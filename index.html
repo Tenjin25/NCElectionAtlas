@@ -1292,6 +1292,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
     // --- CONFIG ---
+    function detectBasePath() {
+      // GitHub Pages project sites are served under /<repo-name>/...
+      if (!window.location.hostname.endsWith('github.io')) return '';
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      return parts.length ? `/${parts[0]}` : '';
+    }
+
+    function withBase(path) {
+      if (!path) return path;
+      if (/^https?:\/\//i.test(path)) return path;
+      const base = detectBasePath();
+      const normalized = path.replace(/^\.\//, '/');
+      return `${base}${normalized}`;
+    }
+
     const CONFIG = {
       mapboxToken: 'pk.eyJ1Ijoic2hhbWFyZGF2aXMiLCJhIjoiY21kcW8yeDB2MDhvbTJzb29qeGp1aDZmZCJ9.Zw_i6U-dL7_bEKRHTUh7yg',
       tilesets: {
@@ -1316,17 +1331,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       },
       paths: {
-        counties: './data/census/tl_2020_37_county20.geojson',
-        precincts: './data/Voting_Precincts.geojson',
-        districts: './data/tileset/nc_cd118_tileset.geojson',
-        state_house: './data/tileset/nc_state_house_2022_lines_tileset.geojson',
-        state_senate: './data/tileset/nc_state_senate_2022_lines_tileset.geojson',
-        election: './data/nc_elections_aggregated.json',
-        district_election: './data/nc_district_results_2022_lines.json',
-        district_contests_dir: './data/district_contests',
-        districts_info: './data/nc_congressional_districts.csv',
-        state_house_info: './data/nc_state_house_districts.csv',
-        state_senate_info: './data/nc_state_senate_districts.csv'
+        counties: withBase('./data/census/tl_2020_37_county20.geojson'),
+        precincts: withBase('./data/Voting_Precincts.geojson'),
+        districts: withBase('./data/tileset/nc_cd118_tileset.geojson'),
+        state_house: withBase('./data/tileset/nc_state_house_2022_lines_tileset.geojson'),
+        state_senate: withBase('./data/tileset/nc_state_senate_2022_lines_tileset.geojson'),
+        election: withBase('./data/nc_elections_aggregated.json'),
+        district_election: withBase('./data/nc_district_results_2022_lines.json'),
+        district_contests_dir: withBase('./data/district_contests'),
+        districts_info: withBase('./data/nc_congressional_districts.csv'),
+        state_house_info: withBase('./data/nc_state_house_districts.csv'),
+        state_senate_info: withBase('./data/nc_state_senate_districts.csv'),
+        contests_dir: withBase('./data/contests')
       },
       center: [-79.0, 35.5],
       zoom: 6.5,
@@ -1368,6 +1384,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctSourceLoaded = false;
     let districtHoverRequestId = 0;
     let lastPointerPoint = null;
+    let appReady = false;
 
     function getVectorSourceLayer(sourceId) {
       if (!CONFIG.tilesets?.enabled) return null;
@@ -1496,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (contestSliceCache.has(key)) return contestSliceCache.get(key);
 
       try {
-        const payload = await loadJSON(`./data/contests/${key}.json`);
+        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
         const rows = (payload.rows || []).map(r => ({
           year: Number(year),
           county: r.county,
@@ -1755,6 +1772,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function populateContestSelectFromElectionJSON(electionData) {
+      if (!Array.isArray(electionData) || electionData.length === 0) return;
       if (contestManifest && contestManifest.length > 0) {
         return populateContestSelectFromManifest(contestManifest);
       }
@@ -1821,6 +1839,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function populateContestSelectFromCSV(csvData) {
+      if (!Array.isArray(csvData) || csvData.length === 0) return;
       const sel = document.getElementById('contestSelect');
       if (sel.dataset.populated === 'true') return; // Only populate once per data load
       sel.innerHTML = '<option value="">Select a contest...</option>';
@@ -2060,6 +2079,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setMapView(view) {
+      if (!appReady) {
+        setStatus('Map is still loading. Try again in a moment.');
+        return;
+      }
       currentView = view;
       
       // Update button states
@@ -2778,6 +2801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addDistrictLayers() {
+      if (!map.getSource('districts')) return;
       if (!map.getLayer('district-fill')) {
         addLayerWithOptionalSourceLayer({ 
           id: 'district-fill', 
@@ -2833,6 +2857,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addStateHouseLayers() {
+      if (!map.getSource('state-house')) return;
       if (!map.getLayer('state-house-fill')) {
         addLayerWithOptionalSourceLayer({ 
           id: 'state-house-fill', 
@@ -2888,6 +2913,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addStateSenatelayers() {
+      if (!map.getSource('state-senate')) return;
       if (!map.getLayer('state-senate-fill')) {
         addLayerWithOptionalSourceLayer({ 
           id: 'state-senate-fill', 
@@ -3584,7 +3610,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.counties?.url) {
           map.addSource('counties', { type: 'vector', url: CONFIG.tilesets.sources.counties.url });
         } else {
-          const counties = await loadJSON(CONFIG.paths.counties);
+          let counties = null;
+          try {
+            counties = await loadJSON(CONFIG.paths.counties);
+          } catch (_) {
+            // Fallback for alternate local layouts.
+            counties = await loadJSON(withBase('./data/tl_2020_37_county20.geojson'));
+          }
           map.addSource('counties', { type: 'geojson', data: counties });
           window.countiesData = counties;
           countyNameMap = buildCountyNameMapFromGeoJSON(counties);
@@ -3598,7 +3630,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateNameCache = new Map();
         contestSliceCache = new Map();
         try {
-          const manifest = await loadJSON('./data/contests/manifest.json');
+          const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
           contestManifest = manifest?.files || [];
           electionData = [];
           populateContestSelectFromManifest(contestManifest);
@@ -3697,8 +3729,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Setup visualization mode switcher
         setupVizModes();
+        appReady = true;
 
       } catch (e) {
+        appReady = false;
         setStatus('Error: ' + e.message);
       }
     }
