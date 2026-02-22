@@ -1730,7 +1730,12 @@ document.addEventListener('DOMContentLoaded', function() {
         'president': 'President of the United States',
         'governor': 'Governor', 
         'us_senate': 'United States Senator',
+        'lieutenant_governor': 'Lieutenant Governor',
         'attorney_general': 'Attorney General',
+        'auditor': 'State Auditor',
+        'labor_commissioner': 'Commissioner of Labor',
+        'insurance_commissioner': 'Commissioner of Insurance',
+        'superintendent': 'Superintendent of Public Instruction',
         'cfo': 'Chief Financial Officer',
         'agriculture_commissioner': 'Commissioner of Agriculture',
         // Historical Florida Cabinet positions (pre-2003)
@@ -1767,6 +1772,15 @@ document.addEventListener('DOMContentLoaded', function() {
       if (contestType.startsWith('d')) {
         return `Judicial Retention ${contestType.toUpperCase()}`;
       }
+
+      if (contestType.startsWith('nc_court_of_appeals_judge_seat_')) {
+        const seat = contestType.replace('nc_court_of_appeals_judge_seat_', '').replace(/^0+/, '');
+        return `NC Court of Appeals Judge Seat ${seat || contestType}`;
+      }
+      if (contestType.startsWith('nc_supreme_court_associate_justice_seat_')) {
+        const seat = contestType.replace('nc_supreme_court_associate_justice_seat_', '').replace(/^0+/, '');
+        return `NC Supreme Court Associate Justice Seat ${seat || contestType}`;
+      }
       
       return nameMap[contestType] || contestType.toUpperCase();
     }
@@ -1787,16 +1801,41 @@ document.addEventListener('DOMContentLoaded', function() {
       const sel = document.getElementById('contestSelect');
       sel.innerHTML = '<option value="">Select a contest...</option>';
 
-      const contestTypes = ['president', 'us_senate', 'governor', 'attorney_general', 'cfo', 'agriculture_commissioner', 'secretary_of_state', 'treasurer', 'education_commissioner', 'comptroller'];
       const contestYearPairs = {};
+      const preferredOrder = [
+        'president',
+        'us_senate',
+        'governor',
+        'lieutenant_governor',
+        'attorney_general',
+        'auditor',
+        'agriculture_commissioner',
+        'labor_commissioner',
+        'insurance_commissioner',
+        'secretary_of_state',
+        'treasurer',
+        'superintendent',
+        'cfo',
+        'education_commissioner',
+        'comptroller'
+      ];
 
       (manifestEntries || []).forEach(entry => {
         const contestType = entry.contest_type;
         const year = Number(entry.year);
-        const rows = Number(entry.rows) || 0;
-        if (!contestTypes.includes(contestType) || rows <= 0) return;
+        const rows = Number(entry.rows || entry.districts || 0) || 0;
+        if (!contestType || rows <= 0) return;
         if (!contestYearPairs[contestType]) contestYearPairs[contestType] = new Set();
         contestYearPairs[contestType].add(year);
+      });
+
+      const contestTypes = Object.keys(contestYearPairs).sort((a, b) => {
+        const ai = preferredOrder.indexOf(a);
+        const bi = preferredOrder.indexOf(b);
+        const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+        const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+        if (av !== bv) return av - bv;
+        return a.localeCompare(b);
       });
 
       const fragment = document.createDocumentFragment();
@@ -1804,13 +1843,22 @@ document.addEventListener('DOMContentLoaded', function() {
         'president': 'Presidential Elections',
         'governor': 'Gubernatorial Elections',
         'us_senate': 'U.S. Senate Elections',
+        'lieutenant_governor': 'Lieutenant Governor Elections',
         'attorney_general': 'Attorney General Elections',
+        'auditor': 'State Auditor Elections',
         'cfo': 'Chief Financial Officer Elections',
         'agriculture_commissioner': 'Agriculture Commissioner Elections',
+        'labor_commissioner': 'Labor Commissioner Elections',
+        'insurance_commissioner': 'Insurance Commissioner Elections',
         'secretary_of_state': 'Secretary of State Elections (Historic: 1978-2002)',
         'treasurer': 'Treasurer Elections (Historic: 1978-2002)',
+        'superintendent': 'Superintendent of Public Instruction Elections',
         'education_commissioner': 'Commissioner of Education Elections (Historic: 1978-1998)',
-        'comptroller': 'Comptroller Elections (Historic: 1978-2002)'
+        'comptroller': 'Comptroller Elections (Historic: 1978-2002)',
+        'nc_court_of_appeals_judge_seat_12': 'Statewide Judicial Elections',
+        'nc_court_of_appeals_judge_seat_14': 'Statewide Judicial Elections',
+        'nc_court_of_appeals_judge_seat_15': 'Statewide Judicial Elections',
+        'nc_supreme_court_associate_justice_seat_06': 'Statewide Judicial Elections'
       };
 
       contestTypes.forEach(contestType => {
@@ -2062,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="statewide-margin" style="margin-bottom:0;">
           <div class="margin-text" style="color: ${winner === 'Republican' ? '#dc2626' : '#2563eb'};font-size:18px;font-weight:700;text-align:left;">
             Winner: <span style="color:${winner === 'Republican' ? '#dc2626' : '#2563eb'}">${winner === 'Republican' ? repCandidate : demCandidate} (${winner === 'Republican' ? 'R' : 'D'})</span><br>
-            Margin: <span style="color:${winner === 'Republican' ? '#dc2626' : '#2563eb'}">${winner === 'Republican' ? 'R+' : 'D+'}${marginPct.toFixed(2)}%</span> <span style="color:#64748b;font-size:14px;">(${Math.abs(repVotes-demVotes).toLocaleString()} votes)</span>
+            Margin: <span style="color:${winner === 'Republican' ? '#dc2626' : '#2563eb'}">${winner === 'Republican' ? repCandidate : demCandidate} +${marginPct.toFixed(2)}%</span> <span style="color:#64748b;font-size:14px;">(${Math.abs(repVotes-demVotes).toLocaleString()} votes)</span>
           </div>
           <div style="margin-top:8px;">
             ${barHTML}
@@ -2155,6 +2203,19 @@ document.addEventListener('DOMContentLoaded', function() {
       return '';
     }
 
+    function winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
+      const marginPct = totalVotes > 0 ? Math.abs((repVotes - demVotes) / totalVotes * 100) : 0;
+      const repName = (repCandidate || 'Republican').toString().trim();
+      const demName = (demCandidate || 'Democratic').toString().trim();
+      if (repVotes > demVotes) {
+        return `${repName} +${marginPct.toFixed(2)}%`;
+      }
+      if (demVotes > repVotes) {
+        return `${demName} +${marginPct.toFixed(2)}%`;
+      }
+      return `Tied ${marginPct.toFixed(2)}%`;
+    }
+
     function renderCountyHoverAtPoint(e) {
       if (!(e.features && e.features[0])) return;
       const props = e.features[0].properties || {};
@@ -2179,6 +2240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const i = contestValue.lastIndexOf('_');
       const contestType = contestValue.substring(0, i);
+      const year = contestValue.substring(i + 1);
       const demVotes = Number(row[`${contestType}_dem`] || 0);
       const repVotes = Number(row[`${contestType}_rep`] || 0);
       const otherVotes = Number(row[`${contestType}_other`] || 0);
@@ -2190,8 +2252,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
       const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
       const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
-      const winner = repVotes > demVotes ? 'R' : 'D';
-      const marginPct = Math.abs((repVotes - demVotes) / totalVotes * 100).toFixed(2);
+      const demCandidate = row[`${contestType}_dem_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
+      const repCandidate = row[`${contestType}_rep_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Republican');
+      const marginLabel = winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const content = `
         <div class="tooltip-title"><strong>${countyName}</strong></div>
         <div style="margin-top: 8px; font-size: 12px;">
@@ -2199,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
           <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
           <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
-            <strong>Margin:</strong> ${winner}+${marginPct}% | <strong>Total:</strong> ${totalVotes.toLocaleString()}
+            <strong>Margin:</strong> ${marginLabel} | <strong>Total:</strong> ${totalVotes.toLocaleString()}
           </div>
         </div>`;
       showHoverTooltip(e.point.x, e.point.y, content);
@@ -2289,8 +2352,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
       const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
       const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
-      const winner = repVotes > demVotes ? 'R' : 'D';
-      const marginPct = Math.abs((repVotes - demVotes) / totalVotes * 100).toFixed(2);
+      const demCandidate = row.dem_candidate || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
+      const repCandidate = row.rep_candidate || getCandidateName(year, formatContestName(contestType, year), 'Republican');
+      const marginLabel = winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const content = `
         <div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div>
         <div style="margin-top: 8px; font-size: 12px;">
@@ -2298,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
           <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
           <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
-            <strong>Margin:</strong> ${winner}+${marginPct}% | <strong>Total:</strong> ${totalVotes.toLocaleString()}
+            <strong>Margin:</strong> ${marginLabel} | <strong>Total:</strong> ${totalVotes.toLocaleString()}
           </div>
         </div>`;
       showHoverTooltip(e.point.x, e.point.y, content);
@@ -2487,7 +2551,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginPct = (Math.abs(margin) / totalVotes * 100).toFixed(2);
       const winner = margin > 0 ? 'Democratic' : (margin < 0 ? 'Republican' : 'Tie');
       const winnerCandidate = margin > 0 ? demCandidate : repCandidate;
-      const marginText = margin > 0 ? 'D+' + marginPct + '%' : (margin < 0 ? 'R+' + marginPct + '%' : 'Tied');
+      const marginText = margin > 0 ? `${winnerCandidate} +${marginPct}%` : (margin < 0 ? `${winnerCandidate} +${marginPct}%` : 'Tied');
       // Accessibility palette for winner color
       function cbColorForMargin(marginPct, winner) {
         if (marginPct >= 40) {
@@ -2546,7 +2610,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (winner !== 'Republican') {
     marginColor = isColorblind ? cbColorForMargin(parseFloat(marginPct), 'D') : '#2563eb';
   }
-  sidebarContent += `<p class="sidebar-margin" style="color: ${marginColor}; font-weight: bold;">${winner === 'Republican' ? 'R+' : 'D+'}${marginPct}%</p>`;
+  sidebarContent += `<p class="sidebar-margin" style="color: ${marginColor}; font-weight: bold;">${marginText}</p>`;
   sidebarContent += `<p class="sidebar-margin-details" style="color: #6b7280;">(${Math.abs(margin).toLocaleString()} vote margin)</p>`;
   sidebarContent += `</div>`;
   sidebarContent += `<div class="vote-breakdown">`;
@@ -3657,6 +3721,9 @@ document.addEventListener('DOMContentLoaded', function() {
           districtManifest = dManifest?.files || [];
           districtElectionDataJSON = null;
           districtSliceCache = new Map();
+          if (contestManifest.length > 0 || districtManifest.length > 0) {
+            populateContestSelectFromManifest([...(contestManifest || []), ...(districtManifest || [])]);
+          }
           setStatus('District index loaded');
         } catch (manifestErr) {
           try {

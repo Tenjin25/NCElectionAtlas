@@ -1,0 +1,413 @@
+"""
+Build 2024 district contest slices with true DEM/REP/OTHER allocation.
+
+Pipeline:
+1) Start from precinct-sort style rows (county, precinct, office, party, candidate, votes).
+2) Reallocate non-geographic precinct rows (ABSENTEE/ONE-STOP/EARLY/etc.) to geographic
+   precincts by candidate-performance shares within county.
+3) Aggregate to precinct-level DEM/REP/OTHER.
+4) VAP-shatter precinct totals to block-level, then aggregate to district scopes.
+5) Emit data/district_contests/{scope}_{contest_type}_{year}.json + manifest.json.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from decimal import Decimal
+from pathlib import Path
+
+import pandas as pd
+
+from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, load_vap, shatter_votes
+
+
+NON_GEO_FLAGS = [
+    "ABSENTEE",
+    "ONE STOP",
+    "ONE-STOP",
+    "EARLY",
+    "EV ",
+    "EV-",
+    "EV_",
+    "PROVISIONAL",
+    "CURBSIDE",
+    "MAIL",
+]
+
+
+def is_non_geographic_precinct(name: str) -> bool:
+    t = str(name).strip().upper()
+    return any(flag in t for flag in NON_GEO_FLAGS)
+
+
+def calculate_competitiveness(margin_pct: float) -> str:
+    abs_margin = abs(margin_pct)
+    if abs_margin < 0.5:
+        return "#f7f7f7"
+    rep_win = margin_pct > 0
+    if abs_margin >= 40:
+        return "#67000d" if rep_win else "#08306b"
+    if abs_margin >= 30:
+        return "#a50f15" if rep_win else "#08519c"
+    if abs_margin >= 20:
+        return "#cb181d" if rep_win else "#3182bd"
+    if abs_margin >= 10:
+        return "#ef3b2c" if rep_win else "#6baed6"
+    if abs_margin >= 5.5:
+        return "#fb6a4a" if rep_win else "#9ecae1"
+    if abs_margin >= 1:
+        return "#fcae91" if rep_win else "#c6dbef"
+    return "#fee8c8" if rep_win else "#e1f5fe"
+
+
+def load_district_map(path: Path, block_col: str, district_col: str) -> pd.DataFrame:
+    d = pd.read_csv(path, dtype=str)
+    d.columns = [str(c).strip() for c in d.columns]
+    out = d[[block_col, district_col]].copy()
+    out.columns = ["block_geoid20", "district"]
+    out["block_geoid20"] = out["block_geoid20"].astype(str).str.strip().str.zfill(15)
+    out["district"] = out["district"].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
+    m = out["district"].str.match(r"^\d+$", na=False)
+    out.loc[m, "district"] = out.loc[m, "district"].str.lstrip("0")
+    out.loc[out["district"] == "", "district"] = "0"
+    return out.dropna().drop_duplicates(subset=["block_geoid20"], keep="first")
+
+
+def party_group(party: str) -> str:
+    p = str(party).strip().upper()
+    if p == "DEM":
+        return "dem_votes"
+    if p == "REP":
+        return "rep_votes"
+    return "other_votes"
+
+
+def allocate_non_geo_by_candidate(df_office: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns rows at county+precinct+candidate with votes after non-geo allocation.
+    """
+    df = df_office.copy()
+    df["votes"] = pd.to_numeric(df["votes"], errors="coerce").fillna(0.0)
+    df["county"] = df["county"].astype(str).str.strip().str.upper()
+    df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
+    df["candidate"] = df["candidate"].astype(str).str.strip()
+    df["precinct_id"] = df["county"] + " - " + df["precinct"]
+    df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
+
+    geo = df[~df["non_geo"]].copy()
+    non_geo = df[df["non_geo"]].copy()
+    if non_geo.empty:
+        return geo.groupby(["county", "precinct_id", "candidate"], as_index=False)["votes"].sum()
+
+    geo_cand = geo.groupby(["county", "candidate", "precinct_id"], as_index=False)["votes"].sum()
+    cand_den = geo_cand.groupby(["county", "candidate"], as_index=False)["votes"].sum().rename(
+        columns={"votes": "cand_geo_total"}
+    )
+    non_geo_cand = non_geo.groupby(["county", "candidate"], as_index=False)["votes"].sum().rename(
+        columns={"votes": "non_geo_votes"}
+    )
+
+    alloc = geo_cand.merge(cand_den, on=["county", "candidate"], how="left").merge(
+        non_geo_cand, on=["county", "candidate"], how="left"
+    )
+    alloc["non_geo_votes"] = alloc["non_geo_votes"].fillna(0.0)
+    alloc["alloc"] = 0.0
+    ok = alloc["cand_geo_total"] > 0
+    alloc.loc[ok, "alloc"] = alloc.loc[ok, "non_geo_votes"] * (
+        alloc.loc[ok, "votes"] / alloc.loc[ok, "cand_geo_total"]
+    )
+
+    miss = non_geo_cand.merge(cand_den, on=["county", "candidate"], how="left")
+    miss = miss[(miss["cand_geo_total"].isna()) & (miss["non_geo_votes"] > 0)].copy()
+    if not miss.empty:
+        county_geo = geo.groupby(["county", "precinct_id"], as_index=False)["votes"].sum()
+        county_den = county_geo.groupby("county", as_index=False)["votes"].sum().rename(columns={"votes": "county_geo_total"})
+        cshare = county_geo.merge(county_den, on="county", how="left")
+        cshare["share"] = cshare["votes"] / cshare["county_geo_total"]
+        miss_alloc = miss.merge(cshare[["county", "precinct_id", "share"]], on="county", how="left")
+        miss_alloc["alloc"] = miss_alloc["non_geo_votes"] * miss_alloc["share"].fillna(0.0)
+        alloc_extra = miss_alloc.groupby(["county", "precinct_id"], as_index=False)["alloc"].sum()
+    else:
+        alloc_extra = pd.DataFrame(columns=["county", "precinct_id", "alloc"])
+
+    alloc_main = alloc.groupby(["county", "precinct_id"], as_index=False)["alloc"].sum()
+    alloc_all = pd.concat([alloc_main, alloc_extra], ignore_index=True).groupby(
+        ["county", "precinct_id"], as_index=False
+    )["alloc"].sum()
+
+    geo_tot = geo.groupby(["county", "precinct_id", "candidate"], as_index=False)["votes"].sum()
+    # Add candidate-specific allocation where available.
+    merged = geo_tot.merge(alloc[["county", "precinct_id", "candidate", "alloc"]], on=["county", "precinct_id", "candidate"], how="left")
+    merged["alloc"] = merged["alloc"].fillna(0.0)
+    merged["votes"] = merged["votes"] + merged["alloc"]
+
+    # County-level fallback allocations were candidate-agnostic; distribute proportionally
+    # across candidates in each precinct by existing geo candidate shares.
+    if not alloc_extra.empty:
+        p_cand = merged.groupby(["county", "precinct_id", "candidate"], as_index=False)["votes"].sum()
+        p_tot = p_cand.groupby(["county", "precinct_id"], as_index=False)["votes"].sum().rename(columns={"votes": "p_total"})
+        p_share = p_cand.merge(p_tot, on=["county", "precinct_id"], how="left")
+        p_share["share"] = p_share["votes"] / p_share["p_total"]
+        add = alloc_extra.merge(p_share[["county", "precinct_id", "candidate", "share"]], on=["county", "precinct_id"], how="left")
+        add["votes_add"] = add["alloc"] * add["share"].fillna(0.0)
+        add = add.groupby(["county", "precinct_id", "candidate"], as_index=False)["votes_add"].sum()
+        merged = merged.merge(add, on=["county", "precinct_id", "candidate"], how="left")
+        merged["votes_add"] = merged["votes_add"].fillna(0.0)
+        merged["votes"] = merged["votes"] + merged["votes_add"]
+
+    return merged[["county", "precinct_id", "candidate", "votes"]]
+
+
+def build_precinct_party_votes(src: pd.DataFrame, office: str) -> tuple[pd.DataFrame, str, str]:
+    df = src[src["office"] == office].copy()
+    if df.empty:
+        return pd.DataFrame(columns=["precinct_id", "dem_votes", "rep_votes", "other_votes"]), "", ""
+    df["votes_num"] = pd.to_numeric(df["votes"], errors="coerce").fillna(0.0)
+    df["party_group"] = df["party"].map(party_group)
+
+    # Candidate labels (statewide top by party).
+    dem_c = (
+        df[df["party_group"] == "dem_votes"]
+        .groupby("candidate", as_index=False)["votes_num"]
+        .sum()
+        .sort_values("votes_num", ascending=False)
+    )
+    rep_c = (
+        df[df["party_group"] == "rep_votes"]
+        .groupby("candidate", as_index=False)["votes_num"]
+        .sum()
+        .sort_values("votes_num", ascending=False)
+    )
+    dem_candidate = str(dem_c["candidate"].iloc[0]) if not dem_c.empty else ""
+    rep_candidate = str(rep_c["candidate"].iloc[0]) if not rep_c.empty else ""
+
+    allocated = allocate_non_geo_by_candidate(df)
+    # Attach party via candidate+office+county lookup (candidate names are unique enough per office).
+    party_lookup = (
+        df[["candidate", "party_group"]]
+        .drop_duplicates(subset=["candidate"], keep="first")
+        .set_index("candidate")["party_group"]
+        .to_dict()
+    )
+    allocated["party_group"] = allocated["candidate"].map(lambda c: party_lookup.get(c, "other_votes"))
+    p = allocated.groupby(["precinct_id", "party_group"], as_index=False)["votes"].sum()
+    wide = p.pivot(index="precinct_id", columns="party_group", values="votes").fillna(0.0).reset_index()
+    for col in ["dem_votes", "rep_votes", "other_votes"]:
+        if col not in wide.columns:
+            wide[col] = 0.0
+    return wide[["precinct_id", "dem_votes", "rep_votes", "other_votes"]], dem_candidate, rep_candidate
+
+
+def to_results_df(p: pd.DataFrame, col: str) -> pd.DataFrame:
+    out = p[["precinct_id", col]].copy()
+    out.columns = ["precinct_id", "votes"]
+    out["votes"] = out["votes"].map(lambda v: Decimal(str(v)))
+    return out
+
+
+def agg_party_to_scope(
+    precinct_party: pd.DataFrame,
+    crosswalk_df: pd.DataFrame,
+    vap_df: pd.DataFrame,
+    map_path: Path,
+    block_col: str,
+    district_col: str,
+) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
+    party_district = {}
+    matched = 0
+    total = int(len(precinct_party))
+    for col in ["dem_votes", "rep_votes", "other_votes"]:
+        res_df = to_results_df(precinct_party, col)
+        shattered, audit = shatter_votes(
+            results_df=res_df,
+            crosswalk_df=crosswalk_df,
+            vap_df=vap_df,
+            precision=28,
+        )
+        matched = max(matched, int(len(audit)))
+        agg = aggregate_to_districts(shattered, map_path, block_col, district_col)
+        party_district[col] = {
+            str(r["district"]).strip(): int(pd.to_numeric(r["votes_rounded"], errors="coerce"))
+            for _, r in agg.iterrows()
+        }
+    return (
+        party_district["dem_votes"],
+        party_district["rep_votes"],
+        party_district["other_votes"],
+        matched,
+        total,
+    )
+
+
+def build_payload(
+    *,
+    year: int,
+    scope: str,
+    contest_type: str,
+    office_label: str,
+    dem_map: dict[str, int],
+    rep_map: dict[str, int],
+    oth_map: dict[str, int],
+    dem_candidate: str,
+    rep_candidate: str,
+    matched: int,
+    total: int,
+) -> dict:
+    keys = sorted(set(dem_map) | set(rep_map) | set(oth_map), key=lambda x: (int(x) if str(x).isdigit() else x))
+    results = {}
+    for k in keys:
+        dem = int(dem_map.get(k, 0))
+        rep = int(rep_map.get(k, 0))
+        oth = int(oth_map.get(k, 0))
+        total_votes = dem + rep + oth
+        margin = rep - dem
+        margin_pct = (margin / total_votes * 100.0) if total_votes else 0.0
+        winner = "REP" if margin > 0 else "DEM" if margin < 0 else "TIE"
+        results[str(k)] = {
+            "dem_votes": dem,
+            "rep_votes": rep,
+            "other_votes": oth,
+            "total_votes": total_votes,
+            "dem_candidate": dem_candidate,
+            "rep_candidate": rep_candidate,
+            "margin": margin,
+            "margin_pct": round(margin_pct, 2),
+            "winner": winner,
+            "competitiveness": {"color": calculate_competitiveness(margin_pct)},
+        }
+    cov = (matched / total * 100.0) if total else 0.0
+    return {
+        "year": year,
+        "scope": scope,
+        "contest_type": contest_type,
+        "meta": {
+            "match_coverage_pct": round(cov, 2),
+            "matched_precinct_keys": int(matched),
+            "total_precinct_keys": int(total),
+            "source": "batch_shatter_vap_party_split",
+            "office": office_label,
+        },
+        "general": {"results": results},
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Build district contest slices with true party split.")
+    parser.add_argument("--batch-dir", type=Path, default=Path("data/tmp/shatter/batch_2024_council_judicial_overlay_test"))
+    parser.add_argument("--results-csv", type=Path, default=Path("data/2024/20241105__nc__general__precinct.csv"))
+    parser.add_argument("--district-contests-dir", type=Path, default=Path("data/district_contests"))
+    parser.add_argument("--crosswalk-csv", type=Path, default=Path("data/crosswalks/block20_to_precinct.csv"))
+    parser.add_argument("--vap-csv", type=Path, default=Path("data/census/block_vap_2020_nc.csv"))
+    parser.add_argument("--house-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-4.csv"))
+    parser.add_argument("--senate-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-2.csv"))
+    parser.add_argument("--cd-file", type=Path, default=Path("data/census/block files/NC_CD118.txt"))
+    parser.add_argument("--year", type=int, default=2024)
+    args = parser.parse_args()
+
+    batch_summary = pd.read_csv(args.batch_dir / "summary.csv", dtype=str).fillna("")
+    src = pd.read_csv(args.results_csv, dtype=str, low_memory=False)
+    crosswalk_df = load_crosswalk(args.crosswalk_csv, "precinct_id", "block_geoid20")
+    vap_df = load_vap(args.vap_csv, "block_geoid20", "vap_count")
+
+    out_dir = args.district_contests_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    written = 0
+    for _, row in batch_summary.iterrows():
+        office = str(row["office"]).strip()
+        contest_type = str(row["office_key"]).strip()
+        if not office or not contest_type:
+            continue
+        print(f"Processing {office} -> {contest_type}")
+        precinct_party, dem_candidate, rep_candidate = build_precinct_party_votes(src, office)
+        if precinct_party.empty:
+            continue
+
+        dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
+            precinct_party, crosswalk_df, vap_df, args.house_file, "Block", "District"
+        )
+        dem_s, rep_s, oth_s, _, _ = agg_party_to_scope(
+            precinct_party, crosswalk_df, vap_df, args.senate_file, "Block", "District"
+        )
+        dem_c, rep_c, oth_c, _, _ = agg_party_to_scope(
+            precinct_party, crosswalk_df, vap_df, args.cd_file, "GEOID", "CDFP"
+        )
+
+        payloads = {
+            f"state_house_{contest_type}_{args.year}.json": build_payload(
+                year=args.year,
+                scope="state_house",
+                contest_type=contest_type,
+                office_label=office,
+                dem_map=dem_h,
+                rep_map=rep_h,
+                oth_map=oth_h,
+                dem_candidate=dem_candidate,
+                rep_candidate=rep_candidate,
+                matched=matched,
+                total=total,
+            ),
+            f"state_senate_{contest_type}_{args.year}.json": build_payload(
+                year=args.year,
+                scope="state_senate",
+                contest_type=contest_type,
+                office_label=office,
+                dem_map=dem_s,
+                rep_map=rep_s,
+                oth_map=oth_s,
+                dem_candidate=dem_candidate,
+                rep_candidate=rep_candidate,
+                matched=matched,
+                total=total,
+            ),
+            f"congressional_{contest_type}_{args.year}.json": build_payload(
+                year=args.year,
+                scope="congressional",
+                contest_type=contest_type,
+                office_label=office,
+                dem_map=dem_c,
+                rep_map=rep_c,
+                oth_map=oth_c,
+                dem_candidate=dem_candidate,
+                rep_candidate=rep_candidate,
+                matched=matched,
+                total=total,
+            ),
+        }
+        for name, payload in payloads.items():
+            (out_dir / name).write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+            written += 1
+
+    # Rebuild manifest
+    manifest = []
+    for p in sorted(out_dir.glob("*.json")):
+        if p.name == "manifest.json":
+            continue
+        parts = p.stem.split("_")
+        if len(parts) < 3:
+            continue
+        if parts[0] == "state" and len(parts) >= 4:
+            scope = "_".join(parts[0:2])
+            contest_type = "_".join(parts[2:-1])
+        else:
+            scope = parts[0]
+            contest_type = "_".join(parts[1:-1])
+        try:
+            year = int(parts[-1])
+        except ValueError:
+            continue
+        try:
+            payload = json.loads(p.read_text(encoding="utf-8"))
+            districts = len(((payload.get("general") or {}).get("results")) or {})
+        except Exception:
+            districts = 0
+        manifest.append(
+            {"year": year, "scope": scope, "contest_type": contest_type, "file": p.name, "districts": districts}
+        )
+    manifest.sort(key=lambda x: (x["year"], x["scope"], x["contest_type"]))
+    (out_dir / "manifest.json").write_text(json.dumps({"files": manifest}, indent=2), encoding="utf-8")
+    print(f"Wrote {written} slices; manifest updated at {out_dir / 'manifest.json'}")
+
+
+if __name__ == "__main__":
+    main()
