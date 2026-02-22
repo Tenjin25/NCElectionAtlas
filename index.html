@@ -120,7 +120,10 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Define toggleSidebar function before DOMContentLoaded
+    const SIDEBAR_ENABLED = false;
+
     function toggleSidebar() {
+      if (!SIDEBAR_ENABLED) return;
       const sidebar = document.getElementById('sidebar');
       const sidebarContent = document.querySelector('.sidebar-content');
       const sidebarHeader = document.querySelector('.sidebar-header');
@@ -169,6 +172,11 @@
       var detailsDiv = document.getElementById('county-details');
       var contentEl = document.getElementById('county-info-content');
       var statusExit = document.getElementById('status-exit');
+
+      if (!SIDEBAR_ENABLED) {
+        if (sidebar) sidebar.style.display = 'none';
+        if (floatBtn) floatBtn.style.display = 'none';
+      }
       
       // Always start minimized and set button text
       if (sidebar) sidebar.classList.add('minimized');
@@ -1136,6 +1144,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
   }
+  const precinctBtn = document.getElementById('precinct-toggle');
+  if (precinctBtn) {
+    precinctBtn.onclick = function() {
+      if (typeof togglePrecinctOverlay === 'function') {
+        togglePrecinctOverlay();
+      }
+    };
+  }
   updateLegendColors(); // Ensure correct colors on load
 });
 </script>
@@ -1221,11 +1237,20 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
         <div class="controls-content" id="controls-content">
+            <div class="control-group" style="margin-bottom:10px;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button id="counties-view" class="view-toggle active" onclick="setMapView('counties')">Counties</button>
+                  <button id="districts-view" class="view-toggle" onclick="setMapView('districts')">Congress</button>
+                  <button id="state-house-view" class="view-toggle" onclick="setMapView('state_house')">State House</button>
+                  <button id="state-senate-view" class="view-toggle" onclick="setMapView('state_senate')">State Senate</button>
+                </div>
+            </div>
             <div class="control-group">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <label>📊 Contest Type:</label>
                   <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">♿</button>
                   <button id="label-toggle" title="Toggle County Labels" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
+                  <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
                 </div>
                 <select id="contestSelect">
                     <option value="">Select a Contest...</option>
@@ -1272,39 +1297,51 @@ document.addEventListener('DOMContentLoaded', function() {
       tilesets: {
         enabled: true,
         sources: {
+          counties: {
+            url: '',
+            sourceLayer: 'tl_2020_37_county20-9o371f'
+          },
           districts: {
-            url: 'mapbox://shamardavis.2ib1lcep',
+            url: '',
             sourceLayer: 'nc_cd118_tileset-30qeef'
           },
           state_house: {
-            url: 'mapbox://shamardavis.a0r2cbpy',
+            url: '',
             sourceLayer: 'nc_state_house_2022_lines_til-d2n5a7'
           },
           state_senate: {
-            url: 'mapbox://shamardavis.8wdc8qdy',
+            url: '',
             sourceLayer: 'nc_state_senate_2022_lines_ti-1co9e6'
           }
         }
       },
       paths: {
-        counties: './data/Voting_Precincts.geojson',
-        districts: './data/nc_congressional_districts.geojson',
-        state_house: './data/nc_state_house_districts.geojson',
-        state_senate: './data/nc_state_senate_districts.geojson',
+        counties: './data/census/tl_2020_37_county20.geojson',
+        precincts: './data/Voting_Precincts.geojson',
+        districts: './data/tileset/nc_cd118_tileset.geojson',
+        state_house: './data/tileset/nc_state_house_2022_lines_tileset.geojson',
+        state_senate: './data/tileset/nc_state_senate_2022_lines_tileset.geojson',
         election: './data/nc_elections_aggregated.json',
         district_election: './data/nc_district_results_2022_lines.json',
+        district_contests_dir: './data/district_contests',
         districts_info: './data/nc_congressional_districts.csv',
         state_house_info: './data/nc_state_house_districts.csv',
         state_senate_info: './data/nc_state_senate_districts.csv'
       },
       center: [-79.0, 35.5],
       zoom: 6.5,
-      fitBounds: [[-84.3, 33.8], [-75.4, 36.6]]
+      fitBounds: [[-84.3, 33.8], [-75.4, 36.6]],
+      precincts: {
+        minZoom: 8.5
+      }
     };
 
     mapboxgl.accessToken = CONFIG.mapboxToken;
 
     const map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/streets-v12', center: CONFIG.center, zoom: CONFIG.zoom });
+    map.on('mousemove', (e) => {
+      lastPointerPoint = e.point;
+    });
 
     const DEBUG = false;
     const debugLog = (...args) => { if (DEBUG) console.log(...args); };
@@ -1312,20 +1349,29 @@ document.addEventListener('DOMContentLoaded', function() {
     let electionDataJSON = null; // New JSON structure from fl_elections_aggregated.json
     let districtElectionDataJSON = null; // District results reallocated to 2024 lines
     let electionData = null; // Flattened array for compatibility
+    let contestManifest = [];
+    let districtManifest = [];
     let congressionalData = []; // Optional legacy district-level table
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
+    let districtSliceCache = new Map();
     let districtsInfo = null;
     let stateHouseInfo = null;
     let stateSenateInfo = null;
     let countyNameMap = {};
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
+    let currentPrecinctResults = null; // Current contest results keyed by precinct
     let currentVizMode = 'margins'; // 'margins', 'winners', 'shift'
     let previousElectionData = null; // For shift mode
+    let precinctsEnabled = false;
+    let precinctSourceLoaded = false;
+    let districtHoverRequestId = 0;
+    let lastPointerPoint = null;
 
     function getVectorSourceLayer(sourceId) {
       if (!CONFIG.tilesets?.enabled) return null;
+      if (sourceId === 'counties') return CONFIG.tilesets.sources?.counties?.sourceLayer || null;
       if (sourceId === 'districts') return CONFIG.tilesets.sources?.districts?.sourceLayer || null;
       if (sourceId === 'state-house') return CONFIG.tilesets.sources?.state_house?.sourceLayer || null;
       if (sourceId === 'state-senate') return CONFIG.tilesets.sources?.state_senate?.sourceLayer || null;
@@ -1333,7 +1379,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
-      const sourceLayer = getVectorSourceLayer(layerDef.source);
+      const src = map.getSource(layerDef.source);
+      const isVectorSource = !!src && src.type === 'vector';
+      const sourceLayer = isVectorSource ? getVectorSourceLayer(layerDef.source) : null;
       if (sourceLayer) layerDef['source-layer'] = sourceLayer;
       map.addLayer(layerDef);
     }
@@ -1387,8 +1435,8 @@ document.addEventListener('DOMContentLoaded', function() {
       animateCounter('dem-count', demVotes);
       animateCounter('rep-count', repVotes);
       
-      document.getElementById('dem-percent').textContent = demPct.toFixed(1) + '%';
-      document.getElementById('rep-percent').textContent = repPct.toFixed(1) + '%';
+      document.getElementById('dem-percent').textContent = demPct.toFixed(2) + '%';
+      document.getElementById('rep-percent').textContent = repPct.toFixed(2) + '%';
       
       showVoteCounter();
     }
@@ -1468,6 +1516,21 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {
         const fallback = (electionData || []).filter(row => row.year == year);
         contestSliceCache.set(key, fallback);
+        return fallback;
+      }
+    }
+
+    async function loadDistrictSlice(scope, contestType, year) {
+      const key = `${scope}_${contestType}_${year}`;
+      if (districtSliceCache.has(key)) return districtSliceCache.get(key);
+
+      try {
+        const payload = await loadJSON(`${CONFIG.paths.district_contests_dir}/${key}.json`);
+        districtSliceCache.set(key, payload);
+        return payload;
+      } catch (_) {
+        const fallback = districtElectionDataJSON?.results_by_year?.[year]?.[scope]?.[contestType] || null;
+        districtSliceCache.set(key, fallback);
         return fallback;
       }
     }
@@ -1692,11 +1755,69 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function populateContestSelectFromElectionJSON(electionData) {
+      if (contestManifest && contestManifest.length > 0) {
+        return populateContestSelectFromManifest(contestManifest);
+      }
       const sel = document.getElementById('contestSelect');
       sel.innerHTML = '<option value="">Select a contest...</option>';
       
       // Use only non-gerrymandered statewide contests for all views
       populateContestSelectFromCSV(electionData);
+    }
+
+    function populateContestSelectFromManifest(manifestEntries) {
+      const sel = document.getElementById('contestSelect');
+      sel.innerHTML = '<option value="">Select a contest...</option>';
+
+      const contestTypes = ['president', 'us_senate', 'governor', 'attorney_general', 'cfo', 'agriculture_commissioner', 'secretary_of_state', 'treasurer', 'education_commissioner', 'comptroller'];
+      const contestYearPairs = {};
+
+      (manifestEntries || []).forEach(entry => {
+        const contestType = entry.contest_type;
+        const year = Number(entry.year);
+        const rows = Number(entry.rows) || 0;
+        if (!contestTypes.includes(contestType) || rows <= 0) return;
+        if (!contestYearPairs[contestType]) contestYearPairs[contestType] = new Set();
+        contestYearPairs[contestType].add(year);
+      });
+
+      const fragment = document.createDocumentFragment();
+      const officeGroups = {
+        'president': 'Presidential Elections',
+        'governor': 'Gubernatorial Elections',
+        'us_senate': 'U.S. Senate Elections',
+        'attorney_general': 'Attorney General Elections',
+        'cfo': 'Chief Financial Officer Elections',
+        'agriculture_commissioner': 'Agriculture Commissioner Elections',
+        'secretary_of_state': 'Secretary of State Elections (Historic: 1978-2002)',
+        'treasurer': 'Treasurer Elections (Historic: 1978-2002)',
+        'education_commissioner': 'Commissioner of Education Elections (Historic: 1978-1998)',
+        'comptroller': 'Comptroller Elections (Historic: 1978-2002)'
+      };
+
+      contestTypes.forEach(contestType => {
+        if (!contestYearPairs[contestType]) return;
+        const years = Array.from(contestYearPairs[contestType]).sort((a, b) => a - b);
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = officeGroups[contestType] || formatContestName(contestType, '');
+        years.forEach(year => {
+          if (contestType === 'governor' && year == 2020) return;
+          const opt = document.createElement('option');
+          opt.value = `${contestType}_${year}`;
+          opt.textContent = `${formatContestName(contestType, year)} (${year})`;
+          optgroup.appendChild(opt);
+        });
+        fragment.appendChild(optgroup);
+      });
+
+      sel.appendChild(fragment);
+      sel.dataset.populated = 'true';
+      sel.onchange = () => {
+        applyContest(sel.value);
+        if (typeof lastSelectedCounty !== 'undefined' && lastSelectedCounty) {
+          showCountyDetails(lastSelectedCounty);
+        }
+      };
     }
 
     function populateContestSelectFromCSV(csvData) {
@@ -1942,10 +2063,10 @@ document.addEventListener('DOMContentLoaded', function() {
       currentView = view;
       
       // Update button states
-      document.getElementById('counties-view').classList.toggle('active', view === 'counties');
-      document.getElementById('districts-view').classList.toggle('active', view === 'districts');
-      document.getElementById('state-house-view').classList.toggle('active', view === 'state_house');
-      document.getElementById('state-senate-view').classList.toggle('active', view === 'state_senate');
+      document.getElementById('counties-view')?.classList.toggle('active', view === 'counties');
+      document.getElementById('districts-view')?.classList.toggle('active', view === 'districts');
+      document.getElementById('state-house-view')?.classList.toggle('active', view === 'state_house');
+      document.getElementById('state-senate-view')?.classList.toggle('active', view === 'state_senate');
       
       // Update 2000 VTDs button if available
       const vtds2000Button = document.getElementById('vtds-2000-view');
@@ -1965,13 +2086,18 @@ document.addEventListener('DOMContentLoaded', function() {
       sidebarTitle.textContent = titles[view];
       
       // Clear all map layers
-      const layerTypes = ['county', 'district', 'state-house', 'state-senate', 'vtds-2000'];
+      const layerTypes = ['county', 'precinct', 'district', 'state-house', 'state-senate', 'vtds-2000'];
       layerTypes.forEach(type => {
         if (map.getLayer(`${type}-fill`)) {
           map.removeLayer(`${type}-fill`);
+        }
+        if (map.getLayer(`${type}-stroke`)) {
           map.removeLayer(`${type}-stroke`);
         }
       });
+      if (map.getLayer('county-label')) {
+        map.removeLayer('county-label');
+      }
       
       // Add appropriate layers
       if (view === 'counties') {
@@ -1992,6 +2118,167 @@ document.addEventListener('DOMContentLoaded', function() {
       // Clear current selection
       document.getElementById('contestSelect').value = '';
       clearCountyDetails();
+    }
+
+    function getDistrictNumberFromProps(props, candidates) {
+      for (const key of candidates) {
+        const val = props?.[key];
+        if (val !== undefined && val !== null && `${val}`.trim() !== '') {
+          const raw = `${val}`.trim();
+          const digits = raw.match(/\d+/);
+          return digits ? digits[0] : raw;
+        }
+      }
+      return '';
+    }
+
+    function renderCountyHoverAtPoint(e) {
+      if (!(e.features && e.features[0])) return;
+      const props = e.features[0].properties || {};
+      const countyName = props.NAME20 || props.CountyName || props.COUNTYNAME || props.county_nam || props.NAME || props.name || 'Unknown County';
+      const norm = (countyName || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+      let row = currentElectionResults ? currentElectionResults[norm] : null;
+      if (!row && currentElectionResults) {
+        for (const key of Object.keys(currentElectionResults)) {
+          const keyNorm = (key || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+          if (keyNorm === norm) {
+            row = currentElectionResults[key];
+            break;
+          }
+        }
+      }
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+
+      if (!contestValue || !row) {
+        showHoverTooltip(e.point.x, e.point.y, `<div class="tooltip-title"><strong>${countyName}</strong></div><div style="margin-top: 8px; color: #999;">Select a contest to see results</div>`);
+        return;
+      }
+
+      const i = contestValue.lastIndexOf('_');
+      const contestType = contestValue.substring(0, i);
+      const demVotes = Number(row[`${contestType}_dem`] || 0);
+      const repVotes = Number(row[`${contestType}_rep`] || 0);
+      const otherVotes = Number(row[`${contestType}_other`] || 0);
+      const totalVotes = Number(row[`${contestType}_total`] || 0);
+      if (totalVotes <= 0) {
+        showHoverTooltip(e.point.x, e.point.y, `<div class="tooltip-title"><strong>${countyName}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`);
+        return;
+      }
+      const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
+      const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
+      const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
+      const winner = repVotes > demVotes ? 'R' : 'D';
+      const marginPct = Math.abs((repVotes - demVotes) / totalVotes * 100).toFixed(2);
+      const content = `
+        <div class="tooltip-title"><strong>${countyName}</strong></div>
+        <div style="margin-top: 8px; font-size: 12px;">
+          <div style="color: #3b82f6; margin: 4px 0;"><strong>D:</strong> ${demVotes.toLocaleString()} (${demPct}%)</div>
+          <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
+          <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
+          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
+            <strong>Margin:</strong> ${winner}+${marginPct}% | <strong>Total:</strong> ${totalVotes.toLocaleString()}
+          </div>
+        </div>`;
+      showHoverTooltip(e.point.x, e.point.y, content);
+    }
+
+    async function refreshHoverAtPointer() {
+      if (!lastPointerPoint) return;
+      const layerName = currentView === 'counties'
+        ? 'county-fill'
+        : (currentView === 'districts'
+          ? 'district-fill'
+          : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
+      if (!map.getLayer(layerName)) return;
+
+      const features = map.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
+      if (!features || !features.length) {
+        hideHoverTooltip();
+        return;
+      }
+      const evt = { point: lastPointerPoint, features };
+      if (layerName === 'county-fill') {
+        renderCountyHoverAtPoint(evt);
+      } else if (layerName === 'district-fill') {
+        await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
+      } else if (layerName === 'state-house-fill') {
+        await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+      } else if (layerName === 'state-senate-fill') {
+        await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+      }
+    }
+
+    async function renderDistrictHover(e, scope, districtLabel, districtFieldCandidates) {
+      if (!(e.features && e.features[0])) return;
+      const props = e.features[0].properties || {};
+      const districtNum = getDistrictNumberFromProps(props, districtFieldCandidates);
+      if (!districtNum) return;
+      const requestId = ++districtHoverRequestId;
+
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      if (!contestValue) {
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">Select a contest to see results</div>`
+        );
+        return;
+      }
+
+      const i = contestValue.lastIndexOf('_');
+      const contestType = contestValue.substring(0, i);
+      const year = contestValue.substring(i + 1);
+      const node = await loadDistrictSlice(scope, contestType, year);
+      if (requestId !== districtHoverRequestId) return;
+      const results = node?.general?.results || {};
+
+      let row = null;
+      const districtNumAsNumber = Number(districtNum);
+      for (const [key, value] of Object.entries(results)) {
+        if (key === districtNum || Number(key) === districtNumAsNumber) {
+          row = value;
+          break;
+        }
+      }
+
+      if (!row) {
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`
+        );
+        return;
+      }
+
+      const demVotes = Number(row.dem_votes || 0);
+      const repVotes = Number(row.rep_votes || 0);
+      const otherVotes = Number(row.other_votes || 0);
+      const totalVotes = Number(row.total_votes || 0);
+      if (totalVotes <= 0) {
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`
+        );
+        return;
+      }
+
+      const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
+      const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
+      const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
+      const winner = repVotes > demVotes ? 'R' : 'D';
+      const marginPct = Math.abs((repVotes - demVotes) / totalVotes * 100).toFixed(2);
+      const content = `
+        <div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div>
+        <div style="margin-top: 8px; font-size: 12px;">
+          <div style="color: #3b82f6; margin: 4px 0;"><strong>D:</strong> ${demVotes.toLocaleString()} (${demPct}%)</div>
+          <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
+          <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
+          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
+            <strong>Margin:</strong> ${winner}+${marginPct}% | <strong>Total:</strong> ${totalVotes.toLocaleString()}
+          </div>
+        </div>`;
+      showHoverTooltip(e.point.x, e.point.y, content);
     }
 
     // Placeholder function for 2000 VTD layers (will be implemented when data is available)
@@ -2092,6 +2379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showCountyDetails(countyName) {
+      if (!SIDEBAR_ENABLED) return;
       // --- NC Map Card-Style Sidebar ---
       const sidebar = document.getElementById('sidebar');
       let sidebarContent = '';
@@ -2331,26 +2619,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function addCountyLayers() {
       if (!map.getLayer('county-fill')) {
-        map.addLayer({ 
+        addLayerWithOptionalSourceLayer({ 
           id: 'county-fill', 
           type: 'fill', 
           source: 'counties', 
           paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.85 } 
         });
-        map.addLayer({ 
+        addLayerWithOptionalSourceLayer({ 
           id: 'county-stroke', 
           type: 'line', 
           source: 'counties', 
           paint: { 'line-color': '#333', 'line-width': 1 } 
         });
         // County label layer (disabled for precinct geometry performance)
-        map.addLayer({
+        addLayerWithOptionalSourceLayer({
           id: 'county-label',
           type: 'symbol',
           source: 'counties',
           minzoom: 7.5,
           layout: {
-            'text-field': ['coalesce', ['get', 'county_nam'], ['get', 'COUNTYNAME'], ['get', 'County'], ['get', 'NAME'], ['get', 'name']],
+            'text-field': ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'NAME'], ['get', 'county_nam'], ['get', 'COUNTYNAME'], ['get', 'County'], ['get', 'name']],
             'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
             'text-size': 11,
             'text-anchor': 'center',
@@ -2387,62 +2675,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hover tooltip with election results
         map.on('mouseenter', 'county-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
-          
-          if (e.features && e.features[0]) {
-            const props = e.features[0].properties;
-            const precinctName = props.precinct_name || ((props.county_nam && props.prec_id) ? `${props.county_nam} - ${props.prec_id}` : (props.NAME20 || props.precinct || props.name || 'Unknown Precinct'));
-            
-            // Get current results if available
-            if (currentElectionResults) {
-              const demVotes = props.dem_votes || 0;
-              const repVotes = props.rep_votes || 0;
-              const totalVotes = props.total_votes || 0;
-              const demCandidate = props.dem_candidate || 'Democrat';
-              const repCandidate = props.rep_candidate || 'Republican';
-              const marginPct = props.margin_pct || 0;
-              const winner = props.winner || '';
-              
-              if (totalVotes > 0) {
-                const demPct = ((demVotes / totalVotes) * 100).toFixed(1);
-                const repPct = ((repVotes / totalVotes) * 100).toFixed(1);
-                
-                const content = `
-                  <div class="tooltip-title"><strong>${precinctName}</strong></div>
-                  <div style="margin-top: 8px; font-size: 12px;">
-                    <div style="color: #3b82f6; margin: 4px 0;">
-                      <strong>${demCandidate} (D):</strong> ${demVotes.toLocaleString()} (${demPct}%)
-                    </div>
-                    <div style="color: #ef4444; margin: 4px 0;">
-                      <strong>${repCandidate} (R):</strong> ${repVotes.toLocaleString()} (${repPct}%)
-                    </div>
-                    <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
-                      <strong>Margin:</strong> ${winner === 'REP' ? 'R' : 'D'}+${Math.abs(marginPct).toFixed(1)}%
-                    </div>
-                  </div>
-                `;
-                showHoverTooltip(e.point.x, e.point.y, content);
-              } else {
-                const content = `
-                  <div class="tooltip-title"><strong>${precinctName}</strong></div>
-                  <div style="margin-top: 8px; color: #999;">No data available</div>
-                `;
-                showHoverTooltip(e.point.x, e.point.y, content);
-              }
-            } else {
-              const content = `
-                <div class="tooltip-title"><strong>${precinctName}</strong></div>
-                <div style="margin-top: 8px; color: #999;">Select a contest to see results</div>
-              `;
-              showHoverTooltip(e.point.x, e.point.y, content);
-            }
-          }
+          renderCountyHoverAtPoint(e);
         });
         
         let hoverRaf = null;
         map.on('mousemove', 'county-fill', (e) => {
           if (hoverRaf) return;
           hoverRaf = requestAnimationFrame(() => {
-            updateHoverTooltipPosition(e.point.x, e.point.y);
+            renderCountyHoverAtPoint(e);
             hoverRaf = null;
           });
         });
@@ -2452,6 +2692,89 @@ document.addEventListener('DOMContentLoaded', function() {
           hideHoverTooltip();
         });
       }
+      updatePrecinctVisibility();
+    }
+
+    async function ensurePrecinctSourceLoaded() {
+      if (precinctSourceLoaded || map.getSource('precincts')) return true;
+      setStatus('Loading precinct geometry...');
+      const precincts = await loadJSON(CONFIG.paths.precincts);
+      precincts.features = (precincts.features || []).map(feature => {
+        const original = feature.properties || {};
+        const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME || '').toString().trim();
+        const countyNorm = countyRaw.replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+        const precRaw = (original.prec_id || original.PREC_ID || '').toString().trim();
+        const precinctRaw = countyRaw && precRaw ? `${countyRaw} - ${precRaw}` : countyRaw;
+        const precinctNorm = (precinctRaw || '').replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+        feature.properties = {
+          county_nam: countyRaw,
+          county_norm: countyNorm,
+          precinct_name: precinctRaw,
+          precinct_norm: precinctNorm,
+          prec_id: precRaw,
+          id: original.id || original.objectid || null
+        };
+        return feature;
+      });
+      window.countiesData = precincts;
+      map.addSource('precincts', { type: 'geojson', data: precincts });
+      precinctSourceLoaded = true;
+      addPrecinctLayers();
+      setStatus('Precinct geometry ready');
+      return true;
+    }
+
+    function addPrecinctLayers() {
+      if (!map.getSource('precincts') || map.getLayer('precinct-fill')) return;
+      map.addLayer({
+        id: 'precinct-fill',
+        type: 'fill',
+        source: 'precincts',
+        minzoom: CONFIG.precincts?.minZoom || 8.5,
+        layout: { visibility: 'none' },
+        paint: { 'fill-color': '#d1d5db', 'fill-opacity': 0.72 }
+      });
+      map.addLayer({
+        id: 'precinct-stroke',
+        type: 'line',
+        source: 'precincts',
+        minzoom: CONFIG.precincts?.minZoom || 8.5,
+        layout: { visibility: 'none' },
+        paint: { 'line-color': '#6b7280', 'line-width': 0.25 }
+      });
+
+      map.on('click', 'precinct-fill', (e) => {
+        const props = e.features?.[0]?.properties || {};
+        const countyName = props.county_nam || '';
+        if (countyName) {
+          showCountyDetails(countyName);
+          lastSelectedCounty = countyName;
+        }
+      });
+    }
+
+    function updatePrecinctVisibility() {
+      const btn = document.getElementById('precinct-toggle');
+      if (btn) {
+        btn.textContent = precinctsEnabled ? 'Precincts On' : 'Precincts Off';
+        btn.style.background = precinctsEnabled ? '#1d4ed8' : '#065f46';
+      }
+      const visible = precinctsEnabled && map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5);
+      ['precinct-fill', 'precinct-stroke'].forEach(id => {
+        if (map.getLayer(id)) {
+          map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+        }
+      });
+    }
+
+    async function togglePrecinctOverlay() {
+      precinctsEnabled = !precinctsEnabled;
+      if (precinctsEnabled && !precinctSourceLoaded) {
+        await ensurePrecinctSourceLoaded();
+      }
+      updatePrecinctVisibility();
+      const contestKey = document.getElementById('contestSelect')?.value;
+      if (contestKey) await applyContest(contestKey);
     }
 
     function addDistrictLayers() {
@@ -2473,7 +2796,7 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('click', 'district-fill', (e) => {
           if (e.features && e.features[0] && e.features[0].properties) {
             const props = e.features[0].properties;
-            const districtNum = props.DISTRICT || props.CD118FP || props.district;
+            const districtNum = props.DISTRICT || props.CD118FP || props.district_id || props.district;
             if (districtNum) {
               // Show full historical trends popup on click
               const trends = getHistoricalTrends(null, true, districtNum);
@@ -2490,10 +2813,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'district-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
+          renderDistrictHover(e, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
+        });
+        let districtHoverRaf = null;
+        map.on('mousemove', 'district-fill', (e) => {
+          if (districtHoverRaf) return;
+          districtHoverRaf = requestAnimationFrame(() => {
+            renderDistrictHover(e, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
+            districtHoverRaf = null;
+          });
         });
         
         map.on('mouseleave', 'district-fill', () => {
+          districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
+          hideHoverTooltip();
         });
       }
     }
@@ -2517,7 +2851,7 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('click', 'state-house-fill', (e) => {
           if (e.features && e.features[0] && e.features[0].properties) {
             const props = e.features[0].properties;
-            const districtNum = props.DISTRICT || props.SLDLST || props.district;
+            const districtNum = props.DISTRICT || props.SLDLST || props.district_id || props.district;
             if (districtNum) {
               // Show full historical trends popup on click
               const trends = getStateDistrictTrends(districtNum, 'house');
@@ -2534,10 +2868,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'state-house-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
+          renderDistrictHover(e, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+        });
+        let stateHouseHoverRaf = null;
+        map.on('mousemove', 'state-house-fill', (e) => {
+          if (stateHouseHoverRaf) return;
+          stateHouseHoverRaf = requestAnimationFrame(() => {
+            renderDistrictHover(e, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+            stateHouseHoverRaf = null;
+          });
         });
         
         map.on('mouseleave', 'state-house-fill', () => {
+          districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
+          hideHoverTooltip();
         });
       }
     }
@@ -2561,7 +2906,7 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('click', 'state-senate-fill', (e) => {
           if (e.features && e.features[0] && e.features[0].properties) {
             const props = e.features[0].properties;
-            const districtNum = props.DISTRICT || props.SLDUST || props.district;
+            const districtNum = props.DISTRICT || props.SLDUST || props.district_id || props.district;
             if (districtNum) {
               // Show full historical trends popup on click
               const trends = getStateDistrictTrends(districtNum, 'senate');
@@ -2578,10 +2923,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'state-senate-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
+          renderDistrictHover(e, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+        });
+        let stateSenateHoverRaf = null;
+        map.on('mousemove', 'state-senate-fill', (e) => {
+          if (stateSenateHoverRaf) return;
+          stateSenateHoverRaf = requestAnimationFrame(() => {
+            renderDistrictHover(e, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+            stateSenateHoverRaf = null;
+          });
         });
         
         map.on('mouseleave', 'state-senate-fill', () => {
+          districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
+          hideHoverTooltip();
         });
       }
     }
@@ -2773,7 +3129,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${marginAbs.toFixed(1)}`,
+                display: `${year}: ${winner}+${marginAbs.toFixed(2)}`,
                 margin: margin,
                 type: 'house'
               });
@@ -2812,7 +3168,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${candidateInfo}+${marginAbs.toFixed(1)}`,
+                display: `${year}: ${candidateInfo}+${marginAbs.toFixed(2)}`,
                 margin: margin,
                 type: 'president'
               });
@@ -2849,7 +3205,7 @@ document.addEventListener('DOMContentLoaded', function() {
             candidateInfo = margin > 0 ? getCandidateName(year, 'Governor', 'Democrat') : getCandidateName(year, 'Governor', 'Republican');
             trends.push({
               year: year,
-              display: `${year}: ${candidateInfo}+${marginAbs.toFixed(1)}`,
+              display: `${year}: ${candidateInfo}+${marginAbs.toFixed(2)}`,
               margin: margin,
               type: 'governor'
             });
@@ -2874,7 +3230,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${marginAbs.toFixed(1)} (House)`,
+                display: `${year}: ${winner}+${marginAbs.toFixed(2)} (House)`,
                 margin: margin,
                 type: 'state_house'
               });
@@ -2963,6 +3319,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showDistrictDetails(districtNum) {
+      if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
       const contentEl = document.getElementById('county-info-content');
@@ -3055,13 +3412,13 @@ document.addEventListener('DOMContentLoaded', function() {
               <div style="margin-bottom: 16px;">
                 <h5>📈 Margin</h5>
                 <p style="color: ${winner === 'Republican' ? '#dc2626' : '#1e40af'}; font-weight: bold; font-size: 18px;">
-                  ${winner} +${marginPct.toFixed(1)}%
+                  ${winner} +${marginPct.toFixed(2)}%
                 </p>
               </div>
               <div style="margin-bottom: 16px;">
                 <h5>🗳️ Vote Breakdown</h5>
-                <p><span style="color: #1e40af; font-weight: bold;">Democratic: </span>${demPct.toFixed(1)}% (${demVotes.toLocaleString()})</p>
-                <p><span style="color: #dc2626; font-weight: bold;">Republican: </span>${repPct.toFixed(1)}% (${repVotes.toLocaleString()})</p>
+                <p><span style="color: #1e40af; font-weight: bold;">Democratic: </span>${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</p>
+                <p><span style="color: #dc2626; font-weight: bold;">Republican: </span>${repPct.toFixed(2)}% (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
             `;
@@ -3074,6 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showStateDistrictDetails(districtNum, chamber) {
+      if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
       const contentEl = document.getElementById('county-info-content');
@@ -3174,7 +3532,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `<div class="quick-tooltip">
           <strong>${countyName} County</strong><br>
-          ${recent.year}: ${winner}+${marginAbs.toFixed(1)}%<br>
+          ${recent.year}: ${winner}+${marginAbs.toFixed(2)}%<br>
           <em>Click for full trends</em>
         </div>`;
       }
@@ -3204,7 +3562,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           return `<div class="quick-tooltip">
             <strong>${displayName}</strong><br>
-            ${recent.year}: ${winner}+${marginAbs.toFixed(1)}%<br>
+            ${recent.year}: ${winner}+${marginAbs.toFixed(2)}%<br>
             <em>Click for full trends</em>
           </div>`;
         }
@@ -3223,76 +3581,60 @@ document.addEventListener('DOMContentLoaded', function() {
     async function init() {
       try {
         setStatus('Loading counties...');
-        debugLog('Loading counties from:', CONFIG.paths.counties);
-        let counties = await loadJSON(CONFIG.paths.counties);
-        debugLog('Counties loaded successfully:', counties.features?.length, 'features');
-        
-        // Trim/normalize precinct properties once to reduce per-frame string work.
-        counties.features = counties.features.map(feature => {
-          const original = feature.properties || {};
-          const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME || '').toString().trim();
-          const countyNorm = countyRaw
-            .replace(/[^a-z0-9 .\-]/gi, '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toUpperCase();
-          const precinctRaw = countyRaw && original.prec_id ? `${countyRaw} - ${String(original.prec_id).trim()}` : countyRaw;
-          const precinctNorm = (precinctRaw || '')
-            .replace(/[^a-z0-9 .\-]/gi, '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toUpperCase();
-          feature.properties = {
-            county_nam: countyRaw,
-            county_norm: countyNorm,
-            precinct_name: precinctRaw,
-            precinct_norm: precinctNorm,
-            prec_id: (original.prec_id || original.PREC_ID || '').toString().trim(),
-            id: original.id || original.objectid || null
-          };
-          return feature;
-        });
-        
-        // Store counties data globally for search functionality
-        window.countiesData = counties;
-        
-        map.addSource('counties', { type: 'geojson', data: counties });
-        
-        countyNameMap = buildCountyNameMapFromGeoJSON(counties);
-        debugLog('County name map built:', Object.keys(countyNameMap).length, 'counties');
-        
-        // Add initial county layers
+        if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.counties?.url) {
+          map.addSource('counties', { type: 'vector', url: CONFIG.tilesets.sources.counties.url });
+        } else {
+          const counties = await loadJSON(CONFIG.paths.counties);
+          map.addSource('counties', { type: 'geojson', data: counties });
+          window.countiesData = counties;
+          countyNameMap = buildCountyNameMapFromGeoJSON(counties);
+        }
         addCountyLayers();
-        
-        // Setup county search after counties are loaded
         setupCountySearch();
-
+        map.on('zoomend', updatePrecinctVisibility);
         setStatus('Counties loaded');
 
-        setStatus('Loading election data...');
-        debugLog('Loading election data from:', CONFIG.paths.election);
-        electionDataJSON = await loadJSON(CONFIG.paths.election);
-        debugLog('Election JSON loaded:', electionDataJSON);
-        
-        // Flatten JSON structure for compatibility with existing code
-        electionData = flattenElectionJSON(electionDataJSON);
-        debugLog('Election data flattened:', electionData.length, 'records');
+        setStatus('Loading election index...');
         candidateNameCache = new Map();
         contestSliceCache = new Map();
-        if (electionData.length > 0) {
-          debugLog('Debug flattened data - first record keys:', Object.keys(electionData[0]));
-          debugLog('Debug flattened data - first record:', electionData[0]);
+        try {
+          const manifest = await loadJSON('./data/contests/manifest.json');
+          contestManifest = manifest?.files || [];
+          electionData = [];
+          populateContestSelectFromManifest(contestManifest);
+          setStatus('Election index loaded');
+        } catch (manifestErr) {
+          setStatus('Loading election data...');
+          debugLog('Loading election data from:', CONFIG.paths.election);
+          electionDataJSON = await loadJSON(CONFIG.paths.election);
+          debugLog('Election JSON loaded:', electionDataJSON);
+          
+          // Flatten JSON structure for compatibility with existing code
+          electionData = flattenElectionJSON(electionDataJSON);
+          debugLog('Election data flattened:', electionData.length, 'records');
+          if (electionData.length > 0) {
+            debugLog('Debug flattened data - first record keys:', Object.keys(electionData[0]));
+            debugLog('Debug flattened data - first record:', electionData[0]);
+          }
+          setStatus('Election data loaded');
+          populateContestSelectFromElectionJSON(electionData);
         }
-        setStatus('Election data loaded');
-
-        populateContestSelectFromElectionJSON(electionData);
 
         try {
-          districtElectionDataJSON = await loadJSON(CONFIG.paths.district_election);
-          debugLog('District election data loaded:', districtElectionDataJSON);
-        } catch (err) {
-          console.warn('District election data not loaded:', err.message);
+          const dManifest = await loadJSON(`${CONFIG.paths.district_contests_dir}/manifest.json`);
+          districtManifest = dManifest?.files || [];
           districtElectionDataJSON = null;
+          districtSliceCache = new Map();
+          setStatus('District index loaded');
+        } catch (manifestErr) {
+          try {
+            districtElectionDataJSON = await loadJSON(CONFIG.paths.district_election);
+            debugLog('District election data loaded:', districtElectionDataJSON);
+            districtSliceCache = new Map();
+          } catch (err) {
+            console.warn('District election data not loaded:', err.message);
+            districtElectionDataJSON = null;
+          }
         }
 
         // Optional district resources: do not fail app initialization if absent
@@ -3348,6 +3690,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         map.fitBounds(CONFIG.fitBounds, { padding: 20 });
+        // Only enforce a higher min zoom when using a minzoom-limited county tileset.
+        if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.counties?.url && map.getZoom() < 8.05) {
+          map.setZoom(8.05);
+        }
         
         // Setup visualization mode switcher
         setupVizModes();
@@ -3407,6 +3753,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // All other contests (statewide) aggregate county data by district
         await applyStatewideContestToDistricts(contestType, year);
       }
+      await refreshHoverAtPointer();
     }
 
     async function applyCountyContest(contestType, year) {
@@ -3419,19 +3766,46 @@ document.addEventListener('DOMContentLoaded', function() {
         return setStatus('No data found for this contest');
       }
 
-      // Store current results for county details using normalized county names
       function normalizeCountyName(name) {
         return (name || '')
-          .replace(/[^a-z0-9 .\-]/gi, '')  // Keep periods for St. names and hyphens for Miami-Dade
+          .replace(/[^a-z0-9 .\-]/gi, '')
           .replace(/\s+/g, ' ')
           .trim()
           .toUpperCase();
       }
-      currentElectionResults = {};
+
+      // Build county aggregates from precinct-level rows.
+      const countyAgg = {};
+      currentPrecinctResults = {};
       contestData.forEach(row => {
-        const norm = normalizeCountyName(row.county);
-        currentElectionResults[norm] = row;
+        const rowName = (row.county || '').toString();
+        const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+        const countyNorm = normalizeCountyName(countyOnly);
+        const precinctNorm = normalizeCountyName(rowName);
+        if (!countyNorm) return;
+
+        const demVotes = Number(row[`${contestType}_dem`] || 0);
+        const repVotes = Number(row[`${contestType}_rep`] || 0);
+        const otherVotes = Number(row[`${contestType}_other`] || 0);
+        const totalVotes = Number(row[`${contestType}_total`] || 0);
+
+        currentPrecinctResults[precinctNorm] = row;
+        if (!countyAgg[countyNorm]) {
+          countyAgg[countyNorm] = {
+            year: Number(year),
+            county: countyOnly,
+            [`${contestType}_dem`]: 0,
+            [`${contestType}_rep`]: 0,
+            [`${contestType}_other`]: 0,
+            [`${contestType}_total`]: 0
+          };
+        }
+        countyAgg[countyNorm][`${contestType}_dem`] += demVotes;
+        countyAgg[countyNorm][`${contestType}_rep`] += repVotes;
+        countyAgg[countyNorm][`${contestType}_other`] += otherVotes;
+        countyAgg[countyNorm][`${contestType}_total`] += totalVotes;
       });
+      currentElectionResults = countyAgg;
 
       // Calculate statewide totals
       let statewidedemVotes = 0;
@@ -3453,18 +3827,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update vote counter - VoteHub Style
       updateVoteCounter(statewidedemVotes, statewidrepVotes);
 
-      // Build expression for county coloring using normalized, uppercase names
+      // Build county expression (base map)
       const expr = ['case'];
       let countiesProcessed = 0;
-      // Normalization function (same as mergeGeoElectionData)
-      function normalizeCountyName(name) {
-        if (!name) return '';
-        return name
-          .replace(/[^a-z0-9 .\-]/gi, '')  // Keep periods for St. names and hyphens for Miami-Dade
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toUpperCase();
-      }
       // Check if accessibility mode is active
       const isColorblindMode = document.body.classList.contains('colorblind-mode');
       
@@ -3489,8 +3854,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      contestData.forEach(row => {
-        const countyName = normalizeCountyName(row.county);
+      Object.keys(countyAgg).forEach(countyName => {
+        const row = countyAgg[countyName];
         const demVotes = row[`${contestType}_dem`] || 0;
         const repVotes = row[`${contestType}_rep`] || 0;
         const totalVotes = row[`${contestType}_total`] || 0;
@@ -3520,10 +3885,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!color) {
           color = isColorblindMode ? getAccessibilityColor(marginPct, winner) : categoryColorForMargin(marginPct, winner);
         }
-        // Match against precomputed normalized county field.
-        expr.push(['any',
-          ['==', ['get', 'precinct_norm'], countyName],
-          ['==', ['get', 'county_norm'], countyName]
+        // Match county key across county tileset and local precinct fallback
+        expr.push([
+          '==',
+          ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
+          countyName
         ]);
         expr.push(color);
         countiesProcessed++;
@@ -3533,6 +3899,29 @@ document.addEventListener('DOMContentLoaded', function() {
       debugLog(`Color expression built for ${countiesProcessed} counties`);
       
       map.setPaintProperty('county-fill', 'fill-color', expr);
+      // Optional precinct expression (detail overlay)
+      if (map.getLayer('precinct-fill')) {
+        const exprPrecinct = ['case'];
+        contestData.forEach(row => {
+          const precinctName = normalizeCountyName(row.county);
+          const demVotes = row[`${contestType}_dem`] || 0;
+          const repVotes = row[`${contestType}_rep`] || 0;
+          const totalVotes = row[`${contestType}_total`] || 0;
+          if (totalVotes === 0) return;
+          const demPct = (demVotes / totalVotes) * 100;
+          const repPct = (repVotes / totalVotes) * 100;
+          const winner = repPct > demPct ? 'R' : 'D';
+          const marginPct = Math.abs(repPct - demPct);
+          let color = row[`${contestType}_color`];
+          if (!color) {
+            color = isColorblindMode ? getAccessibilityColor(marginPct, winner) : categoryColorForMargin(marginPct, winner);
+          }
+          exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
+          exprPrecinct.push(color);
+        });
+        exprPrecinct.push('#d1d5db');
+        map.setPaintProperty('precinct-fill', 'fill-color', exprPrecinct);
+      }
   document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year})`;
       setStatus(`Applied contest: ${formatContestName(contestType, year)} ${year}`);
     }
@@ -3543,7 +3932,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // Preferred path: use precomputed district results aligned to active lines.
-      if (districtElectionDataJSON?.results_by_year?.[year]?.congressional?.[contestType]) {
+      const hasSlice = await loadDistrictSlice('congressional', contestType, year);
+      if (hasSlice) {
         return applyStatewideContestToDistricts(contestType, year);
       }
       
@@ -3573,7 +3963,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         expr.push([
           '==',
-          ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'district']]],
+          ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'district_id'], ['get', 'district']]],
           Number(district)
         ]);
         expr.push(color);
@@ -3588,11 +3978,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function applyStatewideContestToDistricts(contestType, year) {
       // Prefer district-level results reallocated to 2024 lines when available.
-      if (districtElectionDataJSON && (currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate')) {
+      if (currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate') {
         const districtScope = currentView === 'districts'
           ? 'congressional'
           : (currentView === 'state_house' ? 'state_house' : 'state_senate');
-        const districtNode = districtElectionDataJSON?.results_by_year?.[year]?.[districtScope]?.[contestType] || null;
+        const districtNode = await loadDistrictSlice(districtScope, contestType, year);
         const districtResults = districtNode?.general?.results || null;
         const coveragePct = districtNode?.meta?.match_coverage_pct;
 
@@ -3617,11 +4007,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const repPct = (repVotes / rowTotalVotes) * 100;
             const winner = repPct > demPct ? 'R' : 'D';
             const marginPct = Math.abs(repPct - demPct);
-            const color = row.competitiveness?.color || categoryColorForMargin(marginPct, winner);
+            // Always derive color from vote math so district color cannot drift from results.
+            const color = categoryColorForMargin(marginPct, winner);
 
             const districtNum = Number(districtId);
             if (!isNaN(districtNum)) {
-              expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district']]], districtNum]);
+              expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
               expr.push(color);
             }
           });
@@ -3638,10 +4029,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const demPct = totalVotes ? (totalDem / totalVotes) * 100 : 0;
           const repPct = totalVotes ? (totalRep / totalVotes) * 100 : 0;
           const coverageText = (coveragePct !== undefined && coveragePct !== null)
-            ? ` | match coverage ${Number(coveragePct).toFixed(1)}%`
+            ? ` | match coverage ${Number(coveragePct).toFixed(2)}%`
             : '';
-          document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year}) - Reallocated to current lines${coverageText}`;
-          setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(1)}% D, ${repPct.toFixed(1)}% R)${coverageText}`);
+          document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year}) - Reallocated to court-ordered 2022 lines${coverageText}`;
+          setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R)${coverageText}`);
           return;
         }
       }
@@ -3692,10 +4083,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
   document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year}) - Statewide Result`;
-      setStatus(`Applied statewide contest: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(1)}% D, ${repPct.toFixed(1)}% R)`);
+      setStatus(`Applied statewide contest: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R)`);
     }
 
     window.onload = init;
   </script>
 </body>
 </html>
+

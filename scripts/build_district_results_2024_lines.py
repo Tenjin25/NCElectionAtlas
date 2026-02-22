@@ -1,14 +1,28 @@
 """
-Build district-level election results on 2024 legislative lines by reallocating
-precinct results using precomputed area-weighted crosswalks.
+Build district-level election results on NC court-ordered 2022 lines by
+reallocating precinct results using precomputed area-weighted crosswalks.
 """
 from __future__ import annotations
 
+import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
+import geopandas as gpd
+
+
+TARGET_CRS = "EPSG:5070"
+PLAN_ID = "nc_court_ordered_2022"
+PLAN_LABEL = "NC Court-Ordered 2022 Lines (used for 2022 cycle)"
+COMMON_PRECINCT_WORDS = [
+    "PRECINCT",
+    "PCT",
+    "PRCT",
+    "VTD",
+    "WARD",
+]
 
 
 def calculate_competitiveness(margin_pct: float) -> str:
@@ -31,13 +45,95 @@ def calculate_competitiveness(margin_pct: float) -> str:
     return "#fee8c8" if rep_win else "#e1f5fe"
 
 
-def load_crosswalk(path: Path) -> dict[str, list[tuple[str, float]]]:
+def load_crosswalk(path: Path, key_col: str = "precinct_key") -> dict[str, list[tuple[str, float]]]:
     df = pd.read_csv(path, dtype={"district": str})
+    if key_col not in df.columns:
+        raise ValueError(f"{path} missing key column: {key_col}")
     out: dict[str, list[tuple[str, float]]] = defaultdict(list)
     for _, r in df.iterrows():
-        key = str(r["precinct_key"]).strip().upper()
+        key = str(r[key_col]).strip().upper()
         out[key].append((str(r["district"]).strip(), float(r["area_weight"])))
     return out
+
+
+def build_county_fallback_map(
+    path: Path,
+    dominant_threshold: float | None = 0.995,
+) -> dict[str, list[tuple[str, float]]]:
+    """
+    Build county-level fallback weights from precinct crosswalks.
+    If dominant_threshold is set, and a county is effectively a whole-county
+    cluster in one district (top share >= dominant_threshold), collapse to
+    100% top district and skip split counties.
+    If dominant_threshold is None, return full county shares for all counties.
+    """
+    df = pd.read_csv(path, dtype={"district": str})
+    county_rows: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+
+    for _, r in df.iterrows():
+        pk = str(r["precinct_key"]).strip().upper()
+        if " - " not in pk:
+            continue
+        county, _ = pk.split(" - ", 1)
+        district = str(r["district"]).strip()
+        county_rows[county][district] += float(r["area_weight"])
+
+    out: dict[str, list[tuple[str, float]]] = {}
+    for county, dist_map in county_rows.items():
+        total = sum(dist_map.values())
+        if total <= 0:
+            continue
+        shares = sorted(
+            ((d, w / total) for d, w in dist_map.items()),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        if dominant_threshold is None:
+            out[county] = shares
+            continue
+        if shares and shares[0][1] >= dominant_threshold:
+            out[county] = [(shares[0][0], 1.0)]
+    return out
+
+
+def build_precinct_to_vtd_map(
+    *,
+    voting_geojson: Path,
+    vtd_path: Path,
+) -> dict[str, str]:
+    """
+    Build a robust precinct_key -> vtd_geoid20 bridge by max overlap area.
+    """
+    p = gpd.read_file(voting_geojson)[["county_nam", "prec_id", "geometry"]].copy()
+    p["precinct_key"] = (
+        p["county_nam"].astype(str).str.strip().str.upper()
+        + " - "
+        + p["prec_id"].astype(str).str.strip().str.upper()
+    )
+    p = p.to_crs(TARGET_CRS)
+
+    v = gpd.read_file(vtd_path)
+    geoid_col = "GEOID20" if "GEOID20" in v.columns else "GEOID"
+    v = v[[geoid_col, "geometry"]].copy().rename(columns={geoid_col: "vtd_geoid20"})
+    v = v.to_crs(TARGET_CRS)
+
+    inter = gpd.overlay(
+        p[["precinct_key", "geometry"]],
+        v[["vtd_geoid20", "geometry"]],
+        how="intersection",
+        keep_geom_type=False,
+    )
+    inter["a"] = inter.geometry.area
+    inter = inter[inter["a"] > 0].copy()
+    if inter.empty:
+        return {}
+
+    inter = inter.sort_values(["precinct_key", "a"], ascending=[True, False])
+    top = inter.drop_duplicates(subset=["precinct_key"], keep="first")
+    return {
+        str(r["precinct_key"]).strip().upper(): str(r["vtd_geoid20"]).strip().upper()
+        for _, r in top.iterrows()
+    }
 
 
 def _norm(text: str) -> str:
@@ -47,6 +143,15 @@ def _norm(text: str) -> str:
 def _compact(text: str) -> str:
     t = _norm(text)
     return "".join(ch for ch in t if ch.isalnum())
+
+
+def _normalize_precinct_token(text: str) -> str:
+    t = _norm(text)
+    for word in COMMON_PRECINCT_WORDS:
+        t = t.replace(word, " ")
+    t = t.replace("-", " ").replace("_", " ").replace(".", " ")
+    t = " ".join(t.split())
+    return t
 
 
 def _is_non_geographic_precinct(p: str) -> bool:
@@ -59,15 +164,32 @@ def _is_non_geographic_precinct(p: str) -> bool:
         "EARLY VOT",
         "TRANSFER",
         "MAIL",
+        "STOP ",
+        "EARLY ",
     ]
-    return any(f in t for f in flags) or t.startswith("OS-")
+    if any(f in t for f in flags):
+        return True
+    # Countywide early-vote naming patterns in NC exports.
+    # Examples: "EV CHL", "EV-WATKINS", "EV_POLL", "PITT - EV AG CENTER".
+    return (
+        t.startswith("OS-")
+        or t.startswith("EV ")
+        or t.startswith("EV-")
+        or t.startswith("EV_")
+        or " EV " in t
+        or "-EV " in t
+        or "_EV " in t
+    )
 
 
 def _extract_code_name_aliases(raw: str) -> list[str]:
     aliases = set()
     p = _norm(raw)
+    pn = _normalize_precinct_token(raw)
     aliases.add(p)
     aliases.add(_compact(p))
+    aliases.add(pn)
+    aliases.add(_compact(pn))
 
     if "_" in p:
         code, name = p.split("_", 1)
@@ -76,7 +198,7 @@ def _extract_code_name_aliases(raw: str) -> list[str]:
         aliases.add(_compact(code))
         aliases.add(_compact(name))
 
-    parts = p.split()
+    parts = pn.split()
     if parts:
         first = parts[0]
         if any(ch.isdigit() for ch in first):
@@ -101,6 +223,29 @@ def _extract_code_name_aliases(raw: str) -> list[str]:
         aliases.add(p.zfill(4))
 
     return [a for a in aliases if a]
+
+
+def load_precinct_overrides(path: Path) -> dict[str, dict[str, str]]:
+    """
+    Load manual key overrides from CSV with columns:
+      year,raw_precinct_key,canonical_precinct_key
+    year can be blank or '*' to apply to all years.
+    """
+    out: dict[str, dict[str, str]] = defaultdict(dict)
+    if not path.exists():
+        return out
+    df = pd.read_csv(path, dtype=str).fillna("")
+    needed = {"year", "raw_precinct_key", "canonical_precinct_key"}
+    if not needed.issubset(set(df.columns)):
+        raise ValueError(f"Override CSV missing columns: {sorted(needed - set(df.columns))}")
+    for _, r in df.iterrows():
+        year = _norm(r["year"]) or "*"
+        raw_key = _norm(r["raw_precinct_key"])
+        canonical = _norm(r["canonical_precinct_key"])
+        if not raw_key or not canonical:
+            continue
+        out[year][raw_key] = canonical
+    return out
 
 
 NC_COUNTY_FIPS = {
@@ -283,33 +428,131 @@ def allocate_office_results(
     office_results: dict,
     crosswalk: dict[str, list[tuple[str, float]]],
     alias_index: dict[str, dict[str, set[str]]],
+    county_fallback: dict[str, list[tuple[str, float]]] | None = None,
+    county_fallback_non_geo: dict[str, list[tuple[str, float]]] | None = None,
+    county_fallback_legacy: dict[str, list[tuple[str, float]]] | None = None,
+    precinct_to_vtd: dict[str, str] | None = None,
+    year: str | None = None,
+    overrides_by_year: dict[str, dict[str, str]] | None = None,
 ) -> tuple[dict, dict[str, int]]:
     by_district: dict[str, dict[str, float]] = defaultdict(
         lambda: {"dem_votes": 0.0, "rep_votes": 0.0, "other_votes": 0.0}
     )
     stats = defaultdict(int)
+    rows: list[dict] = []
 
     for precinct_key, row in office_results.items():
         stats["total"] += 1
         key = str(precinct_key).strip().upper()
+
+        # Explicit operator overrides take precedence.
+        if overrides_by_year:
+            yk = str(year) if year is not None else ""
+            hit = (overrides_by_year.get(yk, {}).get(key)
+                   or overrides_by_year.get("*", {}).get(key))
+            if hit:
+                key = hit
+                stats["manual_override"] += 1
+
         resolved_key, status = resolve_precinct_key(key, alias_index)
         stats[status] += 1
         if resolved_key:
             key = resolved_key
 
         splits = crosswalk.get(key)
+        if not splits and precinct_to_vtd:
+            vtd_key = precinct_to_vtd.get(key)
+            if vtd_key:
+                splits = crosswalk.get(vtd_key)
+                if splits:
+                    stats["vtd_bridge"] += 1
+        dem = float(row.get("dem_votes", 0) or 0)
+        rep = float(row.get("rep_votes", 0) or 0)
+        oth = float(row.get("other_votes", 0) or 0)
+        county = key.split(" - ", 1)[0] if " - " in key else ""
+        rows.append(
+            {
+                "key": key,
+                "county": county,
+                "status": status,
+                "dem": dem,
+                "rep": rep,
+                "oth": oth,
+                "splits": splits,
+            }
+        )
+
+    # Build county-level district shares from already matched geographic precinct rows
+    # so unresolved/early-vote buckets can be distributed by local voting pattern.
+    county_dist_votes: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    for rec in rows:
+        if not rec["splits"]:
+            continue
+        if rec["status"] == "non_geographic":
+            continue
+        tot = rec["dem"] + rec["rep"] + rec["oth"]
+        if tot <= 0 or not rec["county"]:
+            continue
+        for district, weight in rec["splits"]:
+            county_dist_votes[rec["county"]][district] += tot * float(weight)
+
+    county_dynamic_fallback: dict[str, list[tuple[str, float]]] = {}
+    for county, dmap in county_dist_votes.items():
+        total = sum(dmap.values())
+        if total <= 0:
+            continue
+        county_dynamic_fallback[county] = sorted(
+            [(d, v / total) for d, v in dmap.items()],
+            key=lambda x: x[1],
+            reverse=True,
+        )
+
+    for rec in rows:
+        splits = rec["splits"]
+        county = rec["county"]
+        status = rec["status"]
+        if not splits:
+            if (
+                county
+                and status in {"non_geographic", "unmatched", "ambiguous", "no_county", "bad_key"}
+                and county in county_dynamic_fallback
+            ):
+                splits = county_dynamic_fallback[county]
+                stats["county_fallback_dynamic"] += 1
+            if (
+                not splits
+                and county
+                and status == "non_geographic"
+                and county_fallback_non_geo
+                and county in county_fallback_non_geo
+            ):
+                splits = county_fallback_non_geo[county]
+                stats["county_fallback_non_geo"] += 1
+            if not splits and county and county_fallback and county in county_fallback:
+                splits = county_fallback[county]
+                stats["county_fallback"] += 1
+            # Legacy safety net: for older cycles, prefer preventing dropped votes.
+            if not splits and county and county_fallback_legacy:
+                try:
+                    year_int = int(year) if year is not None else None
+                except (TypeError, ValueError):
+                    year_int = None
+                if (
+                    year_int is not None
+                    and year_int <= 2020
+                    and status in {"unmatched", "ambiguous", "no_county", "bad_key"}
+                    and county in county_fallback_legacy
+                ):
+                    splits = county_fallback_legacy[county]
+                    stats["county_fallback_legacy"] += 1
         if not splits:
             continue
         stats["crosswalk_matched"] += 1
 
-        dem = float(row.get("dem_votes", 0) or 0)
-        rep = float(row.get("rep_votes", 0) or 0)
-        oth = float(row.get("other_votes", 0) or 0)
-
         for district, weight in splits:
-            by_district[district]["dem_votes"] += dem * weight
-            by_district[district]["rep_votes"] += rep * weight
-            by_district[district]["other_votes"] += oth * weight
+            by_district[district]["dem_votes"] += rec["dem"] * weight
+            by_district[district]["rep_votes"] += rec["rep"] * weight
+            by_district[district]["other_votes"] += rec["oth"] * weight
 
     out = {}
     for district, vals in by_district.items():
@@ -336,12 +579,50 @@ def allocate_office_results(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Reallocate precinct election results to current NC district lines."
+    )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=None,
+        help="Input aggregated election JSON (default: data/nc_elections_aggregated.json).",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Output district results JSON (default: data/nc_district_results_2022_lines.json).",
+    )
+    parser.add_argument("--min-year", type=int, default=None, help="Inclusive minimum year filter.")
+    parser.add_argument("--max-year", type=int, default=None, help="Inclusive maximum year filter.")
+    parser.add_argument(
+        "--crosswalk-mode",
+        choices=["precinct", "vtd"],
+        default="precinct",
+        help="Use precinct-key crosswalks (default) or VTD20 crosswalks with precinct->VTD bridge.",
+    )
+    parser.add_argument(
+        "--overrides",
+        type=Path,
+        default=None,
+        help="Optional overrides CSV (year,raw_precinct_key,canonical_precinct_key).",
+    )
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parent.parent
     data_dir = root / "data"
-    in_json = data_dir / "nc_elections_aggregated.json"
-    house_cw = data_dir / "crosswalks" / "precinct_to_2022_state_house.csv"
-    senate_cw = data_dir / "crosswalks" / "precinct_to_2022_state_senate.csv"
-    congress_cw = data_dir / "crosswalks" / "precinct_to_cd118.csv"
+    in_json = args.input if args.input else (data_dir / "nc_elections_aggregated.json")
+    if args.crosswalk_mode == "vtd":
+        house_cw = data_dir / "crosswalks" / "vtd20_to_2024_state_house.csv"
+        senate_cw = data_dir / "crosswalks" / "vtd20_to_2024_state_senate.csv"
+        congress_cw = data_dir / "crosswalks" / "vtd20_to_cd118.csv"
+        crosswalk_key_col = "vtd_geoid20"
+    else:
+        house_cw = data_dir / "crosswalks" / "precinct_to_2022_state_house.csv"
+        senate_cw = data_dir / "crosswalks" / "precinct_to_2022_state_senate.csv"
+        congress_cw = data_dir / "crosswalks" / "precinct_to_cd118.csv"
+        crosswalk_key_col = "precinct_key"
     voting_geojson = data_dir / "Voting_Precincts.geojson"
     vtd_2008 = data_dir / "census" / "tl_2008_37_vtd00_merged.geojson"
     vtd_2012 = data_dir / "census" / "tl_2012_37_vtd10" / "tl_2012_37_vtd10.shp"
@@ -355,9 +636,38 @@ def main() -> None:
         raise FileNotFoundError("Missing precinct crosswalk CSVs. Run build_precinct_crosswalks_to_2024.py first.")
 
     src = json.load(open(in_json, "r", encoding="utf-8"))
-    house_map = load_crosswalk(house_cw)
-    senate_map = load_crosswalk(senate_cw)
-    congress_map = load_crosswalk(congress_cw)
+    overrides_path = args.overrides if args.overrides else (data_dir / "mappings" / "precinct_key_overrides.csv")
+    overrides_by_year = load_precinct_overrides(overrides_path)
+    if overrides_by_year:
+        total_overrides = sum(len(v) for v in overrides_by_year.values())
+        print(f"Loaded manual overrides: {total_overrides} from {overrides_path}")
+    house_map = load_crosswalk(house_cw, key_col=crosswalk_key_col)
+    senate_map = load_crosswalk(senate_cw, key_col=crosswalk_key_col)
+    congress_map = load_crosswalk(congress_cw, key_col=crosswalk_key_col)
+    if args.crosswalk_mode == "vtd":
+        house_county_fallback = None
+        senate_county_fallback = None
+        congress_county_fallback = None
+        house_county_non_geo_fallback = None
+        senate_county_non_geo_fallback = None
+        congress_county_non_geo_fallback = None
+        house_county_legacy_fallback = None
+        senate_county_legacy_fallback = None
+        congress_county_legacy_fallback = None
+    else:
+        house_county_fallback = build_county_fallback_map(house_cw)
+        senate_county_fallback = build_county_fallback_map(senate_cw)
+        congress_county_fallback = build_county_fallback_map(congress_cw)
+        house_county_non_geo_fallback = build_county_fallback_map(house_cw, dominant_threshold=None)
+        senate_county_non_geo_fallback = build_county_fallback_map(senate_cw, dominant_threshold=None)
+        congress_county_non_geo_fallback = build_county_fallback_map(congress_cw, dominant_threshold=None)
+        house_county_legacy_fallback = house_county_non_geo_fallback
+        senate_county_legacy_fallback = senate_county_non_geo_fallback
+        congress_county_legacy_fallback = congress_county_non_geo_fallback
+    precinct_to_vtd = None
+    if args.crosswalk_mode == "vtd":
+        precinct_to_vtd = build_precinct_to_vtd_map(voting_geojson=voting_geojson, vtd_path=vtd_2020)
+        print(f"Built precinct->VTD bridge: {len(precinct_to_vtd):,} precinct keys")
     alias_index = build_precinct_alias_index(voting_geojson)
     added_2008 = enrich_alias_index_from_vtd(
         alias_index,
@@ -385,18 +695,56 @@ def main() -> None:
         f"2012={added_2012}, 2020={added_2020}"
     )
 
-    dst = {"results_by_year": {}}
+    dst = {
+        "plan": {"id": PLAN_ID, "label": PLAN_LABEL},
+        "results_by_year": {},
+    }
 
     for year, year_data in src.get("results_by_year", {}).items():
+        year_int = int(year)
+        if args.min_year is not None and year_int < args.min_year:
+            continue
+        if args.max_year is not None and year_int > args.max_year:
+            continue
         dst["results_by_year"][year] = {"state_house": {}, "state_senate": {}, "congressional": {}}
         for office_key, office_data in year_data.items():
             office_results = office_data.get("general", {}).get("results", {})
             if not office_results:
                 continue
 
-            house_results, hstats = allocate_office_results(office_results, house_map, alias_index)
-            senate_results, sstats = allocate_office_results(office_results, senate_map, alias_index)
-            congress_results, cstats = allocate_office_results(office_results, congress_map, alias_index)
+            house_results, hstats = allocate_office_results(
+                office_results,
+                house_map,
+                alias_index,
+                house_county_fallback,
+                house_county_non_geo_fallback,
+                house_county_legacy_fallback,
+                precinct_to_vtd,
+                year,
+                overrides_by_year,
+            )
+            senate_results, sstats = allocate_office_results(
+                office_results,
+                senate_map,
+                alias_index,
+                senate_county_fallback,
+                senate_county_non_geo_fallback,
+                senate_county_legacy_fallback,
+                precinct_to_vtd,
+                year,
+                overrides_by_year,
+            )
+            congress_results, cstats = allocate_office_results(
+                office_results,
+                congress_map,
+                alias_index,
+                congress_county_fallback,
+                congress_county_non_geo_fallback,
+                congress_county_legacy_fallback,
+                precinct_to_vtd,
+                year,
+                overrides_by_year,
+            )
 
             hcov = (hstats["crosswalk_matched"] / hstats["total"] * 100.0) if hstats["total"] else 0.0
             scov = (sstats["crosswalk_matched"] / sstats["total"] * 100.0) if sstats["total"] else 0.0
@@ -404,6 +752,8 @@ def main() -> None:
 
             dst["results_by_year"][year]["state_house"][office_key] = {
                 "meta": {
+                    "plan_id": PLAN_ID,
+                    "plan_label": PLAN_LABEL,
                     "match_coverage_pct": round(hcov, 2),
                     "matched_precinct_keys": int(hstats["crosswalk_matched"]),
                     "total_precinct_keys": int(hstats["total"]),
@@ -412,6 +762,8 @@ def main() -> None:
             }
             dst["results_by_year"][year]["state_senate"][office_key] = {
                 "meta": {
+                    "plan_id": PLAN_ID,
+                    "plan_label": PLAN_LABEL,
                     "match_coverage_pct": round(scov, 2),
                     "matched_precinct_keys": int(sstats["crosswalk_matched"]),
                     "total_precinct_keys": int(sstats["total"]),
@@ -420,6 +772,8 @@ def main() -> None:
             }
             dst["results_by_year"][year]["congressional"][office_key] = {
                 "meta": {
+                    "plan_id": PLAN_ID,
+                    "plan_label": PLAN_LABEL,
                     "match_coverage_pct": round(ccov, 2),
                     "matched_precinct_keys": int(cstats["crosswalk_matched"]),
                     "total_precinct_keys": int(cstats["total"]),
@@ -428,12 +782,13 @@ def main() -> None:
             }
             print(
                 f"{year} {office_key}: matched precinct keys -> "
-                f"house {hstats['crosswalk_matched']}/{hstats['total']} ({hcov:.1f}%), "
-                f"senate {sstats['crosswalk_matched']}/{sstats['total']} ({scov:.1f}%), "
-                f"cd118 {cstats['crosswalk_matched']}/{cstats['total']} ({ccov:.1f}%)"
+                f"house {hstats['crosswalk_matched']}/{hstats['total']} ({hcov:.1f}%, vtd bridge {hstats.get('vtd_bridge', 0)}, county fb {hstats.get('county_fallback', 0)}, county non-geo fb {hstats.get('county_fallback_non_geo', 0)}, legacy fb {hstats.get('county_fallback_legacy', 0)}), "
+                f"senate {sstats['crosswalk_matched']}/{sstats['total']} ({scov:.1f}%, vtd bridge {sstats.get('vtd_bridge', 0)}, county fb {sstats.get('county_fallback', 0)}, county non-geo fb {sstats.get('county_fallback_non_geo', 0)}, legacy fb {sstats.get('county_fallback_legacy', 0)}), "
+                f"cd118 {cstats['crosswalk_matched']}/{cstats['total']} ({ccov:.1f}%, vtd bridge {cstats.get('vtd_bridge', 0)}, county fb {cstats.get('county_fallback', 0)}, county non-geo fb {cstats.get('county_fallback_non_geo', 0)}, legacy fb {cstats.get('county_fallback_legacy', 0)})"
             )
 
-    out_json = data_dir / "nc_district_results_2022_lines.json"
+    out_json = args.output if args.output else (data_dir / "nc_district_results_2022_lines.json")
+    out_json.parent.mkdir(parents=True, exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(dst, f, indent=2)
     print(f"\nWrote {out_json}")

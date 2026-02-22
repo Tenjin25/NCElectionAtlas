@@ -1,6 +1,6 @@
 """
-Build area-weighted crosswalks from NC 2020 VTD20 precincts to 2024
-state legislative districts (SLDL and SLDU).
+Build area-weighted crosswalks from NC 2020 VTD20 precincts to NC
+court-ordered 2022 district lines (SLDL, SLDU, and CD118).
 """
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ import pandas as pd
 
 
 TARGET_CRS = "EPSG:5070"  # CONUS Albers, good for area weighting
+PLAN_ID = "nc_court_ordered_2022"
+PLAN_LABEL = "NC Court-Ordered 2022 Lines (used for 2022 cycle)"
 
 
 def _load_vtd(vtd_shp: Path) -> gpd.GeoDataFrame:
@@ -33,7 +35,9 @@ def _load_vtd(vtd_shp: Path) -> gpd.GeoDataFrame:
 
 def _load_districts(district_shp: Path, district_col: str) -> gpd.GeoDataFrame:
     d = gpd.read_file(district_shp)
-    cols = [district_col, "GEOID", "NAMELSAD", "geometry"]
+    geoid_col = "GEOID" if "GEOID" in d.columns else "GEOID20"
+    name_col = "NAMELSAD" if "NAMELSAD" in d.columns else "NAMELSAD20"
+    cols = [district_col, geoid_col, name_col, "geometry"]
     missing = [c for c in cols if c not in d.columns]
     if missing:
         raise ValueError(f"District file missing columns: {missing}")
@@ -41,8 +45,8 @@ def _load_districts(district_shp: Path, district_col: str) -> gpd.GeoDataFrame:
     d = d.rename(
         columns={
             district_col: "district",
-            "GEOID": "district_geoid",
-            "NAMELSAD": "district_name",
+            geoid_col: "district_geoid",
+            name_col: "district_name",
         }
     )
     d["district"] = d["district"].astype(str)
@@ -88,7 +92,9 @@ def build_crosswalk(
         ]
     ].copy()
     out["district_type"] = district_type
-    out["target_year"] = 2024
+    out["target_year"] = 2022
+    out["plan_id"] = PLAN_ID
+    out["plan_label"] = PLAN_LABEL
 
     # Normalize per-VTD weights to sum exactly to 1 where there is any overlap
     sums = out.groupby("vtd_geoid20")["area_weight"].sum().rename("sum_weight")
@@ -117,8 +123,24 @@ def main() -> None:
     root = Path(__file__).resolve().parent.parent
     census = root / "data" / "census"
     vtd_shp = census / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp"
-    sldl_shp = census / "tl_2024_37_sldl" / "tl_2024_37_sldl.shp"
-    sldu_shp = census / "tl_2024_37_sldu" / "tl_2024_37_sldu.shp"
+    sldl_shp = root / "data" / "tl_2022_37_sldl" / "tl_2022_37_sldl.shp"
+    sldu_shp = root / "data" / "tl_2022_37_sldu" / "tl_2022_37_sldu.shp"
+    cd_shp_candidates = [
+        root / "data" / "tl_2022_37_cd118" / "tl_2022_37_cd118.shp",
+        root / "data" / "tl_2023_37_cd118" / "tl_2023_37_cd118.shp",
+        census / "tl_2022_37_cd118" / "tl_2022_37_cd118.shp",
+        census / "tl_2023_37_cd118" / "tl_2023_37_cd118.shp",
+    ]
+    cd_shp = None
+    for p in cd_shp_candidates:
+        if p.exists():
+            cd_shp = p
+            break
+    if not sldl_shp.exists() or not sldu_shp.exists():
+        raise FileNotFoundError(
+            "Missing 2022 court-ordered legislative shapefiles: "
+            f"{sldl_shp} and/or {sldu_shp}"
+        )
 
     crosswalk_dir = root / "data" / "crosswalks"
 
@@ -136,6 +158,16 @@ def main() -> None:
         district_type="state_senate",
         out_csv=crosswalk_dir / "vtd20_to_2024_state_senate.csv",
     )
+    if cd_shp:
+        build_crosswalk(
+            vtd_shp=vtd_shp,
+            district_shp=cd_shp,
+            district_col="CD118FP",
+            district_type="congressional",
+            out_csv=crosswalk_dir / "vtd20_to_cd118.csv",
+        )
+    else:
+        print("congressional: skipped (no CD118 shapefile found)")
 
 
 if __name__ == "__main__":

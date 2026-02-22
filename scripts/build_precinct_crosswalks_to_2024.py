@@ -1,9 +1,6 @@
 """
 Build area-weighted crosswalks from local precinct geometries
-(data/Voting_Precincts.geojson) to current-cycle NC district lines.
-
-Preferred inputs are local 2022-era files (CD118/SLDL/SLDU) if present.
-Falls back to previously downloaded Census legislative files under data/census.
+(data/Voting_Precincts.geojson) to NC court-ordered 2022 district lines.
 """
 from __future__ import annotations
 
@@ -14,6 +11,9 @@ import pandas as pd
 
 
 TARGET_CRS = "EPSG:5070"
+MIN_AREA_WEIGHT = 0.001  # Drop sub-0.1% slivers from overlay artifacts.
+PLAN_ID = "nc_court_ordered_2022"
+PLAN_LABEL = "NC Court-Ordered 2022 Lines (used for 2022 cycle)"
 
 
 def _normalize_precinct_key(county: str, precinct: str) -> str:
@@ -41,6 +41,7 @@ def _build_crosswalk(
     district_col: str,
     district_type: str,
     out_csv: Path,
+    min_area_weight: float = MIN_AREA_WEIGHT,
 ) -> None:
     districts = gpd.read_file(district_shp)
     geoid_col = "GEOID" if "GEOID" in districts.columns else "GEOID20"
@@ -64,6 +65,7 @@ def _build_crosswalk(
     inter = inter[inter["intersect_area_m2"] > 0].copy()
     inter["area_weight"] = inter["intersect_area_m2"] / inter["precinct_area_m2"]
     inter["area_weight"] = inter["area_weight"].clip(lower=0, upper=1)
+    inter = inter[inter["area_weight"] >= float(min_area_weight)].copy()
 
     out = inter[
         [
@@ -90,7 +92,9 @@ def _build_crosswalk(
     )
     out["district_label"] = out["district_code"].map(lambda x: f"{prefix}-{x}")
     out["district_type"] = district_type
-    out["target_year"] = 2024
+    out["target_year"] = 2022
+    out["plan_id"] = PLAN_ID
+    out["plan_label"] = PLAN_LABEL
 
     # Re-normalize to sum to 1 for each precinct key
     sums = out.groupby("precinct_key")["area_weight"].sum().rename("sum_w")
@@ -108,6 +112,7 @@ def _build_crosswalk(
     print(f"  rows: {len(out):,}")
     print(f"  precinct coverage: {coverage:.4%}")
     print(f"  weight min/max: {wsum.min():.6f} / {wsum.max():.6f}")
+    print(f"  min area_weight kept: {min_area_weight:.6f}")
 
 
 def _resolve_existing_path(candidates: list[Path]) -> Path:
@@ -128,13 +133,11 @@ def main() -> None:
     house_shp = _resolve_existing_path(
         [
             data_dir / "tl_2022_37_sldl" / "tl_2022_37_sldl.shp",
-            census / "tl_2024_37_sldl" / "tl_2024_37_sldl.shp",
         ]
     )
     senate_shp = _resolve_existing_path(
         [
             data_dir / "tl_2022_37_sldu" / "tl_2022_37_sldu.shp",
-            census / "tl_2024_37_sldu" / "tl_2024_37_sldu.shp",
         ]
     )
     congress_shp = _resolve_existing_path(
