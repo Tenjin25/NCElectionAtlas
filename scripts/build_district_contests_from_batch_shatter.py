@@ -24,6 +24,7 @@ from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, l
 
 NON_GEO_FLAGS = [
     "ABSENTEE",
+    "ABSEN",
     "ONE STOP",
     "ONE-STOP",
     "EARLY",
@@ -31,6 +32,7 @@ NON_GEO_FLAGS = [
     "EV-",
     "EV_",
     "PROVISIONAL",
+    "PROVI",
     "CURBSIDE",
     "MAIL",
 ]
@@ -84,6 +86,8 @@ def infer_office_key(office: str) -> str | None:
 
 def is_non_geographic_precinct(name: str) -> bool:
     t = str(name).strip().upper()
+    if re.match(r"^EV[A-Z0-9]+$", t):
+        return True
     return any(flag in t for flag in NON_GEO_FLAGS)
 
 
@@ -340,6 +344,51 @@ def build_precinct_party_votes(src: pd.DataFrame, office: str) -> tuple[pd.DataF
     return wide[["precinct_id", "dem_votes", "rep_votes", "other_votes"]], dem_candidate, rep_candidate
 
 
+def build_precinct_party_votes_county_weight_mode(
+    src: pd.DataFrame, office: str
+) -> tuple[pd.DataFrame, pd.DataFrame, str, str]:
+    df = src[src["office"] == office].copy()
+    if df.empty:
+        empty_p = pd.DataFrame(columns=["precinct_id", "dem_votes", "rep_votes", "other_votes"])
+        empty_c = pd.DataFrame(columns=["county", "party_group", "votes"])
+        return empty_p, empty_c, "", ""
+
+    df["votes_num"] = pd.to_numeric(df["votes"], errors="coerce").fillna(0.0)
+    df["party_group"] = df["party"].map(party_group)
+    df["county"] = df["county"].astype(str).str.strip().str.upper()
+    df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
+    df["precinct_id"] = df["county"] + " - " + df["precinct"]
+    df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
+
+    dem_c = (
+        df[df["party_group"] == "dem_votes"]
+        .groupby("candidate", as_index=False)["votes_num"]
+        .sum()
+        .sort_values("votes_num", ascending=False)
+    )
+    rep_c = (
+        df[df["party_group"] == "rep_votes"]
+        .groupby("candidate", as_index=False)["votes_num"]
+        .sum()
+        .sort_values("votes_num", ascending=False)
+    )
+    dem_candidate = str(dem_c["candidate"].iloc[0]) if not dem_c.empty else ""
+    rep_candidate = str(rep_c["candidate"].iloc[0]) if not rep_c.empty else ""
+
+    geo = df[~df["non_geo"]].copy()
+    non_geo = df[df["non_geo"]].copy()
+
+    p = geo.groupby(["precinct_id", "party_group"], as_index=False)["votes_num"].sum()
+    wide = p.pivot(index="precinct_id", columns="party_group", values="votes_num").fillna(0.0).reset_index()
+    for col in ["dem_votes", "rep_votes", "other_votes"]:
+        if col not in wide.columns:
+            wide[col] = 0.0
+
+    county_non_geo = non_geo.groupby(["county", "party_group"], as_index=False)["votes_num"].sum()
+    county_non_geo.columns = ["county", "party_group", "votes"]
+    return wide[["precinct_id", "dem_votes", "rep_votes", "other_votes"]], county_non_geo, dem_candidate, rep_candidate
+
+
 def to_results_df(p: pd.DataFrame, col: str) -> pd.DataFrame:
     out = p[["precinct_id", col]].copy()
     out.columns = ["precinct_id", "votes"]
@@ -356,6 +405,7 @@ def agg_party_to_scope(
     district_col: str,
     county_shares: pd.DataFrame,
     matched_precincts: set[str],
+    county_non_geo_party: pd.DataFrame | None = None,
 ) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
     party_district = {}
     matched = 0
@@ -376,6 +426,20 @@ def agg_party_to_scope(
             matched_precincts=matched_precincts,
             county_shares=county_shares,
         )
+
+        if county_non_geo_party is not None and not county_non_geo_party.empty:
+            add_src = county_non_geo_party[county_non_geo_party["party_group"] == col][["county", "votes"]].copy()
+            if not add_src.empty:
+                add = add_src.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
+                add["alloc_votes"] = pd.to_numeric(add["votes"], errors="coerce").fillna(0.0) * pd.to_numeric(
+                    add["share"], errors="coerce"
+                ).fillna(0.0)
+                add = add.groupby("district", as_index=False)["alloc_votes"].sum()
+                base = {k: float(v) for k, v in party_district[col].items()}
+                for _, row in add.iterrows():
+                    d = str(row["district"]).strip()
+                    base[d] = float(base.get(d, 0.0)) + float(row["alloc_votes"])
+                party_district[col] = {str(k): int(round(v)) for k, v in base.items()}
     return (
         party_district["dem_votes"],
         party_district["rep_votes"],
@@ -449,10 +513,22 @@ def main() -> None:
     parser.add_argument("--cd-file", type=Path, default=Path("data/census/block files/NC_CD118.txt"))
     parser.add_argument("--allocation-weights-json", type=Path, default=Path("data/mappings/allocation_weights.json"))
     parser.add_argument(
+        "--allocation-year",
+        type=int,
+        default=None,
+        help="Use this year key in allocation_weights.json (defaults to --year).",
+    )
+    parser.add_argument(
         "--min-county-share",
         type=float,
         default=0.01,
         help="Drop override shares below this threshold and renormalize (e.g., 0.01 => 1%% sliver fallback).",
+    )
+    parser.add_argument(
+        "--nongeo-allocation-mode",
+        choices=["precinct_candidate", "county_weights"],
+        default="precinct_candidate",
+        help="Allocate non-geographic votes by precinct candidate shares (default) or county->district weights.",
     )
     parser.add_argument("--year", type=int, default=2024)
     parser.add_argument(
@@ -464,6 +540,7 @@ def main() -> None:
     args = parser.parse_args()
 
     src = pd.read_csv(args.results_csv, dtype=str, low_memory=False)
+    alloc_year = int(args.allocation_year) if args.allocation_year is not None else int(args.year)
     allocation_weights = load_allocation_weights(args.allocation_weights_json)
     crosswalk_df = load_crosswalk(args.crosswalk_csv, "precinct_id", "block_geoid20")
     vap_df = load_vap(args.vap_csv, "block_geoid20", "vap_count")
@@ -474,21 +551,21 @@ def main() -> None:
     cd_map = load_district_map(args.cd_file, "GEOID", "CDFP")
     house_shares = apply_county_share_overrides(
         build_county_shares(crosswalk_df, vap_df, house_map),
-        year=args.year,
+        year=alloc_year,
         scope="state_house",
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
     )
     senate_shares = apply_county_share_overrides(
         build_county_shares(crosswalk_df, vap_df, senate_map),
-        year=args.year,
+        year=alloc_year,
         scope="state_senate",
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
     )
     cd_shares = apply_county_share_overrides(
         build_county_shares(crosswalk_df, vap_df, cd_map),
-        year=args.year,
+        year=alloc_year,
         scope="congressional",
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
@@ -518,18 +595,48 @@ def main() -> None:
         if not office or not contest_type:
             continue
         print(f"Processing {office} -> {contest_type}")
-        precinct_party, dem_candidate, rep_candidate = build_precinct_party_votes(src, office)
+        if args.nongeo_allocation_mode == "county_weights":
+            precinct_party, county_non_geo_party, dem_candidate, rep_candidate = build_precinct_party_votes_county_weight_mode(
+                src, office
+            )
+        else:
+            precinct_party, dem_candidate, rep_candidate = build_precinct_party_votes(src, office)
+            county_non_geo_party = None
         if precinct_party.empty:
             continue
 
         dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
-            precinct_party, crosswalk_df, vap_df, args.house_file, "Block", "District", house_shares, matched_precincts
+            precinct_party,
+            crosswalk_df,
+            vap_df,
+            args.house_file,
+            "Block",
+            "District",
+            house_shares,
+            matched_precincts,
+            county_non_geo_party=county_non_geo_party,
         )
         dem_s, rep_s, oth_s, _, _ = agg_party_to_scope(
-            precinct_party, crosswalk_df, vap_df, args.senate_file, "Block", "District", senate_shares, matched_precincts
+            precinct_party,
+            crosswalk_df,
+            vap_df,
+            args.senate_file,
+            "Block",
+            "District",
+            senate_shares,
+            matched_precincts,
+            county_non_geo_party=county_non_geo_party,
         )
         dem_c, rep_c, oth_c, _, _ = agg_party_to_scope(
-            precinct_party, crosswalk_df, vap_df, args.cd_file, "GEOID", "CDFP", cd_shares, matched_precincts
+            precinct_party,
+            crosswalk_df,
+            vap_df,
+            args.cd_file,
+            "GEOID",
+            "CDFP",
+            cd_shares,
+            matched_precincts,
+            county_non_geo_party=county_non_geo_party,
         )
 
         payloads = {
