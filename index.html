@@ -4160,12 +4160,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
           const demPct = totalVotes ? (totalDem / totalVotes) * 100 : 0;
           const repPct = totalVotes ? (totalRep / totalVotes) * 100 : 0;
+          const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
           const otherPct = totalVotes ? ((totalVotes - totalDem - totalRep) / totalVotes) * 100 : 0;
           const coverageText = (coveragePct !== undefined && coveragePct !== null)
             ? ` | match coverage ${Number(coveragePct).toFixed(2)}%`
             : '';
           document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year}) - Reallocated to court-ordered 2022 lines${coverageText}`;
           setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
+          updateVoteCounter(totalDem, totalRep, totalOther);
           return;
         }
       }
@@ -4201,6 +4203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const demPct = (totalDem / totalVotes) * 100;
       const repPct = (totalRep / totalVotes) * 100;
+      const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
       const otherPct = ((totalVotes - totalDem - totalRep) / totalVotes) * 100;
       const winner = repPct > demPct ? 'R' : 'D';
       const marginPct = Math.abs(repPct - demPct);
@@ -4218,6 +4221,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('contest-name').textContent = `${formatContestName(contestType, year)} (${year}) - Statewide Result`;
       setStatus(`Applied statewide contest: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
+      updateVoteCounter(totalDem, totalRep, totalOther);
     }
 
     window.onload = init;
