@@ -25,6 +25,7 @@ from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, l
 NON_GEO_FLAGS = [
     "ABSENTEE",
     "ABSEN",
+    "ABS",
     "ONE STOP",
     "ONE-STOP",
     "EARLY",
@@ -33,6 +34,7 @@ NON_GEO_FLAGS = [
     "EV_",
     "PROVISIONAL",
     "PROVI",
+    "PROV",
     "CURBSIDE",
     "MAIL",
 ]
@@ -146,6 +148,32 @@ def build_county_shares(
     return g[["county", "district", "share"]]
 
 
+def build_precinct_bucket_shares(
+    crosswalk_df: pd.DataFrame,
+    vap_df: pd.DataFrame,
+    district_map: pd.DataFrame,
+) -> pd.DataFrame:
+    cw = crosswalk_df.copy()
+    cw["county"] = cw["precinct_id"].astype(str).str.split(" - ").str[0].str.strip().str.upper()
+    p = cw["precinct_id"].astype(str).str.split(" - ").str[1].fillna("").str.strip().str.upper()
+    cw["bucket"] = p.str.split("-").str[0].str.strip()
+    cw = cw[cw["bucket"] != ""].copy()
+
+    v = vap_df.copy()
+    v["vap_count"] = pd.to_numeric(v["vap_count"], errors="coerce").fillna(0.0)
+    m = (
+        cw[["block_geoid20", "county", "bucket"]]
+        .merge(v[["block_geoid20", "vap_count"]], on="block_geoid20", how="left")
+        .merge(district_map[["block_geoid20", "district"]], on="block_geoid20", how="inner")
+    )
+    m["vap_count"] = m["vap_count"].fillna(0.0)
+    g = m.groupby(["county", "bucket", "district"], as_index=False)["vap_count"].sum()
+    den = g.groupby(["county", "bucket"], as_index=False)["vap_count"].sum().rename(columns={"vap_count": "bucket_vap"})
+    g = g.merge(den, on=["county", "bucket"], how="left")
+    g["share"] = g["vap_count"] / g["bucket_vap"]
+    return g[["county", "bucket", "district", "share"]]
+
+
 def load_allocation_weights(path: Path) -> dict:
     if not path.exists():
         return {}
@@ -153,6 +181,63 @@ def load_allocation_weights(path: Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return {}
+
+
+def load_precinct_overrides(path: Path, year: int) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    try:
+        df = pd.read_csv(path, dtype=str).fillna("")
+    except Exception:
+        return {}
+    if df.empty:
+        return {}
+    req = {"raw_precinct_key", "canonical_precinct_key"}
+    if not req.issubset(set(df.columns)):
+        return {}
+    if "year" in df.columns:
+        y = str(int(year))
+        df = df[(df["year"].astype(str).str.strip() == "") | (df["year"].astype(str).str.strip() == y)].copy()
+    df["raw_precinct_key"] = df["raw_precinct_key"].astype(str).str.strip().str.upper()
+    df["canonical_precinct_key"] = df["canonical_precinct_key"].astype(str).str.strip().str.upper()
+    df = df[(df["raw_precinct_key"] != "") & (df["canonical_precinct_key"] != "")]
+    return dict(zip(df["raw_precinct_key"], df["canonical_precinct_key"]))
+
+
+def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: set[str]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    vals = set(precinct_ids.astype(str).str.strip().str.upper())
+    for raw in sorted(vals):
+        if not raw or raw in matched_precincts or " - " not in raw:
+            continue
+        county, p = raw.split(" - ", 1)
+        county = county.strip()
+        p = p.strip()
+
+        # Example: WAKE - 01-07A -> WAKE - 01-07 if canonical exists.
+        if p.endswith("A"):
+            cand = f"{county} - {p[:-1]}"
+            if cand in matched_precincts:
+                out[raw] = cand
+                continue
+
+        # Example: GASTON - 29-1 -> GASTON - 29A; GASTON - 04-1 -> GASTON - 4A.
+        m = re.match(r"^0*([0-9]+)(?:-1)?$", p)
+        if m:
+            cand = f"{county} - {int(m.group(1))}A"
+            if cand in matched_precincts:
+                out[raw] = cand
+                continue
+    return out
+
+
+def apply_precinct_overrides(df: pd.DataFrame, overrides: dict[str, str] | None) -> pd.DataFrame:
+    if not overrides:
+        return df
+    out = df.copy()
+    out["precinct_id"] = out["precinct_id"].astype(str).str.strip().str.upper()
+    out["precinct_id"] = out["precinct_id"].map(lambda k: overrides.get(k, k))
+    return out
 
 
 def apply_county_share_overrides(
@@ -195,6 +280,7 @@ def apply_unmatched_county_fallback(
     results_df: pd.DataFrame,
     matched_precincts: set[str],
     county_shares: pd.DataFrame,
+    precinct_bucket_shares: pd.DataFrame | None = None,
 ) -> dict[str, int]:
     d = district_df.copy()
     d["district"] = d["district"].astype(str).str.strip()
@@ -205,14 +291,39 @@ def apply_unmatched_county_fallback(
     r["precinct_id"] = r["precinct_id"].astype(str).str.strip().str.upper()
     r["votes"] = pd.to_numeric(r["votes"], errors="coerce").fillna(0.0)
     r["county"] = r["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
+    r["precinct"] = r["precinct_id"].str.split(" - ").str[1].fillna("").str.strip().str.upper()
+    r["bucket"] = r["precinct"].str.split("-").str[0].str.strip()
     unmatched = r[~r["precinct_id"].isin(matched_precincts)].copy()
     if unmatched.empty:
         return {str(k): int(round(v)) for k, v in base.items()}
 
-    u = unmatched.groupby("county", as_index=False)["votes"].sum().rename(columns={"votes": "unmatched_votes"})
-    alloc = u.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
-    alloc["alloc_votes"] = alloc["unmatched_votes"] * alloc["share"]
-    add = alloc.groupby("district", as_index=False)["alloc_votes"].sum()
+    add_frames = []
+    assigned = pd.DataFrame(columns=["county", "bucket"])
+    if precinct_bucket_shares is not None and not precinct_bucket_shares.empty:
+        u_bucket = unmatched.groupby(["county", "bucket"], as_index=False)["votes"].sum().rename(
+            columns={"votes": "unmatched_votes"}
+        )
+        b_alloc = u_bucket.merge(precinct_bucket_shares, on=["county", "bucket"], how="inner")
+        if not b_alloc.empty:
+            b_alloc["alloc_votes"] = b_alloc["unmatched_votes"] * b_alloc["share"]
+            add_frames.append(b_alloc[["district", "alloc_votes"]])
+            assigned = b_alloc[["county", "bucket"]].drop_duplicates()
+
+    rem = unmatched
+    if not assigned.empty:
+        rem = unmatched.merge(assigned, on=["county", "bucket"], how="left", indicator=True)
+        rem = rem[rem["_merge"] == "left_only"].drop(columns=["_merge"])
+
+    if not rem.empty:
+        u = rem.groupby("county", as_index=False)["votes"].sum().rename(columns={"votes": "unmatched_votes"})
+        alloc = u.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
+        alloc["alloc_votes"] = alloc["unmatched_votes"] * alloc["share"]
+        add_frames.append(alloc[["district", "alloc_votes"]])
+
+    if not add_frames:
+        return {str(k): int(round(v)) for k, v in base.items()}
+
+    add = pd.concat(add_frames, ignore_index=True).groupby("district", as_index=False)["alloc_votes"].sum()
     for _, row in add.iterrows():
         dist = str(row["district"]).strip()
         base[dist] = float(base.get(dist, 0.0)) + float(row["alloc_votes"])
@@ -228,7 +339,9 @@ def party_group(party: str) -> str:
     return "other_votes"
 
 
-def allocate_non_geo_by_candidate(df_office: pd.DataFrame) -> pd.DataFrame:
+def allocate_non_geo_by_candidate(
+    df_office: pd.DataFrame, precinct_overrides: dict[str, str] | None = None
+) -> pd.DataFrame:
     """
     Returns rows at county+precinct+candidate with votes after non-geo allocation.
     """
@@ -238,6 +351,7 @@ def allocate_non_geo_by_candidate(df_office: pd.DataFrame) -> pd.DataFrame:
     df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
     df["candidate"] = df["candidate"].astype(str).str.strip()
     df["precinct_id"] = df["county"] + " - " + df["precinct"]
+    df = apply_precinct_overrides(df, precinct_overrides)
     df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
 
     geo = df[~df["non_geo"]].copy()
@@ -304,7 +418,9 @@ def allocate_non_geo_by_candidate(df_office: pd.DataFrame) -> pd.DataFrame:
     return merged[["county", "precinct_id", "candidate", "votes"]]
 
 
-def build_precinct_party_votes(src: pd.DataFrame, office: str) -> tuple[pd.DataFrame, str, str]:
+def build_precinct_party_votes(
+    src: pd.DataFrame, office: str, precinct_overrides: dict[str, str] | None = None
+) -> tuple[pd.DataFrame, str, str]:
     df = src[src["office"] == office].copy()
     if df.empty:
         return pd.DataFrame(columns=["precinct_id", "dem_votes", "rep_votes", "other_votes"]), "", ""
@@ -327,7 +443,12 @@ def build_precinct_party_votes(src: pd.DataFrame, office: str) -> tuple[pd.DataF
     dem_candidate = str(dem_c["candidate"].iloc[0]) if not dem_c.empty else ""
     rep_candidate = str(rep_c["candidate"].iloc[0]) if not rep_c.empty else ""
 
-    allocated = allocate_non_geo_by_candidate(df)
+    # Normalize precinct IDs before allocation/matching.
+    df["county"] = df["county"].astype(str).str.strip().str.upper()
+    df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
+    df["precinct_id"] = df["county"] + " - " + df["precinct"]
+    df = apply_precinct_overrides(df, precinct_overrides)
+    allocated = allocate_non_geo_by_candidate(df, precinct_overrides=precinct_overrides)
     # Attach party via candidate+office+county lookup (candidate names are unique enough per office).
     party_lookup = (
         df[["candidate", "party_group"]]
@@ -345,7 +466,7 @@ def build_precinct_party_votes(src: pd.DataFrame, office: str) -> tuple[pd.DataF
 
 
 def build_precinct_party_votes_county_weight_mode(
-    src: pd.DataFrame, office: str
+    src: pd.DataFrame, office: str, precinct_overrides: dict[str, str] | None = None
 ) -> tuple[pd.DataFrame, pd.DataFrame, str, str]:
     df = src[src["office"] == office].copy()
     if df.empty:
@@ -358,6 +479,7 @@ def build_precinct_party_votes_county_weight_mode(
     df["county"] = df["county"].astype(str).str.strip().str.upper()
     df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
     df["precinct_id"] = df["county"] + " - " + df["precinct"]
+    df = apply_precinct_overrides(df, precinct_overrides)
     df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
 
     dem_c = (
@@ -404,6 +526,7 @@ def agg_party_to_scope(
     block_col: str,
     district_col: str,
     county_shares: pd.DataFrame,
+    precinct_bucket_shares: pd.DataFrame,
     matched_precincts: set[str],
     county_non_geo_party: pd.DataFrame | None = None,
 ) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
@@ -425,6 +548,7 @@ def agg_party_to_scope(
             results_df=res_df,
             matched_precincts=matched_precincts,
             county_shares=county_shares,
+            precinct_bucket_shares=precinct_bucket_shares,
         )
 
         if county_non_geo_party is not None and not county_non_geo_party.empty:
@@ -512,6 +636,7 @@ def main() -> None:
     parser.add_argument("--senate-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-2.csv"))
     parser.add_argument("--cd-file", type=Path, default=Path("data/census/block files/NC_CD118.txt"))
     parser.add_argument("--allocation-weights-json", type=Path, default=Path("data/mappings/allocation_weights.json"))
+    parser.add_argument("--precinct-overrides-csv", type=Path, default=Path("data/mappings/precinct_key_overrides.csv"))
     parser.add_argument(
         "--allocation-year",
         type=int,
@@ -545,6 +670,14 @@ def main() -> None:
     crosswalk_df = load_crosswalk(args.crosswalk_csv, "precinct_id", "block_geoid20")
     vap_df = load_vap(args.vap_csv, "block_geoid20", "vap_count")
     matched_precincts = set(crosswalk_df["precinct_id"].astype(str).str.strip().str.upper().unique())
+    src_precinct_ids = (
+        src["county"].astype(str).str.strip().str.upper()
+        + " - "
+        + src["precinct"].astype(str).str.strip().str.upper()
+    )
+    auto_overrides = build_auto_precinct_overrides(src_precinct_ids, matched_precincts)
+    manual_overrides = load_precinct_overrides(args.precinct_overrides_csv, args.year)
+    precinct_overrides = {**auto_overrides, **manual_overrides}
 
     house_map = load_district_map(args.house_file, "Block", "District")
     senate_map = load_district_map(args.senate_file, "Block", "District")
@@ -556,6 +689,7 @@ def main() -> None:
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
     )
+    house_bucket_shares = build_precinct_bucket_shares(crosswalk_df, vap_df, house_map)
     senate_shares = apply_county_share_overrides(
         build_county_shares(crosswalk_df, vap_df, senate_map),
         year=alloc_year,
@@ -563,6 +697,7 @@ def main() -> None:
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
     )
+    senate_bucket_shares = build_precinct_bucket_shares(crosswalk_df, vap_df, senate_map)
     cd_shares = apply_county_share_overrides(
         build_county_shares(crosswalk_df, vap_df, cd_map),
         year=alloc_year,
@@ -570,6 +705,7 @@ def main() -> None:
         allocation_weights=allocation_weights,
         min_county_share=args.min_county_share,
     )
+    cd_bucket_shares = build_precinct_bucket_shares(crosswalk_df, vap_df, cd_map)
 
     out_dir = args.district_contests_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -597,10 +733,12 @@ def main() -> None:
         print(f"Processing {office} -> {contest_type}")
         if args.nongeo_allocation_mode == "county_weights":
             precinct_party, county_non_geo_party, dem_candidate, rep_candidate = build_precinct_party_votes_county_weight_mode(
-                src, office
+                src, office, precinct_overrides=precinct_overrides
             )
         else:
-            precinct_party, dem_candidate, rep_candidate = build_precinct_party_votes(src, office)
+            precinct_party, dem_candidate, rep_candidate = build_precinct_party_votes(
+                src, office, precinct_overrides=precinct_overrides
+            )
             county_non_geo_party = None
         if precinct_party.empty:
             continue
@@ -613,6 +751,7 @@ def main() -> None:
             "Block",
             "District",
             house_shares,
+            house_bucket_shares,
             matched_precincts,
             county_non_geo_party=county_non_geo_party,
         )
@@ -624,6 +763,7 @@ def main() -> None:
             "Block",
             "District",
             senate_shares,
+            senate_bucket_shares,
             matched_precincts,
             county_non_geo_party=county_non_geo_party,
         )
@@ -635,6 +775,7 @@ def main() -> None:
             "GEOID",
             "CDFP",
             cd_shares,
+            cd_bucket_shares,
             matched_precincts,
             county_non_geo_party=county_non_geo_party,
         )
