@@ -139,7 +139,20 @@ def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
     """
     if not shp_path.exists():
         return {}
-    g = gpd.read_file(shp_path)[["PREC_ID", "ENR_DESC", "COUNTY_NAM"]].copy()
+    g0 = gpd.read_file(shp_path)
+    cols = {c.lower(): c for c in list(g0.columns)}
+
+    # Support multiple vintage schemas.
+    prec_col = cols.get("prec_id") or cols.get("precid") or cols.get("precinctid") or cols.get("precinct_id")
+    enr_col = cols.get("enr_desc") or cols.get("enrdesc") or cols.get("name") or cols.get("prec_name")
+    county_col = cols.get("county_nam") or cols.get("county_name") or cols.get("countynam") or cols.get("county")
+
+    if not prec_col or not enr_col or not county_col:
+        return {}
+
+    g = g0[[prec_col, enr_col, county_col]].copy()
+    g.columns = ["PREC_ID", "ENR_DESC", "COUNTY_NAM"]
+
     g["PREC_ID"] = g["PREC_ID"].astype(str).map(_norm)
     g["ENR_DESC"] = g["ENR_DESC"].astype(str).map(_norm_spaces)
     g["COUNTY_NAM"] = g["COUNTY_NAM"].astype(str).map(_norm)
@@ -1038,6 +1051,24 @@ def main() -> None:
         help="Optional NCSBE precinct shapefile path (2014-era) for ENR_DESC->PREC_ID aliases.",
     )
     parser.add_argument(
+        "--sbe-precincts-2020-shp",
+        type=Path,
+        default=Path("data/census/SBE_PRECINCTS_20201018/SBE_PRECINCTS_20201018.shp"),
+        help="Optional NCSBE precinct shapefile path (2020-era) for ENR_DESC->PREC_ID aliases.",
+    )
+    parser.add_argument(
+        "--sbe-precincts-2022-shp",
+        type=Path,
+        default=Path("data/census/SBE_PRECINCTS_20220118/SBE_PRECINCTS_20220118.shp"),
+        help="Optional NCSBE precinct shapefile path (2022-era) for ENR_DESC->PREC_ID aliases.",
+    )
+    parser.add_argument(
+        "--sbe-precincts-2024-shp",
+        type=Path,
+        default=Path("data/census/SBE_PRECINCTS_20240723/SBE_PRECINCTS_20240723.shp"),
+        help="Optional NCSBE precinct shapefile path (2024-era) for ENR_DESC->PREC_ID aliases.",
+    )
+    parser.add_argument(
         "--office-source",
         choices=["summary", "auto"],
         default="summary",
@@ -1048,10 +1079,21 @@ def main() -> None:
     # Load the closest-available SBE precinct name->code alias map and attach it
     # to the cleaning/override helpers.
     sbe_map: dict[tuple[str, str], str] = {}
-    if int(args.year) <= 2012:
-        sbe_map = load_sbe_precinct_code_map(Path(args.sbe_precincts_2012_shp))
+    y = int(args.year)
+    # Choose the most appropriate SBE precinct file for a given election year.
+    # Using a far-off vintage can produce bad "matches" in urban counties where
+    # precinct naming/codes shift over time.
+    if y <= 2012:
+        shp = Path(args.sbe_precincts_2012_shp)
+    elif y <= 2017:
+        shp = Path(args.sbe_precincts_2014_shp)
+    elif y <= 2021:
+        shp = Path(args.sbe_precincts_2020_shp)
+    elif y <= 2023:
+        shp = Path(args.sbe_precincts_2022_shp)
     else:
-        sbe_map = load_sbe_precinct_code_map(Path(args.sbe_precincts_2014_shp))
+        shp = Path(args.sbe_precincts_2024_shp)
+    sbe_map = load_sbe_precinct_code_map(shp)
     clean_precinct_name._sbe_map = sbe_map  # type: ignore[attr-defined]
     build_auto_precinct_overrides._sbe_map = sbe_map  # type: ignore[attr-defined]
 
