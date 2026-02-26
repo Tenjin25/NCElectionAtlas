@@ -41,17 +41,32 @@ NON_GEO_FLAGS = [
 
 KNOWN_OFFICE_KEYS = {
     "US PRESIDENT": "president",
+    "PRESIDENT": "president",
+    "PRESIDENT-VICE PRESIDENT": "president",
+    "PRESIDENT AND VICE PRESIDENT": "president",
+    "PRESIDENT-VICE-PRESIDENT": "president",
     "US SENATE": "us_senate",
+    "UNITED STATES SENATE": "us_senate",
     "NC GOVERNOR": "governor",
+    "GOVERNOR": "governor",
     "NC LIEUTENANT GOVERNOR": "lieutenant_governor",
+    "LIEUTENANT GOVERNOR": "lieutenant_governor",
     "NC ATTORNEY GENERAL": "attorney_general",
+    "ATTORNEY GENERAL": "attorney_general",
     "NC AUDITOR": "auditor",
+    "AUDITOR": "auditor",
     "NC COMMISSIONER OF AGRICULTURE": "agriculture_commissioner",
+    "COMMISSIONER OF AGRICULTURE": "agriculture_commissioner",
     "NC COMMISSIONER OF LABOR": "labor_commissioner",
+    "COMMISSIONER OF LABOR": "labor_commissioner",
     "NC COMMISSIONER OF INSURANCE": "insurance_commissioner",
+    "COMMISSIONER OF INSURANCE": "insurance_commissioner",
     "NC SECRETARY OF STATE": "secretary_of_state",
+    "SECRETARY OF STATE": "secretary_of_state",
     "NC TREASURER": "treasurer",
+    "TREASURER": "treasurer",
     "NC SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
+    "SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
     "NC COURT OF APPEALS JUDGE SEAT 12": "nc_court_of_appeals_judge_seat_12",
     "NC COURT OF APPEALS JUDGE SEAT 14": "nc_court_of_appeals_judge_seat_14",
     "NC COURT OF APPEALS JUDGE SEAT 15": "nc_court_of_appeals_judge_seat_15",
@@ -60,13 +75,21 @@ KNOWN_OFFICE_KEYS = {
 
 
 def infer_office_key(office: str) -> str | None:
-    o = str(office).strip().upper()
-    o = re.sub(r"\s+", " ", o)
-    o = re.sub(r"\s+\(.*\)$", "", o)
+    o_full = str(office).strip().upper()
+    o_full = re.sub(r"\s+", " ", o_full)
+
+    # Strip common parenthetical metadata like "(VOTE FOR 1)" but keep named-seat labels.
+    o = re.sub(r"\s+\((?:VOTE FOR|VOTE|NONPARTISAN|PARTISAN|UNEXPIRED).*?\)$", "", o_full)
 
     direct = KNOWN_OFFICE_KEYS.get(o)
     if direct:
         return direct
+
+    def _slug(s: str) -> str:
+        s = str(s).strip().upper()
+        s = re.sub(r"[^A-Z0-9]+", "_", s)
+        s = s.strip("_")
+        return s.lower()
 
     m = re.match(r"^NC COURT OF APPEALS JUDGE SEAT\s*0*([0-9]+)$", o)
     if m:
@@ -82,6 +105,54 @@ def infer_office_key(office: str) -> str | None:
 
     if o == "NC SUPREME COURT CHIEF JUSTICE":
         return "nc_supreme_court_chief_justice"
+
+    # Legacy presidential label.
+    if "PRESIDENT" in o_full and "VICE PRESIDENT" in o_full and "REPRESENTATIVES" not in o_full:
+        return "president"
+
+    # Older NCSBE labels often used named seats, e.g.:
+    #   "SUPREME COURT ASSOCIATE JUSTICE (EDMUNDS SEAT)"
+    #   "COURT OF APPEALS JUDGE (TYSON SEAT)"
+    m = re.match(r"^SUPREME COURT ASSOCIATE JUSTICE\s*\((.+?)\s+SEAT\)$", o_full)
+    if m:
+        return f"nc_supreme_court_associate_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^SUPREME COURT CHIEF JUSTICE\s*\((.+?)\s+SEAT\)$", o_full)
+    if m:
+        return f"nc_supreme_court_chief_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^COURT OF APPEALS JUDGE\s*\((.+?)\s+SEAT\)$", o_full)
+    if m:
+        return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
+
+    # Alternate legacy formats using a dash instead of parentheses.
+    m = re.match(r"^SUPREME COURT ASSOCIATE JUSTICE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_supreme_court_associate_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^SUPREME COURT CHIEF JUSTICE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_supreme_court_chief_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^COURT OF APPEALS JUDGE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
+
+    # 2014-ish formats like:
+    #   "NC COURT OF APPEALS JUDGE (DAVIS)"
+    #   "NC SUPREME COURT ASSOCIATE JUSTICE (HUDSON)"
+    #   "NC SUPREME COURT CHIEF JUSTICE (PARKER)"
+    m = re.match(r"^NC COURT OF APPEALS JUDGE\s*\((.+?)\)$", o_full)
+    if m:
+        return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^NC SUPREME COURT ASSOCIATE JUSTICE\s*\((.+?)\)$", o_full)
+    if m:
+        return f"nc_supreme_court_associate_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^NC SUPREME COURT CHIEF JUSTICE\s*\((.+?)\)$", o_full)
+    if m:
+        return f"nc_supreme_court_chief_justice_{_slug(m.group(1))}_seat"
 
     return None
 
@@ -558,9 +629,73 @@ def agg_party_to_scope(
     matched_precincts: set[str],
     county_non_geo_party: pd.DataFrame | None = None,
 ) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
+    def _alloc_all_votes_by_bucket_then_county(res_df: pd.DataFrame) -> dict[str, int]:
+        """
+        Fallback when zero precinct keys match the block->precinct crosswalk.
+
+        Allocates votes to districts using:
+        1) county+bucket -> district shares (bucket derived from precinct code like '01-07A' => '01')
+        2) remaining county totals -> district shares (county-wide VAP shares)
+
+        This preserves within-county variation at the "precinct bucket" level without requiring
+        any matched precinct IDs.
+        """
+        r = res_df.copy()
+        r["precinct_id"] = r["precinct_id"].astype(str).str.strip().str.upper()
+        r["votes"] = pd.to_numeric(r["votes"], errors="coerce").fillna(0.0)
+        r["county"] = r["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
+        r["precinct"] = r["precinct_id"].str.split(" - ").str[1].fillna("").str.strip().str.upper()
+        r["bucket"] = r["precinct"].str.split("-").str[0].str.strip()
+        r = r[(r["county"] != "") & (r["votes"] != 0)].copy()
+        if r.empty:
+            return {}
+
+        add_frames = []
+        assigned = pd.DataFrame(columns=["county", "bucket"])
+
+        # Bucket allocation where we have shares.
+        u_bucket = r.groupby(["county", "bucket"], as_index=False)["votes"].sum().rename(columns={"votes": "unmatched_votes"})
+        b_alloc = u_bucket.merge(precinct_bucket_shares, on=["county", "bucket"], how="inner")
+        if not b_alloc.empty:
+            b_alloc["alloc_votes"] = b_alloc["unmatched_votes"] * b_alloc["share"]
+            add_frames.append(b_alloc[["district", "alloc_votes"]])
+            assigned = b_alloc[["county", "bucket"]].drop_duplicates()
+
+        # Remaining county totals (buckets with no shares) fall back to county-wide shares.
+        rem = u_bucket
+        if not assigned.empty:
+            rem = u_bucket.merge(assigned, on=["county", "bucket"], how="left", indicator=True)
+            rem = rem[rem["_merge"] == "left_only"].drop(columns=["_merge"])
+        if not rem.empty:
+            u = rem.groupby("county", as_index=False)["unmatched_votes"].sum().rename(columns={"unmatched_votes": "votes"})
+            alloc = u.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
+            alloc["alloc_votes"] = alloc["votes"] * alloc["share"]
+            add_frames.append(alloc[["district", "alloc_votes"]])
+
+        if not add_frames:
+            return {}
+
+        add = pd.concat(add_frames, ignore_index=True).groupby("district", as_index=False)["alloc_votes"].sum()
+        return {str(row["district"]).strip(): int(round(float(row["alloc_votes"]))) for _, row in add.iterrows()}
+
     party_district = {}
     matched = 0
     total = int(len(precinct_party))
+
+    # If nothing matches the precinct crosswalk, skip VAP-shatter and do a pure share-based allocation.
+    precinct_ids = precinct_party["precinct_id"].astype(str).str.strip().str.upper()
+    if int(precinct_ids.isin(matched_precincts).sum()) == 0:
+        for col in ["dem_votes", "rep_votes", "other_votes"]:
+            res_df = to_results_df(precinct_party, col)
+            party_district[col] = _alloc_all_votes_by_bucket_then_county(res_df)
+        return (
+            party_district.get("dem_votes", {}),
+            party_district.get("rep_votes", {}),
+            party_district.get("other_votes", {}),
+            0,
+            total,
+        )
+
     for col in ["dem_votes", "rep_votes", "other_votes"]:
         res_df = to_results_df(precinct_party, col)
         shattered, audit = shatter_votes(

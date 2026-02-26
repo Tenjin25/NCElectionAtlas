@@ -192,6 +192,85 @@ def allocate_vtd_from_non_geo(geo_vtd_party: pd.DataFrame, non_geo_county_party:
     return out[["countyfp", "vtdst", "party_group", "votes"]]
 
 
+def load_nhgis_vtd00_vap_2000(path: Path) -> pd.DataFrame:
+    """
+    Load NHGIS 2000 votedist VAP (18+) for NC.
+
+    Expected columns (nhgis ds145 2000 votedist):
+      - STATEA (2-digit)
+      - COUNTYA (3-digit)
+      - VOTEDISTA (VTD code within county)
+      - FJ8001 (total 18+)
+    Returns: countyfp, vtdst, vap
+    """
+    if not path.exists():
+        return pd.DataFrame(columns=["countyfp", "vtdst", "vap"])
+    usecols = ["STATEA", "COUNTYA", "VOTEDISTA", "FJ8001"]
+    df = pd.read_csv(path, dtype=str, usecols=usecols).fillna("")
+    df["STATEA"] = df["STATEA"].astype(str).str.strip().str.zfill(2)
+    df = df[df["STATEA"] == "37"].copy()
+    df["countyfp"] = df["COUNTYA"].astype(str).str.strip().str.zfill(3)
+    df["vtdst"] = df["VOTEDISTA"].astype(str).str.upper().str.strip()
+    df["vap"] = pd.to_numeric(df["FJ8001"], errors="coerce").fillna(0.0)
+    df = df[(df["countyfp"] != "") & (df["vtdst"] != "")].copy()
+    g = df.groupby(["countyfp", "vtdst"], as_index=False)["vap"].sum()
+    return g
+
+
+def allocate_vtd_from_non_geo_vap(
+    geo_vtd_party: pd.DataFrame,
+    non_geo_county_party: pd.DataFrame,
+    vtd_vap: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Allocate non-geographic county party totals to VTDs using VTD VAP shares.
+
+    This is mainly intended for pre-2008 work where block VAP isn't available.
+    Falls back to candidate-performance allocation when VAP is unavailable.
+    """
+    if non_geo_county_party.empty:
+        return geo_vtd_party
+    if vtd_vap.empty:
+        # No VAP table, use the existing candidate-performance allocator.
+        return allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
+
+    # Build VTD shares within county from VAP.
+    vv = vtd_vap.copy()
+    vv["countyfp"] = vv["countyfp"].astype(str).str.zfill(3)
+    vv["vtdst"] = vv["vtdst"].astype(str).str.upper().str.strip()
+    vv["vap"] = pd.to_numeric(vv["vap"], errors="coerce").fillna(0.0)
+    vv = vv[(vv["countyfp"] != "") & (vv["vtdst"] != "") & (vv["vap"] >= 0)].copy()
+    if vv.empty:
+        return allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
+    den = vv.groupby("countyfp", as_index=False)["vap"].sum().rename(columns={"vap": "den"})
+    vv = vv.merge(den, on="countyfp", how="left")
+    vv["share"] = vv["vap"] / vv["den"].replace(0, pd.NA)
+    vv["share"] = pd.to_numeric(vv["share"], errors="coerce").fillna(0.0)
+    vv = vv[vv["share"] > 0].copy()
+    if vv.empty:
+        return allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
+
+    # Expand county party totals across VTDs by VAP share.
+    add = non_geo_county_party.copy()
+    add["countyfp"] = add["countyfp"].astype(str).str.zfill(3)
+    add["votes"] = pd.to_numeric(add["votes"], errors="coerce").fillna(0.0)
+    add = add.merge(vv[["countyfp", "vtdst", "share"]], on="countyfp", how="inner")
+    if add.empty:
+        return allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
+    add["votes_add"] = add["votes"] * add["share"]
+    add = add.groupby(["countyfp", "vtdst", "party_group"], as_index=False)["votes_add"].sum()
+
+    if geo_vtd_party.empty:
+        out = add.rename(columns={"votes_add": "votes"}).copy()
+        return out[["countyfp", "vtdst", "party_group", "votes"]]
+
+    out = geo_vtd_party.copy()
+    out = out.merge(add, on=["countyfp", "vtdst", "party_group"], how="left")
+    out["votes_add"] = pd.to_numeric(out["votes_add"], errors="coerce").fillna(0.0)
+    out["votes"] = pd.to_numeric(out["votes"], errors="coerce").fillna(0.0) + out["votes_add"]
+    return out[["countyfp", "vtdst", "party_group", "votes"]]
+
+
 def vtd_to_district_maps(
     vtd_party: pd.DataFrame,
     shares: pd.DataFrame,
@@ -271,6 +350,137 @@ def county_scales_from_targets(vtd_party: pd.DataFrame, county_targets: pd.DataF
     return pd.DataFrame(rows)
 
 
+def load_nhgis_bridge_2000_to_2020(blk2000_2010_csv: Path, blk2010_2020_csv: Path) -> pd.DataFrame:
+    if not blk2000_2010_csv.exists() or not blk2010_2020_csv.exists():
+        return pd.DataFrame(columns=["blk2000ge", "blk2020ge", "weight"])
+
+    a = pd.read_csv(blk2000_2010_csv, dtype=str, usecols=["blk2000ge", "blk2010ge", "weight"]).fillna("")
+    b = pd.read_csv(blk2010_2020_csv, dtype=str, usecols=["blk2010ge", "blk2020ge", "weight"]).fillna("")
+
+    a["blk2000ge"] = a["blk2000ge"].astype(str).str.strip().str.zfill(15)
+    a["blk2010ge"] = a["blk2010ge"].astype(str).str.strip().str.zfill(15)
+    b["blk2010ge"] = b["blk2010ge"].astype(str).str.strip().str.zfill(15)
+    b["blk2020ge"] = b["blk2020ge"].astype(str).str.strip().str.zfill(15)
+
+    a["w1"] = pd.to_numeric(a["weight"], errors="coerce").fillna(0.0)
+    b["w2"] = pd.to_numeric(b["weight"], errors="coerce").fillna(0.0)
+
+    # Keep NC-targeted chain on the 2010/2020 side.
+    a = a[a["blk2010ge"].str.startswith("37") & (a["w1"] > 0)].copy()
+    b = b[b["blk2010ge"].str.startswith("37") & b["blk2020ge"].str.startswith("37") & (b["w2"] > 0)].copy()
+    if a.empty or b.empty:
+        return pd.DataFrame(columns=["blk2000ge", "blk2020ge", "weight"])
+
+    m = a[["blk2000ge", "blk2010ge", "w1"]].merge(
+        b[["blk2010ge", "blk2020ge", "w2"]], on="blk2010ge", how="inner"
+    )
+    if m.empty:
+        return pd.DataFrame(columns=["blk2000ge", "blk2020ge", "weight"])
+
+    m["weight"] = pd.to_numeric(m["w1"], errors="coerce").fillna(0.0) * pd.to_numeric(m["w2"], errors="coerce").fillna(0.0)
+    m = m[m["weight"] > 0].copy()
+    if m.empty:
+        return pd.DataFrame(columns=["blk2000ge", "blk2020ge", "weight"])
+
+    g = m.groupby(["blk2000ge", "blk2020ge"], as_index=False)["weight"].sum()
+    den = g.groupby("blk2000ge", as_index=False)["weight"].sum().rename(columns={"weight": "wden"})
+    g = g.merge(den, on="blk2000ge", how="left")
+    g["weight"] = g["weight"] / g["wden"].replace(0, pd.NA)
+    g["weight"] = pd.to_numeric(g["weight"], errors="coerce").fillna(0.0)
+    g = g[g["weight"] > 0].copy()
+    return g[["blk2000ge", "blk2020ge", "weight"]]
+
+
+def aggregate_block_df_to_maps(
+    block_df: pd.DataFrame,
+    house_lookup: dict[str, str],
+    senate_lookup: dict[str, str],
+    cd_lookup: dict[str, str],
+) -> tuple[dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
+    if block_df.empty:
+        return {}, {}, {}, {}, {}, {}
+
+    def one_lookup(lookup: dict[str, str]) -> tuple[dict[str, int], dict[str, int], dict[str, int]]:
+        d = block_df.copy()
+        d["district"] = d["blk2020ge"].map(lookup)
+        d = d[d["district"].notna()].copy()
+        if d.empty:
+            return {}, {}, {}
+        g = d.groupby("district", as_index=False)[["dem_votes", "rep_votes", "other_votes"]].sum()
+        dem = {str(r["district"]).strip().lstrip("0") or "0": int(round(float(r["dem_votes"]))) for _, r in g.iterrows()}
+        rep = {str(r["district"]).strip().lstrip("0") or "0": int(round(float(r["rep_votes"]))) for _, r in g.iterrows()}
+        oth = {str(r["district"]).strip().lstrip("0") or "0": int(round(float(r["other_votes"]))) for _, r in g.iterrows()}
+        return dem, rep, oth
+
+    dem_h, rep_h, oth_h = one_lookup(house_lookup)
+    dem_s, rep_s, oth_s = one_lookup(senate_lookup)
+    dem_c, rep_c, oth_c = one_lookup(cd_lookup)
+    return dem_h, rep_h, oth_h, dem_s, rep_s, oth_s, dem_c, rep_c, oth_c
+
+
+def try_legacy_block_pres_maps(
+    prefix: str,
+    legacy_block_csvs: list[Path],
+    nhgis_bridge: pd.DataFrame,
+    house_lookup: dict[str, str],
+    senate_lookup: dict[str, str],
+    cd_lookup: dict[str, str],
+) -> tuple[str, tuple[dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]] | None]:
+    for csv_path in legacy_block_csvs:
+        if not csv_path.exists():
+            continue
+        header = pd.read_csv(csv_path, nrows=0).columns.tolist()
+        total_col = f"{prefix}_Total"
+        dem_col = f"{prefix}_Dem"
+        rep_col = f"{prefix}_Rep"
+        if any(c not in header for c in ["GEOID", total_col, dem_col, rep_col]):
+            continue
+
+        # Probe whether GEOID is already block2020-like.
+        probe = pd.read_csv(csv_path, dtype=str, usecols=["GEOID"], nrows=5000).fillna("")
+        probe["GEOID"] = probe["GEOID"].astype(str).str.strip().str.zfill(15)
+        direct_hit = probe["GEOID"].isin(set(house_lookup.keys())).mean() if not probe.empty else 0.0
+
+        if direct_hit >= 0.8:
+            house_stats = draagg.aggregate_scope(csv_path, house_lookup, total_col, dem_col, rep_col)
+            senate_stats = draagg.aggregate_scope(csv_path, senate_lookup, total_col, dem_col, rep_col)
+            cd_stats = draagg.aggregate_scope(csv_path, cd_lookup, total_col, dem_col, rep_col)
+            dem_h, rep_h, oth_h = maps_from_rows(draagg.rows_from_stats("state_house", house_stats))
+            dem_s, rep_s, oth_s = maps_from_rows(draagg.rows_from_stats("state_senate", senate_stats))
+            dem_c, rep_c, oth_c = maps_from_rows(draagg.rows_from_stats("congressional", cd_stats))
+            return "legacy_block_direct", (dem_h, rep_h, oth_h, dem_s, rep_s, oth_s, dem_c, rep_c, oth_c)
+
+        if nhgis_bridge.empty:
+            continue
+
+        chunks = []
+        usecols = ["GEOID", total_col, dem_col, rep_col]
+        for chunk in pd.read_csv(csv_path, dtype=str, usecols=usecols, chunksize=400_000):
+            chunk["blk2000ge"] = chunk["GEOID"].astype(str).str.strip().str.zfill(15)
+            chunk[total_col] = pd.to_numeric(chunk[total_col], errors="coerce").fillna(0.0)
+            chunk[dem_col] = pd.to_numeric(chunk[dem_col], errors="coerce").fillna(0.0)
+            chunk[rep_col] = pd.to_numeric(chunk[rep_col], errors="coerce").fillna(0.0)
+            chunk["other_votes"] = chunk[total_col] - chunk[dem_col] - chunk[rep_col]
+            chunk.loc[chunk["other_votes"] < 0, "other_votes"] = 0.0
+            m = chunk[["blk2000ge", dem_col, rep_col, "other_votes"]].merge(nhgis_bridge, on="blk2000ge", how="inner")
+            if m.empty:
+                continue
+            m["dem_votes"] = pd.to_numeric(m[dem_col], errors="coerce").fillna(0.0) * pd.to_numeric(m["weight"], errors="coerce").fillna(0.0)
+            m["rep_votes"] = pd.to_numeric(m[rep_col], errors="coerce").fillna(0.0) * pd.to_numeric(m["weight"], errors="coerce").fillna(0.0)
+            m["other_votes"] = pd.to_numeric(m["other_votes"], errors="coerce").fillna(0.0) * pd.to_numeric(m["weight"], errors="coerce").fillna(0.0)
+            g = m.groupby("blk2020ge", as_index=False)[["dem_votes", "rep_votes", "other_votes"]].sum()
+            chunks.append(g)
+
+        if not chunks:
+            continue
+        block2020 = pd.concat(chunks, ignore_index=True).groupby("blk2020ge", as_index=False).sum()
+        maps = aggregate_block_df_to_maps(block2020, house_lookup, senate_lookup, cd_lookup)
+        if maps[0] or maps[1] or maps[2]:
+            return "legacy_block2000_nhgis_bridge", maps
+
+    return "", None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build president district outputs on 2022 lines with hybrid DRA-block/official-shatter mode.")
     ap.add_argument("--years", default="2000,2004,2008,2012,2016,2020,2024")
@@ -293,6 +503,28 @@ def main() -> None:
     )
     ap.add_argument("--vtd10-shp", type=Path, default=Path("data/census/tl_2012_37_vtd10/tl_2012_37_vtd10.shp"))
     ap.add_argument("--county20-geojson", type=Path, default=Path("data/census/tl_2020_37_county20.geojson"))
+    ap.add_argument(
+        "--nhgis-blk2000-blk2010-csv",
+        type=Path,
+        default=Path("data/census/nhgis_blk2000_blk2010_37/nhgis_blk2000_blk2010_37.csv"),
+    )
+    ap.add_argument(
+        "--nhgis-blk2010-blk2020-csv",
+        type=Path,
+        default=Path("data/census/nhgis_blk2010_blk2020_37/nhgis_blk2010_blk2020_37.csv"),
+    )
+    ap.add_argument(
+        "--nhgis-vtd00-vap-csv",
+        type=Path,
+        default=Path("data/census/nhgis0004_csv/nhgis0004_csv/nhgis0004_ds145_2000_votedist.csv"),
+        help="NHGIS 2000 votedist VAP table (used for pre-2008 VTD proxy allocation when precinct->block shatter can't match).",
+    )
+    ap.add_argument(
+        "--pre2008-vtd-nongeo-mode",
+        choices=["candidate_perf", "vtd_vap"],
+        default="candidate_perf",
+        help="When using the VTD overlay proxy (pre-2008), how to distribute county non-geographic buckets to VTDs.",
+    )
     ap.add_argument(
         "--county-calibration-block-csvs",
         default="data/Election_Data_Block_NC.v07/Election_Data_Block_NC.v02/election_data_block_NC.v02.csv,data/Election_Data_Block_NC.v07/Election_Data_Block_NC.v01/election_data_block_NC.v01.csv,data/Election_Data_Block_NC.v07/election_data_block_NC.v07.csv",
@@ -427,6 +659,10 @@ def main() -> None:
         "COUNTYFP00",
         "VTDST00",
     )
+    nhgis_bridge_2000_2020 = load_nhgis_bridge_2000_to_2020(
+        args.nhgis_blk2000_blk2010_csv, args.nhgis_blk2010_blk2020_csv
+    )
+    vtd00_vap_2000 = load_nhgis_vtd00_vap_2000(args.nhgis_vtd00_vap_csv)
 
     # DRA lookups once for speed.
     dra_house_lookup = draagg.build_lookup(draagg.load_map(args.house_map))
@@ -495,77 +731,106 @@ def main() -> None:
             matched = total = 0
         else:
             method = "official_precinct_shatter"
-            precinct_party, dem_candidate, rep_candidate = bdc.build_precinct_party_votes(
-                src, office, precinct_overrides=precinct_overrides
+            legacy_method, legacy_maps = try_legacy_block_pres_maps(
+                prefix=prefix,
+                legacy_block_csvs=calib_paths,
+                nhgis_bridge=nhgis_bridge_2000_2020,
+                house_lookup=dra_house_lookup,
+                senate_lookup=dra_senate_lookup,
+                cd_lookup=dra_cd_lookup,
             )
-            matched_count = 0 if precinct_party.empty else int(
-                precinct_party["precinct_id"].astype(str).str.strip().str.upper().isin(matched_precincts).sum()
-            )
-            if precinct_party.empty:
-                print(f"[{year}] skipped (no president rows found).")
-                continue
-            if matched_count == 0:
-                # Try VTD00 spatial overlay proxy before county-only fallback.
-                geo_vtd_party, non_geo_county_party = build_vtd_party_totals(src, office, county_name_to_fips)
-                vtd_party = allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
-                scales = county_scales_from_targets(vtd_party, county_targets)
-                dem_h, rep_h, oth_h = vtd_to_district_maps(vtd_party, vtd10_house, county_scales=scales)
-                dem_s, rep_s, oth_s = vtd_to_district_maps(vtd_party, vtd10_senate, county_scales=scales)
-                dem_c, rep_c, oth_c = vtd_to_district_maps(vtd_party, vtd10_cd, county_scales=scales)
-                if dem_h or rep_h or oth_h:
-                    method = "official_vtd10_overlay_proxy"
-                    matched = total = 0
-                else:
-                    dem_h, rep_h, oth_h = vtd_to_district_maps(vtd_party, vtd00_house, county_scales=scales)
-                    dem_s, rep_s, oth_s = vtd_to_district_maps(vtd_party, vtd00_senate, county_scales=scales)
-                    dem_c, rep_c, oth_c = vtd_to_district_maps(vtd_party, vtd00_cd, county_scales=scales)
-                if dem_h or rep_h or oth_h:
-                    method = "official_vtd00_overlay_proxy" if method != "official_vtd10_overlay_proxy" else method
-                    matched = total = 0
-                else:
-                    method = "official_county_share_proxy"
-                    county_totals = build_county_party_totals(src, office)
-                    dem_h, rep_h, oth_h = allocate_county_to_district(county_totals, house_shares)
-                    dem_s, rep_s, oth_s = allocate_county_to_district(county_totals, senate_shares)
-                    dem_c, rep_c, oth_c = allocate_county_to_district(county_totals, cd_shares)
-                    matched = total = 0
+            if legacy_maps is not None:
+                (
+                    dem_h,
+                    rep_h,
+                    oth_h,
+                    dem_s,
+                    rep_s,
+                    oth_s,
+                    dem_c,
+                    rep_c,
+                    oth_c,
+                ) = legacy_maps
+                method = legacy_method
+                matched = total = 0
             else:
-                dem_h, rep_h, oth_h, matched, total = bdc.agg_party_to_scope(
-                    precinct_party,
-                    crosswalk_df,
-                    vap_df,
-                    args.house_map,
-                    "block_geoid20",
-                    "district",
-                    house_shares,
-                    house_bucket,
-                    matched_precincts,
-                    county_non_geo_party=None,
+                precinct_party, dem_candidate, rep_candidate = bdc.build_precinct_party_votes(
+                    src, office, precinct_overrides=precinct_overrides
                 )
-                dem_s, rep_s, oth_s, _, _ = bdc.agg_party_to_scope(
-                    precinct_party,
-                    crosswalk_df,
-                    vap_df,
-                    args.senate_map,
-                    "block_geoid20",
-                    "district",
-                    senate_shares,
-                    senate_bucket,
-                    matched_precincts,
-                    county_non_geo_party=None,
+                matched_count = 0 if precinct_party.empty else int(
+                    precinct_party["precinct_id"].astype(str).str.strip().str.upper().isin(matched_precincts).sum()
                 )
-                dem_c, rep_c, oth_c, _, _ = bdc.agg_party_to_scope(
-                    precinct_party,
-                    crosswalk_df,
-                    vap_df,
-                    args.cd_map,
-                    "block_geoid20",
-                    "district",
-                    cd_shares,
-                    cd_bucket,
-                    matched_precincts,
-                    county_non_geo_party=None,
-                )
+                if precinct_party.empty:
+                    print(f"[{year}] skipped (no president rows found).")
+                    continue
+                if matched_count == 0:
+                    # Try VTD00/10 spatial overlay proxy before county-only fallback.
+                    geo_vtd_party, non_geo_county_party = build_vtd_party_totals(src, office, county_name_to_fips)
+                    if args.pre2008_vtd_nongeo_mode == "vtd_vap" and year <= 2006:
+                        vtd_party = allocate_vtd_from_non_geo_vap(geo_vtd_party, non_geo_county_party, vtd00_vap_2000)
+                    else:
+                        vtd_party = allocate_vtd_from_non_geo(geo_vtd_party, non_geo_county_party)
+                    scales = county_scales_from_targets(vtd_party, county_targets)
+                    dem_h, rep_h, oth_h = vtd_to_district_maps(vtd_party, vtd10_house, county_scales=scales)
+                    dem_s, rep_s, oth_s = vtd_to_district_maps(vtd_party, vtd10_senate, county_scales=scales)
+                    dem_c, rep_c, oth_c = vtd_to_district_maps(vtd_party, vtd10_cd, county_scales=scales)
+                    if dem_h or rep_h or oth_h:
+                        method = "official_vtd10_overlay_proxy_vtd_vap" if args.pre2008_vtd_nongeo_mode == "vtd_vap" and year <= 2006 else "official_vtd10_overlay_proxy"
+                        matched = total = 0
+                    else:
+                        dem_h, rep_h, oth_h = vtd_to_district_maps(vtd_party, vtd00_house, county_scales=scales)
+                        dem_s, rep_s, oth_s = vtd_to_district_maps(vtd_party, vtd00_senate, county_scales=scales)
+                        dem_c, rep_c, oth_c = vtd_to_district_maps(vtd_party, vtd00_cd, county_scales=scales)
+                    if dem_h or rep_h or oth_h:
+                        if method == "official_vtd10_overlay_proxy" or method == "official_vtd10_overlay_proxy_vtd_vap":
+                            method = method
+                        else:
+                            method = "official_vtd00_overlay_proxy_vtd_vap" if args.pre2008_vtd_nongeo_mode == "vtd_vap" and year <= 2006 else "official_vtd00_overlay_proxy"
+                        matched = total = 0
+                    else:
+                        method = "official_county_share_proxy"
+                        county_totals = build_county_party_totals(src, office)
+                        dem_h, rep_h, oth_h = allocate_county_to_district(county_totals, house_shares)
+                        dem_s, rep_s, oth_s = allocate_county_to_district(county_totals, senate_shares)
+                        dem_c, rep_c, oth_c = allocate_county_to_district(county_totals, cd_shares)
+                        matched = total = 0
+                else:
+                    dem_h, rep_h, oth_h, matched, total = bdc.agg_party_to_scope(
+                        precinct_party,
+                        crosswalk_df,
+                        vap_df,
+                        args.house_map,
+                        "block_geoid20",
+                        "district",
+                        house_shares,
+                        house_bucket,
+                        matched_precincts,
+                        county_non_geo_party=None,
+                    )
+                    dem_s, rep_s, oth_s, _, _ = bdc.agg_party_to_scope(
+                        precinct_party,
+                        crosswalk_df,
+                        vap_df,
+                        args.senate_map,
+                        "block_geoid20",
+                        "district",
+                        senate_shares,
+                        senate_bucket,
+                        matched_precincts,
+                        county_non_geo_party=None,
+                    )
+                    dem_c, rep_c, oth_c, _, _ = bdc.agg_party_to_scope(
+                        precinct_party,
+                        crosswalk_df,
+                        vap_df,
+                        args.cd_map,
+                        "block_geoid20",
+                        "district",
+                        cd_shares,
+                        cd_bucket,
+                        matched_precincts,
+                        county_non_geo_party=None,
+                    )
 
         payload_house = bdc.build_payload(
             year=year,
