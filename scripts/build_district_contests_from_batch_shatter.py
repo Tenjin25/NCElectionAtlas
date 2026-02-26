@@ -76,6 +76,103 @@ KNOWN_OFFICE_KEYS = {
 PRESIDENT_OFFICE_KEY = "president"
 
 
+# County-specific precinct aliases to improve key matching for older years where
+# precinct naming varies between results exports and the precinct crosswalk.
+#
+# Keys and values refer to the precinct token portion of `precinct_id`
+# (the part after "COUNTY - "). Values must match the canonical precinct token
+# used by `data/crosswalks/block20_to_precinct.csv`.
+PRECINCT_ALIASES: dict[str, dict[str, str]] = {
+    "ROBESON": {
+        "ALFORDSVILLE": "01",
+        "ALF": "01",
+        "BACK SWAMP": "02",
+        "BACK": "02",
+        "BRITTS": "03",
+        "BURNT SWAMP": "04",
+        "GADDYS": "07",
+        "GADDY": "07",
+        "LUMBERTON 1": "14",
+        "LUM 1": "14",
+        "LUMBERTON 8": "21",
+        "LUM 8": "21",
+        "MAXTON": "22",
+        "MAX": "22",
+        "ORRUM": "24",
+        "ORR": "24",
+        "PEMBROKE 1": "26",
+        "PEM 1": "26",
+        "RENNERT": "31",
+        "RENS": "31",
+        "SADDLETREE": "32",
+        "SADD": "32",
+        "ST PAULS": "34",
+        "ST P": "34",
+    },
+    "WAKE": {
+        # Common suffix variants where the canonical key is the base code.
+        "20-10A": "20-10",
+        "20-10B": "20-10",
+    },
+    "CABARRUS": {
+        "HAR": "12-09",
+        "HARRISBURG": "12-09",
+    },
+}
+
+
+def _norm(text: str) -> str:
+    return str(text).strip().upper()
+
+
+def clean_precinct_name(precinct: str, county: str) -> str:
+    """
+    Normalize a precinct token to better match our canonical crosswalk keyspace.
+
+    Conservative by design: if we cannot confidently normalize, return the
+    original (uppercased/trimmed) string.
+    """
+    county_u = _norm(county)
+    p = _norm(precinct)
+
+    # 1) Hard-coded aliases (county-specific).
+    ali = PRECINCT_ALIASES.get(county_u)
+    if ali:
+        hit = ali.get(p)
+        if hit:
+            return _norm(hit)
+
+    # 2) Strip boilerplate words sometimes included in exports.
+    p = p.replace("PRECINCT", " ").replace("VTD", " ").strip()
+
+    # 2b) Many historical exports use "CODE_NAME" patterns where the crosswalk
+    # canonical key is just the code (e.g., "01_PATTERSON" -> "01").
+    if "_" in p:
+        left = p.split("_", 1)[0].strip()
+        if left:
+            p = left
+
+    # 3) Standard NC code patterns like "01-14", "01-14A", "4-11", "03-00".
+    m = re.search(r"\b(\d{1,3})-(\d{1,3})[A-Z]?\b", p)
+    if m:
+        a = m.group(1)
+        b = m.group(2)
+        # Many counties use 2-digit code groups in the crosswalk (e.g., 01-14).
+        if len(a) <= 2:
+            a = str(int(a)).zfill(2)
+        if len(b) <= 2:
+            b = str(int(b)).zfill(2)
+        return f"{a}-{b}"
+
+    # 4) Pure numeric code (Robeson uses 2-digit codes).
+    if p.isdigit():
+        if county_u == "ROBESON":
+            return str(int(p)).zfill(2)
+        return str(int(p))
+
+    return p
+
+
 def normalize_presidential_candidate_name(name: str) -> str:
     """
     Strip running mate / ticket formatting from presidential candidate strings.
@@ -313,6 +410,24 @@ def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: se
         county, p = raw.split(" - ", 1)
         county = county.strip()
         p = p.strip()
+
+        # County-specific aliases (named precincts -> coded keys).
+        ali = PRECINCT_ALIASES.get(county)
+        if ali:
+            hit = ali.get(p)
+            if hit:
+                cand = f"{county} - {_norm(hit)}"
+                if cand in matched_precincts:
+                    out[raw] = cand
+                    continue
+
+        # Generic cleanup: extract standard codes from messy labels.
+        cleaned = clean_precinct_name(p, county)
+        if cleaned and cleaned != p:
+            cand = f"{county} - {cleaned}"
+            if cand in matched_precincts:
+                out[raw] = cand
+                continue
 
         # Example: WAKE - 01-07A -> WAKE - 01-07 if canonical exists.
         if p.endswith("A"):
