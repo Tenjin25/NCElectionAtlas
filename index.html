@@ -4863,6 +4863,36 @@ document.addEventListener('DOMContentLoaded', function() {
           .toUpperCase();
       }
 
+      function precinctNormVariants(rowName) {
+        // rowName format: "COUNTY - PREC"
+        const raw = (rowName || '').toString();
+        const out = new Set();
+        const primary = normalizeCountyName(raw);
+        if (primary) out.add(primary);
+
+        if (!raw.includes(' - ')) return Array.from(out);
+        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
+        const countyOnly = (countyOnlyRaw || '').trim();
+        const precRaw = (precRaw0 || '').trim().toUpperCase();
+        if (!countyOnly || !precRaw) return Array.from(out);
+
+        // Some precinct boundary datasets key precincts as "1A", "14A", etc, while official
+        // precinct results use "01" or "04-1". Add an alternate key for those cases.
+        // Example: "GASTON - 04-1" -> "GASTON - 4A"
+        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
+        if (m) {
+          const base = m[1];
+          const baseInt = String(parseInt(base, 10)); // strips leading zeros
+          if (baseInt && baseInt !== 'NaN') {
+            const altPrec = `${baseInt}A`;
+            const altFull = normalizeCountyName(`${countyOnly} - ${altPrec}`);
+            if (altFull) out.add(altFull);
+          }
+        }
+
+        return Array.from(out);
+      }
+
       // Build county aggregates from precinct-level rows.
       const countyAgg = {};
       currentPrecinctResults = {};
@@ -4870,7 +4900,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const rowName = (row.county || '').toString();
         const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
         const countyNorm = normalizeCountyName(countyOnly);
-        const precinctNorm = normalizeCountyName(rowName);
         if (!countyNorm) return;
 
         const demVotes = Number(row[`${contestType}_dem`] || 0);
@@ -4878,7 +4907,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const otherVotes = Number(row[`${contestType}_other`] || 0);
         const totalVotes = Number(row[`${contestType}_total`] || 0);
 
-        currentPrecinctResults[precinctNorm] = row;
+        const norms = precinctNormVariants(rowName);
+        norms.forEach(n => {
+          currentPrecinctResults[n] = row;
+        });
         if (!countyAgg[countyNorm]) {
           countyAgg[countyNorm] = {
             year: Number(year),
@@ -4998,7 +5030,7 @@ document.addEventListener('DOMContentLoaded', function() {
       {
         const exprPrecinct = ['case'];
         contestData.forEach(row => {
-          const precinctName = normalizeCountyName(row.county);
+          const precinctNames = precinctNormVariants(row.county);
           const demVotes = row[`${contestType}_dem`] || 0;
           const repVotes = row[`${contestType}_rep`] || 0;
           const totalVotes = row[`${contestType}_total`] || 0;
@@ -5011,8 +5043,10 @@ document.addEventListener('DOMContentLoaded', function() {
           if (!color) {
             color = isColorblindMode ? getAccessibilityColor(marginPct, winner) : categoryColorForMargin(marginPct, winner);
           }
-          exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
-          exprPrecinct.push(color);
+          precinctNames.forEach(precinctName => {
+            exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
+            exprPrecinct.push(color);
+          });
         });
         exprPrecinct.push('#d1d5db');
         // Cache for later, in case precinct overlay loads after the contest is applied.
