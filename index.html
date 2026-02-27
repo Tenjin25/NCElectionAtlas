@@ -3832,20 +3832,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = e.features[0].properties;
             const districtNum = props.DISTRICT || props.CD118FP || props.district_id || props.district;
             if (districtNum) {
-              // Show full historical trends popup on click (manifest-based).
-              const contestValue = document.getElementById('contestSelect')?.value || '';
-              const [contestType] = parseContestValue(contestValue);
-              const trendType = contestType || 'president';
-              try {
-                const series = await getDistrictTrendSeries('congressional', trendType, districtNum);
-                const content = formatTrendSeries(`Congressional District ${districtNum} - ${formatContestName(trendType, '')} Trends`, series);
-                showHoverTooltip(e.point.x, e.point.y, content);
-                wireTooltipButtons();
-              } catch (err) {
-                console.warn('Failed to load district trends:', err?.message || err);
-              }
-              
-              // Also show detailed sidebar
+              // Show detailed sidebar (results + trends).
               showDistrictDetails(districtNum);
               lastSelectedCounty = `District ${districtNum}`;
 
@@ -3912,20 +3899,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = e.features[0].properties;
             const districtNum = props.DISTRICT || props.SLDLST || props.district_id || props.district;
             if (districtNum) {
-              // Show full historical trends popup on click (manifest-based).
-              const contestValue = document.getElementById('contestSelect')?.value || '';
-              const [contestType] = parseContestValue(contestValue);
-              const trendType = contestType || 'president';
-              try {
-                const series = await getDistrictTrendSeries('state_house', trendType, districtNum);
-                const content = formatTrendSeries(`State House District ${districtNum} - ${formatContestName(trendType, '')} Trends`, series);
-                showHoverTooltip(e.point.x, e.point.y, content);
-                wireTooltipButtons();
-              } catch (err) {
-                console.warn('Failed to load state house trends:', err?.message || err);
-              }
-              
-              // Also show detailed sidebar
+              // Show detailed sidebar (results + trends).
               showStateDistrictDetails(districtNum, 'house');
               lastSelectedCounty = `State House District ${districtNum}`;
 
@@ -3991,20 +3965,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = e.features[0].properties;
             const districtNum = props.DISTRICT || props.SLDUST || props.district_id || props.district;
             if (districtNum) {
-              // Show full historical trends popup on click (manifest-based).
-              const contestValue = document.getElementById('contestSelect')?.value || '';
-              const [contestType] = parseContestValue(contestValue);
-              const trendType = contestType || 'president';
-              try {
-                const series = await getDistrictTrendSeries('state_senate', trendType, districtNum);
-                const content = formatTrendSeries(`State Senate District ${districtNum} - ${formatContestName(trendType, '')} Trends`, series);
-                showHoverTooltip(e.point.x, e.point.y, content);
-                wireTooltipButtons();
-              } catch (err) {
-                console.warn('Failed to load state senate trends:', err?.message || err);
-              }
-              
-              // Also show detailed sidebar
+              // Show detailed sidebar (results + trends).
               showStateDistrictDetails(districtNum, 'senate');
               lastSelectedCounty = `State Senate District ${districtNum}`;
 
@@ -4803,6 +4764,244 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       return trends;
+    }
+
+    // --- District Sidebar (Manifest-Based) ---
+    // The legacy district sidebar functions above only handled US House via a CSV and did not
+    // show state legislative results. Override them here to use district contest slices.
+    let districtSidebarRequestId = 0;
+
+    function pickDistrictSliceRow(payload, districtNum) {
+      const results = payload?.general?.results || null;
+      if (!results) return null;
+      const keyA = String(districtNum);
+      const keyB = String(Number(districtNum));
+      return results[keyA] || results[keyB] || null;
+    }
+
+    function renderDistrictElectionInfoHTML(contestType, year, row) {
+      if (!row) return '<div style="color:#999;">No results for this district/contest.</div>';
+      const demVotes = Number(row.dem_votes || 0);
+      const repVotes = Number(row.rep_votes || 0);
+      const otherVotes = Number(row.other_votes || 0);
+      const totalVotes = Number(row.total_votes || (demVotes + repVotes + otherVotes));
+      if (totalVotes <= 0) return '<div style="color:#999;">No results for this district/contest.</div>';
+
+      let demCandidate = stripRunningMateName((row.dem_candidate || '').toString().trim());
+      let repCandidate = stripRunningMateName((row.rep_candidate || '').toString().trim());
+      if (!demCandidate) demCandidate = 'D';
+      if (!repCandidate) repCandidate = 'R';
+
+      const demPct = (demVotes / totalVotes) * 100.0;
+      const repPct = (repVotes / totalVotes) * 100.0;
+      const othPct = (otherVotes / totalVotes) * 100.0;
+      const marginPct = Math.abs(repPct - demPct);
+      const winnerParty = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'TIE');
+
+      let compLabel = '';
+      let compColor = '#6b7280';
+      if (marginPct >= 40) {
+        compLabel = winnerParty === 'R' ? "Annihilation Republican" : "Annihilation Democratic";
+        compColor = winnerParty === 'R' ? '#7f1d1d' : '#1e3a8a';
+      } else if (marginPct >= 30) {
+        compLabel = winnerParty === 'R' ? "Dominant Republican" : "Dominant Democratic";
+        compColor = winnerParty === 'R' ? '#7f1d1d' : '#1e3a8a';
+      } else if (marginPct >= 20) {
+        compLabel = winnerParty === 'R' ? "Stronghold Republican" : "Stronghold Democratic";
+        compColor = winnerParty === 'R' ? '#dc2626' : '#2563eb';
+      } else if (marginPct >= 10) {
+        compLabel = winnerParty === 'R' ? "Safe Republican" : "Safe Democratic";
+        compColor = winnerParty === 'R' ? '#dc2626' : '#3b82f6';
+      } else if (marginPct >= 5.5) {
+        compLabel = winnerParty === 'R' ? "Likely Republican" : "Likely Democratic";
+        compColor = winnerParty === 'R' ? '#ef4444' : '#60a5fa';
+      } else if (marginPct >= 1) {
+        compLabel = winnerParty === 'R' ? "Lean Republican" : "Lean Democratic";
+        compColor = winnerParty === 'R' ? '#f87171' : '#93c5fd';
+      } else if (marginPct >= 0.5) {
+        compLabel = winnerParty === 'R' ? "Tilt Republican" : "Tilt Democratic";
+        compColor = winnerParty === 'R' ? '#fff1f2' : '#dbeafe';
+      } else {
+        compLabel = "Tossup";
+        compColor = '#6b7280';
+      }
+
+      const winName = winnerParty === 'R' ? repCandidate : (winnerParty === 'D' ? demCandidate : 'Tie');
+      const winColor = winnerParty === 'R' ? '#dc2626' : (winnerParty === 'D' ? '#2563eb' : '#6b7280');
+
+      return `
+        <div style="margin-bottom: 12px;">
+          <h5 style="margin:0 0 6px 0;">${year} ${formatContestName(contestType, year)}</h5>
+          <div style="font-size:15px;font-weight:800;color:${winColor};">Winner: ${winName} (${winnerParty})</div>
+          <div style="margin-top:4px;font-size:15px;font-weight:800;color:${winColor};">
+            Margin: ${winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate)} <span style="color:#64748b;font-weight:600;">(${Math.abs(repVotes - demVotes).toLocaleString()} votes)</span>
+          </div>
+          <div style="margin-top:8px;font-size:14px;">
+            <div><span style="color:#2563eb;font-weight:800;">${demCandidate} (D)</span>: ${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</div>
+            <div><span style="color:#dc2626;font-weight:800;">${repCandidate} (R)</span>: ${repPct.toFixed(2)}% (${repVotes.toLocaleString()})</div>
+            ${otherVotes > 0 ? `<div><span style="color:#6b7280;font-weight:800;">Other</span>: ${othPct.toFixed(2)}% (${otherVotes.toLocaleString()})</div>` : ''}
+            <div style="margin-top:6px;color:#374151;font-weight:700;">Total Votes: ${totalVotes.toLocaleString()}</div>
+          </div>
+          <div style="margin-top:8px;font-size:14px;font-weight:800;color:${compColor};">Competitiveness: ${compLabel}</div>
+        </div>
+      `;
+    }
+
+    function renderDistrictTrendLinesHTML(series) {
+      if (!series || series.length === 0) return '<div style="color:#999;">No historical data</div>';
+      return series
+        .slice()
+        .sort((a, b) => a.year - b.year)
+        .map(s => {
+          const win = (s.winner || '').toString().toUpperCase();
+          const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
+          const label = winnerMarginLabelShort(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          return `<div style="margin-top:4px;color:${color};font-weight:800;">${s.year}: ${label}</div>`;
+        })
+        .join('');
+    }
+
+    function showDistrictDetails(districtNum) {
+      if (!SIDEBAR_ENABLED) return;
+      const detailsDiv = document.getElementById('county-details');
+      const nameEl = document.getElementById('county-name');
+      const contentEl = document.getElementById('county-info-content');
+      if (!detailsDiv || !nameEl || !contentEl) return;
+
+      nameEl.textContent = `Congressional District ${districtNum}`;
+
+      const districtInfo = (districtsInfo || []).find(d => d.district == districtNum);
+      let demographicInfo = '';
+      if (districtInfo) {
+        demographicInfo = `
+          <div style="margin-bottom: 12px;">
+            <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
+            <div style="font-size:14px;"><strong>Total Population:</strong> ${Number(districtInfo.total_population || 0).toLocaleString()}</div>
+            <div style="font-size:14px;"><strong>White:</strong> ${districtInfo.white_vap_pct}%</div>
+            <div style="font-size:14px;"><strong>Black:</strong> ${districtInfo.black_vap_pct}%</div>
+            <div style="font-size:14px;"><strong>Hispanic:</strong> ${districtInfo.hispanic_vap_pct}%</div>
+          </div>
+        `;
+      }
+
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      if (!contestValue) {
+        contentEl.innerHTML = demographicInfo + '<div style="color:#999;">Select a contest to see district results.</div>';
+        detailsDiv.style.display = 'block';
+        return;
+      }
+
+      const [contestType, year] = parseContestValue(contestValue);
+      const reqId = ++districtSidebarRequestId;
+      contentEl.innerHTML = demographicInfo + `
+        <div id="district-election" style="margin-bottom: 14px;color:#94a3b8;">Loading results...</div>
+        <div style="margin-top:10px;">
+          <h5 style="margin:0 0 6px 0;">Historical Trends</h5>
+          <div id="district-trends" style="color:#94a3b8;">Loading...</div>
+        </div>
+      `;
+      detailsDiv.style.display = 'block';
+
+      (async () => {
+        try {
+          const payload = await loadDistrictSlice('congressional', contestType, year);
+          const row = pickDistrictSliceRow(payload, districtNum);
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-election');
+          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row);
+        } catch (err) {
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-election');
+          if (el) el.innerHTML = '<div style="color:#999;">Failed to load district results.</div>';
+          console.warn('Failed to load district results:', err?.message || err);
+        }
+
+        try {
+          const series = await getDistrictTrendSeries('congressional', contestType, districtNum);
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-trends');
+          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series);
+        } catch (err) {
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-trends');
+          if (el) el.innerHTML = '<div style="color:#999;">Failed to load trends.</div>';
+          console.warn('Failed to load district trends:', err?.message || err);
+        }
+      })();
+    }
+
+    function showStateDistrictDetails(districtNum, chamber) {
+      if (!SIDEBAR_ENABLED) return;
+      const detailsDiv = document.getElementById('county-details');
+      const nameEl = document.getElementById('county-name');
+      const contentEl = document.getElementById('county-info-content');
+      if (!detailsDiv || !nameEl || !contentEl) return;
+
+      const title = chamber === 'house' ? `State House District ${districtNum}` : `State Senate District ${districtNum}`;
+      nameEl.textContent = title;
+
+      const scope = chamber === 'house' ? 'state_house' : 'state_senate';
+      const infoRow = chamber === 'house'
+        ? stateHouseInfo?.find(d => d.district == districtNum)
+        : stateSenateInfo?.find(d => d.district == districtNum);
+
+      let demographicInfo = '';
+      if (infoRow) {
+        demographicInfo = `
+          <div style="margin-bottom: 12px;">
+            <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
+            <div style="font-size:14px;"><strong>Total Population:</strong> ${Number(infoRow.total_population || 0).toLocaleString()}</div>
+            <div style="font-size:14px;"><strong>White:</strong> ${infoRow.white_vap_pct}%</div>
+            <div style="font-size:14px;"><strong>Black:</strong> ${infoRow.black_vap_pct}%</div>
+            <div style="font-size:14px;"><strong>Hispanic:</strong> ${infoRow.hispanic_vap_pct}%</div>
+          </div>
+        `;
+      }
+
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      if (!contestValue) {
+        contentEl.innerHTML = demographicInfo + '<div style="color:#999;">Select a contest to see district results.</div>';
+        detailsDiv.style.display = 'block';
+        return;
+      }
+
+      const [contestType, year] = parseContestValue(contestValue);
+      const reqId = ++districtSidebarRequestId;
+      contentEl.innerHTML = demographicInfo + `
+        <div id="district-election" style="margin-bottom: 14px;color:#94a3b8;">Loading results...</div>
+        <div style="margin-top:10px;">
+          <h5 style="margin:0 0 6px 0;">Historical Trends</h5>
+          <div id="district-trends" style="color:#94a3b8;">Loading...</div>
+        </div>
+      `;
+      detailsDiv.style.display = 'block';
+
+      (async () => {
+        try {
+          const payload = await loadDistrictSlice(scope, contestType, year);
+          const row = pickDistrictSliceRow(payload, districtNum);
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-election');
+          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row);
+        } catch (err) {
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-election');
+          if (el) el.innerHTML = '<div style="color:#999;">Failed to load district results.</div>';
+          console.warn('Failed to load state district results:', err?.message || err);
+        }
+
+        try {
+          const series = await getDistrictTrendSeries(scope, contestType, districtNum);
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-trends');
+          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series);
+        } catch (err) {
+          if (reqId !== districtSidebarRequestId) return;
+          const el = document.getElementById('district-trends');
+          if (el) el.innerHTML = '<div style="color:#999;">Failed to load trends.</div>';
+          console.warn('Failed to load state district trends:', err?.message || err);
+        }
+      })();
     }
 
     // Quick info functions for hover tooltips
