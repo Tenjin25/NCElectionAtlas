@@ -90,37 +90,19 @@
     .spinner svg circle {
       animation: spinner-rotate 0.8s linear infinite;
     }
-  /* Colorblind mode legend overrides - must be last in style block */
+  /* Colorblind mode legend overrides.
+     Legend colors are remapped by JS (updateLegendColors); CSS here only reinforces readability. */
   body.colorblind-mode .legend-color {
-    border: 2px dashed #333 !important;
+    border: 2px dashed #111 !important;
   }
   body.colorblind-mode .legend-item {
-    font-weight: bold;
-    text-decoration: underline wavy #333;
+    font-weight: 700;
   }
-  /* Republican shades - Orange/Yellow palette */
-  body.colorblind-mode .legend-color[style*="background: #67000d"] { background: #cc5500 !important; } /* Annihilation R */
-  body.colorblind-mode .legend-color[style*="background: #a50f15"] { background: #ff6600 !important; } /* Dominant R */
-  body.colorblind-mode .legend-color[style*="background: #cb181d"] { background: #ff8833 !important; } /* Stronghold R */
-  body.colorblind-mode .legend-color[style*="background: #ef3b2c"] { background: #ffaa55 !important; } /* Safe R */
-  body.colorblind-mode .legend-color[style*="background: #fb6a4a"] { background: #ffcc77 !important; } /* Likely R */
-  body.colorblind-mode .legend-color[style*="background: #fcae91"] { background: #ffdd99 !important; } /* Lean R */
-  body.colorblind-mode .legend-color[style*="background: #fee8c8"] { background: #ffeecc !important; } /* Tilt R */
-  /* Tossup */
-  body.colorblind-mode .legend-color[style*="background: #f7f7f7"] { background: #cccccc !important; }
-  /* Democratic shades - Blue palette */
-  body.colorblind-mode .legend-color[style*="background: #e1f5fe"] { background: #b3d9ff !important; } /* Tilt D */
-  body.colorblind-mode .legend-color[style*="background: #c6dbef"] { background: #99ccff !important; } /* Lean D */
-  body.colorblind-mode .legend-color[style*="background: #9ecae1"] { background: #66b3ff !important; } /* Likely D */
-  body.colorblind-mode .legend-color[style*="background: #6baed6"] { background: #3399ff !important; } /* Safe D */
-  body.colorblind-mode .legend-color[style*="background: #3182bd"] { background: #0080ff !important; } /* Stronghold D */
-  body.colorblind-mode .legend-color[style*="background: #08519c"] { background: #0066cc !important; } /* Dominant D */
-  body.colorblind-mode .legend-color[style*="background: #08306b"] { background: #004d99 !important; } /* Annihilation D */
   </style>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Define toggleSidebar function before DOMContentLoaded
-    const SIDEBAR_ENABLED = false;
+    const SIDEBAR_ENABLED = true;
 
     function toggleSidebar() {
       if (!SIDEBAR_ENABLED) return;
@@ -209,6 +191,22 @@
           floatBtn.title = 'Expand sidebar';
         }
       }
+
+      // Keyboard shortcuts (ignore when typing in inputs/selects).
+      document.addEventListener('keydown', function(ev) {
+        const t = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
+        if (t === 'input' || t === 'textarea' || t === 'select') return;
+        if (ev.key === 'p' || ev.key === 'P') {
+          if (typeof togglePrecinctOverlay === 'function') togglePrecinctOverlay();
+        }
+        if (ev.key === 'l' || ev.key === 'L') {
+          const btn = document.getElementById('label-toggle');
+          if (btn) btn.click();
+        }
+        if (ev.key === 's' || ev.key === 'S') {
+          toggleSidebar();
+        }
+      });
       
       // Status panel close button
       if (statusExit) {
@@ -478,7 +476,7 @@ body {
 }
 .minimize-btn:hover {
   background: #1d4ed8;
-  border-color: #1e40af;
+  border-color: #2563eb;
   transform: scale(1.05);
 }
 
@@ -1047,7 +1045,7 @@ body {
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
-  color: #1e40af;
+  color: #2563eb;
 }
 
 /* Mobile: Touch-friendly inputs and buttons */
@@ -1190,6 +1188,63 @@ body {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.94) 100%);
   }
 
+  .sidebar-panel {
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.72);
+    padding: 10px 12px;
+    margin: 10px 0;
+  }
+
+  .sidebar-panel summary {
+    list-style: none;
+    cursor: pointer;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+  }
+
+  .sidebar-panel summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .sidebar-panel summary::after {
+    content: '+';
+    font-weight: 900;
+    color: rgba(15, 23, 42, 0.55);
+  }
+
+  .sidebar-panel[open] summary::after {
+    content: '−';
+  }
+
+  #county-search {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-top: 6px;
+    border: 1px solid rgba(148, 163, 184, 0.55);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .hover-tooltip {
+    border: 1px solid rgba(15, 23, 42, 0.20);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.25);
+    backdrop-filter: blur(14px);
+    border-radius: 14px;
+    max-width: 360px;
+    animation: tooltip-in 140ms ease-out;
+  }
+
+  @keyframes tooltip-in {
+    from { transform: translateY(6px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
   .minimize-btn,
   #sidebar-float-toggle,
   #accessibility-toggle,
@@ -1251,22 +1306,26 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (colorblind) {
         // Map original color to colorblind-friendly color
+        // Remap the legend swatches to an accessibility palette (orange vs blue).
         var cbMap = {
-          '#67000d': '#ff9900',
-          '#a50f15': '#ffb84d',
-          '#cb181d': '#ffd699',
-          '#ef3b2c': '#ffe5cc',
-          '#fb6a4a': '#fff2e6',
-          '#fcae91': '#ffe5cc',
-          '#fee8c8': '#fff2e6',
-          '#f7f7f7': '#cccccc',
-          '#e1f5fe': '#3399ff',
-          '#c6dbef': '#66b3ff',
-          '#9ecae1': '#99ccff',
-          '#6baed6': '#b3d1ff',
-          '#3182bd': '#3366cc',
-          '#08519c': '#003399',
-          '#08306b': '#001f4d'
+          // REP shades
+          '#7f1d1d': '#cc5500',
+          '#b91c1c': '#ff6600',
+          '#dc2626': '#ff8833',
+          '#ef4444': '#ffaa55',
+          '#f87171': '#ffcc77',
+          '#fecaca': '#ffdd99',
+          '#fff1f2': '#ffeecc',
+          // Tossup
+          '#f8fafc': '#cccccc',
+          // DEM shades
+          '#1e3a8a': '#004d99',
+          '#1d4ed8': '#0066cc',
+          '#2563eb': '#0080ff',
+          '#3b82f6': '#3399ff',
+          '#60a5fa': '#66b3ff',
+          '#93c5fd': '#99ccff',
+          '#dbeafe': '#b3d9ff'
         };
         var match = orig.match(/#([0-9a-fA-F]{6})/);
         if (match && cbMap[match[0]]) {
@@ -1361,29 +1420,38 @@ document.addEventListener('DOMContentLoaded', function() {
   <!-- Sidebar for County Details and Analysis (single instance only) -->
     <div class="sidebar minimized" id="sidebar">
       <div class="sidebar-header" id="sidebar-header">
-        <h3>📊 County Analysis</h3>
+        <h3>County Analysis</h3>
         <button class="minimize-btn" id="sidebar-minimize-btn">+</button>
       </div>
       <div class="sidebar-content">
-        <div class="county-details" id="county-details" style="display: block;">
-          <h4 id="county-name">Select a County</h4>
-          <div id="county-info-content">
-            Click on any county to see detailed election results and analysis.
+        <details class="sidebar-panel" id="panel-focus" open>
+          <summary>Focus</summary>
+          <div class="county-details" id="county-details" style="display: block;">
+            <h4 id="county-name">Select a County</h4>
+            <div id="county-info-content">
+              Click on any county or district to see results. Click again to see trends.
+            </div>
           </div>
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label for="county-search" style="font-weight:600;">Search County:</label>
-          <input type="text" id="county-search" placeholder="Type county name..." autocomplete="off" spellcheck="false" style="width:100%;padding:8px;border-radius:6px;margin-top:6px;margin-bottom:6px;border:1px solid #d1d5db;" />
-        </div>
-        <h4 id="statewide">🏛️ North Carolina Statewide</h4>
-  <div style="margin:18px 0 8px 0; border-bottom:2px solid #e5e7eb;"></div>
-   <div class="statewide-results" id="statewide-results">
-  <h4 id="contest-name" style="margin:0 0 15px 0; font-size:16px; font-weight:700; color:#1f2937;"></h4>
-      <div id="statewide-content">
-        <p>Select a contest to see statewide results and margin.</p>
-        <div id="statewide-temperature-bar" style="width:100%;height:24px;margin:12px 0;display:none;"></div>
-      </div>
-    </div>
+        </details>
+
+        <details class="sidebar-panel" id="panel-search">
+          <summary>Search</summary>
+          <div style="margin-top: 10px;">
+            <label for="county-search" style="font-weight:600;">County</label>
+            <input type="text" id="county-search" placeholder="Type county name..." autocomplete="off" spellcheck="false" />
+          </div>
+        </details>
+
+        <details class="sidebar-panel" id="panel-statewide" open>
+          <summary>Statewide</summary>
+          <div class="statewide-results" id="statewide-results" style="margin-top: 10px;">
+            <h4 id="contest-name" style="margin:0 0 12px 0; font-size:14px; font-weight:800; color:#0f172a;"></h4>
+            <div id="statewide-content">
+              <p>Select a contest to see statewide results and margin.</p>
+              <div id="statewide-temperature-bar" style="width:100%;height:24px;margin:12px 0;display:none;"></div>
+            </div>
+          </div>
+        </details>
       </div>
       <div class="sidebar-footer" style="padding: 16px 0; text-align: center; color: #888; font-size: 15px; border-top: 1px solid #e5e7eb; background: #f9fafb;">
         Created by Shamar Davis
@@ -1403,7 +1471,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Main Controls Dropdown (Contest Selector) -->
     <div class="main-controls" id="main-controls">
         <div class="controls-header" style="display:flex;align-items:center;justify-content:space-between;">
-            <h3>🗳️ North Carolina Election Contests</h3>
+            <h3>North Carolina Election Contests</h3>
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="minimize-btn" onclick="toggleMainControls()" id="controls-minimize-btn">−</button>
             </div>
@@ -1419,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="control-group">
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <label>📊 Contest Type:</label>
+                  <label>Contest:</label>
                   <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">♿</button>
                   <button id="label-toggle" title="Toggle County Labels" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
                   <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
@@ -1427,6 +1495,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <select id="contestSelect">
                     <option value="">Select a Contest...</option>
                 </select>
+                <div style="margin-top:8px;font-size:12px;color:#64748b;line-height:1.3;">
+                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels, `S` sidebar.
+                </div>
             </div>
         </div>
     </div>
@@ -1440,21 +1511,21 @@ document.addEventListener('DOMContentLoaded', function() {
             <button class="minimize-btn" onclick="toggleLegend()" id="legend-minimize-btn">−</button>
         </div>
         <div class="legend-content" id="legend-content">
-            <div class="legend-item"><div class="legend-color" style="background: #67000d;"></div>Annihilation Republican (40%+)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #a50f15;"></div>Dominant Republican (30.00-39.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #cb181d;"></div>Stronghold Republican (20.00-29.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #ef3b2c;"></div>Safe Republican (10.00-19.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #fb6a4a;"></div>Likely Republican (5.50-9.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #fcae91;"></div>Lean Republican (1.00-5.49%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee8c8;"></div>Tilt Republican (0.50-0.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #f7f7f7; border: 1px solid #999;"></div>Tossup (<0.50%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #e1f5fe;"></div>Tilt Democratic (0.50-0.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #c6dbef;"></div>Lean Democratic (1.00-5.49%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #9ecae1;"></div>Likely Democratic (5.50-9.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #6baed6;"></div>Safe Democratic (10.00-19.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #3182bd;"></div>Stronghold Democratic (20.00-29.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #08519c;"></div>Dominant Democratic (30.00-39.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #08306b;"></div>Annihilation Democratic (40%+)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #7f1d1d;"></div>Annihilation Republican (40%+)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #b91c1c;"></div>Dominant Republican (30.00-39.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #dc2626;"></div>Stronghold Republican (20.00-29.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div>Safe Republican (10.00-19.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f87171;"></div>Likely Republican (5.50-9.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #fecaca;"></div>Lean Republican (1.00-5.49%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #fff1f2;"></div>Tilt Republican (0.50-0.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f8fafc; border: 1px solid rgba(15,23,42,0.35);"></div>Tossup (<0.50%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #dbeafe;"></div>Tilt Democratic (0.50-0.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #93c5fd;"></div>Lean Democratic (1.00-5.49%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #60a5fa;"></div>Likely Democratic (5.50-9.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div>Safe Democratic (10.00-19.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #2563eb;"></div>Stronghold Democratic (20.00-29.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #1d4ed8;"></div>Dominant Democratic (30.00-39.99%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #1e3a8a;"></div>Annihilation Democratic (40%+)</div>
         </div>
     </div>
 
@@ -2319,13 +2390,13 @@ document.addEventListener('DOMContentLoaded', function() {
       // Use county analysis sidebar color logic for competitiveness
       if (marginPct >= 40) {
         compLabel = winner === 'Republican' ? "Annihilation Republican (40%+)" : "Annihilation Democratic (40%+)";
-        compColor = winner === 'Republican' ? '#450a0a' : '#0c1d56';
+        compColor = winner === 'Republican' ? '#7f1d1d' : '#1e3a8a';
       } else if (marginPct >= 30 && marginPct <= 39.99) {
         compLabel = winner === 'Republican' ? "Dominant Republican (30.00-39.99%)" : "Dominant Democratic (30.00-39.99%)";
         compColor = winner === 'Republican' ? '#7f1d1d' : '#1e3a8a';
       } else if (marginPct >= 20 && marginPct <= 29.99) {
         compLabel = winner === 'Republican' ? "Stronghold Republican (20.00-29.99%)" : "Stronghold Democratic (20.00-29.99%)";
-        compColor = winner === 'Republican' ? '#991b1b' : '#1e40af';
+        compColor = winner === 'Republican' ? '#dc2626' : '#2563eb';
       } else if (marginPct >= 10 && marginPct <= 19.99) {
         compLabel = winner === 'Republican' ? "Safe Republican (10.00-19.99%)" : "Safe Democratic (10.00-19.99%)";
         compColor = winner === 'Republican' ? '#dc2626' : '#3b82f6';
@@ -2337,10 +2408,10 @@ document.addEventListener('DOMContentLoaded', function() {
         compColor = winner === 'Republican' ? '#f87171' : '#93c5fd';
       } else if (marginPct >= 0.50 && marginPct <= 0.99) {
         compLabel = winner === 'Republican' ? "Tilt Republican (0.50-0.99%)" : "Tilt Democratic (0.50-0.99%)";
-        compColor = winner === 'Republican' ? '#fca5a5' : '#bfdbfe';
+        compColor = winner === 'Republican' ? '#fff1f2' : '#dbeafe';
       } else {
         compLabel = winner === 'Democratic' ? 'Tossup (Democratic Win - <0.50%)' : 'Tossup (Republican Win - <0.50%)';
-        compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626'; // Blue for Dem win, Red for Rep win
+        compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626';
       }
       
       // Build the horizontal bar with D/R/Other if present
@@ -2405,11 +2476,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update sidebar title
       const sidebarTitle = document.querySelector('.sidebar-header h3');
       const titles = {
-        'counties': '📊 County Analysis',
-        'districts': '📊 Congressional District Analysis', 
-        'state_house': '📊 State House District Analysis',
-        'state_senate': '📊 State Senate District Analysis',
-        'vtds_2000': '📊 2000 Precinct Analysis'
+        'counties': 'County Analysis',
+        'districts': 'Congressional District Analysis', 
+        'state_house': 'State House District Analysis',
+        'state_senate': 'State Senate District Analysis',
+        'vtds_2000': '2000 Precinct Analysis'
       };
       sidebarTitle.textContent = titles[view];
       
@@ -3016,16 +3087,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       // Card-style layout
       sidebarContent += '<div class="result-summary">';
-      sidebarContent += '<h3 class="sidebar-section-title">📊 Election Results</h3>';
+      sidebarContent += '<h3 class="sidebar-section-title">Election Results</h3>';
       if (precincts) sidebarContent += `<div style="font-size:14px;"><b>Precincts:</b> ${precincts}</div>`;
       sidebarContent += `<div style="font-size:14px;margin-bottom:10px;"><b>Total Votes:</b> ${totalVotes.toLocaleString()}</div>`;
       sidebarContent += `</div>`;
     sidebarContent += `<div class="winner-section">`;
-  sidebarContent += '<h3 class="sidebar-section-title">🏆 Winner</h3>';
+  sidebarContent += '<h3 class="sidebar-section-title">Winner</h3>';
   sidebarContent += `<p class="sidebar-winner" style="color: ${winnerColor}; font-weight: bold;">${winnerCandidate} (${winner === 'Republican' ? 'R' : 'D'})</p>`;
   sidebarContent += `</div>`;
   sidebarContent += `<div class="margin-section">`;
-  sidebarContent += '<h3 class="sidebar-section-title">📈 Margin</h3>';
+  sidebarContent += '<h3 class="sidebar-section-title">Margin</h3>';
   let marginColor = winnerColor;
   if (winner !== 'Republican') {
     marginColor = isColorblind ? cbColorForMargin(parseFloat(marginPct), 'D') : '#2563eb';
@@ -3034,9 +3105,9 @@ document.addEventListener('DOMContentLoaded', function() {
   sidebarContent += `<p class="sidebar-margin-details" style="color: #6b7280;">(${Math.abs(margin).toLocaleString()} vote margin)</p>`;
   sidebarContent += `</div>`;
   sidebarContent += `<div class="vote-breakdown">`;
-  sidebarContent += '<h3 class="sidebar-section-title">🗳️ Vote Breakdown</h3>';
+  sidebarContent += '<h3 class="sidebar-section-title">Vote Breakdown</h3>';
   // For colorblind mode, use the correct accessibility palette for Republican vote breakdown
-  let repColor = '#ef3b2c';
+  let repColor = '#dc2626';
   if (isColorblind) {
     if (parseFloat(marginPct) >= 40) repColor = '#cc5500';
     else if (parseFloat(marginPct) >= 30 && parseFloat(marginPct) <= 39.99) repColor = '#ff6600';
@@ -3048,7 +3119,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else repColor = '#cccccc';
   } else {
     // Non-accessibility mode: always use red for Republican vote breakdown
-    repColor = '#ef3b2c';
+    repColor = '#dc2626';
   }
   let demColor;
   if (isColorblind) {
@@ -3091,26 +3162,26 @@ document.addEventListener('DOMContentLoaded', function() {
   let compColor = '#6b7280';
   // Handle tossup cases with better colors and formatting like index (1).html
   if (competitiveness.includes('Tossup')) {
-    compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626'; // Blue for Dem win, Red for Rep win
+    compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626';
   } else if (competitiveness.includes('Rep')) {
-    if (competitiveness.includes('Annihilation')) compColor = '#450a0a';
-    else if (competitiveness.includes('Dominant')) compColor = '#7f1d1d';
-    else if (competitiveness.includes('Stronghold')) compColor = '#991b1b';
-    else if (competitiveness.includes('Safe')) compColor = '#dc2626';
-    else if (competitiveness.includes('Likely')) compColor = '#ef4444';
-    else if (competitiveness.includes('Lean')) compColor = '#f87171';
-    else if (competitiveness.includes('Tilt')) compColor = '#fca5a5';
+    if (competitiveness.includes('Annihilation')) compColor = '#7f1d1d';
+    else if (competitiveness.includes('Dominant')) compColor = '#b91c1c';
+    else if (competitiveness.includes('Stronghold')) compColor = '#dc2626';
+    else if (competitiveness.includes('Safe')) compColor = '#ef4444';
+    else if (competitiveness.includes('Likely')) compColor = '#f87171';
+    else if (competitiveness.includes('Lean')) compColor = '#fecaca';
+    else if (competitiveness.includes('Tilt')) compColor = '#fff1f2';
   } else if (competitiveness.includes('Dem')) {
-    if (competitiveness.includes('Annihilation')) compColor = '#0c1d56';
-    else if (competitiveness.includes('Dominant')) compColor = '#1e3a8a';
-    else if (competitiveness.includes('Stronghold')) compColor = '#1e40af';
+    if (competitiveness.includes('Annihilation')) compColor = '#1e3a8a';
+    else if (competitiveness.includes('Dominant')) compColor = '#1d4ed8';
+    else if (competitiveness.includes('Stronghold')) compColor = '#2563eb';
     else if (competitiveness.includes('Safe')) compColor = '#3b82f6';
     else if (competitiveness.includes('Likely')) compColor = '#60a5fa';
     else if (competitiveness.includes('Lean')) compColor = '#93c5fd';
-    else if (competitiveness.includes('Tilt')) compColor = '#bfdbfe';
+    else if (competitiveness.includes('Tilt')) compColor = '#dbeafe';
   }
   sidebarContent += `<div class="competitiveness-section">`;
-  sidebarContent += '<h5>🎯 Competitiveness</h5>';
+  sidebarContent += '<h5>Competitiveness</h5>';
   sidebarContent += `<p style="color: ${compColor}; font-weight: bold; font-size: 16px;">${competitiveness}</p>`;
   if (actualMarginPct <= 0.5) {
     sidebarContent += `<p style="color: #f59e0b; font-style: italic;">(Extremely close!)</p>`;
@@ -3121,8 +3192,8 @@ document.addEventListener('DOMContentLoaded', function() {
   sidebarContent += `</div>`;
   // Historical trend (year-by-year margins) for the currently selected contest.
   sidebarContent += `<div class="competitiveness-section">`;
-  sidebarContent += '<h5>📈 Historical Trends</h5>';
-  sidebarContent += `<div id="county-trends" style="margin-top:6px;color:#94a3b8;">Loading…</div>`;
+  sidebarContent += '<h5>Historical Trends</h5>';
+  sidebarContent += `<div id="county-trends" style="margin-top:6px;color:#94a3b8;">Loading...</div>`;
   sidebarContent += `</div>`;
   contentEl.innerHTML = sidebarContent;
   // Populate trends asynchronously from manifest slices (does not block UI).
@@ -3321,8 +3392,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function updatePrecinctVisibility() {
       const btn = document.getElementById('precinct-toggle');
       if (btn) {
-        btn.textContent = precinctsEnabled ? 'Precincts On' : 'Precincts Off';
+        if (precinctLoadInFlight) {
+          btn.textContent = 'Precincts Loading';
+        } else {
+          btn.textContent = precinctsEnabled ? 'Precincts On' : 'Precincts Off';
+        }
         btn.style.background = precinctsEnabled ? '#1d4ed8' : '#065f46';
+        btn.style.opacity = precinctLoadInFlight ? '0.75' : '1';
       }
       const visible = precinctsEnabled && map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5);
       // Auto-load precinct geometry once the overlay would become visible.
@@ -4025,39 +4101,39 @@ document.addEventListener('DOMContentLoaded', function() {
             let compColor = '#6b7280';
             // Handle tossup cases with better colors and formatting like index (1).html
             if (competitiveness.includes('Tossup')) {
-              compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626'; // Blue for Dem win, Red for Rep win
+              compColor = winner === 'Democratic' ? '#2563eb' : '#dc2626';
             } else if (competitiveness.includes('Rep')) {
-              if (competitiveness.includes('Annihilation')) compColor = '#67000d';
-              else if (competitiveness.includes('Dominant')) compColor = '#a50f15';
-              else if (competitiveness.includes('Stronghold')) compColor = '#cb181d';
-              else if (competitiveness.includes('Safe')) compColor = '#ef3b2c';
-              else if (competitiveness.includes('Likely')) compColor = '#fb6a4a';
-              else if (competitiveness.includes('Lean')) compColor = '#fcae91';
-              else if (competitiveness.includes('Tilt')) compColor = '#fee8c8';
+              if (competitiveness.includes('Annihilation')) compColor = '#7f1d1d';
+              else if (competitiveness.includes('Dominant')) compColor = '#b91c1c';
+              else if (competitiveness.includes('Stronghold')) compColor = '#dc2626';
+              else if (competitiveness.includes('Safe')) compColor = '#ef4444';
+              else if (competitiveness.includes('Likely')) compColor = '#f87171';
+              else if (competitiveness.includes('Lean')) compColor = '#fecaca';
+              else if (competitiveness.includes('Tilt')) compColor = '#fff1f2';
             } else if (competitiveness.includes('Dem')) {
-              if (competitiveness.includes('Annihilation')) compColor = '#08306b';
-              else if (competitiveness.includes('Dominant')) compColor = '#08519c';
-              else if (competitiveness.includes('Stronghold')) compColor = '#3182bd';
-              else if (competitiveness.includes('Safe')) compColor = '#6baed6';
-              else if (competitiveness.includes('Likely')) compColor = '#9ecae1';
-              else if (competitiveness.includes('Lean')) compColor = '#c6dbef';
-              else if (competitiveness.includes('Tilt')) compColor = '#e1f5fe';
+              if (competitiveness.includes('Annihilation')) compColor = '#1e3a8a';
+              else if (competitiveness.includes('Dominant')) compColor = '#1d4ed8';
+              else if (competitiveness.includes('Stronghold')) compColor = '#2563eb';
+              else if (competitiveness.includes('Safe')) compColor = '#3b82f6';
+              else if (competitiveness.includes('Likely')) compColor = '#60a5fa';
+              else if (competitiveness.includes('Lean')) compColor = '#93c5fd';
+              else if (competitiveness.includes('Tilt')) compColor = '#dbeafe';
             }
             
             electionInfo = `
               <div style="margin-bottom: 16px;">
-                <h5>🎯 Competitiveness</h5>
+                <h5>Competitiveness</h5>
                 <p style="color: ${compColor}; font-weight: bold; font-size: 16px;">${competitiveness}</p>
               </div>
               <div style="margin-bottom: 16px;">
-                <h5>📈 Margin</h5>
-                <p style="color: ${winner === 'Republican' ? '#dc2626' : '#1e40af'}; font-weight: bold; font-size: 18px;">
+                <h5>Margin</h5>
+                <p style="color: ${winner === 'Republican' ? '#dc2626' : '#2563eb'}; font-weight: bold; font-size: 18px;">
                   ${winner} +${marginPct.toFixed(2)}%
                 </p>
               </div>
               <div style="margin-bottom: 16px;">
-                <h5>🗳️ Vote Breakdown</h5>
-                <p><span style="color: #1e40af; font-weight: bold;">Democratic: </span>${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</p>
+                <h5>Vote Breakdown</h5>
+                <p><span style="color: #2563eb; font-weight: bold;">Democratic: </span>${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</p>
                 <p><span style="color: #dc2626; font-weight: bold;">Republican: </span>${repPct.toFixed(2)}% (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
@@ -4109,7 +4185,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // This is complex without a county-to-district mapping, so show general message
           electionInfo = `
             <div style="margin-bottom: 16px;">
-              <h5>📊 ${year} ${chamber === 'house' ? 'State House' : 'State Senate'}</h5>
+              <h5>${year} ${chamber === 'house' ? 'State House' : 'State Senate'}</h5>
               <p style="color: #666; font-style: italic;">District-level results require county-to-district mapping. 
               Click to see general trends for this contest type.</p>
             </div>
@@ -4368,22 +4444,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function categoryColorForMargin(marginPct, winner) {
+      // A softer, more modern ramp (still categorical).
+      // REP: reds; DEM: blues; Tossup: near-white.
       if (marginPct >= 40) {
-        return winner === 'R' ? '#67000d' : '#08306b';
+        return winner === 'R' ? '#7f1d1d' : '#1e3a8a';
       } else if (marginPct >= 30) {
-        return winner === 'R' ? '#a50f15' : '#08519c';
+        return winner === 'R' ? '#b91c1c' : '#1d4ed8';
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#cb181d' : '#3182bd';
+        return winner === 'R' ? '#dc2626' : '#2563eb';
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#ef3b2c' : '#6baed6';
+        return winner === 'R' ? '#ef4444' : '#3b82f6';
       } else if (marginPct >= 5.5) {
-        return winner === 'R' ? '#fb6a4a' : '#9ecae1';
+        return winner === 'R' ? '#f87171' : '#60a5fa';
       } else if (marginPct >= 1.0) {
-        return winner === 'R' ? '#fcae91' : '#c6dbef';
+        return winner === 'R' ? '#fecaca' : '#93c5fd';
       } else if (marginPct >= 0.5) {
-        return winner === 'R' ? '#fee8c8' : '#e1f5fe';
+        return winner === 'R' ? '#fff1f2' : '#dbeafe';
       } else {
-        return '#f7f7f7';
+        return '#f8fafc';
       }
     }
 
@@ -4757,4 +4835,6 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
+
+
 
