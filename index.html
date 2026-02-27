@@ -3020,7 +3020,10 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'county-fill', 
           type: 'fill', 
           source: 'counties', 
-          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.85 } 
+          // Keep the county layer for interactions/search, but don't paint a fill.
+          // This lets precinct/block/district coloring read cleanly while still
+          // showing county outlines.
+          paint: { 'fill-color': '#000000', 'fill-opacity': 0.0 } 
         });
         addLayerWithOptionalSourceLayer({ 
           id: 'county-stroke', 
@@ -4363,7 +4366,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       debugLog(`Color expression built for ${countiesProcessed} counties`);
       
-      map.setPaintProperty('county-fill', 'fill-color', expr);
+      // County fill is intentionally transparent so it doesn't muddy precinct/block colors.
+      // We still compute the expression (so county details remain correct), but we do not
+      // apply it to the map paint.
+      // map.setPaintProperty('county-fill', 'fill-color', expr);
       // Optional precinct expression (detail overlay)
       if (map.getLayer('precinct-fill')) {
         const exprPrecinct = ['case'];

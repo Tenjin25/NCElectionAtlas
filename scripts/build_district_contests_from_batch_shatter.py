@@ -961,6 +961,7 @@ def build_payload(
     scope: str,
     contest_type: str,
     office_label: str,
+    nongeo_allocation_mode: str,
     dem_map: dict[str, int],
     rep_map: dict[str, int],
     oth_map: dict[str, int],
@@ -1002,6 +1003,7 @@ def build_payload(
             "total_precinct_keys": int(total),
             "source": "batch_shatter_vap_party_split",
             "office": office_label,
+            "nongeo_allocation_mode": nongeo_allocation_mode,
         },
         "general": {"results": results},
     }
@@ -1022,8 +1024,8 @@ def main() -> None:
     parser.add_argument(
         "--allocation-year",
         type=int,
-        default=None,
-        help="Use this year key in allocation_weights.json (defaults to --year).",
+        default=2022,
+        help="Use this year key in allocation_weights.json (defaults to 2022 for SL 2022 district overlays).",
     )
     parser.add_argument(
         "--min-county-share",
@@ -1219,6 +1221,7 @@ def main() -> None:
                 scope="state_house",
                 contest_type=contest_type,
                 office_label=office,
+                nongeo_allocation_mode=args.nongeo_allocation_mode,
                 dem_map=dem_h,
                 rep_map=rep_h,
                 oth_map=oth_h,
@@ -1232,6 +1235,7 @@ def main() -> None:
                 scope="state_senate",
                 contest_type=contest_type,
                 office_label=office,
+                nongeo_allocation_mode=args.nongeo_allocation_mode,
                 dem_map=dem_s,
                 rep_map=rep_s,
                 oth_map=oth_s,
@@ -1245,6 +1249,7 @@ def main() -> None:
                 scope="congressional",
                 contest_type=contest_type,
                 office_label=office,
+                nongeo_allocation_mode=args.nongeo_allocation_mode,
                 dem_map=dem_c,
                 rep_map=rep_c,
                 oth_map=oth_c,
