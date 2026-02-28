@@ -102,7 +102,9 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Define toggleSidebar function before DOMContentLoaded
-    const SIDEBAR_ENABLED = true;
+    const SIDEBAR_ENABLED = false;
+    // Gate sidebar rendering/styles without a flash-of-sidebar on load.
+    document.documentElement.classList.toggle('sidebar-enabled', SIDEBAR_ENABLED);
 
     function toggleSidebar() {
       if (!SIDEBAR_ENABLED) return;
@@ -260,8 +262,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-/* Show floating button only when sidebar is minimized */
-#sidebar-float-toggle { display: flex; position: fixed; top: 10px; right: 10px; z-index: 10010; }
+/* Sidebar is disabled by default; show only when html has .sidebar-enabled. */
+#sidebar, #sidebar-float-toggle { display: none; }
+html.sidebar-enabled #sidebar { display: block; }
+
+/* Floating button (only when sidebar exists) */
+#sidebar-float-toggle { position: fixed; top: 10px; right: 10px; z-index: 10010; }
 /* Mobile: Larger touch-friendly floating button */
 @media (max-width: 768px) {
   #sidebar-float-toggle {
@@ -287,9 +293,12 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Manrope', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: #0f172a;
   overflow: hidden;
   touch-action: pan-x pan-y;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 #map {
   position: absolute;
@@ -609,13 +618,28 @@ body {
   background: #e5e7eb;
   color: #374151;
 }
-.view-toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 15px;
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 4px;
+.view-toggle-btn {
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  transition: background 0.15s ease, transform 0.05s ease, border-color 0.15s ease;
+}
+.view-toggle-btn:hover {
+  background: rgba(15, 23, 42, 0.07);
+}
+.view-toggle-btn:active {
+  transform: translateY(1px);
+}
+.view-toggle-btn.active {
+  background: #0f172a;
+  color: #fff;
+  border-color: rgba(15, 23, 42, 0.25);
 }
 .control-group {
   margin-bottom: 16px;
@@ -1122,7 +1146,7 @@ body {
     #sidebar-float-toggle:hover {
       background: #1746a0;
     }
-    .sidebar.minimized ~ #sidebar-float-toggle {
+    html.sidebar-enabled .sidebar.minimized ~ #sidebar-float-toggle {
       display: flex !important;
     }
   /* Removed empty ruleset for #map.sidebar-minimized */
@@ -1139,7 +1163,7 @@ body {
   }
 
   body {
-    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    font-family: 'Manrope', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     background: radial-gradient(circle at 18% 12%, #dbeafe 0%, #eaf2ff 28%, #f8fafc 75%);
     color: var(--ui-text);
   }
@@ -1272,6 +1296,49 @@ body {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.70);
     padding: 10px 12px;
+  }
+
+  .hover-meta {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    background: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .meta-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #9ca3af;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+  }
+
+  .meta-chip.dem .dot { background: #2563eb; }
+  .meta-chip.rep .dot { background: #dc2626; }
+  .meta-chip.tie .dot { background: #94a3b8; }
+  .meta-chip.shift .dot { background: #0ea5e9; }
+
+  .meta-subtle {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 10px;
+    line-height: 1.35;
   }
 
   .result-card .rc-top {
@@ -1420,6 +1487,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  // Allow other modules (viz modes) to re-apply legend recoloring.
+  window.updateLegendColors = updateLegendColors;
   if (accBtn) {
     accBtn.onclick = function() {
       document.body.classList.toggle('colorblind-mode');
@@ -1566,10 +1635,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="controls-content" id="controls-content">
             <div class="control-group" style="margin-bottom:10px;">
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button id="counties-view" class="view-toggle active" onclick="setMapView('counties')">Counties</button>
-                  <button id="districts-view" class="view-toggle" onclick="setMapView('districts')">Congress</button>
-                  <button id="state-house-view" class="view-toggle" onclick="setMapView('state_house')">State House</button>
-                  <button id="state-senate-view" class="view-toggle" onclick="setMapView('state_senate')">State Senate</button>
+                  <button id="counties-view" class="view-toggle-btn active" onclick="setMapView('counties')">Counties</button>
+                  <button id="districts-view" class="view-toggle-btn" onclick="setMapView('districts')">Congress</button>
+                  <button id="state-house-view" class="view-toggle-btn" onclick="setMapView('state_house')">State House</button>
+                  <button id="state-senate-view" class="view-toggle-btn" onclick="setMapView('state_senate')">State Senate</button>
                 </div>
             </div>
             <div class="control-group">
@@ -1583,7 +1652,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="">Select a Contest...</option>
                 </select>
                 <div style="margin-top:8px;font-size:12px;color:#64748b;line-height:1.3;">
-                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels, `S` sidebar.
+                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels.
                 </div>
             </div>
         </div>
@@ -1598,7 +1667,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button class="minimize-btn" onclick="toggleLegend()" id="legend-minimize-btn">-</button>
         </div>
         <div class="legend-content" id="legend-content">
-            <div class="legend-item"><div class="legend-color" style="background: #67000d;"></div>Annihilation Republican (40%+)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #67000d;"></div>Annihilation Republican (≥40.00%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #a50f15;"></div>Dominant Republican (30.00-39.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #cb181d;"></div>Stronghold Republican (20.00-29.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #ef3b2c;"></div>Safe Republican (10.00-19.99%)</div>
@@ -1612,7 +1681,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="legend-item"><div class="legend-color" style="background: #6baed6;"></div>Safe Democratic (10.00-19.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #3182bd;"></div>Stronghold Democratic (20.00-29.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #08519c;"></div>Dominant Democratic (30.00-39.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #08306b;"></div>Annihilation Democratic (40%+)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #08306b;"></div>Annihilation Democratic (≥40.00%)</div>
         </div>
     </div>
 
@@ -1686,7 +1755,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     mapboxgl.accessToken = CONFIG.mapboxToken;
 
-    const map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/streets-v12', center: CONFIG.center, zoom: CONFIG.zoom });
+    const map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/light-v11', center: CONFIG.center, zoom: CONFIG.zoom });
     map.on('mousemove', (e) => {
       lastPointerPoint = e.point;
     });
@@ -1739,6 +1808,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastPointerPoint = null;
     let hoverRefreshRaf = null;
     let appReady = false;
+    let vizShiftCache = null; // { contestType, year, prevYear, prevPrecinctMarginByNorm: Map, prevCountyTotals: Object }
+    const vizDistrictShiftCache = new Map(); // key: `${scope}_${contestType}_${year}` -> { prevYear, prevNode }
 
     function getVectorSourceLayer(sourceId) {
       if (!CONFIG.tilesets?.enabled) return null;
@@ -1775,20 +1846,65 @@ document.addEventListener('DOMContentLoaded', function() {
           switchVizMode(mode);
         });
       });
+      // Ensure legend matches initial mode.
+      renderLegendForVizMode(currentVizMode);
+    }
+
+    function setVizModeUI(mode) {
+      document.querySelectorAll('.viz-mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
     }
 
     function switchVizMode(mode) {
       currentVizMode = mode;
       
       // Update button states
-      document.querySelectorAll('.viz-mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-      });
+      setVizModeUI(mode);
+      renderLegendForVizMode(mode);
       
       // Reapply current contest with new mode
       const contestSelect = document.getElementById('contestSelect');
       if (contestSelect && contestSelect.value) {
         applyContest(contestSelect.value);
+      }
+    }
+
+    function renderLegendForVizMode(mode, meta = {}) {
+      const legend = document.getElementById('legend');
+      const header = legend ? legend.querySelector('.legend-header h4') : null;
+      const content = document.getElementById('legend-content');
+      if (!content) return;
+      if (!content.dataset.marginsHtml) content.dataset.marginsHtml = content.innerHTML;
+
+      if (mode === 'winners') {
+        if (header) header.textContent = 'Winners';
+        content.innerHTML = `
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('D')};"></div>Democratic</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('R')};"></div>Republican</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('T')};"></div>Tie / No data</div>
+        `;
+      } else if (mode === 'shift') {
+        const a = meta?.fromYear ? `${meta.fromYear} → ${meta.toYear || ''}`.trim() : 'Shift';
+        if (header) header.textContent = meta?.fromYear ? `Shift (${a})` : 'Shift';
+        content.innerHTML = `
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-15)};"></div>D +15%</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-10)};"></div>D +10%</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-5)};"></div>D +5%</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(0)}; border: 1px solid rgba(15,23,42,0.20);"></div>No change</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(5)};"></div>R +5%</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(10)};"></div>R +10%</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(15)};"></div>R +15%</div>
+        `;
+      } else {
+        // margins (default)
+        if (header) header.textContent = 'Political Categories';
+        content.innerHTML = content.dataset.marginsHtml;
+      }
+
+      // If legend recoloring is available (colorblind toggle), re-apply it.
+      if (typeof window.updateLegendColors === 'function') {
+        window.updateLegendColors();
       }
     }
 
@@ -2874,6 +2990,23 @@ document.addEventListener('DOMContentLoaded', function() {
       return buildTooltipShell(title, lines);
     }
 
+    function shiftChipHTML(shiftPct, prevYear, year) {
+      const s = Number(shiftPct) || 0;
+      const dir = s > 0 ? 'R' : (s < 0 ? 'D' : 'T');
+      const abs = Math.abs(s);
+      const label = abs < 0.01 ? 'No change' : `${dir} + ${abs.toFixed(2)}%`;
+      const dotColor = colorForShiftMode(s);
+      const years = (prevYear && year) ? `${prevYear}→${year}` : '';
+      return `<span class="meta-chip shift"><span class="dot" style="background:${dotColor};"></span>Shift: ${label}${years ? ` <span style="color:#64748b;font-weight:800;">(${years})</span>` : ''}</span>`;
+    }
+
+    function winnerChipHTML(winner) {
+      const w = (winner || '').toString().toUpperCase();
+      const cls = w === 'R' ? 'rep' : (w === 'D' ? 'dem' : 'tie');
+      const label = w === 'R' ? 'Republican' : (w === 'D' ? 'Democratic' : 'Tie');
+      return `<span class="meta-chip ${cls}"><span class="dot"></span>${label}</span>`;
+    }
+
     function renderCountyHoverAtPoint(e) {
       if (!(e.features && e.features[0])) return;
       const props = e.features[0].properties || {};
@@ -2893,7 +3026,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestValue = document.getElementById('contestSelect')?.value || '';
 
       if (!contestValue || !row) {
-        showHoverTooltip(e.point.x, e.point.y, `<div class="tooltip-title"><strong>${countyDisplay}</strong></div><div style="margin-top: 8px; color: #999;">Select a contest to see results</div>`);
+        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${countyDisplay} County`, '<div style="color:#64748b;">Select a contest to see results</div>'));
+        wireTooltipButtons();
         return;
       }
 
@@ -2905,38 +3039,45 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherVotes = Number(row[`${contestType}_other`] || 0);
       const totalVotes = Number(row[`${contestType}_total`] || 0);
       if (totalVotes <= 0) {
-        showHoverTooltip(e.point.x, e.point.y, `<div class="tooltip-title"><strong>${countyDisplay}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`);
+        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${countyDisplay} County`, '<div style="color:#64748b;">No data available</div>'));
+        wireTooltipButtons();
         return;
       }
-      const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
-      const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
-      const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
       const demCandidate = row[`${contestType}_dem_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
       const repCandidate = row[`${contestType}_rep_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Republican');
-      const demCandidateDisp = stripRunningMateName(demCandidate);
-      const repCandidateDisp = stripRunningMateName(repCandidate);
-      const marginLabel = winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidateDisp, demCandidateDisp);
       setVoteCounterHoverState(`Hover: ${countyDisplay} County`, `${formatContestName(contestType, year)} ${year}`, demVotes, repVotes, otherVotes);
+
+      const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
+      const subtitle = `${formatContestName(contestType, year)} ${year}`;
 
       let demoLine = '';
       try {
         const demo = countyDemographics?.counties?.[norm] || null;
         if (demo) {
-          demoLine = `<div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444; color:#64748b;"><strong>VAP (18+):</strong> ${Number(demo.vap_18plus || 0).toLocaleString()}</div>`;
+          demoLine = `<div class="meta-subtle"><strong>VAP (18+):</strong> ${Number(demo.vap_18plus || 0).toLocaleString()}</div>`;
         }
       } catch (_) {}
-      const content = `
-        <div class="tooltip-title"><strong>${countyDisplay}</strong></div>
-        <div style="margin-top: 8px; font-size: 12px;">
-          <div style="color: #3b82f6; margin: 4px 0;"><strong>D:</strong> ${demVotes.toLocaleString()} (${demPct}%)</div>
-          <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
-          <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
-          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
-            <strong>Margin:</strong> ${marginLabel} | <strong>Total:</strong> ${totalVotes.toLocaleString()}
-          </div>
-          ${demoLine}
-        </div>`;
-      showHoverTooltip(e.point.x, e.point.y, content);
+
+      const chips = [];
+      if (currentVizMode === 'winners') {
+        chips.push(winnerChipHTML(winner));
+      } else if (currentVizMode === 'shift' && vizShiftCache?.prevCountyTotals) {
+        const prev = vizShiftCache.prevCountyTotals[norm] || null;
+        const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+        chips.push(shiftChipHTML(signedMarginPct - prevSigned, vizShiftCache.prevYear, vizShiftCache.year));
+      } else {
+        chips.push(winnerChipHTML(winner));
+      }
+
+      const inner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${demoLine}
+      `;
+
+      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${countyDisplay} County`, inner));
+      wireTooltipButtons();
     }
 
     function renderPrecinctHoverAtPoint(point, feature) {
@@ -2967,7 +3108,24 @@ document.addEventListener('DOMContentLoaded', function() {
       const demCandidate = row[`${contestType}_dem_candidate`] || '';
       const repCandidate = row[`${contestType}_rep_candidate`] || '';
       const subtitle = `${formatContestName(contestType, year)} ${year}`;
-      const inner = buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate);
+
+      const signedMarginPct = Number(row[`${contestType}_margin_pct`]);
+      const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, demVotes + repVotes + otherVotes) : signedMarginPct;
+      const winner = curSigned > 0 ? 'R' : (curSigned < 0 ? 'D' : 'T');
+      const chips = [];
+      if (currentVizMode === 'shift' && vizShiftCache?.prevPrecinctMarginByNorm) {
+        const prevSigned = Number(vizShiftCache.prevPrecinctMarginByNorm.get(precinctNorm) || 0);
+        chips.push(shiftChipHTML(curSigned - prevSigned, vizShiftCache.prevYear, vizShiftCache.year));
+      } else if (currentVizMode === 'winners') {
+        chips.push(winnerChipHTML(winner));
+      } else {
+        chips.push(winnerChipHTML(winner));
+      }
+
+      const inner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+      `;
       showHoverTooltip(point.x, point.y, buildTooltipShell(title, inner));
       wireTooltipButtons();
       setVoteCounterHoverState(`Hover: ${title}`, subtitle, demVotes, repVotes, otherVotes);
@@ -3031,11 +3189,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const contestValue = document.getElementById('contestSelect')?.value || '';
       if (!contestValue) {
-        showHoverTooltip(
-          e.point.x,
-          e.point.y,
-          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">Select a contest to see results</div>`
-        );
+        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, '<div style="color:#64748b;">Select a contest to see results</div>'));
+        wireTooltipButtons();
         return;
       }
 
@@ -3056,11 +3211,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (!row) {
-        showHoverTooltip(
-          e.point.x,
-          e.point.y,
-          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`
-        );
+        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, '<div style=\"color:#64748b;\">No data available</div>'));
+        wireTooltipButtons();
         return;
       }
 
@@ -3069,34 +3221,49 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherVotes = Number(row.other_votes || 0);
       const totalVotes = Number(row.total_votes || 0);
       if (totalVotes <= 0) {
-        showHoverTooltip(
-          e.point.x,
-          e.point.y,
-          `<div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div><div style="margin-top: 8px; color: #999;">No data available</div>`
-        );
+        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, '<div style=\"color:#64748b;\">No data available</div>'));
+        wireTooltipButtons();
         return;
       }
 
-      const demPct = ((demVotes / totalVotes) * 100).toFixed(2);
-      const repPct = ((repVotes / totalVotes) * 100).toFixed(2);
-      const otherPct = ((otherVotes / totalVotes) * 100).toFixed(2);
       const demCandidate = row.dem_candidate || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
       const repCandidate = row.rep_candidate || getCandidateName(year, formatContestName(contestType, year), 'Republican');
-      const demCandidateDisp = stripRunningMateName(demCandidate);
-      const repCandidateDisp = stripRunningMateName(repCandidate);
-      const marginLabel = winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidateDisp, demCandidateDisp);
-      setVoteCounterHoverState(`Hover: ${districtLabel} ${districtNum}`, `${formatContestName(contestType, year)} ${year}`, demVotes, repVotes, otherVotes);
-      const content = `
-        <div class="tooltip-title"><strong>${districtLabel} ${districtNum}</strong></div>
-        <div style="margin-top: 8px; font-size: 12px;">
-          <div style="color: #3b82f6; margin: 4px 0;"><strong>D:</strong> ${demVotes.toLocaleString()} (${demPct}%)</div>
-          <div style="color: #ef4444; margin: 4px 0;"><strong>R:</strong> ${repVotes.toLocaleString()} (${repPct}%)</div>
-          <div style="color: #9ca3af; margin: 4px 0;"><strong>Other:</strong> ${otherVotes.toLocaleString()} (${otherPct}%)</div>
-          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #444;">
-            <strong>Margin:</strong> ${marginLabel} | <strong>Total:</strong> ${totalVotes.toLocaleString()}
-          </div>
-        </div>`;
-      showHoverTooltip(e.point.x, e.point.y, content);
+      const subtitle = `${formatContestName(contestType, year)} ${year}`;
+      setVoteCounterHoverState(`Hover: ${districtLabel} ${districtNum}`, subtitle, demVotes, repVotes, otherVotes);
+
+      const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const winnerRaw = (row.winner || '').toString().toUpperCase();
+      const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
+
+      const chips = [];
+      if (currentVizMode === 'shift') {
+        const key = `${scope}_${contestType}_${year}`;
+        let cached = vizDistrictShiftCache.get(key) || null;
+        if (!cached) {
+          const prev = await getPreviousDistrictSlice(scope, contestType, Number(year));
+          cached = prev ? { prevYear: prev.year, prevNode: prev.node } : null;
+          vizDistrictShiftCache.set(key, cached);
+        }
+        if (cached?.prevNode?.general?.results) {
+          const prevResults = cached.prevNode.general.results;
+          const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
+          const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+          chips.push(shiftChipHTML(signedMarginPct - prevSigned, cached.prevYear, Number(year)));
+        } else {
+          chips.push(shiftChipHTML(0, null, null));
+        }
+      } else if (currentVizMode === 'winners') {
+        chips.push(winnerChipHTML(winner));
+      } else {
+        chips.push(winnerChipHTML(winner));
+      }
+
+      const inner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+      `;
+      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, inner));
+      wireTooltipButtons();
     }
 
     // Placeholder function for 2000 VTD layers (will be implemented when data is available)
@@ -4475,9 +4642,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Hover Tooltip Functions - VoteHub Style
-    function showHoverTooltip(x, y, content) {
+    function showHoverTooltip(x, y, content, { force = false } = {}) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
+      if (tooltipPinned && !force) return;
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
@@ -4550,6 +4718,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateHoverTooltipPosition(x, y) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip || tooltip.style.display === 'none') return;
+      if (tooltipPinned) return;
       
       const tooltipRect = tooltip.getBoundingClientRect();
       const padding = 15;
@@ -5243,6 +5412,114 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    function isColorblindModeActive() {
+      return document.body.classList.contains('colorblind-mode');
+    }
+
+    function accessibilityMarginColor(marginPct, winner) {
+      // Colorblind-friendly: blue/orange ramp.
+      if (marginPct >= 40) return winner === 'R' ? '#cc5500' : '#004d99';
+      if (marginPct >= 30) return winner === 'R' ? '#ff6600' : '#0066cc';
+      if (marginPct >= 20) return winner === 'R' ? '#ff8833' : '#0080ff';
+      if (marginPct >= 10) return winner === 'R' ? '#ffaa55' : '#3399ff';
+      if (marginPct >= 5.5) return winner === 'R' ? '#ffcc77' : '#66b3ff';
+      if (marginPct >= 1.0) return winner === 'R' ? '#ffdd99' : '#99ccff';
+      if (marginPct >= 0.5) return winner === 'R' ? '#ffeecc' : '#b3d9ff';
+      return '#cccccc';
+    }
+
+    function colorForMarginMode(marginPctAbs, winner) {
+      return isColorblindModeActive()
+        ? accessibilityMarginColor(marginPctAbs, winner)
+        : categoryColorForMargin(marginPctAbs, winner);
+    }
+
+    function colorForWinnerMode(winner) {
+      // winner: 'R' | 'D' | 'T'
+      const cb = isColorblindModeActive();
+      if (winner === 'R') return cb ? '#d97706' : '#dc2626';
+      if (winner === 'D') return cb ? '#2563eb' : '#2563eb';
+      return '#9ca3af';
+    }
+
+    function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      return ((Number(repVotes) - Number(demVotes)) / t) * 100;
+    }
+
+    function colorForShiftMode(shiftPct) {
+      // shiftPct: positive => more R, negative => more D
+      const s = Number(shiftPct) || 0;
+      const a = Math.abs(s);
+      const cb = isColorblindModeActive();
+      const dir = s >= 0 ? 'R' : 'D';
+      if (a < 0.5) return '#f8fafc';
+      // Bins tuned for readability; "strong" kicks in at 10.
+      const bin = a >= 15 ? 4 : a >= 10 ? 3 : a >= 5 ? 2 : 1;
+      if (cb) {
+        // Blue (D shift) vs orange (R shift).
+        if (dir === 'R') return ['#ffedd5', '#fdba74', '#f97316', '#c2410c'][bin - 1];
+        return ['#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8'][bin - 1];
+      }
+      // Red vs blue diverging.
+      if (dir === 'R') return ['#fee2e2', '#fca5a5', '#ef4444', '#991b1b'][bin - 1];
+      return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
+    }
+
+    async function tryLoadContestSliceStrict(contestType, year) {
+      const key = `${contestType}_${year}`;
+      try {
+        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
+        return (payload.rows || []).map(r => ({
+          year: Number(year),
+          county: r.county,
+          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
+          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
+          [`${contestType}_other`]: Number(r.other_votes) || 0,
+          [`${contestType}_total`]: Number(r.total_votes) || 0,
+          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
+          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
+          [`${contestType}_margin`]: Number(r.margin) || 0,
+          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
+          [`${contestType}_winner`]: r.winner || '',
+          [`${contestType}_color`]: r.color || ''
+        }));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function getPreviousContestSlice(contestType, year) {
+      const y = Number(year);
+      const candidates = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
+      for (const cy of candidates) {
+        const rows = await tryLoadContestSliceStrict(contestType, cy);
+        if (rows && rows.length) return { year: cy, rows };
+      }
+      return null;
+    }
+
+    async function tryLoadDistrictSliceStrict(scope, contestType, year) {
+      const key = `${scope}_${contestType}_${year}`;
+      try {
+        return await loadJSON(`${CONFIG.paths.district_contests_dir}/${key}.json`);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function getPreviousDistrictSlice(scope, contestType, year) {
+      const y = Number(year);
+      const candidates = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
+      for (const cy of candidates) {
+        const node = await tryLoadDistrictSliceStrict(scope, contestType, cy);
+        const results = node?.general?.results || null;
+        if (results && Object.keys(results).length) return { year: cy, node };
+      }
+      return null;
+    }
+
     async function applyContest(contestKey) {
       if (!contestKey) return setStatus('Select a contest');
       
@@ -5387,31 +5664,49 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, statewidedemVotes, statewidrepVotes, statewidotherVotes);
 
       // Build county expression (base map)
+      let mode = (currentVizMode || 'margins');
+      let prevMeta = null; // {year, rows}
+      let prevPrecinctMarginByNorm = null; // Map<string, number>
+      let prevCountyTotals = null; // Map countyNorm -> {dem, rep, total}
+
+      if (mode === 'shift') {
+        prevMeta = await getPreviousContestSlice(contestType, Number(year));
+        if (!prevMeta) {
+          setStatus(`Shift mode needs a prior year for ${formatContestName(contestType, year)}. Falling back to Margins.`);
+          mode = 'margins';
+          currentVizMode = 'margins';
+          setVizModeUI('margins');
+          renderLegendForVizMode('margins');
+          vizShiftCache = null;
+        } else {
+          renderLegendForVizMode('shift', { fromYear: prevMeta.year, toYear: Number(year) });
+          prevPrecinctMarginByNorm = new Map();
+          prevCountyTotals = {};
+          (prevMeta.rows || []).forEach(r => {
+            const rowName = (r.county || '').toString();
+            const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+            const countyNorm = normalizeCountyName(countyOnly);
+            if (!countyNorm) return;
+            const dem = Number(r[`${contestType}_dem`] || 0);
+            const rep = Number(r[`${contestType}_rep`] || 0);
+            const total = Number(r[`${contestType}_total`] || 0);
+            if (!prevCountyTotals[countyNorm]) prevCountyTotals[countyNorm] = { dem: 0, rep: 0, total: 0 };
+            prevCountyTotals[countyNorm].dem += dem;
+            prevCountyTotals[countyNorm].rep += rep;
+            prevCountyTotals[countyNorm].total += total;
+
+            const mPct = Number(r[`${contestType}_margin_pct`] || 0);
+            precinctNormVariants(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
+          });
+          vizShiftCache = { contestType, year: Number(year), prevYear: prevMeta.year, prevPrecinctMarginByNorm, prevCountyTotals };
+        }
+      } else {
+        renderLegendForVizMode(mode);
+        vizShiftCache = null;
+      }
+
       const expr = ['case'];
       let countiesProcessed = 0;
-      // Check if accessibility mode is active
-      const isColorblindMode = document.body.classList.contains('colorblind-mode');
-      
-      // Define colorblind-friendly color function
-      function getAccessibilityColor(marginPct, winner) {
-        if (marginPct >= 40) {
-          return winner === 'R' ? '#cc5500' : '#004d99';
-        } else if (marginPct >= 30 && marginPct <= 39.99) {
-          return winner === 'R' ? '#ff6600' : '#0066cc';
-        } else if (marginPct >= 20 && marginPct <= 29.99) {
-          return winner === 'R' ? '#ff8833' : '#0080ff';
-        } else if (marginPct >= 10 && marginPct <= 19.99) {
-          return winner === 'R' ? '#ffaa55' : '#3399ff';
-        } else if (marginPct >= 5.51 && marginPct <= 9.99) {
-          return winner === 'R' ? '#ffcc77' : '#66b3ff';
-        } else if (marginPct >= 1 && marginPct <= 5.5) {
-          return winner === 'R' ? '#ffdd99' : '#99ccff';
-        } else if (marginPct >= 0.51 && marginPct <= 0.99) {
-          return winner === 'R' ? '#ffeecc' : '#b3d9ff';
-        } else {
-          return '#cccccc';
-        }
-      }
       
       Object.keys(countyAgg).forEach(countyName => {
         const row = countyAgg[countyName];
@@ -5421,10 +5716,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (totalVotes === 0) return;
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
-        const winner = repPct > demPct ? 'R' : 'D';
-        const marginPct = Math.abs(repPct - demPct);
-        // Prefer color from JSON data, fall back to calculated color
-        let color = row[`${contestType}_color`];
+        const winner = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'T');
+        const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const marginPctAbs = Math.abs(signedMarginPct);
+        let color = '#e0e0e0';
+
+        if (mode === 'winners') {
+          color = colorForWinnerMode(winner);
+        } else if (mode === 'shift' && prevCountyTotals) {
+          const prev = prevCountyTotals[countyName];
+          const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+          const shift = signedMarginPct - prevSigned;
+          color = colorForShiftMode(shift);
+        } else {
+          color = colorForMarginMode(marginPctAbs, winner === 'T' ? 'R' : winner);
+        }
         
         // Debug logging for first few entries
         if (countiesProcessed < 5) {
@@ -5432,17 +5738,13 @@ document.addEventListener('DOMContentLoaded', function() {
             precinct: row.county,
             normalizedCountyName: countyName,
             contestType,
-            colorField: `${contestType}_color`,
+            vizMode: mode,
             colorFromData: color,
             demVotes,
             repVotes,
             winner,
-            marginPct
+            marginPctAbs
           });
-        }
-        
-        if (!color) {
-          color = isColorblindMode ? getAccessibilityColor(marginPct, winner) : categoryColorForMargin(marginPct, winner);
         }
         // Match county key across county tileset and local precinct fallback
         expr.push([
@@ -5457,26 +5759,40 @@ document.addEventListener('DOMContentLoaded', function() {
       
       debugLog(`Color expression built for ${countiesProcessed} counties`);
       
-      // County fill is intentionally transparent so it doesn't muddy precinct/block colors.
-      // We still compute the expression (so county details remain correct), but we do not
-      // apply it to the map paint.
-      // map.setPaintProperty('county-fill', 'fill-color', expr);
+      // Paint counties by default; when precinct overlay is enabled, reduce county opacity
+      // so precinct fills/dots remain visually primary.
+      if (map.getLayer('county-fill')) {
+        map.setPaintProperty('county-fill', 'fill-color', expr);
+        map.setPaintProperty('county-fill', 'fill-opacity', precinctsEnabled ? 0.10 : 0.82);
+      }
       // Optional precinct expression (detail overlay)
       {
         const exprPrecinct = ['case'];
         contestData.forEach(row => {
           const precinctNames = precinctNormVariants(row.county);
-          const demVotes = row[`${contestType}_dem`] || 0;
-          const repVotes = row[`${contestType}_rep`] || 0;
-          const totalVotes = row[`${contestType}_total`] || 0;
+          const demVotes = Number(row[`${contestType}_dem`] || 0);
+          const repVotes = Number(row[`${contestType}_rep`] || 0);
+          const totalVotes = Number(row[`${contestType}_total`] || 0);
           if (totalVotes === 0) return;
-          const demPct = (demVotes / totalVotes) * 100;
-          const repPct = (repVotes / totalVotes) * 100;
-          const winner = repPct > demPct ? 'R' : 'D';
-          const marginPct = Math.abs(repPct - demPct);
-          let color = row[`${contestType}_color`];
-          if (!color) {
-            color = isColorblindMode ? getAccessibilityColor(marginPct, winner) : categoryColorForMargin(marginPct, winner);
+          const signedMarginPct = Number(row[`${contestType}_margin_pct`]);
+          const winnerRaw = (row[`${contestType}_winner`] || '').toString().toUpperCase();
+          const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (repVotes === demVotes ? 'T' : (repVotes > demVotes ? 'R' : 'D')));
+          let color = '#d1d5db';
+
+          if (mode === 'winners') {
+            color = colorForWinnerMode(winner);
+          } else if (mode === 'shift' && prevPrecinctMarginByNorm) {
+            // Signed margin pct: positive => R, negative => D.
+            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            let prevSigned = 0;
+            // Use first matching norm (variants exist for precinct naming quirks).
+            for (const n of precinctNames) {
+              if (prevPrecinctMarginByNorm.has(n)) { prevSigned = prevPrecinctMarginByNorm.get(n); break; }
+            }
+            color = colorForShiftMode(curSigned - prevSigned);
+          } else {
+            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            color = colorForMarginMode(Math.abs(curSigned), winner === 'T' ? 'R' : winner);
           }
           precinctNames.forEach(precinctName => {
             exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
@@ -5668,6 +5984,3 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
-
-
-
