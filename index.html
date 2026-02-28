@@ -1458,6 +1458,17 @@ body {
   .meta-chip.rep .dot { background: #dc2626; }
   .meta-chip.tie .dot { background: #94a3b8; }
   .meta-chip.shift .dot { background: #0ea5e9; }
+  .meta-chip.flip .dot { background: #a855f7; }
+
+  .meta-chip.flip.dem {
+    border-color: rgba(37, 99, 235, 0.28);
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  .meta-chip.flip.rep {
+    border-color: rgba(220, 38, 38, 0.28);
+    background: rgba(220, 38, 38, 0.08);
+  }
 
   .meta-subtle {
     font-size: 12px;
@@ -1512,6 +1523,9 @@ body {
     letter-spacing: 0.08em;
     color: #64748b;
     font-weight: 800;
+    text-transform: none;
+    white-space: normal;
+    line-height: 1.15;
   }
 
   .result-card .rc-chip .v {
@@ -2027,6 +2041,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let appReady = false;
     let vizShiftCache = null; // { contestType, year, prevYear, prevPrecinctMarginByNorm: Map, prevCountyTotals: Object }
     const vizDistrictShiftCache = new Map(); // key: `${scope}_${contestType}_${year}` -> { prevYear, prevNode }
+    let vizPrevCache = null; // { contestType, year, prevYear, prevPrecinctMarginByNorm: Map, prevCountyTotals: Object }
+    const vizPrevDistrictCache = new Map(); // key: `${scope}_${contestType}_${year}` -> { prevYear, prevNode }
 
     function getVectorSourceLayer(sourceId) {
       if (!CONFIG.tilesets?.enabled) return null;
@@ -3056,6 +3072,29 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${winnerLabel} + ${pct.toFixed(2)}`;
     }
 
+    function winnerFromSignedMarginPct(signedPct) {
+      const v = Number(signedPct) || 0;
+      if (v > 0) return 'R';
+      if (v < 0) return 'D';
+      return 'T';
+    }
+
+    function flipInfo(prevSignedPct, curSignedPct) {
+      const from = winnerFromSignedMarginPct(prevSignedPct);
+      const to = winnerFromSignedMarginPct(curSignedPct);
+      const flipped = (from !== 'T' && to !== 'T' && from !== to);
+      return { flipped, from, to };
+    }
+
+    function flipChipHTML(prevSignedPct, curSignedPct) {
+      const f = flipInfo(prevSignedPct, curSignedPct);
+      if (!f.flipped) return '';
+      const labelFrom = f.from === 'R' ? 'R' : 'D';
+      const labelTo = f.to === 'R' ? 'R' : 'D';
+      const cls = f.to === 'R' ? 'rep' : 'dem';
+      return `<span class="meta-chip flip ${cls}"><span class="dot"></span>Flip: ${labelFrom}\u2192${labelTo}</span>`;
+    }
+
     function buildResultCardHTML(title, subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
@@ -3070,8 +3109,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100.0;
 
       const marginLabel = winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
-      const demLabel = shortCandidateLabel(demCandidate, 'DEM');
-      const repLabel = shortCandidateLabel(repCandidate, 'REP');
+      const demFull = (demCandidate || '').toString().trim() || 'Democratic';
+      const repFull = (repCandidate || '').toString().trim() || 'Republican';
 
       const safeTitle = (title || '').toString();
       const safeSubtitle = (subtitle || '').toString();
@@ -3096,7 +3135,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ${bar}
           <div class="rc-row">
             <div class="rc-chip">
-              <div class="k">D (${demLabel})</div>
+              <div class="k">D: ${demFull}</div>
               <div class="v" style="color:#1d4ed8;">${d.toLocaleString()} (${demPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
@@ -3104,7 +3143,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="v" style="color:#475569;">${o.toLocaleString()} (${otherPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
-              <div class="k">R (${repLabel})</div>
+              <div class="k">R: ${repFull}</div>
               <div class="v" style="color:#b91c1c;">${r.toLocaleString()} (${repPct.toFixed(2)}%)</div>
             </div>
           </div>
@@ -3277,14 +3316,22 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
 
       const chips = [];
-      if (currentVizMode === 'winners') {
-        chips.push(winnerChipHTML(winner));
-      } else if (currentVizMode === 'shift' && vizShiftCache?.prevCountyTotals) {
-        const prev = vizShiftCache.prevCountyTotals[norm] || null;
-        const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+      let prevSignedForFlip = null;
+      if (vizPrevCache?.prevYear && vizPrevCache?.prevCountyTotals) {
+        const prev = vizPrevCache.prevCountyTotals[norm] || null;
+        prevSignedForFlip = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+      }
+
+      if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
+        const prevSigned = (prevSignedForFlip !== null) ? prevSignedForFlip : 0;
         chips.push(shiftChipHTML(signedMarginPct - prevSigned, vizShiftCache.prevYear, vizShiftCache.year));
       } else {
         chips.push(winnerChipHTML(winner));
+      }
+
+      if (prevSignedForFlip !== null) {
+        const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
+        if (flipChip) chips.push(flipChip);
       }
 
       const inner = `
@@ -3330,13 +3377,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, demVotes + repVotes + otherVotes) : signedMarginPct;
       const winner = curSigned > 0 ? 'R' : (curSigned < 0 ? 'D' : 'T');
       const chips = [];
-      if (currentVizMode === 'shift' && vizShiftCache?.prevPrecinctMarginByNorm) {
-        const prevSigned = Number(vizShiftCache.prevPrecinctMarginByNorm.get(precinctNorm) || 0);
+      let prevSignedForFlip = null;
+      if (vizPrevCache?.prevYear && vizPrevCache?.prevPrecinctMarginByNorm) {
+        prevSignedForFlip = Number(vizPrevCache.prevPrecinctMarginByNorm.get(precinctNorm) || 0);
+      }
+
+      if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
+        const prevSigned = (prevSignedForFlip !== null) ? prevSignedForFlip : 0;
         chips.push(shiftChipHTML(curSigned - prevSigned, vizShiftCache.prevYear, vizShiftCache.year));
-      } else if (currentVizMode === 'winners') {
-        chips.push(winnerChipHTML(winner));
       } else {
         chips.push(winnerChipHTML(winner));
+      }
+
+      if (prevSignedForFlip !== null) {
+        const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
+        if (flipChip) chips.push(flipChip);
       }
 
       const inner = `
@@ -3453,26 +3508,29 @@ document.addEventListener('DOMContentLoaded', function() {
       const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
 
       const chips = [];
-      if (currentVizMode === 'shift') {
-        const key = `${scope}_${contestType}_${year}`;
-        let cached = vizDistrictShiftCache.get(key) || null;
-        if (!cached) {
-          const prev = await getPreviousDistrictSlice(scope, contestType, Number(year));
-          cached = prev ? { prevYear: prev.year, prevNode: prev.node } : null;
-          vizDistrictShiftCache.set(key, cached);
-        }
-        if (cached?.prevNode?.general?.results) {
-          const prevResults = cached.prevNode.general.results;
+      let prevSignedForFlip = null;
+      let prevYearForFlip = null;
+      try {
+        const prevCached = await ensurePrevDistrictCache(scope, contestType, Number(year));
+        prevYearForFlip = prevCached?.prevYear || null;
+        const prevResults = prevCached?.prevNode?.general?.results || null;
+        if (prevResults) {
           const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
-          const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
-          chips.push(shiftChipHTML(signedMarginPct - prevSigned, cached.prevYear, Number(year)));
-        } else {
-          chips.push(shiftChipHTML(0, null, null));
+          if (prevRow) prevSignedForFlip = Number(prevRow.margin_pct || 0);
         }
-      } else if (currentVizMode === 'winners') {
-        chips.push(winnerChipHTML(winner));
+      } catch (_) {}
+
+      if (currentVizMode === 'shift' && prevSignedForFlip !== null && prevYearForFlip) {
+        chips.push(shiftChipHTML(signedMarginPct - prevSignedForFlip, prevYearForFlip, Number(year)));
+      } else if (currentVizMode === 'shift') {
+        chips.push(shiftChipHTML(0, null, null));
       } else {
         chips.push(winnerChipHTML(winner));
+      }
+
+      if (prevSignedForFlip !== null) {
+        const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
+        if (flipChip) chips.push(flipChip);
       }
 
       const inner = `
@@ -5717,6 +5775,61 @@ document.addEventListener('DOMContentLoaded', function() {
       return null;
     }
 
+    async function ensurePrevContestCache(contestType, year) {
+      const y = Number(year);
+      if (vizPrevCache && vizPrevCache.contestType === contestType && Number(vizPrevCache.year) === y) return vizPrevCache;
+
+      const prevMeta = await getPreviousContestSlice(contestType, y);
+      if (!prevMeta) {
+        vizPrevCache = { contestType, year: y, prevYear: null, prevPrecinctMarginByNorm: new Map(), prevCountyTotals: {} };
+        return vizPrevCache;
+      }
+
+      const prevPrecinctMarginByNorm = new Map();
+      const prevCountyTotals = {};
+      function precinctNormVariantsLite(rowName) {
+        const raw = (rowName || '').toString();
+        const out = new Set();
+        const normalize = (s) => (s || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+        const primary = normalize(raw);
+        if (primary) out.add(primary);
+        if (!raw.includes(' - ')) return Array.from(out);
+        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
+        const countyOnly = (countyOnlyRaw || '').trim();
+        const precRaw = (precRaw0 || '').trim().toUpperCase();
+        if (!countyOnly || !precRaw) return Array.from(out);
+        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
+        if (m) {
+          const baseInt = String(parseInt(m[1], 10));
+          if (baseInt && baseInt !== 'NaN') {
+            const altPrec = `${baseInt}A`;
+            const altFull = normalize(`${countyOnly} - ${altPrec}`);
+            if (altFull) out.add(altFull);
+          }
+        }
+        return Array.from(out);
+      }
+      (prevMeta.rows || []).forEach(r => {
+        const rowName = (r.county || '').toString();
+        const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+        const countyNorm = (countyOnly || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+        if (!countyNorm) return;
+        const dem = Number(r[`${contestType}_dem`] || 0);
+        const rep = Number(r[`${contestType}_rep`] || 0);
+        const total = Number(r[`${contestType}_total`] || 0);
+        if (!prevCountyTotals[countyNorm]) prevCountyTotals[countyNorm] = { dem: 0, rep: 0, total: 0 };
+        prevCountyTotals[countyNorm].dem += dem;
+        prevCountyTotals[countyNorm].rep += rep;
+        prevCountyTotals[countyNorm].total += total;
+
+        const mPct = Number(r[`${contestType}_margin_pct`] || 0);
+        precinctNormVariantsLite(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
+      });
+
+      vizPrevCache = { contestType, year: y, prevYear: prevMeta.year, prevPrecinctMarginByNorm, prevCountyTotals };
+      return vizPrevCache;
+    }
+
     async function tryLoadDistrictSliceStrict(scope, contestType, year) {
       const key = `${scope}_${contestType}_${year}`;
       try {
@@ -5735,6 +5848,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (results && Object.keys(results).length) return { year: cy, node };
       }
       return null;
+    }
+
+    async function ensurePrevDistrictCache(scope, contestType, year) {
+      const y = Number(year);
+      const key = `${scope}_${contestType}_${y}`;
+      if (vizPrevDistrictCache.has(key)) return vizPrevDistrictCache.get(key);
+      const prev = await getPreviousDistrictSlice(scope, contestType, y);
+      const cached = prev ? { prevYear: prev.year, prevNode: prev.node } : { prevYear: null, prevNode: null };
+      vizPrevDistrictCache.set(key, cached);
+      return cached;
     }
 
     async function applyContest(contestKey) {
@@ -5882,13 +6005,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Build county expression (base map)
       let mode = (currentVizMode || 'margins');
-      let prevMeta = null; // {year, rows}
       let prevPrecinctMarginByNorm = null; // Map<string, number>
       let prevCountyTotals = null; // Map countyNorm -> {dem, rep, total}
 
+      // Preload prior-year data for flip detection (and shift mode).
+      try {
+        vizPrevCache = await ensurePrevContestCache(contestType, Number(year));
+      } catch (_) {
+        vizPrevCache = { contestType, year: Number(year), prevYear: null, prevPrecinctMarginByNorm: new Map(), prevCountyTotals: {} };
+      }
+
       if (mode === 'shift') {
-        prevMeta = await getPreviousContestSlice(contestType, Number(year));
-        if (!prevMeta) {
+        if (!vizPrevCache?.prevYear) {
           setStatus(`Shift mode needs a prior year for ${formatContestName(contestType, year)}. Falling back to Margins.`);
           mode = 'margins';
           currentVizMode = 'margins';
@@ -5896,26 +6024,10 @@ document.addEventListener('DOMContentLoaded', function() {
           renderLegendForVizMode('margins');
           vizShiftCache = null;
         } else {
-          renderLegendForVizMode('shift', { fromYear: prevMeta.year, toYear: Number(year) });
-          prevPrecinctMarginByNorm = new Map();
-          prevCountyTotals = {};
-          (prevMeta.rows || []).forEach(r => {
-            const rowName = (r.county || '').toString();
-            const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-            const countyNorm = normalizeCountyName(countyOnly);
-            if (!countyNorm) return;
-            const dem = Number(r[`${contestType}_dem`] || 0);
-            const rep = Number(r[`${contestType}_rep`] || 0);
-            const total = Number(r[`${contestType}_total`] || 0);
-            if (!prevCountyTotals[countyNorm]) prevCountyTotals[countyNorm] = { dem: 0, rep: 0, total: 0 };
-            prevCountyTotals[countyNorm].dem += dem;
-            prevCountyTotals[countyNorm].rep += rep;
-            prevCountyTotals[countyNorm].total += total;
-
-            const mPct = Number(r[`${contestType}_margin_pct`] || 0);
-            precinctNormVariants(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
-          });
-          vizShiftCache = { contestType, year: Number(year), prevYear: prevMeta.year, prevPrecinctMarginByNorm, prevCountyTotals };
+          renderLegendForVizMode('shift', { fromYear: vizPrevCache.prevYear, toYear: Number(year) });
+          prevPrecinctMarginByNorm = vizPrevCache.prevPrecinctMarginByNorm;
+          prevCountyTotals = vizPrevCache.prevCountyTotals;
+          vizShiftCache = vizPrevCache;
         }
       } else {
         renderLegendForVizMode(mode);
@@ -5981,6 +6093,40 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('county-fill')) {
         map.setPaintProperty('county-fill', 'fill-color', expr);
         map.setPaintProperty('county-fill', 'fill-opacity', precinctsEnabled ? 0.10 : 0.82);
+      }
+
+      // Highlight flips in Margins/Winners by tinting outlines red/blue.
+      if ((mode === 'margins' || mode === 'winners') && vizPrevCache?.prevYear && map.getLayer('county-stroke')) {
+        const flipColorExpr = ['case'];
+        const flipWidthExpr = ['case'];
+        Object.keys(countyAgg).forEach(countyNorm => {
+          const row = countyAgg[countyNorm];
+          const demVotes = Number(row[`${contestType}_dem`] || 0);
+          const repVotes = Number(row[`${contestType}_rep`] || 0);
+          const totalVotes = Number(row[`${contestType}_total`] || 0);
+          if (totalVotes <= 0) return;
+          const curSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+          const prev = vizPrevCache.prevCountyTotals?.[countyNorm] || null;
+          const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+          const f = flipInfo(prevSigned, curSigned);
+          if (!f.flipped) return;
+          const toColor = (f.to === 'R') ? '#dc2626' : '#2563eb';
+          flipColorExpr.push(['==', ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]], countyNorm]);
+          flipColorExpr.push(toColor);
+          flipWidthExpr.push(['==', ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]], countyNorm]);
+          flipWidthExpr.push(3);
+        });
+        flipColorExpr.push('#333');
+        flipWidthExpr.push(1);
+        try {
+          map.setPaintProperty('county-stroke', 'line-color', flipColorExpr);
+          map.setPaintProperty('county-stroke', 'line-width', flipWidthExpr);
+        } catch (_) {}
+      } else if (map.getLayer('county-stroke')) {
+        try {
+          map.setPaintProperty('county-stroke', 'line-color', '#333');
+          map.setPaintProperty('county-stroke', 'line-width', 1);
+        } catch (_) {}
       }
       // Optional precinct expression (detail overlay)
       {
@@ -6092,7 +6238,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const coveragePct = districtNode?.meta?.match_coverage_pct;
 
         if (districtResults && Object.keys(districtResults).length > 0) {
+          let mode = (currentVizMode || 'margins');
+          // Preload previous-year results for shift/flip detection.
+          let prevYear = null;
+          let prevResults = null;
+          try {
+            const prevCached = await ensurePrevDistrictCache(districtScope, contestType, Number(year));
+            prevYear = prevCached?.prevYear || null;
+            prevResults = prevCached?.prevNode?.general?.results || null;
+          } catch (_) {}
+          if (mode === 'shift' && !prevYear) {
+            setStatus(`Shift mode needs a prior year for ${formatContestName(contestType, year)} in ${districtScope}. Falling back to Margins.`);
+            mode = 'margins';
+            currentVizMode = 'margins';
+            setVizModeUI('margins');
+            renderLegendForVizMode('margins');
+          } else if (mode === 'shift' && prevYear) {
+            renderLegendForVizMode('shift', { fromYear: prevYear, toYear: Number(year) });
+          } else {
+            renderLegendForVizMode(mode);
+          }
+
           const expr = ['case'];
+          const flipStrokeColorExpr = ['case'];
+          const flipStrokeWidthExpr = ['case'];
           let totalDem = 0;
           let totalRep = 0;
           let totalVotes = 0;
@@ -6108,27 +6277,75 @@ document.addEventListener('DOMContentLoaded', function() {
             totalRep += repVotes;
             totalVotes += rowTotalVotes;
 
-            const demPct = (demVotes / rowTotalVotes) * 100;
-            const repPct = (repVotes / rowTotalVotes) * 100;
-            const winner = repPct > demPct ? 'R' : 'D';
-            const marginPct = Math.abs(repPct - demPct);
-            // Always derive color from vote math so district color cannot drift from results.
-            const color = categoryColorForMargin(marginPct, winner);
+            const signed = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, rowTotalVotes);
+            const winnerRaw = (row.winner || '').toString().toUpperCase();
+            const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
+            let color = '#e0e0e0';
+            if (mode === 'winners') {
+              color = colorForWinnerMode(winner);
+            } else if (mode === 'shift' && prevResults && prevYear) {
+              const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
+              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              color = colorForShiftMode(signed - prevSigned);
+            } else {
+              color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
+            }
 
             const districtNum = Number(districtId);
             if (!isNaN(districtNum)) {
               expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
               expr.push(color);
+
+              // Flip highlighting for non-shift modes: outline flipped districts in red/blue.
+              if ((mode === 'margins' || mode === 'winners') && prevResults) {
+                const prevRow = prevResults[String(districtId)] || prevResults[String(districtNum)] || null;
+                const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+                const f = flipInfo(prevSigned, signed);
+                if (f.flipped) {
+                  const toColor = (f.to === 'R') ? '#dc2626' : '#2563eb';
+                  flipStrokeColorExpr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
+                  flipStrokeColorExpr.push(toColor);
+                  flipStrokeWidthExpr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
+                  flipStrokeWidthExpr.push(3);
+                }
+              }
             }
           });
 
           expr.push('#e0e0e0');
+          flipStrokeColorExpr.push('#1f2937');
+          flipStrokeWidthExpr.push(2);
 
           const layerName = currentView === 'districts'
             ? 'district-fill'
             : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill');
           if (map.getLayer(layerName)) {
             map.setPaintProperty(layerName, 'fill-color', expr);
+          }
+
+          // Apply flip outline styling if applicable.
+          const strokeLayerName = currentView === 'districts'
+            ? 'district-stroke'
+            : (currentView === 'state_house' ? 'state-house-stroke' : 'state-senate-stroke');
+          if ((mode === 'margins' || mode === 'winners') && prevResults && map.getLayer(strokeLayerName)) {
+            try {
+              map.setPaintProperty(strokeLayerName, 'line-color', flipStrokeColorExpr);
+              map.setPaintProperty(strokeLayerName, 'line-width', flipStrokeWidthExpr);
+            } catch (_) {}
+          } else if (map.getLayer(strokeLayerName)) {
+            // Reset to defaults.
+            try {
+              if (strokeLayerName === 'district-stroke') {
+                map.setPaintProperty(strokeLayerName, 'line-color', '#1f2937');
+                map.setPaintProperty(strokeLayerName, 'line-width', 2);
+              } else if (strokeLayerName === 'state-house-stroke') {
+                map.setPaintProperty(strokeLayerName, 'line-color', '#374151');
+                map.setPaintProperty(strokeLayerName, 'line-width', 1);
+              } else {
+                map.setPaintProperty(strokeLayerName, 'line-color', '#4b5563');
+                map.setPaintProperty(strokeLayerName, 'line-width', 1);
+              }
+            } catch (_) {}
           }
 
           const demPct = totalVotes ? (totalDem / totalVotes) * 100 : 0;
