@@ -1718,6 +1718,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="viz-mode-btn" data-mode="shift" id="mode-shift">
       <span>Shift</span>
     </button>
+    <button class="viz-mode-btn" data-mode="flips" id="mode-flips">
+      <span>Flips</span>
+    </button>
   </div>
 
   <!-- Vote Counter Display - VoteHub Style -->
@@ -2023,7 +2026,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
     let currentPrecinctResults = null; // Current contest results keyed by precinct
-    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift'
+    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips'
     let previousElectionData = null; // For shift mode
     let precinctsEnabled = false;
     let precinctSourceLoaded = false;
@@ -2116,6 +2119,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('D')};"></div>Democratic</div>
           <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('R')};"></div>Republican</div>
           <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('T')};"></div>Tie / No data</div>
+        `;
+      } else if (mode === 'flips') {
+        if (header) header.textContent = 'Flips';
+        content.innerHTML = `
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('D')};"></div>Flip to Democratic</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('R')};"></div>Flip to Republican</div>
+          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('T')}; border: 1px solid rgba(15,23,42,0.20);"></div>No flip / No prior</div>
         `;
       } else if (mode === 'shift') {
         const a = meta?.fromYear ? `${meta.fromYear} → ${meta.toYear || ''}`.trim() : 'Shift';
@@ -5717,6 +5727,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return '#9ca3af';
     }
 
+    function colorForFlipMode(toWinner) {
+      // toWinner: 'R' | 'D' | 'T'
+      if (toWinner === 'R') return isColorblindModeActive() ? '#d97706' : '#dc2626';
+      if (toWinner === 'D') return '#2563eb';
+      return '#e2e8f0';
+    }
+
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
@@ -6029,6 +6046,9 @@ document.addEventListener('DOMContentLoaded', function() {
           prevCountyTotals = vizPrevCache.prevCountyTotals;
           vizShiftCache = vizPrevCache;
         }
+      } else if (mode === 'flips') {
+        renderLegendForVizMode('flips', vizPrevCache?.prevYear ? { fromYear: vizPrevCache.prevYear, toYear: Number(year) } : {});
+        vizShiftCache = null;
       } else {
         renderLegendForVizMode(mode);
         vizShiftCache = null;
@@ -6050,7 +6070,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const marginPctAbs = Math.abs(signedMarginPct);
         let color = '#e0e0e0';
 
-        if (mode === 'winners') {
+        if (mode === 'flips') {
+          const prev = vizPrevCache?.prevCountyTotals?.[countyName] || null;
+          const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+          const f = flipInfo(prevSigned, signedMarginPct);
+          color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
+        } else if (mode === 'winners') {
           color = colorForWinnerMode(winner);
         } else if (mode === 'shift' && prevCountyTotals) {
           const prev = prevCountyTotals[countyName];
@@ -6095,8 +6120,8 @@ document.addEventListener('DOMContentLoaded', function() {
         map.setPaintProperty('county-fill', 'fill-opacity', precinctsEnabled ? 0.10 : 0.82);
       }
 
-      // Highlight flips in Margins/Winners by tinting outlines red/blue.
-      if ((mode === 'margins' || mode === 'winners') && vizPrevCache?.prevYear && map.getLayer('county-stroke')) {
+      // Flip mode: outline flipped counties in red/blue (to-winner), leave others subtle.
+      if (mode === 'flips' && vizPrevCache?.prevYear && map.getLayer('county-stroke')) {
         const flipColorExpr = ['case'];
         const flipWidthExpr = ['case'];
         Object.keys(countyAgg).forEach(countyNorm => {
@@ -6110,13 +6135,13 @@ document.addEventListener('DOMContentLoaded', function() {
           const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
           const f = flipInfo(prevSigned, curSigned);
           if (!f.flipped) return;
-          const toColor = (f.to === 'R') ? '#dc2626' : '#2563eb';
+          const toColor = colorForFlipMode(f.to);
           flipColorExpr.push(['==', ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]], countyNorm]);
           flipColorExpr.push(toColor);
           flipWidthExpr.push(['==', ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]], countyNorm]);
           flipWidthExpr.push(3);
         });
-        flipColorExpr.push('#333');
+        flipColorExpr.push('rgba(15,23,42,0.35)');
         flipWidthExpr.push(1);
         try {
           map.setPaintProperty('county-stroke', 'line-color', flipColorExpr);
@@ -6142,7 +6167,16 @@ document.addEventListener('DOMContentLoaded', function() {
           const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (repVotes === demVotes ? 'T' : (repVotes > demVotes ? 'R' : 'D')));
           let color = '#d1d5db';
 
-          if (mode === 'winners') {
+          if (mode === 'flips') {
+            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            let prevSigned = 0;
+            // Use first matching norm (variants exist for precinct naming quirks).
+            for (const n of precinctNames) {
+              if (vizPrevCache?.prevPrecinctMarginByNorm?.has(n)) { prevSigned = vizPrevCache.prevPrecinctMarginByNorm.get(n); break; }
+            }
+            const f = flipInfo(prevSigned, curSigned);
+            color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
+          } else if (mode === 'winners') {
             color = colorForWinnerMode(winner);
           } else if (mode === 'shift' && prevPrecinctMarginByNorm) {
             // Signed margin pct: positive => R, negative => D.
@@ -6255,13 +6289,13 @@ document.addEventListener('DOMContentLoaded', function() {
             renderLegendForVizMode('margins');
           } else if (mode === 'shift' && prevYear) {
             renderLegendForVizMode('shift', { fromYear: prevYear, toYear: Number(year) });
+          } else if (mode === 'flips') {
+            renderLegendForVizMode('flips', prevYear ? { fromYear: prevYear, toYear: Number(year) } : {});
           } else {
             renderLegendForVizMode(mode);
           }
 
           const expr = ['case'];
-          const flipStrokeColorExpr = ['case'];
-          const flipStrokeWidthExpr = ['case'];
           let totalDem = 0;
           let totalRep = 0;
           let totalVotes = 0;
@@ -6281,7 +6315,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
-            if (mode === 'winners') {
+            if (mode === 'flips') {
+              const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(districtNum)] || null) : null;
+              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const f = flipInfo(prevSigned, signed);
+              color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
+            } else if (mode === 'winners') {
               color = colorForWinnerMode(winner);
             } else if (mode === 'shift' && prevResults && prevYear) {
               const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
@@ -6295,26 +6334,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isNaN(districtNum)) {
               expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
               expr.push(color);
-
-              // Flip highlighting for non-shift modes: outline flipped districts in red/blue.
-              if ((mode === 'margins' || mode === 'winners') && prevResults) {
-                const prevRow = prevResults[String(districtId)] || prevResults[String(districtNum)] || null;
-                const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
-                const f = flipInfo(prevSigned, signed);
-                if (f.flipped) {
-                  const toColor = (f.to === 'R') ? '#dc2626' : '#2563eb';
-                  flipStrokeColorExpr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
-                  flipStrokeColorExpr.push(toColor);
-                  flipStrokeWidthExpr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
-                  flipStrokeWidthExpr.push(3);
-                }
-              }
             }
           });
 
           expr.push('#e0e0e0');
-          flipStrokeColorExpr.push('#1f2937');
-          flipStrokeWidthExpr.push(2);
 
           const layerName = currentView === 'districts'
             ? 'district-fill'
@@ -6322,18 +6345,11 @@ document.addEventListener('DOMContentLoaded', function() {
           if (map.getLayer(layerName)) {
             map.setPaintProperty(layerName, 'fill-color', expr);
           }
-
-          // Apply flip outline styling if applicable.
+          // Keep stroke styling consistent across modes (no flip outlines outside flip mode).
           const strokeLayerName = currentView === 'districts'
             ? 'district-stroke'
             : (currentView === 'state_house' ? 'state-house-stroke' : 'state-senate-stroke');
-          if ((mode === 'margins' || mode === 'winners') && prevResults && map.getLayer(strokeLayerName)) {
-            try {
-              map.setPaintProperty(strokeLayerName, 'line-color', flipStrokeColorExpr);
-              map.setPaintProperty(strokeLayerName, 'line-width', flipStrokeWidthExpr);
-            } catch (_) {}
-          } else if (map.getLayer(strokeLayerName)) {
-            // Reset to defaults.
+          if (map.getLayer(strokeLayerName)) {
             try {
               if (strokeLayerName === 'district-stroke') {
                 map.setPaintProperty(strokeLayerName, 'line-color', '#1f2937');
