@@ -338,7 +338,7 @@ body {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 10000;
   max-width: 280px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -1290,6 +1290,131 @@ body {
     background: rgba(255, 255, 255, 0.98);
   }
 
+  /* Allow interacting with tooltip buttons only when pinned. */
+  #hover-tooltip[data-pinned="1"] {
+    pointer-events: auto;
+  }
+
+  /* Help modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10020;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(2, 6, 23, 0.55);
+    backdrop-filter: blur(10px);
+  }
+
+  .modal-card {
+    width: min(760px, 92vw);
+    max-height: min(82vh, 860px);
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 16px;
+    box-shadow: 0 22px 72px rgba(15, 23, 42, 0.35);
+    color: #0f172a;
+  }
+
+  .modal-head {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.90);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .modal-head h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+  }
+
+  .modal-close {
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    color: #0f172a;
+  }
+
+  .modal-close:hover {
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .modal-body {
+    padding: 16px;
+    font-size: 13px;
+    color: #0f172a;
+    line-height: 1.55;
+  }
+
+  .modal-body h3 {
+    margin: 14px 0 8px 0;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #334155;
+  }
+
+  .modal-body p {
+    margin: 8px 0;
+    color: #0f172a;
+  }
+
+  .modal-body ul {
+    margin: 8px 0 0 18px;
+    padding: 0;
+    color: #0f172a;
+  }
+
+  .kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    background: rgba(255, 255, 255, 0.85);
+    color: #0f172a;
+    font-weight: 800;
+  }
+
+  #help-btn {
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 999px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #0f172a;
+    font-weight: 1000;
+    font-size: 14px;
+  }
+
+  #help-btn:hover {
+    background: rgba(15, 23, 42, 0.08);
+  }
+
   .result-card {
     margin-top: 10px;
     border: 1px solid rgba(15, 23, 42, 0.12);
@@ -1450,6 +1575,9 @@ body {
 // Accessibility: Color Blind Mode Toggle
 document.addEventListener('DOMContentLoaded', function() {
   var accBtn = document.getElementById('accessibility-toggle');
+  var helpBtn = document.getElementById('help-btn');
+  var helpBackdrop = document.getElementById('help-backdrop');
+  var helpClose = document.getElementById('help-close');
   function updateLegendColors() {
     var colorblind = document.body.classList.contains('colorblind-mode');
     var legendColors = document.querySelectorAll('.legend-color');
@@ -1501,6 +1629,42 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
   }
+
+  function openHelp() {
+    if (!helpBackdrop) return;
+    helpBackdrop.style.display = 'flex';
+    helpBackdrop.setAttribute('aria-hidden', 'false');
+    if (helpClose) helpClose.focus();
+  }
+
+  function closeHelp() {
+    if (!helpBackdrop) return;
+    helpBackdrop.style.display = 'none';
+    helpBackdrop.setAttribute('aria-hidden', 'true');
+    if (helpBtn) helpBtn.focus();
+  }
+
+  if (helpBtn) {
+    helpBtn.onclick = function() {
+      if (!helpBackdrop) return;
+      const open = helpBackdrop.style.display === 'flex';
+      if (open) closeHelp();
+      else openHelp();
+    };
+  }
+  if (helpClose) {
+    helpClose.onclick = function() { closeHelp(); };
+  }
+  if (helpBackdrop) {
+    helpBackdrop.addEventListener('click', function(ev) {
+      if (ev.target === helpBackdrop) closeHelp();
+    });
+  }
+  document.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Escape') {
+      if (helpBackdrop && helpBackdrop.style.display === 'flex') closeHelp();
+    }
+  });
   // County label toggle
   const labelBtn = document.getElementById('label-toggle');
   if (labelBtn) {
@@ -1629,6 +1793,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="controls-header" style="display:flex;align-items:center;justify-content:space-between;">
             <h3>North Carolina Election Contests</h3>
             <div style="display:flex;align-items:center;gap:8px;">
+              <button id="help-btn" title="Help" type="button">?</button>
               <button class="minimize-btn" onclick="toggleMainControls()" id="controls-minimize-btn">-</button>
             </div>
         </div>
@@ -1644,7 +1809,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="control-group">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <label>Contest:</label>
-                  <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">♿</button>
+                  <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
                   <button id="label-toggle" title="Toggle County Labels" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
                   <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
                 </div>
@@ -1667,7 +1832,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <button class="minimize-btn" onclick="toggleLegend()" id="legend-minimize-btn">-</button>
         </div>
         <div class="legend-content" id="legend-content">
-            <div class="legend-item"><div class="legend-color" style="background: #67000d;"></div>Annihilation Republican (≥40.00%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #67000d;"></div>Annihilation Republican (&ge;40.00%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #a50f15;"></div>Dominant Republican (30.00-39.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #cb181d;"></div>Stronghold Republican (20.00-29.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #ef3b2c;"></div>Safe Republican (10.00-19.99%)</div>
@@ -1681,12 +1846,60 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="legend-item"><div class="legend-color" style="background: #6baed6;"></div>Safe Democratic (10.00-19.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #3182bd;"></div>Stronghold Democratic (20.00-29.99%)</div>
             <div class="legend-item"><div class="legend-color" style="background: #08519c;"></div>Dominant Democratic (30.00-39.99%)</div>
-            <div class="legend-item"><div class="legend-color" style="background: #08306b;"></div>Annihilation Democratic (≥40.00%)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #08306b;"></div>Annihilation Democratic (&ge;40.00%)</div>
         </div>
     </div>
 
     <!-- Hover Tooltip -->
     <div id="hover-tooltip" class="hover-tooltip"></div>
+
+    <!-- Help Modal -->
+    <div class="modal-backdrop" id="help-backdrop" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-head">
+          <h2 id="help-title">How to read this map</h2>
+          <button class="modal-close" id="help-close" type="button" title="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3>Modes</h3>
+          <p><strong>Margins</strong>: colors show the <strong>two-party margin</strong> (absolute value of Rep% − Dem%). Darker = less competitive.</p>
+          <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
+          <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
+
+          <h3>Political Categories</h3>
+          <p>Category names are just shorthand for margin ranges:</p>
+          <ul>
+            <li><strong>Annihilation</strong>: &ge;40%</li>
+            <li><strong>Dominant</strong>: 30–39.99%</li>
+            <li><strong>Stronghold</strong>: 20–29.99%</li>
+            <li><strong>Safe</strong>: 10–19.99%</li>
+            <li><strong>Likely</strong>: 5.50–9.99%</li>
+            <li><strong>Lean</strong>: 1.00–5.49%</li>
+            <li><strong>Tilt</strong>: 0.50–0.99%</li>
+            <li><strong>Tossup</strong>: &lt;0.50%</li>
+          </ul>
+          <p class="meta-subtle">Example: “Safe Republican (10–19.99%)” means the Republican candidate leads by 10–19.99 percentage points (two-party margin).</p>
+
+          <h3>Hover + Pin</h3>
+          <ul>
+            <li>Hover a shape to see a quick result card.</li>
+            <li>Click <strong>Pin</strong> in the tooltip to freeze it (so it won’t change while you move the mouse).</li>
+            <li>Use <strong>Close</strong> to dismiss a pinned tooltip.</li>
+          </ul>
+
+          <h3>Controls</h3>
+          <ul>
+            <li><span class="kbd">P</span> toggles precinct overlay (dots at statewide zoom; polygons when zoomed in).</li>
+            <li><span class="kbd">L</span> toggles county labels.</li>
+            <li><strong>♿</strong> toggles colorblind-friendly colors.</li>
+            <li><strong>Clear</strong> (in the vote counter) unpins a selected area.</li>
+          </ul>
+
+          <h3>Notes</h3>
+          <p class="meta-subtle">If Shift can’t find a prior year for the selected contest, it falls back to Margins.</p>
+        </div>
+      </div>
+    </div>
 
 
     <script>
@@ -1758,6 +1971,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const map = new mapboxgl.Map({ container: 'map', style: 'mapbox://styles/mapbox/light-v11', center: CONFIG.center, zoom: CONFIG.zoom });
     map.on('mousemove', (e) => {
       lastPointerPoint = e.point;
+      // Keep tooltip following the cursor and refresh hovered feature without requiring
+      // leaving/re-entering a layer (especially helpful for district layers).
+      try { updateHoverTooltipPosition(e.point.x, e.point.y); } catch (_) {}
+      queueHoverRefresh();
     });
     map.on('move', () => {
       queueHoverRefresh();
@@ -4024,13 +4241,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'district-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
-          renderDistrictHover(e, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
+          queueHoverRefresh();
         });
         let districtHoverRaf = null;
         map.on('mousemove', 'district-fill', (e) => {
           if (districtHoverRaf) return;
           districtHoverRaf = requestAnimationFrame(() => {
-            renderDistrictHover(e, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
+            queueHoverRefresh();
             districtHoverRaf = null;
           });
         });
@@ -4090,13 +4307,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'state-house-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
-          renderDistrictHover(e, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+          queueHoverRefresh();
         });
         let stateHouseHoverRaf = null;
         map.on('mousemove', 'state-house-fill', (e) => {
           if (stateHouseHoverRaf) return;
           stateHouseHoverRaf = requestAnimationFrame(() => {
-            renderDistrictHover(e, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+            queueHoverRefresh();
             stateHouseHoverRaf = null;
           });
         });
@@ -4156,13 +4373,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Quick hover tooltip with basic info
         map.on('mouseenter', 'state-senate-fill', (e) => {
           map.getCanvas().style.cursor = 'pointer';
-          renderDistrictHover(e, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+          queueHoverRefresh();
         });
         let stateSenateHoverRaf = null;
         map.on('mousemove', 'state-senate-fill', (e) => {
           if (stateSenateHoverRaf) return;
           stateSenateHoverRaf = requestAnimationFrame(() => {
-            renderDistrictHover(e, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+            queueHoverRefresh();
             stateSenateHoverRaf = null;
           });
         });
