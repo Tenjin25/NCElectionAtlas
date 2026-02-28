@@ -1461,13 +1461,30 @@ body {
   .meta-chip.flip .dot { background: #a855f7; }
 
   .meta-chip.flip.dem {
-    border-color: rgba(37, 99, 235, 0.28);
-    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.65);
+    background: rgba(37, 99, 235, 0.18);
+    color: #dbeafe;
   }
 
   .meta-chip.flip.rep {
-    border-color: rgba(220, 38, 38, 0.28);
-    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.65);
+    background: rgba(220, 38, 38, 0.18);
+    color: #fee2e2;
+  }
+
+  .meta-chip.flip {
+    border-width: 2px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+    padding: 7px 12px;
+    font-weight: 1000;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .meta-chip.flip .dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
   }
 
   .meta-subtle {
@@ -3102,7 +3119,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const labelFrom = f.from === 'R' ? 'R' : 'D';
       const labelTo = f.to === 'R' ? 'R' : 'D';
       const cls = f.to === 'R' ? 'rep' : 'dem';
-      return `<span class="meta-chip flip ${cls}"><span class="dot"></span>Flip: ${labelFrom}\u2192${labelTo}</span>`;
+      return `<span class="meta-chip flip ${cls}"><span class="dot"></span>Flip ${labelFrom}\u2192${labelTo}</span>`;
     }
 
     function buildResultCardHTML(title, subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate) {
@@ -3341,7 +3358,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
-        if (flipChip) chips.push(flipChip);
+        if (flipChip) chips.unshift(flipChip);
       }
 
       const inner = `
@@ -3401,7 +3418,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
-        if (flipChip) chips.push(flipChip);
+        if (flipChip) chips.unshift(flipChip);
       }
 
       const inner = `
@@ -3540,7 +3557,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
-        if (flipChip) chips.push(flipChip);
+        if (flipChip) chips.unshift(flipChip);
       }
 
       const inner = `
