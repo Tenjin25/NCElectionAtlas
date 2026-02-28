@@ -2323,9 +2323,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	      const path = PRESIDENT_OPEN_ELECTIONS_CSV[y];
 	      if (!path) throw new Error(`No OpenElections CSV configured for president ${year}`);
 
-	      const csvText = await loadCSV(path);
-	      const rows = parseCSV(csvText);
-
 	      function extractPrecinctCode(precinctRaw) {
 	        const p = (precinctRaw || '').toString().trim();
 	        if (!p) return '';
@@ -2342,25 +2339,66 @@ document.addEventListener('DOMContentLoaded', function() {
 	      // Aggregate to precinct key "COUNTY - CODE" where CODE is the first token extracted from OpenElections `precinct`.
 	      const byPrecinct = new Map(); // key -> {dem, rep, other, demCand, repCand}
 	      const officeOk = (s) => (s || '').toString().toUpperCase().includes('PRESIDENT');
-	      rows.forEach(r => {
-	        const office = (r.office || '').toString();
-	        if (!officeOk(office)) return;
-	        const county = (r.county || '').toString().trim().toUpperCase();
-	        const precinctRaw = (r.precinct || '').toString().trim();
-	        if (!county || !precinctRaw) return;
-	        const code = extractPrecinctCode(precinctRaw);
-	        if (!code) return;
-	        const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
-	        const party = (r.party || '').toString().trim().toUpperCase();
-	        const cand = (r.candidate || '').toString().trim();
-	        const votes = Number(r.votes) || 0;
 
-	        if (!byPrecinct.has(key)) byPrecinct.set(key, { dem: 0, rep: 0, other: 0, demCand: '', repCand: '' });
-	        const node = byPrecinct.get(key);
-	        if (party === 'DEM') { node.dem += votes; if (!node.demCand && cand) node.demCand = cand; }
-	        else if (party === 'REP') { node.rep += votes; if (!node.repCand && cand) node.repCand = cand; }
-	        else { node.other += votes; }
-	      });
+	      // Stream-parse in a worker to avoid freezing the UI on large files (notably 2008/2012).
+	      if (typeof Papa !== 'undefined' && Papa && typeof Papa.parse === 'function') {
+	        await new Promise((resolve, reject) => {
+	          Papa.parse(path, {
+	            download: true,
+	            header: true,
+	            dynamicTyping: true,
+	            skipEmptyLines: true,
+	            worker: true,
+	            chunkSize: 1024 * 256,
+	            chunk: (result) => {
+	              (result?.data || []).forEach(r => {
+	                const office = (r.office || '').toString();
+	                if (!officeOk(office)) return;
+	                const county = (r.county || '').toString().trim().toUpperCase();
+	                const precinctRaw = (r.precinct || '').toString().trim();
+	                if (!county || !precinctRaw) return;
+	                const code = extractPrecinctCode(precinctRaw);
+	                if (!code) return;
+	                const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+	                const party = (r.party || '').toString().trim().toUpperCase();
+	                const cand = (r.candidate || '').toString().trim();
+	                const votes = Number(r.votes) || 0;
+
+	                if (!byPrecinct.has(key)) byPrecinct.set(key, { dem: 0, rep: 0, other: 0, demCand: '', repCand: '' });
+	                const node = byPrecinct.get(key);
+	                if (party === 'DEM') { node.dem += votes; if (!node.demCand && cand) node.demCand = cand; }
+	                else if (party === 'REP') { node.rep += votes; if (!node.repCand && cand) node.repCand = cand; }
+	                else { node.other += votes; }
+	              });
+	            },
+	            error: (err) => reject(err),
+	            complete: () => resolve()
+	          });
+	        });
+	      } else {
+	        // Fallback: parse synchronously (may lag on large CSVs).
+	        const csvText = await loadCSV(path);
+	        const rows = parseCSV(csvText);
+	        rows.forEach(r => {
+	          const office = (r.office || '').toString();
+	          if (!officeOk(office)) return;
+	          const county = (r.county || '').toString().trim().toUpperCase();
+	          const precinctRaw = (r.precinct || '').toString().trim();
+	          if (!county || !precinctRaw) return;
+	          const code = extractPrecinctCode(precinctRaw);
+	          if (!code) return;
+	          const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+	          const party = (r.party || '').toString().trim().toUpperCase();
+	          const cand = (r.candidate || '').toString().trim();
+	          const votes = Number(r.votes) || 0;
+
+	          if (!byPrecinct.has(key)) byPrecinct.set(key, { dem: 0, rep: 0, other: 0, demCand: '', repCand: '' });
+	          const node = byPrecinct.get(key);
+	          if (party === 'DEM') { node.dem += votes; if (!node.demCand && cand) node.demCand = cand; }
+	          else if (party === 'REP') { node.rep += votes; if (!node.repCand && cand) node.repCand = cand; }
+	          else { node.other += votes; }
+	        });
+	      }
 
 	      return Array.from(byPrecinct.entries()).map(([key, v]) => ({
 	        year: y,
