@@ -2050,11 +2050,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctLoadInFlight = false;
     let lastPrecinctFillExpr = null; // Cached fill-color expression for precinct overlay.
     let lastPrecinctDotExpr = null; // Cached circle-color expression for precinct dots (statewide zoom).
-    let precinctCentroidsLoaded = false;
-    let precinctCentroidsLoadInFlight = false;
-    let tooltipPinned = false;
-    let precinctDotHoverRaf = null;
-    let lastPrecinctDotHoverEvent = null;
+	    let precinctCentroidsLoaded = false;
+	    let precinctCentroidsLoadInFlight = false;
+	    let precinctCodeIndexByCounty = null; // Map<string countyNorm, Set<string prec_id>> built from precinct centroids.
+	    let tooltipPinned = false;
+	    let precinctDotHoverRaf = null;
+	    let lastPrecinctDotHoverEvent = null;
     let districtHoverRequestId = 0;
     let lastPointerPoint = null;
     let hoverRefreshRaf = null;
@@ -2304,21 +2305,84 @@ document.addEventListener('DOMContentLoaded', function() {
       return r.json();
     }
 
-    async function loadCSV(path) {
-      const r = await fetch(path);
-      if (!r.ok) throw new Error(`${path} fetch failed: ${r.status}`);
-      return r.text();
-    }
+	    async function loadCSV(path) {
+	      const r = await fetch(path);
+	      if (!r.ok) throw new Error(`${path} fetch failed: ${r.status}`);
+	      return r.text();
+	    }
 
-    async function loadContestSlice(contestType, year) {
-      const key = `${contestType}_${year}`;
-      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
+	    const PRESIDENT_OPEN_ELECTIONS_CSV = {
+	      2000: withBase('./data/2000/20001107__nc__general__precinct.csv'),
+	      2004: withBase('./data/2004/20041102__nc__general__precinct.csv'),
+	      2012: withBase('./data/2012/20121106__nc__general__precinct.csv'),
+	      2008: withBase('./data/2008/20081104__nc__general__precinct.csv')
+	    };
 
-      try {
-        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
-        const rows = (payload.rows || []).map(r => ({
-          year: Number(year),
-          county: r.county,
+	    async function loadPresidentSliceFromOpenElectionsCSV(year) {
+	      const y = Number(year);
+	      const path = PRESIDENT_OPEN_ELECTIONS_CSV[y];
+	      if (!path) throw new Error(`No OpenElections CSV configured for president ${year}`);
+
+	      const csvText = await loadCSV(path);
+	      const rows = parseCSV(csvText);
+
+	      function extractPrecinctCode(precinctRaw) {
+	        const p = (precinctRaw || '').toString().trim();
+	        if (!p) return '';
+	        const u = p.toUpperCase();
+	        // Non-geographic buckets: keep as-is so totals still reconcile, but they won't match precinct geometry.
+	        if (u.includes('ABSENTEE') || u.includes('PROVISIONAL') || u.includes('ONE STOP') || u.includes('CURBSIDE') || u.startsWith('OS ') || u.startsWith('OS-')) return u;
+	        // Typical formats:
+	        // - "01_PATTERSON" (OpenElections newer years)
+	        // - "01 PATTERSON" (older years)
+	        // - "LI-1 ..." (some counties)
+	        return u.split(/[_\s]+/, 1)[0].trim();
+	      }
+
+	      // Aggregate to precinct key "COUNTY - CODE" where CODE is the first token extracted from OpenElections `precinct`.
+	      const byPrecinct = new Map(); // key -> {dem, rep, other, demCand, repCand}
+	      const officeOk = (s) => (s || '').toString().toUpperCase().includes('PRESIDENT');
+	      rows.forEach(r => {
+	        const office = (r.office || '').toString();
+	        if (!officeOk(office)) return;
+	        const county = (r.county || '').toString().trim().toUpperCase();
+	        const precinctRaw = (r.precinct || '').toString().trim();
+	        if (!county || !precinctRaw) return;
+	        const code = extractPrecinctCode(precinctRaw);
+	        if (!code) return;
+	        const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+	        const party = (r.party || '').toString().trim().toUpperCase();
+	        const cand = (r.candidate || '').toString().trim();
+	        const votes = Number(r.votes) || 0;
+
+	        if (!byPrecinct.has(key)) byPrecinct.set(key, { dem: 0, rep: 0, other: 0, demCand: '', repCand: '' });
+	        const node = byPrecinct.get(key);
+	        if (party === 'DEM') { node.dem += votes; if (!node.demCand && cand) node.demCand = cand; }
+	        else if (party === 'REP') { node.rep += votes; if (!node.repCand && cand) node.repCand = cand; }
+	        else { node.other += votes; }
+	      });
+
+	      return Array.from(byPrecinct.entries()).map(([key, v]) => ({
+	        year: y,
+	        county: key,
+	        president_dem: v.dem,
+	        president_rep: v.rep,
+	        president_other: v.other,
+	        president_total: v.dem + v.rep + v.other,
+	        president_dem_candidate: v.demCand,
+	        president_rep_candidate: v.repCand
+	      }));
+	    }
+
+	    async function loadContestSlice(contestType, year) {
+	      const key = `${contestType}_${year}`;
+	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
+
+	      try {
+	        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
+	        const rows = (payload.rows || []).map(r => ({
+	          year: Number(year),
+	          county: r.county,
           [`${contestType}_dem`]: Number(r.dem_votes) || 0,
           [`${contestType}_rep`]: Number(r.rep_votes) || 0,
           [`${contestType}_other`]: Number(r.other_votes) || 0,
@@ -2330,14 +2394,24 @@ document.addEventListener('DOMContentLoaded', function() {
           [`${contestType}_winner`]: r.winner || '',
           [`${contestType}_color`]: r.color || ''
         }));
-        contestSliceCache.set(key, rows);
-        return rows;
-      } catch (_) {
-        const fallback = (electionData || []).filter(row => row.year == year);
-        contestSliceCache.set(key, fallback);
-        return fallback;
-      }
-    }
+	        contestSliceCache.set(key, rows);
+	        return rows;
+	      } catch (_) {
+	        // CSV-backed presidential history (pre-2016) from OpenElections precinct files.
+	        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+	          try {
+	            const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+	            contestSliceCache.set(key, rows);
+	            return rows;
+	          } catch (err) {
+	            console.warn('Failed to load OpenElections presidential CSV for', year, err?.message || err);
+	          }
+	        }
+	        const fallback = (electionData || []).filter(row => row.year == year);
+	        contestSliceCache.set(key, fallback);
+	        return fallback;
+	      }
+	    }
 
     async function loadDistrictSlice(scope, contestType, year) {
       const key = `${scope}_${contestType}_${year}`;
@@ -4120,22 +4194,71 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    async function ensurePrecinctCentroidsLoaded() {
-      if (precinctCentroidsLoaded || map.getSource('precinct-centroids')) return true;
-      if (precinctCentroidsLoadInFlight) return false;
-      precinctCentroidsLoadInFlight = true;
-      try {
-        const pts = await loadJSON(CONFIG.paths.precinct_centroids);
-        map.addSource('precinct-centroids', { type: 'geojson', data: pts });
-        precinctCentroidsLoaded = true;
-        addPrecinctCentroidLayers();
-      } catch (err) {
-        console.warn('Failed to load precinct centroids:', err?.message || err);
-      } finally {
-        precinctCentroidsLoadInFlight = false;
-      }
-      return precinctCentroidsLoaded;
-    }
+	    async function ensurePrecinctCentroidsLoaded() {
+	      if (precinctCentroidsLoaded || map.getSource('precinct-centroids')) return true;
+	      if (precinctCentroidsLoadInFlight) return false;
+	      precinctCentroidsLoadInFlight = true;
+	      try {
+	        const pts = await loadJSON(CONFIG.paths.precinct_centroids);
+	        map.addSource('precinct-centroids', { type: 'geojson', data: pts });
+	        precinctCentroidsLoaded = true;
+	        // Build a lightweight county -> precinct code index for key-variant matching.
+	        try {
+	          if (!precinctCodeIndexByCounty && pts && pts.features) {
+	            const idx = new Map();
+	            (pts.features || []).forEach(f => {
+	              const p = f.properties || {};
+	              const county = (p.county_nam || p.COUNTYNAME || p.County || p.NAME || '').toString()
+	                .replace(/[^a-z0-9 .\-]/gi, '')
+	                .replace(/\s+/g, ' ')
+	                .trim()
+	                .toUpperCase();
+	              const code = (p.prec_id || p.PREC_ID || '').toString().trim().toUpperCase();
+	              if (!county || !code) return;
+	              if (!idx.has(county)) idx.set(county, new Set());
+	              idx.get(county).add(code);
+	            });
+	            precinctCodeIndexByCounty = idx;
+	          }
+	        } catch (err) {
+	          console.warn('Failed to build precinct code index:', err?.message || err);
+	        }
+	        addPrecinctCentroidLayers();
+	      } catch (err) {
+	        console.warn('Failed to load precinct centroids:', err?.message || err);
+	      } finally {
+	        precinctCentroidsLoadInFlight = false;
+	      }
+	      return precinctCentroidsLoaded;
+	    }
+
+	    async function ensurePrecinctCodeIndex() {
+	      if (precinctCodeIndexByCounty) return precinctCodeIndexByCounty;
+	      await ensurePrecinctCentroidsLoaded();
+	      if (!precinctCodeIndexByCounty) {
+	        try {
+	          const src = map.getSource('precinct-centroids');
+	          const gj = src ? (src._data || src.data) : null;
+	          if (gj && gj.features) {
+	            const idx = new Map();
+	            (gj.features || []).forEach(f => {
+	              const p = f.properties || {};
+	              const county = (p.county_nam || p.COUNTYNAME || p.County || p.NAME || '').toString()
+	                .replace(/[^a-z0-9 .\-]/gi, '')
+	                .replace(/\s+/g, ' ')
+	                .trim()
+	                .toUpperCase();
+	              const code = (p.prec_id || p.PREC_ID || '').toString().trim().toUpperCase();
+	              if (!county || !code) return;
+	              if (!idx.has(county)) idx.set(county, new Set());
+	              idx.get(county).add(code);
+	            });
+	            precinctCodeIndexByCounty = idx;
+	          }
+	        } catch (_) {}
+	      }
+	      return precinctCodeIndexByCounty;
+	    }
 
     function addPrecinctCentroidLayers() {
       if (!map.getSource('precinct-centroids') || map.getLayer('precinct-dot')) return;
@@ -5562,13 +5685,18 @@ document.addEventListener('DOMContentLoaded', function() {
         setStatus('Loading election index...');
         candidateNameCache = new Map();
         contestSliceCache = new Map();
-        try {
-          const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
-          contestManifest = manifest?.files || [];
-          electionData = [];
-          populateContestSelectFromManifest(contestManifest);
-          setStatus('Election index loaded');
-        } catch (manifestErr) {
+	        try {
+	          const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
+	          contestManifest = manifest?.files || [];
+	          // Add CSV-backed presidential elections not present in the precomputed contest slices.
+	          Object.keys(PRESIDENT_OPEN_ELECTIONS_CSV).map(Number).forEach(y => {
+	            const exists = contestManifest.some(e => e && e.contest_type === 'president' && Number(e.year) === Number(y));
+	            if (!exists) contestManifest.push({ year: y, contest_type: 'president', file: `open_elections_csv_${y}.csv`, rows: 1 });
+	          });
+	          electionData = [];
+	          populateContestSelectFromManifest(contestManifest);
+	          setStatus('Election index loaded');
+	        } catch (manifestErr) {
           setStatus('Loading election data...');
           debugLog('Loading election data from:', CONFIG.paths.election);
           electionDataJSON = await loadJSON(CONFIG.paths.election);
@@ -5776,28 +5904,35 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
     }
 
-    async function tryLoadContestSliceStrict(contestType, year) {
-      const key = `${contestType}_${year}`;
-      try {
-        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
-        return (payload.rows || []).map(r => ({
-          year: Number(year),
-          county: r.county,
-          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-          [`${contestType}_other`]: Number(r.other_votes) || 0,
-          [`${contestType}_total`]: Number(r.total_votes) || 0,
-          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-          [`${contestType}_margin`]: Number(r.margin) || 0,
-          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-          [`${contestType}_winner`]: r.winner || '',
-          [`${contestType}_color`]: r.color || ''
-        }));
-      } catch (_) {
-        return null;
-      }
-    }
+	    async function tryLoadContestSliceStrict(contestType, year) {
+	      const key = `${contestType}_${year}`;
+	      try {
+	        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
+	        return (payload.rows || []).map(r => ({
+	          year: Number(year),
+	          county: r.county,
+	          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
+	          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
+	          [`${contestType}_other`]: Number(r.other_votes) || 0,
+	          [`${contestType}_total`]: Number(r.total_votes) || 0,
+	          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
+	          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
+	          [`${contestType}_margin`]: Number(r.margin) || 0,
+	          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
+	          [`${contestType}_winner`]: r.winner || '',
+	          [`${contestType}_color`]: r.color || ''
+	        }));
+	      } catch (_) {
+	        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+	          try {
+	            return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+	          } catch (err) {
+	            console.warn('Strict presidential CSV load failed for', year, err?.message || err);
+	          }
+	        }
+	        return null;
+	      }
+	    }
 
     async function getPreviousContestSlice(contestType, year) {
       const y = Number(year);
@@ -5819,30 +5954,58 @@ document.addEventListener('DOMContentLoaded', function() {
         return vizPrevCache;
       }
 
-      const prevPrecinctMarginByNorm = new Map();
-      const prevCountyTotals = {};
-      function precinctNormVariantsLite(rowName) {
-        const raw = (rowName || '').toString();
-        const out = new Set();
-        const normalize = (s) => (s || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
-        const primary = normalize(raw);
-        if (primary) out.add(primary);
-        if (!raw.includes(' - ')) return Array.from(out);
-        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
-        const countyOnly = (countyOnlyRaw || '').trim();
-        const precRaw = (precRaw0 || '').trim().toUpperCase();
-        if (!countyOnly || !precRaw) return Array.from(out);
-        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
-        if (m) {
-          const baseInt = String(parseInt(m[1], 10));
-          if (baseInt && baseInt !== 'NaN') {
-            const altPrec = `${baseInt}A`;
-            const altFull = normalize(`${countyOnly} - ${altPrec}`);
-            if (altFull) out.add(altFull);
-          }
-        }
-        return Array.from(out);
-      }
+	      const prevPrecinctMarginByNorm = new Map();
+	      const prevCountyTotals = {};
+	      let precinctIdx = null;
+	      try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+	      function isNonGeographicPrecinctCode(code) {
+	        const c = (code || '').toString().replace(/\s+/g, ' ').trim().toUpperCase();
+	        if (!c) return true;
+	        if (/^(ABSENTEE|PROVISIONAL|CURBSIDE)$/i.test(c)) return true;
+	        if (c.includes('ONE STOP') || c.includes('MAIL ABSENTEE') || c.includes('VOTE CENTER') || c.includes('VOTECENTER')) return true;
+	        if (c.startsWith('OS ') || c.startsWith('OS-') || c.startsWith('OS_')) return true;
+	        return false;
+	      }
+	      function precinctNormVariantsLite(rowName) {
+	        const raw = (rowName || '').toString();
+	        const out = new Set();
+	        const normalize = (s) => (s || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+	        const primary = normalize(raw);
+	        if (primary) out.add(primary);
+	        if (!raw.includes(' - ')) return Array.from(out);
+	        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
+	        const countyOnly = (countyOnlyRaw || '').trim();
+	        const countyNorm = normalize(countyOnly);
+	        const precRaw = (precRaw0 || '').trim().toUpperCase();
+	        if (!countyOnly || !precRaw) return Array.from(out);
+	        if (isNonGeographicPrecinctCode(precRaw)) return [];
+	        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
+	        if (m) {
+	          const baseInt = String(parseInt(m[1], 10));
+	          if (baseInt && baseInt !== 'NaN') {
+	            const altPrec = `${baseInt}A`;
+	            const altFull = normalize(`${countyOnly} - ${altPrec}`);
+	            if (altFull) out.add(altFull);
+	          }
+	        }
+	        try {
+	          const codes = precinctIdx && countyNorm ? precinctIdx.get(countyNorm) : null;
+	          const baseCompact = precRaw.replace(/\s+/g, '');
+	          if (codes && baseCompact && /[^0-9]/.test(baseCompact)) {
+	            codes.forEach(code => {
+	              const c = (code || '').toString().trim().toUpperCase();
+	              const cCompact = c.replace(/\s+/g, '');
+	              if (!cCompact || cCompact === baseCompact) return;
+	              if (!cCompact.startsWith(baseCompact)) return;
+	              const suffix = cCompact.slice(baseCompact.length);
+	              if (!/^[A-Z0-9]{1,2}$/.test(suffix)) return;
+	              const altFull = normalize(`${countyOnly} - ${c}`);
+	              if (altFull) out.add(altFull);
+	            });
+	          }
+	        } catch (_) {}
+	        return Array.from(out);
+	      }
       (prevMeta.rows || []).forEach(r => {
         const rowName = (r.county || '').toString();
         const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
@@ -5924,43 +6087,80 @@ document.addEventListener('DOMContentLoaded', function() {
         return setStatus('No data found for this contest');
       }
 
-      function normalizeCountyName(name) {
-        return (name || '')
-          .replace(/[^a-z0-9 .\-]/gi, '')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toUpperCase();
-      }
+	      function normalizeCountyName(name) {
+	        return (name || '')
+	          .replace(/[^a-z0-9 .\-]/gi, '')
+	          .replace(/\s+/g, ' ')
+	          .trim()
+	          .toUpperCase();
+	      }
 
-      function precinctNormVariants(rowName) {
-        // rowName format: "COUNTY - PREC"
-        const raw = (rowName || '').toString();
-        const out = new Set();
-        const primary = normalizeCountyName(raw);
-        if (primary) out.add(primary);
+	      // Precinct key matching needs to tolerate (a) non-geographic buckets in results
+	      // (absentee/one-stop/etc) and (b) modern precinct splits where historical results
+	      // provide a shorter base code (e.g. "03S" vs "03SE"/"03SM").
+	      let precinctIdx = null;
+	      try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
 
-        if (!raw.includes(' - ')) return Array.from(out);
-        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
-        const countyOnly = (countyOnlyRaw || '').trim();
-        const precRaw = (precRaw0 || '').trim().toUpperCase();
-        if (!countyOnly || !precRaw) return Array.from(out);
+	      function isNonGeographicPrecinctCode(code) {
+	        const c = (code || '').toString().replace(/\s+/g, ' ').trim().toUpperCase();
+	        if (!c) return true;
+	        if (/^(ABSENTEE|PROVISIONAL|CURBSIDE)$/i.test(c)) return true;
+	        if (c.includes('ONE STOP') || c.includes('MAIL ABSENTEE') || c.includes('VOTE CENTER') || c.includes('VOTECENTER')) return true;
+	        if (c.startsWith('OS ') || c.startsWith('OS-') || c.startsWith('OS_')) return true;
+	        return false;
+	      }
 
-        // Some precinct boundary datasets key precincts as "1A", "14A", etc, while official
-        // precinct results use "01" or "04-1". Add an alternate key for those cases.
-        // Example: "GASTON - 04-1" -> "GASTON - 4A"
-        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
-        if (m) {
-          const base = m[1];
-          const baseInt = String(parseInt(base, 10)); // strips leading zeros
-          if (baseInt && baseInt !== 'NaN') {
-            const altPrec = `${baseInt}A`;
-            const altFull = normalizeCountyName(`${countyOnly} - ${altPrec}`);
-            if (altFull) out.add(altFull);
-          }
-        }
+	      function precinctNormVariants(rowName) {
+	        // rowName format: "COUNTY - PREC"
+	        const raw = (rowName || '').toString();
+	        const out = new Set();
+	        const primary = normalizeCountyName(raw);
+	        if (primary) out.add(primary);
 
-        return Array.from(out);
-      }
+	        if (!raw.includes(' - ')) return Array.from(out);
+	        const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
+	        const countyOnly = (countyOnlyRaw || '').trim();
+	        const countyNorm = normalizeCountyName(countyOnly);
+	        const precRaw = (precRaw0 || '').trim().toUpperCase();
+	        if (!countyOnly || !precRaw) return Array.from(out);
+	        if (isNonGeographicPrecinctCode(precRaw)) return [];
+
+	        // Some precinct boundary datasets key precincts as "1A", "14A", etc, while official
+	        // precinct results use "01" or "04-1". Add an alternate key for those cases.
+	        // Example: "GASTON - 04-1" -> "GASTON - 4A"
+	        const m = precRaw.match(/^(\d{1,3})(?:-(\d+))?$/);
+	        if (m) {
+	          const base = m[1];
+	          const baseInt = String(parseInt(base, 10)); // strips leading zeros
+	          if (baseInt && baseInt !== 'NaN') {
+	            const altPrec = `${baseInt}A`;
+	            const altFull = normalizeCountyName(`${countyOnly} - ${altPrec}`);
+	            if (altFull) out.add(altFull);
+	          }
+	        }
+
+	        // Historical results sometimes use a base code that later gets split into multiple
+	        // precinct IDs in the modern geometry. If we have the geometry code index, map the
+	        // base to any known precinct IDs that extend it by a short suffix.
+	        try {
+	          const codes = precinctIdx && countyNorm ? precinctIdx.get(countyNorm) : null;
+	          const baseCompact = precRaw.replace(/\s+/g, '');
+	          if (codes && baseCompact && /[^0-9]/.test(baseCompact)) {
+	            codes.forEach(code => {
+	              const c = (code || '').toString().trim().toUpperCase();
+	              const cCompact = c.replace(/\s+/g, '');
+	              if (!cCompact || cCompact === baseCompact) return;
+	              if (!cCompact.startsWith(baseCompact)) return;
+	              const suffix = cCompact.slice(baseCompact.length);
+	              if (!/^[A-Z0-9]{1,2}$/.test(suffix)) return;
+	              const altFull = normalizeCountyName(`${countyOnly} - ${c}`);
+	              if (altFull) out.add(altFull);
+	            });
+	          }
+	        } catch (_) {}
+
+	        return Array.from(out);
+	      }
 
       // Build county aggregates from precinct-level rows.
       const countyAgg = {};
