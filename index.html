@@ -80,6 +80,12 @@
       overscroll-behavior: contain;
     }
 
+    /* Prefer stable viewport units on mobile (helps Android Chrome with collapsing URL bar). */
+    @supports (height: 100svh) {
+      .main-controls { max-height: 52svh !important; }
+      .legend { max-height: 50svh !important; }
+    }
+
     /* Avoid iOS zoom-on-focus while keeping text readable. */
     .control-group select,
     .main-controls input[type="search"],
@@ -150,6 +156,17 @@
     const SIDEBAR_ENABLED = false;
     // Gate sidebar rendering/styles without a flash-of-sidebar on load.
     document.documentElement.classList.toggle('sidebar-enabled', SIDEBAR_ENABLED);
+
+    // Mobile viewport height fallback for browsers that don't support dvh/svh well (older Android Chrome/WebView).
+    // Keeps fixed panels from "jumping" when the URL bar collapses/expands.
+    (function () {
+      function setAppHeight() {
+        try { document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`); } catch (_) {}
+      }
+      setAppHeight();
+      window.addEventListener('resize', setAppHeight, { passive: true });
+      window.addEventListener('orientationchange', setAppHeight, { passive: true });
+    })();
 
     function toggleSidebar() {
       if (!SIDEBAR_ENABLED) return;
@@ -361,6 +378,18 @@ body {
   html, body { height: 100dvh; }
   body { height: 100dvh; }
   #map { height: 100dvh; }
+}
+/* JS-updated fallback for older mobile browsers (notably some Android WebViews). */
+:root { --app-height: 100vh; }
+html, body { height: var(--app-height); }
+body { height: var(--app-height); }
+#map { height: var(--app-height); }
+
+/* Stable viewport sizing (Android Chrome supports svh/lvh). Prefer svh to avoid UI overlays. */
+@supports (height: 100svh) {
+  html, body { height: 100svh; }
+  body { height: 100svh; }
+  #map { height: 100svh; }
 }
 
 /* Add smooth color transitions to the map */
