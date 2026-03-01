@@ -42,6 +42,51 @@
       font-size: 16px !important;
     }
   }
+  /* Mobile safe-area + scroll ergonomics (iOS notch, bottom gesture bar). */
+  @media (max-width: 768px) {
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+
+    body {
+      overscroll-behavior: none;
+    }
+
+    /* Keep top-sheet controls clear of notches and avoid covering the full map. */
+    .main-controls {
+      top: var(--safe-top) !important;
+      left: var(--safe-left) !important;
+      right: var(--safe-right) !important;
+      padding-top: calc(12px + var(--safe-top)) !important;
+      padding-left: calc(16px + var(--safe-left)) !important;
+      padding-right: calc(16px + var(--safe-right)) !important;
+      max-height: calc(52vh - var(--safe-bottom)) !important;
+      overscroll-behavior: contain;
+    }
+
+    .main-controls.minimized {
+      height: auto !important;
+      max-height: none !important;
+      padding: 10px 12px !important;
+      border-radius: 14px !important;
+    }
+
+    /* Bottom-sheet legend should clear the iOS home indicator. */
+    .legend {
+      padding-bottom: calc(8px + var(--safe-bottom)) !important;
+      overscroll-behavior: contain;
+    }
+
+    /* Avoid iOS zoom-on-focus while keeping text readable. */
+    .control-group select,
+    .main-controls input[type="search"],
+    .main-controls input[type="text"] {
+      font-size: 16px !important;
+    }
+  }
   @media (max-width: 768px) {
     /* Legend at bottom of screen on mobile */
     .legend {
@@ -310,6 +355,12 @@ body {
   transition: left 0.3s cubic-bezier(.4,0,.2,1), width 0.3s cubic-bezier(.4,0,.2,1), filter 0.3s ease;
   z-index: 1;
   touch-action: pan-x pan-y pinch-zoom;
+}
+/* Prefer dynamic viewport units on mobile browsers (prevents "address bar" jumps). */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+  body { height: 100dvh; }
+  #map { height: 100dvh; }
 }
 
 /* Add smooth color transitions to the map */
