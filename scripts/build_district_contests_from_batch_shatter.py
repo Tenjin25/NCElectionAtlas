@@ -348,6 +348,10 @@ def is_non_geographic_precinct(name: str) -> bool:
     # (e.g., "OS MAXTON"). Treat these as non-geographic buckets.
     if t == "OS" or t.startswith("OS ") or t.startswith("OS-") or t.startswith("OS_"):
         return True
+    # Some counties (notably WAKE in OpenElections precinct exports) use compact one-stop
+    # codes like "OSNB 81-91" (no space after "OS"). Treat any OS-prefixed bucket as non-geo.
+    if re.match(r"^OS[A-Z0-9]+", t):
+        return True
     # Some counties use a compact "ONESTOP" label.
     if t == "ONESTOP" or t.startswith("ONESTOP "):
         return True
