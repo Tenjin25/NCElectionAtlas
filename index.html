@@ -1986,8 +1986,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!path) return path;
       if (/^https?:\/\//i.test(path)) return path;
       const base = detectBasePath();
-      const normalized = path.replace(/^\.\//, '/');
-      return `${base}${normalized}`;
+      // Keep paths relative by default so the app works when served from a subfolder
+      // (e.g. `http://localhost:8000/NCPrecinctMap/index.html`) and in file-like previews.
+      // Only prefix an explicit GitHub Pages base when detected.
+      const cleaned = path.replace(/^\.\//, '').replace(/^\/+/, '');
+      return base ? `${base}/${cleaned}` : cleaned;
     }
 
     const CONFIG = {
