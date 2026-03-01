@@ -6411,6 +6411,41 @@ document.addEventListener('DOMContentLoaded', function() {
 	        if (!countyOnly || !precRaw) return Array.from(out);
 	        if (isNonGeographicPrecinctCode(precRaw)) return [];
 
+          // Many older exports use "CODE NAME" or "CODE_NAME ..." where the geometry key
+          // is just the code token (e.g., "HARNETT - PR01 ANDERSON CREEK" => "HARNETT - PR01",
+          // "RICHMOND - 06_WOLF PIT #3" => "RICHMOND - 06"). Add those variants.
+          try {
+            const firstToken = precRaw.split(/\s+/, 1)[0].trim();
+            const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim();
+            const token = token0.replace(/[^A-Z0-9-]/g, '').trim();
+            const tokenOk = token && /^[A-Z]{0,3}\d{1,3}(?:-\d{1,3})?[A-Z]?$/.test(token);
+            if (tokenOk && token !== precRaw) {
+              const addKey = (t) => {
+                const altFull = normalizeCountyName(`${countyOnly} - ${t}`);
+                if (altFull) out.add(altFull);
+              };
+
+              addKey(token);
+              // Numeric codes: include both trimmed and zero-padded forms.
+              if (/^\d{1,3}$/.test(token)) {
+                const n = parseInt(token, 10);
+                if (!isNaN(n)) {
+                  addKey(String(n));
+                  addKey(String(n).padStart(2, '0'));
+                }
+              }
+              // PRxx codes (Harnett): include both padded/unpadded variants.
+              const mpr = token.match(/^PR(\d{1,3})$/);
+              if (mpr) {
+                const n = parseInt(mpr[1], 10);
+                if (!isNaN(n)) {
+                  addKey(`PR${String(n)}`);
+                  addKey(`PR${String(n).padStart(2, '0')}`);
+                }
+              }
+            }
+          } catch (_) {}
+
 	        // Some precinct boundary datasets key precincts as "1A", "14A", etc, while official
 	        // precinct results use "01" or "04-1". Add an alternate key for those cases.
 	        // Example: "GASTON - 04-1" -> "GASTON - 4A"
