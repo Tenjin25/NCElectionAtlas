@@ -189,6 +189,13 @@ def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
         # Common variants: underscores vs spaces.
         out[(r["COUNTY_NAM"], _norm_spaces(r["ENR_DESC"].replace("_", " ")))] = r["PREC_ID"]
         out[(r["COUNTY_NAM"], _norm_spaces(r["ENR_DESC"].replace(" ", "_")))] = r["PREC_ID"]
+        # Many ENR_DESC values include a code prefix like "CC01_CROSS CREEK #01".
+        # Add a variant that drops the leading "<CODE>_" so exports that only
+        # include the human-readable label can still resolve.
+        if "_" in r["ENR_DESC"]:
+            right = _norm_spaces(str(r["ENR_DESC"]).split("_", 1)[1])
+            if right:
+                out[(r["COUNTY_NAM"], right)] = r["PREC_ID"]
     return out
 
 
@@ -219,6 +226,16 @@ def clean_precinct_name(precinct: str, county: str) -> str:
 
     # 2) Strip boilerplate words sometimes included in exports.
     p = p.replace("PRECINCT", " ").replace("VTD", " ").strip()
+    # Some exports use "PCT <num>" for coded precincts (notably Mecklenburg in 2008).
+    # Convert those to the canonical numeric code where possible.
+    m = re.fullmatch(r"PCT\s*0*([0-9]{1,3})(\.[0-9]+)?", p)
+    if m:
+        num = int(m.group(1))
+        suffix = m.group(2) or ""
+        if county_u == "MECKLENBURG":
+            base = str(num).zfill(3) if num < 100 else str(num)
+            return f"{base}{suffix}"
+        return f"{num}{suffix}"
 
     # 2b) Many historical exports use "CODE_NAME" patterns where the crosswalk
     # canonical key is just the code (e.g., "01_PATTERSON" -> "01").
