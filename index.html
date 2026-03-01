@@ -4006,7 +4006,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const _demoHTML = buildDemoHTML(_demoRow);
       if (!contestValue) {
         showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#64748b;margin-top:6px;">Select a contest to see results</div>'));
+          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>'));
         wireTooltipButtons();
         return;
       }
@@ -4029,7 +4029,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!row) {
         showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#64748b;margin-top:6px;">No data for this contest</div>'));
+          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>'));
         wireTooltipButtons();
         return;
       }
@@ -4040,7 +4040,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalVotes = Number(row.total_votes || 0);
       if (totalVotes <= 0) {
         showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#64748b;margin-top:6px;">No data for this contest</div>'));
+          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>'));
         wireTooltipButtons();
         return;
       }
@@ -4092,7 +4092,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const desc = getDistrictDescription(scope, districtNum);
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
-        ${desc ? `<div class="meta-subtle" style="margin-top:6px;"><strong>Area:</strong> ${desc}</div>` : ''}
+        ${desc ? `<div style="margin-top:6px;font-size:12px;color:#94a3b8;"><strong style="color:#e2e8f0;">Area:</strong> ${desc}</div>` : ''}
         ${_demoHTML}
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
       `;
@@ -6311,22 +6311,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scope === 'congressional') source = districtsInfo;
         else if (scope === 'state_house') source = stateHouseInfo;
         else if (scope === 'state_senate') source = stateSenateInfo;
-        if (!source) return null;
-        const dNum = String(districtNum).trim();
-        return source.find(d =>
-          String(d.district).trim() === dNum ||
-          String(Number(d.district)) === String(Number(dNum))
-        ) || null;
+        if (!source || !source.length) return null;
+        // Use loose == so "099" == 99, "01" == 1, etc. (mirrors showStateDistrictDetails)
+        const n = Number(districtNum);
+        return source.find(d => d.district == districtNum || (!isNaN(n) && Number(d.district) === n)) || null;
       } catch (_) { return null; }
     }
 
     function buildDemoHTML(demoRow) {
       if (!demoRow) return '';
-      return `<div class="meta-subtle" style="margin-top:6px;border-top:1px solid #334155;padding-top:6px;">` +
-        `<span style="font-weight:700;">Pop:</span> ${Number(demoRow.total_population||0).toLocaleString()}` +
-        ` &nbsp;<span style="font-weight:700;">W:</span>${demoRow.white_vap_pct}%` +
-        ` <span style="font-weight:700;">B:</span>${demoRow.black_vap_pct}%` +
-        ` <span style="font-weight:700;">H:</span>${demoRow.hispanic_vap_pct}%` +
+      return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;color:#cbd5e1;">` +
+        `<span style="font-weight:700;color:#e2e8f0;">Pop:</span> ${Number(demoRow.total_population||0).toLocaleString()}` +
+        ` &nbsp;<span style="font-weight:700;color:#e2e8f0;">W:</span>${demoRow.white_vap_pct}%` +
+        ` <span style="font-weight:700;color:#e2e8f0;">B:</span>${demoRow.black_vap_pct}%` +
+        ` <span style="font-weight:700;color:#e2e8f0;">H:</span>${demoRow.hispanic_vap_pct}%` +
         `</div>`;
     }
 
