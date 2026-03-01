@@ -128,6 +128,30 @@ def _norm(text: str) -> str:
 def _norm_spaces(text: str) -> str:
     return re.sub(r"\s+", " ", _norm(text))
 
+def precinct_bucket_from_code(precinct_code: str) -> str:
+    """
+    Derive a 'bucket' key used only for allocating *unmatched* precinct totals.
+
+    The previous approach bucketed by the first token before '-' (e.g. '01-07A' -> '01'),
+    which is too coarse in counties like WAKE/MECK where many distinct precinct codes share
+    the same leading group. That smears unmatched votes across too many districts.
+
+    Strategy:
+      - If the code looks like A-B or A-B<letter>, bucket by A-B (strip suffix letter).
+      - Otherwise fall back to legacy behavior: first token before '-'.
+    """
+    p = _norm(precinct_code)
+    if not p:
+        return ""
+    m = re.fullmatch(r"0*([0-9]{1,3})-0*([0-9]{1,3})(?:[A-Z])?", p)
+    if m:
+        a = int(m.group(1))
+        b = int(m.group(2))
+        aa = str(a).zfill(2) if a < 100 else str(a)
+        bb = str(b).zfill(2) if b < 100 else str(b)
+        return f"{aa}-{bb}"
+    return p.split("-")[0].strip()
+
 
 def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
     """
@@ -524,7 +548,7 @@ def build_precinct_bucket_shares(
     cw = crosswalk_df.copy()
     cw["county"] = cw["precinct_id"].astype(str).str.split(" - ").str[0].str.strip().str.upper()
     p = cw["precinct_id"].astype(str).str.split(" - ").str[1].fillna("").str.strip().str.upper()
-    cw["bucket"] = p.str.split("-").str[0].str.strip()
+    cw["bucket"] = p.map(precinct_bucket_from_code)
     cw = cw[cw["bucket"] != ""].copy()
 
     v = vap_df.copy()
@@ -688,7 +712,7 @@ def apply_unmatched_county_fallback(
     r["votes"] = pd.to_numeric(r["votes"], errors="coerce").fillna(0.0)
     r["county"] = r["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
     r["precinct"] = r["precinct_id"].str.split(" - ").str[1].fillna("").str.strip().str.upper()
-    r["bucket"] = r["precinct"].str.split("-").str[0].str.strip()
+    r["bucket"] = r["precinct"].map(precinct_bucket_from_code)
     unmatched = r[~r["precinct_id"].isin(matched_precincts)].copy()
     if unmatched.empty:
         return {str(k): int(round(v)) for k, v in base.items()}
@@ -965,7 +989,7 @@ def agg_party_to_scope(
         Fallback when zero precinct keys match the block->precinct crosswalk.
 
         Allocates votes to districts using:
-        1) county+bucket -> district shares (bucket derived from precinct code like '01-07A' => '01')
+        1) county+bucket -> district shares (bucket derived from precinct code like '01-07A' => '01-07')
         2) remaining county totals -> district shares (county-wide VAP shares)
 
         This preserves within-county variation at the "precinct bucket" level without requiring
@@ -976,7 +1000,7 @@ def agg_party_to_scope(
         r["votes"] = pd.to_numeric(r["votes"], errors="coerce").fillna(0.0)
         r["county"] = r["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
         r["precinct"] = r["precinct_id"].str.split(" - ").str[1].fillna("").str.strip().str.upper()
-        r["bucket"] = r["precinct"].str.split("-").str[0].str.strip()
+        r["bucket"] = r["precinct"].map(precinct_bucket_from_code)
         r = r[(r["county"] != "") & (r["votes"] != 0)].copy()
         if r.empty:
             return {}
