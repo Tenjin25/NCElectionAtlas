@@ -3058,6 +3058,33 @@ document.addEventListener('DOMContentLoaded', function() {
 	      sel.innerHTML = '<option value="">Select a contest...</option>';
 
 	      const contestYearPairs = {};
+        const councilOfStateTypes = new Set([
+          'governor',
+          'lieutenant_governor',
+          'attorney_general',
+          'auditor',
+          'secretary_of_state',
+          'treasurer',
+          'labor_commissioner',
+          'insurance_commissioner',
+          'agriculture_commissioner',
+          'superintendent'
+        ]);
+
+        function parseMajorPartyContested(entry) {
+          const raw = entry?.major_party_contested;
+          if (typeof raw === 'boolean') return raw;
+          if (typeof raw === 'number') return raw !== 0;
+          if (typeof raw === 'string') {
+            const s = raw.trim().toLowerCase();
+            if (s === 'false' || s === '0' || s === 'no') return false;
+            if (s === 'true' || s === '1' || s === 'yes') return true;
+          }
+          const demTotal = Number(entry?.dem_total || 0);
+          const repTotal = Number(entry?.rep_total || 0);
+          if (demTotal > 0 || repTotal > 0) return demTotal > 0 && repTotal > 0;
+          return true;
+        }
 	      (manifestEntries || []).forEach(entry => {
 	        const contestType = entry.contest_type;
 	        const year = Number(entry.year);
@@ -3068,6 +3095,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // NC appellate judicial races are nonpartisan in older cycles; without endorsements they read as "OTHER".
           const isJudicial = contestType.startsWith('nc_supreme_court_') || contestType.startsWith('nc_court_of_appeals_');
           if (isJudicial && Number.isFinite(year) && year < 2018) return;
+          if (councilOfStateTypes.has(contestType) && !parseMajorPartyContested(entry)) return;
 
 	        if (!contestYearPairs[contestType]) contestYearPairs[contestType] = new Set();
 	        contestYearPairs[contestType].add(year);

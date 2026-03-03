@@ -49,9 +49,35 @@ Historical results from 2000–2020 are reallocated to these lines using Census 
 
 - **Multiple Views:** Counties, Precincts (zoomed in), Congressional Districts, State House, State Senate
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
+- **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, and trend lines for each geography
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
+
+## Recent Updates (March 2026)
+
+- Added historical Counties-view Council of State contest slices for **2000, 2004, and 2008**.
+- Rebuilt **2012** Council of State county/precinct slices with updated manifest metadata.
+- Added legacy office alias support for `SUPER. OF PUBLIC INSTRUCTION` (older OpenElections naming).
+- Added Counties-manifest metadata fields:
+  - `dem_total`
+  - `rep_total`
+  - `total_votes`
+  - `major_party_contested`
+- Updated contest picker logic to hide unopposed Council of State entries (example: **2012 NC Attorney General**).
+
+## UI Performance Enhancements
+
+The current `index.html` includes several speed-focused improvements that are already live in the app:
+
+- **Manifest-first contest indexing:** Contest dropdowns are built from `data/contests/manifest.json` and `data/district_contests/manifest.json`, avoiding expensive full-data scans for availability.
+- **Slice/result caching:** In-memory caches (`contestSliceCache`, `districtSliceCache`, `candidateNameCache`) reduce repeated fetch/parse work while switching contests or views.
+- **Lazy precinct loading:** County/district layers load first; precinct polygons load on demand, while centroids are used for faster statewide interaction.
+- **Centroid-first rendering path:** Precinct centroids are shown at lower zoom, then polygons take over at higher zoom to keep navigation responsive.
+- **Missing-polygon fallback:** Centroids remain visible for precincts without polygon geometry so data stays interactive without blocking rendering.
+- **RAF-throttled hover updates:** Hover handlers use `requestAnimationFrame` and feature-state highlighting to reduce pointer-move churn and flicker.
+- **Worker-based CSV parsing fallback:** Historical presidential OpenElections CSVs are stream-parsed in a Web Worker (Papa Parse) when needed, reducing main-thread UI stalls.
+- **Deferred trend loading:** County trend series are loaded asynchronously so contest application and map recoloring happen immediately.
 
 ## What to Expect on the Live Site
 
@@ -100,7 +126,7 @@ To build or modify data files locally, you will need Python 3.x and PowerShell. 
 ### 1. County/Precinct Contest Slices (Counties View)
 
 - `data/contests/<contest_type>_<year>.json` — Precinct-level results for a contest/year
-- `data/contests/manifest.json` — List of available contests for the Counties view
+- `data/contests/manifest.json` — List of available contests for the Counties view (including contested metadata)
 
 Each row is keyed as `"COUNTY - PRECINCT"` and includes candidate names and vote totals:
 
@@ -109,6 +135,16 @@ Each row is keyed as `"COUNTY - PRECINCT"` and includes candidate names and vote
 ```
 
 The Counties view aggregates these rows to county totals and also uses them to power precinct hovers (where precinct geometry exists).
+
+`data/contests/manifest.json` entries now include:
+
+- `rows`
+- `dem_total`
+- `rep_total`
+- `total_votes`
+- `major_party_contested`
+
+The Counties dropdown uses `major_party_contested` to suppress unopposed Council of State contests.
 
 ### 2. Precinct Geometry (Precincts Overlay)
 
@@ -199,6 +235,20 @@ py scripts/build_district_contests_from_batch_shatter.py `
   --write-contests
 ```
 
+To rebuild historical Council of State county slices (example: 2000/2004/2008/2012):
+
+```powershell
+$regex = "^(governor|lieutenant_governor|attorney_general|auditor|secretary_of_state|treasurer|labor_commissioner|insurance_commissioner|agriculture_commissioner|superintendent)$"
+
+py scripts/build_district_contests_from_batch_shatter.py `
+  --year 2000 `
+  --results-csv data/2000/20001107__nc__general__precinct.csv `
+  --office-source auto `
+  --contest-type-regex $regex `
+  --contests-only `
+  --write-contests
+```
+
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
@@ -226,6 +276,7 @@ Coverage is tracked per-contest in the district slice metadata. Remaining unmatc
 - **New contests don't show in dropdown:** Ensure the correct manifest is updated:
   - Counties view → `data/contests/manifest.json`
   - District views → `data/district_contests/manifest.json`
+- **A Council of State contest/year is missing in Counties view:** Check `major_party_contested` in `data/contests/manifest.json`. Unopposed contests are intentionally hidden.
 - **Wake/Meck district accuracy looks off in older years:** Check unmatched precinct reports and add overrides; rebuild slices.
 
 ## Contributing

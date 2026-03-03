@@ -68,6 +68,7 @@ KNOWN_OFFICE_KEYS = {
     "TREASURER": "treasurer",
     "NC SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
     "SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
+    "SUPER. OF PUBLIC INSTRUCTION": "superintendent",
     "NC COURT OF APPEALS JUDGE SEAT 12": "nc_court_of_appeals_judge_seat_12",
     "NC COURT OF APPEALS JUDGE SEAT 14": "nc_court_of_appeals_judge_seat_14",
     "NC COURT OF APPEALS JUDGE SEAT 15": "nc_court_of_appeals_judge_seat_15",
@@ -465,6 +466,9 @@ def build_precinct_contest_payload(
     where county is a "COUNTY - PRECINCT" precinct_id string.
     """
     rows: list[dict] = []
+    dem_total = 0
+    rep_total = 0
+    other_total = 0
     if precinct_party is None or precinct_party.empty:
         return {"rows": []}
 
@@ -496,8 +500,13 @@ def build_precinct_contest_payload(
                 "color": calculate_competitiveness(m_pct),
             }
         )
+        dem_total += dem
+        rep_total += rep
+        other_total += oth
 
     rows.sort(key=lambda x: str(x.get("county", "")))
+    total_votes = int(dem_total + rep_total + other_total)
+    major_party_contested = bool(dem_total > 0 and rep_total > 0)
     return {
         "year": int(year),
         "contest_type": str(contest_type),
@@ -505,8 +514,36 @@ def build_precinct_contest_payload(
             "source": "batch_shatter_vap_party_split",
             "office": office_label,
             "nongeo_allocation_mode": nongeo_allocation_mode,
+            "dem_total": int(dem_total),
+            "rep_total": int(rep_total),
+            "other_total": int(other_total),
+            "total_votes": total_votes,
+            "major_party_contested": major_party_contested,
         },
         "rows": rows,
+    }
+
+
+def build_contests_manifest_entry(*, year: int, contest_type: str, file_name: str, payload: dict) -> dict:
+    rows = payload.get("rows") or []
+    meta = payload.get("meta") or {}
+    dem_total = int(meta.get("dem_total", 0) or 0)
+    rep_total = int(meta.get("rep_total", 0) or 0)
+    total_votes = int(meta.get("total_votes", 0) or 0)
+    if total_votes <= 0 and rows:
+        dem_total = int(sum(int(r.get("dem_votes", 0) or 0) for r in rows))
+        rep_total = int(sum(int(r.get("rep_votes", 0) or 0) for r in rows))
+        total_votes = int(sum(int(r.get("total_votes", 0) or 0) for r in rows))
+    major_party_contested = bool(dem_total > 0 and rep_total > 0)
+    return {
+        "year": int(year),
+        "contest_type": str(contest_type),
+        "file": str(file_name),
+        "rows": int(len(rows)),
+        "dem_total": dem_total,
+        "rep_total": rep_total,
+        "total_votes": total_votes,
+        "major_party_contested": major_party_contested,
     }
 
 
@@ -1355,12 +1392,12 @@ def main() -> None:
             update_contests_manifest(
                 args.contests_manifest,
                 [
-                    {
-                        "year": int(args.year),
-                        "contest_type": str(contest_type),
-                        "file": contest_file.name,
-                        "rows": int(len((payload.get("rows") or []))),
-                    }
+                    build_contests_manifest_entry(
+                        year=int(args.year),
+                        contest_type=str(contest_type),
+                        file_name=contest_file.name,
+                        payload=payload,
+                    )
                 ],
             )
 
@@ -1528,12 +1565,12 @@ def main() -> None:
                 update_contests_manifest(
                     args.contests_manifest,
                     [
-                        {
-                            "year": int(args.year),
-                            "contest_type": str(contest_type),
-                            "file": contest_file.name,
-                            "rows": int(len((contest_payload.get("rows") or []))),
-                        }
+                        build_contests_manifest_entry(
+                            year=int(args.year),
+                            contest_type=str(contest_type),
+                            file_name=contest_file.name,
+                            payload=contest_payload,
+                        )
                     ],
                 )
 
