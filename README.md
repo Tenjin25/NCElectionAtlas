@@ -56,9 +56,13 @@ Historical results from 2000–2020 are reallocated to these lines using Census 
 
 ## Recent Updates (March 2026)
 
+**Last updated:** March 3, 2026
+
 - Added historical Counties-view Council of State contest slices for **2000, 2004, and 2008**.
 - Rebuilt **2012** Council of State county/precinct slices with updated manifest metadata.
 - Added legacy office alias support for `SUPER. OF PUBLIC INSTRUCTION` (older OpenElections naming).
+- Caught a counties-view performance issue by manually switching contests with **Precincts Off** and noticing throttling in the dropdown-change path.
+- Addressed that throttling by skipping heavy precinct-only work when precincts are disabled (precinct variant expansion, precinct color-expression rebuilds, and precinct-index-backed prior-cycle matching now run only when needed).
 - Added Counties-manifest metadata fields:
   - `dem_total`
   - `rep_total`
@@ -78,6 +82,7 @@ The current `index.html` includes several speed-focused improvements that are al
 - **RAF-throttled hover updates:** Hover handlers use `requestAnimationFrame` and feature-state highlighting to reduce pointer-move churn and flicker.
 - **Worker-based CSV parsing fallback:** Historical presidential OpenElections CSVs are stream-parsed in a Web Worker (Papa Parse) when needed, reducing main-thread UI stalls.
 - **Deferred trend loading:** County trend series are loaded asynchronously so contest application and map recoloring happen immediately.
+- **Counties-mode contest switch optimization (March 3, 2026):** Contest changes with `Precincts Off` now avoid unnecessary precinct matching/index work, improving responsiveness and reducing main-thread churn.
 
 ## What to Expect on the Live Site
 

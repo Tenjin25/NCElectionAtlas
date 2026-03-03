@@ -6994,20 +6994,35 @@ document.addEventListener('DOMContentLoaded', function() {
       return null;
     }
 
-    async function ensurePrevContestCache(contestType, year) {
+    async function ensurePrevContestCache(contestType, year, options = {}) {
+      const includePrecinctMargins = !!options.includePrecinctMargins;
       const y = Number(year);
-      if (vizPrevCache && vizPrevCache.contestType === contestType && Number(vizPrevCache.year) === y) return vizPrevCache;
+      if (
+        vizPrevCache &&
+        vizPrevCache.contestType === contestType &&
+        Number(vizPrevCache.year) === y &&
+        (!includePrecinctMargins || vizPrevCache.hasPrecinctMargins)
+      ) return vizPrevCache;
 
       const prevMeta = await getPreviousContestSlice(contestType, y);
       if (!prevMeta) {
-        vizPrevCache = { contestType, year: y, prevYear: null, prevPrecinctMarginByNorm: new Map(), prevCountyTotals: {} };
+        vizPrevCache = {
+          contestType,
+          year: y,
+          prevYear: null,
+          prevPrecinctMarginByNorm: new Map(),
+          prevCountyTotals: {},
+          hasPrecinctMargins: false
+        };
         return vizPrevCache;
       }
 
 	      const prevPrecinctMarginByNorm = new Map();
 	      const prevCountyTotals = {};
 	      let precinctIdx = null;
-	      try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+	      if (includePrecinctMargins) {
+	        try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+	      }
 	      function isNonGeographicPrecinctCode(code) {
 	        return isNonGeographicPrecinctToken(code);
 	      }
@@ -7119,11 +7134,20 @@ document.addEventListener('DOMContentLoaded', function() {
         prevCountyTotals[countyNorm].rep += rep;
         prevCountyTotals[countyNorm].total += total;
 
-        const mPct = Number(r[`${contestType}_margin_pct`] || 0);
-        precinctNormVariantsLite(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
+        if (includePrecinctMargins) {
+          const mPct = Number(r[`${contestType}_margin_pct`] || 0);
+          precinctNormVariantsLite(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
+        }
       });
 
-      vizPrevCache = { contestType, year: y, prevYear: prevMeta.year, prevPrecinctMarginByNorm, prevCountyTotals };
+      vizPrevCache = {
+        contestType,
+        year: y,
+        prevYear: prevMeta.year,
+        prevPrecinctMarginByNorm,
+        prevCountyTotals,
+        hasPrecinctMargins: includePrecinctMargins
+      };
       return vizPrevCache;
     }
 
@@ -7196,11 +7220,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	          .toUpperCase();
 	      }
 
-	      // Precinct key matching needs to tolerate (a) non-geographic buckets in results
-	      // (absentee/one-stop/etc) and (b) modern precinct splits where historical results
-	      // provide a shorter base code (e.g. "03S" vs "03SE"/"03SM").
-	      let precinctIdx = null;
-	      try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+      // Only build heavy precinct matching/color expressions when the overlay is enabled.
+      // If users switch contests with precincts off, keep the county path fast.
+      const needsPrecinctDetail = !!precinctsEnabled;
+
+      // Precinct key matching needs to tolerate (a) non-geographic buckets in results
+      // (absentee/one-stop/etc) and (b) modern precinct splits where historical results
+      // provide a shorter base code (e.g. "03S" vs "03SE"/"03SM").
+      let precinctIdx = null;
+      if (needsPrecinctDetail) {
+        try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+      }
 
 	      function isNonGeographicPrecinctCode(code) {
 	        return isNonGeographicPrecinctToken(code);
@@ -7341,7 +7371,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Build county aggregates from precinct-level rows.
       const countyAgg = {};
-      currentPrecinctResults = new Map();
+      currentPrecinctResults = needsPrecinctDetail ? new Map() : null;
       contestData.forEach(row => {
         const rowName = (row.county || '').toString();
         const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
@@ -7355,10 +7385,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const demCand = (row[`${contestType}_dem_candidate`] || '').toString();
         const repCand = (row[`${contestType}_rep_candidate`] || '').toString();
 
-        const norms = precinctNormVariants(rowName);
-        norms.forEach(n => {
-          currentPrecinctResults.set(n, row);
-        });
+        if (needsPrecinctDetail) {
+          const norms = precinctNormVariants(rowName);
+          norms.forEach(n => {
+            currentPrecinctResults.set(n, row);
+          });
+        }
         if (!countyAgg[countyNorm]) {
           countyAgg[countyNorm] = {
             year: Number(year),
@@ -7419,11 +7451,28 @@ document.addEventListener('DOMContentLoaded', function() {
       let prevPrecinctMarginByNorm = null; // Map<string, number>
       let prevCountyTotals = null; // Map countyNorm -> {dem, rep, total}
 
-      // Preload prior-year data for flip detection (and shift mode).
-      try {
-        vizPrevCache = await ensurePrevContestCache(contestType, Number(year));
-      } catch (_) {
-        vizPrevCache = { contestType, year: Number(year), prevYear: null, prevPrecinctMarginByNorm: new Map(), prevCountyTotals: {} };
+      // Preload prior-year data only when the active mode needs it.
+      // In margins/winners mode this avoids unnecessary contest-slice and precinct-index work.
+      const needsPrevData = (mode === 'shift' || mode === 'flips');
+      if (needsPrevData) {
+        try {
+          vizPrevCache = await ensurePrevContestCache(contestType, Number(year), {
+            includePrecinctMargins: needsPrecinctDetail
+          });
+        } catch (_) {
+          vizPrevCache = {
+            contestType,
+            year: Number(year),
+            prevYear: null,
+            prevPrecinctMarginByNorm: new Map(),
+            prevCountyTotals: {},
+            hasPrecinctMargins: false
+          };
+        }
+      } else {
+        // Leave prior-year cache unset when the mode doesn't need it so a later
+        // flip/shift switch can load real previous-cycle data.
+        vizPrevCache = null;
       }
 
       if (mode === 'shift') {
@@ -7548,7 +7597,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (_) {}
       }
       // Optional precinct expression (detail overlay)
-      {
+      if (needsPrecinctDetail) {
         const exprPrecinct = ['case'];
         contestData.forEach(row => {
           const precinctNames = precinctNormVariants(row.county);
