@@ -2790,15 +2790,18 @@ body { height: var(--app-height); }
   }
 
   .focus-pill-value {
-    display: block;
+    display: -webkit-box;
     margin-top: 5px;
     font-size: 15px;
     font-weight: 900;
     color: #0f172a;
     line-height: 1.2;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
   }
 
   .focus-pill-value.dem {
@@ -3213,6 +3216,269 @@ body { height: var(--app-height); }
     border: 1px solid rgba(139, 92, 246, 0.16);
   }
 
+  .focus-trend-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    gap: 8px;
+  }
+
+  .focus-trend-stat {
+    display: grid;
+    gap: 4px;
+    padding: 10px 11px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .focus-trend-stat-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .focus-trend-stat-value {
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #0f172a;
+  }
+
+  .focus-trend-stat-value.dem {
+    color: #1d4ed8;
+  }
+
+  .focus-trend-stat-value.rep {
+    color: #b91c1c;
+  }
+
+  .focus-trend-stat-value.tie {
+    color: #475569;
+  }
+
+  .focus-trend-list {
+    display: grid;
+    gap: 10px;
+    max-height: min(42vh, 360px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+    scrollbar-width: thin;
+  }
+
+  .focus-trend-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .focus-trend-entry::after {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 34px;
+    bottom: -10px;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.42) 0%, rgba(226, 232, 240, 0.18) 100%);
+  }
+
+  .focus-trend-entry:last-child::after {
+    display: none;
+  }
+
+  .focus-trend-entry-year {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.92);
+    color: #475569;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .focus-trend-entry-card {
+    display: grid;
+    gap: 9px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(248, 250, 252, 0.92);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .focus-trend-entry-card[data-party="rep"] {
+    background: linear-gradient(180deg, rgba(254, 242, 242, 0.96) 0%, rgba(248, 250, 252, 0.94) 100%);
+  }
+
+  .focus-trend-entry-card[data-party="dem"] {
+    background: linear-gradient(180deg, rgba(239, 246, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+  }
+
+  .focus-trend-entry-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .focus-trend-entry-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .focus-trend-entry-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.84);
+    color: #475569;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .focus-trend-entry-badge.dem {
+    color: #1d4ed8;
+    background: rgba(219, 234, 254, 0.86);
+  }
+
+  .focus-trend-entry-badge.rep {
+    color: #b91c1c;
+    background: rgba(254, 226, 226, 0.82);
+  }
+
+  .focus-trend-entry-call {
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #0f172a;
+    word-break: break-word;
+  }
+
+  .focus-trend-entry-call.dem {
+    color: #1d4ed8;
+  }
+
+  .focus-trend-entry-call.rep {
+    color: #b91c1c;
+  }
+
+  .focus-trend-entry-call.tie {
+    color: #475569;
+  }
+
+  .focus-trend-entry-margin {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  .focus-trend-entry-scale {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .focus-trend-entry-scale .dem {
+    color: #1d4ed8;
+  }
+
+  .focus-trend-entry-scale .rep {
+    color: #b91c1c;
+    text-align: right;
+  }
+
+  .focus-trend-entry-bar {
+    display: flex;
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(226, 232, 240, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .focus-trend-entry-bar span {
+    display: block;
+    height: 100%;
+  }
+
+  .focus-trend-entry-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .focus-trend-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    max-width: 100%;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(241, 245, 249, 0.94);
+    color: #475569;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    white-space: nowrap;
+  }
+
+  .focus-trend-chip.dem {
+    color: #1d4ed8;
+    background: rgba(219, 234, 254, 0.84);
+  }
+
+  .focus-trend-chip.rep {
+    color: #b91c1c;
+    background: rgba(254, 226, 226, 0.78);
+  }
+
+  .focus-trend-chip.tie {
+    color: #475569;
+    background: rgba(226, 232, 240, 0.86);
+  }
+
+  .focus-trend-chip.flip {
+    color: #5b21b6;
+    background: rgba(237, 233, 254, 0.88);
+    border-color: rgba(139, 92, 246, 0.16);
+  }
+
   @media (min-width: 769px) and (max-width: 1180px) {
     :root {
       --desktop-left-w: 344px;
@@ -3412,11 +3678,12 @@ body { height: var(--app-height); }
 
     .focus-pill-value {
       white-space: normal;
-      overflow: visible;
-      text-overflow: clip;
+      overflow: hidden;
+      text-overflow: ellipsis;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
+      max-height: calc(1.2em * 2);
     }
 
   .vote-counter-row {
@@ -4056,7 +4323,7 @@ body { height: var(--app-height); }
 
   .legend-content {
     display: grid;
-    gap: 8px;
+    gap: 12px;
     padding: 0 16px 14px;
   }
 
@@ -4085,7 +4352,8 @@ body { height: var(--app-height); }
   }
 
   .legend-footer {
-    padding: 0 16px 16px;
+    padding: 10px 16px 16px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
     color: #64748b;
     font-size: 12px;
     line-height: 1.45;
@@ -5415,32 +5683,161 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
 
+    // County memberships back the regional quick jumps so they can drive
+    // real regional rollups instead of only camera movement.
+    // Definitions used:
+    // - Triangle: Research Triangle Regional Partnership
+    // - Triad: Piedmont Triad Regional Council
+    // - Charlotte: 2024 Charlotte-Concord-Gastonia NC counties (BLS/OMB metro definition)
+    // - Mountains: NC Office of State Archaeology mountain region
+    // - Coast: NC DEQ CAMA counties
+    // - Sandhills: NCGS 143B-28.1 Sandhills (South Central) region
     const REGION_JUMPS = {
       triangle: {
         label: 'Research Triangle',
-        bounds: [[-79.45, 35.55], [-78.35, 36.25]]
+        bounds: [[-79.90, 35.25], [-77.55, 36.60]],
+        counties: ['Chatham', 'Durham', 'Franklin', 'Granville', 'Harnett', 'Johnston', 'Lee', 'Nash', 'Orange', 'Person', 'Vance', 'Wake', 'Warren', 'Wilson']
       },
       triad: {
         label: 'Piedmont Triad',
-        bounds: [[-80.65, 35.80], [-79.35, 36.45]]
+        bounds: [[-81.10, 35.15], [-79.15, 36.62]],
+        counties: ['Alamance', 'Caswell', 'Davidson', 'Davie', 'Forsyth', 'Guilford', 'Montgomery', 'Randolph', 'Rockingham', 'Stokes', 'Surry', 'Yadkin']
       },
       charlotte: {
         label: 'Charlotte Metro',
-        bounds: [[-81.25, 34.90], [-80.45, 35.55]]
+        bounds: [[-81.95, 34.55], [-79.95, 35.95]],
+        counties: ['Anson', 'Cabarrus', 'Gaston', 'Iredell', 'Lincoln', 'Mecklenburg', 'Rowan', 'Union']
       },
       mountains: {
         label: 'Western Mountains',
-        bounds: [[-84.40, 35.00], [-81.70, 36.65]]
+        bounds: [[-84.45, 34.90], [-81.30, 36.65]],
+        counties: ['Alleghany', 'Ashe', 'Avery', 'Buncombe', 'Burke', 'Caldwell', 'Clay', 'Cherokee', 'Graham', 'Haywood', 'Henderson', 'Jackson', 'Macon', 'Madison', 'McDowell', 'Mitchell', 'Polk', 'Rutherford', 'Swain', 'Transylvania', 'Watauga', 'Wilkes', 'Yancey']
       },
       coast: {
-        label: 'Coastal Plain',
-        bounds: [[-78.25, 33.80], [-75.35, 36.55]]
+        label: 'NC Coast',
+        bounds: [[-78.75, 33.80], [-75.30, 36.58]],
+        counties: ['Beaufort', 'Bertie', 'Brunswick', 'Camden', 'Carteret', 'Chowan', 'Craven', 'Currituck', 'Dare', 'Gates', 'Hertford', 'Hyde', 'New Hanover', 'Onslow', 'Pamlico', 'Pasquotank', 'Pender', 'Perquimans', 'Tyrrell', 'Washington']
       },
       sandhills: {
         label: 'Sandhills',
-        bounds: [[-80.20, 34.65], [-78.20, 35.70]]
+        bounds: [[-79.95, 33.90], [-77.35, 35.55]],
+        counties: ['Bladen', 'Columbus', 'Cumberland', 'Hoke', 'Montgomery', 'Moore', 'Richmond', 'Robeson', 'Sampson', 'Scotland']
       }
     };
+
+    function normalizeRegionCountyName(name) {
+      return (name || '')
+        .toString()
+        .replace(/\s+COUNTY$/i, '')
+        .replace(/[^a-z0-9 .\-]/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toUpperCase();
+    }
+
+    function getRegionCountySet(regionKey) {
+      const counties = REGION_JUMPS[regionKey]?.counties || [];
+      return new Set(counties.map(normalizeRegionCountyName).filter(Boolean));
+    }
+
+    function aggregateContestRowsForRegion(rows, contestType, regionKey) {
+      const countySet = getRegionCountySet(regionKey);
+      let dem = 0;
+      let rep = 0;
+      let other = 0;
+      let total = 0;
+      let demCandidate = '';
+      let repCandidate = '';
+      const matchedCounties = new Set();
+
+      (rows || []).forEach(row => {
+        const countyRaw = ((row?.county || '').toString().split(' - ')[0] || '').trim();
+        const countyNorm = normalizeRegionCountyName(countyRaw);
+        if (!countyNorm || !countySet.has(countyNorm)) return;
+
+        matchedCounties.add(countyNorm);
+        dem += Number(row?.[`${contestType}_dem`] || 0);
+        rep += Number(row?.[`${contestType}_rep`] || 0);
+        other += Number(row?.[`${contestType}_other`] || 0);
+        total += Number(row?.[`${contestType}_total`] || 0);
+        if (!demCandidate) demCandidate = (row?.[`${contestType}_dem_candidate`] || '').toString().trim();
+        if (!repCandidate) repCandidate = (row?.[`${contestType}_rep_candidate`] || '').toString().trim();
+      });
+
+      return {
+        dem,
+        rep,
+        other,
+        total,
+        demCandidate,
+        repCandidate,
+        matchedCounties: matchedCounties.size,
+        totalCounties: countySet.size
+      };
+    }
+
+    async function getRegionContestTotals(regionKey, contestType, year) {
+      const region = REGION_JUMPS[regionKey];
+      if (!region) return null;
+      const rows = await loadContestSlice(contestType, Number(year), { preferCounty: true });
+      const totals = aggregateContestRowsForRegion(rows, contestType, regionKey);
+      if (!totals.total) return null;
+      return totals;
+    }
+
+    async function getRegionTrendSeries(contestType, regionKey) {
+      const entries = (contestManifest || [])
+        .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
+        .slice()
+        .sort((a, b) => Number(a.year) - Number(b.year));
+
+      const out = [];
+      for (const e of entries) {
+        const year = Number(e.year);
+        const rows = await loadContestSlice(contestType, year, { preferCounty: true });
+        const totals = aggregateContestRowsForRegion(rows, contestType, regionKey);
+        if (!totals.total) continue;
+        const margin = totals.rep - totals.dem;
+        out.push({
+          year,
+          dem_votes: totals.dem,
+          rep_votes: totals.rep,
+          other_votes: totals.other,
+          total_votes: totals.total,
+          dem_candidate: totals.demCandidate,
+          rep_candidate: totals.repCandidate,
+          winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
+          margin_pct: Number(((margin / totals.total) * 100).toFixed(2))
+        });
+      }
+      return out;
+    }
+
+    async function focusRegionSummary(regionKey) {
+      const region = REGION_JUMPS[regionKey];
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const [contestType, year] = parseContestValue(contestValue);
+      if (!region || !contestType || !year) return false;
+
+      const totals = await getRegionContestTotals(regionKey, contestType, year);
+      if (!totals) {
+        setStatus(`No ${formatContestName(contestType, year)} data available for ${region.label}.`);
+        return false;
+      }
+
+      clearCountyDetails();
+      pinVoteCounterState(
+        region.label,
+        `${formatContestName(contestType, year)} ${year}`,
+        totals.dem,
+        totals.rep,
+        totals.other,
+        { kind: 'region', regionKey, regionLabel: region.label, contestType, year: Number(year) },
+        { demCandidate: totals.demCandidate, repCandidate: totals.repCandidate }
+      );
+      setStatus(`Loaded ${region.label}: ${compactWinnerMarginLabel(totals.rep, totals.dem, totals.total, totals.repCandidate, totals.demCandidate)}`);
+      return true;
+    }
 
     mapboxgl.accessToken = CONFIG.mapboxToken;
 
@@ -5746,6 +6143,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${full} (${partyCode})`;
     }
 
+    function formatVoteCounterWinnerLabel(name, partyCode, fallbackText) {
+      const short = shortCandidateLabel(name, fallbackText);
+      if (!short || short.toUpperCase() === partyCode.toUpperCase()) return fallbackText;
+      return `${short} (${partyCode})`;
+    }
+
     function formatFocusBarLabel(name, pct, fallbackText) {
       const short = shortCandidateLabel(name, fallbackText);
       return `${short} ${Number(pct || 0).toFixed(2)}%`;
@@ -5850,6 +6253,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100;
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
+        ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
+        : (winnerParty === 'dem'
+          ? formatVoteCounterWinnerLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
+          : 'Tie');
+      const winnerTitle = winnerParty === 'rep'
         ? formatVoteCounterCandidateLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
@@ -5860,8 +6268,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
+      winnerEl.title = winnerTitle;
       marginEl.textContent = leadLabel;
       marginEl.className = `focus-pill-value ${winnerParty}`;
+      marginEl.title = leadLabel;
       totalEl.textContent = total.toLocaleString();
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
@@ -6000,6 +6410,16 @@ document.addEventListener('DOMContentLoaded', function() {
         latest.item.rep_candidate,
         latest.item.dem_candidate
       );
+      const earliest = annotated[0];
+      const historyShift = describeTrendShift(latest.signedPct, earliest ? earliest.signedPct : NaN, earliest ? earliest.item.year : '');
+      let streakCount = 0;
+      for (let i = annotated.length - 1; i >= 0; i -= 1) {
+        if (annotated[i].winnerMeta.partyClass !== latest.winnerMeta.partyClass) break;
+        streakCount += 1;
+      }
+      const streakLabel = latest.winnerMeta.partyClass === 'tie'
+        ? 'Latest result was an even race.'
+        : `${latest.winnerMeta.partyClass === 'rep' ? 'Republican' : 'Democratic'} streak: ${streakCount} election${streakCount === 1 ? '' : 's'}.`;
 
       const summaryBadges = [];
       if (latest.shiftMeta) {
@@ -6020,27 +6440,38 @@ document.addEventListener('DOMContentLoaded', function() {
           const winnerLabel = entry.winnerMeta.partyClass === 'rep'
             ? 'Republican'
             : (entry.winnerMeta.partyClass === 'dem' ? 'Democratic' : 'Tie');
-          const totalVotesLabel = formatCompactVoteTotal(entry.totalVotes);
+          const totalVotesLabel = `${formatCompactVoteTotal(entry.totalVotes)} votes`;
           const flipChip = entry.flip && entry.flip.flipped
-            ? `<span class="focus-trend-dot-flip">${escapeHtml(`Flip ${entry.flip.from}->${entry.flip.to}`)}</span>`
+            ? `<span class="focus-trend-chip flip">${escapeHtml(`Flip ${entry.flip.from}->${entry.flip.to}`)}</span>`
+            : '';
+          const leadSummary = entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel;
+          const otherChip = entry.otherPct >= 0.05
+            ? `<span class="focus-trend-chip">Other ${escapeHtml(entry.otherPct.toFixed(2))}%</span>`
             : '';
           return `
-            <div class="focus-trend-dot" data-party="${entry.winnerMeta.partyClass}">
-              <div class="focus-trend-dot-head">
-                <span class="focus-trend-dot-year">${escapeHtml(entry.item.year)}</span>
-                <span class="focus-trend-dot-badge ${entry.winnerMeta.partyClass}">${escapeHtml(winnerLabel)}</span>
-              </div>
-              <span class="focus-trend-dot-value ${entry.winnerMeta.partyClass}">${escapeHtml(entry.winnerMeta.label)}</span>
-              <span class="focus-trend-dot-meta">${escapeHtml(entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel)}</span>
-              <div class="focus-trend-dot-bar" aria-hidden="true">
-                <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
-                ${entry.otherVotes > 0 ? `<span style="width:${entry.otherPct.toFixed(4)}%;background:#64748b;"></span>` : ''}
-                <span style="width:${entry.repPct.toFixed(4)}%;background:#dc2626;"></span>
-              </div>
-              <div class="focus-trend-dot-footer">
-                <span class="focus-trend-dot-subtle">${escapeHtml(`${totalVotesLabel} votes`)}</span>
-                <div class="focus-trend-dot-badges">
-                  <span class="focus-trend-dot-shift ${entry.shiftMeta.cls}">${escapeHtml(entry.shiftMeta.text)}</span>
+            <div class="focus-trend-entry">
+              <span class="focus-trend-entry-year">${escapeHtml(entry.item.year)}</span>
+              <div class="focus-trend-entry-card" data-party="${entry.winnerMeta.partyClass}">
+                <div class="focus-trend-entry-head">
+                  <div class="focus-trend-entry-copy">
+                    <span class="focus-trend-entry-badge ${entry.winnerMeta.partyClass}">${escapeHtml(winnerLabel)}</span>
+                    <span class="focus-trend-entry-call ${entry.winnerMeta.partyClass}">${escapeHtml(entry.winnerMeta.label)}</span>
+                  </div>
+                  <span class="focus-trend-entry-margin">${escapeHtml(leadSummary)}</span>
+                </div>
+                <div class="focus-trend-entry-scale">
+                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${entry.demPct.toFixed(2)}%`)}</span>
+                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${entry.repPct.toFixed(2)}%`)}</span>
+                </div>
+                <div class="focus-trend-entry-bar" aria-hidden="true">
+                  <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
+                  ${entry.otherVotes > 0 ? `<span style="width:${entry.otherPct.toFixed(4)}%;background:#64748b;"></span>` : ''}
+                  <span style="width:${entry.repPct.toFixed(4)}%;background:#dc2626;"></span>
+                </div>
+                <div class="focus-trend-entry-footer">
+                  <span class="focus-trend-chip">${escapeHtml(totalVotesLabel)}</span>
+                  <span class="focus-trend-chip ${entry.shiftMeta.cls}">${escapeHtml(entry.shiftMeta.text)}</span>
+                  ${otherChip}
                   ${flipChip}
                 </div>
               </div>
@@ -6053,14 +6484,28 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="focus-trend-plot">
           <div class="focus-trend-summary">
             <div class="focus-trend-summary-copy">
-              <span class="focus-trend-summary-kicker">History board</span>
+              <span class="focus-trend-summary-kicker">Trend at a glance</span>
               <div class="focus-trend-summary-call">${escapeHtml(`${latest.item.year}: ${latestSummary}`)}</div>
-              <div class="focus-trend-summary-note">${escapeHtml(`Closest recent race: ${closest.item.year} (${winnerMarginLabelShort(closest.repVotes, closest.demVotes, closest.totalVotes, closest.item.rep_candidate, closest.item.dem_candidate)})`)}</div>
+              <div class="focus-trend-summary-note">${escapeHtml(`Showing ${annotated.length} elections from ${earliest.item.year} to ${latest.item.year}. ${streakLabel}`)}</div>
             </div>
             <div class="focus-trend-summary-badges">${summaryBadges.join('')}</div>
+            <div class="focus-trend-stats">
+              <div class="focus-trend-stat">
+                <span class="focus-trend-stat-label">Latest</span>
+                <span class="focus-trend-stat-value ${latest.winnerMeta.partyClass}">${escapeHtml(`${latest.item.year}: ${latestSummary}`)}</span>
+              </div>
+              <div class="focus-trend-stat">
+                <span class="focus-trend-stat-label">Closest</span>
+                <span class="focus-trend-stat-value ${closest.winnerMeta.partyClass}">${escapeHtml(`${closest.item.year}: ${winnerMarginLabelShort(closest.repVotes, closest.demVotes, closest.totalVotes, closest.item.rep_candidate, closest.item.dem_candidate)}`)}</span>
+              </div>
+              <div class="focus-trend-stat">
+                <span class="focus-trend-stat-label">Since ${escapeHtml(earliest.item.year)}</span>
+                <span class="focus-trend-stat-value ${historyShift.cls}">${escapeHtml(historyShift.text)}</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="focus-trend-dots">${cards}</div>
+        <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
@@ -6143,13 +6588,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const meta = state?.meta || { kind: 'statewide', contestType, year };
       const baseCaption = meta.kind === 'statewide'
         ? 'Statewide history'
-        : (meta.kind === 'county'
-          ? `${displayCountyName(meta.county)} County`
-          : (meta.kind === 'district'
-            ? (meta.scope === 'congressional'
-              ? `Congressional District ${meta.districtNum}`
-              : (meta.scope === 'state_house' ? `State House District ${meta.districtNum}` : `State Senate District ${meta.districtNum}`))
-            : (meta.kind === 'precinct' ? `${meta.precinct}` : 'Trend history')));
+        : (meta.kind === 'region'
+          ? `${meta.regionLabel || REGION_JUMPS[meta.regionKey]?.label || 'Region'} history`
+          : (meta.kind === 'county'
+            ? `${displayCountyName(meta.county)} County`
+            : (meta.kind === 'district'
+              ? (meta.scope === 'congressional'
+                ? `Congressional District ${meta.districtNum}`
+                : (meta.scope === 'state_house' ? `State House District ${meta.districtNum}` : `State Senate District ${meta.districtNum}`))
+              : (meta.kind === 'precinct' ? `${meta.precinct}` : 'Trend history'))));
 
       renderFocusTrendEmpty('Loading trend history...', baseCaption);
 
@@ -6157,6 +6604,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let series = [];
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
+        } else if (meta.kind === 'region' && meta.regionKey) {
+          series = await getRegionTrendSeries(contestType, meta.regionKey);
         } else if (meta.kind === 'district' && meta.scope && meta.districtNum !== undefined) {
           series = await getDistrictTrendSeries(meta.scope, contestType, meta.districtNum);
         } else if (meta.kind === 'precinct' && meta.county) {
@@ -6180,6 +6629,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
         refreshFocusTrend(voteCounterBaseline);
       }
+      try { updateContextBanner(); } catch (_) {}
     }
 
     function pinVoteCounterState(title, sub, demVotes, repVotes, otherVotes, meta = null, candidates = null) {
@@ -6188,6 +6638,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       refreshFocusTrend(voteCounterPinned);
+      try { updateContextBanner(); } catch (_) {}
     }
 
     function clearPinnedVoteCounterState() {
@@ -6208,6 +6659,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderFocusTrendEmpty('Select a contest to load trend history.', 'Trend history');
         hideVoteCounter();
       }
+      try { updateContextBanner(); } catch (_) {}
     }
 
     function setVoteCounterHoverState(title, sub, demVotes, repVotes, otherVotes, candidates = null, meta = null) {
@@ -7394,6 +7846,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const meta = pinnedState?.meta || null;
       if (!meta) return false;
 
+      if (meta.kind === 'region' && meta.regionKey) {
+        return focusRegionSummary(meta.regionKey);
+      }
+
       if (meta.kind === 'district') {
         const targetScope = getDistrictScopeForView(view);
         if (!targetScope) return false;
@@ -7900,6 +8356,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100;
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
+        ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
+        : (winnerParty === 'dem'
+          ? formatVoteCounterWinnerLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
+          : 'Tie');
+      const winnerTitle = winnerParty === 'rep'
         ? formatVoteCounterCandidateLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
@@ -7908,8 +8369,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
+      winnerEl.title = winnerTitle;
       marginEl.textContent = leadLabel;
       marginEl.className = `focus-pill-value ${winnerParty}`;
+      marginEl.title = leadLabel;
       totalEl.textContent = total.toLocaleString();
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
@@ -8423,6 +8886,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getReadableFocusLabel() {
+      const pinnedMeta = voteCounterPinned?.meta || null;
+      if (pinnedMeta?.kind === 'region' && pinnedMeta.regionLabel) {
+        return pinnedMeta.regionLabel;
+      }
       const raw = (window.lastSelectedCounty || '').toString().trim();
       if (!raw) return 'Statewide';
       if (/district|cd\s|hd\s|sd\s/i.test(raw)) return raw;
@@ -8450,7 +8917,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
-    function jumpToRegion(regionKey) {
+    async function jumpToRegion(regionKey) {
       const region = REGION_JUMPS[regionKey];
       if (!region || !map) return;
       map.fitBounds(region.bounds, { padding: 28, duration: 900 });
@@ -8459,14 +8926,27 @@ document.addEventListener('DOMContentLoaded', function() {
           window.collapseMobileTopbar();
         }
       } catch (_) {}
-      setStatus(`Jumped to ${region.label}`);
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      if (!contestValue) {
+        setStatus(`Jumped to ${region.label}`);
+        return;
+      }
+      try {
+        const loaded = await focusRegionSummary(regionKey);
+        if (!loaded) {
+          setStatus(`Jumped to ${region.label}`);
+        }
+      } catch (err) {
+        console.warn('Failed to load region summary:', err?.message || err);
+        setStatus(`Jumped to ${region.label}`);
+      }
     }
 
     function setupRegionJumpButtons() {
       document.querySelectorAll('[data-region-jump]').forEach(btn => {
         if (btn.dataset.regionJumpReady === 'true') return;
         btn.dataset.regionJumpReady = 'true';
-        btn.addEventListener('click', () => jumpToRegion(btn.dataset.regionJump || ''));
+        btn.addEventListener('click', () => { void jumpToRegion(btn.dataset.regionJump || ''); });
       });
     }
 
@@ -11961,6 +12441,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function applyContest(contestKey) {
       if (!contestKey) return setStatus('Select a contest');
+
+      const previousRegionPinnedState = voteCounterPinned?.meta?.kind === 'region'
+        ? {
+            ...voteCounterPinned,
+            meta: voteCounterPinned.meta ? { ...voteCounterPinned.meta } : null,
+            candidates: voteCounterPinned.candidates ? { ...voteCounterPinned.candidates } : null
+          }
+        : null;
+      if (previousRegionPinnedState) {
+        voteCounterPinned = null;
+        voteCounterHoverActive = false;
+      }
       
       // Split contest key properly - year is always the last part after final underscore
       const lastUnderscoreIndex = contestKey.lastIndexOf('_');
@@ -11975,6 +12467,13 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         // All other contests (statewide) aggregate county data by district
         await applyStatewideContestToDistricts(contestType, year);
+      }
+      if (previousRegionPinnedState?.meta?.regionKey) {
+        try {
+          await focusRegionSummary(previousRegionPinnedState.meta.regionKey);
+        } catch (err) {
+          console.warn('Failed to restore regional selection after contest change:', err?.message || err);
+        }
       }
       updateContextBanner();
       await refreshHoverAtPointer();
