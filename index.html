@@ -275,6 +275,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+      function syncInitialTopbarOffset() {
+        try {
+          const topbar = document.getElementById('map-topbar');
+          if (!topbar) return;
+          const topbarHeight = Math.max(156, Math.round(topbar.getBoundingClientRect().height || 0));
+          document.documentElement.style.setProperty('--topbar-h', `${topbarHeight}px`);
+        } catch (_) {}
+      }
+
       var sidebar = document.getElementById('sidebar');
       var sidebarBtn = document.getElementById('sidebar-minimize-btn');
       var floatBtn = document.getElementById('sidebar-float-toggle');
@@ -347,6 +356,13 @@
         contentEl.innerHTML = '<p>Select a contest or county to see results.</p>';
         detailsDiv.style.display = 'block';
       }
+
+      syncInitialTopbarOffset();
+      requestAnimationFrame(syncInitialTopbarOffset);
+      setTimeout(syncInitialTopbarOffset, 180);
+      window.addEventListener('resize', syncInitialTopbarOffset, { passive: true });
+      setupRegionJumpButtons();
+      updateContextBanner();
     });
     // Zoom to county by name using turf.js
     function zoomToCounty(countyName) {
@@ -753,6 +769,10 @@ body { height: var(--app-height); }
 .main-controls.minimized .controls-header h3 {
   display: none;
 }
+.main-controls.minimized .panel-eyebrow,
+.main-controls.minimized .controls-subtitle {
+  display: none !important;
+}
 .main-controls.minimized #help-btn {
   display: none !important;
 }
@@ -761,6 +781,9 @@ body { height: var(--app-height); }
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+}
+.controls-header > div:first-child {
+  min-width: 0;
 }
 .controls-header h3 {
   flex: 1 1 auto;
@@ -1315,7 +1338,8 @@ body { height: var(--app-height); }
 
 /* Mobile: Touch-friendly inputs and buttons */
 @media (max-width: 768px) {
-  #county-search {
+  #county-search,
+  #sidebar-county-search {
     font-size: 16px !important;
     padding: 12px !important;
     border-radius: 8px !important;
@@ -1496,7 +1520,8 @@ body { height: var(--app-height); }
     content: '-';
   }
 
-  #county-search {
+  #county-search,
+  #sidebar-county-search {
     width: 100%;
     padding: 10px 12px;
     border-radius: 10px;
@@ -1954,10 +1979,631 @@ body { height: var(--app-height); }
       font-size: 13px !important;
     }
   }
+
+  :root {
+    --topbar-h: 156px;
+    --desktop-left-w: 380px;
+    --desktop-right-w: 360px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .map-topbar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1003;
+    width: min(var(--desktop-left-w), calc(100vw - 40px));
+    min-height: 136px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.82);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 52px rgba(15, 23, 42, 0.28);
+    backdrop-filter: blur(18px);
+  }
+
+  .map-topbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .map-topbar-badge {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(96, 165, 250, 0.18);
+    color: #bfdbfe;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .map-topbar-copy {
+    min-width: 0;
+  }
+
+  .map-topbar-copy strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .map-topbar-copy span {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(248, 250, 252, 0.78);
+  }
+
+  .fly-search-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .fly-search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+
+  .fly-search-field:focus-within {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+  }
+
+  .fly-search-icon {
+    flex: 0 0 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    margin-left: 4px;
+  }
+
+  .map-topbar input[type="search"],
+  .map-topbar input[type="text"] {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 8px 13px 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #0f172a;
+    font-size: 14px;
+  }
+
+  .map-topbar #county-search {
+    margin-top: 0 !important;
+    padding: 13px 8px 13px 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  .map-topbar input[type="search"]:focus,
+  .map-topbar input[type="text"]:focus {
+    box-shadow: none;
+    border-color: transparent;
+  }
+
+  .fly-search-clear {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 6px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.16);
+    color: #334155;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .fly-search-clear:hover {
+    background: rgba(148, 163, 184, 0.24);
+  }
+
+  .fly-search-clear.visible {
+    display: inline-flex;
+  }
+
+  .fly-search-submit {
+    flex: 0 0 auto;
+    padding: 0 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+    white-space: nowrap;
+  }
+
+  .map-topbar-hints {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .map-topbar-hints::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fly-search-chip {
+    flex: 0 0 auto;
+    border: 1px solid rgba(191, 219, 254, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .fly-search-chip:hover {
+    background: rgba(96, 165, 250, 0.18);
+    border-color: rgba(147, 197, 253, 0.42);
+  }
+
+  .context-banner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .context-banner-item {
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .context-banner-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(191, 219, 254, 0.88);
+  }
+
+  .context-banner-value {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fly-search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    display: none;
+    padding: 8px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 1004;
+  }
+
+  .fly-search-dropdown.visible {
+    display: block;
+  }
+
+  .fly-search-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .fly-search-option:hover,
+  .fly-search-option:focus-visible {
+    background: #eff6ff;
+    outline: none;
+  }
+
+  .fly-search-option strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .fly-search-option span {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .fly-search-option[data-tone="district"] span,
+  .fly-search-option[data-tone="precinct"] span {
+    color: #1d4ed8;
+  }
+
+  .panel-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.10);
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .controls-subtitle {
+    margin: 10px 0 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .section-kicker {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #475569;
+  }
+
+  .region-jumps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .region-jump-btn {
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: rgba(248, 250, 252, 0.96);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.05s ease;
+  }
+
+  .region-jump-btn:hover {
+    background: #eff6ff;
+    border-color: rgba(37, 99, 235, 0.26);
+  }
+
+  .region-jump-btn:active {
+    transform: translateY(1px);
+  }
+
+  .main-controls {
+    top: calc(36px + var(--topbar-h, 156px));
+    width: min(var(--desktop-left-w), calc(100vw - 40px));
+    min-width: 0;
+    max-width: var(--desktop-left-w);
+    max-height: calc(100vh - var(--topbar-h, 156px) - 72px);
+    overflow-y: auto;
+  }
+
+  .controls-collapsed-label {
+    display: none;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0f172a;
+  }
+
+  .main-controls.minimized {
+    min-width: 138px;
+    max-width: 160px;
+    padding: 10px 12px;
+    border-radius: 999px;
+  }
+
+  .main-controls.minimized .controls-header {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .main-controls.minimized .controls-collapsed-label {
+    display: inline-flex;
+  }
+
+  .viz-modes {
+    left: auto;
+    right: 20px;
+    transform: none;
+  }
+
+  .vote-counter {
+    top: 96px;
+    left: auto;
+    right: 20px;
+    transform: none;
+    width: min(var(--desktop-right-w), calc(100vw - 40px));
+    min-width: 300px;
+    max-width: var(--desktop-right-w);
+    padding: 18px 18px 16px;
+  }
+
+  .focus-card {
+    display: none;
+  }
+
+  .focus-card.visible {
+    display: block;
+  }
+
+  .focus-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .focus-pill {
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(248, 250, 252, 0.92);
+  }
+
+  .focus-pill-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .focus-pill-value {
+    display: block;
+    margin-top: 5px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .focus-pill-value.dem {
+    color: #1d4ed8;
+  }
+
+  .focus-pill-value.rep {
+    color: #dc2626;
+  }
+
+  .focus-pill-value.tie {
+    color: #475569;
+  }
+
+  .focus-bar {
+    display: flex;
+    align-items: stretch;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: #e5e7eb;
+    margin-bottom: 12px;
+  }
+
+  .focus-bar-segment {
+    min-width: 0;
+    transition: width 0.35s ease;
+  }
+
+  .focus-bar-segment.dem {
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+  }
+
+  .focus-bar-segment.other {
+    background: #94a3b8;
+  }
+
+  .focus-bar-segment.rep {
+    background: linear-gradient(90deg, #f87171, #dc2626);
+  }
+
+  @media (min-width: 769px) and (max-width: 1180px) {
+    :root {
+      --desktop-left-w: 344px;
+      --desktop-right-w: 304px;
+    }
+
+    .map-topbar {
+      min-height: 148px;
+    }
+
+    .main-controls {
+      top: calc(40px + var(--topbar-h, 156px));
+      max-height: calc(100vh - var(--topbar-h, 156px) - 78px);
+    }
+
+    .viz-mode-btn {
+      min-width: 82px;
+      padding: 10px 14px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .map-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+      padding: calc(12px + var(--safe-top, 0px)) calc(12px + var(--safe-right, 0px)) 14px calc(12px + var(--safe-left, 0px));
+      border-radius: 0 0 20px 20px;
+    }
+
+    .map-topbar-copy strong {
+      font-size: 13px;
+    }
+
+    .map-topbar-copy span {
+      font-size: 11px;
+    }
+
+    .map-topbar input[type="search"],
+    .map-topbar input[type="text"] {
+      font-size: 16px !important;
+      padding-top: 13px;
+      padding-bottom: 13px;
+    }
+
+    .context-banner {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .main-controls {
+      top: calc(var(--safe-top, 0px) + var(--topbar-h, 156px) + 10px) !important;
+      left: 12px !important;
+      right: 12px !important;
+      width: auto !important;
+      min-width: auto !important;
+      max-width: none !important;
+      padding: 14px !important;
+      border-radius: 18px !important;
+      max-height: min(48vh, 430px) !important;
+    }
+
+    @supports (height: 100svh) {
+      .main-controls {
+        max-height: min(48svh, 430px) !important;
+      }
+    }
+
+    @supports (height: 100dvh) {
+      .main-controls {
+        max-height: min(48dvh, 430px) !important;
+      }
+    }
+
+    .main-controls.minimized {
+      top: calc(var(--safe-top, 0px) + var(--topbar-h, 156px) + 10px) !important;
+      left: 12px !important;
+      right: auto !important;
+      width: auto !important;
+      min-width: 132px !important;
+      max-width: none !important;
+      padding: 8px 10px !important;
+      border-radius: 999px !important;
+    }
+
+    .main-controls.minimized .controls-header {
+      justify-content: space-between !important;
+    }
+
+    .vote-counter {
+      left: 12px !important;
+      right: 12px !important;
+      width: auto !important;
+      max-width: none !important;
+      bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + 68px) !important;
+      transform: none !important;
+    }
+
+    .focus-summary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .map-topbar-copy span {
+      display: none;
+    }
+
+    .map-topbar-badge {
+      padding: 5px 8px;
+      font-size: 10px;
+    }
+
+    .fly-search-submit {
+      padding: 0 14px;
+      min-width: 74px;
+    }
+
+    .context-banner {
+      grid-template-columns: 1fr;
+    }
+
+    .focus-summary {
+      grid-template-columns: 1fr;
+    }
+  }
     </style>
 </head>
 <body>
-<!-- Move JS to <script> block -->
+<!-- Move JS to script block -->
 <script>
 // Accessibility: Color Blind Mode Toggle
 document.addEventListener('DOMContentLoaded', function() {
@@ -2104,6 +2750,55 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <div id="map"></div>
 
+  <div class="map-topbar" id="map-topbar">
+    <div class="map-topbar-meta">
+      <div class="map-topbar-badge">NC Precinct Map</div>
+      <div class="map-topbar-copy">
+        <strong>Fly to a county, district, or precinct</strong>
+        <span>Try Wake, CD 13, HD 73, SD 18, or Wake 01-14.</span>
+      </div>
+    </div>
+    <form class="fly-search-bar" id="fly-search-form" role="search">
+      <label class="sr-only" for="county-search">Fly to county, district, or precinct</label>
+      <div class="fly-search-field">
+        <span class="fly-search-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"></circle>
+            <path d="M16 16L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          </svg>
+        </span>
+        <input type="search" id="county-search" placeholder="Fly to Wake, CD 13, HD 73..." autocomplete="off" spellcheck="false" />
+        <button type="button" class="fly-search-clear" id="fly-search-clear" aria-label="Clear search">x</button>
+      </div>
+      <button type="submit" class="fly-search-submit">Fly to</button>
+    </form>
+    <div class="map-topbar-hints" aria-label="Search examples">
+      <button type="button" class="fly-search-chip" data-search-example="Wake">Wake</button>
+      <button type="button" class="fly-search-chip" data-search-example="CD 13">CD 13</button>
+      <button type="button" class="fly-search-chip" data-search-example="HD 73">HD 73</button>
+      <button type="button" class="fly-search-chip" data-search-example="SD 18">SD 18</button>
+      <button type="button" class="fly-search-chip" data-search-example="Wake 01-14">Wake 01-14</button>
+    </div>
+    <div class="context-banner" id="context-banner" aria-label="Current map state">
+      <div class="context-banner-item">
+        <span class="context-banner-label">View</span>
+        <span class="context-banner-value" id="context-view">Counties</span>
+      </div>
+      <div class="context-banner-item">
+        <span class="context-banner-label">Mode</span>
+        <span class="context-banner-value" id="context-mode">Margins</span>
+      </div>
+      <div class="context-banner-item">
+        <span class="context-banner-label">Contest</span>
+        <span class="context-banner-value" id="context-contest">Select a contest</span>
+      </div>
+      <div class="context-banner-item">
+        <span class="context-banner-label">Focus</span>
+        <span class="context-banner-value" id="context-focus">Statewide</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Visualization Mode Tabs - VoteHub Style -->
   <div class="viz-modes" id="viz-modes">
     <button class="viz-mode-btn active" data-mode="margins" id="mode-margins">
@@ -2124,10 +2819,31 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="vote-counter" id="vote-counter">
     <div class="vote-counter-context" id="vote-counter-context">
       <div class="context-left">
-        <div class="context-title" id="vote-context-title">Statewide</div>
+        <div class="context-title" id="vote-context-title">Statewide Focus</div>
         <div class="context-sub" id="vote-context-sub">Hover a county or district</div>
       </div>
       <button class="context-clear" id="vote-context-clear" title="Clear selection">Clear</button>
+    </div>
+    <div class="focus-card visible" id="focus-card">
+      <div class="focus-summary">
+        <div class="focus-pill">
+          <span class="focus-pill-label">Winner</span>
+          <span class="focus-pill-value tie" id="focus-winner">No data</span>
+        </div>
+        <div class="focus-pill">
+          <span class="focus-pill-label">Margin</span>
+          <span class="focus-pill-value" id="focus-margin">0.00%</span>
+        </div>
+        <div class="focus-pill">
+          <span class="focus-pill-label">Total Votes</span>
+          <span class="focus-pill-value" id="focus-total">0</span>
+        </div>
+      </div>
+      <div class="focus-bar" aria-label="Vote share split">
+        <div class="focus-bar-segment dem" id="focus-bar-dem" style="width:0%;"></div>
+        <div class="focus-bar-segment other" id="focus-bar-other" style="width:0%;"></div>
+        <div class="focus-bar-segment rep" id="focus-bar-rep" style="width:0%;"></div>
+      </div>
     </div>
     <div class="vote-counter-row">
       <div class="vote-item">
@@ -2168,8 +2884,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <details class="sidebar-panel" id="panel-search">
           <summary>Search</summary>
           <div style="margin-top: 10px;">
-            <label for="county-search" style="font-weight:600;">Find</label>
-            <input type="text" id="county-search" placeholder="Wake, CD 13, HD 73, SD 18, Wake 01-14" autocomplete="off" spellcheck="false" />
+            <label for="sidebar-county-search" style="font-weight:600;">Find</label>
+            <input type="text" id="sidebar-county-search" placeholder="Wake, CD 13, HD 73, SD 18, Wake 01-14" autocomplete="off" spellcheck="false" />
             <div style="margin-top:6px;font-size:12px;color:#64748b;">
               Tips: use <span style="font-weight:700;">CD</span> for Congress, <span style="font-weight:700;">HD</span> for House, <span style="font-weight:700;">SD</span> for Senate.
             </div>
@@ -2205,14 +2921,31 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Main Controls Dropdown (Contest Selector) -->
     <div class="main-controls" id="main-controls">
         <div class="controls-header" style="display:flex;align-items:center;justify-content:space-between;">
-            <h3>North Carolina Election Contests</h3>
+            <div>
+              <span class="panel-eyebrow">Explore</span>
+              <h3>North Carolina Election Atlas</h3>
+              <p class="controls-subtitle">Switch layers, jump to major regions, and compare contests without leaving the map.</p>
+            </div>
             <div style="display:flex;align-items:center;gap:8px;">
+              <span class="controls-collapsed-label">Tools</span>
               <button id="help-btn" title="Help" type="button">?</button>
               <button class="minimize-btn" onclick="toggleMainControls()" id="controls-minimize-btn">-</button>
             </div>
         </div>
         <div class="controls-content" id="controls-content">
+            <div class="control-group" style="margin-bottom:12px;">
+                <span class="section-kicker">Quick Jumps</span>
+                <div class="region-jumps" id="region-jumps">
+                  <button type="button" class="region-jump-btn" data-region-jump="triangle">Triangle</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="triad">Triad</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="charlotte">Charlotte</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="mountains">Mountains</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="coast">Coast</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="sandhills">Sandhills</button>
+                </div>
+            </div>
             <div class="control-group" style="margin-bottom:10px;">
+                <span class="section-kicker">Map Layer</span>
                 <div class="view-toggle-row" style="display:flex;gap:6px;flex-wrap:wrap;">
                   <button id="counties-view" class="view-toggle-btn active" onclick="setMapView('counties')">Counties</button>
                   <button id="districts-view" class="view-toggle-btn" onclick="setMapView('districts')">Congress</button>
@@ -2221,7 +2954,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="control-group viz-inline-group" style="margin-bottom:10px;">
-              <label style="display:block;font-weight:600;margin-bottom:8px;color:#374151;">Mode:</label>
+              <span class="section-kicker">Analysis Mode</span>
               <div class="viz-modes-inline" id="viz-modes-inline">
                 <button class="viz-mode-btn active" data-mode="margins" type="button"><span>Margins</span></button>
                 <button class="viz-mode-btn" data-mode="winners" type="button"><span>Winners</span></button>
@@ -2230,8 +2963,9 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </div>
             <div class="control-group">
+                <span class="section-kicker">Contest</span>
                 <div class="contest-toolbar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <label>Contest:</label>
+                  <label>Tools:</label>
                   <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
                   <button id="label-toggle" title="Toggle County Labels" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
                   <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
@@ -2399,6 +3133,33 @@ document.addEventListener('DOMContentLoaded', function() {
       fitBounds: [[-84.3, 33.8], [-75.4, 36.6]],
       precincts: {
         minZoom: 8.5
+      }
+    };
+
+    const REGION_JUMPS = {
+      triangle: {
+        label: 'Research Triangle',
+        bounds: [[-79.45, 35.55], [-78.35, 36.25]]
+      },
+      triad: {
+        label: 'Piedmont Triad',
+        bounds: [[-80.65, 35.80], [-79.35, 36.45]]
+      },
+      charlotte: {
+        label: 'Charlotte Metro',
+        bounds: [[-81.25, 34.90], [-80.45, 35.55]]
+      },
+      mountains: {
+        label: 'Western Mountains',
+        bounds: [[-84.40, 35.00], [-81.70, 36.65]]
+      },
+      coast: {
+        label: 'Coastal Plain',
+        bounds: [[-78.25, 33.80], [-75.35, 36.55]]
+      },
+      sandhills: {
+        label: 'Sandhills',
+        bounds: [[-80.20, 34.65], [-78.20, 35.70]]
       }
     };
 
@@ -2611,6 +3372,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (contestSelect && contestSelect.value) {
         applyContest(contestSelect.value);
       }
+      updateContextBanner();
       saveUIState();
     }
 
@@ -2660,9 +3422,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Vote Counter Functions - VoteHub Style
+    function updateVoteCounterSummary(demVotes, repVotes, otherVotes = 0) {
+      const d = Number(demVotes || 0);
+      const r = Number(repVotes || 0);
+      const o = Number(otherVotes || 0);
+      const total = d + r + o;
+
+      const winnerEl = document.getElementById('focus-winner');
+      const marginEl = document.getElementById('focus-margin');
+      const totalEl = document.getElementById('focus-total');
+      const barDem = document.getElementById('focus-bar-dem');
+      const barOther = document.getElementById('focus-bar-other');
+      const barRep = document.getElementById('focus-bar-rep');
+
+      if (!winnerEl || !marginEl || !totalEl || !barDem || !barOther || !barRep) return;
+
+      if (total <= 0) {
+        winnerEl.textContent = 'No data';
+        winnerEl.className = 'focus-pill-value tie';
+        marginEl.textContent = '0.00%';
+        totalEl.textContent = '0';
+        barDem.style.width = '0%';
+        barOther.style.width = '0%';
+        barRep.style.width = '0%';
+        return;
+      }
+
+      const demPct = (d / total) * 100;
+      const repPct = (r / total) * 100;
+      const otherPct = (o / total) * 100;
+      const marginPct = Math.abs(repPct - demPct);
+      const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
+      const winnerLabel = winnerParty === 'rep' ? 'Republican' : (winnerParty === 'dem' ? 'Democratic' : 'Tie');
+
+      winnerEl.textContent = winnerLabel;
+      winnerEl.className = `focus-pill-value ${winnerParty}`;
+      marginEl.textContent = `${marginPct.toFixed(2)}%`;
+      totalEl.textContent = total.toLocaleString();
+      barDem.style.width = `${demPct.toFixed(4)}%`;
+      barOther.style.width = `${otherPct.toFixed(4)}%`;
+      barRep.style.width = `${repPct.toFixed(4)}%`;
+    }
+
     function updateVoteCounter(demVotes, repVotes, otherVotes = 0) {
       const totalVotes = demVotes + repVotes + otherVotes;
       if (totalVotes === 0) {
+        updateVoteCounterSummary(0, 0, 0);
         hideVoteCounter();
         return;
       }
@@ -2678,6 +3483,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('dem-percent').textContent = demPct.toFixed(2) + '%';
       document.getElementById('rep-percent').textContent = repPct.toFixed(2) + '%';
       document.getElementById('other-percent').textContent = otherPct.toFixed(2) + '%';
+      updateVoteCounterSummary(demVotes, repVotes, otherVotes);
       
       showVoteCounter();
     }
@@ -3802,7 +4608,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Clear current selection
       document.getElementById('contestSelect').value = '';
+      window.lastSelectedCounty = '';
       clearCountyDetails();
+      updateContextBanner();
       saveUIState();
     }
 
@@ -4224,6 +5032,64 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    function getReadableViewLabel(view) {
+      const labels = {
+        counties: 'Counties',
+        districts: 'Congress',
+        state_house: 'State House',
+        state_senate: 'State Senate',
+        vtds_2000: 'Precincts 2000'
+      };
+      return labels[view] || 'Counties';
+    }
+
+    function getReadableModeLabel(mode) {
+      const labels = {
+        margins: 'Margins',
+        winners: 'Winners',
+        shift: 'Shift',
+        flips: 'Flips'
+      };
+      return labels[mode] || 'Margins';
+    }
+
+    function getReadableFocusLabel() {
+      const raw = (window.lastSelectedCounty || '').toString().trim();
+      if (!raw) return 'Statewide';
+      if (/district|cd\s|hd\s|sd\s/i.test(raw)) return raw;
+      if (raw.includes(' - ')) return raw;
+      return `${displayCountyName(raw)} County`;
+    }
+
+    function updateContextBanner() {
+      const viewEl = document.getElementById('context-view');
+      const modeEl = document.getElementById('context-mode');
+      const contestEl = document.getElementById('context-contest');
+      const focusEl = document.getElementById('context-focus');
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const [contestType, year] = parseContestValue(contestValue);
+
+      if (viewEl) viewEl.textContent = getReadableViewLabel(currentView);
+      if (modeEl) modeEl.textContent = getReadableModeLabel(currentVizMode);
+      if (contestEl) contestEl.textContent = contestValue ? `${formatContestName(contestType, year)} ${year}` : 'Select a contest';
+      if (focusEl) focusEl.textContent = getReadableFocusLabel();
+    }
+
+    function jumpToRegion(regionKey) {
+      const region = REGION_JUMPS[regionKey];
+      if (!region || !map) return;
+      map.fitBounds(region.bounds, { padding: 28, duration: 900 });
+      setStatus(`Jumped to ${region.label}`);
+    }
+
+    function setupRegionJumpButtons() {
+      document.querySelectorAll('[data-region-jump]').forEach(btn => {
+        if (btn.dataset.regionJumpReady === 'true') return;
+        btn.dataset.regionJumpReady = 'true';
+        btn.addEventListener('click', () => jumpToRegion(btn.dataset.regionJump || ''));
+      });
+    }
+
     function renderCountyHoverAtPoint(e) {
       if (!(e.features && e.features[0])) return;
 
@@ -4639,11 +5505,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateMobileOverlayOffsets() {
-      // On mobile, position floating UI elements relative to the actual legend height
-      // instead of assuming it always takes 50vh.
+      // Measure the top fly-to bar on every viewport size, then update mobile overlay spacing.
       try {
         const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
         const root = document.documentElement;
+        const topbar = document.getElementById('map-topbar');
+        const th = topbar ? Math.round(topbar.getBoundingClientRect().height) : 112;
+        root.style.setProperty('--topbar-h', `${Math.max(0, th)}px`);
         if (!isMobile) {
           root.style.removeProperty('--legend-h');
           root.style.removeProperty('--controls-h');
@@ -4682,6 +5550,23 @@ document.addEventListener('DOMContentLoaded', function() {
         legendContent.style.display = 'none';
         minimizeBtn.textContent = '+';
         minimizeBtn.title = 'Expand legend';
+        try { updateMobileOverlayOffsets(); } catch (_) {}
+      } catch (_) {}
+    }
+
+    function minimizeMainControlsOnMobile() {
+      try {
+        const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        if (!isMobile) return;
+        const controls = document.getElementById('main-controls');
+        const controlsContent = document.getElementById('controls-content');
+        const minimizeBtn = document.getElementById('controls-minimize-btn');
+        if (!controls || !controlsContent || !minimizeBtn) return;
+        if (controls.classList.contains('minimized')) return;
+        controls.classList.add('minimized');
+        controlsContent.style.display = 'none';
+        minimizeBtn.textContent = '+';
+        minimizeBtn.title = 'Expand controls';
         try { updateMobileOverlayOffsets(); } catch (_) {}
       } catch (_) {}
     }
@@ -4735,6 +5620,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const countyNameElement = document.getElementById('county-name');
       const countyDisplay = displayCountyName(countyName);
+      window.lastSelectedCounty = countyDisplay;
+      updateContextBanner();
       if (countyNameElement) countyNameElement.textContent = countyDisplay + ' County';
       // sidebarContent already declared above
       // Guard: election results must exist
@@ -5776,102 +6663,282 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Sidebar minimized by default on load, expand on click
-    // County search functionality - Efficient search with limited suggestions
-    function setupCountySearch() {
-      const countiesSource = map.getSource('counties');
-      if (!countiesSource) return;
-      
-      let counties = [];
-      if (countiesSource._data && countiesSource._data.features) {
-        // Use NAME20 field (just county name, no "County" suffix)
-        counties = countiesSource._data.features.map(f => {
-          const p = f.properties || {};
-          return p.NAME20 || p.County || p.COUNTYNAME || p.NAME || '';
-        }).filter(Boolean).sort();
-      }
-      
-      const searchInput = document.getElementById('county-search');
-      if (searchInput && counties.length > 0) {
-        // Create dropdown for suggestions (hidden by default)
-        let dropdown = document.getElementById('county-dropdown');
-        if (!dropdown) {
-          dropdown = document.createElement('div');
-          dropdown.id = 'county-dropdown';
-          dropdown.style.cssText = `
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          `;
-          
-          // Make search container relative positioned
-          searchInput.parentNode.style.position = 'relative';
-          searchInput.parentNode.appendChild(dropdown);
+    let flySearchWired = false;
+
+    function getFlySearchInputs() {
+      return ['county-search', 'sidebar-county-search']
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+    }
+
+    function updateFlySearchClearButton(value) {
+      const clearBtn = document.getElementById('fly-search-clear');
+      if (!clearBtn) return;
+      const primary = document.getElementById('county-search') || getFlySearchInputs()[0];
+      const currentValue = typeof value === 'string' ? value : ((primary && primary.value) || '');
+      const hasValue = currentValue.trim().length > 0;
+      clearBtn.classList.toggle('visible', hasValue);
+      clearBtn.disabled = !hasValue;
+    }
+
+    function syncFlySearchInputs(value, sourceInput = null) {
+      getFlySearchInputs().forEach(input => {
+        if (input && input !== sourceInput && input.value !== value) {
+          input.value = value;
         }
-        
-        // Only show suggestions when user types
+      });
+      updateFlySearchClearButton(value);
+    }
+
+    function setFlySearchFeedback(color) {
+      getFlySearchInputs().forEach(input => {
+        if (!input) return;
+        input.style.borderColor = color;
+        setTimeout(() => {
+          try { input.style.borderColor = ''; } catch (_) {}
+        }, 900);
+      });
+    }
+
+    function hideAllSearchDropdowns() {
+      document.querySelectorAll('.fly-search-dropdown').forEach(dropdown => {
+        dropdown.classList.remove('visible');
+        dropdown.innerHTML = '';
+      });
+    }
+
+    function getSearchSuggestionLabel(parsed, fallbackRaw) {
+      if (!parsed) return fallbackRaw;
+      if (parsed.kind === 'cd') return `Congressional District ${parsed.num}`;
+      if (parsed.kind === 'hd') return `State House District ${parsed.num}`;
+      if (parsed.kind === 'sd') return `State Senate District ${parsed.num}`;
+      if (parsed.kind === 'precinct') return `${parsed.county} ${parsed.code}`;
+      return fallbackRaw;
+    }
+
+    function buildSearchSuggestions(searchValue, counties) {
+      const raw = (searchValue || '').trim();
+      if (!raw) return [];
+
+      const parsed = parseSearchQuery(raw);
+      const suggestions = [];
+      const seen = new Set();
+
+      function addSuggestion(label, value, tone, meta) {
+        const key = `${tone}:${String(value || '').toUpperCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        suggestions.push({ label, value, tone, meta });
+      }
+
+      if (parsed.kind !== 'county') {
+        addSuggestion(
+          getSearchSuggestionLabel(parsed, raw),
+          raw,
+          parsed.kind === 'precinct' ? 'precinct' : 'district',
+          parsed.kind === 'precinct' ? 'Precinct' : 'Fly to'
+        );
+      }
+
+      counties
+        .filter(county => county.toLowerCase().includes(raw.toLowerCase()))
+        .slice(0, parsed.kind === 'county' ? 8 : 5)
+        .forEach(county => addSuggestion(county, county, 'county', 'County'));
+
+      if (!suggestions.length && raw.length >= 2) {
+        addSuggestion(raw, raw, 'query', 'Search');
+      }
+
+      return suggestions.slice(0, 10);
+    }
+
+    function ensureSearchDropdown(searchInput) {
+      const host = searchInput.closest('.fly-search-field') || searchInput.parentElement;
+      if (!host) return null;
+      if (!host.classList.contains('fly-search-field')) {
+        host.style.position = 'relative';
+      }
+      let dropdown = host.querySelector('.fly-search-dropdown');
+      if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.className = 'fly-search-dropdown';
+        host.appendChild(dropdown);
+      }
+      return dropdown;
+    }
+
+    async function submitFlySearch(rawOrInput) {
+      const input = rawOrInput && rawOrInput.tagName ? rawOrInput : null;
+      const raw = input ? input.value : rawOrInput;
+      const query = (raw || '').toString().trim();
+
+      syncFlySearchInputs(query, input);
+      if (!query) {
+        hideAllSearchDropdowns();
+        updateFlySearchClearButton('');
+        return;
+      }
+
+      hideAllSearchDropdowns();
+      await handleSearchSelection(query);
+    }
+
+    function renderSearchDropdown(dropdown, suggestions, ownerInput) {
+      if (!dropdown) return;
+      dropdown.innerHTML = '';
+
+      if (!suggestions.length) {
+        dropdown.classList.remove('visible');
+        return;
+      }
+
+      suggestions.forEach(({ label, value, tone, meta }) => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'fly-search-option';
+        option.dataset.tone = tone;
+
+        const strong = document.createElement('strong');
+        strong.textContent = label;
+        const metaLabel = document.createElement('span');
+        metaLabel.textContent = meta;
+
+        option.appendChild(strong);
+        option.appendChild(metaLabel);
+        option.addEventListener('mousedown', async ev => {
+          ev.preventDefault();
+          ownerInput.value = value;
+          syncFlySearchInputs(value, ownerInput);
+          await submitFlySearch(ownerInput);
+        });
+        dropdown.appendChild(option);
+      });
+
+      dropdown.classList.add('visible');
+    }
+
+    function wireFlySearchUI(counties) {
+      const inputs = getFlySearchInputs();
+      if (!inputs.length) return;
+
+      inputs.forEach(searchInput => {
+        if (searchInput.dataset.flySearchReady === 'true') return;
+        searchInput.dataset.flySearchReady = 'true';
+
+        const dropdown = ensureSearchDropdown(searchInput);
         searchInput.addEventListener('input', function() {
-          const searchValue = this.value.trim().toLowerCase();
-          if (searchValue.length < 1) {
-            dropdown.style.display = 'none';
-            return;
-          }
-          // Match county names
-          const matches = counties.filter(county => county.toLowerCase().includes(searchValue)).slice(0, 10);
-          if (matches.length > 0) {
-            dropdown.innerHTML = matches.map(county => `
-              <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f3f4f6;" 
-                   onmouseover="this.style.backgroundColor='#f3f4f6'" 
-                   onmouseout="this.style.backgroundColor='white'"
-                   onclick="selectCounty('${county}')">${county}</div>
-            `).join('');
-            dropdown.style.display = 'block';
-          } else {
-            dropdown.style.display = 'none';
-          }
+          syncFlySearchInputs(this.value, this);
+          renderSearchDropdown(dropdown, buildSearchSuggestions(this.value, counties), this);
         });
-        
-        // Hide dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-          if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-          }
+
+        searchInput.addEventListener('focus', function() {
+          renderSearchDropdown(dropdown, buildSearchSuggestions(this.value, counties), this);
         });
-        
-        // Handle Enter key
-        searchInput.addEventListener('keydown', function(e) {
+
+        searchInput.addEventListener('keydown', async function(e) {
           if (e.key === 'Enter') {
             e.preventDefault();
-            const val = this.value.trim();
-            if (val) {
-              dropdown.style.display = 'none';
-              handleSearchSelection(val);
-            }
+            await submitFlySearch(this);
+          } else if (e.key === 'Escape') {
+            hideAllSearchDropdowns();
           }
         });
+      });
+
+      if (!flySearchWired) {
+        flySearchWired = true;
+
+        const form = document.getElementById('fly-search-form');
+        if (form) {
+          form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const primary = document.getElementById('county-search');
+            await submitFlySearch(primary || '');
+          });
+        }
+
+        const clearBtn = document.getElementById('fly-search-clear');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function() {
+            const primary = document.getElementById('county-search') || getFlySearchInputs()[0];
+            if (primary) {
+              primary.value = '';
+              primary.focus();
+            }
+            syncFlySearchInputs('', primary || null);
+            hideAllSearchDropdowns();
+            updateFlySearchClearButton('');
+          });
+        }
+
+        document.querySelectorAll('[data-search-example]').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const query = this.getAttribute('data-search-example') || '';
+            const primary = document.getElementById('county-search') || getFlySearchInputs()[0];
+            if (primary) primary.value = query;
+            syncFlySearchInputs(query, primary || null);
+            await submitFlySearch(primary || query);
+          });
+        });
+
+        document.addEventListener('click', function(e) {
+          const target = e.target;
+          if (target && typeof target.closest === 'function') {
+            if (target.closest('.fly-search-field') || target.closest('.fly-search-dropdown')) return;
+          }
+          hideAllSearchDropdowns();
+        });
+      }
+
+      updateFlySearchClearButton();
+    }
+
+    // Sidebar minimized by default on load, expand on click
+    // County search functionality - shared by the top fly-to bar and the optional sidebar input.
+    async function setupCountySearch() {
+      const countiesSource = map.getSource('counties');
+      let countiesGeoJSON = (window.countiesData && window.countiesData.features) ? window.countiesData : null;
+
+      if (!countiesGeoJSON && countiesSource && countiesSource._data && countiesSource._data.features) {
+        countiesGeoJSON = countiesSource._data;
+      }
+
+      if (!countiesGeoJSON) {
+        try {
+          countiesGeoJSON = await loadJSON(CONFIG.paths.counties);
+        } catch (_) {
+          try {
+            countiesGeoJSON = await loadJSON(withBase('./data/tl_2020_37_county20.geojson'));
+          } catch (_) {
+            countiesGeoJSON = null;
+          }
+        }
+        if (countiesGeoJSON && countiesGeoJSON.features) {
+          window.countiesData = countiesGeoJSON;
+          if (!countyNameMap || Object.keys(countyNameMap).length === 0) {
+            countyNameMap = buildCountyNameMapFromGeoJSON(countiesGeoJSON);
+          }
+        }
+      }
+
+      const counties = countiesGeoJSON && countiesGeoJSON.features
+        ? countiesGeoJSON.features.map(f => {
+            const p = f.properties || {};
+            return p.NAME20 || p.County || p.COUNTYNAME || p.NAME || '';
+          }).filter(Boolean).sort()
+        : [];
+
+      if (counties.length > 0) {
+        wireFlySearchUI(counties);
       }
     }
 
-    // Global function to select county from dropdown
-    function selectCounty(countyName) {
-      const searchInput = document.getElementById('county-search');
-      const dropdown = document.getElementById('county-dropdown');
-      
-      if (searchInput) {
-        searchInput.value = countyName;
-        if (dropdown) dropdown.style.display = 'none';
-        handleSearchSelection(countyName);
-      }
+    function selectCounty(countyName, inputId = 'county-search') {
+      const searchInput = document.getElementById(inputId) || document.getElementById('county-search');
+      if (!searchInput) return;
+      searchInput.value = countyName;
+      syncFlySearchInputs(countyName, searchInput);
+      submitFlySearch(searchInput);
     }
 
     function parseSearchQuery(query) {
@@ -5943,12 +7010,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handleDistrictSelection(districtNum, sourceId, chamber, label) {
-      const searchInput = document.getElementById('county-search');
-      if (searchInput) {
-        searchInput.style.borderColor = '#10b981';
-        setTimeout(() => { searchInput.style.borderColor = '#d1d5db'; }, 1000);
-      }
-
       const path = sourceId === 'districts' ? CONFIG.paths.districts
         : (sourceId === 'state-house' ? CONFIG.paths.state_house : CONFIG.paths.state_senate);
       const gj = await ensureSearchGeoJSON(sourceId, path);
@@ -5957,10 +7018,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const match = gj.features.find(f => getDistrictNumberFromPropsNumeric(f.properties) === Number(districtNum));
       if (!match) {
         console.warn('District not found for search:', label, districtNum);
+        setFlySearchFeedback('#ef4444');
+        setStatus(`${label} ${districtNum} not found on the map.`);
         return;
       }
 
       const bbox = turf.bbox(match);
+      const canonicalQuery = sourceId === 'districts'
+        ? `CD ${districtNum}`
+        : (sourceId === 'state-house' ? `HD ${districtNum}` : `SD ${districtNum}`);
+      syncFlySearchInputs(canonicalQuery);
+      setFlySearchFeedback('#10b981');
       map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 40, duration: 900 });
 
       const sidebar = document.getElementById('sidebar');
@@ -5976,12 +7044,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handlePrecinctSelection(countyNameRaw, precinctCodeRaw) {
-      const searchInput = document.getElementById('county-search');
-      if (searchInput) {
-        searchInput.style.borderColor = '#10b981';
-        setTimeout(() => { searchInput.style.borderColor = '#d1d5db'; }, 1000);
-      }
-
       const county = (countyNameRaw || '').toString().trim().toUpperCase();
       const code = (precinctCodeRaw || '').toString().trim().toUpperCase();
       try { await ensurePrecinctCodeIndex(); } catch (_) {}
@@ -6001,10 +7063,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const hit = gj.features.find(f => ((f.properties || {}).precinct_norm || '').toString().trim().toUpperCase() === target);
       if (!hit) {
         console.warn('Precinct not found for search:', target);
+        setFlySearchFeedback('#ef4444');
+        setStatus(`Precinct ${target} not found on the map.`);
         return;
       }
 
       const coords = hit.geometry && hit.geometry.type === 'Point' ? hit.geometry.coordinates : null;
+      syncFlySearchInputs(target);
+      setFlySearchFeedback('#10b981');
       if (coords && coords.length >= 2) {
         map.flyTo({ center: coords, zoom: Math.max(CONFIG.precincts?.minZoom || 8.5, 10.0), speed: 0.9 });
       }
@@ -6025,14 +7091,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleCountySelection(countyName) {
-      const searchInput = document.getElementById('county-search');
-      // Add visual feedback
-      if (searchInput) {
-        searchInput.style.borderColor = '#10b981';
-        setTimeout(() => {
-          searchInput.style.borderColor = '#d1d5db';
-        }, 1000);
-      }
       // Find and zoom to the county using countiesData and Turf.js
       // Prefer the authoritative source: window.countiesData if present, otherwise try map source
       const src = (window.countiesData && window.countiesData.features) ? window.countiesData : (map.getSource && map.getSource('counties') && (map.getSource('counties')._data || map.getSource('counties').data)) || null;
@@ -6069,6 +7127,8 @@ document.addEventListener('DOMContentLoaded', function() {
           lastSelectedCounty = props.NAME20 || props.NAMELSAD20 || props.county_name || props.County || props.COUNTYNAME || props.NAME || props.name;
           const bbox = turf.bbox(found);
           debugLog('[DIAGNOSTIC] Matched county for', countyName, '->', lastSelectedCounty, 'bbox:', bbox);
+          syncFlySearchInputs(lastSelectedCounty);
+          setFlySearchFeedback('#10b981');
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 40, duration: 1000 });
           showCountyDetails(lastSelectedCounty);
           const sidebar = document.getElementById('sidebar');
@@ -6077,6 +7137,8 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         } else {
           console.warn('[DIAGNOSTIC] County not found:', countyName, 'normalized:', normTarget);
+          setFlySearchFeedback('#ef4444');
+          setStatus(`County "${countyName}" was not found on the map.`);
         }
       }
     }
@@ -6643,6 +7705,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const contentEl = document.getElementById('county-info-content');
       if (!detailsDiv || !nameEl || !contentEl) return;
 
+      window.lastSelectedCounty = `Congressional District ${districtNum}`;
+      updateContextBanner();
       nameEl.textContent = `Congressional District ${districtNum}`;
 
       const districtInfo = (districtsInfo || []).find(d => d.district == districtNum);
@@ -6723,6 +7787,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!detailsDiv || !nameEl || !contentEl) return;
 
       const title = chamber === 'house' ? `State House District ${districtNum}` : `State Senate District ${districtNum}`;
+      window.lastSelectedCounty = title;
+      updateContextBanner();
       nameEl.textContent = title;
 
       const scope = chamber === 'house' ? 'state_house' : 'state_senate';
@@ -6933,7 +7999,7 @@ document.addEventListener('DOMContentLoaded', function() {
           countyNameMap = buildCountyNameMapFromGeoJSON(counties);
         }
         addCountyLayers();
-        setupCountySearch();
+        await setupCountySearch();
         map.on('zoomend', updatePrecinctVisibility);
         setStatus('Counties loaded');
 
@@ -7065,6 +8131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setupVizModes();
         try { wireMobileOverlayOffsets(); } catch (_) {}
         try { minimizeLegendOnMobile(); } catch (_) {}
+        try { minimizeMainControlsOnMobile(); } catch (_) {}
         appReady = true;
         try { await restoreUIState(); } catch (_) {}
 
@@ -7418,6 +8485,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // All other contests (statewide) aggregate county data by district
         await applyStatewideContestToDistricts(contestType, year);
       }
+      updateContextBanner();
       await refreshHoverAtPointer();
     }
 
