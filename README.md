@@ -2,6 +2,8 @@
 
 **NCPrecinctMap** is an interactive web-based map for exploring North Carolina election results at the precinct and district level, covering general elections from **2000 through 2024**. It is designed for researchers, journalists, and citizens who want to understand how election results map onto changing precinct and district boundaries over time.
 
+The live app is now presented as **North Carolina Election Atlas**, which is the public-facing name used in the current UI.
+
 **Live site:** [https://tenjin25.github.io/NCPrecinctMap/](https://tenjin25.github.io/NCPrecinctMap/)
 
 ---
@@ -61,6 +63,7 @@ Historical results from 2000–2020 are reallocated to these lines using Census 
 **Last updated:** March 10, 2026
 
 - Refined the desktop atlas layout with tighter left/right rails, a stronger statewide results card, and a more polished controls panel.
+- Renamed the public-facing app to **North Carolina Election Atlas** on **March 10, 2026** to match the UI overhaul and atlas-style presentation.
 - Reworked the statewide summary presentation so the lead is shown as a margin percentage again, while previous-election trend tiles carry fuller winner/lead context.
 - Rebuilt the map key into compact visual legend modes for margins, winners, shift, and flips instead of relying on long stacked text rows.
 - Restored the original competitiveness naming in the legend and summary labels: `Annihilation`, `Dominant`, `Stronghold`, `Safe`, `Likely`, `Lean`, `Tilt`, `Tossup`.
@@ -187,7 +190,7 @@ Where `scope` is one of: `congressional`, `state_house`, `state_senate`.
 
 Each file contains already-aggregated results and coverage metadata.
 
-### 4. Statewide County Results (Legacy/Fallback)
+### 4. Statewide County Results (Fallback)
 
 - `data/nc_elections_aggregated.json` — Used as a fallback for some contests/years
 
