@@ -1285,6 +1285,13 @@ body { height: var(--app-height); }
   text-overflow: ellipsis;
 }
 
+.vote-counter-context .context-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .vote-counter-context .context-clear {
   display: none;
   border: 1px solid rgba(0,0,0,0.10);
@@ -1299,6 +1306,38 @@ body { height: var(--app-height); }
 
 .vote-counter-context .context-clear:hover {
   background: rgba(17,24,39,0.08);
+}
+
+.vote-counter-context .context-minimize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(17,24,39,0.04);
+  color: #111827;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.vote-counter-context .context-minimize:hover {
+  background: rgba(17,24,39,0.08);
+}
+
+.vote-counter.minimized .vote-counter-meta,
+.vote-counter.minimized .focus-card,
+.vote-counter.minimized .vote-counter-row {
+  display: none;
+}
+
+.vote-counter.minimized .vote-counter-context {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 @media (max-width: 768px) {
@@ -5549,7 +5588,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="context-title" id="vote-context-title">Statewide Focus</div>
         <div class="context-sub" id="vote-context-sub">Hover a county or district</div>
       </div>
-      <button class="context-clear" id="vote-context-clear" title="Clear selection">Clear</button>
+      <div class="context-actions">
+        <button class="context-clear" id="vote-context-clear" title="Clear selection" type="button">Clear</button>
+        <button class="context-minimize" id="vote-context-minimize" title="Minimize vote counter" type="button" aria-expanded="true">-</button>
+      </div>
     </div>
     <div class="vote-counter-meta">
       <div class="vote-total" id="vote-total">0 total votes</div>
@@ -6434,6 +6476,24 @@ document.addEventListener('DOMContentLoaded', function() {
       if (c) c.style.display = showClear ? 'inline-flex' : 'none';
     }
 
+    function setVoteCounterMinimizedState(minimized) {
+      const counter = document.getElementById('vote-counter');
+      const minimizeBtn = document.getElementById('vote-context-minimize');
+      if (!counter || !minimizeBtn) return;
+      const isMinimized = !!minimized;
+      counter.classList.toggle('minimized', isMinimized);
+      minimizeBtn.textContent = isMinimized ? '+' : '-';
+      minimizeBtn.title = isMinimized ? 'Expand vote counter' : 'Minimize vote counter';
+      minimizeBtn.setAttribute('aria-expanded', isMinimized ? 'false' : 'true');
+      try { updateMobileOverlayOffsets(); } catch (_) {}
+    }
+
+    function toggleVoteCounterMinimized() {
+      const counter = document.getElementById('vote-counter');
+      if (!counter) return;
+      setVoteCounterMinimizedState(!counter.classList.contains('minimized'));
+    }
+
     function renderFocusTrendEmpty(message, caption = 'Statewide history') {
       const captionEl = document.getElementById('focus-trend-caption');
       const chartEl = document.getElementById('focus-trend-chart');
@@ -6849,6 +6909,15 @@ document.addEventListener('DOMContentLoaded', function() {
           e.stopPropagation();
           clearPinnedVoteCounterState();
         });
+      }
+      const minimizeBtn = document.getElementById('vote-context-minimize');
+      if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleVoteCounterMinimized();
+        });
+        setVoteCounterMinimizedState(false);
       }
       window.addEventListener('resize', queueVoteBreakdownLayoutMeasure, { passive: true });
       queueVoteBreakdownLayoutMeasure();
