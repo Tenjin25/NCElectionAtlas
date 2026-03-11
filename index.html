@@ -9954,26 +9954,46 @@ document.addEventListener('DOMContentLoaded', function() {
               showCountyDetails(countyName);
               lastSelectedCounty = countyName;
               setCountyHoverOutline(countyName);
-              if (IS_COARSE_POINTER) {
-                // On touch devices, tapping a county should open the same result card/chips
-                // used by hover so flip indicators are visible.
-                renderCountyHoverAtPoint(e);
-                maybePinTooltipForTap();
-              } else {
-                // Desktop click keeps the historical trend popup behavior.
-                const contestValue = document.getElementById('contestSelect')?.value || '';
-                const [contestType] = parseContestValue(contestValue);
-                const trendType = contestType || 'president';
-                try {
-                  const series = await getCountyTrendSeries(trendType, countyName);
-                  const content = formatTrendSeries(`${countyName} County - ${formatContestName(trendType, '')} Trends`, series);
-                  showHoverTooltip(e.point.x, e.point.y, content);
-                  maybePinTooltipForTap();
-                  wireTooltipButtons();
-                } catch (err) {}
-                  console.warn('Failed to load county trends:', err?.message || err);
+              
+              // Pin vote counter to this county for current contest (if any).
+              const contestValue = document.getElementById('contestSelect')?.value || '';
+              if (contestValue) {
+                const [contestType, year] = parseContestValue(contestValue);
+                if (contestType && currentElectionResults) {
+                  const norm = (countyName || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+                  let row = currentElectionResults[norm];
+                  if (!row) {
+                    for (const key of Object.keys(currentElectionResults)) {
+                      const keyNorm = (key || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+                      if (keyNorm === norm) {
+                        row = currentElectionResults[key];
+                        break;
+                      }
+                    }
+                  }
+                  if (row) {
+                    const demVotes = Number(row[`${contestType}_dem`] || 0);
+                    const repVotes = Number(row[`${contestType}_rep`] || 0);
+                    const otherVotes = Number(row[`${contestType}_other`] || 0);
+                    const demCandidate = row[`${contestType}_dem_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
+                    const repCandidate = row[`${contestType}_rep_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Republican');
+                    pinVoteCounterState(
+                      `Selected: ${countyName} County`,
+                      `${formatContestName(contestType, year)} ${year}`,
+                      demVotes,
+                      repVotes,
+                      otherVotes,
+                      { demCandidate, repCandidate },
+                      { kind: 'county', county: countyName.toUpperCase(), contestType, year: Number(year) }
+                    );
+                  }
                 }
               }
+              
+              // Show tooltip with results.
+              renderCountyHoverAtPoint(e);
+              maybePinTooltipForTap();
+              
               // Optionally, expand sidebar if minimized
               const sidebar = document.getElementById('sidebar');
               if (sidebar && sidebar.classList.contains('minimized')) {
