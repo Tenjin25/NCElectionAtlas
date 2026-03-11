@@ -4624,7 +4624,7 @@ body { height: var(--app-height); }
 
   .vote-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(72px, 40%);
+    grid-template-columns: minmax(0, 1fr) fit-content(120px);
     grid-template-areas:
       "head count"
       "percent percent"
@@ -4664,6 +4664,7 @@ body { height: var(--app-height); }
     grid-area: count;
     justify-self: end;
     text-align: right;
+    min-width: 64px;
     max-width: 100%;
     font-size: clamp(11px, 1.35vw, 20px);
     line-height: 1.15;
@@ -4678,21 +4679,20 @@ body { height: var(--app-height); }
   }
 
   .vote-label {
+    flex: 1 1 auto;
     min-width: 0;
     max-width: 100%;
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .vote-label.candidate {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    white-space: normal;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
     text-overflow: ellipsis;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
 
   .vote-share-track {
