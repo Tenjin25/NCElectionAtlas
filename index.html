@@ -9958,7 +9958,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // On touch devices, tapping a county should open the same result card/chips
                 // used by hover so flip indicators are visible.
                 renderCountyHoverAtPoint(e);
-                wireTooltipButtons();
                 maybePinTooltipForTap();
               } else {
                 // Desktop click keeps the historical trend popup behavior.
@@ -9969,9 +9968,9 @@ document.addEventListener('DOMContentLoaded', function() {
                   const series = await getCountyTrendSeries(trendType, countyName);
                   const content = formatTrendSeries(`${countyName} County - ${formatContestName(trendType, '')} Trends`, series);
                   showHoverTooltip(e.point.x, e.point.y, content);
-                  wireTooltipButtons();
                   maybePinTooltipForTap();
-                } catch (err) {
+                  wireTooltipButtons();
+                } catch (err) {}
                   console.warn('Failed to load county trends:', err?.message || err);
                 }
               }
@@ -10457,7 +10456,6 @@ document.addEventListener('DOMContentLoaded', function() {
               try {
                 await renderDistrictHover(e, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'district_id', 'district', 'NAMELSAD']);
                 maybePinTooltipForTap();
-                wireTooltipButtons();
               } catch (_) {}
             }
           }
@@ -10547,7 +10545,6 @@ document.addEventListener('DOMContentLoaded', function() {
               try {
                 await renderDistrictHover(e, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
                 maybePinTooltipForTap();
-                wireTooltipButtons();
               } catch (_) {}
             }
           }
@@ -10637,7 +10634,6 @@ document.addEventListener('DOMContentLoaded', function() {
               try {
                 await renderDistrictHover(e, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
                 maybePinTooltipForTap();
-                wireTooltipButtons();
               } catch (_) {}
             }
           }
