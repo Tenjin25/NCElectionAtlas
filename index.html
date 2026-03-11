@@ -4579,6 +4579,7 @@ body { height: var(--app-height); }
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 14px;
     padding: 10px 12px;
@@ -4590,9 +4591,14 @@ body { height: var(--app-height); }
   .vote-total,
   .vote-lead {
     min-width: 0;
+    max-width: 100%;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.02em;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .vote-total {
@@ -4602,6 +4608,7 @@ body { height: var(--app-height); }
   .vote-lead {
     color: #475569;
     text-align: right;
+    margin-left: auto;
   }
 
   .vote-lead[data-party="dem"] { color: #1d4ed8; }
@@ -4611,24 +4618,28 @@ body { height: var(--app-height); }
   .vote-counter-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
+    min-width: 0;
   }
 
   .vote-item {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 12px;
+    min-width: 0;
+    padding: 10px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.84);
     border: 1px solid rgba(148, 163, 184, 0.16);
     text-align: left;
+    overflow: hidden;
   }
 
   .vote-item-head {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
   }
 
   .vote-swatch {
@@ -4643,8 +4654,30 @@ body { height: var(--app-height); }
   .vote-item.other .vote-swatch { background: #64748b; }
 
   .vote-count {
-    font-size: 22px;
+    max-width: 100%;
+    font-size: clamp(14px, 1.6vw, 22px);
     line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .vote-label {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .vote-label.candidate {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .vote-share-track {
