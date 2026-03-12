@@ -5130,8 +5130,118 @@ body { height: var(--app-height); }
       padding: 14px 16px 12px !important;
     }
 
-    .desktop-statewide-panel .statewide-call {
+  .desktop-statewide-panel .statewide-call {
       font-size: clamp(30px, 2.5vw, 38px);
+    }
+  }
+
+  /* Final mobile pass: prioritize touch targets, reduce clutter, and prevent cramped overlays. */
+  @media (max-width: 768px) {
+    .map-topbar,
+    .main-controls,
+    .legend,
+    .vote-counter,
+    #status-panel {
+      left: 8px !important;
+      right: 8px !important;
+      width: auto !important;
+      max-width: none !important;
+    }
+
+    .main-controls,
+    .legend,
+    .vote-counter {
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #main-controls button,
+    #main-controls .view-toggle-btn,
+    #main-controls .region-jump-btn,
+    #main-controls select,
+    #main-controls input[type="search"],
+    #main-controls input[type="text"],
+    .map-topbar .fly-search-submit,
+    .map-topbar .mobile-topbar-toggle,
+    .legend .minimize-btn,
+    .vote-counter-context .context-minimize,
+    .vote-counter-context .context-clear {
+      min-height: 44px !important;
+    }
+
+    .contest-toolbar {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px !important;
+      align-items: stretch !important;
+    }
+
+    .contest-toolbar label {
+      grid-column: 1 / -1;
+      margin: 0 !important;
+    }
+
+    #precinct-toggle {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+
+    .controls-subtitle,
+    .desktop-fly-helper,
+    .desktop-statewide-sub,
+    .controls-panel-note {
+      display: none !important;
+    }
+
+    .desktop-fly-chip-row {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .desktop-fly-chip {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .vote-counter {
+      max-height: min(34vh, 300px) !important;
+      overflow-y: auto !important;
+    }
+
+    #status-panel {
+      top: auto !important;
+      bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + 12px) !important;
+      min-width: 0 !important;
+      padding-right: 44px !important;
+    }
+
+    #status-exit {
+      min-width: 36px !important;
+      min-height: 36px !important;
+      top: 8px !important;
+      right: 8px !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .desktop-fly-chip-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .region-jumps,
+    .view-toggle-row {
+      grid-template-columns: 1fr !important;
+    }
+
+    .control-summary-title {
+      font-size: 15px !important;
+    }
+
+    .legend-chip-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
     }
   }
     </style>
@@ -6418,9 +6528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
-      const leadLabel = winnerParty === 'tie'
-        ? 'Tie'
-        : leadMarginPctLabel(r, d, total);
+      const leadLabel = focusLeadMarginLabel(r, d, total);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
@@ -8266,6 +8374,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
     }
 
+    // Prefix with party for the vote-counter Lead pill only (R+ / D+).
+    function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
+      const margin = Number(repVotes || 0) - Number(demVotes || 0);
+      if (!margin) return 'Tie';
+      const party = margin > 0 ? 'R' : 'D';
+      return `${party}+${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
+    }
+
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       const pctLabel = `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
@@ -8552,7 +8668,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
-      const leadLabel = winnerParty === 'tie' ? 'Tie' : leadMarginPctLabel(r, d, total);
+      const leadLabel = focusLeadMarginLabel(r, d, total);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
