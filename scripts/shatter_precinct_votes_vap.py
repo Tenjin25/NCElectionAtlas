@@ -93,21 +93,17 @@ def shatter_votes(
     shattered["block_votes_raw"] = shattered["votes"] * shattered["block_weight"]
 
     # Zero-sum guard: enforce sum(block_votes) == precinct votes exactly.
-    def _rebalance(group: pd.DataFrame) -> pd.DataFrame:
-        g = group.copy()
-        target = g["votes"].iloc[0]
-        current = g["block_votes_raw"].sum()
+    # Avoid groupby.apply here because pandas 3.0 drops grouping columns.
+    for _, idxs in shattered.groupby("precinct_id").groups.items():
+        idx_list = list(idxs)
+        if not idx_list:
+            continue
+        target = shattered.loc[idx_list[0], "votes"]
+        current = shattered.loc[idx_list, "block_votes_raw"].sum()
         residual = target - current
-        if residual != 0 and len(g) > 0:
-            idx = g["block_weight"].astype(float).idxmax()
-            g.loc[idx, "block_votes_raw"] = g.loc[idx, "block_votes_raw"] + residual
-        return g
-
-    shattered = (
-        shattered.groupby("precinct_id", group_keys=False)
-        .apply(_rebalance)
-        .reset_index(drop=True)
-    )
+        if residual != 0:
+            idx = shattered.loc[idx_list, "block_weight"].astype(float).idxmax()
+            shattered.loc[idx, "block_votes_raw"] = shattered.loc[idx, "block_votes_raw"] + residual
 
     # Audit table by precinct.
     precinct_audit = (

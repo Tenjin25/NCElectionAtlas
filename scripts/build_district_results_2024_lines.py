@@ -155,8 +155,15 @@ def _normalize_precinct_token(text: str) -> str:
     return t
 
 
-def _is_non_geographic_precinct(p: str) -> bool:
+def _is_non_geographic_precinct(p: str, county: str | None = None) -> bool:
     t = _norm(p)
+    c = _norm(county or "")
+    # Some real precinct names/codes contain "PROV*" but are geographic
+    # (e.g., CASWELL/WAKE "PROVI", JOHNSTON "PROVIDENCE").
+    if t == "PROVIDENCE":
+        return False
+    if c in {"CASWELL", "WAKE"} and t == "PROVI":
+        return False
     flags = [
         "ABSENTEE",
         "PROVISIONAL",
@@ -169,6 +176,8 @@ def _is_non_geographic_precinct(p: str) -> bool:
         "EARLY ",
     ]
     if any(f in t for f in flags):
+        return True
+    if re.search(r"(^|[^A-Z0-9])OS([^A-Z0-9]|$)", t):
         return True
     # Countywide early-vote naming patterns in NC exports.
     # Examples: "EV CHL", "EV-WATKINS", "EV_POLL", "PITT - EV AG CENTER".
@@ -404,7 +413,7 @@ def resolve_precinct_key(
     county, precinct = election_precinct_key.split(" - ", 1)
     county = _norm(county)
     precinct = _norm(precinct)
-    if _is_non_geographic_precinct(precinct):
+    if _is_non_geographic_precinct(precinct, county):
         return None, "non_geographic"
 
     # Wake often embeds codes like "01-14" in strings like "PRECINCT 01-14A".

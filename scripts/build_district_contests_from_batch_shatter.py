@@ -38,6 +38,7 @@ NON_GEO_FLAGS = [
     "PROV",
     "CURBSIDE",
     "MAIL",
+    "TRANSFER",
 ]
 
 KNOWN_OFFICE_KEYS = {
@@ -128,6 +129,9 @@ def _norm(text: str) -> str:
 
 def _norm_spaces(text: str) -> str:
     return re.sub(r"\s+", " ", _norm(text))
+
+def _compact_token(text: str) -> str:
+    return re.sub(r"[^A-Z0-9]", "", _norm(text))
 
 def precinct_bucket_from_code(precinct_code: str) -> str:
     """
@@ -301,6 +305,19 @@ def normalize_presidential_candidate_name(name: str) -> str:
     return raw
 
 
+def canonicalize_candidate_label(name: str) -> str:
+    """
+    Normalize known punctuation variants for candidate display labels.
+    """
+    raw = str(name or "").strip()
+    if not raw:
+        return ""
+    t = re.sub(r"\s+", " ", raw).strip().upper().replace(".", "")
+    if t in {"PHIL BERGER JR", "PHIL BERGER, JR"}:
+        return "Phil Berger, Jr."
+    return raw
+
+
 def infer_office_key(office: str) -> str | None:
     o_full = str(office).strip().upper()
     o_full = re.sub(r"\s+", " ", o_full)
@@ -384,8 +401,15 @@ def infer_office_key(office: str) -> str | None:
     return None
 
 
-def is_non_geographic_precinct(name: str) -> bool:
+def is_non_geographic_precinct(name: str, county: str | None = None) -> bool:
     t = str(name).strip().upper()
+    c = _norm(county or "")
+    # Some real precinct names/codes contain "PROV*" but are geographic
+    # (e.g., CASWELL/WAKE "PROVI", JOHNSTON "PROVIDENCE").
+    if t == "PROVIDENCE":
+        return False
+    if c in {"CASWELL", "WAKE"} and t == "PROVI":
+        return False
     # NC precinct-sort exports often abbreviate one-stop/early vote as "OS <SITE>"
     # (e.g., "OS MAXTON"). Treat these as non-geographic buckets.
     if t == "OS" or t.startswith("OS ") or t.startswith("OS-") or t.startswith("OS_"):
@@ -393,6 +417,9 @@ def is_non_geographic_precinct(name: str) -> bool:
     # Some counties (notably WAKE in OpenElections precinct exports) use compact one-stop
     # codes like "OSNB 81-91" (no space after "OS"). Treat any OS-prefixed bucket as non-geo.
     if re.match(r"^OS[A-Z0-9]+", t):
+        return True
+    # Some files use suffix forms like "NASHVILLE OS" / "BOE OS".
+    if re.search(r"(^|[^A-Z0-9])OS([^A-Z0-9]|$)", t):
         return True
     # Some counties use a compact "ONESTOP" label.
     if t == "ONESTOP" or t.startswith("ONESTOP "):
@@ -653,17 +680,46 @@ def load_precinct_overrides(path: Path, year: int) -> dict[str, str]:
 def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: set[str]) -> dict[str, str]:
     out: dict[str, str] = {}
     vals = set(precinct_ids.astype(str).str.strip().str.upper())
+
+    county_tokens: dict[str, set[str]] = {}
+    county_compact_tokens: dict[str, dict[str, set[str]]] = {}
+    for key in matched_precincts:
+        if " - " not in key:
+            continue
+        county, tok = key.split(" - ", 1)
+        county = _norm(county)
+        tok = _norm(tok)
+        if not county or not tok:
+            continue
+        county_tokens.setdefault(county, set()).add(tok)
+
+    for county, toks in county_tokens.items():
+        c_map: dict[str, set[str]] = {}
+        for tok in toks:
+            comp = _compact_token(tok)
+            if not comp:
+                continue
+            c_map.setdefault(comp, set()).add(tok)
+        county_compact_tokens[county] = c_map
+
+    def _resolve_unique_token(county: str, candidates: list[str] | set[str]) -> str | None:
+        toks = sorted({str(t).strip().upper() for t in candidates if str(t).strip()})
+        if len(toks) != 1:
+            return None
+        cand = f"{county} - {toks[0]}"
+        return cand if cand in matched_precincts else None
+
     for raw in sorted(vals):
         if not raw or raw in matched_precincts or " - " not in raw:
             continue
         county, p = raw.split(" - ", 1)
-        county = county.strip()
-        p = p.strip()
+        county = _norm(county)
+        p = _norm(p)
 
         # Use SBE ENR_DESC->PREC_ID if available (strongest signal).
         sbe_map = getattr(build_auto_precinct_overrides, "_sbe_map", None)
         if isinstance(sbe_map, dict):
-            hit = sbe_map.get((_norm(county), _norm_spaces(p)))
+            hit = sbe_map.get((county, _norm_spaces(p)))
             if hit:
                 cand = f"{county} - {_norm(hit)}"
                 if cand in matched_precincts:
@@ -702,6 +758,48 @@ def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: se
             if cand in matched_precincts:
                 out[raw] = cand
                 continue
+
+        # Example: ROCKINGHAM - WS -> ROCKINGHAM - WS-1.
+        if re.fullmatch(r"[A-Z0-9]+", p):
+            cand = f"{county} - {p}-1"
+            if cand in matched_precincts:
+                out[raw] = cand
+                continue
+
+        # Zero-padded numeric variants (e.g., UNION 019 -> 0019, 020A -> 0020A).
+        m = re.fullmatch(r"0*([0-9]{1,4})([A-Z]?)", p)
+        if m:
+            n = int(m.group(1))
+            suffix = m.group(2) or ""
+            numeric_candidates = []
+            for width in [1, 2, 3, 4]:
+                base = str(n) if width == 1 else str(n).zfill(width)
+                numeric_candidates.append(f"{base}{suffix}")
+            cand = _resolve_unique_token(county, numeric_candidates)
+            if cand:
+                out[raw] = cand
+                continue
+
+        # Compact-token fallback for punctuated variants (e.g., DV1-A -> DV1A1A, CC3 -> CC3-1).
+        p_comp = _compact_token(p)
+        if p_comp:
+            comp_map = county_compact_tokens.get(county, {})
+            cand = _resolve_unique_token(county, comp_map.get(p_comp, set()))
+            if cand:
+                out[raw] = cand
+                continue
+
+            # Conservative prefix fallback: only when exactly one canonical token matches.
+            if len(p_comp) >= 3:
+                pref_hits: set[str] = set()
+                for tok_comp, tok_set in comp_map.items():
+                    if tok_comp.startswith(p_comp):
+                        pref_hits.update(tok_set)
+                cand = _resolve_unique_token(county, pref_hits)
+                if cand:
+                    out[raw] = cand
+                    continue
+
     return out
 
 
@@ -852,7 +950,10 @@ def allocate_non_geo_by_candidate(
     df["candidate"] = df["candidate"].astype(str).str.strip()
     df["precinct_id"] = df["county"] + " - " + df["precinct"]
     df = apply_precinct_overrides(df, precinct_overrides)
-    df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
+    df["non_geo"] = df.apply(
+        lambda r: is_non_geographic_precinct(str(r.get("precinct", "")), str(r.get("county", ""))),
+        axis=1,
+    )
 
     geo = df[~df["non_geo"]].copy()
     non_geo = df[df["non_geo"]].copy()
@@ -927,6 +1028,7 @@ def build_precinct_party_votes(
     df["votes_num"] = pd.to_numeric(df["votes"], errors="coerce").fillna(0.0)
     df["party_group"] = df["party"].map(party_group)
     df = apply_candidate_party_overrides(df, election_year=election_year)
+    df["candidate"] = df["candidate"].map(canonicalize_candidate_label)
 
     # Candidate labels (statewide top by party).
     dem_c = (
@@ -946,6 +1048,8 @@ def build_precinct_party_votes(
     if infer_office_key(office) == PRESIDENT_OFFICE_KEY:
         dem_candidate = normalize_presidential_candidate_name(dem_candidate)
         rep_candidate = normalize_presidential_candidate_name(rep_candidate)
+    dem_candidate = canonicalize_candidate_label(dem_candidate)
+    rep_candidate = canonicalize_candidate_label(rep_candidate)
 
     # Normalize precinct IDs before allocation/matching.
     df["county"] = df["county"].astype(str).str.strip().str.upper()
@@ -981,11 +1085,15 @@ def build_precinct_party_votes_county_weight_mode(
     df["votes_num"] = pd.to_numeric(df["votes"], errors="coerce").fillna(0.0)
     df["party_group"] = df["party"].map(party_group)
     df = apply_candidate_party_overrides(df, election_year=election_year)
+    df["candidate"] = df["candidate"].map(canonicalize_candidate_label)
     df["county"] = df["county"].astype(str).str.strip().str.upper()
     df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
     df["precinct_id"] = df["county"] + " - " + df["precinct"]
     df = apply_precinct_overrides(df, precinct_overrides)
-    df["non_geo"] = df["precinct"].map(is_non_geographic_precinct)
+    df["non_geo"] = df.apply(
+        lambda r: is_non_geographic_precinct(str(r.get("precinct", "")), str(r.get("county", ""))),
+        axis=1,
+    )
 
     dem_c = (
         df[df["party_group"] == "dem_votes"]
@@ -1004,6 +1112,8 @@ def build_precinct_party_votes_county_weight_mode(
     if infer_office_key(office) == PRESIDENT_OFFICE_KEY:
         dem_candidate = normalize_presidential_candidate_name(dem_candidate)
         rep_candidate = normalize_presidential_candidate_name(rep_candidate)
+    dem_candidate = canonicalize_candidate_label(dem_candidate)
+    rep_candidate = canonicalize_candidate_label(rep_candidate)
 
     geo = df[~df["non_geo"]].copy()
     non_geo = df[df["non_geo"]].copy()
