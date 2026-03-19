@@ -6864,6 +6864,21 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
+    function updateCountyLabelHaloForFillOpacity(fillOpacity) {
+      if (!map.getLayer('county-label')) return;
+      const oRaw = Number(fillOpacity);
+      const o = Number.isFinite(oRaw) ? Math.max(0, Math.min(1, oRaw)) : 0.82;
+      // Use a lighter/smaller halo when county fills are faint; strengthen when fills are prominent.
+      const haloAlpha = o >= 0.6 ? 0.86 : (o >= 0.25 ? 0.72 : 0.58);
+      const haloWidth = o >= 0.6 ? 1.8 : (o >= 0.25 ? 1.4 : 1.05);
+      const haloBlur = o >= 0.6 ? 0.55 : 0.45;
+      try {
+        map.setPaintProperty('county-label', 'text-halo-color', `rgba(255, 255, 255, ${haloAlpha})`);
+        map.setPaintProperty('county-label', 'text-halo-width', haloWidth);
+        map.setPaintProperty('county-label', 'text-halo-blur', haloBlur);
+      } catch (_) {}
+    }
+
     function refreshViewportPrecinctCount() {
       const targets = document.querySelectorAll('[data-viewport-precinct-count]');
       if (!targets.length) return;
@@ -11855,11 +11870,12 @@ document.addEventListener('DOMContentLoaded', function() {
           },
           paint: {
             'text-color': '#111827',
-            'text-halo-color': 'rgba(255, 255, 255, 0.96)',
-            'text-halo-width': 2.3,
-            'text-halo-blur': 0.7
+            'text-halo-color': 'rgba(255, 255, 255, 0.58)',
+            'text-halo-width': 1.05,
+            'text-halo-blur': 0.45
           }
         });
+        updateCountyLabelHaloForFillOpacity(0.0);
         // Add mouseleave event handler
         map.on('mouseleave', 'county-fill', () => {
           map.getCanvas().style.cursor = '';
@@ -11869,8 +11885,8 @@ document.addEventListener('DOMContentLoaded', function() {
           if (e.features && e.features[0] && e.features[0].properties) {
             const countyName = e.features[0].properties.precinct_name || e.features[0].properties.NAME20 || e.features[0].properties.CountyName || e.features[0].properties.county_nam || e.features[0].properties.COUNTYNAME || e.features[0].properties.County || e.features[0].properties.NAME || e.features[0].properties.name;
             if (countyName) {
-              showCountyDetails(countyName);
-              lastSelectedCounty = countyName;
+              // Reuse the fly-to county path so click and search have consistent zoom behavior.
+              handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
               setTooltipPinned(false);
               if (isTouchInteractionMode()) {
@@ -11878,14 +11894,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTooltipPinned(true);
               } else {
                 hideHoverTooltip();
-              }
-              
-              // Optionally, expand sidebar if minimized
-              const sidebar = document.getElementById('sidebar');
-              if (sidebar && sidebar.classList.contains('minimized')) {
-                sidebar.classList.remove('minimized');
-                const btn = document.getElementById('sidebar-minimize-btn');
-                if (btn) btn.textContent = '-';
               }
             }
           }
@@ -15074,8 +15082,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Paint counties by default; when precinct overlay is enabled, reduce county opacity
       // so precinct fills/dots remain visually primary.
       if (map.getLayer('county-fill')) {
+        const countyFillOpacity = precinctsEnabled ? 0.10 : 0.82;
         map.setPaintProperty('county-fill', 'fill-color', expr);
-        map.setPaintProperty('county-fill', 'fill-opacity', precinctsEnabled ? 0.10 : 0.82);
+        map.setPaintProperty('county-fill', 'fill-opacity', countyFillOpacity);
+        updateCountyLabelHaloForFillOpacity(countyFillOpacity);
       }
 
       // Flip mode: outline flipped counties in red/blue (to-winner), leave others subtle.
