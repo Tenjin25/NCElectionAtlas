@@ -45,7 +45,8 @@ These lines were chosen as the consistent historical baseline for two reasons:
 1. **Neutrality** — they were drawn by independent experts under court supervision, not by either party, making them the most politically neutral set of modern statewide district lines available. Using party-drawn maps as a baseline would embed partisan intent into the geographic frame when comparing results across years.
 2. **Practical coverage** — the 2022 remedial maps were actually used for a real election (the 2022 general), making them a grounded modern baseline for reallocating earlier results.
 
-Historical results from 2000–2020 are reallocated to these lines using Census block-level crosswalks (block → precinct → district), with unmatched votes distributed by candidate share within the county. [NHGIS](https://www.nhgis.org/) block-to-block crosswalks are used to bridge across Census vintages, which significantly cut down on mismatches — particularly for pre-2008 elections. This pushes overall precinct match rates **above 70%** statewide and **close to 95%** for elections from 2012 onward.
+Historical results from 2000–2020 are reallocated to these lines using Census block-level crosswalks (block → precinct → district), with unmatched votes distributed by candidate share within the county. [NHGIS](https://www.nhgis.org/) block-to-block crosswalks are used to bridge across Census vintages, which significantly cut down on mismatches in older eras.  
+As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-19.csv`), geo-key match coverage is **99.42% across all years** and **99.28% for pre-2020 years**.
 
 ## Features
 
@@ -62,34 +63,49 @@ Historical results from 2000–2020 are reallocated to these lines using Census 
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 12, 2026
+**Last updated:** March 19, 2026
 
-- Refined the desktop atlas layout with tighter left/right rails, a stronger statewide results card, and a more polished controls panel.
-- Renamed the public-facing app to **North Carolina Election Atlas** on **March 10, 2026** to match the UI overhaul and atlas-style presentation.
-- Reworked the statewide summary presentation so the lead is shown as a margin percentage again, while previous-election trend tiles carry fuller winner/lead context.
-- Added preset regional rollups so quick jumps like **Triangle**, **Triad**, **Charlotte Metro**, **Mountains**, **Coast**, and **Sandhills** can show aggregated results and trend history instead of acting as camera jumps only.
-- Rebuilt the map key into compact visual legend modes for margins, winners, shift, and flips instead of relying on long stacked text rows.
-- Restored the original competitiveness naming in the legend and summary labels: `Annihilation`, `Dominant`, `Stronghold`, `Safe`, `Likely`, `Lean`, `Tilt`, `Tossup`.
-- Improved the trend chart readability by emphasizing labeled election points and guide bands over a heavy connector line.
-- Replaced the older line-graph-style statewide trend view with a more readable top-right timeline/history module for statewide and regional summaries.
-- Styled the `North Carolina Election Atlas` control header as a pill and carried that treatment into the minimized state so the panel title stays consistent.
-- Adjusted the top-right winner summary so wider desktop layouts can keep full candidate names with party labels while narrower widths fall back to shorter labels.
-- Added a mobile-first bottom dock (`Search`, `Layers`, `Legend`) that drives panel sheets with snap states (`collapsed`, `half`, `full`) while preserving the desktop rail layout.
-- Added touch-first interaction handling on mobile: tap-to-open info cards, reduced hover churn, and pinned tooltip behavior designed for non-hover devices.
-- Added mobile keyboard-aware behavior so focus on map/search inputs temporarily clears panel clutter and restores prior panel state after blur.
-- Updated the vote counter lead pill to show explicit party prefixes (`R+` / `D+`) on lead margin percentages.
+### UI / UX
 
-- Added historical Counties-view Council of State contest slices for **2000, 2004, and 2008**.
-- Rebuilt **2012** Council of State county/precinct slices with updated manifest metadata.
-- Added legacy office alias support for `SUPER. OF PUBLIC INSTRUCTION` (older OpenElections naming).
-- Caught a counties-view performance issue by manually switching contests with **Precincts Off** and noticing throttling in the dropdown-change path.
-- Addressed that throttling by skipping heavy precinct-only work when precincts are disabled (precinct variant expansion, precinct color-expression rebuilds, and precinct-index-backed prior-cycle matching now run only when needed).
-- Added Counties-manifest metadata fields:
-  - `dem_total`
-  - `rep_total`
-  - `total_votes`
-  - `major_party_contested`
-- Updated contest picker logic to hide unopposed Council of State entries (example: **2012 NC Attorney General**).
+- Continued the atlas-style UI rollout with cleaner desktop rails, stronger statewide cards, and improved control hierarchy.
+- Renamed the live presentation to **North Carolina Election Atlas** and carried consistent branding through normal/minimized control states.
+- Expanded mobile UX with a bottom dock (`Search`, `Layers`, `Legend`) and bottom-sheet snap states (`collapsed`, `half`, `full`).
+- Added swipe/flick sheet gesture behavior so mobile panels feel native and settle into predictable snap states.
+- Improved touch-first interactions: tap/pin behavior for precinct details, less hover churn on touch devices, and keyboard-aware sheet handling.
+- Improved cross-browser behavior (including Vivaldi-targeted fixes) and refined placement/flow of top controls.
+- Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
+
+### Precinct Matching and Outlier Cleanup
+
+- Expanded legacy precinct variant handling so older tokens map to modern centroid/geometry IDs more reliably.
+- Added evidence-based centroid bridge mappings for high-friction county outliers:
+  - `PERSON`: `RCTL -> RCOB`
+  - `IREDELL`: `BA -> BA-1`, `DV1-B -> DV1B-1`, `DV2-A -> DV2A-1`, `DV3-A/DV3 -> DV3A`
+  - `SURRY`: `13 <-> 34`
+  - `UNION`: `020A -> 0020A`
+- Applied bridge matching consistently across search, contest key normalization, and active precinct hover/result lookup paths.
+- Expanded `precinct_variant_overrides` coverage for additional counties and older naming patterns (including Haywood-focused shorthand fixes).
+- Rebuilt legacy precinct crosswalk outputs for the 2022-line district scopes:
+  - `data/crosswalks/precinct_to_2022_state_house.csv`
+  - `data/crosswalks/precinct_to_2022_state_senate.csv`
+  - `data/crosswalks/precinct_to_cd118.csv`
+
+### District Data and Calibration
+
+- Added DRA-aligned calibration workflow for 2022-line district slices, including congressional and legislative presidential benchmarks.
+- Added support for dual district-line data modes (2022 and 2024 line contexts) and rebuilt/split supporting contest outputs.
+- Rebuilt multiple 2020–2024 district contest slices with calibration passes from district-statistics CSV inputs.
+
+### Diagnostics and Reporting
+
+- Added/maintained county+contest match diagnostics in:
+  - `data/reports/precinct_match_by_county_all_contests.csv`
+  - `data/reports/precinct_match_top_unmatched_file_county.csv`
+  - `data/reports/unmatched_precinct_examples.csv`
+- Added fresh March 19, 2026 summary exports:
+  - `data/reports/precinct_match_year_summary_fresh_2026-03-19.csv`
+  - `data/reports/precinct_match_pre2020_county_outliers_fresh_2026-03-19.csv`
+  - `data/reports/precinct_match_focus_counties_by_year_fresh_2026-03-19.csv`
 
 ## UI Performance Enhancements
 
@@ -303,15 +319,24 @@ py scripts/build_district_contests_from_batch_shatter.py `
 
 ### Crosswalk Coverage and Accuracy
 
-Precinct match rates vary by era. Without cross-vintage crosswalks, pre-2008 elections had very high mismatch rates due to precinct renumbering. [NHGIS](https://www.nhgis.org/) longitudinal block crosswalks significantly reduced those mismatches, especially for 2000–2006:
+Precinct match rates are tracked directly from generated county+contest diagnostics. Current audited geo-key match rates (March 19, 2026) are:
 
-| Era | Approx. Match Rate | Notes |
-|-----|-------------------|-------|
-| 2012–2024 | ~95% | Modern precinct IDs are stable and well-covered by NHGIS crosswalks |
-| 2008–2010 | 80–90% | IDs shifted around the 2010 redistricting; NHGIS bridges most gaps |
-| 2000–2006 | >70% | Oldest years had the most mismatches; NHGIS crosswalks cut these down significantly, but some residual unmatched vote fallback remains |
+| Year | Geo Match % | Unmatched Geo Keys |
+|------|-------------|--------------------|
+| 2000 | 98.81% | 320 |
+| 2002 | 98.79% | 33 |
+| 2004 | 98.69% | 396 |
+| 2008 | 99.04% | 292 |
+| 2010 | 99.67% | 9 |
+| 2012 | 99.75% | 70 |
+| 2014 | 99.60% | 11 |
+| 2016 | 99.74% | 119 |
+| 2018 | 99.63% | 40 |
+| 2020 | 99.51% | 260 |
+| 2022 | 99.66% | 63 |
+| 2024 | 99.81% | 75 |
 
-Coverage is tracked per-contest in the district slice metadata. Remaining unmatched votes are allocated using candidate shares within the county.
+Coverage is tracked per contest and per county. Remaining unmatched keys are handled via alias resolution, bridge mappings, and county-level fallback allocation paths.
 
 ### Other Limitations
 
