@@ -6879,6 +6879,27 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
+    function updateBasemapTownLabelLegibility() {
+      let layers = [];
+      try { layers = map.getStyle()?.layers || []; } catch (_) { layers = []; }
+      if (!layers.length) return;
+
+      layers.forEach(layer => {
+        if (!layer || layer.type !== 'symbol') return;
+        const hasTextField = !!(layer.layout && Object.prototype.hasOwnProperty.call(layer.layout, 'text-field'));
+        if (!hasTextField) return;
+        const id = String(layer.id || '').toLowerCase();
+        const isTownOrPlaceLabel = id.includes('settlement') || id.includes('place') || id.includes('city') || id.includes('town') || id.includes('village');
+        if (!isTownOrPlaceLabel) return;
+        try {
+          map.setPaintProperty(layer.id, 'text-color', 'rgba(248, 250, 252, 0.97)');
+          map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(2, 6, 23, 0.84)');
+          map.setPaintProperty(layer.id, 'text-halo-width', 1.6);
+          map.setPaintProperty(layer.id, 'text-halo-blur', 0.45);
+        } catch (_) {}
+      });
+    }
+
     function refreshViewportPrecinctCount() {
       const targets = document.querySelectorAll('[data-viewport-precinct-count]');
       if (!targets.length) return;
@@ -14095,6 +14116,8 @@ document.addEventListener('DOMContentLoaded', function() {
           countyNameMap = buildCountyNameMapFromGeoJSON(counties);
         }
         addCountyLayers();
+        updateBasemapTownLabelLegibility();
+        map.once('idle', () => updateBasemapTownLabelLegibility());
         await setupCountySearch();
         map.on('zoomend', updatePrecinctVisibility);
         map.on('moveend', () => queueViewportPrecinctCountUpdate());
