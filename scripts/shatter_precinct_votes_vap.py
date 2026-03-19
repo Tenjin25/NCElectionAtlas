@@ -135,6 +135,9 @@ def aggregate_to_districts(
     d.columns = ["block_geoid20", "district"]
     d["block_geoid20"] = d["block_geoid20"].astype(str).str.strip().str.zfill(15)
     d["district"] = d["district"].astype(str).str.strip()
+    m_digits = d["district"].str.match(r"^\d+$", na=False)
+    d.loc[m_digits, "district"] = d.loc[m_digits, "district"].str.lstrip("0")
+    d.loc[d["district"] == "", "district"] = "0"
 
     m = shattered_df.merge(d, on="block_geoid20", how="inner")
     if m.empty:
