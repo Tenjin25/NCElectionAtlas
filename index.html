@@ -6269,6 +6269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         election: withBase('./data/nc_elections_aggregated.json'),
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
         district_contests_dir: withBase('./data/district_contests'),
+        district_contests_2020_2024_dir: withBase('./data/district_contests_2020_2024'),
         district_contests_dirs: {
           '2022': withBase('./data/district_contests'),
           '2024': withBase('./data/district_contests_2024_lines')
@@ -6616,6 +6617,24 @@ document.addEventListener('DOMContentLoaded', function() {
       const y = normalizeDistrictLinesYear(linesYear);
       const dirs = CONFIG.paths?.district_contests_dirs || {};
       return dirs[String(y)] || CONFIG.paths.district_contests_dir;
+    }
+
+    function getPreferredDistrictSlicePaths(scope, contestType, year, linesYear = currentDistrictLinesYear) {
+      const y = Number(year);
+      const ly = normalizeDistrictLinesYear(linesYear);
+      const key = `${scope}_${contestType}_${year}`;
+      const out = [];
+      const calibrated2020Dir = (CONFIG.paths?.district_contests_2020_2024_dir || '').toString().trim();
+      const baseDir = (getActiveDistrictContestsDir(linesYear) || '').toString().trim();
+
+      // Prefer calibrated slices only for congressional scope on 2022 lines.
+      // Legislative scopes continue to use the primary district_contests data.
+      if (ly === 2022 && scope === 'congressional' && Number.isFinite(y) && y >= 2020 && calibrated2020Dir) {
+        out.push(`${calibrated2020Dir}/${key}.json`);
+      }
+      if (baseDir) out.push(`${baseDir}/${key}.json`);
+
+      return Array.from(new Set(out));
     }
 
     function getActiveDistrictManifest(linesYear = currentDistrictLinesYear) {
@@ -7097,6 +7116,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (countyNorm === 'RICHMOND' && /^(BROWDER|CO OP|ELLERBE|HAMLET)$/.test(c)) return true;
       // Orange legacy exports include one-stop site labels.
       if (countyNorm === 'ORANGE' && /^(BOE|CHAPEL OF THE CROSS|SEYMOUR SENIOR CENTER)$/.test(c)) return true;
+      // Henderson exports include a Carolina Village vote-center bucket.
+      if (countyNorm === 'HENDERSON' && /^(CV|CV CAROLINA VILLAGE|CAROLINA VILLAGE)$/.test(c)) return true;
       // Surry one-stop shorthand buckets.
       if (countyNorm === 'SURRY' && /^(DBOS|MAOS)$/.test(c)) return true;
       return false;
@@ -8060,17 +8081,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const cacheKey = `${linesYear}|${key}`;
       if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
 
-      try {
-        const payload = await loadJSON(`${getActiveDistrictContestsDir(linesYear)}/${key}.json`);
-        districtSliceCache.set(cacheKey, payload);
-        return payload;
-      } catch (_) {
-        const fallback = linesYear === 2022
-          ? (districtElectionDataJSON?.results_by_year?.[year]?.[scope]?.[contestType] || null)
-          : null;
-        districtSliceCache.set(cacheKey, fallback);
-        return fallback;
+      const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
+      for (const path of candidatePaths) {
+        try {
+          const payload = await loadJSON(path);
+          districtSliceCache.set(cacheKey, payload);
+          return payload;
+        } catch (_) {}
       }
+
+      const fallback = linesYear === 2022
+        ? (districtElectionDataJSON?.results_by_year?.[year]?.[scope]?.[contestType] || null)
+        : null;
+      districtSliceCache.set(cacheKey, fallback);
+      return fallback;
     }
 
     function parseCSV(csvText) {
@@ -14040,12 +14064,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function tryLoadDistrictSliceStrict(scope, contestType, year, linesYear = currentDistrictLinesYear) {
-      const key = `${scope}_${contestType}_${year}`;
-      try {
-        return await loadJSON(`${getActiveDistrictContestsDir(linesYear)}/${key}.json`);
-      } catch (_) {
-        return null;
+      const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
+      for (const path of candidatePaths) {
+        try {
+          return await loadJSON(path);
+        } catch (_) {}
       }
+      return null;
     }
 
     async function getPreviousDistrictSlice(scope, contestType, year, linesYear = currentDistrictLinesYear) {
