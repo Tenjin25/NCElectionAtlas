@@ -7088,6 +7088,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (/^OS[A-Z0-9]/.test(c)) return true;
       // Buncombe legacy exports sometimes use 4-letter early-vote site abbreviations.
       if (countyNorm === 'BUNCOMBE' && /^[A-Z]{4}$/.test(c)) return true;
+      // Bladen 2020 exports include vote-center style site labels that are not precinct IDs.
+      if (countyNorm === 'BLADEN' && /^(BAY TREE FIRE DEPT|BLAD COUNTY GYM|BOOK T\.? WASHINGTON|EAST ARCADIA|SPAULDING MONROE|TAR HEEL MUNI BLD)$/.test(c)) return true;
       return false;
     }
 
