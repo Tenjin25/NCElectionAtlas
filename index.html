@@ -5367,6 +5367,10 @@ body { height: var(--app-height); }
     display: none;
   }
 
+  .mobile-sheet-grab {
+    display: none;
+  }
+
   @media (max-width: 768px) {
     :root {
       --mobile-dock-h: 62px;
@@ -5401,6 +5405,11 @@ body { height: var(--app-height); }
       letter-spacing: 0.01em;
       cursor: pointer;
       transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .mobile-dock-btn:focus-visible {
+      outline: 2px solid #1d4ed8;
+      outline-offset: 2px;
     }
 
     .mobile-dock-btn[aria-pressed="true"] {
@@ -5441,7 +5450,43 @@ body { height: var(--app-height); }
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      scroll-padding-top: 28px;
       transition: transform 0.22s ease, opacity 0.2s ease, max-height 0.2s ease;
+    }
+
+    .mobile-sheet-grab {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin: -2px auto 6px;
+      padding: 6px 0 4px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .mobile-sheet-grab::before {
+      content: '';
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(100, 116, 139, 0.58);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+    }
+
+    .mobile-sheet-grab.is-dragging::before {
+      background: rgba(30, 64, 175, 0.66);
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.14), 0 1px 0 rgba(30, 64, 175, 0.35);
+    }
+
+    .mobile-sheet-grab:focus-visible {
+      outline: 2px solid #1d4ed8;
+      outline-offset: 2px;
+      border-radius: 12px;
     }
 
     .mobile-sheet-panel.mobile-sheet-active {
@@ -6144,9 +6189,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <div class="mobile-sheet-scrim" id="mobile-sheet-scrim" aria-hidden="true"></div>
     <nav class="mobile-dock" id="mobile-dock" aria-label="Mobile panel dock">
-      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="search" aria-pressed="false">Search</button>
-      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="layers" aria-pressed="false">Layers</button>
-      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="legend" aria-pressed="false">Legend</button>
+      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="search" aria-controls="map-topbar" aria-expanded="false" aria-pressed="false" title="Open search panel">Search</button>
+      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="layers" aria-controls="main-controls" aria-expanded="false" aria-pressed="false" title="Open layers panel">Layers</button>
+      <button type="button" class="mobile-dock-btn" data-mobile-sheet-btn="legend" aria-controls="legend" aria-expanded="false" aria-pressed="false" title="Open legend panel">Legend</button>
     </nav>
 
     <!-- Hover Tooltip -->
@@ -10609,7 +10654,16 @@ document.addEventListener('DOMContentLoaded', function() {
       layers: 'main-controls',
       legend: 'legend'
     });
+    const MOBILE_SHEET_PANEL_LABELS = Object.freeze({
+      search: 'search',
+      layers: 'layers',
+      legend: 'legend'
+    });
     const MOBILE_SHEET_SNAP_SEQUENCE = Object.freeze(['half', 'full', 'collapsed']);
+    const MOBILE_SHEET_SWIPE_THRESHOLD_PX = 24;
+    const MOBILE_SHEET_FLICK_VELOCITY_PX_PER_MS = 0.45;
+    const MOBILE_SHEET_FLICK_WINDOW_MS = 120;
+    const MOBILE_SHEET_FLICK_MIN_TRAVEL_PX = 10;
     let activeMobileSheetKey = null;
     let mobileSheetSystemReady = false;
     let mobileInputFocusWired = false;
@@ -10631,12 +10685,185 @@ document.addEventListener('DOMContentLoaded', function() {
       panel.dataset.mobileSnap = snap || 'collapsed';
     }
 
+    function ensureMobileSheetGrab(panel, key) {
+      if (!panel || !key || panel.querySelector('.mobile-sheet-grab')) return;
+      const grab = document.createElement('button');
+      grab.type = 'button';
+      grab.className = 'mobile-sheet-grab';
+      grab.setAttribute('aria-label', 'Resize or close panel');
+      grab.title = 'Tap, swipe, or flick to resize panel';
+      let dragState = null;
+
+      function stampMs(rawTs) {
+        const t = Number(rawTs);
+        if (Number.isFinite(t) && t > 0) return t;
+        try {
+          if (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') {
+            return performance.now();
+          }
+        } catch (_) {}
+        return Date.now();
+      }
+
+      function resetDragState() {
+        dragState = null;
+        grab.classList.remove('is-dragging');
+      }
+
+      function beginDrag(clientX, clientY, pointerId = null, rawTs = null) {
+        const t = stampMs(rawTs);
+        dragState = {
+          startX: Number(clientX) || 0,
+          startY: Number(clientY) || 0,
+          pointerId,
+          samples: [{ x: Number(clientX) || 0, y: Number(clientY) || 0, t }]
+        };
+        grab.classList.add('is-dragging');
+      }
+
+      function updateDrag(clientX, clientY, rawTs = null) {
+        if (!dragState) return;
+        const x = Number(clientX) || dragState.startX;
+        const y = Number(clientY) || dragState.startY;
+        const t = stampMs(rawTs);
+        dragState.lastX = x;
+        dragState.lastY = y;
+        dragState.samples.push({ x, y, t });
+        if (dragState.samples.length > 10) {
+          dragState.samples.splice(0, dragState.samples.length - 10);
+        }
+      }
+
+      function finishDrag(clientX, clientY, rawTs = null) {
+        if (!dragState) return;
+        const endX = Number(clientX) || dragState.lastX || dragState.startX;
+        const endY = Number(clientY) || dragState.lastY || dragState.startY;
+        const endT = stampMs(rawTs);
+        dragState.samples.push({ x: endX, y: endY, t: endT });
+        if (dragState.samples.length > 12) {
+          dragState.samples.splice(0, dragState.samples.length - 12);
+        }
+        const dy = endY - dragState.startY;
+        const dx = endX - dragState.startX;
+        const absDy = Math.abs(dy);
+        const absDx = Math.abs(dx);
+        const cutoff = endT - MOBILE_SHEET_FLICK_WINDOW_MS;
+        let ref = dragState.samples[0];
+        for (let i = dragState.samples.length - 1; i >= 0; i -= 1) {
+          const sample = dragState.samples[i];
+          if (sample.t <= cutoff) break;
+          ref = sample;
+        }
+        const refT = Number.isFinite(Number(ref?.t)) ? Number(ref.t) : endT;
+        const refY = Number.isFinite(Number(ref?.y)) ? Number(ref.y) : endY;
+        const vDt = Math.max(1, endT - refT);
+        const vy = (endY - refY) / vDt;
+        const absVy = Math.abs(vy);
+        const distanceSwipe = absDy >= MOBILE_SHEET_SWIPE_THRESHOLD_PX && absDy > absDx * 1.1;
+        const velocityFlick =
+          absVy >= MOBILE_SHEET_FLICK_VELOCITY_PX_PER_MS &&
+          absDy >= MOBILE_SHEET_FLICK_MIN_TRAVEL_PX &&
+          absDy > absDx * 0.65;
+        resetDragState();
+        if (!distanceSwipe && !velocityFlick) return;
+        grab.dataset.swiped = 'true';
+        if (dy < 0) {
+          swipeMobileSheet(key, 'up');
+        } else {
+          swipeMobileSheet(key, 'down');
+        }
+        window.setTimeout(() => {
+          if (grab) grab.dataset.swiped = '';
+        }, 160);
+      }
+
+      if (typeof window.PointerEvent !== 'undefined') {
+        grab.addEventListener('pointerdown', (event) => {
+          if (event.pointerType === 'mouse' && event.button !== 0) return;
+          event.preventDefault();
+          beginDrag(event.clientX, event.clientY, event.pointerId, event.timeStamp);
+          try { grab.setPointerCapture(event.pointerId); } catch (_) {}
+        });
+        grab.addEventListener('pointermove', (event) => {
+          if (!dragState) return;
+          if (dragState.pointerId !== null && event.pointerId !== dragState.pointerId) return;
+          updateDrag(event.clientX, event.clientY, event.timeStamp);
+        });
+        grab.addEventListener('pointerup', (event) => {
+          if (!dragState) return;
+          if (dragState.pointerId !== null && event.pointerId !== dragState.pointerId) return;
+          finishDrag(event.clientX, event.clientY, event.timeStamp);
+          try { grab.releasePointerCapture(event.pointerId); } catch (_) {}
+        });
+        grab.addEventListener('pointercancel', () => {
+          resetDragState();
+        });
+      } else {
+        grab.addEventListener('touchstart', (event) => {
+          const touch = event.changedTouches && event.changedTouches[0];
+          if (!touch) return;
+          beginDrag(touch.clientX, touch.clientY, touch.identifier, event.timeStamp);
+        }, { passive: true });
+        grab.addEventListener('touchmove', (event) => {
+          if (!dragState) return;
+          const touches = event.changedTouches;
+          if (!touches || !touches.length) return;
+          let matched = false;
+          for (let i = 0; i < touches.length; i += 1) {
+            const touch = touches[i];
+            if (dragState.pointerId !== null && touch.identifier !== dragState.pointerId) continue;
+            updateDrag(touch.clientX, touch.clientY, event.timeStamp);
+            matched = true;
+            break;
+          }
+          if (!matched) resetDragState();
+        }, { passive: true });
+        grab.addEventListener('touchend', (event) => {
+          if (!dragState) return;
+          const touches = event.changedTouches;
+          if (!touches || !touches.length) {
+            resetDragState();
+            return;
+          }
+          let matched = false;
+          for (let i = 0; i < touches.length; i += 1) {
+            const touch = touches[i];
+            if (dragState.pointerId !== null && touch.identifier !== dragState.pointerId) continue;
+            finishDrag(touch.clientX, touch.clientY, event.timeStamp);
+            matched = true;
+            break;
+          }
+          if (!matched) resetDragState();
+        }, { passive: true });
+        grab.addEventListener('touchcancel', () => {
+          resetDragState();
+        }, { passive: true });
+      }
+
+      grab.addEventListener('click', (event) => {
+        if (grab.dataset.swiped === 'true') {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        toggleMobileSheet(key);
+      });
+      panel.insertBefore(grab, panel.firstChild);
+    }
+
     function syncMobileDockButtons() {
       const buttons = document.querySelectorAll('[data-mobile-sheet-btn]');
       buttons.forEach(btn => {
         const key = btn.getAttribute('data-mobile-sheet-btn') || '';
         const pressed = key && key === activeMobileSheetKey;
         btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+        btn.setAttribute('aria-expanded', pressed ? 'true' : 'false');
+        const panelId = MOBILE_SHEET_PANEL_IDS[key];
+        if (panelId) btn.setAttribute('aria-controls', panelId);
+        const panelLabel = MOBILE_SHEET_PANEL_LABELS[key] || 'panel';
+        btn.title = pressed ? `Collapse ${panelLabel} panel` : `Open ${panelLabel} panel`;
       });
       document.body.classList.toggle('mobile-sheet-open', !!activeMobileSheetKey && isMobileViewportNow());
     }
@@ -10719,6 +10946,30 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
 
+    function swipeMobileSheet(key, direction = 'up') {
+      if (!isMobileViewportNow()) return;
+      if (!MOBILE_SHEET_PANEL_IDS[key]) return;
+      if (activeMobileSheetKey !== key) {
+        if (direction === 'up') openMobileSheet(key, 'half');
+        return;
+      }
+      const current = getMobileSheetSnap(key);
+      let next = current;
+      if (direction === 'up') {
+        next = current === 'collapsed' ? 'half' : 'full';
+      } else {
+        next = current === 'full' ? 'half' : 'collapsed';
+      }
+      if (next === 'collapsed') {
+        closeMobileSheet(key);
+        activeMobileSheetKey = null;
+        syncMobileDockButtons();
+        try { updateMobileOverlayOffsets(); } catch (_) {}
+        return;
+      }
+      openMobileSheet(key, next);
+    }
+
     function toggleMobileSheet(key) {
       if (!isMobileViewportNow()) return;
       if (!MOBILE_SHEET_PANEL_IDS[key]) return;
@@ -10749,6 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
           panel.classList.add('mobile-sheet-panel');
           setMobileSheetSnap(panel, 'collapsed');
           panel.classList.remove('mobile-sheet-active');
+          ensureMobileSheetGrab(panel, key);
         });
         document.querySelectorAll('[data-mobile-sheet-btn]').forEach(btn => {
           if (btn.dataset.mobileSheetReady === 'true') return;
@@ -10762,6 +11014,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scrim && scrim.dataset.mobileSheetReady !== 'true') {
           scrim.dataset.mobileSheetReady = 'true';
           scrim.addEventListener('click', () => { closeAllMobileSheets(); });
+        }
+        if (!window.__mobileSheetEscapeReady) {
+          window.__mobileSheetEscapeReady = true;
+          document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            if (!isMobileViewportNow()) return;
+            if (!activeMobileSheetKey) return;
+            event.preventDefault();
+            closeAllMobileSheets();
+          });
         }
         window.addEventListener('resize', () => {
           try {
@@ -10784,6 +11046,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const panel = getMobileSheetPanel(key);
                 if (!panel) return;
                 panel.classList.add('mobile-sheet-panel');
+                ensureMobileSheetGrab(panel, key);
                 if (!panel.dataset.mobileSnap) setMobileSheetSnap(panel, 'collapsed');
               });
             }
