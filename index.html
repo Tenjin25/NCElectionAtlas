@@ -7077,6 +7077,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (/^P\s+PROV\b/i.test(c)) return true;
       if (c === 'EV') return true;
       if (c.startsWith('EV') || c.startsWith('EV-') || c.startsWith('EV_')) return true;
+      if (/(^|[\s\-_])EV($|[\s\-_])/.test(c)) return true;
       if (/^(ABSENTEE|PROVISIONAL|CURBSIDE)$/i.test(c)) return true;
       if (c.includes('ABSENTEE') || c.includes('PROVISIONAL') || c.includes('TRANSFER') || c.includes('CURBSIDE')) return true;
       if (/^ABS[\s\/_-]*CURB[\s\/_-]*PROV\b/i.test(c) || /^ABS[\s\/_-]*PROV[\s\/_-]*CURB\b/i.test(c)) return true;
@@ -7090,6 +7091,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (countyNorm === 'BUNCOMBE' && /^[A-Z]{4}$/.test(c)) return true;
       // Bladen 2020 exports include vote-center style site labels that are not precinct IDs.
       if (countyNorm === 'BLADEN' && /^(BAY TREE FIRE DEPT|BLAD COUNTY GYM|BOOK T\.? WASHINGTON|EAST ARCADIA|SPAULDING MONROE|TAR HEEL MUNI BLD)$/.test(c)) return true;
+      // Lee legacy exports include vote-center site labels.
+      if (countyNorm === 'LEE' && /^(LEE COUNTY BOE|MCSWAIN CENTER)$/.test(c)) return true;
+      // Richmond 2020 exports include four vote-center site labels.
+      if (countyNorm === 'RICHMOND' && /^(BROWDER|CO OP|ELLERBE|HAMLET)$/.test(c)) return true;
+      // Orange legacy exports include one-stop site labels.
+      if (countyNorm === 'ORANGE' && /^(BOE|CHAPEL OF THE CROSS|SEYMOUR SENIOR CENTER)$/.test(c)) return true;
+      // Surry one-stop shorthand buckets.
+      if (countyNorm === 'SURRY' && /^(DBOS|MAOS)$/.test(c)) return true;
       return false;
     }
 
@@ -9185,6 +9194,18 @@ document.addEventListener('DOMContentLoaded', function() {
       return toTitleCaseName(cleaned);
     }
 
+    function expandLegacyCandidateShorthand(name) {
+      const raw = (name || '').toString().trim();
+      if (!raw) return '';
+      const key = raw.toUpperCase().replace(/\s+/g, ' ').trim();
+      if (key === 'A. GORE' || key === 'A GORE' || key === 'AL GORE') return 'Al Gore';
+      if (key === 'G. W. BUSH' || key === 'G W BUSH' || key === 'GEORGE W BUSH') return 'George W. Bush';
+      if (key === 'OBAMA' || key === 'B. OBAMA' || key === 'B OBAMA') return 'Barack Obama';
+      if (key === 'MCCAIN' || key === 'J. MCCAIN' || key === 'J MCCAIN') return 'John McCain';
+      if (key === 'ROMNEY' || key === 'M. ROMNEY' || key === 'M ROMNEY') return 'Mitt Romney';
+      return raw;
+    }
+
     function stripRunningMateName(name) {
       const raw = (name || '').toString().trim();
       if (!raw) return '';
@@ -9193,15 +9214,15 @@ document.addEventListener('DOMContentLoaded', function() {
       for (const sep of seps) {
         if (raw.includes(sep)) {
           const left = raw.split(sep, 1)[0].trim();
-          return left || raw;
+          return expandLegacyCandidateShorthand(left || raw);
         }
       }
       // Legacy "GORE-LIEBERMAN" style.
       if (raw.includes('-')) {
         const [left, right] = raw.split('-', 2).map(s => (s || '').trim());
-        if (left && right && (right.includes('.') || right.includes(' '))) return left;
+        if (left && right && (right.includes('.') || right.includes(' '))) return expandLegacyCandidateShorthand(left);
       }
-      return raw;
+      return expandLegacyCandidateShorthand(raw);
     }
 
     function isNameSuffixToken(token) {
@@ -13921,9 +13942,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	              const cCompact = c.replace(/\s+/g, '');
 	              if (!cCompact || cCompact === baseCompact) return;
 
-	              // Numeric-only bases should only match the exact numeric portion + a short alpha suffix (e.g. "10" -> "10A").
+	              // Numeric-only bases should only match the exact numeric portion + a short split suffix
+	              // (e.g. "10" -> "10A", "10-1", "10-A").
 	              if (baseNum) {
-	                const cm = cCompact.match(/^0*([0-9]+)([A-Z]{1,2})$/);
+	                const cmCompactAlpha = cCompact.match(/^0*([0-9]+)([A-Z]{1,2})$/);
+	                const cmHyphenAlpha = c.match(/^0*([0-9]+)-([A-Z]{1,2})$/);
+	                const cmHyphenNumeric = c.match(/^0*([0-9]+)-([0-9]{1,2})$/);
+	                const cm = cmCompactAlpha || cmHyphenAlpha || cmHyphenNumeric;
 	                if (!cm) return;
 	                if (parseInt(cm[1], 10) !== parseInt(baseNum[1], 10)) return;
 	                const altFull = normalize(`${countyOnly} - ${c}`);
@@ -14244,9 +14269,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	              const cCompact = c.replace(/\s+/g, '');
 	              if (!cCompact || cCompact === baseCompact) return;
 
-	              // Numeric-only bases should only match the exact numeric portion + a short alpha suffix (e.g. "10" -> "10A").
+	              // Numeric-only bases should only match the exact numeric portion + a short split suffix
+	              // (e.g. "10" -> "10A", "10-1", "10-A").
 	              if (baseNum) {
-	                const cm = cCompact.match(/^0*([0-9]+)([A-Z]{1,2})$/);
+	                const cmCompactAlpha = cCompact.match(/^0*([0-9]+)([A-Z]{1,2})$/);
+	                const cmHyphenAlpha = c.match(/^0*([0-9]+)-([A-Z]{1,2})$/);
+	                const cmHyphenNumeric = c.match(/^0*([0-9]+)-([0-9]{1,2})$/);
+	                const cm = cmCompactAlpha || cmHyphenAlpha || cmHyphenNumeric;
 	                if (!cm) return;
 	                if (parseInt(cm[1], 10) !== parseInt(baseNum[1], 10)) return;
 	                const altFull = normalizeCountyName(`${countyOnly} - ${c}`);
