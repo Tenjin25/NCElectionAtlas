@@ -14595,6 +14595,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	          const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim();
 	          baseToken = (token0 || '').toString().trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, '').trim();
 	        } catch (_) { baseToken = ''; }
+	        try {
+	          addKnownLegacyCentroidBridges(countyNorm, precRaw, addKey);
+	          if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
+	        } catch (_) {}
 
           // Many older exports use "CODE NAME" or "CODE_NAME ..." where the geometry key
           // is just the code token (e.g., "HARNETT - PR01 ANDERSON CREEK" => "HARNETT - PR01",
