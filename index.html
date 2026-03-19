@@ -7088,6 +7088,50 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hits.length === 1) addVariantFn(hits[0]);
     }
 
+    function addKnownLegacyCentroidBridges(countyNorm, rawToken, addVariantFn) {
+      if (!countyNorm || typeof addVariantFn !== 'function') return;
+      const tokenRaw = (rawToken || '').toString().trim().toUpperCase();
+      if (!tokenRaw) return;
+      const tokenNorm = normalizePrecinctAliasToken(tokenRaw);
+      const tokenCompact = compactPrecinctAliasToken(tokenRaw);
+      const candidates = new Set([tokenRaw]);
+      if (tokenNorm) candidates.add(tokenNorm);
+      if (tokenCompact) candidates.add(tokenCompact);
+
+      // Keep this map intentionally narrow and evidence-based so we don't over-match.
+      const bridgesByCounty = {
+        PERSON: {
+          RCTL: ['RCOB']
+        },
+        IREDELL: {
+          BA: ['BA-1'],
+          DV1B: ['DV1B-1'],
+          'DV1-B': ['DV1B-1'],
+          DV2A: ['DV2A-1'],
+          'DV2-A': ['DV2A-1']
+        },
+        SURRY: {
+          '13': ['34']
+        },
+        UNION: {
+          '020A': ['0020A']
+        }
+      };
+
+      const countyMap = bridgesByCounty[(countyNorm || '').toString().trim().toUpperCase()];
+      if (!countyMap) return;
+      candidates.forEach(alias => {
+        const key = (alias || '').toString().trim().toUpperCase();
+        if (!key) return;
+        const codes = countyMap[key];
+        if (!Array.isArray(codes) || !codes.length) return;
+        codes.forEach(code => {
+          const c = (code || '').toString().trim().toUpperCase();
+          if (c) addVariantFn(c);
+        });
+      });
+    }
+
     function resolveUniquePrecinctCodeByAlias(countyAliases, rawPrecinctValue) {
       if (!countyAliases) return null;
       const candidates = Array.from(extractPrecinctAliasCandidates(rawPrecinctValue));
@@ -12934,6 +12978,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addNumericBaseVariantsFromAlphaSuffix(code, addTargetVariant);
         addEmbeddedPrecinctCodeVariants(code, addTargetVariant);
         const countyNorm = normalizeCountyToken(county);
+        addKnownLegacyCentroidBridges(countyNorm, code, addTargetVariant);
         const codes = precinctCodeIndexByCounty && countyNorm ? precinctCodeIndexByCounty.get(countyNorm) : null;
         if (codes) {
           addCompactCodeVariants(code, codes, addTargetVariant);
@@ -14285,6 +14330,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        }
 	        try {
 	          const codes = precinctIdx && countyNorm ? precinctIdx.get(countyNorm) : null;
+            addKnownLegacyCentroidBridges(countyNorm, precRaw, addKey);
+            if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
             if (codes) {
               addCompactCodeVariants(precRaw, codes, addKey);
               addPrefixStrippedNumericVariants(precRaw, codes, addKey);
