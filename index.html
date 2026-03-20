@@ -348,6 +348,9 @@
           { id: 'split-ticket-toggle', label: 'Toggle split ticket comparison', keyShortcuts: 'T' },
           { id: 'gps-locate-btn', label: 'Find my precinct by GPS', keyShortcuts: 'G' },
           { id: 'snapshot-share-btn', label: 'Download story snapshot', keyShortcuts: 'X' },
+          { id: 'copy-link-btn', label: 'Copy shareable map link', keyShortcuts: 'C' },
+          { id: 'reset-view-btn', label: 'Reset map view', keyShortcuts: 'R' },
+          { id: 'scenario-reset-btn', label: 'Reset scenario swing to zero', keyShortcuts: '0' },
           { id: 'snapshot-variant', label: 'Story snapshot layout variant' },
           { id: 'contestSearch', label: 'Search contests' },
           { id: 'contestSelect', label: 'Select contest' }
@@ -454,6 +457,14 @@
         }
         if (ev.key === 'x' || ev.key === 'X') {
           const btn = document.getElementById('snapshot-share-btn');
+          if (btn) btn.click();
+        }
+        if (ev.key === 'c' || ev.key === 'C') {
+          const btn = document.getElementById('copy-link-btn');
+          if (btn) btn.click();
+        }
+        if (ev.key === 'r' || ev.key === 'R') {
+          const btn = document.getElementById('reset-view-btn');
           if (btn) btn.click();
         }
       });
@@ -5713,20 +5724,56 @@ body { height: var(--app-height); }
     background: #0b5f5a;
   }
 
+  .tool-chip-btn:focus-visible,
+  .view-toggle-btn:focus-visible,
+  .region-jump-btn:focus-visible,
+  .desktop-fly-chip:focus-visible {
+    outline: 2px solid rgba(191, 219, 254, 0.95);
+    outline-offset: 1px;
+  }
+
+  .tool-chip-btn.tool-chip-btn-ghost {
+    background: #155e75;
+  }
+
+  .tool-chip-btn.tool-chip-btn-ghost:hover {
+    background: #0e7490;
+  }
+
+  .tool-chip-btn.tool-chip-btn-muted {
+    background: #334155;
+  }
+
+  .tool-chip-btn.tool-chip-btn-muted:hover {
+    background: #1e293b;
+  }
+
   .tool-chip-select {
     height: 32px;
-    min-width: 112px;
+    min-width: 126px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.24);
     background: #0b6a63;
-    color: #f8fafc;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.01em;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.20);
-    padding: 0 26px 0 10px;
+    padding: 0 30px 0 10px;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #e2e8f0 50%),
+      linear-gradient(135deg, #e2e8f0 50%, transparent 50%);
+    background-position:
+      calc(100% - 15px) 13px,
+      calc(100% - 10px) 13px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
   }
 
   .tool-chip-select:hover {
@@ -5742,6 +5789,10 @@ body { height: var(--app-height); }
     color: #0f172a;
     background: #f8fafc;
     font-weight: 700;
+  }
+
+  .tool-chip-select::-ms-expand {
+    display: none;
   }
 
   .control-group-scenario,
@@ -5761,6 +5812,18 @@ body { height: var(--app-height); }
     font-size: 12px;
     color: #334155;
     font-weight: 700;
+  }
+
+  .scenario-row-actions {
+    grid-template-columns: 74px 1fr auto;
+    margin-top: 4px;
+  }
+
+  .scenario-row-actions .tool-chip-btn {
+    justify-self: start;
+    height: 30px;
+    font-size: 10px;
+    padding: 0 10px;
   }
 
   #scenario-scope,
@@ -5824,14 +5887,20 @@ body { height: var(--app-height); }
     .scenario-row {
       grid-template-columns: 70px 1fr auto;
     }
+    .scenario-row-actions {
+      grid-template-columns: 70px 1fr auto;
+    }
     .tool-chip-btn {
       font-size: 10px;
       padding: 0 8px;
     }
     .tool-chip-select {
-      min-width: 102px;
+      min-width: 118px;
       font-size: 11px;
-      padding: 0 22px 0 8px;
+      padding: 0 28px 0 8px;
+      background-position:
+        calc(100% - 14px) 13px,
+        calc(100% - 9px) 13px;
     }
   }
     </style>
@@ -6016,6 +6085,59 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof exportStorySnapshot === 'function') exportStorySnapshot();
     };
   }
+  const copyLinkBtn = document.getElementById('copy-link-btn');
+  if (copyLinkBtn) {
+    copyLinkBtn.onclick = function() {
+      (async () => {
+        try {
+          if (typeof writeURLStateFromUI === 'function') writeURLStateFromUI();
+        } catch (_) {}
+        const href = window.location.href;
+        try {
+          if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(href);
+            if (typeof setStatus === 'function') setStatus('Share link copied.');
+            return;
+          }
+        } catch (_) {}
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = href;
+          ta.setAttribute('readonly', 'readonly');
+          ta.style.position = 'absolute';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          ta.remove();
+          if (typeof setStatus === 'function') setStatus(ok ? 'Share link copied.' : 'Unable to copy link automatically.');
+        } catch (_) {
+          if (typeof setStatus === 'function') setStatus('Unable to copy link automatically.');
+        }
+      })().catch(() => {});
+    };
+  }
+  const resetViewBtn = document.getElementById('reset-view-btn');
+  if (resetViewBtn) {
+    resetViewBtn.onclick = function() {
+      try {
+        if (typeof clearPinnedVoteCounterState === 'function') clearPinnedVoteCounterState();
+      } catch (_) {}
+      try {
+        if (typeof setSelectedPrecinctNorm === 'function') setSelectedPrecinctNorm('');
+      } catch (_) {}
+      try {
+        if (typeof syncFlySearchInputs === 'function') syncFlySearchInputs('');
+      } catch (_) {}
+      try {
+        if (map && typeof map.fitBounds === 'function' && CONFIG?.fitBounds) {
+          map.fitBounds(CONFIG.fitBounds, { padding: 24, duration: 900 });
+        }
+      } catch (_) {}
+      if (typeof setStatus === 'function') setStatus('Map reset to statewide view.');
+      try { saveUIState(); } catch (_) {}
+    };
+  }
   const snapshotVariantSelect = document.getElementById('snapshot-variant');
   if (snapshotVariantSelect) {
     snapshotVariantSelect.value = String(snapshotVariantSelect.value || 'balanced');
@@ -6037,6 +6159,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!key || typeof applyContest !== 'function') return;
         applyContest(key).catch(() => {});
       }, 180);
+    });
+  }
+  const scenarioResetBtn = document.getElementById('scenario-reset-btn');
+  if (scenarioResetBtn) {
+    scenarioResetBtn.addEventListener('click', function() {
+      if (scenarioSwing) scenarioSwing.value = '0';
+      if (typeof setScenarioSwingFromControl === 'function') setScenarioSwingFromControl(0);
+      const key = document.getElementById('contestSelect')?.value || '';
+      if (key && typeof applyContest === 'function') {
+        applyContest(key).catch(() => {});
+      } else if (typeof applyLayerOpacityTuning === 'function') {
+        applyLayerOpacityTuning();
+      }
+      if (typeof setStatus === 'function') setStatus('Scenario swing reset to 0.0%.');
+      try { saveUIState(); } catch (_) {}
     });
   }
 
@@ -6308,6 +6445,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button id="split-ticket-toggle" title="Toggle between President and Riggs 2024" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison">Pres-Riggs</button>
                   <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
                   <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button" data-testid="tool-snapshot" aria-label="Download story snapshot">Story Snapshot</button>
+                  <button id="copy-link-btn" title="Copy shareable link for current map state" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-copy-link" aria-label="Copy shareable map link">Copy Link</button>
+                  <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
                   <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select" data-testid="snapshot-variant" aria-label="Story snapshot layout variant">
                     <option value="balanced">Balanced</option>
                     <option value="instagram">Instagram</option>
@@ -6323,7 +6462,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   </select>
                 </div>
                 <div class="controls-panel-note">
-                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels.
+                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels, `C` copy link.
                 </div>
             </div>
             <div class="control-group control-group-scenario">
@@ -6339,6 +6478,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <label for="scenario-swing">Dem swing</label>
                 <input id="scenario-swing" type="range" min="-15" max="15" step="0.5" value="0" data-testid="scenario-swing" aria-label="Democratic swing percentage" />
                 <span class="scenario-value" id="scenario-swing-value">0.0%</span>
+              </div>
+              <div class="scenario-row scenario-row-actions">
+                <span></span>
+                <button id="scenario-reset-btn" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="scenario-reset" aria-label="Reset scenario swing">Reset Swing</button>
+                <span></span>
               </div>
               <div class="scenario-row">
                 <label for="overlay-opacity-preset">Overlay</label>
