@@ -5715,20 +5715,33 @@ body { height: var(--app-height); }
 
   .tool-chip-select {
     height: 32px;
+    min-width: 112px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.24);
-    background: #0f766e;
-    color: #ffffff;
+    background: #0b6a63;
+    color: #f8fafc;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.01em;
-    padding: 0 8px;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.20);
+    padding: 0 26px 0 10px;
     cursor: pointer;
   }
 
   .tool-chip-select:hover {
-    background: #0b5f5a;
+    background: #095c56;
+  }
+
+  .tool-chip-select:focus {
+    outline: 2px solid rgba(191, 219, 254, 0.95);
+    outline-offset: 1px;
+  }
+
+  .tool-chip-select option {
+    color: #0f172a;
+    background: #f8fafc;
+    font-weight: 700;
   }
 
   .control-group-scenario,
@@ -5816,8 +5829,9 @@ body { height: var(--app-height); }
       padding: 0 8px;
     }
     .tool-chip-select {
-      font-size: 10px;
-      padding: 0 6px;
+      min-width: 102px;
+      font-size: 11px;
+      padding: 0 22px 0 8px;
     }
   }
     </style>
