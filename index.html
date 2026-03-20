@@ -6826,6 +6826,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       setStatus(`District lines set to ${getDistrictLinesLabel(nextYear)}`);
+      reinforceMapLabelHalos();
       saveUIState();
     }
 
@@ -6879,7 +6880,14 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
-    function updateBasemapTownLabelLegibility() {
+    function reinforceMapLabelHalos() {
+      const highCountyFill = currentView === 'counties' && !precinctsEnabled;
+      const textColor = highCountyFill ? 'rgba(248,250,252,0.99)' : 'rgba(241,245,249,0.97)';
+      const textOpacity = highCountyFill ? 1.0 : 0.97;
+      const haloColor = highCountyFill ? 'rgba(15,23,42,0.86)' : 'rgba(15,23,42,0.72)';
+      const haloWidth = highCountyFill ? 1.55 : 1.25;
+      const haloBlur = highCountyFill ? 0.34 : 0.42;
+
       let layers = [];
       try { layers = map.getStyle()?.layers || []; } catch (_) { layers = []; }
       if (!layers.length) return;
@@ -6889,13 +6897,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasTextField = !!(layer.layout && Object.prototype.hasOwnProperty.call(layer.layout, 'text-field'));
         if (!hasTextField) return;
         const id = String(layer.id || '').toLowerCase();
-        const isTownOrPlaceLabel = id.includes('settlement') || id.includes('place') || id.includes('city') || id.includes('town') || id.includes('village');
+        const isTownOrPlaceLabel = /(settlement|place|city|town|village|county)/.test(id);
         if (!isTownOrPlaceLabel) return;
         try {
-          map.setPaintProperty(layer.id, 'text-color', 'rgba(248, 250, 252, 0.97)');
-          map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(2, 6, 23, 0.84)');
-          map.setPaintProperty(layer.id, 'text-halo-width', 1.6);
-          map.setPaintProperty(layer.id, 'text-halo-blur', 0.45);
+          map.setPaintProperty(layer.id, 'text-color', textColor);
+          map.setPaintProperty(layer.id, 'text-opacity', textOpacity);
+          map.setPaintProperty(layer.id, 'text-halo-color', haloColor);
+          map.setPaintProperty(layer.id, 'text-halo-width', haloWidth);
+          map.setPaintProperty(layer.id, 'text-halo-blur', haloBlur);
         } catch (_) {}
       });
     }
@@ -9420,6 +9429,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateContextBanner();
       }
 
+      reinforceMapLabelHalos();
       saveUIState();
     }
 
@@ -12388,6 +12398,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('precinct-dot-missing')) {
         map.setLayoutProperty('precinct-dot-missing', 'visibility', polyVisible ? 'visible' : 'none');
       }
+      reinforceMapLabelHalos();
     }
 
     async function togglePrecinctOverlay() {
@@ -14116,8 +14127,8 @@ document.addEventListener('DOMContentLoaded', function() {
           countyNameMap = buildCountyNameMapFromGeoJSON(counties);
         }
         addCountyLayers();
-        updateBasemapTownLabelLegibility();
-        map.once('idle', () => updateBasemapTownLabelLegibility());
+        reinforceMapLabelHalos();
+        map.once('idle', () => reinforceMapLabelHalos());
         await setupCountySearch();
         map.on('zoomend', updatePrecinctVisibility);
         map.on('moveend', () => queueViewportPrecinctCountUpdate());
