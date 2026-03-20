@@ -340,7 +340,35 @@
         } catch (_) {}
       }
 
+      function applyToolAccessibilityAndTestHooks() {
+        const toolMeta = [
+          { id: 'accessibility-toggle', label: 'Toggle color blind mode', keyShortcuts: 'B' },
+          { id: 'label-toggle', label: 'Toggle county labels', keyShortcuts: 'L' },
+          { id: 'precinct-toggle', label: 'Toggle precinct overlay', keyShortcuts: 'P' },
+          { id: 'split-ticket-toggle', label: 'Toggle split ticket comparison', keyShortcuts: 'T' },
+          { id: 'gps-locate-btn', label: 'Find my precinct by GPS', keyShortcuts: 'G' },
+          { id: 'snapshot-share-btn', label: 'Download story snapshot', keyShortcuts: 'X' },
+          { id: 'snapshot-variant', label: 'Story snapshot layout variant' },
+          { id: 'contestSearch', label: 'Search contests' },
+          { id: 'contestSelect', label: 'Select contest' }
+        ];
+        toolMeta.forEach(meta => {
+          const el = document.getElementById(meta.id);
+          if (!el) return;
+          if (!el.getAttribute('aria-label')) el.setAttribute('aria-label', meta.label);
+          if (meta.keyShortcuts && !el.getAttribute('aria-keyshortcuts')) {
+            el.setAttribute('aria-keyshortcuts', meta.keyShortcuts);
+          }
+        });
+        document.querySelectorAll('[data-region-jump]').forEach(btn => {
+          const key = (btn.getAttribute('data-region-jump') || '').toLowerCase();
+          if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', `Jump to ${key || 'region'}`);
+          if (!btn.getAttribute('data-testid') && key) btn.setAttribute('data-testid', `region-jump-${key}`);
+        });
+      }
+
       prioritizeContestControl();
+      applyToolAccessibilityAndTestHooks();
 
       var sidebar = document.getElementById('sidebar');
       var sidebarBtn = document.getElementById('sidebar-minimize-btn');
@@ -399,6 +427,7 @@
 
       // Keyboard shortcuts (ignore when typing in inputs/selects).
       document.addEventListener('keydown', function(ev) {
+        if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
         const t = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
         if (t === 'input' || t === 'textarea' || t === 'select') return;
         if (ev.key === 'p' || ev.key === 'P') {
@@ -410,6 +439,22 @@
         }
         if (ev.key === 's' || ev.key === 'S') {
           toggleSidebar();
+        }
+        if (ev.key === 'b' || ev.key === 'B') {
+          const btn = document.getElementById('accessibility-toggle');
+          if (btn) btn.click();
+        }
+        if (ev.key === 't' || ev.key === 'T') {
+          const btn = document.getElementById('split-ticket-toggle');
+          if (btn) btn.click();
+        }
+        if (ev.key === 'g' || ev.key === 'G') {
+          const btn = document.getElementById('gps-locate-btn');
+          if (btn) btn.click();
+        }
+        if (ev.key === 'x' || ev.key === 'X') {
+          const btn = document.getElementById('snapshot-share-btn');
+          if (btn) btn.click();
         }
       });
       
@@ -5825,10 +5870,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   // Allow other modules (viz modes) to re-apply legend recoloring.
   window.updateLegendColors = updateLegendColors;
+  function syncColorblindToggleAria() {
+    if (!accBtn) return;
+    const pressed = document.body.classList.contains('colorblind-mode');
+    accBtn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+  }
   if (accBtn) {
+    syncColorblindToggleAria();
     accBtn.onclick = function() {
       document.body.classList.toggle('colorblind-mode');
       updateLegendColors();
+      syncColorblindToggleAria();
       // Reapply current contest with new color mode
       const contestSelect = document.getElementById('contestSelect');
       const contestKey = contestSelect && contestSelect.value;
@@ -5875,17 +5927,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   // County label toggle
+  function syncCountyLabelToggleAria() {
+    if (!labelBtn) return;
+    let visible = true;
+    try {
+      if (map && map.getLayer && map.getLayer('county-label')) {
+        visible = map.getLayoutProperty('county-label', 'visibility') === 'visible';
+      }
+    } catch (_) {}
+    labelBtn.setAttribute('aria-pressed', visible ? 'true' : 'false');
+  }
   const labelBtn = document.getElementById('label-toggle');
   if (labelBtn) {
+    syncCountyLabelToggleAria();
     labelBtn.onclick = function() {
       if (map.getLayer('county-label')) {
         const visibility = map.getLayoutProperty('county-label', 'visibility');
+        const nextVisible = visibility !== 'visible';
         map.setLayoutProperty(
           'county-label',
           'visibility',
-          visibility === 'visible' ? 'none' : 'visible'
+          nextVisible ? 'visible' : 'none'
         );
-        labelBtn.style.opacity = visibility === 'visible' ? '0.5' : '1';
+        labelBtn.style.opacity = nextVisible ? '1' : '0.5';
+        labelBtn.setAttribute('aria-pressed', nextVisible ? 'true' : 'false');
       }
       try { saveUIState(); } catch (_) {}
     };
@@ -6012,7 +6077,7 @@ document.addEventListener('DOMContentLoaded', function() {
   updateLegendColors(); // Ensure correct colors on load
 });
 </script>
-<div id="map"></div>
+<div id="map" data-testid="atlas-map"></div>
 <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <div class="desktop-ui-left">
@@ -6036,7 +6101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="search" id="county-search" placeholder="Fly to Wake, CD 13, HD 73..." autocomplete="off" spellcheck="false" />
         <button type="button" class="fly-search-clear" id="fly-search-clear" aria-label="Clear search">x</button>
       </div>
-      <button type="submit" class="fly-search-submit">Fly to</button>
+      <button type="submit" class="fly-search-submit" data-testid="fly-submit">Fly to</button>
     </form>
     <div class="map-topbar-quick-stats" data-viewport-precinct-count>Viewing precincts...</div>
     <button type="button" class="mobile-topbar-toggle" id="mobile-topbar-toggle" aria-controls="map-topbar-details" aria-expanded="false">Show details</button>
@@ -6051,19 +6116,19 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="context-banner" id="context-banner" aria-label="Current map state">
         <div class="context-banner-item">
           <span class="context-banner-label">View</span>
-          <span class="context-banner-value" id="context-view">Counties</span>
+          <span class="context-banner-value" id="context-view" data-testid="context-view">Counties</span>
         </div>
         <div class="context-banner-item">
           <span class="context-banner-label">Mode</span>
-          <span class="context-banner-value" id="context-mode">Margins</span>
+          <span class="context-banner-value" id="context-mode" data-testid="context-mode">Margins</span>
         </div>
         <div class="context-banner-item">
           <span class="context-banner-label">Contest</span>
-          <span class="context-banner-value" id="context-contest">Select a contest</span>
+          <span class="context-banner-value" id="context-contest" data-testid="context-contest">Select a contest</span>
         </div>
         <div class="context-banner-item">
           <span class="context-banner-label">Focus</span>
-          <span class="context-banner-value" id="context-focus">Statewide</span>
+          <span class="context-banner-value" id="context-focus" data-testid="context-focus">Statewide</span>
         </div>
       </div>
     </div>
@@ -6194,17 +6259,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="control-group" style="margin-bottom:10px;">
                 <span class="section-kicker">Map Layer</span>
                 <div class="view-toggle-row" style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button id="counties-view" class="view-toggle-btn active" onclick="setMapView('counties')">Counties</button>
-                  <button id="districts-view" class="view-toggle-btn" onclick="setMapView('districts')">Congress</button>
-                  <button id="state-house-view" class="view-toggle-btn" onclick="setMapView('state_house')">State House</button>
-                  <button id="state-senate-view" class="view-toggle-btn" onclick="setMapView('state_senate')">State Senate</button>
+                  <button id="counties-view" class="view-toggle-btn active" onclick="setMapView('counties')" data-testid="view-counties" aria-label="Show counties view" aria-pressed="true">Counties</button>
+                  <button id="districts-view" class="view-toggle-btn" onclick="setMapView('districts')" data-testid="view-congress" aria-label="Show congressional districts view" aria-pressed="false">Congress</button>
+                  <button id="state-house-view" class="view-toggle-btn" onclick="setMapView('state_house')" data-testid="view-state-house" aria-label="Show state house districts view" aria-pressed="false">State House</button>
+                  <button id="state-senate-view" class="view-toggle-btn" onclick="setMapView('state_senate')" data-testid="view-state-senate" aria-label="Show state senate districts view" aria-pressed="false">State Senate</button>
                 </div>
             </div>
             <div class="control-group" style="margin-bottom:10px;">
                 <span class="section-kicker">District Lines</span>
                 <div class="view-toggle-row" style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button id="district-lines-2022" class="view-toggle-btn active" type="button">2022 Lines</button>
-                  <button id="district-lines-2024" class="view-toggle-btn" type="button">2024 Lines</button>
+                  <button id="district-lines-2022" class="view-toggle-btn active" type="button" data-testid="lines-2022" aria-label="Use 2022 district lines" aria-pressed="true">2022 Lines</button>
+                  <button id="district-lines-2024" class="view-toggle-btn" type="button" data-testid="lines-2024" aria-label="Use 2024 district lines" aria-pressed="false">2024 Lines</button>
                 </div>
                 <div style="margin-top:4px;font-size:11px;color:#6b7280;">
                   2022 keeps the longer history; 2024 uses the new legislative and congressional boundaries.
@@ -6223,23 +6288,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="section-kicker">Contest</span>
                 <div class="contest-toolbar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <label>Tools:</label>
-                  <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
-                  <button id="label-toggle" title="Toggle County Labels" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
-                  <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
-                  <button id="split-ticket-toggle" title="Toggle between President and Riggs 2024" class="tool-chip-btn" type="button">Pres-Riggs</button>
-                  <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button">Find My Precinct</button>
-                  <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button">Story Snapshot</button>
-                  <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select">
+                  <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" data-testid="tool-colorblind" aria-label="Toggle color blind mode" aria-pressed="false" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
+                  <button id="label-toggle" title="Toggle County Labels" data-testid="tool-labels" aria-label="Toggle county labels" aria-pressed="true" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
+                  <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" data-testid="tool-precinct-overlay" aria-label="Toggle precinct overlay" aria-pressed="false" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
+                  <button id="split-ticket-toggle" title="Toggle between President and Riggs 2024" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison">Pres-Riggs</button>
+                  <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
+                  <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button" data-testid="tool-snapshot" aria-label="Download story snapshot">Story Snapshot</button>
+                  <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select" data-testid="snapshot-variant" aria-label="Story snapshot layout variant">
                     <option value="balanced">Balanced</option>
                     <option value="instagram">Instagram</option>
                     <option value="tiktok">TikTok</option>
                   </select>
                 </div>
                 <div class="contest-search-wrap">
-                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" />
+                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
                 </div>
                 <div class="contest-select-wrap">
-                  <select id="contestSelect">
+                  <select id="contestSelect" data-testid="contest-select" aria-label="Select contest">
                       <option value="">Select a Contest...</option>
                   </select>
                 </div>
@@ -6251,26 +6316,26 @@ document.addEventListener('DOMContentLoaded', function() {
               <span class="section-kicker">What-If Swing</span>
               <div class="scenario-row">
                 <label for="scenario-scope">Scope</label>
-                <select id="scenario-scope">
+                <select id="scenario-scope" data-testid="scenario-scope" aria-label="Scenario scope">
                   <option value="statewide">Statewide</option>
                   <option value="wake">Wake County only</option>
                 </select>
               </div>
               <div class="scenario-row">
                 <label for="scenario-swing">Dem swing</label>
-                <input id="scenario-swing" type="range" min="-15" max="15" step="0.5" value="0" />
+                <input id="scenario-swing" type="range" min="-15" max="15" step="0.5" value="0" data-testid="scenario-swing" aria-label="Democratic swing percentage" />
                 <span class="scenario-value" id="scenario-swing-value">0.0%</span>
               </div>
               <div class="scenario-row">
                 <label for="overlay-opacity-preset">Overlay</label>
-                <select id="overlay-opacity-preset">
+                <select id="overlay-opacity-preset" data-testid="overlay-preset" aria-label="Overlay opacity preset">
                   <option value="reveal">Map Reveal</option>
                   <option value="balanced">Balanced</option>
                   <option value="focus">Data Focus</option>
                 </select>
               </div>
               <label class="scenario-toggle">
-                <input id="bivariate-opacity-toggle" type="checkbox" />
+                <input id="bivariate-opacity-toggle" type="checkbox" data-testid="turnout-bivariate-toggle" aria-label="Enable turnout intensity opacity mode" />
                 Turnout intensity opacity (bivariate)
               </label>
               <div class="controls-panel-note">
@@ -6279,11 +6344,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="control-group control-group-analytics">
               <span class="section-kicker">Advanced Analytics</span>
-              <div class="analytics-card" id="realignment-index-card">
+              <div class="analytics-card" id="realignment-index-card" data-testid="realignment-index-card">
                 <div class="analytics-card-title">Realignment Index</div>
                 <div class="analytics-card-body">Select a contest to load top shifting precincts.</div>
               </div>
-              <div class="analytics-card" id="ghost-precinct-card">
+              <div class="analytics-card" id="ghost-precinct-card" data-testid="ghost-precinct-card">
                 <div class="analytics-card-title">Ghost Precinct Tracker</div>
                 <div class="analytics-card-body">Waiting for contest selection.</div>
               </div>
@@ -6374,7 +6439,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 
   <!-- Vote Counter Display - VoteHub Style -->
-  <div class="vote-counter" id="vote-counter">
+  <div class="vote-counter" id="vote-counter" data-testid="vote-counter">
     <div class="vote-counter-context" id="vote-counter-context">
       <div class="context-left">
         <div class="context-title" id="vote-context-title">Statewide Focus</div>
@@ -6393,15 +6458,15 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="focus-summary">
         <div class="focus-pill">
           <span class="focus-pill-label">Winner</span>
-          <span class="focus-pill-value tie" id="focus-winner">No data</span>
+          <span class="focus-pill-value tie" id="focus-winner" data-testid="focus-winner">No data</span>
         </div>
         <div class="focus-pill">
           <span class="focus-pill-label">Lead</span>
-          <span class="focus-pill-value tie" id="focus-margin">Tie</span>
+          <span class="focus-pill-value tie" id="focus-margin" data-testid="focus-margin">Tie</span>
         </div>
         <div class="focus-pill focus-pill-total">
           <span class="focus-pill-label">Total Votes</span>
-          <span class="focus-pill-value" id="focus-total">0</span>
+          <span class="focus-pill-value" id="focus-total" data-testid="focus-total">0</span>
         </div>
       </div>
       <div class="focus-bar-panel">
@@ -6944,8 +7009,210 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastAriaAnnouncement = '';
     let lastAriaAnnouncedAt = 0;
 
-    function saveUIState() {}
-    async function restoreUIState() {}
+    let urlStateRestoreInFlight = false;
+    let saveUIStateTimer = null;
+    let urlPopstateSyncWired = false;
+    const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
+    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips']);
+
+    function normalizeURLViewToken(raw) {
+      const token = String(raw || '').trim().toLowerCase();
+      return URL_VIEW_VALUES.has(token) ? token : '';
+    }
+
+    function normalizeURLModeToken(raw) {
+      const token = String(raw || '').trim().toLowerCase();
+      return URL_MODE_VALUES.has(token) ? token : '';
+    }
+
+    function parseURLStateFromLocation() {
+      const params = new URLSearchParams(window.location.search || '');
+      const view = normalizeURLViewToken(params.get('view'));
+      const contest = String(params.get('contest') || '').trim();
+      const mode = normalizeURLModeToken(params.get('mode'));
+      const focus = String(params.get('focus') || '').trim();
+      const linesRaw = String(params.get('lines') || '').trim();
+      const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
+      const hasAny = !!(view || contest || mode || focus || lines !== null);
+      return { hasAny, view, contest, mode, focus, lines };
+    }
+
+    function getFocusURLTokenFromState() {
+      const meta = voteCounterPinned?.meta || null;
+      if (meta) {
+        if (meta.kind === 'region' && meta.regionKey) {
+          return `region:${String(meta.regionKey).trim().toLowerCase()}`;
+        }
+        if (meta.kind === 'district' && Number.isFinite(Number(meta.districtNum))) {
+          const num = Number(meta.districtNum);
+          if (meta.scope === 'congressional') return `cd:${num}`;
+          if (meta.scope === 'state_house') return `hd:${num}`;
+          if (meta.scope === 'state_senate') return `sd:${num}`;
+        }
+        if (meta.kind === 'precinct') {
+          const raw = String(
+            meta.precinctNorm
+              || (meta.county && meta.precinct ? `${meta.county} - ${meta.precinct}` : (meta.precinct || ''))
+          ).trim();
+          if (raw) return `precinct:${raw}`;
+        }
+        if (meta.kind === 'county' && meta.county) {
+          return `county:${String(meta.county).trim()}`;
+        }
+      }
+
+      const raw = String(window.lastSelectedCounty || '').trim();
+      if (!raw || /^statewide$/i.test(raw)) return '';
+      const cdMatch = raw.match(/congressional district\s+(\d+)/i);
+      if (cdMatch) return `cd:${Number(cdMatch[1])}`;
+      const hdMatch = raw.match(/state house district\s+(\d+)/i);
+      if (hdMatch) return `hd:${Number(hdMatch[1])}`;
+      const sdMatch = raw.match(/state senate district\s+(\d+)/i);
+      if (sdMatch) return `sd:${Number(sdMatch[1])}`;
+      if (raw.includes(' - ')) return `precinct:${raw}`;
+      return `county:${raw}`;
+    }
+
+    function collectURLStateFromUI() {
+      const params = new URLSearchParams();
+      if (currentView && currentView !== 'counties') params.set('view', currentView);
+      const contestValue = String(document.getElementById('contestSelect')?.value || '').trim();
+      if (contestValue) params.set('contest', contestValue);
+      if (currentVizMode && currentVizMode !== 'margins') params.set('mode', currentVizMode);
+      const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
+      if (linesYear !== 2022) params.set('lines', String(linesYear));
+      const focusToken = getFocusURLTokenFromState();
+      if (focusToken) params.set('focus', focusToken);
+      return params;
+    }
+
+    function writeURLStateFromUI() {
+      if (urlStateRestoreInFlight) return;
+      const params = collectURLStateFromUI();
+      const query = params.toString();
+      const nextURL = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash || ''}`;
+      const currentURL = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`;
+      if (nextURL === currentURL) return;
+      try {
+        window.history.replaceState(null, '', nextURL);
+      } catch (_) {}
+    }
+
+    function saveUIState() {
+      if (urlStateRestoreInFlight) return;
+      if (saveUIStateTimer) clearTimeout(saveUIStateTimer);
+      saveUIStateTimer = setTimeout(() => {
+        saveUIStateTimer = null;
+        writeURLStateFromUI();
+      }, 90);
+    }
+
+    async function applyFocusTokenFromURL(focusToken) {
+      const raw = String(focusToken || '').trim();
+      if (!raw) return;
+      const idx = raw.indexOf(':');
+      if (idx <= 0) return;
+      const kind = raw.slice(0, idx).toLowerCase();
+      const payload = raw.slice(idx + 1).trim();
+      if (!payload) return;
+
+      if (kind === 'region') {
+        await focusRegionSummary(payload.toLowerCase());
+        return;
+      }
+
+      if (kind === 'cd' || kind === 'hd' || kind === 'sd') {
+        const num = Number(String(payload).replace(/[^0-9]/g, ''));
+        if (!Number.isFinite(num) || num <= 0) return;
+        if (kind === 'cd') {
+          await setMapView('districts');
+          await handleDistrictSelection(num, 'districts', 'congressional', 'Congressional District');
+          return;
+        }
+        if (kind === 'hd') {
+          await setMapView('state_house');
+          await handleDistrictSelection(num, 'state-house', 'house', 'State House District');
+          return;
+        }
+        await setMapView('state_senate');
+        await handleDistrictSelection(num, 'state-senate', 'senate', 'State Senate District');
+        return;
+      }
+
+      if (kind === 'county') {
+        if (currentView !== 'counties' && currentView !== 'vtds_2000') {
+          await setMapView('counties');
+        }
+        handleCountySelection(payload);
+        return;
+      }
+
+      if (kind === 'precinct') {
+        const parsed = parseSearchQuery(payload);
+        if (parsed.kind !== 'precinct') return;
+        if (currentView !== 'counties' && currentView !== 'vtds_2000') {
+          await setMapView('counties');
+        }
+        await handlePrecinctSelection(parsed.county, parsed.code);
+      }
+    }
+
+    async function restoreUIState() {
+      const state = parseURLStateFromLocation();
+
+      if (!state.hasAny) {
+        if (!urlPopstateSyncWired) {
+          urlPopstateSyncWired = true;
+          window.addEventListener('popstate', () => {
+            if (!appReady) return;
+            restoreUIState().catch(() => {});
+          });
+        }
+        return;
+      }
+
+      urlStateRestoreInFlight = true;
+      try {
+        if (state.lines !== null && state.lines !== normalizeDistrictLinesYear(currentDistrictLinesYear)) {
+          await setDistrictLinesMode(state.lines);
+        }
+
+        if (state.view && state.view !== currentView) {
+          await setMapView(state.view);
+        }
+
+        if (state.mode && state.mode !== currentVizMode) {
+          switchVizMode(state.mode);
+        }
+
+        const contestValue = String(state.contest || '').trim();
+        if (contestValue) {
+          const contestSelect = document.getElementById('contestSelect');
+          const hasContest = !!(
+            contestSelect &&
+            Array.from(contestSelect.options || []).some(opt => String(opt?.value || '').trim() === contestValue)
+          );
+          if (hasContest && contestSelect) {
+            contestSelect.value = contestValue;
+            await applyContest(contestValue);
+          }
+        }
+
+        if (state.focus) {
+          await applyFocusTokenFromURL(state.focus);
+        }
+      } finally {
+        urlStateRestoreInFlight = false;
+        writeURLStateFromUI();
+        if (!urlPopstateSyncWired) {
+          urlPopstateSyncWired = true;
+          window.addEventListener('popstate', () => {
+            if (!appReady) return;
+            restoreUIState().catch(() => {});
+          });
+        }
+      }
+    }
 
     function normalizeDistrictLinesYear(raw) {
       return Number(raw) === 2024 ? 2024 : 2022;
@@ -7013,8 +7280,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateDistrictLinesToggleUI() {
       const y = normalizeDistrictLinesYear(currentDistrictLinesYear);
-      document.getElementById('district-lines-2022')?.classList.toggle('active', y === 2022);
-      document.getElementById('district-lines-2024')?.classList.toggle('active', y === 2024);
+      const btn2022 = document.getElementById('district-lines-2022');
+      const btn2024 = document.getElementById('district-lines-2024');
+      if (btn2022) {
+        btn2022.classList.toggle('active', y === 2022);
+        btn2022.setAttribute('aria-pressed', y === 2022 ? 'true' : 'false');
+      }
+      if (btn2024) {
+        btn2024.classList.toggle('active', y === 2024);
+        btn2024.setAttribute('aria-pressed', y === 2024 ? 'true' : 'false');
+      }
     }
 
     function clearDistrictSearchGeoJSONCache() {
@@ -8028,13 +8303,16 @@ document.addEventListener('DOMContentLoaded', function() {
           switchVizMode(mode);
         });
       });
+      setVizModeUI(currentVizMode);
       // Ensure legend matches initial mode.
       renderLegendForVizMode(currentVizMode);
     }
 
     function setVizModeUI(mode) {
       document.querySelectorAll('.viz-mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
+        const active = btn.dataset.mode === mode;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
     }
 
@@ -9958,10 +10236,18 @@ document.addEventListener('DOMContentLoaded', function() {
       currentView = view;
       
       // Update button states
-      document.getElementById('counties-view')?.classList.toggle('active', view === 'counties');
-      document.getElementById('districts-view')?.classList.toggle('active', view === 'districts');
-      document.getElementById('state-house-view')?.classList.toggle('active', view === 'state_house');
-      document.getElementById('state-senate-view')?.classList.toggle('active', view === 'state_senate');
+      const viewButtonStates = [
+        ['counties-view', view === 'counties'],
+        ['districts-view', view === 'districts'],
+        ['state-house-view', view === 'state_house'],
+        ['state-senate-view', view === 'state_senate']
+      ];
+      viewButtonStates.forEach(([id, active]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.toggle('active', !!active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
       
       // Update 2000 VTDs button if available
       const vtds2000Button = document.getElementById('vtds-2000-view');
@@ -11217,6 +11503,7 @@ document.addEventListener('DOMContentLoaded', function() {
           window.syncInitialTopbarOffset();
         }
       } catch (_) {}
+      saveUIState();
     }
 
     function getContestOptionValues() {
@@ -13743,6 +14030,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         btn.style.background = precinctsEnabled ? '#1d4ed8' : '#065f46';
         btn.style.opacity = precinctLoadInFlight ? '0.75' : '1';
+        btn.setAttribute('aria-pressed', precinctsEnabled ? 'true' : 'false');
+        btn.setAttribute('aria-busy', precinctLoadInFlight ? 'true' : 'false');
       }
       const minZoom = (CONFIG.precincts?.minZoom || 8.5);
       const z = map.getZoom();
@@ -16118,6 +16407,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       updateContextBanner();
       await refreshHoverAtPointer();
+      saveUIState();
     }
 
     async function applyCountyContest(contestType, year) {
