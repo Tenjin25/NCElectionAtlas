@@ -16212,6 +16212,227 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>`;
     }
 
+    function setContestSelectDeferredLoading(isLoading) {
+      const sel = document.getElementById('contestSelect');
+      if (!sel) return;
+      if (isLoading) {
+        sel.disabled = true;
+        sel.dataset.deferredLoading = 'true';
+        sel.innerHTML = '<option value="">Loading contests...</option>';
+        return;
+      }
+      sel.disabled = false;
+      if (sel.dataset.deferredLoading) delete sel.dataset.deferredLoading;
+    }
+
+    function syncCurrentViewLayersAfterHydration() {
+      if (currentView === 'districts') {
+        addDistrictLayers();
+      } else if (currentView === 'state_house') {
+        addStateHouseLayers();
+      } else if (currentView === 'state_senate') {
+        addStateSenatelayers();
+      } else if (currentView === 'counties' || currentView === 'vtds_2000') {
+        addCountyLayers();
+      }
+      try { reinforceMapLabelHalos(); } catch (_) {}
+      try { applyLayerOpacityTuning(); } catch (_) {}
+    }
+
+    async function hydrateAtlasDataAndDistrictSources() {
+      setStatus('Loading election index...');
+      candidateNameCache = new Map();
+      contestSliceCache = new Map();
+      try {
+        const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
+        contestManifest = manifest?.files || [];
+        // Add CSV-backed presidential elections not present in the precomputed contest slices.
+        Object.keys(PRESIDENT_OPEN_ELECTIONS_CSV).map(Number).forEach(y => {
+          const exists = contestManifest.some(e => e && e.contest_type === 'president' && Number(e.year) === Number(y));
+          if (!exists) contestManifest.push({ year: y, contest_type: 'president', file: `open_elections_csv_${y}.csv`, rows: 1 });
+        });
+        electionData = [];
+        updateContestSelectForCurrentView();
+        setStatus('Election index loaded');
+      } catch (manifestErr) {
+        setStatus('Loading election data...');
+        debugLog('Loading election data from:', CONFIG.paths.election);
+        electionDataJSON = await loadJSON(CONFIG.paths.election);
+        debugLog('Election JSON loaded:', electionDataJSON);
+
+        // Flatten JSON structure for compatibility with existing code
+        electionData = flattenElectionJSON(electionDataJSON);
+        debugLog('Election data flattened:', electionData.length, 'records');
+        if (electionData.length > 0) {
+          debugLog('Debug flattened data - first record keys:', Object.keys(electionData[0]));
+          debugLog('Debug flattened data - first record:', electionData[0]);
+        }
+        setStatus('Election data loaded');
+        populateContestSelectFromElectionJSON(electionData);
+      }
+
+      try {
+        let loadedAnyDistrictManifest = false;
+        districtManifestByLines = { '2022': [], '2024': [] };
+        for (const linesYear of [2022, 2024]) {
+          const dir = getActiveDistrictContestsDir(linesYear);
+          if (!dir) continue;
+          try {
+            const dManifest = await loadJSON(`${dir}/manifest.json`);
+            const files = dManifest?.files || [];
+            districtManifestByLines[String(linesYear)] = files;
+            if (files.length > 0) loadedAnyDistrictManifest = true;
+          } catch (err) {
+            districtManifestByLines[String(linesYear)] = [];
+            if (linesYear === 2022) {
+              console.warn('Primary district manifest not loaded:', err?.message || err);
+            }
+          }
+        }
+
+        if (!loadedAnyDistrictManifest) {
+          throw new Error('No district manifests found');
+        }
+
+        districtManifest = getActiveDistrictManifest();
+        districtElectionDataJSON = null;
+        districtSliceCache = new Map();
+        updateDistrictLinesToggleUI();
+        if (contestManifest.length > 0 || districtManifest.length > 0) {
+          updateContestSelectForCurrentView();
+        }
+        setStatus('District index loaded');
+      } catch (manifestErr) {
+        try {
+          districtElectionDataJSON = await loadJSON(CONFIG.paths.district_election);
+          debugLog('District election data loaded:', districtElectionDataJSON);
+          districtSliceCache = new Map();
+          districtManifestByLines = { '2022': [], '2024': [] };
+          districtManifest = [];
+          updateDistrictLinesToggleUI();
+        } catch (err) {
+          console.warn('District election data not loaded:', err.message);
+          districtElectionDataJSON = null;
+        }
+      }
+
+      // Optional district resources: do not fail app initialization if absent
+      try {
+        const districtsCSV = await loadCSV(CONFIG.paths.districts_info);
+        districtsInfo = parseCSV(districtsCSV);
+        setStatus('Congressional data loaded');
+      } catch (err) {
+        console.warn('District CSV not loaded:', err.message);
+      }
+
+      // Optional descriptive district labels (manual overrides).
+      try {
+        districtDescriptions = await loadJSON(CONFIG.paths.district_descriptions);
+      } catch (_) {
+        districtDescriptions = null;
+      }
+
+      // Optional county demographics (DP1-derived) for sidebar/tooltips.
+      try {
+        countyDemographics = await loadJSON(CONFIG.paths.county_demographics);
+      } catch (err) {
+        countyDemographics = null;
+        console.warn('County demographics not loaded:', err?.message || err);
+      }
+
+      try {
+        setStatus('Loading congressional districts...');
+        if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.districts?.url) {
+          if (!map.getSource('districts')) {
+            map.addSource('districts', { type: 'vector', url: CONFIG.tilesets.sources.districts.url });
+          }
+        } else {
+          const districtsGeoJSON = await loadDistrictGeometry('congressional', currentDistrictLinesYear);
+          if (map.getSource('districts')) {
+            map.getSource('districts').setData(districtsGeoJSON);
+          } else {
+            map.addSource('districts', { type: 'geojson', data: districtsGeoJSON });
+          }
+          window['districts__search_geojson'] = districtsGeoJSON;
+        }
+        setStatus('Congressional districts loaded');
+      } catch (err) {
+        console.warn('Congressional GeoJSON not loaded:', err.message);
+      }
+
+      try {
+        setStatus('Loading state house districts...');
+        if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.state_house?.url) {
+          if (!map.getSource('state-house')) {
+            map.addSource('state-house', { type: 'vector', url: CONFIG.tilesets.sources.state_house.url });
+          }
+        } else {
+          const stateHouseGeoJSON = await loadDistrictGeometry('state_house', currentDistrictLinesYear);
+          if (map.getSource('state-house')) {
+            map.getSource('state-house').setData(stateHouseGeoJSON);
+          } else {
+            map.addSource('state-house', { type: 'geojson', data: stateHouseGeoJSON });
+          }
+          window['state-house__search_geojson'] = stateHouseGeoJSON;
+        }
+        const stateHouseCSV = await loadCSV(CONFIG.paths.state_house_info);
+        stateHouseInfo = parseCSV(stateHouseCSV);
+        setStatus('State house districts loaded');
+      } catch (err) {
+        console.warn('State house resources not loaded:', err.message);
+      }
+
+      try {
+        setStatus('Loading state senate districts...');
+        if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.state_senate?.url) {
+          if (!map.getSource('state-senate')) {
+            map.addSource('state-senate', { type: 'vector', url: CONFIG.tilesets.sources.state_senate.url });
+          }
+        } else {
+          const stateSenateGeoJSON = await loadDistrictGeometry('state_senate', currentDistrictLinesYear);
+          if (map.getSource('state-senate')) {
+            map.getSource('state-senate').setData(stateSenateGeoJSON);
+          } else {
+            map.addSource('state-senate', { type: 'geojson', data: stateSenateGeoJSON });
+          }
+          window['state-senate__search_geojson'] = stateSenateGeoJSON;
+        }
+        const stateSenateCSV = await loadCSV(CONFIG.paths.state_senate_info);
+        stateSenateInfo = parseCSV(stateSenateCSV);
+        setStatus('State senate districts loaded');
+      } catch (err) {
+        console.warn('State senate resources not loaded:', err.message);
+      }
+
+      syncCurrentViewLayersAfterHydration();
+    }
+
+    function scheduleDeferredAtlasHydration() {
+      return new Promise((resolve, reject) => {
+        let started = false;
+        const start = () => {
+          if (started) return;
+          started = true;
+          hydrateAtlasDataAndDistrictSources().then(resolve).catch(reject);
+        };
+        const kickoff = () => {
+          if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(() => start(), { timeout: 2600 });
+          } else {
+            setTimeout(start, 360);
+          }
+        };
+        map.once('idle', kickoff);
+        setTimeout(kickoff, 1600);
+      });
+    }
+
+    async function finalizeAppPostHydration() {
+      try { await restoreUIState(); } catch (_) {}
+      try { applyLayerOpacityTuning(); } catch (_) {}
+      try { await updateAnalyticsPanels('', '', []); } catch (_) {}
+    }
+
     async function init() {
       try {
         setStatus('Loading counties...');
@@ -16238,151 +16459,13 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('zoomend', () => queueViewportPrecinctCountUpdate());
         scheduleStartupPrecinctCentroidPreload();
         setStatus('Counties loaded');
-
-        setStatus('Loading election index...');
-        candidateNameCache = new Map();
-        contestSliceCache = new Map();
-	        try {
-	          const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
-	          contestManifest = manifest?.files || [];
-	          // Add CSV-backed presidential elections not present in the precomputed contest slices.
-	          Object.keys(PRESIDENT_OPEN_ELECTIONS_CSV).map(Number).forEach(y => {
-	            const exists = contestManifest.some(e => e && e.contest_type === 'president' && Number(e.year) === Number(y));
-	            if (!exists) contestManifest.push({ year: y, contest_type: 'president', file: `open_elections_csv_${y}.csv`, rows: 1 });
-	          });
-	          electionData = [];
-	          updateContestSelectForCurrentView();
-	          setStatus('Election index loaded');
-	        } catch (manifestErr) {
-          setStatus('Loading election data...');
-          debugLog('Loading election data from:', CONFIG.paths.election);
-          electionDataJSON = await loadJSON(CONFIG.paths.election);
-          debugLog('Election JSON loaded:', electionDataJSON);
-          
-          // Flatten JSON structure for compatibility with existing code
-          electionData = flattenElectionJSON(electionDataJSON);
-          debugLog('Election data flattened:', electionData.length, 'records');
-          if (electionData.length > 0) {
-            debugLog('Debug flattened data - first record keys:', Object.keys(electionData[0]));
-            debugLog('Debug flattened data - first record:', electionData[0]);
-          }
-          setStatus('Election data loaded');
-          populateContestSelectFromElectionJSON(electionData);
-        }
-
-        try {
-          let loadedAnyDistrictManifest = false;
-          districtManifestByLines = { '2022': [], '2024': [] };
-          for (const linesYear of [2022, 2024]) {
-            const dir = getActiveDistrictContestsDir(linesYear);
-            if (!dir) continue;
-            try {
-              const dManifest = await loadJSON(`${dir}/manifest.json`);
-              const files = dManifest?.files || [];
-              districtManifestByLines[String(linesYear)] = files;
-              if (files.length > 0) loadedAnyDistrictManifest = true;
-            } catch (err) {
-              districtManifestByLines[String(linesYear)] = [];
-              if (linesYear === 2022) {
-                console.warn('Primary district manifest not loaded:', err?.message || err);
-              }
-            }
-          }
-
-          if (!loadedAnyDistrictManifest) {
-            throw new Error('No district manifests found');
-          }
-
-          districtManifest = getActiveDistrictManifest();
-          districtElectionDataJSON = null;
-          districtSliceCache = new Map();
-          updateDistrictLinesToggleUI();
-          if (contestManifest.length > 0 || districtManifest.length > 0) {
-            updateContestSelectForCurrentView();
-          }
-          setStatus('District index loaded');
-        } catch (manifestErr) {
-          try {
-            districtElectionDataJSON = await loadJSON(CONFIG.paths.district_election);
-            debugLog('District election data loaded:', districtElectionDataJSON);
-            districtSliceCache = new Map();
-            districtManifestByLines = { '2022': [], '2024': [] };
-            districtManifest = [];
-            updateDistrictLinesToggleUI();
-          } catch (err) {
-            console.warn('District election data not loaded:', err.message);
-            districtElectionDataJSON = null;
-          }
-        }
-
-        // Optional district resources: do not fail app initialization if absent
-        try {
-          const districtsCSV = await loadCSV(CONFIG.paths.districts_info);
-          districtsInfo = parseCSV(districtsCSV);
-          setStatus('Congressional data loaded');
-        } catch (err) {
-          console.warn('District CSV not loaded:', err.message);
-        }
-
-        // Optional descriptive district labels (manual overrides).
-        try {
-          districtDescriptions = await loadJSON(CONFIG.paths.district_descriptions);
-        } catch (_) {
-          districtDescriptions = null;
-        }
-
-        // Optional county demographics (DP1-derived) for sidebar/tooltips.
-        try {
-          countyDemographics = await loadJSON(CONFIG.paths.county_demographics);
-        } catch (err) {
-          countyDemographics = null;
-          console.warn('County demographics not loaded:', err?.message || err);
-        }
-
-        try {
-          setStatus('Loading congressional districts...');
-          if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.districts?.url) {
-            map.addSource('districts', { type: 'vector', url: CONFIG.tilesets.sources.districts.url });
-          } else {
-            const districtsGeoJSON = await loadDistrictGeometry('congressional', currentDistrictLinesYear);
-            map.addSource('districts', { type: 'geojson', data: districtsGeoJSON });
-            window['districts__search_geojson'] = districtsGeoJSON;
-          }
-          setStatus('Congressional districts loaded');
-        } catch (err) {
-          console.warn('Congressional GeoJSON not loaded:', err.message);
-        }
-
-        try {
-          setStatus('Loading state house districts...');
-          if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.state_house?.url) {
-            map.addSource('state-house', { type: 'vector', url: CONFIG.tilesets.sources.state_house.url });
-          } else {
-            const stateHouseGeoJSON = await loadDistrictGeometry('state_house', currentDistrictLinesYear);
-            map.addSource('state-house', { type: 'geojson', data: stateHouseGeoJSON });
-            window['state-house__search_geojson'] = stateHouseGeoJSON;
-          }
-          const stateHouseCSV = await loadCSV(CONFIG.paths.state_house_info);
-          stateHouseInfo = parseCSV(stateHouseCSV);
-          setStatus('State house districts loaded');
-        } catch (err) {
-          console.warn('State house resources not loaded:', err.message);
-        }
-
-        try {
-          setStatus('Loading state senate districts...');
-          if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.state_senate?.url) {
-            map.addSource('state-senate', { type: 'vector', url: CONFIG.tilesets.sources.state_senate.url });
-          } else {
-            const stateSenateGeoJSON = await loadDistrictGeometry('state_senate', currentDistrictLinesYear);
-            map.addSource('state-senate', { type: 'geojson', data: stateSenateGeoJSON });
-            window['state-senate__search_geojson'] = stateSenateGeoJSON;
-          }
-          const stateSenateCSV = await loadCSV(CONFIG.paths.state_senate_info);
-          stateSenateInfo = parseCSV(stateSenateCSV);
-          setStatus('State senate districts loaded');
-        } catch (err) {
-          console.warn('State senate resources not loaded:', err.message);
+        const deferHeavyHydration = isMobileViewportNow() || isTouchInteractionMode();
+        if (deferHeavyHydration) setContestSelectDeferredLoading(true);
+        const hydrationPromise = deferHeavyHydration
+          ? scheduleDeferredAtlasHydration()
+          : hydrateAtlasDataAndDistrictSources();
+        if (!deferHeavyHydration) {
+          await hydrationPromise;
         }
 
         map.fitBounds(CONFIG.fitBounds, { padding: 20 });
@@ -16399,9 +16482,21 @@ document.addEventListener('DOMContentLoaded', function() {
         try { minimizeLegendOnMobile(); } catch (_) {}
         try { minimizeMainControlsOnMobile(); } catch (_) {}
         appReady = true;
-        try { await restoreUIState(); } catch (_) {}
-        try { applyLayerOpacityTuning(); } catch (_) {}
-        try { await updateAnalyticsPanels('', '', []); } catch (_) {}
+        if (deferHeavyHydration) {
+          hydrationPromise
+            .then(async () => {
+              setContestSelectDeferredLoading(false);
+              if (!appReady) return;
+              await finalizeAppPostHydration();
+            })
+            .catch(err => {
+              setContestSelectDeferredLoading(false);
+              console.warn('Deferred atlas hydration failed:', err?.message || err);
+            });
+        } else {
+          setContestSelectDeferredLoading(false);
+          await finalizeAppPostHydration();
+        }
 
       } catch (e) {
         appReady = false;
