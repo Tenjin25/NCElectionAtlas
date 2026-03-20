@@ -3148,6 +3148,11 @@ body { height: var(--app-height); }
     background: rgba(226, 232, 240, 0.86);
   }
 
+  .focus-trend-summary-badge.fallback {
+    color: #92400e;
+    background: rgba(254, 243, 199, 0.92);
+  }
+
   .focus-trend-dots {
     display: grid;
     grid-auto-flow: column;
@@ -5285,6 +5290,30 @@ body { height: var(--app-height); }
       width: 100%;
     }
 
+    .contest-toolbar .tool-chip-btn,
+    .contest-toolbar .tool-chip-select {
+      width: 100%;
+      min-width: 0 !important;
+      justify-content: center;
+    }
+
+    .contest-toolbar .tool-chip-btn {
+      min-height: 40px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+
+    .contest-toolbar .tool-chip-select {
+      min-height: 40px;
+      font-size: 14px;
+      padding: 0 34px 0 12px;
+    }
+
+    #snapshot-variant {
+      grid-column: 1 / -1;
+      min-width: 0 !important;
+    }
+
     .controls-subtitle,
     .desktop-fly-helper,
     .desktop-quick-stats,
@@ -5300,6 +5329,19 @@ body { height: var(--app-height); }
     }
 
     .desktop-fly-chip {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .map-topbar.mobile-sheet-panel .map-topbar-hints {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      overflow: visible;
+      margin-top: 10px;
+    }
+
+    .map-topbar.mobile-sheet-panel .fly-search-chip {
       width: 100%;
       justify-content: center;
     }
@@ -5406,6 +5448,30 @@ body { height: var(--app-height); }
     }
   }
 
+  @media (max-width: 600px) {
+    .contest-toolbar {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .contest-toolbar #split-ticket-toggle,
+    .contest-toolbar #gps-locate-btn,
+    .contest-toolbar #snapshot-share-btn,
+    .contest-toolbar #copy-link-btn,
+    .contest-toolbar #reset-view-btn,
+    .contest-toolbar #snapshot-variant,
+    .contest-toolbar #precinct-toggle {
+      grid-column: 1 / -1;
+    }
+
+    .contest-toolbar #accessibility-toggle,
+    .contest-toolbar #label-toggle {
+      width: 100% !important;
+      min-width: 0 !important;
+      border-radius: 10px !important;
+      font-size: 14px !important;
+    }
+  }
+
   @media (max-width: 420px) {
     .desktop-fly-chip-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5435,6 +5501,116 @@ body { height: var(--app-height); }
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px;
+    }
+  }
+
+  @media (max-width: 375px) {
+    :root {
+      --mobile-dock-h: 56px;
+      --mobile-sheet-gap: 8px;
+    }
+
+    .mobile-dock {
+      left: 6px;
+      right: 6px;
+      bottom: calc(6px + var(--safe-bottom, 0px));
+      gap: 6px;
+      padding: 6px;
+      border-radius: 14px;
+    }
+
+    .mobile-dock-btn {
+      min-height: 40px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
+    .mobile-sheet-panel {
+      left: 6px !important;
+      right: 6px !important;
+      border-radius: 14px !important;
+    }
+
+    .map-topbar.mobile-sheet-panel,
+    .main-controls.mobile-sheet-panel,
+    .legend.mobile-sheet-panel {
+      border-radius: 14px !important;
+    }
+
+    .legend.mobile-sheet-panel .legend-header {
+      border-radius: 14px 14px 0 0 !important;
+    }
+
+    .contest-toolbar {
+      grid-template-columns: 1fr !important;
+      gap: 6px !important;
+    }
+
+    .contest-toolbar .tool-chip-btn,
+    .contest-toolbar .tool-chip-select,
+    .contest-toolbar #precinct-toggle,
+    .contest-toolbar #snapshot-variant,
+    .contest-toolbar #split-ticket-toggle,
+    .contest-toolbar #gps-locate-btn,
+    .contest-toolbar #snapshot-share-btn,
+    .contest-toolbar #copy-link-btn,
+    .contest-toolbar #reset-view-btn,
+    .contest-toolbar #accessibility-toggle,
+    .contest-toolbar #label-toggle {
+      grid-column: 1 / -1;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+
+    .contest-toolbar .tool-chip-btn {
+      min-height: 38px;
+      font-size: 11px;
+    }
+
+    .contest-toolbar .tool-chip-select {
+      min-height: 38px;
+      font-size: 13px;
+      padding: 0 32px 0 10px;
+    }
+
+    .map-topbar.mobile-sheet-panel .map-topbar-hints {
+      grid-template-columns: 1fr !important;
+      gap: 6px;
+    }
+
+    #main-controls .control-group {
+      margin-bottom: 10px !important;
+    }
+
+    #main-controls .view-toggle-btn,
+    #main-controls .region-jump-btn,
+    .viz-mode-btn {
+      min-height: 40px !important;
+      font-size: 11px !important;
+      padding: 8px 10px !important;
+    }
+
+    #main-controls select,
+    #main-controls input[type="search"],
+    #main-controls input[type="text"] {
+      font-size: 15px !important;
+    }
+
+    .focus-trend-summary-call {
+      font-size: 14px;
+    }
+
+    .focus-trend-summary-note {
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .focus-trend-stat-label {
+      font-size: 10px;
+    }
+
+    .focus-trend-stat-value {
+      font-size: 12px;
     }
   }
 
@@ -5750,7 +5926,7 @@ body { height: var(--app-height); }
 
   .tool-chip-select {
     height: 38px;
-    min-width: 152px;
+    min-width: 168px;
     border-radius: 8px;
     border: 1px solid rgba(148, 163, 184, 0.72);
     background: #0b6a63;
@@ -5759,7 +5935,7 @@ body { height: var(--app-height); }
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
     font-size: 15px;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.25;
     letter-spacing: 0.005em;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.20);
     padding: 0 38px 0 14px;
@@ -5784,6 +5960,9 @@ body { height: var(--app-height); }
   .tool-chip-select:focus {
     outline: 2px solid rgba(191, 219, 254, 0.95);
     outline-offset: 1px;
+    background-color: #0b6a63;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff;
   }
 
   .tool-chip-select option {
@@ -5791,6 +5970,37 @@ body { height: var(--app-height); }
     background: #f8fafc;
     font-weight: 700;
     font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .tool-chip-select option:checked {
+    background: #0b6a63;
+    color: #ffffff;
+  }
+
+  #snapshot-variant {
+    min-width: 176px;
+    background-color: #99d9cc;
+    border-color: rgba(15, 23, 42, 0.28);
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    text-shadow: none;
+  }
+
+  #snapshot-variant:hover {
+    background-color: #8acfc1;
+  }
+
+  #snapshot-variant:focus {
+    background-color: #99d9cc !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    text-shadow: none;
+  }
+
+  #snapshot-variant option:checked {
+    background: #dcfce7;
+    color: #14532d;
   }
 
   .tool-chip-select::-ms-expand {
@@ -5897,7 +6107,7 @@ body { height: var(--app-height); }
       padding: 0 8px;
     }
     .tool-chip-select {
-      min-width: 136px;
+      min-width: 152px;
       height: 36px;
       font-size: 14px;
       padding: 0 34px 0 10px;
@@ -6724,11 +6934,11 @@ document.addEventListener('DOMContentLoaded', function() {
           </ul>
           <p class="meta-subtle">Example: “Safe Republican (10–19.99%)” means the Republican candidate leads by 10–19.99 percentage points (two-party margin).</p>
 
-          <h3>Hover + Pin</h3>
+          <h3>Hover + Select</h3>
           <ul>
             <li>Hover a shape to see a quick result card.</li>
-            <li>Click <strong>Pin</strong> in the tooltip to freeze it (so it won’t change while you move the mouse).</li>
-            <li>Use <strong>Close</strong> to dismiss a pinned tooltip.</li>
+            <li>Click a shape to select it and pin the vote counter/trend panel to that area.</li>
+            <li>Use <strong>Close</strong> to dismiss the tooltip and <strong>Clear</strong> in the vote counter to unpin selection.</li>
           </ul>
 
           <h3>Controls</h3>
@@ -8834,9 +9044,10 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
 
-    function renderFocusTrendSeries(series, caption = 'Trend history') {
+    function renderFocusTrendSeries(series, caption = 'Trend history', options = {}) {
       const captionEl = document.getElementById('focus-trend-caption');
       const chartEl = document.getElementById('focus-trend-chart');
+      const fallbackBadge = String(options?.fallbackBadge || '').trim();
       if (!chartEl) return;
       if (captionEl) captionEl.textContent = caption;
       if (!series || !series.length) {
@@ -8911,6 +9122,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (latest.flip && latest.flip.flipped) {
         summaryBadges.push(
           `<span class="focus-trend-summary-badge ${latest.flip.to === 'R' ? 'rep' : 'dem'}">${escapeHtml(`Flip ${latest.flip.from}->${latest.flip.to}`)}</span>`
+        );
+      }
+      if (fallbackBadge) {
+        summaryBadges.push(
+          `<span class="focus-trend-summary-badge fallback">${escapeHtml(fallbackBadge)}</span>`
         );
       }
 
@@ -9083,6 +9299,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       try {
         let series = [];
+        const trendOptions = {};
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
         } else if (meta.kind === 'region' && meta.regionKey) {
@@ -9093,12 +9310,15 @@ document.addEventListener('DOMContentLoaded', function() {
           series = await getPrecinctTrendSeries(contestType, meta.precinctNorm || meta.precinct || '', meta.county || '');
           if (!series || !series.length) {
             series = await getCountyTrendSeries(contestType, meta.county);
+            if (series && series.length) {
+              trendOptions.fallbackBadge = 'Precinct history unavailable - showing county trend';
+            }
           }
         } else {
           series = await getStatewideTrendSeries(contestType);
         }
         if (reqId !== voteCounterTrendRequestId) return;
-        renderFocusTrendSeries(series, baseCaption);
+        renderFocusTrendSeries(series, baseCaption, trendOptions);
       } catch (err) {
         if (reqId !== voteCounterTrendRequestId) return;
         renderFocusTrendEmpty('Failed to load trend history.', baseCaption);
@@ -11461,6 +11681,33 @@ document.addEventListener('DOMContentLoaded', function() {
       return `<span class="meta-chip ${cls}"><span class="dot"></span>${label}</span>`;
     }
 
+    function precinctTrendAtGlanceHTML(currentSignedPct, prevSignedPct, prevYear, year) {
+      const cur = Number(currentSignedPct);
+      const prev = Number(prevSignedPct);
+      const currentLabel = Number.isFinite(cur)
+        ? (Math.abs(cur) < 0.01 ? 'Tie' : `${cur > 0 ? 'R' : 'D'} +${Math.abs(cur).toFixed(2)}%`)
+        : 'No margin data';
+      let shiftLabel = 'No prior precinct cycle loaded';
+      let shiftColor = '#64748b';
+      if (Number.isFinite(prev) && prevYear) {
+        const delta = cur - prev;
+        if (Math.abs(delta) < 0.01) {
+          shiftLabel = `No shift vs ${prevYear}`;
+          shiftColor = '#64748b';
+        } else {
+          shiftLabel = `${delta > 0 ? 'R' : 'D'} +${Math.abs(delta).toFixed(2)} vs ${prevYear}`;
+          shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
+        }
+      }
+      return `
+        <div style="margin-top:8px;padding:8px 10px;border:1px solid rgba(148,163,184,0.36);border-radius:10px;background:rgba(248,250,252,0.92);">
+          <div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Trend at a glance</div>
+          <div style="margin-top:2px;font-size:12px;font-weight:700;color:#0f172a;">${escapeHtml(`${year}: ${currentLabel}`)}</div>
+          <div style="margin-top:1px;font-size:11px;font-weight:700;color:${shiftColor};">${escapeHtml(shiftLabel)}</div>
+        </div>
+      `;
+    }
+
     // Hover outline (stroke-only highlight) helpers.
     const HOVER_OUTLINE_LAYER_IDS = [
       'county-stroke-hover',
@@ -12309,7 +12556,7 @@ document.addEventListener('DOMContentLoaded', function() {
       wireTooltipButtons();
     }
 
-    function renderPrecinctHoverAtPoint(point, feature, { forceTooltip = false } = {}) {
+    function renderPrecinctHoverAtPoint(point, feature, { forceTooltip = false, pinSelection = false } = {}) {
       const props = feature?.properties || {};
       const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
       const countyName = (props.county_nam || '').toString().trim();
@@ -12374,22 +12621,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
         if (flipChip) chips.unshift(flipChip);
       }
+      const trendPrevYear = vizPrevCache?.prevYear || vizShiftCache?.prevYear || null;
+      const trendAtGlance = precinctTrendAtGlanceHTML(curSigned, prevSignedForFlip, trendPrevYear, Number(year));
 
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${trendAtGlance}
       `;
       showHoverTooltip(point.x, point.y, buildTooltipShell(title, inner), { force: !!forceTooltip });
       wireTooltipButtons();
+      const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
+      const precinctCandidates = { demCandidate, repCandidate };
       setVoteCounterHoverState(
         `Hover: ${title}`,
         subtitle,
         demVotes,
         repVotes,
         otherVotes,
-        { demCandidate, repCandidate },
-        { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) }
+        precinctCandidates,
+        precinctMeta
       );
+      if (pinSelection) {
+        pinVoteCounterState(
+          `Selected: ${title}`,
+          subtitle,
+          demVotes,
+          repVotes,
+          otherVotes,
+          precinctMeta,
+          precinctCandidates
+        );
+      }
     }
 
     async function refreshHoverAtPointer() {
@@ -13836,7 +14099,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
             setTooltipPinned(false);
-            renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true });
+            renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
             if (isTouchInteractionMode()) setTooltipPinned(true);
             setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${props.prec_id || ''}`.trim());
           }
@@ -14102,49 +14365,9 @@ document.addEventListener('DOMContentLoaded', function() {
             precinctDotHoverRaf = null;
             const evt = lastPrecinctDotHoverEvent;
             if (!evt) return;
-            const props = evt.features?.[0]?.properties || {};
-            const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
-            const countyName = (props.county_nam || '').toString().trim();
-            const precId = (props.prec_id || '').toString().trim();
-            const title = `${countyName} - ${precId}`;
-
-            const contestValue = document.getElementById('contestSelect')?.value || '';
-            const [contestType, year] = parseContestValue(contestValue);
-            if (!contestType || !year) {
-              showHoverTooltip(evt.point.x, evt.point.y, buildTooltipShell(title, '<div style="color:#64748b;">Select a contest to see results</div>'));
-              wireTooltipButtons();
-              return;
-            }
-
-            const row = currentPrecinctResults ? currentPrecinctResults.get(precinctNorm) : null;
-            if (!row) {
-              showHoverTooltip(
-                evt.point.x,
-                evt.point.y,
-                buildTooltipShell(title, `<div style="color:#64748b;">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>`)
-              );
-              wireTooltipButtons();
-              return;
-            }
-
-            const demVotes = Number(row[`${contestType}_dem`] || 0);
-            const repVotes = Number(row[`${contestType}_rep`] || 0);
-            const otherVotes = Number(row[`${contestType}_other`] || 0);
-            const demCandidate = row[`${contestType}_dem_candidate`] || '';
-            const repCandidate = row[`${contestType}_rep_candidate`] || '';
-            const subtitle = `${formatContestName(contestType, year)} ${year}`;
-            const inner = buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate);
-            showHoverTooltip(evt.point.x, evt.point.y, buildTooltipShell(title, inner));
-            wireTooltipButtons();
-            setVoteCounterHoverState(
-              `Hover: ${title}`,
-              subtitle,
-              demVotes,
-              repVotes,
-              otherVotes,
-              { demCandidate, repCandidate },
-              { kind: 'precinct', county: countyName || (row.county || ''), precinct: title, precinctNorm, contestType, year: Number(year) }
-            );
+            const feature = evt.features?.[0];
+            if (!feature || !evt.point) return;
+            renderPrecinctHoverAtPoint(evt.point, feature);
           });
         });
         map.on('click', layerId, (e) => {
@@ -14156,7 +14379,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
             setTooltipPinned(false);
-            renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true });
+            renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
             if (props.county_nam && props.prec_id) {
               showCountyDetails(props.county_nam);
               setStatus(`Selected precinct highlighted in yellow: ${props.county_nam} ${props.prec_id}`);

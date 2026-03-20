@@ -20,6 +20,28 @@ async function waitForSplitTicketOptions(page) {
   }, { timeout: APP_READY_TIMEOUT });
 }
 
+async function pickContestKey(page) {
+  await page.waitForFunction(() => {
+    const sel = document.getElementById('contestSelect');
+    return !!(sel && Array.from(sel.options || []).some((o) => (o?.value || '').trim()));
+  }, { timeout: APP_READY_TIMEOUT });
+
+  return page.evaluate(() => {
+    const sel = document.getElementById('contestSelect');
+    const values = Array.from(sel?.options || [])
+      .map((opt) => (opt && opt.value ? String(opt.value).trim() : ''))
+      .filter(Boolean);
+    return (
+      values.find((v) => v.startsWith('attorney_general_2024')) ||
+      values.find((v) => v.startsWith('governor_2024')) ||
+      values.find((v) => v.startsWith('us_senate_2022')) ||
+      values.find((v) => v.startsWith('president_2024')) ||
+      values[0] ||
+      ''
+    );
+  });
+}
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
@@ -110,6 +132,127 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(selectedState.selected).toMatch(/^WAKE - /i);
     expect(selectedState.zoom).toBeGreaterThanOrEqual(9.8);
     expect(selectedState.searchValue.toUpperCase()).toContain('WAKE -');
+  });
+
+  test('selecting a precinct pins precinct trend context', async ({ page }) => {
+    const contestKey = await pickContestKey(page);
+    expect(contestKey).toBeTruthy();
+
+    await page.selectOption('#contestSelect', contestKey);
+    await page.waitForFunction(
+      (v) => document.getElementById('contestSelect')?.value === v,
+      contestKey
+    );
+
+    await page.click('#precinct-toggle');
+    await page.waitForFunction(() => {
+      const text = (document.getElementById('precinct-toggle')?.textContent || '').trim();
+      return text === 'Precincts On' || text === 'Precincts Loading';
+    }, { timeout: APP_READY_TIMEOUT });
+
+    await page.getByRole('button', { name: 'Wake 01-14' }).first().click();
+    await page.waitForFunction(() => {
+      try {
+        if (typeof selectedPrecinctNorm === 'undefined' || typeof map === 'undefined' || !map) return false;
+        return /^WAKE - /i.test(String(selectedPrecinctNorm || '')) && Number(map.getZoom()) >= 9.8;
+      } catch (_) {
+        return false;
+      }
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const clickHandle = await page.waitForFunction(() => {
+      try {
+        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return null;
+        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
+        if (!norm) return null;
+
+        const src = map.getSource('precinct-centroids');
+        const gj = src ? (src._data || src.data) : null;
+        const features = gj?.features || [];
+        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
+        const coords = hit?.geometry?.coordinates;
+        if (!Array.isArray(coords) || coords.length < 2) return null;
+
+        const projected = map.project(coords);
+        if (!projected) return null;
+        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
+        if (!layers.length) return null;
+        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
+        if (!rendered || !rendered.length) return null;
+        const container = map.getContainer && map.getContainer();
+        const rect = container && container.getBoundingClientRect ? container.getBoundingClientRect() : null;
+        if (!rect) return null;
+        return {
+          x: Math.round(rect.left + projected.x),
+          y: Math.round(rect.top + projected.y)
+        };
+      } catch (_) {
+        return null;
+      }
+    }, { timeout: APP_READY_TIMEOUT });
+    const clickPoint = await clickHandle.jsonValue();
+    expect(clickPoint && Number.isFinite(clickPoint.x) && Number.isFinite(clickPoint.y)).toBeTruthy();
+
+    const pinnedFromSelection = await page.evaluate(() => {
+      try {
+        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return false;
+        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
+        if (!norm) return false;
+        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
+        if (!layers.length) return false;
+
+        const src = map.getSource('precinct-centroids');
+        const gj = src ? (src._data || src.data) : null;
+        const features = gj?.features || [];
+        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
+        const coords = hit?.geometry?.coordinates;
+        if (!Array.isArray(coords) || coords.length < 2) return false;
+
+        const projected = map.project(coords);
+        if (!projected) return false;
+        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
+        const feature = rendered && rendered.length ? rendered[0] : null;
+        if (!feature || typeof renderPrecinctHoverAtPoint !== 'function') return false;
+
+        renderPrecinctHoverAtPoint(
+          { x: projected.x, y: projected.y },
+          feature,
+          { forceTooltip: true, pinSelection: true }
+        );
+        return true;
+      } catch (_) {
+        return false;
+      }
+    });
+    expect(pinnedFromSelection).toBeTruthy();
+
+    await page.waitForFunction(() => {
+      try {
+        const pinnedMeta = (typeof voteCounterPinned !== 'undefined' && voteCounterPinned) ? voteCounterPinned.meta : null;
+        const title = (document.getElementById('vote-context-title')?.textContent || '').trim();
+        const caption = (document.getElementById('focus-trend-caption')?.textContent || '').trim();
+        const chartText = (document.getElementById('focus-trend-chart')?.textContent || '').trim();
+        const trendUpdated = /Loading trend history|Trend at a glance|No historical trend data available|Failed to load trend history/i.test(chartText);
+        return !!(pinnedMeta && pinnedMeta.kind === 'precinct' && /^Selected:/i.test(title) && /WAKE -/i.test(caption) && trendUpdated);
+      } catch (_) {
+        return false;
+      }
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const pinnedSnapshot = await page.evaluate(() => {
+      const pinnedMeta = (typeof voteCounterPinned !== 'undefined' && voteCounterPinned) ? voteCounterPinned.meta : null;
+      return {
+        kind: pinnedMeta?.kind || '',
+        precinctNorm: String(pinnedMeta?.precinctNorm || ''),
+        caption: String(document.getElementById('focus-trend-caption')?.textContent || ''),
+        title: String(document.getElementById('vote-context-title')?.textContent || '')
+      };
+    });
+
+    expect(pinnedSnapshot.kind).toBe('precinct');
+    expect(pinnedSnapshot.precinctNorm).toMatch(/^WAKE - /i);
+    expect(pinnedSnapshot.caption).toMatch(/WAKE -/i);
+    expect(pinnedSnapshot.title).toMatch(/^Selected:/i);
   });
 
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
