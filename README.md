@@ -57,13 +57,19 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions like the Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
+- **Comparative Controls:** One-click split-ticket swap (`President` vs `NC Supreme Court`) plus a what-if swing slider for fast scenario exploration
+- **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
+- **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
+- **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
+- **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
+- **Accessibility Support:** Live screen-reader summaries for hovered/selected results and stronger map label halos for town/county labels
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 19, 2026
+**Last updated:** March 20, 2026
 
 ### UI / UX
 
@@ -74,6 +80,16 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Improved touch-first interactions: tap/pin behavior for precinct details, less hover churn on touch devices, and keyboard-aware sheet handling.
 - Improved cross-browser behavior (including Vivaldi-targeted fixes) and refined placement/flow of top controls.
 - Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
+- Added split-ticket comparative toggle so counties mode can instantly switch between Presidential and NC Supreme Court views.
+- Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
+- Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
+- Added stronger settlement/town and county label halos so labels stay legible over high-intensity precinct coloring.
+- Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
+- Added `Find My Precinct` GPS control and `Story Snapshot` export for vertical social sharing.
+- Refined the `Story Snapshot` export layout (full-bleed map crop, clearer contest/focus labels, and stronger branding for social share readability).
+- Tuned pre-contest county/overlay styling so the basemap stays bright before a contest is selected, while keeping roads visible under active overlays.
+- Normalized scenario/turnout vote displays to whole-number counts (no decimal vote totals in cards/counters).
+- Added precinct-level trend retrieval using precinct alias/variant matching, with automatic county-history fallback if precinct history is unavailable.
 
 ### Precinct Matching and Outlier Cleanup
 
@@ -119,6 +135,7 @@ The current `index.html` includes several speed-focused improvements that are al
 - **RAF-throttled hover updates:** Hover handlers use `requestAnimationFrame` and feature-state highlighting to reduce pointer-move churn and flicker.
 - **Worker-based CSV parsing fallback:** Historical presidential OpenElections CSVs are stream-parsed in a Web Worker (Papa Parse) when needed, reducing main-thread UI stalls.
 - **Deferred trend loading:** County trend series are loaded asynchronously so contest application and map recoloring happen immediately.
+- **Precinct trend matching fallback:** Selected precinct trend lookups now use precinct alias/variant matching across years, then fall back to county history when no valid precinct series is found.
 - **Counties-mode contest switch optimization (March 3, 2026):** Contest changes with `Precincts Off` now avoid unnecessary precinct matching/index work, improving responsiveness and reducing main-thread churn.
 
 ## UI and Presentation Notes
@@ -127,6 +144,7 @@ The current `index.html` includes several speed-focused improvements that are al
 - **Statewide snapshot focus:** The right-side summary stays visible while browsing counties, districts, and prior-election trend history.
 - **Regional focus mode:** Quick-jump presets can pin multi-county regional summaries and use the same top-right module as statewide and county selections.
 - **Trend display:** The top-right trend area now uses a more readable history/timeline layout rather than leaning on a compact line graph alone.
+- **Selection clarity:** Selected precincts now keep a yellow highlight and zoomed focus so users can distinguish active selection from hover/other overlays.
 - **Header language:** The control header and minimized state now use the full `North Carolina Election Atlas` title in pill form for stronger branding and consistency.
 - **Responsive winner labels:** The winner pill keeps full candidate names on wider desktop widths and shortens them only when space is tighter.
 

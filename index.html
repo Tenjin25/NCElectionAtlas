@@ -7119,8 +7119,13 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
+    function hasActiveContestSelection() {
+      const key = (document.getElementById('contestSelect')?.value || '').toString().trim();
+      return !!key;
+    }
+
     function reinforceMapLabelHalos() {
-      const heavyOverlay = (currentView === 'counties' && !precinctsEnabled) || (currentView !== 'counties');
+      const heavyOverlay = hasActiveContestSelection() && ((currentView === 'counties' && !precinctsEnabled) || (currentView !== 'counties'));
       const settlementTextColor = 'rgba(15, 23, 42, 0.94)';
       const settlementTextOpacity = heavyOverlay ? 1.0 : 0.96;
       const settlementHaloColor = heavyOverlay ? 'rgba(255, 255, 255, 0.97)' : 'rgba(255, 255, 255, 0.92)';
@@ -7285,17 +7290,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function applyScenarioShiftToVotes(countyNorm, demVotes, repVotes, otherVotes, totalVotes) {
+      function finalizeVoteSet(dIn, rIn, oIn, totalHint = 0) {
+        const d = Math.max(0, Math.round(Number(dIn) || 0));
+        const r = Math.max(0, Math.round(Number(rIn) || 0));
+        const o = Math.max(0, Math.round(Number(oIn) || 0));
+        const sum = d + r + o;
+        const hint = Math.max(0, Math.round(Number(totalHint) || 0));
+        return { dem: d, rep: r, other: o, total: sum > 0 ? sum : hint };
+      }
+
       const total = Number(totalVotes || 0);
       let dem = Number(demVotes || 0);
       let rep = Number(repVotes || 0);
       const other = Number(otherVotes || 0);
-      if (!Number.isFinite(total) || total <= 0) return { dem, rep, other, total: Math.max(0, total) };
+      if (!Number.isFinite(total) || total <= 0) return finalizeVoteSet(dem, rep, other, total);
       const swing = Number(scenarioSwingPct || 0);
-      if (Math.abs(swing) < 0.0001) return { dem, rep, other, total };
-      if (!shouldApplyScenarioToCounty(countyNorm)) return { dem, rep, other, total };
+      if (Math.abs(swing) < 0.0001) return finalizeVoteSet(dem, rep, other, total);
+      if (!shouldApplyScenarioToCounty(countyNorm)) return finalizeVoteSet(dem, rep, other, total);
 
       const originalTwoParty = Math.max(0, dem + rep);
-      if (originalTwoParty <= 0) return { dem, rep, other, total };
+      if (originalTwoParty <= 0) return finalizeVoteSet(dem, rep, other, total);
       const deltaVotes = (swing / 200.0) * total; // +/-1 point margin shift == +/-0.5% vote transfer between D/R.
       dem = Math.max(0, dem + deltaVotes);
       rep = Math.max(0, rep - deltaVotes);
@@ -7305,7 +7319,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dem *= scale;
         rep *= scale;
       }
-      return { dem, rep, other, total };
+      return finalizeVoteSet(dem, rep, other, total);
     }
 
     function quantile(sortedValues, p) {
@@ -7390,31 +7404,31 @@ document.addEventListener('DOMContentLoaded', function() {
       const preset = String(overlayOpacityPreset || 'reveal').toLowerCase();
       const presets = {
         reveal: {
-          countyActive: 0.66,
-          countyWithPrecinct: 0.08,
-          district: 0.58,
-          house: 0.54,
-          senate: 0.56,
-          precinctFill: 0.62,
-          precinctDot: 0.82
+          countyActive: 0.60,
+          countyWithPrecinct: 0.07,
+          district: 0.53,
+          house: 0.49,
+          senate: 0.51,
+          precinctFill: 0.56,
+          precinctDot: 0.80
         },
         balanced: {
-          countyActive: 0.74,
-          countyWithPrecinct: 0.10,
-          district: 0.64,
-          house: 0.60,
-          senate: 0.62,
-          precinctFill: 0.68,
-          precinctDot: 0.86
+          countyActive: 0.68,
+          countyWithPrecinct: 0.09,
+          district: 0.60,
+          house: 0.56,
+          senate: 0.58,
+          precinctFill: 0.64,
+          precinctDot: 0.84
         },
         focus: {
-          countyActive: 0.84,
+          countyActive: 0.80,
           countyWithPrecinct: 0.14,
-          district: 0.72,
-          house: 0.68,
-          senate: 0.70,
-          precinctFill: 0.78,
-          precinctDot: 0.90
+          district: 0.68,
+          house: 0.64,
+          senate: 0.66,
+          precinctFill: 0.74,
+          precinctDot: 0.88
         }
       };
       return presets[preset] || presets.reveal;
@@ -7475,14 +7489,27 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyLayerOpacityTuning() {
       if (!map) return;
       const preset = getOverlayOpacityPresetConfig();
-      const countyBaseOpacity = precinctsEnabled ? preset.countyWithPrecinct : preset.countyActive;
-      const districtBaseOpacity = preset.district;
-      const houseBaseOpacity = preset.house;
-      const senateBaseOpacity = preset.senate;
-      const precinctFillBaseOpacity = preset.precinctFill;
-      const precinctDotBaseOpacity = preset.precinctDot;
+      const contestIsActive = hasActiveContestSelection();
+      let countyBaseOpacity = precinctsEnabled ? preset.countyWithPrecinct : preset.countyActive;
+      let districtBaseOpacity = preset.district;
+      let houseBaseOpacity = preset.house;
+      let senateBaseOpacity = preset.senate;
+      let precinctFillBaseOpacity = preset.precinctFill;
+      let precinctDotBaseOpacity = preset.precinctDot;
+
+      if (!contestIsActive) {
+        countyBaseOpacity = precinctsEnabled ? 0.04 : 0.08;
+        districtBaseOpacity = 0.10;
+        houseBaseOpacity = 0.10;
+        senateBaseOpacity = 0.10;
+        precinctFillBaseOpacity = 0.22;
+        precinctDotBaseOpacity = 0.62;
+      }
 
       if (map.getLayer('county-fill')) {
+        if (!contestIsActive) {
+          try { map.setPaintProperty('county-fill', 'fill-color', '#d9e3ef'); } catch (_) {}
+        }
         const countyOpacity = turnoutBivariateEnabled && !precinctsEnabled
           ? buildCountyTurnoutOpacityExpression(countyBaseOpacity)
           : countyBaseOpacity;
@@ -7507,11 +7534,20 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (_) {}
       }
       if (map.getLayer('precinct-fill')) {
+        if (!contestIsActive) {
+          try { map.setPaintProperty('precinct-fill', 'fill-color', '#cbd5e1'); } catch (_) {}
+        }
         try {
           map.setPaintProperty('precinct-fill', 'fill-opacity', buildPrecinctTurnoutOpacityExpression(precinctFillBaseOpacity));
         } catch (_) {}
       }
       if (map.getLayer('precinct-dot')) {
+        if (!contestIsActive) {
+          try {
+            map.setPaintProperty('precinct-dot', 'circle-color', '#94a3b8');
+            if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-color', '#94a3b8');
+          } catch (_) {}
+        }
         try {
           map.setPaintProperty('precinct-dot', 'circle-opacity', precinctDotBaseOpacity);
           if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-opacity', Math.min(1, precinctDotBaseOpacity + 0.03));
@@ -10729,29 +10765,142 @@ document.addEventListener('DOMContentLoaded', function() {
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
 
-      const precinctNorm = normalizeCountyToken(precinctNormRaw);
+      const normalizedInput = normalizeCountyToken(precinctNormRaw);
       const countyNormHint = normalizeCountyToken(countyNameRaw);
-      if (!precinctNorm) return [];
-      const targetCounty = precinctNorm.includes(' - ') ? normalizeCountyToken(precinctNorm.split(' - ', 1)[0]) : countyNormHint;
-      const targetCode = precinctNorm.includes(' - ')
-        ? precinctNorm.split(' - ', 2)[1]
-        : '';
+      let targetCounty = '';
+      let targetCode = '';
+      if (normalizedInput.includes(' - ')) {
+        const [countyPart, codePart] = normalizedInput.split(' - ', 2);
+        targetCounty = normalizeCountyToken(countyPart);
+        targetCode = (codePart || '').toString().trim().toUpperCase();
+      } else {
+        targetCounty = countyNormHint;
+        targetCode = (precinctNormRaw || '').toString().trim().toUpperCase();
+      }
+      if (!targetCounty) targetCounty = countyNormHint;
+      if (!targetCode && normalizedInput.includes(' - ')) {
+        targetCode = (normalizedInput.split(' - ', 2)[1] || '').toString().trim().toUpperCase();
+      }
+      targetCode = (targetCode || '').replace(/\s+/g, ' ').trim().toUpperCase();
+      if (!targetCounty || !targetCode) return [];
+      if (isNonGeographicPrecinctToken(targetCode, targetCounty)) return [];
+
+      let precinctIdx = null;
+      let precinctAliasIdx = null;
+      try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
+      try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
+      try { await ensurePrecinctVariantOverrides(); } catch (_) {}
 
       function normalizePrecinctCodeToken(value) {
         return (value || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
       }
 
-      function rowMatchesTarget(rowCounty, rowPrecinct) {
-        const rowNorm = normalizeCountyToken(`${rowCounty} - ${rowPrecinct}`);
-        if (rowNorm === precinctNorm) return true;
-        if (!targetCode) return false;
-        const rowCode = normalizePrecinctCodeToken(rowPrecinct);
-        const codeA = rowCode.replace(/\s+/g, '');
-        const codeB = targetCode.replace(/\s+/g, '');
-        if (!codeA || !codeB) return false;
-        if (codeA === codeB) return true;
-        if (codeA.startsWith(codeB) || codeB.startsWith(codeA)) return true;
-        return false;
+      function extractBaseCodeToken(value) {
+        const raw = normalizePrecinctCodeToken(value);
+        if (!raw) return '';
+        const firstToken = raw.split(/\s+/, 1)[0].trim();
+        return (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim().toUpperCase();
+      }
+
+      function collectCodeCandidates(rawCode, countyNorm, countyCodes = null, countyAliases = null) {
+        const out = new Set();
+        const raw = normalizePrecinctCodeToken(rawCode);
+        if (!raw) return out;
+        if (isNonGeographicPrecinctToken(raw, countyNorm)) return out;
+
+        const addCode = (value) => {
+          const code = normalizePrecinctCodeToken(value);
+          if (!code) return;
+          out.add(code);
+          const compact = compactPrecinctAliasToken(code);
+          if (compact) out.add(compact);
+          const normalizedAlias = normalizePrecinctAliasToken(code);
+          if (normalizedAlias) out.add(normalizedAlias);
+        };
+
+        addCode(raw);
+        extractPrecinctAliasCandidates(raw).forEach(addCode);
+        addNumericBaseVariantsFromAlphaSuffix(raw, addCode);
+        addEmbeddedPrecinctCodeVariants(raw, addCode);
+        addKnownLegacyCentroidBridges(countyNorm, raw, addCode);
+
+        const baseToken = extractBaseCodeToken(raw);
+        if (baseToken && baseToken !== raw) {
+          addCode(baseToken);
+          extractPrecinctAliasCandidates(baseToken).forEach(addCode);
+          addKnownLegacyCentroidBridges(countyNorm, baseToken, addCode);
+        }
+
+        if (countyCodes) {
+          addCompactCodeVariants(raw, countyCodes, addCode);
+          addPrefixStrippedNumericVariants(raw, countyCodes, addCode);
+          if (baseToken && baseToken !== raw) {
+            addCompactCodeVariants(baseToken, countyCodes, addCode);
+            addPrefixStrippedNumericVariants(baseToken, countyCodes, addCode);
+          }
+          if (countyNorm === 'WAKE') addClosestHyphenCodeVariants(raw, countyCodes, addCode);
+        }
+
+        if (countyAliases) {
+          const resolved = resolveUniquePrecinctCodeByAlias(countyAliases, raw);
+          if (resolved) addCode(resolved);
+          if (baseToken && baseToken !== raw) {
+            const resolvedBase = resolveUniquePrecinctCodeByAlias(countyAliases, baseToken);
+            if (resolvedBase) addCode(resolvedBase);
+          }
+        }
+
+        try {
+          applyPrecinctVariantOverrides(countyNorm, raw, addCode);
+          if (baseToken && baseToken !== raw) applyPrecinctVariantOverrides(countyNorm, baseToken, addCode);
+        } catch (_) {}
+
+        return out;
+      }
+
+      const targetCountyCodes = precinctIdx && targetCounty ? precinctIdx.get(targetCounty) : null;
+      const targetCountyAliases = precinctAliasIdx && targetCounty ? precinctAliasIdx.get(targetCounty) : null;
+      const targetCodeCandidates = collectCodeCandidates(targetCode, targetCounty, targetCountyCodes, targetCountyAliases);
+      if (!targetCodeCandidates.size) targetCodeCandidates.add(targetCode);
+
+      const targetFullNorms = new Set();
+      const normalizedTargetFull = normalizeCountyToken(`${targetCounty} - ${targetCode}`);
+      if (normalizedTargetFull) targetFullNorms.add(normalizedTargetFull);
+      if (normalizedInput.includes(' - ')) targetFullNorms.add(normalizedInput);
+      targetCodeCandidates.forEach(code => {
+        const full = normalizeCountyToken(`${targetCounty} - ${code}`);
+        if (full) targetFullNorms.add(full);
+      });
+
+      const rowMatchMemo = new Map();
+      function rowMatchesTarget(rowCountyRaw, rowPrecinctRaw) {
+        const rowCountyNorm = normalizeCountyToken(rowCountyRaw);
+        if (!rowCountyNorm || rowCountyNorm !== targetCounty) return false;
+        const rowPrecinct = normalizePrecinctCodeToken(rowPrecinctRaw);
+        if (!rowPrecinct || isNonGeographicPrecinctToken(rowPrecinct, rowCountyNorm)) return false;
+
+        const rowFullNorm = normalizeCountyToken(`${rowCountyNorm} - ${rowPrecinct}`);
+        if (rowFullNorm && targetFullNorms.has(rowFullNorm)) return true;
+
+        const memoKey = `${rowCountyNorm}|${rowPrecinct}`;
+        if (rowMatchMemo.has(memoKey)) return rowMatchMemo.get(memoKey);
+
+        const rowCountyCodes = precinctIdx && rowCountyNorm ? precinctIdx.get(rowCountyNorm) : null;
+        const rowCountyAliases = precinctAliasIdx && rowCountyNorm ? precinctAliasIdx.get(rowCountyNorm) : null;
+        const rowCandidates = collectCodeCandidates(rowPrecinct, rowCountyNorm, rowCountyCodes, rowCountyAliases);
+
+        let matched = false;
+        rowCandidates.forEach(code => {
+          if (matched) return;
+          if (targetCodeCandidates.has(code)) {
+            matched = true;
+            return;
+          }
+          const full = normalizeCountyToken(`${targetCounty} - ${code}`);
+          if (full && targetFullNorms.has(full)) matched = true;
+        });
+        rowMatchMemo.set(memoKey, matched);
+        return matched;
       }
 
       const out = [];
@@ -10770,8 +10919,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const rowName = (r.county || '').toString();
           if (!rowName.includes(' - ')) return;
           const [rowCounty, rowPrecinct] = rowName.split(' - ', 2);
-          const rowCountyNorm = normalizeCountyToken(rowCounty);
-          if (targetCounty && rowCountyNorm !== targetCounty) return;
           if (!rowMatchesTarget(rowCounty, rowPrecinct)) return;
           dem += Number(r[`${contestType}_dem`] || 0);
           rep += Number(r[`${contestType}_rep`] || 0);
@@ -11181,52 +11328,148 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#f8fafc');
-      gradient.addColorStop(1, '#e2e8f0');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      function roundedRectPath(x, y, w, h, r) {
+        const radius = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      function drawTag(x, y, text, { bg = 'rgba(15,23,42,0.62)', fg = '#f8fafc' } = {}) {
+        const safe = String(text || '').trim();
+        if (!safe) return 0;
+        ctx.font = '700 30px "Manrope", "Segoe UI", Arial, sans-serif';
+        const padX = 18;
+        const h = 48;
+        const w = Math.ceil(ctx.measureText(safe).width + (padX * 2));
+        roundedRectPath(x, y, w, h, 24);
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.fillStyle = fg;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(safe, x + padX, y + (h / 2) + 1);
+        return w;
+      }
+
+      function drawWrappedHeadline(text, x, y, maxWidth, lineHeight, maxLines = 2) {
+        const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+        if (!words.length) return 0;
+        const lines = [];
+        let current = '';
+        words.forEach(word => {
+          const test = current ? `${current} ${word}` : word;
+          if (ctx.measureText(test).width <= maxWidth) {
+            current = test;
+            return;
+          }
+          if (current) lines.push(current);
+          current = word;
+        });
+        if (current) lines.push(current);
+        const clipped = lines.slice(0, maxLines);
+        if (lines.length > maxLines && clipped.length) {
+          let last = clipped[clipped.length - 1];
+          while (last.length > 3 && ctx.measureText(`${last}...`).width > maxWidth) {
+            last = last.slice(0, -1).trim();
+          }
+          clipped[clipped.length - 1] = `${last}...`;
+        }
+        clipped.forEach((line, idx) => ctx.fillText(line, x, y + (idx * lineHeight)));
+        return clipped.length;
+      }
 
       const mapW = mapCanvas.width || 1;
       const mapH = mapCanvas.height || 1;
-      const targetW = 960;
-      const targetH = 1200;
-      const targetX = (width - targetW) / 2;
-      const targetY = 300;
-      const scale = Math.max(targetW / mapW, targetH / mapH);
-      const drawW = mapW * scale;
-      const drawH = mapH * scale;
-      const drawX = targetX - ((drawW - targetW) / 2);
-      const drawY = targetY - ((drawH - targetH) / 2);
+      const mapScale = Math.max(width / mapW, height / mapH);
+      const drawW = mapW * mapScale;
+      const drawH = mapH * mapScale;
+      const drawX = (width - drawW) / 2;
+      const drawY = (height - drawH) / 2;
+      ctx.drawImage(mapCanvas, drawX, drawY, drawW, drawH);
 
-      try {
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(targetX, targetY, targetW, targetH, 28);
-        ctx.clip();
-        ctx.drawImage(mapCanvas, drawX, drawY, drawW, drawH);
-        ctx.restore();
-      } catch (_) {
-        ctx.drawImage(mapCanvas, targetX, targetY, targetW, targetH);
-      }
+      const topShade = ctx.createLinearGradient(0, 0, 0, 620);
+      topShade.addColorStop(0, 'rgba(15,23,42,0.78)');
+      topShade.addColorStop(1, 'rgba(15,23,42,0)');
+      ctx.fillStyle = topShade;
+      ctx.fillRect(0, 0, width, 620);
 
-      const contest = (document.getElementById('context-contest')?.textContent || 'NC Election Atlas').trim();
+      const bottomShade = ctx.createLinearGradient(0, 1260, 0, height);
+      bottomShade.addColorStop(0, 'rgba(15,23,42,0)');
+      bottomShade.addColorStop(1, 'rgba(15,23,42,0.86)');
+      ctx.fillStyle = bottomShade;
+      ctx.fillRect(0, 1260, width, height - 1260);
+
+      const contestRaw = (document.getElementById('context-contest')?.textContent || '').trim();
       const mode = (document.getElementById('context-mode')?.textContent || 'Margins').trim();
       const focus = (document.getElementById('context-focus')?.textContent || 'Statewide').trim();
-      ctx.fillStyle = '#0f172a';
-      ctx.font = '800 54px "Segoe UI", Arial, sans-serif';
-      ctx.fillText('North Carolina Election Atlas', 60, 110);
-      ctx.fillStyle = '#1e293b';
-      ctx.font = '700 42px "Segoe UI", Arial, sans-serif';
-      ctx.fillText(contest, 60, 180);
-      ctx.font = '700 30px "Segoe UI", Arial, sans-serif';
-      ctx.fillStyle = '#334155';
-      ctx.fillText(`${mode} | ${focus}`, 60, 236);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = '700 30px "Segoe UI", Arial, sans-serif';
-      ctx.fillText('Generated from live map view', 60, 1625);
+      const winner = (document.getElementById('focus-winner')?.textContent || 'No data').trim();
+      const lead = (document.getElementById('focus-margin')?.textContent || 'Tie').trim();
+      const totalVotes = (document.getElementById('focus-total')?.textContent || '0').trim();
+      const presetLabel = (document.getElementById('overlay-opacity-preset')?.selectedOptions?.[0]?.textContent || 'Map Reveal').trim();
+      const contest = /^select a contest$/i.test(contestRaw) ? 'No Contest Selected' : (contestRaw || 'No Contest Selected');
 
-      const dataUrl = canvas.toDataURL('image/png');
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '800 34px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.fillText('North Carolina Election Atlas', 54, 82);
+
+      ctx.font = '800 62px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      const headlineLines = drawWrappedHeadline(contest, 54, 162, width - 108, 70, 2);
+      const chipsY = 162 + (headlineLines * 70) + 18;
+      const modeW = drawTag(54, chipsY, mode);
+      drawTag(54 + modeW + 12, chipsY, focus, { bg: 'rgba(37,99,235,0.62)' });
+      ctx.textBaseline = 'alphabetic';
+
+      roundedRectPath(42, 1490, width - 84, 336, 28);
+      ctx.fillStyle = 'rgba(15,23,42,0.56)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.20)';
+      ctx.stroke();
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '700 27px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.fillText('Winner', 82, 1562);
+      ctx.fillText('Lead', 82, 1666);
+      ctx.fillText('Total Votes', 82, 1770);
+
+      const winnerUpper = winner.toUpperCase();
+      const winnerColor = winnerUpper.includes('(R)') || winnerUpper.includes('REPUBLICAN')
+        ? '#fecaca'
+        : (winnerUpper.includes('(D)') || winnerUpper.includes('DEMOCRATIC') ? '#bfdbfe' : '#e2e8f0');
+      ctx.fillStyle = winnerColor;
+      ctx.font = '800 44px "Manrope", "Segoe UI", Arial, sans-serif';
+      drawWrappedHeadline(winner, 250, 1562, width - 330, 50, 2);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '800 44px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.fillText(lead, 250, 1666);
+      ctx.fillText(totalVotes, 250, 1770);
+
+      const now = new Date();
+      const dateLabel = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '700 25px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.fillText(`Mode: ${mode}  |  Focus: ${focus}`, 54, 1882);
+      ctx.fillText(`Overlay: ${presetLabel}  |  Generated: ${dateLabel}`, 54, 1914);
+
+      let dataUrl = '';
+      try {
+        dataUrl = canvas.toDataURL('image/png');
+      } catch (err) {
+        console.warn('Snapshot export failed:', err?.message || err);
+        setStatus('Snapshot export failed. Try again after the map finishes rendering.');
+        return;
+      }
       const download = document.createElement('a');
       download.href = dataUrl;
       download.download = `nc-election-atlas-story-${Date.now()}.png`;
@@ -12820,7 +13063,7 @@ document.addEventListener('DOMContentLoaded', function() {
           // Keep the county layer for interactions/search, but don't paint a fill.
           // This lets precinct/block/district coloring read cleanly while still
           // showing county outlines.
-          paint: { 'fill-color': '#000000', 'fill-opacity': 0.0 }
+          paint: { 'fill-color': '#d9e3ef', 'fill-opacity': 0.0 }
         });
         addLayerWithOptionalSourceLayer({
           id: 'county-stroke',
@@ -15720,7 +15963,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function applyContest(contestKey) {
-      if (!contestKey) return setStatus('Select a contest');
+      if (!contestKey) {
+        try { applyLayerOpacityTuning(); } catch (_) {}
+        updateContextBanner();
+        return setStatus('Select a contest');
+      }
 
       const previousRegionPinnedState = voteCounterPinned?.meta?.kind === 'region'
         ? {
