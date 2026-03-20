@@ -61,8 +61,10 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
+- **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
 - **Accessibility Support:** Live screen-reader summaries for hovered/selected results and stronger map label halos for town/county labels
+- **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
@@ -88,9 +90,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added `Find My Precinct` GPS control and `Story Snapshot` export for vertical social sharing.
 - Refined the `Story Snapshot` export layout (full-bleed map crop, clearer contest/focus labels, and stronger branding for social share readability).
 - Added snapshot layout variants (`Balanced`, `Instagram`, `TikTok`) so 9:16 exports can be tuned for each platform's safe zones.
+- Added stronger cross-browser styling for the snapshot layout selector so the selected value remains clearly readable (including Vivaldi/Chromium edge cases).
 - Tuned pre-contest county/overlay styling so the basemap stays bright before a contest is selected, while keeping roads visible under active overlays.
 - Normalized scenario/turnout vote displays to whole-number counts (no decimal vote totals in cards/counters).
 - Added precinct-level trend retrieval using precinct alias/variant matching, with automatic county-history fallback if precinct history is unavailable.
+- Added toolbar utility actions: `Copy Link`, `Reset View`, and `Reset Swing`.
+- Expanded keyboard shortcuts for faster analyst workflow (`B` colorblind, `T` split-ticket, `G` GPS locate, `X` snapshot, `C` copy link, `R` reset view).
+- Added ARIA/state semantics and stable `data-testid` hooks across key controls to improve accessibility and regression-test durability.
+- Added URL-driven state restore/sync for deep-linkable map sessions (`view`, `contest`, `mode`, `lines`, `focus`).
 
 ### Precinct Matching and Outlier Cleanup
 
