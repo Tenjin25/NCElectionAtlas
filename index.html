@@ -5668,6 +5668,24 @@ body { height: var(--app-height); }
     background: #0b5f5a;
   }
 
+  .tool-chip-select {
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    padding: 0 8px;
+    cursor: pointer;
+  }
+
+  .tool-chip-select:hover {
+    background: #0b5f5a;
+  }
+
   .control-group-scenario,
   .control-group-analytics {
     margin-bottom: 10px;
@@ -5751,6 +5769,10 @@ body { height: var(--app-height); }
     .tool-chip-btn {
       font-size: 10px;
       padding: 0 8px;
+    }
+    .tool-chip-select {
+      font-size: 10px;
+      padding: 0 6px;
     }
   }
     </style>
@@ -5914,6 +5936,13 @@ document.addEventListener('DOMContentLoaded', function() {
     snapshotBtn.onclick = function() {
       if (typeof exportStorySnapshot === 'function') exportStorySnapshot();
     };
+  }
+  const snapshotVariantSelect = document.getElementById('snapshot-variant');
+  if (snapshotVariantSelect) {
+    snapshotVariantSelect.value = String(snapshotVariantSelect.value || 'balanced');
+    snapshotVariantSelect.addEventListener('change', function() {
+      snapshotStoryVariant = String(this.value || 'balanced').toLowerCase();
+    });
   }
 
   const scenarioSwing = document.getElementById('scenario-swing');
@@ -6200,6 +6229,11 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button id="split-ticket-toggle" title="Toggle between President and Riggs 2024" class="tool-chip-btn" type="button">Pres-Riggs</button>
                   <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button">Find My Precinct</button>
                   <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button">Story Snapshot</button>
+                  <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select">
+                    <option value="balanced">Balanced</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                  </select>
                 </div>
                 <div class="contest-search-wrap">
                   <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" />
@@ -6899,6 +6933,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let scenarioScope = 'statewide'; // statewide | wake
     let turnoutBivariateEnabled = false;
     let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
+    let snapshotStoryVariant = 'balanced'; // balanced | instagram | tiktok
     let currentCountyTurnoutTotals = {};
     let currentPrecinctTurnoutTotals = new Map();
     let currentDistrictTurnoutTotals = {};
@@ -11386,6 +11421,81 @@ document.addEventListener('DOMContentLoaded', function() {
         return clipped.length;
       }
 
+      const rawVariant = String(document.getElementById('snapshot-variant')?.value || snapshotStoryVariant || 'balanced').toLowerCase();
+      const variants = {
+        balanced: {
+          label: 'Balanced',
+          topShadeEnd: 620,
+          bottomShadeStart: 1260,
+          brandY: 82,
+          headlineY: 162,
+          headlineFont: 62,
+          headlineLine: 70,
+          headlineMaxLines: 2,
+          chipGap: 18,
+          panelY: 1490,
+          panelH: 336,
+          labelY1: 1562,
+          labelY2: 1666,
+          labelY3: 1770,
+          valueY1: 1562,
+          valueY2: 1666,
+          valueY3: 1770,
+          winnerFont: 44,
+          winnerLine: 50,
+          footerY1: 1882,
+          footerY2: 1914
+        },
+        instagram: {
+          label: 'Instagram',
+          topShadeEnd: 700,
+          bottomShadeStart: 1220,
+          brandY: 94,
+          headlineY: 206,
+          headlineFont: 58,
+          headlineLine: 66,
+          headlineMaxLines: 2,
+          chipGap: 20,
+          panelY: 1450,
+          panelH: 364,
+          labelY1: 1532,
+          labelY2: 1640,
+          labelY3: 1748,
+          valueY1: 1532,
+          valueY2: 1640,
+          valueY3: 1748,
+          winnerFont: 42,
+          winnerLine: 48,
+          footerY1: 1860,
+          footerY2: 1898
+        },
+        tiktok: {
+          label: 'TikTok',
+          topShadeEnd: 760,
+          bottomShadeStart: 1180,
+          brandY: 106,
+          headlineY: 244,
+          headlineFont: 56,
+          headlineLine: 64,
+          headlineMaxLines: 2,
+          chipGap: 22,
+          panelY: 1370,
+          panelH: 410,
+          labelY1: 1460,
+          labelY2: 1588,
+          labelY3: 1716,
+          valueY1: 1460,
+          valueY2: 1588,
+          valueY3: 1716,
+          winnerFont: 40,
+          winnerLine: 46,
+          footerY1: 1846,
+          footerY2: 1884
+        }
+      };
+      const variant = variants[rawVariant] || variants.balanced;
+      snapshotStoryVariant = rawVariant in variants ? rawVariant : 'balanced';
+
       const mapW = mapCanvas.width || 1;
       const mapH = mapCanvas.height || 1;
       const mapScale = Math.max(width / mapW, height / mapH);
@@ -11395,17 +11505,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const drawY = (height - drawH) / 2;
       ctx.drawImage(mapCanvas, drawX, drawY, drawW, drawH);
 
-      const topShade = ctx.createLinearGradient(0, 0, 0, 620);
+      const topShade = ctx.createLinearGradient(0, 0, 0, variant.topShadeEnd);
       topShade.addColorStop(0, 'rgba(15,23,42,0.78)');
       topShade.addColorStop(1, 'rgba(15,23,42,0)');
       ctx.fillStyle = topShade;
-      ctx.fillRect(0, 0, width, 620);
+      ctx.fillRect(0, 0, width, variant.topShadeEnd);
 
-      const bottomShade = ctx.createLinearGradient(0, 1260, 0, height);
+      const bottomShade = ctx.createLinearGradient(0, variant.bottomShadeStart, 0, height);
       bottomShade.addColorStop(0, 'rgba(15,23,42,0)');
-      bottomShade.addColorStop(1, 'rgba(15,23,42,0.86)');
+      bottomShade.addColorStop(1, 'rgba(15,23,42,0.88)');
       ctx.fillStyle = bottomShade;
-      ctx.fillRect(0, 1260, width, height - 1260);
+      ctx.fillRect(0, variant.bottomShadeStart, width, height - variant.bottomShadeStart);
 
       const contestRaw = (document.getElementById('context-contest')?.textContent || '').trim();
       const mode = (document.getElementById('context-mode')?.textContent || 'Margins').trim();
@@ -11419,18 +11529,18 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#f8fafc';
       ctx.font = '800 34px "Manrope", "Segoe UI", Arial, sans-serif';
-      ctx.fillText('North Carolina Election Atlas', 54, 82);
+      ctx.fillText('North Carolina Election Atlas', 54, variant.brandY);
 
-      ctx.font = '800 62px "Manrope", "Segoe UI", Arial, sans-serif';
+      ctx.font = `800 ${variant.headlineFont}px "Manrope", "Segoe UI", Arial, sans-serif`;
       ctx.fillStyle = '#ffffff';
-      const headlineLines = drawWrappedHeadline(contest, 54, 162, width - 108, 70, 2);
-      const chipsY = 162 + (headlineLines * 70) + 18;
+      const headlineLines = drawWrappedHeadline(contest, 54, variant.headlineY, width - 108, variant.headlineLine, variant.headlineMaxLines);
+      const chipsY = variant.headlineY + (headlineLines * variant.headlineLine) + variant.chipGap;
       const modeW = drawTag(54, chipsY, mode);
       drawTag(54 + modeW + 12, chipsY, focus, { bg: 'rgba(37,99,235,0.62)' });
       ctx.textBaseline = 'alphabetic';
 
-      roundedRectPath(42, 1490, width - 84, 336, 28);
-      ctx.fillStyle = 'rgba(15,23,42,0.56)';
+      roundedRectPath(42, variant.panelY, width - 84, variant.panelH, 28);
+      ctx.fillStyle = 'rgba(15,23,42,0.58)';
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = 'rgba(255,255,255,0.20)';
@@ -11438,29 +11548,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
       ctx.fillStyle = '#cbd5e1';
       ctx.font = '700 27px "Manrope", "Segoe UI", Arial, sans-serif';
-      ctx.fillText('Winner', 82, 1562);
-      ctx.fillText('Lead', 82, 1666);
-      ctx.fillText('Total Votes', 82, 1770);
+      ctx.fillText('Winner', 82, variant.labelY1);
+      ctx.fillText('Lead', 82, variant.labelY2);
+      ctx.fillText('Total Votes', 82, variant.labelY3);
 
       const winnerUpper = winner.toUpperCase();
       const winnerColor = winnerUpper.includes('(R)') || winnerUpper.includes('REPUBLICAN')
         ? '#fecaca'
         : (winnerUpper.includes('(D)') || winnerUpper.includes('DEMOCRATIC') ? '#bfdbfe' : '#e2e8f0');
       ctx.fillStyle = winnerColor;
-      ctx.font = '800 44px "Manrope", "Segoe UI", Arial, sans-serif';
-      drawWrappedHeadline(winner, 250, 1562, width - 330, 50, 2);
+      ctx.font = `800 ${variant.winnerFont}px "Manrope", "Segoe UI", Arial, sans-serif`;
+      drawWrappedHeadline(winner, 250, variant.valueY1, width - 330, variant.winnerLine, 2);
 
       ctx.fillStyle = '#f8fafc';
-      ctx.font = '800 44px "Manrope", "Segoe UI", Arial, sans-serif';
-      ctx.fillText(lead, 250, 1666);
-      ctx.fillText(totalVotes, 250, 1770);
+      ctx.font = `800 ${variant.winnerFont}px "Manrope", "Segoe UI", Arial, sans-serif`;
+      ctx.fillText(lead, 250, variant.valueY2);
+      ctx.fillText(totalVotes, 250, variant.valueY3);
 
       const now = new Date();
       const dateLabel = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       ctx.fillStyle = '#e2e8f0';
       ctx.font = '700 25px "Manrope", "Segoe UI", Arial, sans-serif';
-      ctx.fillText(`Mode: ${mode}  |  Focus: ${focus}`, 54, 1882);
-      ctx.fillText(`Overlay: ${presetLabel}  |  Generated: ${dateLabel}`, 54, 1914);
+      ctx.fillText(`Mode: ${mode}  |  Focus: ${focus}`, 54, variant.footerY1);
+      ctx.fillText(`Overlay: ${presetLabel}  |  Layout: ${variant.label}  |  ${dateLabel}`, 54, variant.footerY2);
 
       let dataUrl = '';
       try {
@@ -11472,11 +11582,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const download = document.createElement('a');
       download.href = dataUrl;
-      download.download = `nc-election-atlas-story-${Date.now()}.png`;
+      download.download = `nc-election-atlas-story-${snapshotStoryVariant}-${Date.now()}.png`;
       document.body.appendChild(download);
       download.click();
       download.remove();
-      setStatus('Story snapshot downloaded.');
+      setStatus(`Story snapshot downloaded (${variant.label}).`);
     }
 
     async function ensureUnmatchedAuditDataLoaded() {

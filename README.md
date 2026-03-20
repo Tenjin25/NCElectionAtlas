@@ -87,6 +87,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
 - Added `Find My Precinct` GPS control and `Story Snapshot` export for vertical social sharing.
 - Refined the `Story Snapshot` export layout (full-bleed map crop, clearer contest/focus labels, and stronger branding for social share readability).
+- Added snapshot layout variants (`Balanced`, `Instagram`, `TikTok`) so 9:16 exports can be tuned for each platform's safe zones.
 - Tuned pre-contest county/overlay styling so the basemap stays bright before a contest is selected, while keeping roads visible under active overlays.
 - Normalized scenario/turnout vote displays to whole-number counts (no decimal vote totals in cards/counters).
 - Added precinct-level trend retrieval using precinct alias/variant matching, with automatic county-history fallback if precinct history is unavailable.
