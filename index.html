@@ -7350,6 +7350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctVariantOverridesLoadInFlight = false;
     let precinctDotHoverWired = new Set();
     let viewportPrecinctCountRaf = null;
+    let startupPrecinctCentroidPreloadScheduled = false;
     let tooltipPinned = false;
     let precinctDotHoverRaf = null;
     let lastPrecinctDotHoverEvent = null;
@@ -7907,6 +7908,37 @@ document.addEventListener('DOMContentLoaded', function() {
         viewportPrecinctCountRaf = null;
         refreshViewportPrecinctCount();
       });
+    }
+
+    function scheduleStartupPrecinctCentroidPreload() {
+      if (startupPrecinctCentroidPreloadScheduled) return;
+      startupPrecinctCentroidPreloadScheduled = true;
+
+      const beginLoad = () => {
+        if (precinctCentroidsLoaded || precinctCentroidsLoadInFlight) return;
+        queueViewportPrecinctCountUpdate({ ensureLoaded: true });
+      };
+
+      const deferForMobile = isMobileViewportNow() || isTouchInteractionMode();
+      if (!deferForMobile) {
+        beginLoad();
+        return;
+      }
+
+      // Keep county-first paint responsive on mobile; load centroid stats after first idle.
+      setViewportPrecinctCountText('Viewing -- precincts');
+      let kicked = false;
+      const kick = () => {
+        if (kicked) return;
+        kicked = true;
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(() => beginLoad(), { timeout: 2800 });
+        } else {
+          setTimeout(beginLoad, 450);
+        }
+      };
+      map.once('idle', kick);
+      setTimeout(kick, 1600);
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
@@ -16200,11 +16232,11 @@ document.addEventListener('DOMContentLoaded', function() {
         addCountyLayers();
         reinforceMapLabelHalos();
         map.once('idle', () => reinforceMapLabelHalos());
-        await setupCountySearch();
+        setupCountySearch().catch(err => console.warn('County search setup failed:', err?.message || err));
         map.on('zoomend', updatePrecinctVisibility);
         map.on('moveend', () => queueViewportPrecinctCountUpdate());
         map.on('zoomend', () => queueViewportPrecinctCountUpdate());
-        queueViewportPrecinctCountUpdate({ ensureLoaded: true });
+        scheduleStartupPrecinctCentroidPreload();
         setStatus('Counties loaded');
 
         setStatus('Loading election index...');
