@@ -199,6 +199,30 @@ This project is deployed on GitHub Pages and requires no local setup to use. Sim
 
 To build or modify data files locally, you will need Python 3.x and PowerShell. See the "Rebuilding Data" section below.
 
+### Automated UI Regression (Playwright)
+
+The repository now includes a focused Playwright suite that covers key interaction regressions:
+
+- Load state with no contest selected (pre-contest defaults)
+- Split-ticket toggle (`President` <-> `NC Supreme Court (Riggs)`)
+- Precinct selection flow (search/jump, yellow selection target, zoom-in behavior)
+- Story snapshot exports for all layout variants (`Balanced`, `Instagram`, `TikTok`)
+
+Run locally:
+
+```bash
+npm install
+npm test
+```
+
+Optional commands:
+
+```bash
+npm run test:headed
+npm run test:ui
+npm run test:report
+```
+
 ### Directory Structure
 
 - `index.html`, `NCMap.html` — Main web app entry points
