@@ -7100,12 +7100,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function reinforceMapLabelHalos() {
-      const highCountyFill = currentView === 'counties' && !precinctsEnabled;
-      const textColor = highCountyFill ? 'rgba(248,250,252,0.99)' : 'rgba(241,245,249,0.97)';
-      const textOpacity = highCountyFill ? 1.0 : 0.97;
-      const haloColor = highCountyFill ? 'rgba(15,23,42,0.86)' : 'rgba(15,23,42,0.72)';
-      const haloWidth = highCountyFill ? 1.55 : 1.25;
-      const haloBlur = highCountyFill ? 0.34 : 0.42;
+      const heavyOverlay = (currentView === 'counties' && !precinctsEnabled) || (currentView !== 'counties');
+      const settlementTextColor = 'rgba(15, 23, 42, 0.94)';
+      const settlementTextOpacity = heavyOverlay ? 1.0 : 0.96;
+      const settlementHaloColor = heavyOverlay ? 'rgba(255, 255, 255, 0.97)' : 'rgba(255, 255, 255, 0.92)';
+      const settlementHaloWidth = heavyOverlay ? 2.25 : 1.9;
+      const settlementHaloBlur = heavyOverlay ? 0.7 : 0.58;
+      const countyTextColor = 'rgba(15, 23, 42, 0.96)';
+      const countyTextOpacity = 1.0;
+      const countyHaloColor = heavyOverlay ? 'rgba(255, 255, 255, 0.94)' : 'rgba(255, 255, 255, 0.88)';
+      const countyHaloWidth = heavyOverlay ? 2.0 : 1.7;
+      const countyHaloBlur = heavyOverlay ? 0.62 : 0.52;
 
       let layers = [];
       try { layers = map.getStyle()?.layers || []; } catch (_) { layers = []; }
@@ -7116,14 +7121,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasTextField = !!(layer.layout && Object.prototype.hasOwnProperty.call(layer.layout, 'text-field'));
         if (!hasTextField) return;
         const id = String(layer.id || '').toLowerCase();
-        const isTownOrPlaceLabel = /(settlement|place|city|town|village|county)/.test(id);
-        if (!isTownOrPlaceLabel) return;
+        const isSettlementLabel = /(settlement|place|city|town|village|locality|hamlet)/.test(id);
+        const isCountyLabel = /(county-label|(^|[-_])county([-_]|$)|(^|[-_])counties([-_]|$))/.test(id);
+        if (!isSettlementLabel && !isCountyLabel) return;
         try {
-          map.setPaintProperty(layer.id, 'text-color', textColor);
-          map.setPaintProperty(layer.id, 'text-opacity', textOpacity);
-          map.setPaintProperty(layer.id, 'text-halo-color', haloColor);
-          map.setPaintProperty(layer.id, 'text-halo-width', haloWidth);
-          map.setPaintProperty(layer.id, 'text-halo-blur', haloBlur);
+          if (isSettlementLabel) {
+            map.setPaintProperty(layer.id, 'text-color', settlementTextColor);
+            map.setPaintProperty(layer.id, 'text-opacity', settlementTextOpacity);
+            map.setPaintProperty(layer.id, 'text-halo-color', settlementHaloColor);
+            map.setPaintProperty(layer.id, 'text-halo-width', settlementHaloWidth);
+            map.setPaintProperty(layer.id, 'text-halo-blur', settlementHaloBlur);
+          } else {
+            map.setPaintProperty(layer.id, 'text-color', countyTextColor);
+            map.setPaintProperty(layer.id, 'text-opacity', countyTextOpacity);
+            map.setPaintProperty(layer.id, 'text-halo-color', countyHaloColor);
+            map.setPaintProperty(layer.id, 'text-halo-width', countyHaloWidth);
+            map.setPaintProperty(layer.id, 'text-halo-blur', countyHaloBlur);
+          }
         } catch (_) {}
       });
     }
@@ -7318,7 +7332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ]);
         expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
       });
-      expr.push(Math.max(0.22, baseOpacity - 0.18));
+      expr.push(Math.max(0.16, baseOpacity - 0.20));
       return expr;
     }
 
@@ -7334,7 +7348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
         expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
       });
-      expr.push(Math.max(0.24, baseOpacity - 0.18));
+      expr.push(Math.max(0.18, baseOpacity - 0.20));
       return expr;
     }
 
@@ -7348,18 +7362,18 @@ document.addEventListener('DOMContentLoaded', function() {
         expr.push(['==', ['get', 'precinct_norm'], precinctNorm]);
         expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
       });
-      expr.push(Math.max(0.25, baseOpacity - 0.16));
+      expr.push(Math.max(0.20, baseOpacity - 0.18));
       return expr;
     }
 
     function applyLayerOpacityTuning() {
       if (!map) return;
-      const countyBaseOpacity = precinctsEnabled ? 0.14 : 0.88;
-      const districtBaseOpacity = 0.76;
-      const houseBaseOpacity = 0.68;
-      const senateBaseOpacity = 0.70;
-      const precinctFillBaseOpacity = 0.78;
-      const precinctDotBaseOpacity = 0.90;
+      const countyBaseOpacity = precinctsEnabled ? 0.08 : 0.66;
+      const districtBaseOpacity = 0.58;
+      const houseBaseOpacity = 0.54;
+      const senateBaseOpacity = 0.56;
+      const precinctFillBaseOpacity = 0.62;
+      const precinctDotBaseOpacity = 0.82;
 
       if (map.getLayer('county-fill')) {
         const countyOpacity = turnoutBivariateEnabled && !precinctsEnabled
@@ -7393,9 +7407,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('precinct-dot')) {
         try {
           map.setPaintProperty('precinct-dot', 'circle-opacity', precinctDotBaseOpacity);
-          if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-opacity', Math.min(1, precinctDotBaseOpacity + 0.02));
+          if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-opacity', Math.min(1, precinctDotBaseOpacity + 0.03));
         } catch (_) {}
       }
+      reinforceMapLabelHalos();
     }
 
     function setScenarioSwingFromControl(rawValue) {
@@ -12775,7 +12790,7 @@ document.addEventListener('DOMContentLoaded', function() {
         source: 'precincts',
         minzoom: CONFIG.precincts?.minZoom || 8.5,
         layout: { visibility: 'none' },
-        paint: { 'fill-color': '#d1d5db', 'fill-opacity': 0.78 }
+        paint: { 'fill-color': '#d1d5db', 'fill-opacity': 0.62 }
       }, (baseSymbolLayerId && map.getLayer(baseSymbolLayerId)) ? baseSymbolLayerId : undefined);
       map.addLayer({
         id: 'precinct-stroke',
@@ -12987,7 +13002,7 @@ document.addEventListener('DOMContentLoaded', function() {
               8.4, 2.75
             ],
             'circle-color': '#94a3b8',
-            'circle-opacity': 0.9,
+            'circle-opacity': 0.82,
             'circle-stroke-color': 'rgba(15,23,42,0.35)',
             'circle-stroke-width': 0.5
           }
@@ -13012,7 +13027,7 @@ document.addEventListener('DOMContentLoaded', function() {
               14, 5.6
             ],
             'circle-color': '#94a3b8',
-            'circle-opacity': 0.92,
+            'circle-opacity': 0.85,
             'circle-stroke-color': 'rgba(15,23,42,0.45)',
             'circle-stroke-width': 0.75
           }
@@ -13190,7 +13205,7 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'fill',
           source: 'districts',
           beforeId: baseSymbolLayerId,
-          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.76 }
+          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.58 }
         });
         addLayerWithOptionalSourceLayer({
           id: 'district-stroke',
@@ -13300,7 +13315,7 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'fill',
           source: 'state-house',
           beforeId: baseSymbolLayerId,
-          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.68 }
+          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.54 }
         });
         addLayerWithOptionalSourceLayer({
           id: 'state-house-stroke',
@@ -13408,7 +13423,7 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'fill',
           source: 'state-senate',
           beforeId: baseSymbolLayerId,
-          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.70 }
+          paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.56 }
         });
         addLayerWithOptionalSourceLayer({
           id: 'state-senate-stroke',
