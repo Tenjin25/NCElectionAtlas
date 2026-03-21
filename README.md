@@ -36,6 +36,21 @@ North Carolina's election data is complex: precinct boundaries and IDs change fr
 
 The project is powered by prebuilt JSON data slices and raw [OpenElections](https://openelections.net/) precinct CSVs, with geometry from NCSBE and Census Bureau TIGER files.
 
+## Who This Atlas Is For
+
+- **General public:** See how your county or precinct voted without downloading data files or GIS tools.
+- **Students and educators:** Explore long-run election trends (2000-2024) with map-first visuals that are easier to use in class projects.
+- **Political junkies and campaign watchers:** Compare margins, flips, shifts, and district outcomes quickly across multiple election years.
+- **Data journalists and researchers:** Use the map for rapid story discovery, then trace the underlying JSON/CSV inputs and coverage diagnostics in this repo.
+- **Civic tech and redistricting users:** Inspect how statewide results look when reallocated to a consistent district baseline (2022 MQP lines).
+
+### Quick Start by Audience
+
+- **General public:** Open the live site, pick a contest/year, click a county or precinct, and read winner/margin/trend cards.
+- **Students:** Start with Counties view, then switch to Congressional/State House/State Senate to compare the same contest across geographies.
+- **Political junkies:** Use `Split-ticket`, `Shift`, `Flips`, and `Reset View` to scan for realignment and crossover patterns.
+- **Data journalists:** Pin a county/precinct, use `Copy Link` for reproducible map state, and cross-check with files in `data/contests/` and `data/reports/`.
+
 ## Why the 2022 Court-Ordered (MQP) Lines?
 
 All three district views (Congressional, State House, State Senate) use the **court-ordered "MQP" remedial maps** drawn in 2022 by court-appointed Special Masters following the NC Supreme Court's ruling that the legislature's own maps were unconstitutional partisan gerrymanders.
@@ -59,12 +74,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 - **Comparative Controls:** One-click split-ticket swap (`President` vs `NC Supreme Court`) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
-- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic) with a dedicated map key
+- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic), with synchronized legend colors in both standard and colorblind palettes
+- **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
+- **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
-- **Accessibility Support:** Live screen-reader summaries for hovered/selected results and stronger map label halos for town/county labels
+- **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
@@ -74,8 +91,21 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** March 21, 2026
 
+### Demographics + Accessibility (March 21, 2026)
+
+- Added a dedicated `Demographics` map mode across counties, congressional districts, state house, state senate, and precinct overlays.
+- Added precinct-level demographic inputs (`data/precinct_demographics_2020_vap.csv`) and wired them into precinct hover/sidebar race chips.
+- Synced legend swatches with the **active** map palette in colorblind mode so the legend now always matches on-map colors.
+- Added `High contrast demographics` toggle in controls for stronger map fills and race-chip contrast when demographics mode is active.
+- Added URL-state persistence for demographic contrast (`democontrast=high`, with `demo_contrast` accepted when parsing links).
+- Increased baseline demographics visibility in map fills and hover chips for county + precinct contexts.
+- Improved county and precinct demographics chip/card readability in hover surfaces.
+- Fixed dark-tooltip-specific demographics contrast regressions so text/chips remain legible in pinned/hover cards.
+
 ### UI / UX
 
+- Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
+- Fixed pinned precinct side-panel trend syncing so `Trend at a glance` updates correctly when switching contests with a precinct selection pinned.
 - Continued the atlas-style UI rollout with cleaner desktop rails, stronger statewide cards, and improved control hierarchy.
 - Renamed the live presentation to **North Carolina Election Atlas** and carried consistent branding through normal/minimized control states.
 - Updated the top-left atlas name badge with stronger NC blue/red split text coloring for clearer branding at a glance.
@@ -88,6 +118,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
+- Added a `High contrast demographics` control-path so demographic overlays and chips remain usable on low-contrast displays.
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
 - Added stronger settlement/town and county label halos so labels stay legible over high-intensity precinct coloring.
 - Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
@@ -160,6 +191,35 @@ The current `index.html` includes several speed-focused improvements that are al
 - **Header language:** The control header and minimized state now use the full `North Carolina Election Atlas` title in pill form for stronger branding and consistency.
 - **Responsive winner labels:** The winner pill keeps full candidate names on wider desktop widths and shortens them only when space is tighter.
 
+## Demographics Mode Guide
+
+### What Demographics Mode Displays
+
+- **Primary signal:** Each geography is colored by the largest reported share among white, black, and Hispanic fields.
+- **Near-tie handling:** If the top two race shares are effectively tied, the map uses a mixed-color class (`Near tie / mixed`) rather than forcing one group.
+- **No-data handling:** Geographies without usable fields render as `No demographic data`.
+
+### Data Source by View
+
+- **Counties:** `data/county_demographics_2020_dp1.json` (DP1 total-pop race/ethnicity shares + VAP 18+ shown in sidebar).
+- **Congressional / State House / State Senate:** District demographic CSVs (`data/nc_congressional_districts.csv`, `data/nc_state_house_districts.csv`, `data/nc_state_senate_districts.csv`).
+- **Precincts:** `data/precinct_demographics_2020_vap.csv` (block-aggregated precinct VAP race fields).
+
+### Controls and URL State
+
+- Switch map mode using the `Demographics` button in the visualization mode row.
+- Use `High contrast demographics` to force stronger demographic fills/chips (especially useful over dark tooltips).
+- Colorblind mode (`B` or the accessibility toggle) continues to apply in demographics mode; legend swatches stay synchronized with the active palette.
+- Deep-link state is preserved in URL parameters:
+  - `mode=demographics`
+  - `democontrast=high` (parser also accepts `demo_contrast`)
+
+### Hover/Sidebar Behavior
+
+- County and precinct detail cards include race-share chips for quick demographic context.
+- Recent styling passes specifically targeted county hover, precinct hover, and pinned tooltip readability on dark backgrounds.
+- If a field is missing for a group, the chip can display `N/A` while the map still renders any available race shares.
+
 ## Regional Presets
 
 The preset region buttons are more than camera shortcuts. They use curated North Carolina county groups so the app can calculate grouped results and trend history for commonly used regions.
@@ -183,6 +243,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 - **Dynamic Views:** Switch between Counties, Precincts, Congressional Districts, State House, and State Senate. The map and sidebar update to reflect your selection.
 - **Regional Presets:** Use quick jumps like Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills to zoom and see grouped regional vote summaries.
 - **Hover and Sidebar Details:** See candidate names, vote totals, margins, and trend lines for any geography.
+- **Demographics Layering:** Use `Demographics` mode to shade geographies by plurality race share, with optional high-contrast rendering for better visibility.
 - **Data Coverage:** Precinct-level results span **2000–2024**. Some contests or years may be incomplete depending on source data availability.
 - **Judicial and Special Contests:** Appear in the Counties view contest picker where available.
 
@@ -434,6 +495,8 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
   - Counties view → `data/contests/manifest.json`
   - District views → `data/district_contests/manifest.json`
 - **A Council of State contest/year is missing in Counties view:** Check `major_party_contested` in `data/contests/manifest.json`. Unopposed contests are intentionally hidden.
+- **Demographics chips are hard to read in hover cards:** Turn on `High contrast demographics` in controls, then hard refresh (`Ctrl+Shift+R`) to ensure latest CSS/JS assets are loaded.
+- **Legend colors do not appear to match map colors in colorblind mode:** Refresh once to clear cached assets; the latest build ties legend swatches to the same palette functions used for map fills.
 - **Wake/Meck district accuracy looks off in older years:** Check unmatched precinct reports and add overrides; rebuild slices.
 
 ## Contributing
