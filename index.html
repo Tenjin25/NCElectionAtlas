@@ -6879,6 +6879,31 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+  const contestSelectEl = document.getElementById('contestSelect');
+  if (contestSelectEl && !contestSelectEl.dataset.downwardOpenWired) {
+    contestSelectEl.dataset.downwardOpenWired = 'true';
+    const prepContestSelectDownwardOpen = () => {
+      try {
+        if (isMobileViewport()) return;
+        const controls = document.getElementById('main-controls');
+        const select = document.getElementById('contestSelect');
+        if (!controls || !select) return;
+        const rect = select.getBoundingClientRect();
+        const viewportH = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
+        if (!viewportH) return;
+        const spaceAbove = Math.max(0, rect.top);
+        const spaceBelow = Math.max(0, viewportH - rect.bottom);
+        // If the browser would likely open upward, nudge the controls scroll
+        // so the native popup has more room below the select.
+        if (spaceBelow >= spaceAbove) return;
+        const controlsRect = controls.getBoundingClientRect();
+        const relativeTop = rect.top - controlsRect.top + controls.scrollTop;
+        controls.scrollTop = Math.max(0, Math.round(relativeTop - 16));
+      } catch (_) {}
+    };
+    contestSelectEl.addEventListener('pointerdown', prepContestSelectDownwardOpen, { capture: true });
+    contestSelectEl.addEventListener('focus', prepContestSelectDownwardOpen, { capture: true });
+  }
   updateLegendColors(); // Ensure correct colors on load
 });
 </script>
