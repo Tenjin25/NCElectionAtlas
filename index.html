@@ -8297,30 +8297,30 @@ document.addEventListener('DOMContentLoaded', function() {
       const preset = String(overlayOpacityPreset || 'reveal').toLowerCase();
       const presets = {
         reveal: {
-          countyActive: 0.70,
-          countyWithPrecinct: 0.14,
+          countyActive: 0.65,
+          countyWithPrecinct: 0.11,
+          district: 0.59,
+          house: 0.57,
+          senate: 0.58,
+          precinctFill: 0.61,
+          precinctDot: 0.80
+        },
+        balanced: {
+          countyActive: 0.71,
+          countyWithPrecinct: 0.13,
           district: 0.64,
           house: 0.62,
           senate: 0.63,
           precinctFill: 0.66,
-          precinctDot: 0.80
-        },
-        balanced: {
-          countyActive: 0.76,
-          countyWithPrecinct: 0.16,
-          district: 0.69,
-          house: 0.67,
-          senate: 0.68,
-          precinctFill: 0.71,
           precinctDot: 0.84
         },
         focus: {
-          countyActive: 0.82,
-          countyWithPrecinct: 0.22,
-          district: 0.74,
-          house: 0.72,
-          senate: 0.73,
-          precinctFill: 0.77,
+          countyActive: 0.77,
+          countyWithPrecinct: 0.18,
+          district: 0.69,
+          house: 0.67,
+          senate: 0.68,
+          precinctFill: 0.72,
           precinctDot: 0.88
         }
       };
