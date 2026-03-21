@@ -6196,41 +6196,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var helpBackdrop = document.getElementById('help-backdrop');
   var helpClose = document.getElementById('help-close');
   function updateLegendColors() {
-    var colorblind = document.body.classList.contains('colorblind-mode');
-    var legendColors = document.querySelectorAll('.legend-color');
-    legendColors.forEach(function(el) {
-      var orig = el.getAttribute('data-orig-bg');
-      if (!orig) {
-        orig = el.style.background;
-        el.setAttribute('data-orig-bg', orig);
-      }
-      if (colorblind) {
-        // Map original color to colorblind-friendly color
-        var cbMap = {
-          '#67000d': '#ff9900',
-          '#a50f15': '#ffb84d',
-          '#cb181d': '#ffd699',
-          '#ef3b2c': '#ffe5cc',
-          '#fb6a4a': '#fff2e6',
-          '#fcae91': '#ffe5cc',
-          '#fee8c8': '#fff2e6',
-          '#f7f7f7': '#cccccc',
-          '#e1f5fe': '#3399ff',
-          '#c6dbef': '#66b3ff',
-          '#9ecae1': '#99ccff',
-          '#6baed6': '#b3d1ff',
-          '#3182bd': '#3366cc',
-          '#08519c': '#003399',
-          '#08306b': '#001f4d'
-        };
-        var match = orig.match(/#([0-9a-fA-F]{6})/);
-        if (match && cbMap[match[0]]) {
-          el.style.background = cbMap[match[0]];
-        }
-      } else {
-        el.style.background = orig;
-      }
-    });
+    // Keep legend swatches aligned with the same color functions used by map fills.
+    if (typeof renderLegendForVizMode === 'function') {
+      const activeModeBtn = document.querySelector('.viz-mode-btn.active[data-mode]');
+      const mode = (activeModeBtn && activeModeBtn.dataset && activeModeBtn.dataset.mode) ? activeModeBtn.dataset.mode : 'margins';
+      renderLegendForVizMode(mode);
+    }
   }
   // Allow other modules (viz modes) to re-apply legend recoloring.
   window.updateLegendColors = updateLegendColors;
@@ -11159,9 +11130,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildMarginsLegendHTML() {
       const colors = [
-        '#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fb6a4a', '#fcae91', '#fee8c8',
-        '#f7f7f7',
-        '#e1f5fe', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c', '#08306b'
+        colorForMarginMode(40, 'R'),
+        colorForMarginMode(30, 'R'),
+        colorForMarginMode(20, 'R'),
+        colorForMarginMode(10, 'R'),
+        colorForMarginMode(5.5, 'R'),
+        colorForMarginMode(1, 'R'),
+        colorForMarginMode(0.5, 'R'),
+        colorForMarginMode(0, 'R'),
+        colorForMarginMode(0.5, 'D'),
+        colorForMarginMode(1, 'D'),
+        colorForMarginMode(5.5, 'D'),
+        colorForMarginMode(10, 'D'),
+        colorForMarginMode(20, 'D'),
+        colorForMarginMode(30, 'D'),
+        colorForMarginMode(40, 'D')
       ];
       return `
         <div class="legend-scale-shell">
@@ -11304,9 +11287,6 @@ document.addEventListener('DOMContentLoaded', function() {
         content.innerHTML = content.dataset.marginsHtml;
       }
 
-      if (typeof window.updateLegendColors === 'function') {
-        window.updateLegendColors();
-      }
     }
 
     function updateVoteCounterSummary(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
