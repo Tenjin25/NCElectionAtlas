@@ -4529,6 +4529,42 @@ body { height: var(--app-height); }
     color: #475569;
   }
 
+  .statewide-race-alert {
+    margin-top: 8px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(255, 255, 255, 0.86);
+    color: #1f2937;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+  }
+
+  .statewide-race-alert.recount {
+    border-color: rgba(234, 88, 12, 0.38);
+    background: rgba(255, 237, 213, 0.88);
+    color: #9a3412;
+  }
+
+  .statewide-race-alert.litigation {
+    border-color: rgba(217, 119, 6, 0.36);
+    background: rgba(254, 249, 195, 0.90);
+    color: #854d0e;
+  }
+
+  .statewide-race-alert-label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .statewide-competitive {
     display: inline-flex;
     align-items: center;
@@ -12007,6 +12043,33 @@ document.addEventListener('DOMContentLoaded', function() {
       if (otherShareFill) otherShareFill.style.width = `${otherPct.toFixed(2)}%`;
     }
 
+    function isStatewideContestType(contestType) {
+      const key = String(contestType || '').trim().toLowerCase();
+      if (!key) return false;
+      if (key === 'state_house' || key === 'state_senate' || key === 'us_house') return false;
+      return true;
+    }
+
+    function buildStatewideCloseRaceAlertHTML(contestType, year, marginPct) {
+      if (!isStatewideContestType(contestType)) return '';
+      if (!Number.isFinite(marginPct) || marginPct > 1.0) return '';
+
+      const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
+      const alertLabel = inRecountRange ? 'Recount / Litigation Watch' : 'Litigation Watch';
+      const detail = inRecountRange
+        ? `Margin ${marginPct.toFixed(2)} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
+        : `Margin ${marginPct.toFixed(2)} pts is extremely close and could trigger post-election litigation.`;
+      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
+      const className = inRecountRange ? 'recount' : 'litigation';
+
+      return (
+        `<div class="statewide-race-alert ${className}" role="status" aria-live="polite">` +
+          `<span class="statewide-race-alert-label">${escapeHtml(alertLabel)}</span>` +
+          `<span>${escapeHtml(contestLabel)}: ${escapeHtml(detail)} Verify official canvass/court status.</span>` +
+        `</div>`
+      );
+    }
+
     function updateStatewideResults(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
       const statewideTargets = getStatewideContentNodes();
       if (!statewideTargets.length) return;
@@ -12107,6 +12170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const winnerSummary = winnerCall.party === 'tie'
           ? 'Even race'
           : `${winnerCall.winnerName} (${winnerCall.party === 'rep' ? 'R' : 'D'})`;
+        const closeRaceAlertHtml = buildStatewideCloseRaceAlertHTML(contestType, year, marginPct);
 
         setStatewideResultsMarkup(`
           <div class="statewide-card" data-party="${winnerCall.party}">
@@ -12115,6 +12179,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="statewide-kicker">Statewide leader</div>
                 <div class="statewide-call" data-party="${winnerCall.party}">${winnerCall.text}</div>
                 <div class="statewide-subline">${winnerSummary} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin</div>
+                ${closeRaceAlertHtml}
               </div>
               <div class="statewide-competitive" style="color:${compColor};" title="${compLabel}">${compactCompetitivenessLabel(marginPct, winnerCall.party)}</div>
             </div>
