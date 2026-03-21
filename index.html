@@ -1969,6 +1969,64 @@ body { height: var(--app-height); }
     line-height: 1.35;
   }
 
+  .demo-race-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .demo-race-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #475569;
+  }
+
+  .demo-race-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .demo-race-chip.white {
+    background: rgba(148, 163, 184, 0.22);
+    color: #334155;
+    border-color: rgba(71, 85, 105, 0.28);
+  }
+
+  .demo-race-chip.black {
+    background: rgba(37, 99, 235, 0.18);
+    color: #1e3a8a;
+    border-color: rgba(37, 99, 235, 0.34);
+  }
+
+  .demo-race-chip.hispanic {
+    background: rgba(249, 115, 22, 0.20);
+    color: #9a3412;
+    border-color: rgba(234, 88, 12, 0.34);
+  }
+
+  .demo-race-chip.unknown {
+    background: rgba(148, 163, 184, 0.16);
+    color: #475569;
+    border-color: rgba(100, 116, 139, 0.28);
+  }
+
+  .sidebar-demo-race-row .demo-race-chip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
   .result-card .rc-top {
     display: flex;
     justify-content: space-between;
@@ -6656,6 +6714,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="viz-mode-btn" data-mode="winners" type="button"><span>Winners</span></button>
                 <button class="viz-mode-btn" data-mode="shift" type="button"><span>Shift</span></button>
                 <button class="viz-mode-btn" data-mode="flips" type="button"><span>Flips</span></button>
+                <button class="viz-mode-btn" data-mode="demographics" type="button"><span>Demographics</span></button>
               </div>
             </div>
             <div class="control-group control-group-contest">
@@ -6816,6 +6875,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </button>
     <button class="viz-mode-btn" data-mode="flips" id="mode-flips">
       <span>Flips</span>
+    </button>
+    <button class="viz-mode-btn" data-mode="demographics" id="mode-demographics">
+      <span>Demographics</span>
     </button>
   </div>
 
@@ -7031,6 +7093,7 @@ document.addEventListener('DOMContentLoaded', function() {
         state_senate_2022: withBase('./data/tileset/nc_state_senate_2022_lines_tileset.geojson'),
         state_senate_2024: withBase('./data/tileset/nc_state_senate_2024_lines_tileset.geojson'),
         county_demographics: withBase('./data/county_demographics_2020_dp1.json'),
+        precinct_demographics: withBase('./data/precinct_demographics_2020_vap.csv'),
         election: withBase('./data/nc_elections_aggregated.json'),
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
         district_contests_dir: withBase('./data/district_contests'),
@@ -7338,11 +7401,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let stateSenateInfo = null;
     let districtDescriptions = null; // Optional labels like "Sampson & Bladen Counties" or "Concord–Harrisburg"
     let countyDemographics = null; // County-level VAP (18+) + total-pop race/ethnicity from DP1
+    let precinctDemographicsByNorm = null; // Map<string normalized "COUNTY - PREC"> -> row
+    let precinctDemographicsByCountyCode = null; // Map<string countyNorm, Map<string code, row>>
     let countyNameMap = {};
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
     let currentPrecinctResults = null; // Current contest results keyed by precinct
-    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips'
+    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips', 'demographics'
     let previousElectionData = null; // For shift mode
     let precinctsEnabled = false;
     let precinctSourceLoaded = false;
@@ -7395,7 +7460,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let saveUIStateTimer = null;
     let urlPopstateSyncWired = false;
     const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
-    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips']);
+    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics']);
 
     function normalizeURLViewToken(raw) {
       const token = String(raw || '').trim().toLowerCase();
@@ -8743,51 +8808,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       updateContextBanner();
       saveUIState();
-    }
-
-    function renderLegendForVizMode(mode, meta = {}) {
-      const legend = document.getElementById('legend');
-      const header = legend ? legend.querySelector('.legend-header h4') : null;
-      const content = document.getElementById('legend-content');
-      if (!content) return;
-      if (!content.dataset.marginsHtml) content.dataset.marginsHtml = content.innerHTML;
-
-      if (mode === 'winners') {
-        if (header) header.textContent = 'Winners';
-        content.innerHTML = `
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('D')};"></div>Democratic</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('R')};"></div>Republican</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForWinnerMode('T')};"></div>Tie / No data</div>
-        `;
-      } else if (mode === 'flips') {
-        if (header) header.textContent = 'Flips';
-        content.innerHTML = `
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('D')};"></div>Flip to Democratic</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('R')};"></div>Flip to Republican</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForFlipMode('T')}; border: 1px solid rgba(15,23,42,0.20);"></div>No flip / No prior</div>
-        `;
-      } else if (mode === 'shift') {
-        const a = meta?.fromYear ? `${meta.fromYear} → ${meta.toYear || ''}`.trim() : 'Shift';
-        if (header) header.textContent = meta?.fromYear ? `Shift (${a})` : 'Shift';
-        content.innerHTML = `
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-15)};"></div>D +15%</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-10)};"></div>D +10%</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(-5)};"></div>D +5%</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(0)}; border: 1px solid rgba(15,23,42,0.20);"></div>No change</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(5)};"></div>R +5%</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(10)};"></div>R +10%</div>
-          <div class="legend-item"><div class="legend-color" style="background: ${colorForShiftMode(15)};"></div>R +15%</div>
-        `;
-      } else {
-        // margins (default)
-        if (header) header.textContent = 'Political Categories';
-        content.innerHTML = content.dataset.marginsHtml;
-      }
-
-      // If legend recoloring is available (colorblind toggle), re-apply it.
-      if (typeof window.updateLegendColors === 'function') {
-        window.updateLegendColors();
-      }
     }
 
     // Vote Counter Functions - VoteHub Style
@@ -10840,6 +10860,139 @@ document.addEventListener('DOMContentLoaded', function() {
       return toTitleCaseName(cleaned);
     }
 
+    function numericOrNull(value) {
+      if (value === null || value === undefined) return null;
+      const t = String(value).trim();
+      if (!t) return null;
+      const n = Number(t);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function numericOrZero(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function buildRaceChipRowHTML(whitePct, blackPct, hispanicPct, { includeUnknownHispanic = false, extraClass = '' } = {}) {
+      const chips = [];
+      const w = numericOrNull(whitePct);
+      const b = numericOrNull(blackPct);
+      const h = numericOrNull(hispanicPct);
+      if (w !== null) chips.push(`<span class="demo-race-chip white">White ${w.toFixed(2)}%</span>`);
+      if (b !== null) chips.push(`<span class="demo-race-chip black">Black ${b.toFixed(2)}%</span>`);
+      if (h !== null) chips.push(`<span class="demo-race-chip hispanic">Hispanic ${h.toFixed(2)}%</span>`);
+      else if (includeUnknownHispanic) chips.push(`<span class="demo-race-chip unknown">Hispanic N/A</span>`);
+      if (!chips.length) return '';
+      return `<div class="demo-race-row ${extraClass}"><span class="demo-race-label">Race</span>${chips.join('')}</div>`;
+    }
+
+    function buildCountyDemographicsHoverHTML(demo) {
+      if (!demo) return '';
+      const vap = numericOrZero(demo.vap_18plus);
+      const races = buildRaceChipRowHTML(demo.white_pop_pct, demo.black_pop_pct, demo.hispanic_pop_pct);
+      return `
+        <div class="meta-subtle"><strong>VAP (18+):</strong> ${vap.toLocaleString()}</div>
+        ${races}
+        <div class="meta-subtle">Race/ethnicity reflects total population (DP1), not VAP-by-race.</div>
+      `;
+    }
+
+    function buildPrecinctDemographicsHoverHTML(demo) {
+      if (!demo) return '';
+      const vap = numericOrZero(demo.vap_18plus);
+      const races = buildRaceChipRowHTML(demo.white_vap_pct, demo.black_vap_pct, demo.hispanic_vap_pct, { includeUnknownHispanic: true });
+      return `
+        <div class="meta-subtle"><strong>VAP (18+):</strong> ${vap.toLocaleString()}</div>
+        ${races}
+      `;
+    }
+
+    function buildPrecinctDemographicsIndexes(rows) {
+      const byNorm = new Map();
+      const byCountyCode = new Map();
+      (rows || []).forEach(rawRow => {
+        const precinctId = (rawRow?.precinct_id || rawRow?.precinct || '').toString().trim();
+        if (!precinctId || !precinctId.includes(' - ')) return;
+        const [countyRaw, codeRaw] = precinctId.split(' - ', 2);
+        const countyNorm = normalizeCountyToken(countyRaw);
+        const codeNorm = (codeRaw || '').toString().trim().toUpperCase();
+        if (!countyNorm || !codeNorm) return;
+
+        const vap = numericOrZero(rawRow.vap_18plus);
+        const whiteVotes = numericOrZero(rawRow.white_vap);
+        const blackVotes = numericOrZero(rawRow.black_vap);
+        const hispanicVotes = numericOrNull(rawRow.hispanic_vap);
+
+        const whitePctRaw = numericOrNull(rawRow.white_vap_pct);
+        const blackPctRaw = numericOrNull(rawRow.black_vap_pct);
+        const hispanicPctRaw = numericOrNull(rawRow.hispanic_vap_pct);
+        const whitePct = whitePctRaw !== null ? whitePctRaw : (vap > 0 ? (whiteVotes / vap) * 100 : 0);
+        const blackPct = blackPctRaw !== null ? blackPctRaw : (vap > 0 ? (blackVotes / vap) * 100 : 0);
+        const hispanicPct = hispanicPctRaw !== null
+          ? hispanicPctRaw
+          : ((hispanicVotes !== null && vap > 0) ? (hispanicVotes / vap) * 100 : null);
+
+        const row = {
+          precinct_id: `${countyNorm} - ${codeNorm}`,
+          county_norm: countyNorm,
+          precinct_code: codeNorm,
+          vap_18plus: vap,
+          white_vap: whiteVotes,
+          black_vap: blackVotes,
+          hispanic_vap: hispanicVotes,
+          white_vap_pct: Math.round((whitePct + Number.EPSILON) * 100) / 100,
+          black_vap_pct: Math.round((blackPct + Number.EPSILON) * 100) / 100,
+          hispanic_vap_pct: hispanicPct === null ? null : (Math.round((hispanicPct + Number.EPSILON) * 100) / 100)
+        };
+
+        const norm = normalizeCountyToken(`${countyNorm} - ${codeNorm}`);
+        if (norm && !byNorm.has(norm)) byNorm.set(norm, row);
+        if (!byCountyCode.has(countyNorm)) byCountyCode.set(countyNorm, new Map());
+        const codeMap = byCountyCode.get(countyNorm);
+        if (!codeMap.has(codeNorm)) codeMap.set(codeNorm, row);
+      });
+      return { byNorm, byCountyCode };
+    }
+
+    function getPrecinctDemographicsRow(precinctNormRaw, countyNameRaw = '', precinctCodeRaw = '') {
+      if (!precinctDemographicsByNorm || !precinctDemographicsByCountyCode) return null;
+
+      const norm = normalizeCountyToken(precinctNormRaw);
+      if (norm && precinctDemographicsByNorm.has(norm)) return precinctDemographicsByNorm.get(norm);
+
+      let countyNorm = normalizeCountyToken(countyNameRaw);
+      let codeNorm = (precinctCodeRaw || '').toString().trim().toUpperCase();
+      if ((!countyNorm || !codeNorm) && norm.includes(' - ')) {
+        const parts = norm.split(' - ', 2);
+        countyNorm = countyNorm || parts[0];
+        codeNorm = codeNorm || parts[1];
+      }
+      if (!countyNorm || !codeNorm) return null;
+
+      const countyMap = precinctDemographicsByCountyCode.get(countyNorm);
+      if (!countyMap) return null;
+      if (countyMap.has(codeNorm)) return countyMap.get(codeNorm);
+
+      const codeSet = new Set(Array.from(countyMap.keys()));
+      const candidates = new Set([codeNorm]);
+      const addVariant = (value) => {
+        const v = (value || '').toString().trim().toUpperCase();
+        if (v) candidates.add(v);
+      };
+
+      try {
+        addNumericBaseVariantsFromAlphaSuffix(codeNorm, addVariant);
+        addEmbeddedPrecinctCodeVariants(codeNorm, addVariant);
+        addPrefixStrippedNumericVariants(codeNorm, codeSet, addVariant);
+        if (countyNorm === 'WAKE') addClosestHyphenCodeVariants(codeNorm, codeSet, addVariant);
+      } catch (_) {}
+
+      for (const cand of candidates) {
+        if (countyMap.has(cand)) return countyMap.get(cand);
+      }
+      return null;
+    }
+
     function expandLegacyCandidateShorthand(name) {
       const raw = (name || '').toString().trim();
       if (!raw) return '';
@@ -11092,6 +11245,18 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
+    function buildDemographicsLegendHTML() {
+      return `
+        <div class="legend-swatch-grid">
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(60, 20, 20)};"></span><span>White plurality</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 60, 20)};"></span><span>Black plurality</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 60)};"></span><span>Hispanic plurality</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(35, 35, 30)};"></span><span>Near tie / mixed</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(null, null, null)};"></span><span>No demographic data</span></div>
+        </div>
+      `;
+    }
+
     function renderLegendForVizMode(mode, meta = {}) {
       const legend = document.getElementById('legend');
       const header = legend ? legend.querySelector('.legend-header h4') : null;
@@ -11125,6 +11290,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (badge) badge.textContent = meta?.fromYear ? shiftRange : 'Shift';
         if (footer) footer.textContent = 'Blue means movement toward Democrats; red means movement toward Republicans.';
         content.innerHTML = buildShiftLegendHTML();
+      } else if (mode === 'demographics') {
+        if (header) header.textContent = 'Demographics';
+        if (subtitle) subtitle.textContent = 'Shades each geography by the largest reported race share (white, black, or Hispanic).';
+        if (badge) badge.textContent = 'Demographics';
+        if (footer) footer.textContent = 'County shares use DP1 total population; district/precinct shares use available VAP race fields.';
+        content.innerHTML = buildDemographicsLegendHTML();
       } else {
         if (header) header.textContent = 'Political Categories';
         if (subtitle) subtitle.textContent = 'A compact spectrum from strongest Republican to strongest Democratic performance.';
@@ -11885,7 +12056,8 @@ document.addEventListener('DOMContentLoaded', function() {
         margins: 'Margins',
         winners: 'Winners',
         shift: 'Shift',
-        flips: 'Flips'
+        flips: 'Flips',
+        demographics: 'Demographics'
       };
       return labels[mode] || 'Margins';
     }
@@ -12574,9 +12746,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let demoLine = '';
       try {
         const demo = countyDemographics?.counties?.[norm] || null;
-        if (demo) {
-          demoLine = `<div class="meta-subtle"><strong>VAP (18+):</strong> ${Number(demo.vap_18plus || 0).toLocaleString()}</div>`;
-        }
+        demoLine = buildCountyDemographicsHoverHTML(demo);
       } catch (_) {}
 
       const chips = [];
@@ -12675,11 +12845,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const trendPrevYear = vizPrevCache?.prevYear || vizShiftCache?.prevYear || null;
       const trendAtGlance = precinctTrendAtGlanceHTML(curSigned, prevSignedForFlip, trendPrevYear, Number(year));
+      let demoLine = '';
+      try {
+        const demo = getPrecinctDemographicsRow(precinctNorm, countyName, precId);
+        demoLine = buildPrecinctDemographicsHoverHTML(demo);
+      } catch (_) {}
 
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
         ${trendAtGlance}
+        ${demoLine}
       `;
       showHoverTooltip(point.x, point.y, buildTooltipShell(title, inner), { force: !!forceTooltip });
       wireTooltipButtons();
@@ -13827,13 +14003,17 @@ document.addEventListener('DOMContentLoaded', function() {
   try {
     const demo = countyDemographics?.counties?.[norm] || null;
     if (demo) {
+      const demoRaceChips = buildRaceChipRowHTML(
+        demo.white_pop_pct,
+        demo.black_pop_pct,
+        demo.hispanic_pop_pct,
+        { extraClass: 'sidebar-demo-race-row' }
+      );
       sidebarContent += `<div class="demographics-section">`;
       sidebarContent += `<h3 class="sidebar-section-title">Demographics</h3>`;
       sidebarContent += `<p class="sidebar-breakdown"><b>VAP (18+):</b> ${Number(demo.vap_18plus || 0).toLocaleString()}</p>`;
       sidebarContent += `<p class="sidebar-margin-details" style="margin-top:6px;">Race/ethnicity shown is total population (DP1), not VAP-by-race.</p>`;
-      sidebarContent += `<p class="sidebar-breakdown"><b>White:</b> ${Number(demo.white_pop_pct || 0).toFixed(2)}%</p>`;
-      sidebarContent += `<p class="sidebar-breakdown"><b>Black:</b> ${Number(demo.black_pop_pct || 0).toFixed(2)}%</p>`;
-      sidebarContent += `<p class="sidebar-breakdown"><b>Hispanic:</b> ${Number(demo.hispanic_pop_pct || 0).toFixed(2)}%</p>`;
+      if (demoRaceChips) sidebarContent += demoRaceChips;
       sidebarContent += `</div>`;
     }
   } catch (_) {}
@@ -16360,6 +16540,19 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('County demographics not loaded:', err?.message || err);
       }
 
+      // Optional precinct demographics (VAP by race from block aggregation).
+      try {
+        const precinctDemographicsCSV = await loadCSV(CONFIG.paths.precinct_demographics);
+        const rows = parseCSV(precinctDemographicsCSV);
+        const idx = buildPrecinctDemographicsIndexes(rows);
+        precinctDemographicsByNorm = idx.byNorm;
+        precinctDemographicsByCountyCode = idx.byCountyCode;
+      } catch (err) {
+        precinctDemographicsByNorm = null;
+        precinctDemographicsByCountyCode = null;
+        console.warn('Precinct demographics not loaded:', err?.message || err);
+      }
+
       try {
         setStatus('Loading congressional districts...');
         if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.districts?.url) {
@@ -16617,6 +16810,33 @@ document.addEventListener('DOMContentLoaded', function() {
       // Red vs blue diverging.
       if (dir === 'R') return ['#fee2e2', '#fca5a5', '#ef4444', '#991b1b'][bin - 1];
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
+    }
+
+    function classifyDemographicDominance(whitePct, blackPct, hispanicPct) {
+      const entries = [
+        { key: 'white', value: numericOrNull(whitePct) },
+        { key: 'black', value: numericOrNull(blackPct) },
+        { key: 'hispanic', value: numericOrNull(hispanicPct) }
+      ].filter(entry => entry.value !== null);
+
+      if (!entries.length) return { key: 'unknown', pct: null };
+
+      entries.sort((a, b) => Number(b.value) - Number(a.value));
+      const top = entries[0];
+      const second = entries[1] || null;
+      if (second && Math.abs(Number(top.value) - Number(second.value)) < 0.15) {
+        return { key: 'mixed', pct: Number(top.value) };
+      }
+      return { key: top.key, pct: Number(top.value) };
+    }
+
+    function colorForDemographicsMode(whitePct, blackPct, hispanicPct) {
+      const dom = classifyDemographicDominance(whitePct, blackPct, hispanicPct);
+      if (dom.key === 'white') return '#64748b';
+      if (dom.key === 'black') return '#2563eb';
+      if (dom.key === 'hispanic') return '#f97316';
+      if (dom.key === 'mixed') return '#0f766e';
+      return '#94a3b8';
     }
 
 	    async function tryLoadContestSliceStrict(contestType, year) {
@@ -17271,6 +17491,68 @@ document.addEventListener('DOMContentLoaded', function() {
       let prevPrecinctMarginByNorm = null; // Map<string, number>
       let prevCountyTotals = null; // Map countyNorm -> {dem, rep, total}
 
+      if (mode === 'demographics') {
+        renderLegendForVizMode('demographics');
+        vizShiftCache = null;
+
+        const countyExpr = ['case'];
+        const countyDemoRows = countyDemographics?.counties || null;
+        if (countyDemoRows) {
+          Object.keys(countyDemoRows).forEach(countyNorm => {
+            const demo = countyDemoRows[countyNorm] || {};
+            const color = colorForDemographicsMode(demo.white_pop_pct, demo.black_pop_pct, demo.hispanic_pop_pct);
+            countyExpr.push([
+              '==',
+              ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
+              countyNorm
+            ]);
+            countyExpr.push(color);
+          });
+        }
+        countyExpr.push('#e2e8f0');
+        if (map.getLayer('county-fill')) {
+          map.setPaintProperty('county-fill', 'fill-color', countyExpr);
+        }
+        if (map.getLayer('county-stroke')) {
+          try {
+            map.setPaintProperty('county-stroke', 'line-color', '#333');
+            map.setPaintProperty('county-stroke', 'line-width', 1);
+          } catch (_) {}
+        }
+
+        const exprPrecinct = ['case'];
+        if (currentPrecinctResults) {
+          currentPrecinctResults.forEach((precRow, precNorm) => {
+            const tVotes = Number(precRow?.[`${contestType}_total`] || 0);
+            currentPrecinctTurnoutTotals.set(precNorm, tVotes);
+          });
+        }
+        if (precinctDemographicsByNorm && precinctDemographicsByNorm.size) {
+          precinctDemographicsByNorm.forEach((demo, precNorm) => {
+            const color = colorForDemographicsMode(demo?.white_vap_pct, demo?.black_vap_pct, demo?.hispanic_vap_pct);
+            exprPrecinct.push(['==', ['get', 'precinct_norm'], precNorm]);
+            exprPrecinct.push(color);
+          });
+        }
+        exprPrecinct.push('#d1d5db');
+        lastPrecinctFillExpr = exprPrecinct;
+        lastPrecinctDotExpr = exprPrecinct;
+        if (needsPrecinctDetail) {
+          if (map.getLayer('precinct-fill')) {
+            map.setPaintProperty('precinct-fill', 'fill-color', exprPrecinct);
+          }
+          if (map.getLayer('precinct-dot')) {
+            map.setPaintProperty('precinct-dot', 'circle-color', exprPrecinct);
+          }
+        }
+
+        applyLayerOpacityTuning();
+        try { await updateAnalyticsPanels(contestType, year, contestData); } catch (_) {}
+        setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})`);
+        setStatus(`Applied demographic mode: ${formatContestName(contestType, year)} ${year}`);
+        return;
+      }
+
       // Keep previous-cycle county totals loaded for hover flip chips across modes.
       // Precinct-level prior margins remain opt-in for shift/flip mode to keep non-shift
       // contest switches lightweight when precinct overlay is enabled.
@@ -17502,6 +17784,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return setStatus('No congressional data found for this year');
       }
 
+      const mode = (currentVizMode || 'margins');
+      renderLegendForVizMode(mode);
+
       // Build expression for district coloring
       const expr = ['case'];
       currentDistrictTurnoutTotals = {};
@@ -17527,7 +17812,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const repPct = (repVotes / totalVotes) * 100;
         const winner = repPct > demPct ? 'R' : 'D';
         const marginPct = Math.abs(repPct - demPct);
-        const color = colorForMarginMode(marginPct, winner);
+        let color = colorForMarginMode(marginPct, winner);
+        if (mode === 'demographics') {
+          const demoRow = getDistrictDemographics('congressional', district);
+          color = colorForDemographicsMode(demoRow?.white_vap_pct, demoRow?.black_vap_pct, demoRow?.hispanic_vap_pct);
+        } else if (mode === 'winners') {
+          color = colorForWinnerMode(winner);
+        }
         currentDistrictTurnoutTotals[String(Number(district))] = totalVotes;
         
         expr.push([
@@ -17559,8 +17850,13 @@ document.addEventListener('DOMContentLoaded', function() {
       applyLayerOpacityTuning();
       setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totals.dem, totals.rep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
       try { await updateAnalyticsPanels(contestType, year, []); } catch (_) {}
-  setStatewideContestTitle(`US House (${year})`);
-      setStatus(`Applied contest: NC US House ${year}`);
+      if (mode === 'demographics') {
+        setStatewideContestTitle(`US House (${year}) - Congressional demographic profile`);
+        setStatus(`Applied demographic mode for Congressional districts.`);
+      } else {
+        setStatewideContestTitle(`US House (${year})`);
+        setStatus(`Applied contest: NC US House ${year}`);
+      }
     }
 
     async function applyStatewideContestToDistricts(contestType, year) {
@@ -17628,7 +17924,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
-            if (mode === 'flips') {
+            const districtNum = Number(districtId);
+            if (mode === 'demographics') {
+              const demoRow = getDistrictDemographics(districtScope, districtNum);
+              color = colorForDemographicsMode(demoRow?.white_vap_pct, demoRow?.black_vap_pct, demoRow?.hispanic_vap_pct);
+            } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
               const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
               const f = flipInfo(prevSigned, signed);
@@ -17643,7 +17943,6 @@ document.addEventListener('DOMContentLoaded', function() {
               color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
             }
 
-            const districtNum = Number(districtId);
             if (!isNaN(districtNum)) {
               expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
               expr.push(color);
@@ -17686,8 +17985,13 @@ document.addEventListener('DOMContentLoaded', function() {
             ? ` | match coverage ${Number(coveragePct).toFixed(2)}%`
             : '';
           const linesLabel = getDistrictLinesLabel();
-          setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Reallocated to ${linesLabel}${coverageText}`);
-          setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
+          if (mode === 'demographics') {
+            setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
+            setStatus(`Applied demographic mode for ${getReadableViewLabel(currentView)} (${linesLabel}).`);
+          } else {
+            setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Reallocated to ${linesLabel}${coverageText}`);
+            setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
+          }
           setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year} (${linesLabel})`, totalDem, totalRep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
           return;
         }
@@ -17701,6 +18005,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (contestData.length === 0) {
         return setStatus('No data found for this contest');
+      }
+
+      const mode = (currentVizMode || 'margins');
+      if (mode === 'demographics') {
+        renderLegendForVizMode('demographics');
+        const layerName = currentView === 'districts' ? 'district-fill'
+          : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill');
+        const sourceRows = currentView === 'districts'
+          ? (districtsInfo || [])
+          : (currentView === 'state_house' ? (stateHouseInfo || []) : (stateSenateInfo || []));
+        const expr = ['case'];
+        let mapped = 0;
+        sourceRows.forEach(row => {
+          const districtNum = Number(row?.district);
+          if (!Number.isFinite(districtNum)) return;
+          const color = colorForDemographicsMode(row?.white_vap_pct, row?.black_vap_pct, row?.hispanic_vap_pct);
+          expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
+          expr.push(color);
+          mapped += 1;
+        });
+        expr.push('#e0e0e0');
+
+        if (map.getLayer(layerName)) {
+          map.setPaintProperty(layerName, 'fill-color', expr);
+          applyLayerOpacityTuning();
+        } else {
+          setStatus('District layer not found!', 5000, true);
+        }
+
+        let totalDem = 0;
+        let totalRep = 0;
+        let totalVotes = 0;
+        contestData.forEach(row => {
+          const countyNorm = normalizeCountyToken(row?.county || '');
+          const fallbackTotal = (Number(row[`${contestType}_dem`]) || 0) + (Number(row[`${contestType}_rep`]) || 0);
+          const adjusted = applyScenarioShiftToVotes(
+            countyNorm,
+            Number(row[`${contestType}_dem`]) || 0,
+            Number(row[`${contestType}_rep`]) || 0,
+            Number(row[`${contestType}_other`]) || 0,
+            Number(row[`${contestType}_total`]) || fallbackTotal
+          );
+          const demVotes = Number(adjusted.dem || 0);
+          const repVotes = Number(adjusted.rep || 0);
+          const rowTotalVotes = Number(adjusted.total || 0);
+          totalVotes += rowTotalVotes > 0 ? rowTotalVotes : (demVotes + repVotes);
+          totalDem += demVotes;
+          totalRep += repVotes;
+        });
+        const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
+        setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totalDem, totalRep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
+        setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile`);
+        setStatus(mapped > 0
+          ? `Applied demographic mode for ${getReadableViewLabel(currentView)}.`
+          : `No district demographic rows found for ${getReadableViewLabel(currentView)}.`);
+        return;
       }
 
       // Calculate statewide totals for this contest
@@ -17758,3 +18118,4 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
+

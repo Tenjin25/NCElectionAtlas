@@ -59,6 +59,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 - **Comparative Controls:** One-click split-ticket swap (`President` vs `NC Supreme Court`) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
+- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic) with a dedicated map key
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
@@ -71,7 +72,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 20, 2026
+**Last updated:** March 21, 2026
 
 ### UI / UX
 
@@ -85,6 +86,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
 - Added split-ticket comparative toggle so counties mode can instantly switch between Presidential and NC Supreme Court views.
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
+- Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
+- Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
 - Added stronger settlement/town and county label halos so labels stay legible over high-intensity precinct coloring.
 - Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
@@ -299,6 +302,14 @@ Each file contains already-aggregated results and coverage metadata.
 }
 ```
 
+### 6. Demographic Overlays (Optional)
+
+- `data/county_demographics_2020_dp1.json` — County-level demographic shares used for county hover/sidebar and demographics mode
+- `data/nc_congressional_districts.csv` — Congressional district demographic shares
+- `data/nc_state_house_districts.csv` — State House district demographic shares
+- `data/nc_state_senate_districts.csv` — State Senate district demographic shares
+- `data/precinct_demographics_2020_vap.csv` — Precinct-level VAP demographics aggregated from 2020 blocks
+
 ## Precinct Matching and Non-Geographic Votes
 
 Many precinct exports include buckets like Absentee by mail, One Stop/Early vote, Provisional, and Transfer. These do **not** map to precinct geometry, and treating them as real precincts will distort maps (especially in Wake/Meck).
@@ -325,6 +336,26 @@ py scripts/build_district_contests_from_batch_shatter.py `
 ```
 
 This produces three district slice files (congressional, state_house, state_senate) and updates the manifest.
+
+### Rebuilding Demographic Layers
+
+Rebuild county-level demographics (DP1 JSON used in county mode):
+
+```powershell
+py scripts/build_county_demographics_2020_dp1.py
+```
+
+Rebuild precinct-level demographics (2020 block VAP -> precinct CSV used by precinct overlays/tooltips):
+
+```powershell
+py scripts/build_precinct_demographics_2020.py
+```
+
+Rebuild district demographic CSVs for congressional/state-house/state-senate overlays:
+
+```powershell
+py scripts/build_district_demographics.py
+```
 
 ### Improving Wake/Meck Pre-2010 Allocations
 
