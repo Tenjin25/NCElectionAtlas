@@ -2065,19 +2065,19 @@ body { height: var(--app-height); }
   }
 
   .meta-chip.tier {
-    padding: 7px 12px;
-    font-size: 13px;
-    font-weight: 900;
-    border-width: 2px;
-    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-    background: rgba(255, 255, 255, 0.92);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    border-width: 1px;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.78);
     color: #0f172a;
   }
 
   .meta-chip.tier .dot {
-    width: 10px;
-    height: 10px;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 0 0 1px rgba(15,23,42,0.14);
+    width: 8px;
+    height: 8px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
   }
 
   .meta-subtle {
@@ -14113,7 +14113,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
-        if (flipChip) chips.unshift(flipChip);
+        if (flipChip) chips.push(flipChip);
       }
 
       if (isBellwetherCounty(norm)) {
@@ -14208,7 +14208,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
-        if (flipChip) chips.unshift(flipChip);
+        if (flipChip) chips.push(flipChip);
       }
       const trendPrevYear = prevSignedForFlip !== null
         ? (vizPrevCache?.prevYear || vizShiftCache?.prevYear || null)
@@ -14419,7 +14419,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
-        if (flipChip) chips.unshift(flipChip);
+        if (flipChip) chips.push(flipChip);
       }
 
       const desc = getDistrictDescription(scope, districtNum);
