@@ -15021,7 +15021,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function isMobileEditableField(node) {
       if (!node || !node.tagName) return false;
       const tag = node.tagName.toLowerCase();
-      if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') return false;
+      // Keep native dropdowns stable; focus-mode shifts are only useful for text entry.
+      if (tag === 'select') return false;
+      if (tag !== 'input' && tag !== 'textarea') return false;
       return !!(node.closest && (node.closest('#map-topbar') || node.closest('#main-controls')));
     }
 
