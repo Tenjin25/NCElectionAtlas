@@ -9252,10 +9252,9 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${short} (${partyCode})`;
     }
 
-    function formatFocusBarLabel(name, pct, fallbackText, marginPct = null) {
+    function formatFocusBarLabel(name, pct, fallbackText) {
       const short = shortCandidateLabel(name, fallbackText);
-      const m = marginPct === null ? Number(pct || 0) : Number(marginPct || 0);
-      return `${short} ${formatPctForCloseRace(pct, m)}%`;
+      return `${short} ${Number(pct || 0).toFixed(2)}%`;
     }
 
     function formatCompactVoteTotal(value) {
@@ -9390,7 +9389,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = Math.abs(repPct - demPct);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -9414,9 +9412,9 @@ document.addEventListener('DOMContentLoaded', function() {
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
-      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
+      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem');
       barMidLabelEl.textContent = '50%';
-      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
+      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep');
     }
 
     function updateVoteCounter(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
@@ -9435,10 +9433,9 @@ document.addEventListener('DOMContentLoaded', function() {
       animateCounter('rep-count', repVotes);
       animateCounter('other-count', otherVotes);
       
-      const marginPct = Math.abs(repPct - demPct);
-      document.getElementById('dem-percent').textContent = formatPctForCloseRace(demPct, marginPct) + '%';
-      document.getElementById('rep-percent').textContent = formatPctForCloseRace(repPct, marginPct) + '%';
-      document.getElementById('other-percent').textContent = formatPctForCloseRace(otherPct, marginPct) + '%';
+      document.getElementById('dem-percent').textContent = demPct.toFixed(2) + '%';
+      document.getElementById('rep-percent').textContent = repPct.toFixed(2) + '%';
+      document.getElementById('other-percent').textContent = otherPct.toFixed(2) + '%';
       updateVoteCounterSummary(demVotes, repVotes, otherVotes, candidates, meta);
       
       showVoteCounter();
@@ -9502,14 +9499,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return { cls: 'tie', text: 'First available result' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
-      const shiftAbs = Math.abs(shift);
-      if (shiftAbs < 0.01) {
+      if (Math.abs(shift) < 0.01) {
         return { cls: 'tie', text: `No shift vs ${prevYear}` };
       }
-      const shiftLabel = formatPctForCloseRace(shiftAbs, shiftAbs);
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `${shift > 0 ? 'R' : 'D'} +${shiftLabel} vs ${prevYear}`
+        text: `${shift > 0 ? 'R' : 'D'} +${Math.abs(shift).toFixed(2)} vs ${prevYear}`
       };
     }
 
@@ -9538,7 +9533,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
         const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
-        const marginPct = totalVotes > 0 ? Math.abs(repPct - demPct) : 0;
         const signedPct = Number(item.margin_pct || 0);
         const winnerMeta = getTrendWinnerMeta(item);
         const leadLabel = leadMarginPctLabel(repVotes, demVotes, totalVotes);
@@ -9554,7 +9548,6 @@ document.addEventListener('DOMContentLoaded', function() {
           demPct,
           repPct,
           otherPct,
-          marginPct,
           signedPct,
           winnerMeta,
           leadLabel,
@@ -9623,7 +9616,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : '';
           const leadSummary = entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel;
           const otherChip = entry.otherPct >= 0.05
-            ? `<span class="focus-trend-chip">Other ${escapeHtml(formatPctForCloseRace(entry.otherPct, entry.marginPct))}%</span>`
+            ? `<span class="focus-trend-chip">Other ${escapeHtml(entry.otherPct.toFixed(2))}%</span>`
             : '';
           return `
             <div class="focus-trend-entry">
@@ -9637,8 +9630,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span class="focus-trend-entry-margin">${escapeHtml(leadSummary)}</span>
                 </div>
                 <div class="focus-trend-entry-scale">
-                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${formatPctForCloseRace(entry.demPct, entry.marginPct)}%`)}</span>
-                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${formatPctForCloseRace(entry.repPct, entry.marginPct)}%`)}</span>
+                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${entry.demPct.toFixed(2)}%`)}</span>
+                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${entry.repPct.toFixed(2)}%`)}</span>
                 </div>
                 <div class="focus-trend-entry-bar" aria-hidden="true">
                   <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
@@ -11573,37 +11566,40 @@ document.addEventListener('DOMContentLoaded', function() {
       return /^(II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX)$/.test(normalized);
     }
 
+    function roundPct2(value) {
+      return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+    }
+
     function partyPctValue(votes, totalVotes) {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
-      return (Number(votes || 0) / t) * 100.0;
+      return roundPct2((Number(votes || 0) / t) * 100.0);
     }
 
     function marginPctValue(repVotes, demVotes, totalVotes) {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
-      return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
+      const repPct = partyPctValue(repVotes, t);
+      const demPct = partyPctValue(demVotes, t);
+      return Math.abs(repPct - demPct);
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      return `${formatPctForCloseRace(pct, pct)}%`;
+      return `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
     }
 
     // Lead pill uses numeric margin only; party context comes from winner color/label.
     function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      return `${formatPctForCloseRace(pct, pct)}%`;
+      return `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
     }
 
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      const pctLabel = `${formatPctForCloseRace(pct, pct)}%`;
+      const pctLabel = `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
       if (margin > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
@@ -12020,7 +12016,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = Math.abs(repPct - demPct);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -12044,9 +12039,9 @@ document.addEventListener('DOMContentLoaded', function() {
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
-      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
+      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem');
       barMidLabelEl.textContent = '50%';
-      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
+      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep');
       if (totalMetaEl) totalMetaEl.textContent = `${total.toLocaleString()} total votes`;
       if (leadMetaEl) {
         leadMetaEl.textContent = winnerParty === 'tie'
@@ -12071,19 +12066,18 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(marginPct) || marginPct > 1.0) return '';
 
       const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
-      const recountThresholdLabel = formatPctForCloseRace(RECOUNT_MARGIN_THRESHOLD_PCT, RECOUNT_MARGIN_THRESHOLD_PCT);
       const marginLabel = formatPctForCloseRace(marginPct, marginPct);
-      const alertLabel = inRecountRange ? 'Recount Watch' : 'Litigation Watch';
-      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
+      const alertLabel = inRecountRange ? 'Recount / Litigation Watch' : 'Litigation Watch';
       const detail = inRecountRange
-        ? `${contestLabel} is within the ${recountThresholdLabel}-point recount range (${marginLabel} pts).`
-        : `${contestLabel} is very close at ${marginLabel} pts and could draw post-election litigation.`;
+        ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
+        : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
+      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
       const className = inRecountRange ? 'recount' : 'litigation';
 
       return (
         `<div class="statewide-race-alert ${className}" role="status" aria-live="polite">` +
           `<span class="statewide-race-alert-label">${escapeHtml(alertLabel)}</span>` +
-          `<span>${escapeHtml(detail)}</span>` +
+          `<span>${escapeHtml(contestLabel)}: ${escapeHtml(detail)} Verify official canvass/court status.</span>` +
         `</div>`
       );
     }
@@ -12244,7 +12238,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100.0;
       const repPct = (r / total) * 100.0;
       const otherPct = (o / total) * 100.0;
-      const marginPct = Math.abs(repPct - demPct);
 
       const marginLabel = winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
       const demFull = fullCandidateLabel(demCandidate, 'Democratic');
@@ -12274,15 +12267,15 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="rc-row">
             <div class="rc-chip">
               <div class="k">D: ${demFull}</div>
-              <div class="v" style="color:#1d4ed8;">${d.toLocaleString()} (${formatPctForCloseRace(demPct, marginPct)}%)</div>
+              <div class="v" style="color:#1d4ed8;">${d.toLocaleString()} (${demPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
               <div class="k">OTHER</div>
-              <div class="v" style="color:#475569;">${o.toLocaleString()} (${formatPctForCloseRace(otherPct, marginPct)}%)</div>
+              <div class="v" style="color:#475569;">${o.toLocaleString()} (${otherPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
               <div class="k">R: ${repFull}</div>
-              <div class="v" style="color:#b91c1c;">${r.toLocaleString()} (${formatPctForCloseRace(repPct, marginPct)}%)</div>
+              <div class="v" style="color:#b91c1c;">${r.toLocaleString()} (${repPct.toFixed(2)}%)</div>
             </div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:#64748b;">
@@ -12914,7 +12907,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
       const voteLabel = marginVotes === 1 ? 'vote' : 'votes';
       const pctLabel = formatPctForCloseRace(marginPct, marginPct);
-      const html = `<span class="recount-label">Recount Watch</span><span>${safeFocusLabel}: ${pctLabel}% (${marginVotes.toLocaleString()} ${voteLabel})</span>`;
+      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${pctLabel}%) - RECOUNT ACTIVE</span>`;
       setRecountRadarBadgeVisible(true, html);
     }
 
