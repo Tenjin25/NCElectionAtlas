@@ -7602,6 +7602,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const BELLWETHER_MIN_TWO_PARTY_VOTES = 150;
     const BELLWETHER_MAX_MARKERS = 60;
     const BELLWETHER_MARKER_SHARE = 0.018;
+    const BELLWETHER_MIN_COUNTIES = 8;
+    const BELLWETHER_MAX_COUNTIES = 20;
+    const BELLWETHER_COUNTY_SHARE = 0.15;
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
     let splitTicketCountyOverlayMargins = {};
@@ -7609,6 +7612,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let bellwetherPrecinctNorms = new Set();
     let bellwetherCountyNorms = new Set();
     let bellwetherCache = new Map();
+    let bellwetherCountyCache = new Map();
     let bellwetherRequestId = 0;
     let snapshotStoryVariant = 'balanced'; // balanced | instagram | tiktok
     let currentCountyTurnoutTotals = {};
@@ -12604,14 +12608,8 @@ document.addEventListener('DOMContentLoaded', function() {
       return !!(countyNorm && bellwetherCountyNorms && bellwetherCountyNorms.has(countyNorm));
     }
 
-    function deriveBellwetherCountyNormsFromPrecincts(normSet) {
-      const next = new Set();
-      const src = normSet instanceof Set ? normSet : new Set();
-      src.forEach(norm => {
-        const countyNorm = String(norm || '').split(' - ', 1)[0];
-        if (countyNorm) next.add(countyNorm);
-      });
-      bellwetherCountyNorms = next;
+    function setBellwetherCountyNorms(normSet) {
+      bellwetherCountyNorms = normSet instanceof Set ? new Set(normSet) : new Set();
     }
 
     function updateSplitTicketLegendChipVisibility() {
@@ -13018,6 +13016,94 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.max(18, Math.min(BELLWETHER_MAX_MARKERS, byShare || BELLWETHER_MAX_MARKERS));
     }
 
+    function getBellwetherCountyCap() {
+      const countyCount = Array.isArray(countiesGeoJSON?.features)
+        ? countiesGeoJSON.features.length
+        : 100;
+      const byShare = countyCount > 0
+        ? Math.round(countyCount * BELLWETHER_COUNTY_SHARE)
+        : BELLWETHER_MAX_COUNTIES;
+      return Math.max(BELLWETHER_MIN_COUNTIES, Math.min(BELLWETHER_MAX_COUNTIES, byShare || BELLWETHER_MAX_COUNTIES));
+    }
+
+    async function computeBellwetherCountyNormSet(contestType, year) {
+      const cycleYears = getBellwetherCycleYears(contestType, year, BELLWETHER_CYCLE_COUNT);
+      if (cycleYears.length < BELLWETHER_CYCLE_COUNT) return new Set();
+
+      const scores = new Map();
+      for (const cycleYear of cycleYears) {
+        const rows = await loadContestSlice(contestType, cycleYear);
+        const countyTotals = new Map();
+        let statewideDem = 0;
+        let statewideRep = 0;
+
+        rows.forEach(row => {
+          const nameNorm = normalizeCountyToken(row?.county || '');
+          if (!nameNorm) return;
+          const countyNorm = nameNorm.includes(' - ')
+            ? nameNorm.split(' - ', 1)[0]
+            : nameNorm;
+          if (!countyNorm) return;
+
+          const demVotes = Number(row?.[`${contestType}_dem`] || 0);
+          const repVotes = Number(row?.[`${contestType}_rep`] || 0);
+          if (!Number.isFinite(demVotes) || !Number.isFinite(repVotes)) return;
+
+          statewideDem += demVotes;
+          statewideRep += repVotes;
+
+          const current = countyTotals.get(countyNorm) || { dem: 0, rep: 0 };
+          current.dem += demVotes;
+          current.rep += repVotes;
+          countyTotals.set(countyNorm, current);
+        });
+
+        const statewideTwoParty = statewideDem + statewideRep;
+        if (!Number.isFinite(statewideTwoParty) || statewideTwoParty <= 0) return new Set();
+
+        const statewideWinnerSign = statewideRep > statewideDem ? 1 : (statewideDem > statewideRep ? -1 : 0);
+        if (!statewideWinnerSign) return new Set();
+        const statewideSignedMarginPct = ((statewideRep - statewideDem) / statewideTwoParty) * 100;
+
+        countyTotals.forEach((totals, countyNorm) => {
+          const twoPartyVotes = Number(totals?.dem || 0) + Number(totals?.rep || 0);
+          if (!Number.isFinite(twoPartyVotes) || twoPartyVotes <= 0) return;
+
+          const winnerSign = totals.rep > totals.dem ? 1 : (totals.dem > totals.rep ? -1 : 0);
+          if (!winnerSign || winnerSign !== statewideWinnerSign) return;
+
+          const countySignedMarginPct = ((totals.rep - totals.dem) / twoPartyVotes) * 100;
+          const marginError = Math.abs(countySignedMarginPct - statewideSignedMarginPct);
+
+          const current = scores.get(countyNorm) || { hits: 0, errorSum: 0, voteSum: 0 };
+          current.hits += 1;
+          current.errorSum += marginError;
+          current.voteSum += twoPartyVotes;
+          scores.set(countyNorm, current);
+        });
+      }
+
+      const finalists = [];
+      scores.forEach((value, norm) => {
+        if (!value || value.hits !== cycleYears.length) return;
+        finalists.push({
+          norm,
+          avgError: value.errorSum / cycleYears.length,
+          voteSum: value.voteSum
+        });
+      });
+      if (!finalists.length) return new Set();
+
+      finalists.sort((a, b) => (
+        (a.avgError - b.avgError)
+        || (b.voteSum - a.voteSum)
+        || a.norm.localeCompare(b.norm)
+      ));
+
+      const cap = getBellwetherCountyCap();
+      return new Set(finalists.slice(0, cap).map(item => item.norm));
+    }
+
     async function computeBellwetherPrecinctNormSet(contestType, year) {
       const cycleYears = getBellwetherCycleYears(contestType, year, BELLWETHER_CYCLE_COUNT);
       if (cycleYears.length < BELLWETHER_CYCLE_COUNT) return new Set();
@@ -13089,7 +13175,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const requestId = ++bellwetherRequestId;
       if (!contestType || !year) {
         bellwetherPrecinctNorms = new Set();
-        deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
+        setBellwetherCountyNorms(new Set());
         setBellwetherFeatures(bellwetherPrecinctNorms);
         updateBellwetherLayerVisibility();
         return;
@@ -13104,15 +13190,23 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const cacheKey = `${contestType}_${Number(year)}`;
-      let normSet = bellwetherCache.get(cacheKey);
-      if (!normSet) {
-        normSet = await computeBellwetherPrecinctNormSet(contestType, year);
-        bellwetherCache.set(cacheKey, normSet);
-      }
+      const precinctPromise = bellwetherCache.has(cacheKey)
+        ? Promise.resolve(bellwetherCache.get(cacheKey))
+        : computeBellwetherPrecinctNormSet(contestType, year).then(normSet => {
+          bellwetherCache.set(cacheKey, normSet);
+          return normSet;
+        });
+      const countyPromise = bellwetherCountyCache.has(cacheKey)
+        ? Promise.resolve(bellwetherCountyCache.get(cacheKey))
+        : computeBellwetherCountyNormSet(contestType, year).then(normSet => {
+          bellwetherCountyCache.set(cacheKey, normSet);
+          return normSet;
+        });
+      const [precinctNormSet, countyNormSet] = await Promise.all([precinctPromise, countyPromise]);
       if (requestId !== bellwetherRequestId) return;
 
-      bellwetherPrecinctNorms = normSet instanceof Set ? normSet : new Set();
-      deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
+      bellwetherPrecinctNorms = precinctNormSet instanceof Set ? precinctNormSet : new Set();
+      setBellwetherCountyNorms(countyNormSet);
       setBellwetherFeatures(precinctsEnabled ? bellwetherPrecinctNorms : new Set());
       updateBellwetherLayerVisibility();
     }
@@ -18131,7 +18225,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try { setSplitTicketOverlayVisibility(); } catch (_) {}
         try {
           bellwetherPrecinctNorms = new Set();
-          deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
+          setBellwetherCountyNorms(new Set());
           setBellwetherFeatures(bellwetherPrecinctNorms);
           updateBellwetherLayerVisibility();
         } catch (_) {}
