@@ -10,6 +10,7 @@ Default NHGIS columns (ds248 P3, 18+):
   - U7D003: white alone 18+
   - U7D004: black alone 18+
   - U7D005: American Indian and Alaska Native alone 18+
+  - U7D006: Asian alone 18+
 
 Hispanic VAP is optional because many block files (including ds248 P3) do not
 include it. If available, pass --hispanic-col (and optionally
@@ -19,6 +20,7 @@ include it. If available, pass --hispanic-col (and optionally
 from __future__ import annotations
 
 import argparse
+import csv
 from pathlib import Path
 
 import pandas as pd
@@ -49,6 +51,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--white-col", default="U7D003", help="White 18+ block column.")
     p.add_argument("--black-col", default="U7D004", help="Black 18+ block column.")
     p.add_argument("--native-col", default="U7D005", help="American Indian and Alaska Native 18+ block column.")
+    p.add_argument("--asian-col", default="U7D006", help="Asian 18+ block column.")
 
     p.add_argument("--hispanic-block-csv", type=Path, default=None)
     p.add_argument(
@@ -79,10 +82,12 @@ def main() -> int:
     white_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.white_col, "white_vap")
     black_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.black_col, "black_vap")
     native_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.native_col, "native_vap")
+    asian_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.asian_col, "asian_vap")
 
     demo = total_df.merge(white_df, on="block_geoid20", how="outer")
     demo = demo.merge(black_df, on="block_geoid20", how="outer")
     demo = demo.merge(native_df, on="block_geoid20", how="outer")
+    demo = demo.merge(asian_df, on="block_geoid20", how="outer")
 
     has_hispanic = bool(str(args.hispanic_col or "").strip())
     if has_hispanic:
@@ -102,10 +107,11 @@ def main() -> int:
     merged["white_vap"] = pd.to_numeric(merged["white_vap"], errors="coerce").fillna(0)
     merged["black_vap"] = pd.to_numeric(merged["black_vap"], errors="coerce").fillna(0)
     merged["native_vap"] = pd.to_numeric(merged["native_vap"], errors="coerce").fillna(0)
+    merged["asian_vap"] = pd.to_numeric(merged["asian_vap"], errors="coerce").fillna(0)
     if has_hispanic:
         merged["hispanic_vap"] = pd.to_numeric(merged["hispanic_vap"], errors="coerce").fillna(0)
 
-    sum_cols = ["vap_18plus", "white_vap", "black_vap", "native_vap"] + (["hispanic_vap"] if has_hispanic else [])
+    sum_cols = ["vap_18plus", "white_vap", "black_vap", "native_vap", "asian_vap"] + (["hispanic_vap"] if has_hispanic else [])
     out = merged.groupby("precinct_id", as_index=False)[sum_cols].sum()
     out = out.sort_values("precinct_id").reset_index(drop=True)
 
@@ -113,6 +119,7 @@ def main() -> int:
     out["white_vap_pct"] = (out["white_vap"] / denom * 100).fillna(0).round(args.round_pct)
     out["black_vap_pct"] = (out["black_vap"] / denom * 100).fillna(0).round(args.round_pct)
     out["native_vap_pct"] = (out["native_vap"] / denom * 100).fillna(0).round(args.round_pct)
+    out["asian_vap_pct"] = (out["asian_vap"] / denom * 100).fillna(0).round(args.round_pct)
     if has_hispanic:
         out["hispanic_vap_pct"] = (out["hispanic_vap"] / denom * 100).fillna(0).round(args.round_pct)
     else:
@@ -120,12 +127,12 @@ def main() -> int:
         out["hispanic_vap_pct"] = pd.NA
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    out.to_csv(args.output, index=False)
+    out.to_csv(args.output, index=False, quoting=csv.QUOTE_ALL)
 
     print(f"Wrote {len(out):,} precinct rows -> {args.output}")
     print(
-        "Columns: precinct_id, vap_18plus, white_vap, black_vap, native_vap, hispanic_vap, "
-        "white_vap_pct, black_vap_pct, native_vap_pct, hispanic_vap_pct"
+        "Columns: precinct_id, vap_18plus, white_vap, black_vap, native_vap, asian_vap, hispanic_vap, "
+        "white_vap_pct, black_vap_pct, native_vap_pct, asian_vap_pct, hispanic_vap_pct"
     )
     print(f"Hispanic source applied: {'yes' if has_hispanic else 'no (columns left blank)'}")
     return 0

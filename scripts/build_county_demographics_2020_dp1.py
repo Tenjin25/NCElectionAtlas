@@ -31,6 +31,7 @@ def main() -> None:
         "DP1_0078C",  # White (one race)
         "DP1_0079C",  # Black (one race)
         "DP1_0080C",  # American Indian and Alaska Native (one race)
+        "DP1_0081C",  # Asian (one race)
         "DP1_0093C",  # Hispanic or Latino (of any race)
     ]
     df = pd.read_csv(dp1, usecols=usecols, dtype=str)
@@ -57,6 +58,7 @@ def main() -> None:
         white = as_int(r.get("DP1_0078C"))
         black = as_int(r.get("DP1_0079C"))
         native = as_int(r.get("DP1_0080C"))
+        asian = as_int(r.get("DP1_0081C"))
         hisp = as_int(r.get("DP1_0093C"))
 
         def pct(x):
@@ -70,10 +72,12 @@ def main() -> None:
             "white_pop": white,
             "black_pop": black,
             "native_pop": native,
+            "asian_pop": asian,
             "hispanic_pop": hisp,
             "white_pop_pct": pct(white),
             "black_pop_pct": pct(black),
             "native_pop_pct": pct(native),
+            "asian_pop_pct": pct(asian),
             "hispanic_pop_pct": pct(hisp),
         }
 
@@ -83,6 +87,7 @@ def main() -> None:
             "vap_18plus is total population 18 years and over (VAP total).",
             "Race/ethnicity percentages are for total population (DP1), not VAP-by-race.",
             "native_pop/native_pop_pct use DP1 American Indian and Alaska Native (one race).",
+            "asian_pop/asian_pop_pct use DP1 Asian (one race).",
         ],
         "counties": rows,
     }
