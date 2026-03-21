@@ -11638,15 +11638,26 @@ document.addEventListener('DOMContentLoaded', function() {
       return { flipped, from, to };
     }
 
+    function closeRaceDisplayDigits(marginPct) {
+      const pct = Math.abs(Number(marginPct) || 0);
+      return pct < 0.1 ? 3 : 2;
+    }
+
+    function formatPctForCloseRace(value, marginPct) {
+      const digits = closeRaceDisplayDigits(marginPct);
+      return Number(value || 0).toFixed(digits);
+    }
+
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const marginPct = totalVotes > 0 ? Math.abs((repVotes - demVotes) / totalVotes * 100) : 0;
+      const marginLabel = formatPctForCloseRace(marginPct, marginPct);
       if (repVotes > demVotes) {
         return {
           party: 'rep',
           winnerName: fullCandidateLabel(repCandidate, 'Republican'),
           shortLabel: shortCandidateLabel(repCandidate, 'Republican'),
           marginPct,
-          text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginPct.toFixed(2)}`
+          text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginLabel}`
         };
       }
       if (demVotes > repVotes) {
@@ -11655,7 +11666,7 @@ document.addEventListener('DOMContentLoaded', function() {
           winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
           shortLabel: shortCandidateLabel(demCandidate, 'Democratic'),
           marginPct,
-          text: `${shortCandidateLabel(demCandidate, 'Democratic')} +${marginPct.toFixed(2)}`
+          text: `${shortCandidateLabel(demCandidate, 'Democratic')} +${marginLabel}`
         };
       }
       return {
@@ -11663,7 +11674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerName: 'Tie',
         shortLabel: 'Even',
         marginPct,
-        text: `Even ${marginPct.toFixed(2)}`
+        text: `Even ${marginLabel}`
       };
     }
 
@@ -12055,10 +12066,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(marginPct) || marginPct > 1.0) return '';
 
       const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
+      const marginLabel = formatPctForCloseRace(marginPct, marginPct);
       const alertLabel = inRecountRange ? 'Recount / Litigation Watch' : 'Litigation Watch';
       const detail = inRecountRange
-        ? `Margin ${marginPct.toFixed(2)} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
-        : `Margin ${marginPct.toFixed(2)} pts is extremely close and could trigger post-election litigation.`;
+        ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
+        : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
       const contestLabel = `${formatContestName(contestType, year)} ${year}`;
       const className = inRecountRange ? 'recount' : 'litigation';
 
@@ -12084,6 +12096,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
         const marginPct = Math.abs(demPct - repPct);
+        const marginLabel = formatPctForCloseRace(marginPct, marginPct);
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
         let repCandidate = (opts?.repCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Republican');
@@ -12149,7 +12162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const shareChips = breakdownItems.map(item => (
-          `<div class="statewide-share-chip ${item.key}">${item.label} <strong>${item.pct.toFixed(2)}%</strong></div>`
+          `<div class="statewide-share-chip ${item.key}">${item.label} <strong>${formatPctForCloseRace(item.pct, marginPct)}%</strong></div>`
         )).join('');
         const barSegments = [`<div style="width:${demPct.toFixed(4)}%;background:#2563eb;"></div>`];
         if (otherVotes > 0) barSegments.push(`<div style="width:${otherPct.toFixed(4)}%;background:#6b7280;"></div>`);
@@ -12162,7 +12175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `</div>` +
             `<div class="statewide-breakdown-value" style="color:${item.color};">` +
               `${item.votes.toLocaleString()}` +
-              `<span>${item.pct.toFixed(2)}%</span>` +
+              `<span>${formatPctForCloseRace(item.pct, marginPct)}%</span>` +
             `</div>` +
           `</div>`
         )).join('');
@@ -12193,7 +12206,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div class="statewide-stat">
                 <span>Margin</span>
-                <strong>${marginPct.toFixed(2)} pts</strong>
+                <strong>${marginLabel} pts</strong>
               </div>
             </div>
           </div>
@@ -12893,7 +12906,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const focusLabel = recountFocusLabelFromMeta(state.meta || null);
       const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
       const voteLabel = marginVotes === 1 ? 'vote' : 'votes';
-      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${marginPct.toFixed(2)}%) - RECOUNT ACTIVE</span>`;
+      const pctLabel = formatPctForCloseRace(marginPct, marginPct);
+      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${pctLabel}%) - RECOUNT ACTIVE</span>`;
       setRecountRadarBadgeVisible(true, html);
     }
 
