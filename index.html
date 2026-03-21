@@ -2683,19 +2683,19 @@ body { height: var(--app-height); }
 
   .recount-radar-badge {
     display: none;
-    margin-top: 8px;
+    margin-top: 10px;
     align-items: center;
-    gap: 8px;
-    padding: 6px 11px;
+    gap: 10px;
+    padding: 8px 12px;
     border-radius: 999px;
-    border: 1px solid rgba(253, 186, 116, 0.58);
-    background: linear-gradient(130deg, rgba(127, 29, 29, 0.72) 0%, rgba(194, 65, 12, 0.56) 60%, rgba(120, 53, 15, 0.52) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.42);
+    background:
+      linear-gradient(115deg, rgba(120, 53, 15, 0.88) 0%, rgba(146, 64, 14, 0.82) 55%, rgba(154, 52, 18, 0.78) 100%);
     color: #fff7ed;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   }
 
   .recount-radar-badge.is-visible {
@@ -2703,7 +2703,45 @@ body { height: var(--app-height); }
   }
 
   .recount-radar-badge .recount-label {
-    color: #fed7aa;
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(254, 243, 199, 0.28);
+    border: 1px solid rgba(254, 243, 199, 0.42);
+    color: #fde68a;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .recount-radar-badge .recount-focus {
+    color: #fff7ed;
+    font-weight: 800;
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recount-radar-badge .recount-divider {
+    color: rgba(254, 215, 170, 0.86);
+    font-weight: 700;
+  }
+
+  .recount-radar-badge .recount-meta {
+    color: rgba(255, 237, 213, 0.94);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .recount-radar-badge .recount-meta strong {
+    color: #ffffff;
+    font-weight: 900;
   }
 
   .map-topbar-hints {
@@ -4530,39 +4568,65 @@ body { height: var(--app-height); }
   }
 
   .statewide-race-alert {
-    margin-top: 8px;
+    margin-top: 10px;
     display: inline-flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
-    border-radius: 999px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.28);
-    background: rgba(255, 255, 255, 0.86);
+    background: rgba(255, 255, 255, 0.94);
     color: #1f2937;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.01em;
-    line-height: 1.35;
+    letter-spacing: 0.005em;
+    line-height: 1.4;
   }
 
   .statewide-race-alert.recount {
-    border-color: rgba(234, 88, 12, 0.38);
-    background: rgba(255, 237, 213, 0.88);
-    color: #9a3412;
+    border-color: rgba(234, 88, 12, 0.34);
+    background:
+      linear-gradient(112deg, rgba(255, 237, 213, 0.92) 0%, rgba(254, 215, 170, 0.56) 100%);
+    color: #7c2d12;
   }
 
   .statewide-race-alert.litigation {
-    border-color: rgba(217, 119, 6, 0.36);
-    background: rgba(254, 249, 195, 0.90);
-    color: #854d0e;
+    border-color: rgba(217, 119, 6, 0.3);
+    background:
+      linear-gradient(112deg, rgba(254, 249, 195, 0.94) 0%, rgba(253, 224, 71, 0.38) 100%);
+    color: #713f12;
   }
 
   .statewide-race-alert-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
     font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .statewide-race-alert.recount .statewide-race-alert-label {
+    border: 1px solid rgba(194, 65, 12, 0.32);
+    background: rgba(255, 247, 237, 0.78);
+    color: #9a3412;
+  }
+
+  .statewide-race-alert.litigation .statewide-race-alert-label {
+    border: 1px solid rgba(180, 83, 9, 0.3);
+    background: rgba(254, 252, 232, 0.8);
+    color: #854d0e;
+  }
+
+  .statewide-race-alert-text {
+    display: inline-block;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .statewide-competitive {
@@ -12076,7 +12140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
       const marginLabel = formatPctForCloseRace(marginPct, marginPct);
-      const alertLabel = inRecountRange ? 'Recount / Litigation Watch' : 'Litigation Watch';
+      const alertLabel = inRecountRange ? 'Recount Watch' : 'Litigation Watch';
       const detail = inRecountRange
         ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
         : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
@@ -12086,7 +12150,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return (
         `<div class="statewide-race-alert ${className}" role="status" aria-live="polite">` +
           `<span class="statewide-race-alert-label">${escapeHtml(alertLabel)}</span>` +
-          `<span>${escapeHtml(contestLabel)}: ${escapeHtml(detail)} Verify official canvass/court status.</span>` +
+          `<span class="statewide-race-alert-text">${escapeHtml(`${contestLabel}: ${detail}`)}</span>` +
         `</div>`
       );
     }
@@ -12916,7 +12980,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
       const voteLabel = marginVotes === 1 ? 'vote' : 'votes';
       const pctLabel = formatPctForCloseRace(marginPct, marginPct);
-      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${pctLabel}%) - RECOUNT ACTIVE</span>`;
+      const html = `<span class="recount-label">Recount Watch</span><span class="recount-focus">${safeFocusLabel}</span><span class="recount-divider">\u2022</span><span class="recount-meta"><strong>${pctLabel}%</strong> margin (${marginVotes.toLocaleString()} ${voteLabel})</span>`;
       setRecountRadarBadgeVisible(true, html);
     }
 
