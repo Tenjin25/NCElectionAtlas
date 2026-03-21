@@ -32,6 +32,8 @@ def main() -> None:
         "DP1_0079C",  # Black (one race)
         "DP1_0080C",  # American Indian and Alaska Native (one race)
         "DP1_0081C",  # Asian (one race)
+        "DP1_0082C",  # Native Hawaiian and Other Pacific Islander (one race)
+        "DP1_0084C",  # Two or more races
         "DP1_0093C",  # Hispanic or Latino (of any race)
     ]
     df = pd.read_csv(dp1, usecols=usecols, dtype=str)
@@ -59,6 +61,8 @@ def main() -> None:
         black = as_int(r.get("DP1_0079C"))
         native = as_int(r.get("DP1_0080C"))
         asian = as_int(r.get("DP1_0081C"))
+        pacific = as_int(r.get("DP1_0082C"))
+        multiracial = as_int(r.get("DP1_0084C"))
         hisp = as_int(r.get("DP1_0093C"))
 
         def pct(x):
@@ -73,11 +77,15 @@ def main() -> None:
             "black_pop": black,
             "native_pop": native,
             "asian_pop": asian,
+            "pacific_pop": pacific,
+            "multiracial_pop": multiracial,
             "hispanic_pop": hisp,
             "white_pop_pct": pct(white),
             "black_pop_pct": pct(black),
             "native_pop_pct": pct(native),
             "asian_pop_pct": pct(asian),
+            "pacific_pop_pct": pct(pacific),
+            "multiracial_pop_pct": pct(multiracial),
             "hispanic_pop_pct": pct(hisp),
         }
 
@@ -88,6 +96,8 @@ def main() -> None:
             "Race/ethnicity percentages are for total population (DP1), not VAP-by-race.",
             "native_pop/native_pop_pct use DP1 American Indian and Alaska Native (one race).",
             "asian_pop/asian_pop_pct use DP1 Asian (one race).",
+            "pacific_pop/pacific_pop_pct use DP1 Native Hawaiian and Other Pacific Islander (one race).",
+            "multiracial_pop/multiracial_pop_pct use DP1 Two or more races.",
         ],
         "counties": rows,
     }

@@ -2056,6 +2056,18 @@ body { height: var(--app-height); }
     border-color: rgba(22, 101, 52, 0.44);
   }
 
+  .demo-race-chip.pacific {
+    background: rgba(8, 145, 178, 0.24);
+    color: #155e75;
+    border-color: rgba(14, 116, 144, 0.44);
+  }
+
+  .demo-race-chip.multiracial {
+    background: rgba(190, 24, 93, 0.2);
+    color: #831843;
+    border-color: rgba(157, 23, 77, 0.42);
+  }
+
   .demo-race-chip.unknown {
     background: rgba(148, 163, 184, 0.22);
     color: #334155;
@@ -2137,6 +2149,16 @@ body { height: var(--app-height); }
   .hover-tooltip .demo-race-chip.asian {
     background: rgba(22, 101, 52, 0.62);
     color: #dcfce7;
+  }
+
+  .hover-tooltip .demo-race-chip.pacific {
+    background: rgba(14, 116, 144, 0.62);
+    color: #cffafe;
+  }
+
+  .hover-tooltip .demo-race-chip.multiracial {
+    background: rgba(157, 23, 77, 0.62);
+    color: #fce7f3;
   }
 
   .hover-tooltip .demo-race-chip.unknown {
@@ -11179,25 +11201,37 @@ document.addEventListener('DOMContentLoaded', function() {
       return Number.isFinite(n) ? n : 0;
     }
 
-    function buildRaceChipRowHTML(whitePct, blackPct, hispanicPct, nativePct, asianPctOrOptions = null, maybeOptions = null) {
-      let asianPct = asianPctOrOptions;
+    function buildRaceChipRowHTML(whitePct, blackPct, hispanicPct, nativePct, extraRacesOrOptions = null, maybeOptions = null) {
+      let extraRaces = {};
       let options = maybeOptions;
-      if (asianPctOrOptions && typeof asianPctOrOptions === 'object' && !Array.isArray(asianPctOrOptions)) {
-        options = asianPctOrOptions;
-        asianPct = null;
+      if (extraRacesOrOptions && typeof extraRacesOrOptions === 'object' && !Array.isArray(extraRacesOrOptions)) {
+        const looksLikeOptions = Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'includeUnknownHispanic')
+          || Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'extraClass');
+        if (looksLikeOptions) {
+          options = extraRacesOrOptions;
+        } else {
+          extraRaces = extraRacesOrOptions;
+        }
+      } else if (extraRacesOrOptions !== null && extraRacesOrOptions !== undefined) {
+        // Backward compatibility: a numeric 5th argument is treated as Asian percent.
+        extraRaces = { asianPct: extraRacesOrOptions };
       }
-      options = options || {};
+      options = (options && typeof options === 'object' && !Array.isArray(options)) ? options : {};
       const { includeUnknownHispanic = false, extraClass = '' } = options;
       const chips = [];
       const w = numericOrNull(whitePct);
       const b = numericOrNull(blackPct);
       const h = numericOrNull(hispanicPct);
       const n = numericOrNull(nativePct);
-      const a = numericOrNull(asianPct);
+      const a = numericOrNull(extraRaces.asianPct);
+      const p = numericOrNull(extraRaces.pacificPct);
+      const m = numericOrNull(extraRaces.multiracialPct);
       if (w !== null) chips.push(`<span class="demo-race-chip white">White ${w.toFixed(2)}%</span>`);
       if (b !== null) chips.push(`<span class="demo-race-chip black">Black ${b.toFixed(2)}%</span>`);
       if (n !== null) chips.push(`<span class="demo-race-chip native">Native ${n.toFixed(2)}%</span>`);
       if (a !== null) chips.push(`<span class="demo-race-chip asian">Asian ${a.toFixed(2)}%</span>`);
+      if (p !== null) chips.push(`<span class="demo-race-chip pacific">Pacific ${p.toFixed(2)}%</span>`);
+      if (m !== null) chips.push(`<span class="demo-race-chip multiracial">Multiracial ${m.toFixed(2)}%</span>`);
       if (h !== null) chips.push(`<span class="demo-race-chip hispanic">Hispanic ${h.toFixed(2)}%</span>`);
       else if (includeUnknownHispanic) chips.push(`<span class="demo-race-chip unknown">Hispanic N/A</span>`);
       if (!chips.length) return '';
@@ -11212,7 +11246,11 @@ document.addEventListener('DOMContentLoaded', function() {
         demo.black_pop_pct,
         demo.hispanic_pop_pct,
         demo.native_pop_pct,
-        demo.asian_pop_pct
+        {
+          asianPct: demo.asian_pop_pct,
+          pacificPct: demo.pacific_pop_pct,
+          multiracialPct: demo.multiracial_pop_pct
+        }
       );
       return `
         <div class="demo-hover-card">
@@ -11231,7 +11269,11 @@ document.addEventListener('DOMContentLoaded', function() {
         demo.black_vap_pct,
         demo.hispanic_vap_pct,
         demo.native_vap_pct,
-        demo.asian_vap_pct,
+        {
+          asianPct: demo.asian_vap_pct,
+          pacificPct: demo.pacific_vap_pct,
+          multiracialPct: demo.multiracial_vap_pct
+        },
         { includeUnknownHispanic: true }
       );
       return `
@@ -11258,12 +11300,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const blackVotes = numericOrZero(rawRow.black_vap);
         const nativeVotes = numericOrNull(rawRow.native_vap);
         const asianVotes = numericOrNull(rawRow.asian_vap);
+        const pacificVotes = numericOrNull(rawRow.pacific_vap);
+        const multiracialVotes = numericOrNull(rawRow.multiracial_vap);
         const hispanicVotes = numericOrNull(rawRow.hispanic_vap);
 
         const whitePctRaw = numericOrNull(rawRow.white_vap_pct);
         const blackPctRaw = numericOrNull(rawRow.black_vap_pct);
         const nativePctRaw = numericOrNull(rawRow.native_vap_pct);
         const asianPctRaw = numericOrNull(rawRow.asian_vap_pct);
+        const pacificPctRaw = numericOrNull(rawRow.pacific_vap_pct);
+        const multiracialPctRaw = numericOrNull(rawRow.multiracial_vap_pct);
         const hispanicPctRaw = numericOrNull(rawRow.hispanic_vap_pct);
         const whitePct = whitePctRaw !== null ? whitePctRaw : (vap > 0 ? (whiteVotes / vap) * 100 : 0);
         const blackPct = blackPctRaw !== null ? blackPctRaw : (vap > 0 ? (blackVotes / vap) * 100 : 0);
@@ -11273,6 +11319,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const asianPct = asianPctRaw !== null
           ? asianPctRaw
           : ((asianVotes !== null && vap > 0) ? (asianVotes / vap) * 100 : null);
+        const pacificPct = pacificPctRaw !== null
+          ? pacificPctRaw
+          : ((pacificVotes !== null && vap > 0) ? (pacificVotes / vap) * 100 : null);
+        const multiracialPct = multiracialPctRaw !== null
+          ? multiracialPctRaw
+          : ((multiracialVotes !== null && vap > 0) ? (multiracialVotes / vap) * 100 : null);
         const hispanicPct = hispanicPctRaw !== null
           ? hispanicPctRaw
           : ((hispanicVotes !== null && vap > 0) ? (hispanicVotes / vap) * 100 : null);
@@ -11286,11 +11338,15 @@ document.addEventListener('DOMContentLoaded', function() {
           black_vap: blackVotes,
           native_vap: nativeVotes,
           asian_vap: asianVotes,
+          pacific_vap: pacificVotes,
+          multiracial_vap: multiracialVotes,
           hispanic_vap: hispanicVotes,
           white_vap_pct: Math.round((whitePct + Number.EPSILON) * 100) / 100,
           black_vap_pct: Math.round((blackPct + Number.EPSILON) * 100) / 100,
           native_vap_pct: nativePct === null ? null : (Math.round((nativePct + Number.EPSILON) * 100) / 100),
           asian_vap_pct: asianPct === null ? null : (Math.round((asianPct + Number.EPSILON) * 100) / 100),
+          pacific_vap_pct: pacificPct === null ? null : (Math.round((pacificPct + Number.EPSILON) * 100) / 100),
+          multiracial_vap_pct: multiracialPct === null ? null : (Math.round((multiracialPct + Number.EPSILON) * 100) / 100),
           hispanic_vap_pct: hispanicPct === null ? null : (Math.round((hispanicPct + Number.EPSILON) * 100) / 100)
         };
 
@@ -11614,8 +11670,10 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 60)};"></span><span>Hispanic plurality</span></div>
           <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 20, 60)};"></span><span>Native plurality</span></div>
           <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 20, 20, 60)};"></span><span>Asian plurality</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 20, 20, 20, 60, 20)};"></span><span>Pacific plurality</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(20, 20, 20, 20, 20, 20, 60)};"></span><span>Multiracial plurality</span></div>
           <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(35, 35, 30)};"></span><span>Near tie / mixed</span></div>
-          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(null, null, null, null, null)};"></span><span>No demographic data</span></div>
+          <div class="legend-swatch-card"><span class="legend-color" style="background: ${colorForDemographicsMode(null, null, null, null, null, null, null)};"></span><span>No demographic data</span></div>
         </div>
       `;
     }
@@ -11657,8 +11715,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (header) header.textContent = 'Demographics';
         if (subtitle) {
           subtitle.textContent = demographicsHighContrastEnabled
-            ? 'High-contrast palette on: each geography is shaded by the largest reported race share (white, black, Hispanic, Native, and Asian where available).'
-            : 'Shades each geography by the largest reported race share (white, black, Hispanic, Native, and Asian where available).';
+            ? 'High-contrast palette on: each geography is shaded by the largest reported race share (white, black, Hispanic, Native, Asian, Pacific, and multiracial where available).'
+            : 'Shades each geography by the largest reported race share (white, black, Hispanic, Native, Asian, Pacific, and multiracial where available).';
         }
         if (badge) badge.textContent = demographicsHighContrastEnabled ? 'Demographics HC' : 'Demographics';
         if (footer) {
@@ -15139,7 +15197,11 @@ document.addEventListener('DOMContentLoaded', function() {
         demo.black_pop_pct,
         demo.hispanic_pop_pct,
         demo.native_pop_pct,
-        demo.asian_pop_pct,
+        {
+          asianPct: demo.asian_pop_pct,
+          pacificPct: demo.pacific_pop_pct,
+          multiracialPct: demo.multiracial_pop_pct
+        },
         { extraClass: 'sidebar-demo-race-row' }
       );
       sidebarContent += `<div class="demographics-section">`;
@@ -17975,13 +18037,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
     }
 
-    function classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null) {
+    function classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null, pacificPct = null, multiracialPct = null) {
       const entries = [
         { key: 'white', value: numericOrNull(whitePct) },
         { key: 'black', value: numericOrNull(blackPct) },
         { key: 'hispanic', value: numericOrNull(hispanicPct) },
         { key: 'native', value: numericOrNull(nativePct) },
-        { key: 'asian', value: numericOrNull(asianPct) }
+        { key: 'asian', value: numericOrNull(asianPct) },
+        { key: 'pacific', value: numericOrNull(pacificPct) },
+        { key: 'multiracial', value: numericOrNull(multiracialPct) }
       ].filter(entry => entry.value !== null);
 
       if (!entries.length) return { key: 'unknown', pct: null };
@@ -17995,8 +18059,8 @@ document.addEventListener('DOMContentLoaded', function() {
       return { key: top.key, pct: Number(top.value) };
     }
 
-    function colorForDemographicsMode(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null) {
-      const dom = classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct, asianPct);
+    function colorForDemographicsMode(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null, pacificPct = null, multiracialPct = null) {
+      const dom = classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct, asianPct, pacificPct, multiracialPct);
       const cb = isColorblindModeActive();
       if (demographicsHighContrastEnabled) {
         if (dom.key === 'white') return '#111827';
@@ -18004,6 +18068,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dom.key === 'hispanic') return cb ? '#d97706' : '#9a3412';
         if (dom.key === 'native') return '#7e22ce';
         if (dom.key === 'asian') return '#166534';
+        if (dom.key === 'pacific') return '#155e75';
+        if (dom.key === 'multiracial') return '#9d174d';
         if (dom.key === 'mixed') return '#065f46';
         return '#475569';
       }
@@ -18012,6 +18078,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (dom.key === 'hispanic') return '#c2410c';
       if (dom.key === 'native') return '#9333ea';
       if (dom.key === 'asian') return '#15803d';
+      if (dom.key === 'pacific') return '#0e7490';
+      if (dom.key === 'multiracial') return '#be185d';
       if (dom.key === 'mixed') return '#0f766e';
       return '#64748b';
     }
@@ -18718,7 +18786,9 @@ document.addEventListener('DOMContentLoaded', function() {
               demo.black_pop_pct,
               demo.hispanic_pop_pct,
               demo.native_pop_pct,
-              demo.asian_pop_pct
+              demo.asian_pop_pct,
+              demo.pacific_pop_pct,
+              demo.multiracial_pop_pct
             );
             countyExpr.push([
               '==',
@@ -18753,7 +18823,9 @@ document.addEventListener('DOMContentLoaded', function() {
               demo?.black_vap_pct,
               demo?.hispanic_vap_pct,
               demo?.native_vap_pct,
-              demo?.asian_vap_pct
+              demo?.asian_vap_pct,
+              demo?.pacific_vap_pct,
+              demo?.multiracial_vap_pct
             );
             exprPrecinct.push(['==', ['get', 'precinct_norm'], precNorm]);
             exprPrecinct.push(color);
@@ -19045,7 +19117,9 @@ document.addEventListener('DOMContentLoaded', function() {
             demoRow?.black_vap_pct,
             demoRow?.hispanic_vap_pct,
             demoRow?.native_vap_pct,
-            demoRow?.asian_vap_pct
+            demoRow?.asian_vap_pct,
+            demoRow?.pacific_vap_pct ?? demoRow?.pacific_pct ?? demoRow?.Pacific,
+            demoRow?.multiracial_vap_pct ?? demoRow?.multiracial_pct ?? demoRow?.Multiracial
           );
         } else if (mode === 'winners') {
           color = colorForWinnerMode(winner);
@@ -19163,7 +19237,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 demoRow?.black_vap_pct,
                 demoRow?.hispanic_vap_pct,
                 demoRow?.native_vap_pct,
-                demoRow?.asian_vap_pct
+                demoRow?.asian_vap_pct,
+                demoRow?.pacific_vap_pct ?? demoRow?.pacific_pct ?? demoRow?.Pacific,
+                demoRow?.multiracial_vap_pct ?? demoRow?.multiracial_pct ?? demoRow?.Multiracial
               );
             } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
@@ -19262,7 +19338,9 @@ document.addEventListener('DOMContentLoaded', function() {
             row?.black_vap_pct,
             row?.hispanic_vap_pct,
             row?.native_vap_pct,
-            row?.asian_vap_pct
+            row?.asian_vap_pct,
+            row?.pacific_vap_pct ?? row?.pacific_pct ?? row?.Pacific,
+            row?.multiracial_vap_pct ?? row?.multiracial_pct ?? row?.Multiracial
           );
           expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
           expr.push(color);

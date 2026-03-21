@@ -11,6 +11,8 @@ Default NHGIS columns (ds248 P3, 18+):
   - U7D004: black alone 18+
   - U7D005: American Indian and Alaska Native alone 18+
   - U7D006: Asian alone 18+
+  - U7D007: Native Hawaiian and Other Pacific Islander alone 18+
+  - U7D009: two or more races 18+
 
 Hispanic VAP is optional because many block files (including ds248 P3) do not
 include it. If available, pass --hispanic-col (and optionally
@@ -52,6 +54,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--black-col", default="U7D004", help="Black 18+ block column.")
     p.add_argument("--native-col", default="U7D005", help="American Indian and Alaska Native 18+ block column.")
     p.add_argument("--asian-col", default="U7D006", help="Asian 18+ block column.")
+    p.add_argument("--pacific-col", default="U7D007", help="Native Hawaiian and Other Pacific Islander 18+ block column.")
+    p.add_argument("--multiracial-col", default="U7D009", help="Two or more races 18+ block column.")
 
     p.add_argument("--hispanic-block-csv", type=Path, default=None)
     p.add_argument(
@@ -83,11 +87,15 @@ def main() -> int:
     black_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.black_col, "black_vap")
     native_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.native_col, "native_vap")
     asian_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.asian_col, "asian_vap")
+    pacific_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.pacific_col, "pacific_vap")
+    multiracial_df = _read_block_metric(args.race_block_csv, args.race_geoid_col, args.multiracial_col, "multiracial_vap")
 
     demo = total_df.merge(white_df, on="block_geoid20", how="outer")
     demo = demo.merge(black_df, on="block_geoid20", how="outer")
     demo = demo.merge(native_df, on="block_geoid20", how="outer")
     demo = demo.merge(asian_df, on="block_geoid20", how="outer")
+    demo = demo.merge(pacific_df, on="block_geoid20", how="outer")
+    demo = demo.merge(multiracial_df, on="block_geoid20", how="outer")
 
     has_hispanic = bool(str(args.hispanic_col or "").strip())
     if has_hispanic:
@@ -108,10 +116,20 @@ def main() -> int:
     merged["black_vap"] = pd.to_numeric(merged["black_vap"], errors="coerce").fillna(0)
     merged["native_vap"] = pd.to_numeric(merged["native_vap"], errors="coerce").fillna(0)
     merged["asian_vap"] = pd.to_numeric(merged["asian_vap"], errors="coerce").fillna(0)
+    merged["pacific_vap"] = pd.to_numeric(merged["pacific_vap"], errors="coerce").fillna(0)
+    merged["multiracial_vap"] = pd.to_numeric(merged["multiracial_vap"], errors="coerce").fillna(0)
     if has_hispanic:
         merged["hispanic_vap"] = pd.to_numeric(merged["hispanic_vap"], errors="coerce").fillna(0)
 
-    sum_cols = ["vap_18plus", "white_vap", "black_vap", "native_vap", "asian_vap"] + (["hispanic_vap"] if has_hispanic else [])
+    sum_cols = [
+        "vap_18plus",
+        "white_vap",
+        "black_vap",
+        "native_vap",
+        "asian_vap",
+        "pacific_vap",
+        "multiracial_vap",
+    ] + (["hispanic_vap"] if has_hispanic else [])
     out = merged.groupby("precinct_id", as_index=False)[sum_cols].sum()
     out = out.sort_values("precinct_id").reset_index(drop=True)
 
@@ -120,6 +138,8 @@ def main() -> int:
     out["black_vap_pct"] = (out["black_vap"] / denom * 100).fillna(0).round(args.round_pct)
     out["native_vap_pct"] = (out["native_vap"] / denom * 100).fillna(0).round(args.round_pct)
     out["asian_vap_pct"] = (out["asian_vap"] / denom * 100).fillna(0).round(args.round_pct)
+    out["pacific_vap_pct"] = (out["pacific_vap"] / denom * 100).fillna(0).round(args.round_pct)
+    out["multiracial_vap_pct"] = (out["multiracial_vap"] / denom * 100).fillna(0).round(args.round_pct)
     if has_hispanic:
         out["hispanic_vap_pct"] = (out["hispanic_vap"] / denom * 100).fillna(0).round(args.round_pct)
     else:
@@ -131,8 +151,9 @@ def main() -> int:
 
     print(f"Wrote {len(out):,} precinct rows -> {args.output}")
     print(
-        "Columns: precinct_id, vap_18plus, white_vap, black_vap, native_vap, asian_vap, hispanic_vap, "
-        "white_vap_pct, black_vap_pct, native_vap_pct, asian_vap_pct, hispanic_vap_pct"
+        "Columns: precinct_id, vap_18plus, white_vap, black_vap, native_vap, asian_vap, pacific_vap, "
+        "multiracial_vap, hispanic_vap, white_vap_pct, black_vap_pct, native_vap_pct, asian_vap_pct, "
+        "pacific_vap_pct, multiracial_vap_pct, hispanic_vap_pct"
     )
     print(f"Hispanic source applied: {'yes' if has_hispanic else 'no (columns left blank)'}")
     return 0
