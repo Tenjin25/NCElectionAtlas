@@ -6450,9 +6450,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const bivariateToggle = document.getElementById('bivariate-opacity-toggle');
   if (bivariateToggle) {
+    bivariateToggle.checked = !!turnoutBivariateEnabled;
     bivariateToggle.addEventListener('change', function() {
       turnoutBivariateEnabled = !!this.checked;
       if (typeof applyLayerOpacityTuning === 'function') applyLayerOpacityTuning();
+    });
+  }
+  const demographicsContrastToggle = document.getElementById('demographics-contrast-toggle');
+  if (demographicsContrastToggle) {
+    demographicsContrastToggle.checked = !!demographicsHighContrastEnabled;
+    demographicsContrastToggle.addEventListener('change', function() {
+      demographicsHighContrastEnabled = !!this.checked;
+      const key = document.getElementById('contestSelect')?.value || '';
+      if (key && typeof applyContest === 'function' && currentVizMode === 'demographics') {
+        applyContest(key).catch(() => {});
+      } else {
+        if (typeof renderLegendForVizMode === 'function') renderLegendForVizMode(currentVizMode || 'margins');
+        if (typeof applyLayerOpacityTuning === 'function') applyLayerOpacityTuning();
+      }
+      if (typeof setStatus === 'function') {
+        setStatus(demographicsHighContrastEnabled
+          ? 'High-contrast demographics enabled.'
+          : 'High-contrast demographics disabled.');
+      }
+      try { saveUIState(); } catch (_) {}
     });
   }
 
@@ -6748,6 +6769,10 @@ document.addEventListener('DOMContentLoaded', function() {
               <label class="scenario-toggle">
                 <input id="bivariate-opacity-toggle" type="checkbox" data-testid="turnout-bivariate-toggle" aria-label="Enable turnout intensity opacity mode" />
                 Turnout intensity opacity (bivariate)
+              </label>
+              <label class="scenario-toggle">
+                <input id="demographics-contrast-toggle" type="checkbox" data-testid="demographics-contrast-toggle" aria-label="Enable high contrast demographics colors" />
+                High contrast demographics
               </label>
               <div class="controls-panel-note">
                 Positive swing shifts margins toward Democrats. Negative values shift toward Republicans.
@@ -7415,6 +7440,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let scenarioSwingPct = 0;
     let scenarioScope = 'statewide'; // statewide | wake
     let turnoutBivariateEnabled = false;
+    let demographicsHighContrastEnabled = false;
     let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
     let snapshotStoryVariant = 'balanced'; // balanced | instagram | tiktok
     let currentCountyTurnoutTotals = {};
@@ -7451,8 +7477,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const focus = String(params.get('focus') || '').trim();
       const linesRaw = String(params.get('lines') || '').trim();
       const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
-      const hasAny = !!(view || contest || mode || focus || lines !== null);
-      return { hasAny, view, contest, mode, focus, lines };
+      const demoContrastRaw = String(params.get('democontrast') || params.get('demo_contrast') || '').trim().toLowerCase();
+      const demoContrastHigh = demoContrastRaw
+        ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
+        : null;
+      const hasAny = !!(view || contest || mode || focus || lines !== null || demoContrastHigh !== null);
+      return { hasAny, view, contest, mode, focus, lines, demoContrastHigh };
     }
 
     function getFocusURLTokenFromState() {
@@ -7499,6 +7529,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (currentVizMode && currentVizMode !== 'margins') params.set('mode', currentVizMode);
       const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
       if (linesYear !== 2022) params.set('lines', String(linesYear));
+      if (demographicsHighContrastEnabled) params.set('democontrast', 'high');
       const focusToken = getFocusURLTokenFromState();
       if (focusToken) params.set('focus', focusToken);
       return params;
@@ -7591,6 +7622,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       urlStateRestoreInFlight = true;
       try {
+        if (state.demoContrastHigh !== null) {
+          demographicsHighContrastEnabled = !!state.demoContrastHigh;
+          const demoContrastToggle = document.getElementById('demographics-contrast-toggle');
+          if (demoContrastToggle) demoContrastToggle.checked = demographicsHighContrastEnabled;
+        }
+
         if (state.lines !== null && state.lines !== normalizeDistrictLinesYear(currentDistrictLinesYear)) {
           await setDistrictLinesMode(state.lines);
         }
@@ -8273,6 +8310,14 @@ document.addEventListener('DOMContentLoaded', function() {
         senateBaseOpacity = Math.max(senateBaseOpacity, 0.77);
         precinctFillBaseOpacity = Math.max(precinctFillBaseOpacity, 0.80);
         precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.92);
+        if (demographicsHighContrastEnabled) {
+          countyBaseOpacity = precinctsEnabled ? Math.max(countyBaseOpacity, 0.22) : Math.max(countyBaseOpacity, 0.92);
+          districtBaseOpacity = Math.max(districtBaseOpacity, 0.90);
+          houseBaseOpacity = Math.max(houseBaseOpacity, 0.88);
+          senateBaseOpacity = Math.max(senateBaseOpacity, 0.89);
+          precinctFillBaseOpacity = Math.max(precinctFillBaseOpacity, 0.90);
+          precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.97);
+        }
       }
 
       if (map.getLayer('county-fill')) {
@@ -11285,9 +11330,17 @@ document.addEventListener('DOMContentLoaded', function() {
         content.innerHTML = buildShiftLegendHTML();
       } else if (mode === 'demographics') {
         if (header) header.textContent = 'Demographics';
-        if (subtitle) subtitle.textContent = 'Shades each geography by the largest reported race share (white, black, or Hispanic).';
-        if (badge) badge.textContent = 'Demographics';
-        if (footer) footer.textContent = 'County shares use DP1 total population; district/precinct shares use available VAP race fields.';
+        if (subtitle) {
+          subtitle.textContent = demographicsHighContrastEnabled
+            ? 'High-contrast palette on: each geography is shaded by the largest reported race share (white, black, or Hispanic).'
+            : 'Shades each geography by the largest reported race share (white, black, or Hispanic).';
+        }
+        if (badge) badge.textContent = demographicsHighContrastEnabled ? 'Demographics HC' : 'Demographics';
+        if (footer) {
+          footer.textContent = demographicsHighContrastEnabled
+            ? 'High-contrast colors enabled. County shares use DP1 total population; district/precinct shares use available VAP race fields.'
+            : 'County shares use DP1 total population; district/precinct shares use available VAP race fields.';
+        }
         content.innerHTML = buildDemographicsLegendHTML();
       } else {
         if (header) header.textContent = 'Political Categories';
@@ -16822,6 +16875,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function colorForDemographicsMode(whitePct, blackPct, hispanicPct) {
       const dom = classifyDemographicDominance(whitePct, blackPct, hispanicPct);
+      const cb = isColorblindModeActive();
+      if (demographicsHighContrastEnabled) {
+        if (dom.key === 'white') return '#111827';
+        if (dom.key === 'black') return '#1d4ed8';
+        if (dom.key === 'hispanic') return cb ? '#d97706' : '#9a3412';
+        if (dom.key === 'mixed') return '#065f46';
+        return '#475569';
+      }
       if (dom.key === 'white') return '#334155';
       if (dom.key === 'black') return '#1d4ed8';
       if (dom.key === 'hispanic') return '#c2410c';
