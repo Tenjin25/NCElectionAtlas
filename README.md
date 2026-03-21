@@ -120,6 +120,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
 - Added a `High contrast demographics` control-path so demographic overlays and chips remain usable on low-contrast displays.
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
+- Retuned overlay opacity presets again (slightly lower after live testing) to keep color fills readable while preserving roads and basemap context.
 - Added stronger settlement/town and county label halos so labels stay legible over high-intensity precinct coloring.
 - Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
 - Added `Find My Precinct` GPS control and `Story Snapshot` export for vertical social sharing.
