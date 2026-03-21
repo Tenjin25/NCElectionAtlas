@@ -2064,6 +2064,42 @@ body { height: var(--app-height); }
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
   }
 
+  .meta-chip.tier {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 900;
+    border-width: 2px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+  }
+
+  .meta-chip.tier .dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  .meta-chip.tier.rep {
+    border-color: rgba(239, 68, 68, 0.58);
+    background: rgba(220, 38, 38, 0.2);
+    color: #fee2e2;
+  }
+
+  .meta-chip.tier.dem {
+    border-color: rgba(59, 130, 246, 0.58);
+    background: rgba(37, 99, 235, 0.2);
+    color: #dbeafe;
+  }
+
+  .meta-chip.tier.tie {
+    border-color: rgba(148, 163, 184, 0.58);
+    background: rgba(100, 116, 139, 0.24);
+    color: #e2e8f0;
+  }
+
+  .meta-chip.tier .tier-chip-pct {
+    opacity: 0.9;
+    font-weight: 800;
+  }
+
   .meta-subtle {
     font-size: 12px;
     color: #64748b;
@@ -12498,6 +12534,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return `<span class="meta-chip ${cls}"><span class="dot"></span>${label}</span>`;
     }
 
+    function tierChipHTML(tierMeta) {
+      if (!tierMeta || !tierMeta.label) return '';
+      const partyClass = tierMeta.party === 'rep' ? 'rep' : (tierMeta.party === 'dem' ? 'dem' : 'tie');
+      const pct = Number(tierMeta.marginPct || 0);
+      return `<span class="meta-chip tier ${partyClass}"><span class="dot"></span>${escapeHtml(tierMeta.label)} <span class="tier-chip-pct">(${pct.toFixed(2)}%)</span></span>`;
+    }
+
     function precinctTrendAtGlanceHTML(currentSignedPct, prevSignedPct, prevYear, year) {
       const cur = Number(currentSignedPct);
       const prev = Number(prevSignedPct);
@@ -14085,6 +14128,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         chips.push(winnerChipHTML(winner));
       }
+      chips.push(tierChipHTML(tierMeta));
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
@@ -14107,7 +14151,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${demoLine}
       `;
 
-      const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`, tierMeta);
+      const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
       showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, inner), { force: !!forceTooltip });
       wireTooltipButtons();
     }
@@ -14179,6 +14223,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         chips.push(winnerChipHTML(winner));
       }
+      chips.push(tierChipHTML(tierMeta));
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
@@ -14200,7 +14245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${trendAtGlance}
         ${demoLine}
       `;
-      const hoverTitle = buildTooltipTitleWithTier(title, tierMeta);
+      const hoverTitle = buildTooltipTitleWithTier(title);
       showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, inner), { force: !!forceTooltip });
       wireTooltipButtons();
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
@@ -14365,6 +14410,7 @@ document.addEventListener('DOMContentLoaded', function() {
       );
 
       const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winnerRaw = (row.winner || '').toString().toUpperCase();
       const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
 
@@ -14388,6 +14434,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         chips.push(winnerChipHTML(winner));
       }
+      chips.push(tierChipHTML(tierMeta));
 
       if (prevSignedForFlip !== null) {
         const flipChip = flipChipHTML(prevSignedForFlip, signedMarginPct);
