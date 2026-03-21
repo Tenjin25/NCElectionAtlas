@@ -15090,7 +15090,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const th = topbarVisible ? Math.round(topbar.getBoundingClientRect().height || 0) : 0;
         const dockVisible = !!(isMobile && mobileDock && mobileDock.getClientRects().length);
         const dh = dockVisible ? Math.round(mobileDock.getBoundingClientRect().height || 0) : 0;
-        root.style.setProperty('--topbar-h', `${Math.max(0, th)}px`);
+        const desktopTopbarMin = 224;
+        const topbarHeight = isDesktop ? Math.max(desktopTopbarMin, th) : Math.max(0, th);
+        root.style.setProperty('--topbar-h', `${topbarHeight}px`);
         root.style.setProperty('--mobile-dock-h', `${Math.max(0, dh)}px`);
         if (isDesktop) {
           const counterVisible = !!(voteCounter && voteCounter.style.display !== 'none' && voteCounter.getClientRects().length);
