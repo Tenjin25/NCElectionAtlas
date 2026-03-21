@@ -7004,6 +7004,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
         <div class="legend-context-chips" id="legend-context-chips">
           <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether stars show top predictive precincts: matched the statewide winner in each of the last three available cycles and stayed closest to the statewide margin.">&#9733; Bellwether: top predictive precincts</span>
+          <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
         </div>
     </div>
   </div>
@@ -7603,8 +7604,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const BELLWETHER_MARKER_SHARE = 0.018;
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
+    let splitTicketCountyOverlayMargins = {};
     let splitTicketOverlayMeta = null; // { overlayContestType, overlayYear, baseYear, governorValue, presidentValue }
     let bellwetherPrecinctNorms = new Set();
+    let bellwetherCountyNorms = new Set();
     let bellwetherCache = new Map();
     let bellwetherRequestId = 0;
     let snapshotStoryVariant = 'balanced'; // balanced | instagram | tiktok
@@ -12526,7 +12529,27 @@ document.addEventListener('DOMContentLoaded', function() {
       if (pref && values.includes(pref)) return pref;
       const exact = values.find(v => v === prefix);
       if (exact) return exact;
-      return values.find(v => v.startsWith(`${prefix}_`)) || '';
+      const prefYearNum = Number(preferredYear);
+      const typed = values.filter(v => v.startsWith(`${prefix}_`));
+      if (!typed.length) return '';
+
+      if (Number.isFinite(prefYearNum)) {
+        const withYears = typed
+          .map(value => {
+            const parsedYear = Number(parseContestValue(value)?.[1]);
+            return { value, year: parsedYear };
+          })
+          .filter(item => Number.isFinite(item.year));
+
+        if (withYears.length) {
+          withYears.sort((a, b) => (
+            Math.abs(a.year - prefYearNum) - Math.abs(b.year - prefYearNum)
+            || b.year - a.year
+          ));
+          return withYears[0].value;
+        }
+      }
+      return typed[0] || '';
     }
 
     function findPresidentContestValue(preferredYear = null) {
@@ -12546,6 +12569,63 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${countyNorm} - ${precinctCode}`;
     }
 
+    function formatSignedMarginTag(signedPct) {
+      const signed = Number(signedPct || 0);
+      if (!Number.isFinite(signed) || Math.abs(signed) < 0.005) return 'Tied';
+      const winner = signed > 0 ? 'R' : 'D';
+      return `${winner}+${Math.abs(signed).toFixed(2)}%`;
+    }
+
+    function getSplitTicketCountyInsight(countyNorm, contestType, demVotes, repVotes, totalVotes) {
+      if (!splitTicketOverlayEnabled || currentView !== 'counties') return null;
+      if (String(contestType || '').trim() !== 'president') return null;
+      if (!countyNorm) return null;
+      const govSigned = Number(splitTicketCountyOverlayMargins?.[countyNorm]);
+      if (!Number.isFinite(govSigned)) return null;
+
+      const presSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const deltaSigned = govSigned - presSigned;
+      const deltaLabel = Math.abs(deltaSigned) < 0.005
+        ? 'No split shift'
+        : `${deltaSigned > 0 ? 'R' : 'D'}+${Math.abs(deltaSigned).toFixed(2)} vs President`;
+
+      return {
+        presidentSigned: presSigned,
+        governorSigned: govSigned,
+        deltaSigned,
+        presidentLabel: formatSignedMarginTag(presSigned),
+        governorLabel: formatSignedMarginTag(govSigned),
+        deltaLabel
+      };
+    }
+
+    function isBellwetherCounty(countyNameOrNorm) {
+      const countyNorm = normalizeCountyToken(countyNameOrNorm);
+      return !!(countyNorm && bellwetherCountyNorms && bellwetherCountyNorms.has(countyNorm));
+    }
+
+    function deriveBellwetherCountyNormsFromPrecincts(normSet) {
+      const next = new Set();
+      const src = normSet instanceof Set ? normSet : new Set();
+      src.forEach(norm => {
+        const countyNorm = String(norm || '').split(' - ', 1)[0];
+        if (countyNorm) next.add(countyNorm);
+      });
+      bellwetherCountyNorms = next;
+    }
+
+    function updateSplitTicketLegendChipVisibility() {
+      const chip = document.getElementById('legend-split-chip');
+      if (!chip) return;
+      const meta = splitTicketOverlayMeta || null;
+      const active = !!(splitTicketOverlayEnabled && currentView === 'counties' && meta);
+      chip.style.display = active ? 'inline-flex' : 'none';
+      if (!active) return;
+      const baseYear = Number(meta.baseYear || currentContestMeta?.year || 2024) || 2024;
+      const overlayYear = Number(meta.overlayYear || baseYear) || baseYear;
+      chip.textContent = `Pres-Gov: President ${baseYear} base, Governor ${overlayYear} overlay`;
+    }
+
     function syncSplitTicketToggleUI() {
       const btn = document.getElementById('split-ticket-toggle');
       if (!btn) return;
@@ -12561,6 +12641,7 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.title = enabled
         ? 'Disable split-ticket overlay (Governor over President).'
         : 'Overlay Governor results over President to highlight split-ticket places.';
+      updateSplitTicketLegendChipVisibility();
     }
 
     function setSplitTicketOverlayVisibility() {
@@ -12583,6 +12664,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('precinct-split-overlay-dot-missing')) {
         map.setLayoutProperty('precinct-split-overlay-dot-missing', 'visibility', precinctMissingVisible ? 'visible' : 'none');
       }
+      updateSplitTicketLegendChipVisibility();
     }
 
     function ensureSplitTicketOverlayLayers() {
@@ -12671,6 +12753,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const rows = await loadContestSlice(contestType, y);
       const countyTotals = {};
+      const countySignedMargins = {};
       const precinctColorByNorm = new Map();
 
       rows.forEach(row => {
@@ -12705,6 +12788,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ];
       Object.entries(countyTotals).forEach(([countyNorm, totals]) => {
         const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+        countySignedMargins[countyNorm] = signed;
         const winner = winnerFromSignedMarginPct(signed);
         const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
         countyExpr.push(countyNorm, color);
@@ -12718,7 +12802,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       precinctExpr.push('#94a3b8');
 
-      const payload = { countyExpr, precinctExpr };
+      const payload = { countyExpr, precinctExpr, countySignedMargins };
       splitTicketOverlayCache.set(cacheKey, payload);
       return payload;
     }
@@ -12726,7 +12810,21 @@ document.addEventListener('DOMContentLoaded', function() {
     async function refreshSplitTicketOverlayForSelection(contestType, year) {
       ensureSplitTicketOverlayLayers();
       if (!splitTicketOverlayEnabled) {
+        splitTicketCountyOverlayMargins = {};
         setSplitTicketOverlayVisibility();
+        return;
+      }
+      if (currentView !== 'counties') {
+        setSplitTicketOverlayVisibility();
+        return;
+      }
+      if (contestType !== 'president') {
+        splitTicketOverlayEnabled = false;
+        splitTicketOverlayMeta = null;
+        splitTicketCountyOverlayMargins = {};
+        syncSplitTicketToggleUI();
+        setSplitTicketOverlayVisibility();
+        setStatus('Pres-Gov overlay only applies to President results. It was turned off.');
         return;
       }
       const baseYear = Number(year) || 2024;
@@ -12734,6 +12832,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!governorValue) {
         splitTicketOverlayEnabled = false;
         splitTicketOverlayMeta = null;
+        splitTicketCountyOverlayMargins = {};
         syncSplitTicketToggleUI();
         setSplitTicketOverlayVisibility();
         setStatus('Split-ticket overlay unavailable: governor contest not found for this year.');
@@ -12743,6 +12842,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const overlayYear = Number(overlayYearRaw) || 2024;
       splitTicketOverlayMeta = { overlayContestType, overlayYear, baseYear, governorValue };
       const exprs = await buildContestColorExpressions(overlayContestType, overlayYear);
+      splitTicketCountyOverlayMargins = exprs?.countySignedMargins || {};
 
       if (map.getLayer('county-split-overlay-fill')) {
         try { map.setPaintProperty('county-split-overlay-fill', 'fill-color', exprs.countyExpr); } catch (_) {}
@@ -12757,19 +12857,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try { map.setPaintProperty('precinct-split-overlay-dot-missing', 'circle-color', exprs.precinctExpr); } catch (_) {}
       }
       setSplitTicketOverlayVisibility();
-
-      if (contestType !== 'president') {
-        setStatus('Split-ticket overlay is optimized for President base + Governor overlay.');
-      }
     }
 
     async function toggleSplitTicketContest() {
       const sel = document.getElementById('contestSelect');
       if (!sel) return;
+      if (currentView !== 'counties') {
+        setStatus('Pres-Gov overlay is available in Counties view only.');
+        return;
+      }
 
       if (splitTicketOverlayEnabled) {
         splitTicketOverlayEnabled = false;
         splitTicketOverlayMeta = null;
+        splitTicketCountyOverlayMargins = {};
         setSplitTicketOverlayVisibility();
         try { applyLayerOpacityTuning(); } catch (_) {}
         syncSplitTicketToggleUI();
@@ -12789,6 +12890,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       splitTicketOverlayEnabled = true;
       splitTicketOverlayMeta = null;
+      splitTicketCountyOverlayMargins = {};
       syncSplitTicketToggleUI();
 
       const targetValue = presidentValue;
@@ -12801,7 +12903,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try { applyLayerOpacityTuning(); } catch (_) {}
       }
 
-      setStatus('Split-ticket overlay active: Governor results layered over President.');
+      setStatus('Pres-Gov overlay active: President is the base map, Governor is the translucent overlay. Hover a county to see split shift details.');
       saveUIState();
     }
 
@@ -12985,24 +13087,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function refreshBellwetherOverlayForContest(contestType, year) {
       const requestId = ++bellwetherRequestId;
-      if (!precinctsEnabled) {
-        bellwetherPrecinctNorms = new Set();
-        setBellwetherFeatures(bellwetherPrecinctNorms);
-        updateBellwetherLayerVisibility();
-        return;
-      }
       if (!contestType || !year) {
         bellwetherPrecinctNorms = new Set();
+        deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
         setBellwetherFeatures(bellwetherPrecinctNorms);
         updateBellwetherLayerVisibility();
         return;
       }
 
-      try {
-        await ensurePrecinctCentroidsLoaded();
-      } catch (_) {}
-      if (requestId !== bellwetherRequestId) return;
-      ensureBellwetherLayer();
+      if (precinctsEnabled) {
+        try {
+          await ensurePrecinctCentroidsLoaded();
+        } catch (_) {}
+        if (requestId !== bellwetherRequestId) return;
+        ensureBellwetherLayer();
+      }
 
       const cacheKey = `${contestType}_${Number(year)}`;
       let normSet = bellwetherCache.get(cacheKey);
@@ -13013,7 +13112,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (requestId !== bellwetherRequestId) return;
 
       bellwetherPrecinctNorms = normSet instanceof Set ? normSet : new Set();
-      setBellwetherFeatures(bellwetherPrecinctNorms);
+      deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
+      setBellwetherFeatures(precinctsEnabled ? bellwetherPrecinctNorms : new Set());
       updateBellwetherLayerVisibility();
     }
 
@@ -13605,9 +13705,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (flipChip) chips.unshift(flipChip);
       }
 
+      if (isBellwetherCounty(norm)) {
+        chips.push('<span class="result-chip" style="background:rgba(250,204,21,0.18);color:#7c2d12;border-color:rgba(202,138,4,0.58);">&#9733; Bellwether County</span>');
+      }
+
+      const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
+      const splitInsightLine = splitInsight
+        ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);"><div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Pres-Gov Lens</div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Split Shift:</span><strong>${splitInsight.deltaLabel}</strong></div></div>`
+        : '';
+
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${splitInsightLine}
         ${demoLine}
       `;
 
@@ -14761,6 +14871,23 @@ document.addEventListener('DOMContentLoaded', function() {
       if (precincts) sidebarContent += `<div style="font-size:14px;"><b>Precincts:</b> ${precincts}</div>`;
       sidebarContent += `<div style="font-size:14px;margin-bottom:10px;"><b>Total Votes:</b> ${totalVotes.toLocaleString()}</div>`;
       sidebarContent += `</div>`;
+
+      if (isBellwetherCounty(norm)) {
+        sidebarContent += `<div style="margin:0 0 10px 0;padding:8px 10px;border-radius:10px;background:rgba(250,204,21,0.16);border:1px solid rgba(202,138,4,0.5);color:#7c2d12;font-size:13px;font-weight:700;">&#9733; Bellwether County</div>`;
+      }
+
+      const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
+      if (splitInsight) {
+        sidebarContent += `
+          <div style="margin:0 0 12px 0;padding:10px;border-radius:10px;background:rgba(15,23,42,0.05);border:1px solid rgba(148,163,184,0.35);">
+            <h3 class="sidebar-section-title" style="margin:0 0 6px 0;">Pres-Gov Lens</h3>
+            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#334155;"><span>Split Shift:</span><strong>${splitInsight.deltaLabel}</strong></div>
+          </div>
+        `;
+      }
+
     sidebarContent += `<div class="winner-section">`;
   sidebarContent += '<h3 class="sidebar-section-title">Winner</h3>';
   sidebarContent += `<p class="sidebar-winner" style="color: ${winnerColor}; font-weight: bold;">${fullCandidateLabel(winnerCandidate, winner === 'Republican' ? 'Republican' : 'Democratic')} (${winner === 'Republican' ? 'R' : 'D'})</p>`;
@@ -15563,8 +15690,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestKey = document.getElementById('contestSelect')?.value;
       if (contestKey) await applyContest(contestKey);
       if (!precinctsEnabled) {
-        bellwetherPrecinctNorms = new Set();
-        setBellwetherFeatures(bellwetherPrecinctNorms);
+        setBellwetherFeatures(new Set());
         updateBellwetherLayerVisibility();
       }
       saveUIState();
@@ -18001,9 +18127,11 @@ document.addEventListener('DOMContentLoaded', function() {
     async function applyContest(contestKey) {
       if (!contestKey) {
         try { applyLayerOpacityTuning(); } catch (_) {}
+        splitTicketCountyOverlayMargins = {};
         try { setSplitTicketOverlayVisibility(); } catch (_) {}
         try {
           bellwetherPrecinctNorms = new Set();
+          deriveBellwetherCountyNormsFromPrecincts(bellwetherPrecinctNorms);
           setBellwetherFeatures(bellwetherPrecinctNorms);
           updateBellwetherLayerVisibility();
         } catch (_) {}
@@ -18051,7 +18179,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       try {
         if (splitTicketOverlayEnabled) {
-          await refreshSplitTicketOverlayForSelection(contestType, year);
+          if (contestType !== 'president') {
+            splitTicketOverlayEnabled = false;
+            splitTicketOverlayMeta = null;
+            splitTicketCountyOverlayMargins = {};
+            syncSplitTicketToggleUI();
+            setSplitTicketOverlayVisibility();
+            setStatus('Pres-Gov overlay turned off because the selected contest is not President.');
+          } else {
+            await refreshSplitTicketOverlayForSelection(contestType, year);
+          }
         } else {
           setSplitTicketOverlayVisibility();
         }
