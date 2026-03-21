@@ -74,7 +74,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
-- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic), with synchronized legend colors in both standard and colorblind palettes
+- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
@@ -97,6 +97,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Added a dedicated `Demographics` map mode across counties, congressional districts, state house, state senate, and precinct overlays.
 - Added precinct-level demographic inputs (`data/precinct_demographics_2020_vap.csv`) and wired them into precinct hover/sidebar race chips.
+- Expanded county/precinct demographic fields to include Native, Asian, Pacific, and multiracial shares in addition to white/black/Hispanic fields when available.
+- Updated demographics legend + map coloring so plurality classes now include Native, Asian, Pacific, and multiracial categories where source fields exist.
 - Synced legend swatches with the **active** map palette in colorblind mode so the legend now always matches on-map colors.
 - Added `High contrast demographics` toggle in controls for stronger map fills and race-chip contrast when demographics mode is active.
 - Added URL-state persistence for demographic contrast (`democontrast=high`, with `demo_contrast` accepted when parsing links).
@@ -200,7 +202,9 @@ The current `index.html` includes several speed-focused improvements that are al
 
 ### What Demographics Mode Displays
 
-- **Primary signal:** Each geography is colored by the largest reported share among white, black, and Hispanic fields.
+- **Primary signal:** Each geography is colored by the largest reported race share among available fields.
+  - County/precinct overlays use white, black, Hispanic, Native, Asian, Pacific, and multiracial shares when present.
+  - District overlays continue to use whichever race-share columns exist in the district CSV inputs.
 - **Near-tie handling:** If the top two race shares are effectively tied, the map uses a mixed-color class (`Near tie / mixed`) rather than forcing one group.
 - **No-data handling:** Geographies without usable fields render as `No demographic data`.
 
