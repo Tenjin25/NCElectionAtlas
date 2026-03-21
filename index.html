@@ -9570,6 +9570,46 @@ document.addEventListener('DOMContentLoaded', function() {
       try { announceForScreenReader(buildAriaSummary(title || 'Hovered area', demVotes, repVotes, otherVotes)); } catch (_) {}
     }
 
+    function refreshPinnedPrecinctForContest(contestType, year) {
+      const pinned = voteCounterPinned || null;
+      const meta = pinned?.meta || null;
+      if (!meta || meta.kind !== 'precinct') return false;
+      if (!contestType || !currentPrecinctResults) return false;
+
+      const norm = normalizeCountyToken(meta.precinctNorm || meta.precinct || '');
+      if (!norm) return false;
+      const row = currentPrecinctResults.get(norm);
+      if (!row) return false;
+
+      const demVotes = Number(row[`${contestType}_dem`] || 0);
+      const repVotes = Number(row[`${contestType}_rep`] || 0);
+      const otherVotes = Number(row[`${contestType}_other`] || 0);
+      const county = (meta.county || norm.split(' - ')[0] || '').toString().trim().toUpperCase();
+      const precinctDisplay = (meta.precinct || norm).toString().trim();
+
+      pinVoteCounterState(
+        `Selected: ${precinctDisplay}`,
+        `${formatContestName(contestType, year)} ${year}`,
+        demVotes,
+        repVotes,
+        otherVotes,
+        {
+          ...meta,
+          kind: 'precinct',
+          county,
+          precinct: precinctDisplay,
+          precinctNorm: norm,
+          contestType,
+          year: Number(year)
+        },
+        {
+          demCandidate: row[`${contestType}_dem_candidate`] || pinned?.candidates?.demCandidate || '',
+          repCandidate: row[`${contestType}_rep_candidate`] || pinned?.candidates?.repCandidate || ''
+        }
+      );
+      return true;
+    }
+
     function clearVoteCounterHoverState() {
       if (voteCounterPinned) return;
       if (!voteCounterHoverActive) return;
@@ -17637,6 +17677,9 @@ document.addEventListener('DOMContentLoaded', function() {
         demCandidate: statewideDemCandidate,
         repCandidate: statewideRepCandidate
       });
+
+      // Keep a pinned precinct context synchronized when users switch contests.
+      try { refreshPinnedPrecinctForContest(contestType, year); } catch (_) {}
       
       // Baseline vote counter (statewide) for this contest/view.
       setVoteCounterBaselineState(

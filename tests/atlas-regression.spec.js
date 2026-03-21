@@ -260,6 +260,107 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }, { timeout: APP_READY_TIMEOUT });
   });
 
+  test('pinned precinct side trend stays in sync after contest switch', async ({ page }) => {
+    const firstContestKey = await pickContestKey(page);
+    expect(firstContestKey).toBeTruthy();
+
+    await page.selectOption('#contestSelect', firstContestKey);
+    await page.waitForFunction(
+      (v) => document.getElementById('contestSelect')?.value === v,
+      firstContestKey
+    );
+
+    await page.click('#precinct-toggle');
+    await page.waitForFunction(() => {
+      const text = (document.getElementById('precinct-toggle')?.textContent || '').trim();
+      return text === 'Precincts On' || text === 'Precincts Loading';
+    }, { timeout: APP_READY_TIMEOUT });
+
+    await page.getByRole('button', { name: 'Wake 01-14' }).first().click();
+    await page.waitForFunction(() => {
+      try {
+        if (typeof selectedPrecinctNorm === 'undefined' || typeof map === 'undefined' || !map) return false;
+        return /^WAKE - /i.test(String(selectedPrecinctNorm || '')) && Number(map.getZoom()) >= 9.8;
+      } catch (_) {
+        return false;
+      }
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const pinnedFromSelection = await page.evaluate(() => {
+      try {
+        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return false;
+        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
+        if (!norm) return false;
+        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
+        if (!layers.length) return false;
+        const src = map.getSource('precinct-centroids');
+        const gj = src ? (src._data || src.data) : null;
+        const features = gj?.features || [];
+        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
+        const coords = hit?.geometry?.coordinates;
+        if (!Array.isArray(coords) || coords.length < 2) return false;
+        const projected = map.project(coords);
+        if (!projected) return false;
+        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
+        const feature = rendered && rendered.length ? rendered[0] : null;
+        if (!feature || typeof renderPrecinctHoverAtPoint !== 'function') return false;
+        renderPrecinctHoverAtPoint(
+          { x: projected.x, y: projected.y },
+          feature,
+          { forceTooltip: true, pinSelection: true }
+        );
+        return true;
+      } catch (_) {
+        return false;
+      }
+    });
+    expect(pinnedFromSelection).toBeTruthy();
+
+    const secondContestKey = await page.evaluate((current) => {
+      const sel = document.getElementById('contestSelect');
+      const values = Array.from(sel?.options || [])
+        .map((opt) => (opt && opt.value ? String(opt.value).trim() : ''))
+        .filter(Boolean);
+      const preferred = [
+        'governor_2024',
+        'president_2024',
+        'us_senate_2022',
+        'attorney_general_2024'
+      ];
+      for (const target of preferred) {
+        const hit = values.find((v) => v === target && v !== current);
+        if (hit) return hit;
+      }
+      return values.find((v) => v !== current) || '';
+    }, firstContestKey);
+    expect(secondContestKey).toBeTruthy();
+
+    await page.selectOption('#contestSelect', secondContestKey);
+    await page.waitForFunction(
+      (v) => document.getElementById('contestSelect')?.value === v,
+      secondContestKey
+    );
+
+    const splitAt = secondContestKey.lastIndexOf('_');
+    const expectedType = secondContestKey.slice(0, splitAt);
+    const expectedYear = Number(secondContestKey.slice(splitAt + 1));
+
+    await page.waitForFunction(({ expectedType, expectedYear }) => {
+      try {
+        const pinned = (typeof voteCounterPinned !== 'undefined' && voteCounterPinned) ? voteCounterPinned : null;
+        const meta = pinned?.meta || null;
+        if (!meta || meta.kind !== 'precinct') return false;
+        if (String(meta.contestType || '') !== String(expectedType || '')) return false;
+        if (Number(meta.year) !== Number(expectedYear)) return false;
+        const subtitle = String(document.getElementById('vote-context-sub')?.textContent || '').trim();
+        const chartText = String(document.getElementById('focus-trend-chart')?.textContent || '').trim();
+        return subtitle.includes(String(expectedYear)) && /Trend at a glance|No historical trend data available|Failed to load trend history/i.test(chartText);
+      } catch (_) {
+        return false;
+      }
+    }, { expectedType, expectedYear }, { timeout: APP_READY_TIMEOUT });
+  });
+
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
     await page.evaluate(() => {
       const png1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC';
