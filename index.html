@@ -11554,12 +11554,11 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
     }
 
-    // Prefix with party for the vote-counter Lead pill only (R+ / D+).
+    // Lead pill uses numeric margin only; party context comes from winner color/label.
     function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      const party = margin > 0 ? 'R' : 'D';
-      return `${party}+${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
+      return `${marginPctValue(repVotes, demVotes, totalVotes).toFixed(2)}%`;
     }
 
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
