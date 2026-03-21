@@ -15,8 +15,8 @@ async function waitForSplitTicketOptions(page) {
       .map((opt) => (opt && opt.value ? String(opt.value).trim() : ''))
       .filter(Boolean);
     const hasPresident = values.some((v) => v.startsWith('president_2024'));
-    const hasRiggs = values.some((v) => v.startsWith('nc_supreme_court_associate_justice_seat_06_2024'));
-    return hasPresident && hasRiggs;
+    const hasGovernor = values.some((v) => v.startsWith('governor_2024'));
+    return hasPresident && hasGovernor;
   }, { timeout: APP_READY_TIMEOUT });
 }
 
@@ -67,7 +67,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }
   });
 
-  test('split-ticket toggle swaps President and Riggs contests', async ({ page }) => {
+  test('split-ticket toggle enables President vs Governor overlay', async ({ page }) => {
     await waitForSplitTicketOptions(page);
 
     const contestKeys = await page.evaluate(() => {
@@ -76,32 +76,57 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         .map((opt) => (opt && opt.value ? String(opt.value).trim() : ''))
         .filter(Boolean);
       const presidentValue = values.find((v) => v.startsWith('president_2024')) || '';
-      const riggsValue = values.find((v) => v.startsWith('nc_supreme_court_associate_justice_seat_06_2024')) || '';
-      return { presidentValue, riggsValue };
+      const governorValue = values.find((v) => v.startsWith('governor_2024')) || '';
+      return { presidentValue, governorValue };
     });
 
     expect(contestKeys.presidentValue).toBeTruthy();
-    expect(contestKeys.riggsValue).toBeTruthy();
+    expect(contestKeys.governorValue).toBeTruthy();
 
-    await page.selectOption('#contestSelect', contestKeys.presidentValue);
+    await page.selectOption('#contestSelect', contestKeys.governorValue);
     await page.waitForFunction(
       (v) => document.getElementById('contestSelect')?.value === v,
-      contestKeys.presidentValue
+      contestKeys.governorValue
     );
-
-    await page.click('#split-ticket-toggle');
-    await page.waitForFunction(
-      (v) => document.getElementById('contestSelect')?.value === v,
-      contestKeys.riggsValue
-    );
-    await expect(page.locator('#context-contest')).toContainText(/Supreme Court/i);
 
     await page.click('#split-ticket-toggle');
     await page.waitForFunction(
       (v) => document.getElementById('contestSelect')?.value === v,
       contestKeys.presidentValue
     );
+    await expect(page.locator('#split-ticket-toggle')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#context-contest')).toContainText(/President/i);
+
+    const overlayState = await page.evaluate(() => {
+      try {
+        if (typeof map === 'undefined' || !map || !map.getLayer) return null;
+        const countyLayer = map.getLayer('county-split-overlay-fill');
+        if (!countyLayer) return null;
+        const visibility = map.getLayoutProperty('county-split-overlay-fill', 'visibility');
+        const opacity = map.getPaintProperty('county-split-overlay-fill', 'fill-opacity');
+        return { visibility, opacity };
+      } catch (_) {
+        return null;
+      }
+    });
+    expect(overlayState).toBeTruthy();
+    expect(overlayState.visibility).toBe('visible');
+    if (typeof overlayState.opacity === 'number') {
+      expect(overlayState.opacity).toBeGreaterThan(0.05);
+    }
+
+    await page.click('#split-ticket-toggle');
+    await expect(page.locator('#split-ticket-toggle')).toHaveAttribute('aria-pressed', 'false');
+    await page.waitForFunction(
+      () => {
+        try {
+          if (typeof map === 'undefined' || !map || !map.getLayer || !map.getLayer('county-split-overlay-fill')) return true;
+          return map.getLayoutProperty('county-split-overlay-fill', 'visibility') === 'none';
+        } catch (_) {
+          return false;
+        }
+      }
+    );
   });
 
   test('precinct search selection sets yellow-highlight target and zooms in', async ({ page }) => {

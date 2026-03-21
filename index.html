@@ -2547,6 +2547,31 @@ body { height: var(--app-height); }
     letter-spacing: 0.01em;
   }
 
+  .recount-radar-badge {
+    display: none;
+    margin-top: 8px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(253, 186, 116, 0.58);
+    background: linear-gradient(130deg, rgba(127, 29, 29, 0.72) 0%, rgba(194, 65, 12, 0.56) 60%, rgba(120, 53, 15, 0.52) 100%);
+    color: #fff7ed;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+  }
+
+  .recount-radar-badge.is-visible {
+    display: inline-flex;
+  }
+
+  .recount-radar-badge .recount-label {
+    color: #fed7aa;
+  }
+
   .map-topbar-hints {
     display: flex;
     gap: 8px;
@@ -4654,6 +4679,28 @@ body { height: var(--app-height); }
     line-height: 1.45;
   }
 
+  .legend-context-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 14px;
+  }
+
+  .legend-context-chip {
+    display: none;
+    align-items: center;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 158, 11, 0.30);
+    background: rgba(254, 243, 199, 0.82);
+    color: #78350f;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
   .legend-scale-shell {
     display: grid;
     gap: 10px;
@@ -4816,7 +4863,8 @@ body { height: var(--app-height); }
   }
 
   .legend.minimized .legend-content,
-  .legend.minimized .legend-footer {
+  .legend.minimized .legend-footer,
+  .legend.minimized .legend-context-chips {
     display: none !important;
   }
 
@@ -6311,6 +6359,9 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.classList.toggle('colorblind-mode');
       updateLegendColors();
       syncColorblindToggleAria();
+      if (typeof splitTicketOverlayCache !== 'undefined' && splitTicketOverlayCache && typeof splitTicketOverlayCache.clear === 'function') {
+        splitTicketOverlayCache.clear();
+      }
       // Reapply current contest with new color mode
       const contestSelect = document.getElementById('contestSelect');
       const contestKey = contestSelect && contestSelect.value;
@@ -6412,6 +6463,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const splitTicketBtn = document.getElementById('split-ticket-toggle');
   if (splitTicketBtn) {
+    if (typeof syncSplitTicketToggleUI === 'function') syncSplitTicketToggleUI();
     splitTicketBtn.onclick = function() {
       if (typeof toggleSplitTicketContest === 'function') {
         toggleSplitTicketContest().catch(() => {});
@@ -6623,6 +6675,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <button type="submit" class="fly-search-submit" data-testid="fly-submit">Fly to</button>
     </form>
     <div class="map-topbar-quick-stats" data-viewport-precinct-count>Viewing precincts...</div>
+    <div class="recount-radar-badge" id="recount-radar-badge" data-testid="recount-radar-badge" aria-live="polite"></div>
     <button type="button" class="mobile-topbar-toggle" id="mobile-topbar-toggle" aria-controls="map-topbar-details" aria-expanded="false">Show details</button>
     <div class="map-topbar-details" id="map-topbar-details">
       <div class="map-topbar-hints" aria-label="Search examples">
@@ -6811,7 +6864,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" data-testid="tool-colorblind" aria-label="Toggle color blind mode" aria-pressed="false" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
                   <button id="label-toggle" title="Toggle County Labels" data-testid="tool-labels" aria-label="Toggle county labels" aria-pressed="true" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
                   <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" data-testid="tool-precinct-overlay" aria-label="Toggle precinct overlay" aria-pressed="false" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
-                  <button id="split-ticket-toggle" title="Toggle between President and Riggs 2024" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison">Pres-Riggs</button>
+                  <button id="split-ticket-toggle" title="Overlay Governor over President to highlight split-ticket patterns" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison" aria-pressed="false">Pres-Gov</button>
                   <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
                   <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button" data-testid="tool-snapshot" aria-label="Download story snapshot">Story Snapshot</button>
                   <button id="copy-link-btn" title="Copy shareable link for current map state" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-copy-link" aria-label="Copy shareable map link">Copy Link</button>
@@ -6949,6 +7002,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
+        <div class="legend-context-chips" id="legend-context-chips">
+          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether precincts matched the statewide winner in each of the last three available cycles.">★ Bellwether: matched statewide winner in last 3 cycles</span>
+        </div>
     </div>
   </div>
 
@@ -7539,6 +7595,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let turnoutBivariateEnabled = false;
     let demographicsHighContrastEnabled = false;
     let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
+    const RECOUNT_MARGIN_THRESHOLD_PCT = 0.5;
+    const RECOUNT_MIN_ZOOM = 8.5;
+    let splitTicketOverlayEnabled = false;
+    let splitTicketOverlayCache = new Map();
+    let splitTicketOverlayMeta = null; // { overlayContestType, overlayYear, baseYear, governorValue, presidentValue }
+    let bellwetherPrecinctNorms = new Set();
+    let bellwetherCache = new Map();
+    let bellwetherRequestId = 0;
     let snapshotStoryVariant = 'balanced'; // balanced | instagram | tiktok
     let currentCountyTurnoutTotals = {};
     let currentPrecinctTurnoutTotals = new Map();
@@ -8464,12 +8528,45 @@ document.addEventListener('DOMContentLoaded', function() {
           if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-opacity', Math.min(1, precinctDotBaseOpacity + 0.03));
         } catch (_) {}
       }
+      const splitActive = !!(splitTicketOverlayEnabled && currentView === 'counties');
+      let splitCountyOpacity = 0.0;
+      let splitPrecinctFillOpacity = 0.0;
+      let splitPrecinctDotOpacity = 0.0;
+      if (splitActive) {
+        if (overlayOpacityPreset === 'focus') {
+          splitCountyOpacity = precinctsEnabled ? 0.18 : 0.30;
+          splitPrecinctFillOpacity = 0.30;
+          splitPrecinctDotOpacity = 0.76;
+        } else if (overlayOpacityPreset === 'balanced') {
+          splitCountyOpacity = precinctsEnabled ? 0.14 : 0.25;
+          splitPrecinctFillOpacity = 0.26;
+          splitPrecinctDotOpacity = 0.70;
+        } else {
+          splitCountyOpacity = precinctsEnabled ? 0.10 : 0.20;
+          splitPrecinctFillOpacity = 0.22;
+          splitPrecinctDotOpacity = 0.63;
+        }
+      }
+      if (map.getLayer('county-split-overlay-fill')) {
+        try { map.setPaintProperty('county-split-overlay-fill', 'fill-opacity', splitCountyOpacity); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-fill')) {
+        try { map.setPaintProperty('precinct-split-overlay-fill', 'fill-opacity', splitPrecinctFillOpacity); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-dot')) {
+        try { map.setPaintProperty('precinct-split-overlay-dot', 'circle-opacity', splitPrecinctDotOpacity); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-dot-missing')) {
+        try { map.setPaintProperty('precinct-split-overlay-dot-missing', 'circle-opacity', Math.min(1, splitPrecinctDotOpacity + 0.05)); } catch (_) {}
+      }
       if (map.getLayer('precinct-selected-fill')) {
         try { map.setPaintProperty('precinct-selected-fill', 'fill-opacity', Math.min(0.26, precinctFillBaseOpacity * 0.38)); } catch (_) {}
       }
       if (map.getLayer('precinct-dot-selected')) {
         try { map.setPaintProperty('precinct-dot-selected', 'circle-opacity', Math.min(1, precinctDotBaseOpacity + 0.16)); } catch (_) {}
       }
+      setSplitTicketOverlayVisibility();
+      updateBellwetherLayerVisibility();
       reinforceMapLabelHalos();
     }
 
@@ -9528,6 +9625,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
         refreshFocusTrend(voteCounterBaseline);
       }
+      updateRecountRadarBadge();
       try { updateContextBanner(); } catch (_) {}
     }
 
@@ -9537,6 +9635,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       refreshFocusTrend(voteCounterPinned);
+      updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes)); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
     }
@@ -9559,6 +9658,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderFocusTrendEmpty('Select a contest to load trend history.', 'Trend history');
         hideVoteCounter();
       }
+      updateRecountRadarBadge();
       try { updateContextBanner(); } catch (_) {}
     }
 
@@ -10949,6 +11049,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
       reinforceMapLabelHalos();
       applyLayerOpacityTuning();
+      setSplitTicketOverlayVisibility();
+      updateBellwetherLayerVisibility();
+      updateRecountRadarBadge();
       saveUIState();
     }
 
@@ -12323,6 +12426,77 @@ document.addEventListener('DOMContentLoaded', function() {
       saveUIState();
     }
 
+    function setRecountRadarBadgeVisible(visible, html = '') {
+      const badge = document.getElementById('recount-radar-badge');
+      if (!badge) return;
+      if (!visible) {
+        badge.classList.remove('is-visible');
+        badge.innerHTML = '';
+      } else {
+        badge.innerHTML = html;
+        badge.classList.add('is-visible');
+      }
+      try {
+        if (typeof window.syncInitialTopbarOffset === 'function') {
+          window.syncInitialTopbarOffset();
+        }
+      } catch (_) {}
+    }
+
+    function recountFocusLabelFromMeta(meta) {
+      if (!meta) return getReadableFocusLabel();
+      if (meta.kind === 'district') {
+        const d = Number(meta.districtNum);
+        if (!Number.isFinite(d)) return getReadableFocusLabel();
+        if (meta.scope === 'congressional') return `CD ${d}`;
+        if (meta.scope === 'state_house') return `HD ${d}`;
+        if (meta.scope === 'state_senate') return `SD ${d}`;
+      }
+      if (meta.kind === 'county' && meta.county) return `${displayCountyName(meta.county)} County`;
+      if (meta.kind === 'precinct' && meta.precinct) return meta.precinct;
+      if (meta.kind === 'region' && meta.regionLabel) return meta.regionLabel;
+      return getReadableFocusLabel();
+    }
+
+    function updateRecountRadarBadge() {
+      if (!map) {
+        setRecountRadarBadgeVisible(false);
+        return;
+      }
+      const zoom = Number(map.getZoom() || 0);
+      if (zoom < RECOUNT_MIN_ZOOM) {
+        setRecountRadarBadgeVisible(false);
+        return;
+      }
+
+      const state = voteCounterPinned || voteCounterBaseline || null;
+      if (!state) {
+        setRecountRadarBadgeVisible(false);
+        return;
+      }
+
+      const demVotes = Number(state.demVotes || 0);
+      const repVotes = Number(state.repVotes || 0);
+      const otherVotes = Number(state.otherVotes || 0);
+      const totalVotes = demVotes + repVotes + otherVotes;
+      if (!Number.isFinite(totalVotes) || totalVotes <= 0) {
+        setRecountRadarBadgeVisible(false);
+        return;
+      }
+
+      const marginVotes = Math.abs(repVotes - demVotes);
+      const marginPct = totalVotes > 0 ? (marginVotes / totalVotes) * 100 : 0;
+      if (!Number.isFinite(marginPct) || marginPct > RECOUNT_MARGIN_THRESHOLD_PCT) {
+        setRecountRadarBadgeVisible(false);
+        return;
+      }
+
+      const focusLabel = recountFocusLabelFromMeta(state.meta || null);
+      const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
+      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} votes (${marginPct.toFixed(2)}%) - RECOUNT ACTIVE</span>`;
+      setRecountRadarBadgeVisible(true, html);
+    }
+
     function getContestOptionValues() {
       const sel = document.getElementById('contestSelect');
       if (!sel) return [];
@@ -12344,25 +12518,441 @@ document.addEventListener('DOMContentLoaded', function() {
       return findContestValueByPrefix('president', preferredYear || '2024');
     }
 
-    function findRiggsContestValue() {
-      return findContestValueByPrefix('nc_supreme_court_associate_justice_seat_06', '2024');
+    function findGovernorContestValue(preferredYear = null) {
+      return findContestValueByPrefix('governor', preferredYear || '2024');
+    }
+
+    function normalizeContestPrecinctNorm(rowNameRaw) {
+      const normalized = normalizeCountyToken(rowNameRaw);
+      if (!normalized || !normalized.includes(' - ')) return '';
+      const [countyNorm, precinctCode] = normalized.split(' - ', 2);
+      if (!countyNorm || !precinctCode) return '';
+      if (isNonGeographicPrecinctToken(precinctCode, countyNorm)) return '';
+      return `${countyNorm} - ${precinctCode}`;
+    }
+
+    function syncSplitTicketToggleUI() {
+      const btn = document.getElementById('split-ticket-toggle');
+      if (!btn) return;
+      const enabled = !!splitTicketOverlayEnabled;
+      btn.textContent = enabled ? 'Split On' : 'Pres-Gov';
+      btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      btn.title = enabled
+        ? 'Disable split-ticket overlay (Governor over President).'
+        : 'Overlay Governor results over President to highlight split-ticket places.';
+    }
+
+    function setSplitTicketOverlayVisibility() {
+      const minZoom = CONFIG.precincts?.minZoom || 8.5;
+      const zoom = map.getZoom();
+      const countyVisible = !!splitTicketOverlayEnabled && currentView === 'counties';
+      const precinctPolyVisible = countyVisible && precinctsEnabled && zoom >= minZoom;
+      const precinctDotVisible = countyVisible && precinctsEnabled && zoom < minZoom;
+      const precinctMissingVisible = countyVisible && precinctsEnabled && zoom >= minZoom;
+
+      if (map.getLayer('county-split-overlay-fill')) {
+        map.setLayoutProperty('county-split-overlay-fill', 'visibility', countyVisible ? 'visible' : 'none');
+      }
+      if (map.getLayer('precinct-split-overlay-fill')) {
+        map.setLayoutProperty('precinct-split-overlay-fill', 'visibility', precinctPolyVisible ? 'visible' : 'none');
+      }
+      if (map.getLayer('precinct-split-overlay-dot')) {
+        map.setLayoutProperty('precinct-split-overlay-dot', 'visibility', precinctDotVisible ? 'visible' : 'none');
+      }
+      if (map.getLayer('precinct-split-overlay-dot-missing')) {
+        map.setLayoutProperty('precinct-split-overlay-dot-missing', 'visibility', precinctMissingVisible ? 'visible' : 'none');
+      }
+    }
+
+    function ensureSplitTicketOverlayLayers() {
+      if (!map) return;
+      if (map.getSource('counties') && !map.getLayer('county-split-overlay-fill')) {
+        addLayerWithOptionalSourceLayer({
+          id: 'county-split-overlay-fill',
+          type: 'fill',
+          source: 'counties',
+          beforeId: 'county-stroke',
+          layout: { visibility: 'none' },
+          paint: {
+            'fill-color': '#64748b',
+            'fill-opacity': 0.0
+          }
+        });
+      }
+      if (map.getSource('precincts') && !map.getLayer('precinct-split-overlay-fill')) {
+        map.addLayer({
+          id: 'precinct-split-overlay-fill',
+          type: 'fill',
+          source: 'precincts',
+          minzoom: CONFIG.precincts?.minZoom || 8.5,
+          layout: { visibility: 'none' },
+          paint: {
+            'fill-color': '#64748b',
+            'fill-opacity': 0.0
+          }
+        }, map.getLayer('precinct-stroke') ? 'precinct-stroke' : undefined);
+      }
+      if (map.getSource('precinct-centroids') && !map.getLayer('precinct-split-overlay-dot')) {
+        const minZoom = CONFIG.precincts?.minZoom || 8.5;
+        map.addLayer({
+          id: 'precinct-split-overlay-dot',
+          type: 'circle',
+          source: 'precinct-centroids',
+          maxzoom: minZoom,
+          layout: { visibility: 'none' },
+          paint: {
+            'circle-radius': [
+              'interpolate', ['exponential', 1.35], ['zoom'],
+              4.0, 0.55,
+              5.5, 1.15,
+              6.5, 1.75,
+              7.5, 2.45,
+              8.4, 3.1
+            ],
+            'circle-color': '#64748b',
+            'circle-opacity': 0.0,
+            'circle-stroke-color': 'rgba(15,23,42,0.35)',
+            'circle-stroke-width': 0.55
+          }
+        }, map.getLayer('precinct-dot-selected') ? 'precinct-dot-selected' : undefined);
+      }
+      if (map.getSource('precinct-centroids') && !map.getLayer('precinct-split-overlay-dot-missing')) {
+        const minZoom = CONFIG.precincts?.minZoom || 8.5;
+        map.addLayer({
+          id: 'precinct-split-overlay-dot-missing',
+          type: 'circle',
+          source: 'precinct-centroids',
+          minzoom: minZoom,
+          filter: ['==', ['get', 'has_polygon'], false],
+          layout: { visibility: 'none' },
+          paint: {
+            'circle-radius': [
+              'interpolate', ['linear'], ['zoom'],
+              minZoom, 3.5,
+              10, 4.1,
+              12, 5.0,
+              14, 5.9
+            ],
+            'circle-color': '#64748b',
+            'circle-opacity': 0.0,
+            'circle-stroke-color': 'rgba(15,23,42,0.42)',
+            'circle-stroke-width': 0.8
+          }
+        }, map.getLayer('precinct-dot-selected') ? 'precinct-dot-selected' : undefined);
+      }
+      setSplitTicketOverlayVisibility();
+    }
+
+    async function buildContestColorExpressions(contestType, year) {
+      const y = Number(year);
+      const cacheKey = `${contestType}_${y}`;
+      if (splitTicketOverlayCache.has(cacheKey)) return splitTicketOverlayCache.get(cacheKey);
+
+      const rows = await loadContestSlice(contestType, y);
+      const countyTotals = {};
+      const precinctColorByNorm = new Map();
+
+      rows.forEach(row => {
+        const rowNameRaw = (row?.county || '').toString();
+        const rowNameNorm = normalizeCountyToken(rowNameRaw);
+        if (!rowNameNorm) return;
+        const countyNorm = rowNameNorm.includes(' - ') ? rowNameNorm.split(' - ')[0] : rowNameNorm;
+        if (!countyNorm) return;
+        const demVotes = Number(row?.[`${contestType}_dem`] || 0);
+        const repVotes = Number(row?.[`${contestType}_rep`] || 0);
+        const otherVotes = Number(row?.[`${contestType}_other`] || 0);
+        const fallbackTotal = demVotes + repVotes + otherVotes;
+        const totalVotes = Math.max(0, Number(row?.[`${contestType}_total`] || fallbackTotal));
+
+        if (!countyTotals[countyNorm]) countyTotals[countyNorm] = { dem: 0, rep: 0, total: 0, other: 0 };
+        countyTotals[countyNorm].dem += demVotes;
+        countyTotals[countyNorm].rep += repVotes;
+        countyTotals[countyNorm].other += otherVotes;
+        countyTotals[countyNorm].total += totalVotes;
+
+        const precinctNorm = normalizeContestPrecinctNorm(rowNameRaw);
+        if (!precinctNorm) return;
+        const signed = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const winner = winnerFromSignedMarginPct(signed);
+        const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
+        precinctColorByNorm.set(precinctNorm, color);
+      });
+
+      const countyExpr = [
+        'match',
+        ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
+      ];
+      Object.entries(countyTotals).forEach(([countyNorm, totals]) => {
+        const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+        const winner = winnerFromSignedMarginPct(signed);
+        const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
+        countyExpr.push(countyNorm, color);
+      });
+      countyExpr.push('#cbd5e1');
+
+      const precinctExpr = ['case'];
+      precinctColorByNorm.forEach((color, precinctNorm) => {
+        precinctExpr.push(['==', ['get', 'precinct_norm'], precinctNorm]);
+        precinctExpr.push(color);
+      });
+      precinctExpr.push('#94a3b8');
+
+      const payload = { countyExpr, precinctExpr };
+      splitTicketOverlayCache.set(cacheKey, payload);
+      return payload;
+    }
+
+    async function refreshSplitTicketOverlayForSelection(contestType, year) {
+      ensureSplitTicketOverlayLayers();
+      if (!splitTicketOverlayEnabled) {
+        setSplitTicketOverlayVisibility();
+        return;
+      }
+      const baseYear = Number(year) || 2024;
+      const governorValue = findGovernorContestValue(String(baseYear)) || findGovernorContestValue('2024');
+      if (!governorValue) {
+        splitTicketOverlayEnabled = false;
+        splitTicketOverlayMeta = null;
+        syncSplitTicketToggleUI();
+        setSplitTicketOverlayVisibility();
+        setStatus('Split-ticket overlay unavailable: governor contest not found for this year.');
+        return;
+      }
+      const [overlayContestType, overlayYearRaw] = parseContestValue(governorValue);
+      const overlayYear = Number(overlayYearRaw) || 2024;
+      splitTicketOverlayMeta = { overlayContestType, overlayYear, baseYear, governorValue };
+      const exprs = await buildContestColorExpressions(overlayContestType, overlayYear);
+
+      if (map.getLayer('county-split-overlay-fill')) {
+        try { map.setPaintProperty('county-split-overlay-fill', 'fill-color', exprs.countyExpr); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-fill')) {
+        try { map.setPaintProperty('precinct-split-overlay-fill', 'fill-color', exprs.precinctExpr); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-dot')) {
+        try { map.setPaintProperty('precinct-split-overlay-dot', 'circle-color', exprs.precinctExpr); } catch (_) {}
+      }
+      if (map.getLayer('precinct-split-overlay-dot-missing')) {
+        try { map.setPaintProperty('precinct-split-overlay-dot-missing', 'circle-color', exprs.precinctExpr); } catch (_) {}
+      }
+      setSplitTicketOverlayVisibility();
+
+      if (contestType !== 'president') {
+        setStatus('Split-ticket overlay is optimized for President base + Governor overlay.');
+      }
     }
 
     async function toggleSplitTicketContest() {
       const sel = document.getElementById('contestSelect');
       if (!sel) return;
+
+      if (splitTicketOverlayEnabled) {
+        splitTicketOverlayEnabled = false;
+        splitTicketOverlayMeta = null;
+        setSplitTicketOverlayVisibility();
+        try { applyLayerOpacityTuning(); } catch (_) {}
+        syncSplitTicketToggleUI();
+        setStatus('Split-ticket overlay disabled.');
+        saveUIState();
+        return;
+      }
+
       const cur = String(sel.value || '').trim();
       const curYear = parseContestValue(cur)?.[1] || '2024';
       const presidentValue = findPresidentContestValue(curYear) || findPresidentContestValue('2024');
-      const riggsValue = findRiggsContestValue();
-      if (!presidentValue || !riggsValue) {
-        setStatus('Split-ticket toggle needs both President and Riggs contests in this view.');
+      const governorValue = findGovernorContestValue(curYear) || findGovernorContestValue('2024');
+      if (!presidentValue || !governorValue) {
+        setStatus('Split-ticket overlay needs both President and Governor contests in this view.');
         return;
       }
-      const target = (cur === presidentValue) ? riggsValue : presidentValue;
-      sel.value = target;
-      await applyContest(target);
-      setStatus(`Split-ticket view: ${target === presidentValue ? 'President' : 'Riggs'}.`);
+
+      splitTicketOverlayEnabled = true;
+      splitTicketOverlayMeta = null;
+      syncSplitTicketToggleUI();
+
+      const targetValue = presidentValue;
+      if (sel.value !== targetValue) {
+        sel.value = targetValue;
+        await applyContest(targetValue);
+      } else {
+        const [contestType, year] = parseContestValue(targetValue);
+        await refreshSplitTicketOverlayForSelection(contestType, year);
+        try { applyLayerOpacityTuning(); } catch (_) {}
+      }
+
+      setStatus('Split-ticket overlay active: Governor results layered over President.');
+      saveUIState();
+    }
+
+    function updateBellwetherLegendChipVisibility() {
+      const chip = document.getElementById('legend-bellwether-chip');
+      if (!chip) return;
+      const count = bellwetherPrecinctNorms && bellwetherPrecinctNorms.size ? bellwetherPrecinctNorms.size : 0;
+      const active = !!(precinctsEnabled && currentView === 'counties' && count > 0);
+      chip.style.display = active ? 'inline-flex' : 'none';
+      if (active) {
+        chip.textContent = `★ Bellwether: matched statewide winner in last 3 cycles (${count.toLocaleString()})`;
+      }
+    }
+
+    function updateBellwetherLayerVisibility() {
+      const minZoom = CONFIG.precincts?.minZoom || 8.5;
+      const visible = !!(
+        precinctsEnabled
+        && currentView === 'counties'
+        && map.getZoom() >= Math.max(6.5, minZoom - 2.0)
+        && bellwetherPrecinctNorms
+        && bellwetherPrecinctNorms.size > 0
+      );
+      if (map.getLayer('bellwether-stars')) {
+        map.setLayoutProperty('bellwether-stars', 'visibility', visible ? 'visible' : 'none');
+      }
+      updateBellwetherLegendChipVisibility();
+    }
+
+    function ensureBellwetherLayer() {
+      if (!map) return;
+      if (!map.getSource('bellwether-precincts')) {
+        map.addSource('bellwether-precincts', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+      }
+      if (!map.getLayer('bellwether-stars')) {
+        map.addLayer({
+          id: 'bellwether-stars',
+          type: 'symbol',
+          source: 'bellwether-precincts',
+          layout: {
+            'text-field': '★',
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': [
+              'interpolate', ['linear'], ['zoom'],
+              6.5, 9,
+              8.5, 10.5,
+              11, 12.5,
+              13, 14
+            ],
+            'text-allow-overlap': false,
+            'text-ignore-placement': false,
+            'visibility': 'none'
+          },
+          paint: {
+            'text-color': '#fde047',
+            'text-halo-color': 'rgba(120, 53, 15, 0.75)',
+            'text-halo-width': 1.05,
+            'text-halo-blur': 0.35
+          }
+        }, map.getLayer('precinct-dot-selected') ? 'precinct-dot-selected' : undefined);
+      }
+      updateBellwetherLayerVisibility();
+    }
+
+    function setBellwetherFeatures(normSet) {
+      const source = map.getSource('bellwether-precincts');
+      if (!source) return;
+      const targetNorms = normSet instanceof Set ? normSet : new Set();
+      const centroidFeatures = Array.isArray(precinctCentroidsData?.features) ? precinctCentroidsData.features : [];
+      const features = [];
+      centroidFeatures.forEach(feature => {
+        const props = feature?.properties || {};
+        const norm = (props.precinct_norm || '').toString().trim().toUpperCase();
+        if (!norm || !targetNorms.has(norm)) return;
+        features.push({
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: {
+            precinct_norm: norm,
+            county_nam: props.county_nam || '',
+            prec_id: props.prec_id || ''
+          }
+        });
+      });
+      try {
+        source.setData({ type: 'FeatureCollection', features });
+      } catch (_) {}
+    }
+
+    function getBellwetherCycleYears(contestType, year, count = 3) {
+      const targetYear = Number(year);
+      if (!contestType || !Number.isFinite(targetYear)) return [];
+      const years = Array.from(new Set(
+        (contestManifest || [])
+          .filter(entry => entry && entry.contest_type === contestType && Number.isFinite(Number(entry.year)))
+          .map(entry => Number(entry.year))
+          .filter(y => y <= targetYear)
+      )).sort((a, b) => b - a);
+      return years.slice(0, count);
+    }
+
+    async function computeBellwetherPrecinctNormSet(contestType, year) {
+      const cycleYears = getBellwetherCycleYears(contestType, year, 3);
+      if (cycleYears.length < 3) return new Set();
+
+      let running = null;
+      for (const cycleYear of cycleYears) {
+        const rows = await loadContestSlice(contestType, cycleYear);
+        let statewideDem = 0;
+        let statewideRep = 0;
+        rows.forEach(row => {
+          statewideDem += Number(row?.[`${contestType}_dem`] || 0);
+          statewideRep += Number(row?.[`${contestType}_rep`] || 0);
+        });
+        const statewideWinner = statewideRep > statewideDem ? 'R' : (statewideDem > statewideRep ? 'D' : 'T');
+        if (statewideWinner === 'T') return new Set();
+
+        const cycleMatches = new Set();
+        rows.forEach(row => {
+          const precinctNorm = normalizeContestPrecinctNorm(row?.county || '');
+          if (!precinctNorm) return;
+          const demVotes = Number(row?.[`${contestType}_dem`] || 0);
+          const repVotes = Number(row?.[`${contestType}_rep`] || 0);
+          const winner = repVotes > demVotes ? 'R' : (demVotes > repVotes ? 'D' : 'T');
+          if (winner === statewideWinner) cycleMatches.add(precinctNorm);
+        });
+
+        if (running === null) {
+          running = cycleMatches;
+        } else {
+          running = new Set(Array.from(running).filter(norm => cycleMatches.has(norm)));
+        }
+        if (!running.size) break;
+      }
+      return running || new Set();
+    }
+
+    async function refreshBellwetherOverlayForContest(contestType, year) {
+      const requestId = ++bellwetherRequestId;
+      if (!precinctsEnabled) {
+        bellwetherPrecinctNorms = new Set();
+        setBellwetherFeatures(bellwetherPrecinctNorms);
+        updateBellwetherLayerVisibility();
+        return;
+      }
+      if (!contestType || !year) {
+        bellwetherPrecinctNorms = new Set();
+        setBellwetherFeatures(bellwetherPrecinctNorms);
+        updateBellwetherLayerVisibility();
+        return;
+      }
+
+      try {
+        await ensurePrecinctCentroidsLoaded();
+      } catch (_) {}
+      if (requestId !== bellwetherRequestId) return;
+      ensureBellwetherLayer();
+
+      const cacheKey = `${contestType}_${Number(year)}`;
+      let normSet = bellwetherCache.get(cacheKey);
+      if (!normSet) {
+        normSet = await computeBellwetherPrecinctNormSet(contestType, year);
+        bellwetherCache.set(cacheKey, normSet);
+      }
+      if (requestId !== bellwetherRequestId) return;
+
+      bellwetherPrecinctNorms = normSet instanceof Set ? normSet : new Set();
+      setBellwetherFeatures(bellwetherPrecinctNorms);
+      updateBellwetherLayerVisibility();
     }
 
     function ensureMyLocationSourceAndLayer(coords) {
@@ -14397,6 +14987,7 @@ document.addEventListener('DOMContentLoaded', function() {
           clearHoverOutline();
         });
       }
+      ensureSplitTicketOverlayLayers();
       updatePrecinctVisibility();
     }
 
@@ -14450,6 +15041,10 @@ document.addEventListener('DOMContentLoaded', function() {
       precinctSourceLoaded = true;
       precinctLoadInFlight = false;
       addPrecinctLayers();
+      ensureSplitTicketOverlayLayers();
+      if (splitTicketOverlayEnabled && currentContestMeta?.contestType && currentContestMeta?.year) {
+        refreshSplitTicketOverlayForSelection(currentContestMeta.contestType, currentContestMeta.year).catch(() => {});
+      }
       // If a contest is already applied, paint precincts immediately.
       try {
         if (lastPrecinctFillExpr && map.getLayer('precinct-fill')) {
@@ -14585,6 +15180,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	          console.warn('Failed to build precinct code index:', err?.message || err);
 	        }
 	        addPrecinctCentroidLayers();
+          ensureSplitTicketOverlayLayers();
+          ensureBellwetherLayer();
+          if (splitTicketOverlayEnabled && currentContestMeta?.contestType && currentContestMeta?.year) {
+            refreshSplitTicketOverlayForSelection(currentContestMeta.contestType, currentContestMeta.year).catch(() => {});
+          }
           queueViewportPrecinctCountUpdate();
 	      } catch (err) {
 	        console.warn('Failed to load precinct centroids:', err?.message || err);
@@ -14878,6 +15478,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedVisible = precinctsEnabled && (dotVisible || (polyVisible && !selectedHasPolygon));
         map.setLayoutProperty('precinct-dot-selected', 'visibility', selectedVisible ? 'visible' : 'none');
       }
+      setSplitTicketOverlayVisibility();
+      updateBellwetherLayerVisibility();
       reinforceMapLabelHalos();
     }
 
@@ -14898,6 +15500,11 @@ document.addEventListener('DOMContentLoaded', function() {
       applyLayerOpacityTuning();
       const contestKey = document.getElementById('contestSelect')?.value;
       if (contestKey) await applyContest(contestKey);
+      if (!precinctsEnabled) {
+        bellwetherPrecinctNorms = new Set();
+        setBellwetherFeatures(bellwetherPrecinctNorms);
+        updateBellwetherLayerVisibility();
+      }
       saveUIState();
     }
 
@@ -16838,6 +17445,10 @@ document.addEventListener('DOMContentLoaded', function() {
     async function finalizeAppPostHydration() {
       try { await restoreUIState(); } catch (_) {}
       try { applyLayerOpacityTuning(); } catch (_) {}
+      try { syncSplitTicketToggleUI(); } catch (_) {}
+      try { updateRecountRadarBadge(); } catch (_) {}
+      try { updateBellwetherLayerVisibility(); } catch (_) {}
+      try { setSplitTicketOverlayVisibility(); } catch (_) {}
       try { await updateAnalyticsPanels('', '', []); } catch (_) {}
     }
 
@@ -16865,6 +17476,16 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('zoomend', updatePrecinctVisibility);
         map.on('moveend', () => queueViewportPrecinctCountUpdate());
         map.on('zoomend', () => queueViewportPrecinctCountUpdate());
+        map.on('zoom', () => {
+          updateRecountRadarBadge();
+          updateBellwetherLayerVisibility();
+          setSplitTicketOverlayVisibility();
+        });
+        map.on('zoomend', () => {
+          updateRecountRadarBadge();
+          updateBellwetherLayerVisibility();
+          setSplitTicketOverlayVisibility();
+        });
         scheduleStartupPrecinctCentroidPreload();
         setStatus('Counties loaded');
         const deferHeavyHydration = isMobileViewportNow() || isTouchInteractionMode();
@@ -17318,6 +17939,13 @@ document.addEventListener('DOMContentLoaded', function() {
     async function applyContest(contestKey) {
       if (!contestKey) {
         try { applyLayerOpacityTuning(); } catch (_) {}
+        try { setSplitTicketOverlayVisibility(); } catch (_) {}
+        try {
+          bellwetherPrecinctNorms = new Set();
+          setBellwetherFeatures(bellwetherPrecinctNorms);
+          updateBellwetherLayerVisibility();
+        } catch (_) {}
+        setRecountRadarBadgeVisible(false);
         updateContextBanner();
         return setStatus('Select a contest');
       }
@@ -17359,6 +17987,21 @@ document.addEventListener('DOMContentLoaded', function() {
           console.warn('Failed to restore regional selection after contest change:', err?.message || err);
         }
       }
+      try {
+        if (splitTicketOverlayEnabled) {
+          await refreshSplitTicketOverlayForSelection(contestType, year);
+        } else {
+          setSplitTicketOverlayVisibility();
+        }
+      } catch (err) {
+        console.warn('Failed to refresh split-ticket overlay:', err?.message || err);
+      }
+      try {
+        refreshBellwetherOverlayForContest(contestType, year).catch(err => {
+          console.warn('Failed to refresh bellwether overlay:', err?.message || err);
+        });
+      } catch (_) {}
+      updateRecountRadarBadge();
       updateContextBanner();
       await refreshHoverAtPointer();
       saveUIState();

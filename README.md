@@ -72,12 +72,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions like the Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Comparative Controls:** One-click split-ticket swap (`President` vs `NC Supreme Court`) plus a what-if swing slider for fast scenario exploration
+- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
+- **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
+- **Bellwether Precinct Stars:** Precinct stars highlight locations that matched the statewide winner in the last three available cycles for the selected contest
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
@@ -114,7 +116,9 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Improved touch-first interactions: tap/pin behavior for precinct details, less hover churn on touch devices, and keyboard-aware sheet handling.
 - Improved cross-browser behavior (including Vivaldi-targeted fixes) and refined placement/flow of top controls.
 - Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
-- Added split-ticket comparative toggle so counties mode can instantly switch between Presidential and NC Supreme Court views.
+- Reworked split-ticket controls into a `Pres-Gov` overlay mode: President remains the base contest while Governor colors are layered on top for crossover analysis.
+- Added a topbar `Recount Radar` badge that activates at zoomed-in levels when focused margins are within the `0.5%` recount threshold.
+- Added bellwether precinct star callouts (plus legend chip/count) for precincts that matched the statewide winner across the last three available cycles.
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
@@ -277,7 +281,7 @@ To build or modify data files locally, you will need Python 3.x and PowerShell. 
 The repository now includes a focused Playwright suite that covers key interaction regressions:
 
 - Load state with no contest selected (pre-contest defaults)
-- Split-ticket toggle (`President` <-> `NC Supreme Court (Riggs)`)
+- Split-ticket overlay toggle (`President` base + `Governor` overlay)
 - Precinct selection flow (search/jump, yellow selection target, zoom-in behavior)
 - Story snapshot exports for all layout variants (`Balanced`, `Instagram`, `TikTok`)
 
