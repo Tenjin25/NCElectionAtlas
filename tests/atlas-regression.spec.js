@@ -253,6 +253,11 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(pinnedSnapshot.precinctNorm).toMatch(/^WAKE - /i);
     expect(pinnedSnapshot.caption).toMatch(/WAKE -/i);
     expect(pinnedSnapshot.title).toMatch(/^Selected:/i);
+
+    await page.waitForFunction(() => {
+      const tooltipText = String(document.getElementById('hover-tooltip')?.textContent || '');
+      return /Trend at a glance/i.test(tooltipText) && /No prior precinct cycle loaded/i.test(tooltipText);
+    }, { timeout: APP_READY_TIMEOUT });
   });
 
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {

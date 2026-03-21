@@ -163,13 +163,41 @@
     .spinner svg circle {
       animation: spinner-rotate 0.8s linear infinite;
     }
-  /* Colorblind mode legend overrides.
-     Legend colors are remapped by JS (updateLegendColors); CSS here only reinforces readability. */
-  body.colorblind-mode .legend-color {
-    border: 2px dashed #111 !important;
+  /* Colorblind mode legend readability.
+     Use dashed separators with palette-matched yellow/blue tones (not black). */
+  body.colorblind-mode .legend-spectrum .legend-segment.legend-color {
+    box-sizing: border-box;
+    border: 1px dashed rgba(100, 116, 139, 0.45) !important;
+    box-shadow: none !important;
   }
-  body.colorblind-mode .legend-item {
-    font-weight: 700;
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(-n+7) {
+    border-color: rgba(217, 119, 6, 0.75) !important;
+  }
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(8) {
+    border-color: rgba(100, 116, 139, 0.6) !important;
+  }
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(n+9) {
+    border-color: rgba(37, 99, 235, 0.75) !important;
+  }
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(-n+3) {
+    border-color: rgba(37, 99, 235, 0.75) !important;
+  }
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(4) {
+    border-color: rgba(100, 116, 139, 0.6) !important;
+  }
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(n+5) {
+    border-color: rgba(217, 119, 6, 0.75) !important;
+  }
+  body.colorblind-mode .legend-swatch-card .legend-color {
+    border: 1px solid rgba(15, 23, 42, 0.55) !important;
+  }
+  body.colorblind-mode .legend-axis .rep,
+  body.colorblind-mode .legend-scale-caption .rep {
+    color: #b45309 !important;
+  }
+  body.colorblind-mode .legend-axis .dem,
+  body.colorblind-mode .legend-scale-caption .dem {
+    color: #1d4ed8 !important;
   }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -12021,12 +12049,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function precinctTrendAtGlanceHTML(currentSignedPct, prevSignedPct, prevYear, year) {
       const cur = Number(currentSignedPct);
       const prev = Number(prevSignedPct);
+      const hasPrev = prevSignedPct !== null && prevSignedPct !== undefined && Number.isFinite(prev);
       const currentLabel = Number.isFinite(cur)
         ? (Math.abs(cur) < 0.01 ? 'Tie' : `${cur > 0 ? 'R' : 'D'} +${Math.abs(cur).toFixed(2)}%`)
         : 'No margin data';
       let shiftLabel = 'No prior precinct cycle loaded';
       let shiftColor = '#64748b';
-      if (Number.isFinite(prev) && prevYear) {
+      if (hasPrev && prevYear) {
         const delta = cur - prev;
         if (Math.abs(delta) < 0.01) {
           shiftLabel = `No shift vs ${prevYear}`;
@@ -12942,8 +12971,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const winner = curSigned > 0 ? 'R' : (curSigned < 0 ? 'D' : 'T');
       const chips = [];
       let prevSignedForFlip = null;
-      if (vizPrevCache?.prevYear && vizPrevCache?.prevPrecinctMarginByNorm) {
-        prevSignedForFlip = Number(vizPrevCache.prevPrecinctMarginByNorm.get(precinctNorm) || 0);
+      const prevPrecinctMargins = (vizPrevCache?.prevYear && vizPrevCache?.hasPrecinctMargins)
+        ? vizPrevCache.prevPrecinctMarginByNorm
+        : null;
+      if (prevPrecinctMargins?.has(precinctNorm)) {
+        const prevMargin = Number(prevPrecinctMargins.get(precinctNorm));
+        if (Number.isFinite(prevMargin)) prevSignedForFlip = prevMargin;
       }
 
       if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
@@ -12957,7 +12990,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const flipChip = flipChipHTML(prevSignedForFlip, curSigned);
         if (flipChip) chips.unshift(flipChip);
       }
-      const trendPrevYear = vizPrevCache?.prevYear || vizShiftCache?.prevYear || null;
+      const trendPrevYear = prevSignedForFlip !== null
+        ? (vizPrevCache?.prevYear || vizShiftCache?.prevYear || null)
+        : null;
       const trendAtGlance = precinctTrendAtGlanceHTML(curSigned, prevSignedForFlip, trendPrevYear, Number(year));
       let demoLine = '';
       try {
