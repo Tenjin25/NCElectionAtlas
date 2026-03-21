@@ -125,7 +125,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
-- Added dynamic competitiveness tier labels across focus and hover surfaces; hover now shows a larger tier chip next to winner/shift chips for faster scanability.
+- Added dynamic competitiveness tier labels across focus and hover surfaces, with compact tier chip styling that matches surrounding hover badges.
+- Reordered hover meta badges so `Flip` now appears to the right of the competitiveness tier badge (winner -> tier -> flip) for more consistent reading order.
 - Added a `High contrast demographics` control-path so demographic overlays and chips remain usable on low-contrast displays.
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
 - Retuned overlay opacity presets again (slightly lower after live testing) to keep color fills readable while preserving roads and basemap context.
@@ -228,7 +229,7 @@ The current `index.html` includes several speed-focused improvements that are al
 ### Hover/Sidebar Behavior
 
 - County and precinct detail cards include race-share chips for quick demographic context.
-- Hover cards now include a larger competitiveness tier chip next to winner/shift chips (instead of relying only on a small title badge).
+- Hover cards include a compact competitiveness tier chip next to winner/shift/flip badges (instead of relying only on a small title badge).
 - Recent styling passes specifically targeted county hover, precinct hover, and pinned tooltip readability on dark backgrounds.
 - If a field is missing for a group, the chip can display `N/A` while the map still renders any available race shares.
 
