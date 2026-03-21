@@ -344,8 +344,9 @@
         try {
           const topbar = document.getElementById('map-topbar');
           if (!topbar) return;
-          const minTopbarHeight = isMobileViewport() ? 0 : 224;
-          const topbarHeight = Math.max(minTopbarHeight, Math.round(topbar.getBoundingClientRect().height || 0));
+          const topbarHeight = isMobileViewport()
+            ? Math.max(0, Math.round(topbar.getBoundingClientRect().height || 0))
+            : 224;
           document.documentElement.style.setProperty('--topbar-h', `${topbarHeight}px`);
           syncMobileTopbarToggle();
           if (typeof window.updateMobileOverlayOffsets === 'function') {
@@ -15192,8 +15193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const th = topbarVisible ? Math.round(topbar.getBoundingClientRect().height || 0) : 0;
         const dockVisible = !!(isMobile && mobileDock && mobileDock.getClientRects().length);
         const dh = dockVisible ? Math.round(mobileDock.getBoundingClientRect().height || 0) : 0;
-        const desktopTopbarMin = 224;
-        const topbarHeight = isDesktop ? Math.max(desktopTopbarMin, th) : Math.max(0, th);
+        const topbarHeight = isDesktop ? 224 : Math.max(0, th);
         root.style.setProperty('--topbar-h', `${topbarHeight}px`);
         root.style.setProperty('--mobile-dock-h', `${Math.max(0, dh)}px`);
         if (isDesktop) {
