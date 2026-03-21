@@ -7453,11 +7453,13 @@ document.addEventListener('DOMContentLoaded', function() {
     map.on('move', () => {
       if (isTouchInteractionMode()) return;
       if (isHoverRefreshSuppressed()) return;
+      if (precinctsEnabled) return;
       queueHoverRefresh();
     });
     map.on('zoom', () => {
       if (isTouchInteractionMode()) return;
       if (isHoverRefreshSuppressed()) return;
+      if (precinctsEnabled) return;
       queueHoverRefresh();
     });
     map.on('moveend', () => {
@@ -12827,7 +12829,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const layers = [];
           if (map.getLayer('precinct-dot')) layers.push('precinct-dot');
           if (map.getLayer('precinct-dot-missing')) layers.push('precinct-dot-missing');
-          if (map.getLayer('precinct-fill')) layers.push('precinct-fill');
           if (layers.length) {
             const pf = map.queryRenderedFeatures(e.point, { layers });
             if (pf && pf.length) return;
@@ -13041,7 +13042,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (precinctsEnabled) {
         const layers = [];
         if (map.getLayer('precinct-dot')) layers.push('precinct-dot');
-        if (map.getLayer('precinct-fill')) layers.push('precinct-fill');
+        if (map.getLayer('precinct-dot-missing')) layers.push('precinct-dot-missing');
         if (layers.length) {
           const pf = map.queryRenderedFeatures(lastPointerPoint, { layers });
           if (pf && pf.length) {
@@ -13087,6 +13088,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hoverRefreshRaf) return;
       hoverRefreshRaf = requestAnimationFrame(async () => {
         hoverRefreshRaf = null;
+        try {
+          if (precinctsEnabled && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+        } catch (_) {}
         await refreshHoverAtPointer();
       });
     }
@@ -14655,8 +14659,7 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'precinct-dot',
           type: 'circle',
           source: 'precinct-centroids',
-          // Visible at statewide zoom; polygons take over later.
-          maxzoom: minZoom,
+          // Keep centroid dots available across zoom levels for smooth interaction.
           layout: { visibility: 'none' },
           paint: {
             'circle-radius': [
@@ -14665,7 +14668,10 @@ document.addEventListener('DOMContentLoaded', function() {
               5.5, 0.95,
               6.5, 1.45,
               7.5, 2.15,
-              8.4, 2.75
+              8.4, 2.75,
+              10.0, 3.35,
+              12.0, 3.95,
+              14.0, 4.55
             ],
             'circle-color': '#94a3b8',
             'circle-opacity': 0.82,
@@ -14798,17 +14804,11 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.setAttribute('aria-pressed', precinctsEnabled ? 'true' : 'false');
         btn.setAttribute('aria-busy', precinctLoadInFlight ? 'true' : 'false');
       }
-      const minZoom = (CONFIG.precincts?.minZoom || 8.5);
-      const z = map.getZoom();
-      const polyVisible = precinctsEnabled && z >= minZoom;
-      const dotVisible = precinctsEnabled && z < minZoom;
+      const dotVisible = !!precinctsEnabled;
+      const polyVisible = false; // Keep precinct mode centroid-first to reduce stutter.
 
-      // Auto-load precinct centroids at statewide zoom (fast), polygons later (heavy).
       if (dotVisible && !precinctCentroidsLoaded && !precinctCentroidsLoadInFlight) {
         ensurePrecinctCentroidsLoaded().catch(err => console.warn('Precinct centroids load failed:', err?.message || err));
-      }
-      if (polyVisible && !precinctSourceLoaded && !precinctLoadInFlight) {
-        ensurePrecinctSourceLoaded().catch(err => console.warn('Precinct load failed:', err?.message || err));
       }
       ['precinct-fill', 'precinct-stroke'].forEach(id => {
         if (map.getLayer(id)) {
@@ -14825,11 +14825,10 @@ document.addEventListener('DOMContentLoaded', function() {
         map.setLayoutProperty('precinct-dot', 'visibility', dotVisible ? 'visible' : 'none');
       }
       if (map.getLayer('precinct-dot-missing')) {
-        map.setLayoutProperty('precinct-dot-missing', 'visibility', polyVisible ? 'visible' : 'none');
+        map.setLayoutProperty('precinct-dot-missing', 'visibility', 'none');
       }
       if (map.getLayer('precinct-dot-selected')) {
-        const selectedHasPolygon = !!(selectedPrecinctNorm && precinctPolygonNormSet && precinctPolygonNormSet.has(selectedPrecinctNorm));
-        const selectedVisible = precinctsEnabled && (dotVisible || (polyVisible && !selectedHasPolygon));
+        const selectedVisible = !!precinctsEnabled;
         map.setLayoutProperty('precinct-dot-selected', 'visibility', selectedVisible ? 'visible' : 'none');
       }
       reinforceMapLabelHalos();
@@ -14840,9 +14839,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (precinctsEnabled) {
         // Always prefer centroids first so statewide zoom is responsive.
         await ensurePrecinctCentroidsLoaded();
-        if (map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5)) {
-          await ensurePrecinctSourceLoaded();
-        }
       } else {
         setTooltipPinned(false);
         clearSelectedPrecinctNorm();
