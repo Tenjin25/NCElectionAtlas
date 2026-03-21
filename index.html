@@ -2259,6 +2259,16 @@ body { height: var(--app-height); }
     text-transform: uppercase;
   }
 
+  .map-topbar-badge .badge-state-name {
+    color: #3b82f6;
+    text-shadow: 0 1px 0 rgba(15, 23, 42, 0.55);
+  }
+
+  .map-topbar-badge .badge-atlas-name {
+    color: #ef4444;
+    text-shadow: 0 1px 0 rgba(15, 23, 42, 0.55);
+  }
+
   .map-topbar-copy {
     min-width: 0;
   }
@@ -6447,7 +6457,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="desktop-ui-left">
   <div class="map-topbar" id="map-topbar">
     <div class="map-topbar-meta">
-      <div class="map-topbar-badge">North Carolina Election Atlas</div>
+      <div class="map-topbar-badge"><span class="badge-state-name">North Carolina</span> <span class="badge-atlas-name">Election Atlas</span></div>
       <div class="map-topbar-copy">
         <strong>Fly to a county, district, or precinct</strong>
         <span>Try Wake, CD 13, HD 73, SD 18, or Wake 01-14.</span>

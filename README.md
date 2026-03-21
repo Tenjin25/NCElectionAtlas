@@ -77,6 +77,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Continued the atlas-style UI rollout with cleaner desktop rails, stronger statewide cards, and improved control hierarchy.
 - Renamed the live presentation to **North Carolina Election Atlas** and carried consistent branding through normal/minimized control states.
+- Updated the top-left atlas name badge with stronger NC blue/red split text coloring for clearer branding at a glance.
 - Expanded mobile UX with a bottom dock (`Search`, `Layers`, `Legend`) and bottom-sheet snap states (`collapsed`, `half`, `full`).
 - Added swipe/flick sheet gesture behavior so mobile panels feel native and settle into predictable snap states.
 - Improved touch-first interactions: tap/pin behavior for precinct details, less hover churn on touch devices, and keyboard-aware sheet handling.
