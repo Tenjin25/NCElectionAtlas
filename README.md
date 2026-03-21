@@ -72,6 +72,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions like the Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
+- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
@@ -124,6 +125,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
+- Added dynamic competitiveness tier labels across focus and hover surfaces; hover now shows a larger tier chip next to winner/shift chips for faster scanability.
 - Added a `High contrast demographics` control-path so demographic overlays and chips remain usable on low-contrast displays.
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
 - Retuned overlay opacity presets again (slightly lower after live testing) to keep color fills readable while preserving roads and basemap context.
@@ -226,6 +228,7 @@ The current `index.html` includes several speed-focused improvements that are al
 ### Hover/Sidebar Behavior
 
 - County and precinct detail cards include race-share chips for quick demographic context.
+- Hover cards now include a larger competitiveness tier chip next to winner/shift chips (instead of relying only on a small title badge).
 - Recent styling passes specifically targeted county hover, precinct hover, and pinned tooltip readability on dark backgrounds.
 - If a field is missing for a group, the chip can display `N/A` while the map still renders any available race shares.
 
