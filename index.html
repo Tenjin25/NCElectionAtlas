@@ -4448,6 +4448,22 @@ body { height: var(--app-height); }
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
+  #contestSelect {
+    appearance: none;
+    padding-right: 40px;
+  }
+
+  .contest-select-wrap::after {
+    content: '\25BE';
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
   #help-btn,
   #accessibility-toggle,
   #label-toggle {
@@ -6891,32 +6907,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try { saveUIState(); } catch (_) {}
       });
     });
-  }
-  const contestSelectEl = document.getElementById('contestSelect');
-  if (contestSelectEl && !contestSelectEl.dataset.downwardOpenWired) {
-    contestSelectEl.dataset.downwardOpenWired = 'true';
-    const prepContestSelectDownwardOpen = () => {
-      try {
-        if (isMobileViewport()) return;
-        const controls = document.getElementById('main-controls');
-        const select = document.getElementById('contestSelect');
-        if (!controls || !select) return;
-        // Native select direction is browser-controlled; on desktop we keep
-        // the contest picker near the top of the scroll container so it has
-        // maximum room to expand downward.
-        controls.scrollTop = 0;
-        try { select.scrollIntoView({ block: 'start', inline: 'nearest' }); } catch (_) {}
-      } catch (_) {}
-    };
-    contestSelectEl.addEventListener('pointerdown', prepContestSelectDownwardOpen, { capture: true });
-    contestSelectEl.addEventListener('mousedown', prepContestSelectDownwardOpen, { capture: true });
-    contestSelectEl.addEventListener('focus', prepContestSelectDownwardOpen, { capture: true });
-    contestSelectEl.addEventListener('keydown', (event) => {
-      const key = String(event?.key || '');
-      if (key === 'Enter' || key === ' ' || key === 'ArrowDown') {
-        prepContestSelectDownwardOpen();
-      }
-    }, { capture: true });
   }
   updateLegendColors(); // Ensure correct colors on load
 });
