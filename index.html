@@ -6300,6 +6300,18 @@ body { height: var(--app-height); }
     order: -20;
   }
 
+  @media (min-width: 769px) {
+    #main-controls .control-group-contest {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      padding: 0 0 10px;
+      margin: 0 0 10px;
+      background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(248, 250, 252, 0.9) 72%, rgba(248, 250, 252, 0.72) 100%);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+  }
+
   /* Vivaldi compatibility: reduce compositor-heavy effects and avoid clipped scroll gutters. */
   html.browser-vivaldi .main-controls,
   html.browser-vivaldi .legend,
@@ -6888,21 +6900,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const controls = document.getElementById('main-controls');
         const select = document.getElementById('contestSelect');
         if (!controls || !select) return;
-        const rect = select.getBoundingClientRect();
-        const viewportH = Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
-        if (!viewportH) return;
-        const spaceAbove = Math.max(0, rect.top);
-        const spaceBelow = Math.max(0, viewportH - rect.bottom);
-        // If the browser would likely open upward, nudge the controls scroll
-        // so the native popup has more room below the select.
-        if (spaceBelow >= spaceAbove) return;
-        const controlsRect = controls.getBoundingClientRect();
-        const relativeTop = rect.top - controlsRect.top + controls.scrollTop;
-        controls.scrollTop = Math.max(0, Math.round(relativeTop - 16));
+        // Native select direction is browser-controlled; on desktop we keep
+        // the contest picker near the top of the scroll container so it has
+        // maximum room to expand downward.
+        controls.scrollTop = 0;
+        try { select.scrollIntoView({ block: 'start', inline: 'nearest' }); } catch (_) {}
       } catch (_) {}
     };
     contestSelectEl.addEventListener('pointerdown', prepContestSelectDownwardOpen, { capture: true });
+    contestSelectEl.addEventListener('mousedown', prepContestSelectDownwardOpen, { capture: true });
     contestSelectEl.addEventListener('focus', prepContestSelectDownwardOpen, { capture: true });
+    contestSelectEl.addEventListener('keydown', (event) => {
+      const key = String(event?.key || '');
+      if (key === 'Enter' || key === ' ' || key === 'ArrowDown') {
+        prepContestSelectDownwardOpen();
+      }
+    }, { capture: true });
   }
   updateLegendColors(); // Ensure correct colors on load
 });
