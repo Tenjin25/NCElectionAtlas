@@ -7003,7 +7003,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
         <div class="legend-context-chips" id="legend-context-chips">
-          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether precincts matched the statewide winner in each of the last three available cycles.">★ Bellwether: matched statewide winner in last 3 cycles</span>
+          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether stars show top predictive precincts: matched the statewide winner in each of the last three available cycles and stayed closest to the statewide margin.">&#9733; Bellwether: top predictive precincts</span>
         </div>
     </div>
   </div>
@@ -7596,7 +7596,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let demographicsHighContrastEnabled = false;
     let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
     const RECOUNT_MARGIN_THRESHOLD_PCT = 0.5;
-    const RECOUNT_MIN_ZOOM = 8.5;
+    const RECOUNT_MIN_ZOOM = 7.25;
+    const BELLWETHER_CYCLE_COUNT = 3;
+    const BELLWETHER_MIN_TWO_PARTY_VOTES = 150;
+    const BELLWETHER_MAX_MARKERS = 60;
+    const BELLWETHER_MARKER_SHARE = 0.018;
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
     let splitTicketOverlayMeta = null; // { overlayContestType, overlayYear, baseYear, governorValue, presidentValue }
@@ -9263,6 +9267,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Vote counter context (statewide vs hover vs selected)
     let voteCounterBaseline = null; // {title, sub, dem, rep, other}
     let voteCounterPinned = null;   // {title, sub, dem, rep, other}
+    let voteCounterHover = null;    // {title, sub, dem, rep, other}
     let voteCounterHoverActive = false;
     let voteCounterTrendRequestId = 0;
 
@@ -9631,6 +9636,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function pinVoteCounterState(title, sub, demVotes, repVotes, otherVotes, meta = null, candidates = null) {
       voteCounterPinned = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
+      voteCounterHover = null;
       voteCounterHoverActive = false;
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
@@ -9642,6 +9648,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function clearPinnedVoteCounterState() {
       voteCounterPinned = null;
+      voteCounterHover = null;
       voteCounterHoverActive = false;
       if (voteCounterBaseline) {
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
@@ -9664,9 +9671,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setVoteCounterHoverState(title, sub, demVotes, repVotes, otherVotes, candidates = null, meta = null) {
       if (voteCounterPinned) return; // don't override a pinned selection
+      voteCounterHover = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
       voteCounterHoverActive = true;
       setVoteCounterContext(title, sub, { showClear: false });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
+      updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Hovered area', demVotes, repVotes, otherVotes)); } catch (_) {}
     }
 
@@ -9713,6 +9722,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearVoteCounterHoverState() {
       if (voteCounterPinned) return;
       if (!voteCounterHoverActive) return;
+      voteCounterHover = null;
       voteCounterHoverActive = false;
       if (voteCounterBaseline) {
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
@@ -9724,6 +9734,7 @@ document.addEventListener('DOMContentLoaded', function() {
           voteCounterBaseline.meta
         );
       }
+      updateRecountRadarBadge();
     }
 
     function animateCounter(id, targetValue) {
@@ -12469,7 +12480,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      const state = voteCounterPinned || voteCounterBaseline || null;
+      const state = voteCounterPinned
+        || (voteCounterHoverActive ? voteCounterHover : null)
+        || voteCounterBaseline
+        || null;
       if (!state) {
         setRecountRadarBadgeVisible(false);
         return;
@@ -12493,7 +12507,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const focusLabel = recountFocusLabelFromMeta(state.meta || null);
       const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
-      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} votes (${marginPct.toFixed(2)}%) - RECOUNT ACTIVE</span>`;
+      const voteLabel = marginVotes === 1 ? 'vote' : 'votes';
+      const html = `<span class="recount-label">Recount Radar</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${marginPct.toFixed(2)}%) - RECOUNT ACTIVE</span>`;
       setRecountRadarBadgeVisible(true, html);
     }
 
@@ -12535,8 +12550,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const btn = document.getElementById('split-ticket-toggle');
       if (!btn) return;
       const enabled = !!splitTicketOverlayEnabled;
-      btn.textContent = enabled ? 'Split On' : 'Pres-Gov';
+      btn.textContent = enabled ? 'Pres-Gov On' : 'Pres-Gov';
       btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      btn.setAttribute(
+        'aria-label',
+        enabled
+          ? 'Disable President-Governor split ticket comparison'
+          : 'Enable President-Governor split ticket comparison'
+      );
       btn.title = enabled
         ? 'Disable split-ticket overlay (Governor over President).'
         : 'Overlay Governor results over President to highlight split-ticket places.';
@@ -12791,7 +12812,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const active = !!(precinctsEnabled && currentView === 'counties' && count > 0);
       chip.style.display = active ? 'inline-flex' : 'none';
       if (active) {
-        chip.textContent = `★ Bellwether: matched statewide winner in last 3 cycles (${count.toLocaleString()})`;
+        chip.textContent = `\u2605 Bellwether: top predictive precincts (${count.toLocaleString()})`;
       }
     }
 
@@ -12824,7 +12845,7 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'symbol',
           source: 'bellwether-precincts',
           layout: {
-            'text-field': '★',
+            'text-field': '\u2605',
             'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
             'text-size': [
               'interpolate', ['linear'], ['zoom'],
@@ -12885,11 +12906,21 @@ document.addEventListener('DOMContentLoaded', function() {
       return years.slice(0, count);
     }
 
-    async function computeBellwetherPrecinctNormSet(contestType, year) {
-      const cycleYears = getBellwetherCycleYears(contestType, year, 3);
-      if (cycleYears.length < 3) return new Set();
+    function getBellwetherMarkerCap() {
+      const centroidCount = Array.isArray(precinctCentroidsData?.features)
+        ? precinctCentroidsData.features.length
+        : 0;
+      const byShare = centroidCount > 0
+        ? Math.round(centroidCount * BELLWETHER_MARKER_SHARE)
+        : BELLWETHER_MAX_MARKERS;
+      return Math.max(18, Math.min(BELLWETHER_MAX_MARKERS, byShare || BELLWETHER_MAX_MARKERS));
+    }
 
-      let running = null;
+    async function computeBellwetherPrecinctNormSet(contestType, year) {
+      const cycleYears = getBellwetherCycleYears(contestType, year, BELLWETHER_CYCLE_COUNT);
+      if (cycleYears.length < BELLWETHER_CYCLE_COUNT) return new Set();
+
+      const scores = new Map();
       for (const cycleYear of cycleYears) {
         const rows = await loadContestSlice(contestType, cycleYear);
         let statewideDem = 0;
@@ -12898,27 +12929,58 @@ document.addEventListener('DOMContentLoaded', function() {
           statewideDem += Number(row?.[`${contestType}_dem`] || 0);
           statewideRep += Number(row?.[`${contestType}_rep`] || 0);
         });
-        const statewideWinner = statewideRep > statewideDem ? 'R' : (statewideDem > statewideRep ? 'D' : 'T');
-        if (statewideWinner === 'T') return new Set();
+        const statewideTwoParty = statewideDem + statewideRep;
+        if (!Number.isFinite(statewideTwoParty) || statewideTwoParty <= 0) return new Set();
 
-        const cycleMatches = new Set();
+        const statewideWinnerSign = statewideRep > statewideDem ? 1 : (statewideDem > statewideRep ? -1 : 0);
+        if (!statewideWinnerSign) return new Set();
+        const statewideSignedMarginPct = ((statewideRep - statewideDem) / statewideTwoParty) * 100;
+
+        const seenCycleNorms = new Set();
         rows.forEach(row => {
           const precinctNorm = normalizeContestPrecinctNorm(row?.county || '');
           if (!precinctNorm) return;
+          if (seenCycleNorms.has(precinctNorm)) return;
+
           const demVotes = Number(row?.[`${contestType}_dem`] || 0);
           const repVotes = Number(row?.[`${contestType}_rep`] || 0);
-          const winner = repVotes > demVotes ? 'R' : (demVotes > repVotes ? 'D' : 'T');
-          if (winner === statewideWinner) cycleMatches.add(precinctNorm);
-        });
+          const twoPartyVotes = demVotes + repVotes;
+          if (!Number.isFinite(twoPartyVotes) || twoPartyVotes < BELLWETHER_MIN_TWO_PARTY_VOTES) return;
 
-        if (running === null) {
-          running = cycleMatches;
-        } else {
-          running = new Set(Array.from(running).filter(norm => cycleMatches.has(norm)));
-        }
-        if (!running.size) break;
+          const winnerSign = repVotes > demVotes ? 1 : (demVotes > repVotes ? -1 : 0);
+          if (!winnerSign || winnerSign !== statewideWinnerSign) return;
+
+          const precinctSignedMarginPct = ((repVotes - demVotes) / twoPartyVotes) * 100;
+          const marginError = Math.abs(precinctSignedMarginPct - statewideSignedMarginPct);
+
+          const current = scores.get(precinctNorm) || { hits: 0, errorSum: 0, voteSum: 0 };
+          current.hits += 1;
+          current.errorSum += marginError;
+          current.voteSum += twoPartyVotes;
+          scores.set(precinctNorm, current);
+          seenCycleNorms.add(precinctNorm);
+        });
       }
-      return running || new Set();
+
+      const finalists = [];
+      scores.forEach((value, norm) => {
+        if (!value || value.hits !== cycleYears.length) return;
+        finalists.push({
+          norm,
+          avgError: value.errorSum / cycleYears.length,
+          voteSum: value.voteSum
+        });
+      });
+      if (!finalists.length) return new Set();
+
+      finalists.sort((a, b) => (
+        (a.avgError - b.avgError)
+        || (b.voteSum - a.voteSum)
+        || a.norm.localeCompare(b.norm)
+      ));
+
+      const cap = getBellwetherMarkerCap();
+      return new Set(finalists.slice(0, cap).map(item => item.norm));
     }
 
     async function refreshBellwetherOverlayForContest(contestType, year) {
