@@ -2027,6 +2027,29 @@ body { height: var(--app-height); }
     padding: 5px 10px;
   }
 
+  .demo-hover-card {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.24);
+    background: rgba(241, 245, 249, 0.82);
+  }
+
+  .demo-hover-metric {
+    font-size: 12px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+
+  .demo-hover-note {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.3;
+  }
+
   .result-card .rc-top {
     display: flex;
     justify-content: space-between;
@@ -10917,9 +10940,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const vap = numericOrZero(demo.vap_18plus);
       const races = buildRaceChipRowHTML(demo.white_pop_pct, demo.black_pop_pct, demo.hispanic_pop_pct);
       return `
-        <div class="meta-subtle"><strong>VAP (18+):</strong> ${vap.toLocaleString()}</div>
-        ${races}
-        <div class="meta-subtle">Race/ethnicity reflects total population (DP1), not VAP-by-race.</div>
+        <div class="demo-hover-card">
+          <div class="demo-hover-metric">VAP (18+): ${vap.toLocaleString()}</div>
+          ${races}
+          <div class="demo-hover-note">Race/ethnicity reflects total population (DP1), not VAP-by-race.</div>
+        </div>
       `;
     }
 
@@ -10928,8 +10953,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const vap = numericOrZero(demo.vap_18plus);
       const races = buildRaceChipRowHTML(demo.white_vap_pct, demo.black_vap_pct, demo.hispanic_vap_pct, { includeUnknownHispanic: true });
       return `
-        <div class="meta-subtle"><strong>VAP (18+):</strong> ${vap.toLocaleString()}</div>
-        ${races}
+        <div class="demo-hover-card">
+          <div class="demo-hover-metric">VAP (18+): ${vap.toLocaleString()}</div>
+          ${races}
+        </div>
       `;
     }
 
