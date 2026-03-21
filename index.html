@@ -1973,58 +1973,58 @@ body { height: var(--app-height); }
     margin-top: 8px;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
   }
 
   .demo-race-label {
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #475569;
+    color: #1f2937;
   }
 
   .demo-race-chip {
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    padding: 4px 8px;
-    font-size: 11px;
-    font-weight: 800;
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 900;
     letter-spacing: 0.01em;
     line-height: 1.15;
     white-space: nowrap;
   }
 
   .demo-race-chip.white {
-    background: rgba(148, 163, 184, 0.22);
-    color: #334155;
-    border-color: rgba(71, 85, 105, 0.28);
+    background: rgba(71, 85, 105, 0.24);
+    color: #0f172a;
+    border-color: rgba(51, 65, 85, 0.36);
   }
 
   .demo-race-chip.black {
-    background: rgba(37, 99, 235, 0.18);
+    background: rgba(37, 99, 235, 0.24);
     color: #1e3a8a;
-    border-color: rgba(37, 99, 235, 0.34);
+    border-color: rgba(30, 64, 175, 0.44);
   }
 
   .demo-race-chip.hispanic {
-    background: rgba(249, 115, 22, 0.20);
-    color: #9a3412;
-    border-color: rgba(234, 88, 12, 0.34);
+    background: rgba(234, 88, 12, 0.24);
+    color: #7c2d12;
+    border-color: rgba(194, 65, 12, 0.44);
   }
 
   .demo-race-chip.unknown {
-    background: rgba(148, 163, 184, 0.16);
-    color: #475569;
-    border-color: rgba(100, 116, 139, 0.28);
+    background: rgba(148, 163, 184, 0.22);
+    color: #334155;
+    border-color: rgba(71, 85, 105, 0.34);
   }
 
   .sidebar-demo-race-row .demo-race-chip {
-    font-size: 11px;
-    padding: 4px 8px;
+    font-size: 12px;
+    padding: 5px 10px;
   }
 
   .result-card .rc-top {
@@ -8249,6 +8249,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!map) return;
       const preset = getOverlayOpacityPresetConfig();
       const contestIsActive = hasActiveContestSelection();
+      const demographicsModeActive = currentVizMode === 'demographics';
+      const useTurnoutOpacity = turnoutBivariateEnabled && !demographicsModeActive;
       let countyBaseOpacity = precinctsEnabled ? preset.countyWithPrecinct : preset.countyActive;
       let districtBaseOpacity = preset.district;
       let houseBaseOpacity = preset.house;
@@ -8264,12 +8266,20 @@ document.addEventListener('DOMContentLoaded', function() {
         precinctFillBaseOpacity = 0.22;
         precinctDotBaseOpacity = 0.62;
       }
+      if (contestIsActive && demographicsModeActive) {
+        countyBaseOpacity = precinctsEnabled ? Math.max(countyBaseOpacity, 0.16) : Math.max(countyBaseOpacity, 0.84);
+        districtBaseOpacity = Math.max(districtBaseOpacity, 0.78);
+        houseBaseOpacity = Math.max(houseBaseOpacity, 0.76);
+        senateBaseOpacity = Math.max(senateBaseOpacity, 0.77);
+        precinctFillBaseOpacity = Math.max(precinctFillBaseOpacity, 0.80);
+        precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.92);
+      }
 
       if (map.getLayer('county-fill')) {
         if (!contestIsActive) {
           try { map.setPaintProperty('county-fill', 'fill-color', '#d9e3ef'); } catch (_) {}
         }
-        const countyOpacity = turnoutBivariateEnabled && !precinctsEnabled
+        const countyOpacity = useTurnoutOpacity && !precinctsEnabled
           ? buildCountyTurnoutOpacityExpression(countyBaseOpacity)
           : countyBaseOpacity;
         try {
@@ -8279,17 +8289,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (map.getLayer('district-fill')) {
         try {
-          map.setPaintProperty('district-fill', 'fill-opacity', buildDistrictTurnoutOpacityExpression(districtBaseOpacity));
+          map.setPaintProperty('district-fill', 'fill-opacity', useTurnoutOpacity ? buildDistrictTurnoutOpacityExpression(districtBaseOpacity) : districtBaseOpacity);
         } catch (_) {}
       }
       if (map.getLayer('state-house-fill')) {
         try {
-          map.setPaintProperty('state-house-fill', 'fill-opacity', buildDistrictTurnoutOpacityExpression(houseBaseOpacity));
+          map.setPaintProperty('state-house-fill', 'fill-opacity', useTurnoutOpacity ? buildDistrictTurnoutOpacityExpression(houseBaseOpacity) : houseBaseOpacity);
         } catch (_) {}
       }
       if (map.getLayer('state-senate-fill')) {
         try {
-          map.setPaintProperty('state-senate-fill', 'fill-opacity', buildDistrictTurnoutOpacityExpression(senateBaseOpacity));
+          map.setPaintProperty('state-senate-fill', 'fill-opacity', useTurnoutOpacity ? buildDistrictTurnoutOpacityExpression(senateBaseOpacity) : senateBaseOpacity);
         } catch (_) {}
       }
       if (map.getLayer('precinct-fill')) {
@@ -8297,7 +8307,7 @@ document.addEventListener('DOMContentLoaded', function() {
           try { map.setPaintProperty('precinct-fill', 'fill-color', '#cbd5e1'); } catch (_) {}
         }
         try {
-          map.setPaintProperty('precinct-fill', 'fill-opacity', buildPrecinctTurnoutOpacityExpression(precinctFillBaseOpacity));
+          map.setPaintProperty('precinct-fill', 'fill-opacity', useTurnoutOpacity ? buildPrecinctTurnoutOpacityExpression(precinctFillBaseOpacity) : precinctFillBaseOpacity);
         } catch (_) {}
       }
       if (map.getLayer('precinct-dot')) {
@@ -16812,11 +16822,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function colorForDemographicsMode(whitePct, blackPct, hispanicPct) {
       const dom = classifyDemographicDominance(whitePct, blackPct, hispanicPct);
-      if (dom.key === 'white') return '#64748b';
-      if (dom.key === 'black') return '#2563eb';
-      if (dom.key === 'hispanic') return '#f97316';
+      if (dom.key === 'white') return '#334155';
+      if (dom.key === 'black') return '#1d4ed8';
+      if (dom.key === 'hispanic') return '#c2410c';
       if (dom.key === 'mixed') return '#0f766e';
-      return '#94a3b8';
+      return '#64748b';
     }
 
 	    async function tryLoadContestSliceStrict(contestType, year) {
