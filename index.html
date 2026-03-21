@@ -9080,6 +9080,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const captionEl = document.getElementById('focus-trend-caption');
       const chartEl = document.getElementById('focus-trend-chart');
       const fallbackBadge = String(options?.fallbackBadge || '').trim();
+      const selectedYearRaw = Number(options?.selectedYear);
+      const selectedYear = Number.isFinite(selectedYearRaw) ? selectedYearRaw : null;
       if (!chartEl) return;
       if (captionEl) captionEl.textContent = caption;
       if (!series || !series.length) {
@@ -9123,37 +9125,44 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       const latest = annotated[annotated.length - 1];
+      const selectedEntry = selectedYear === null
+        ? null
+        : (annotated.find(entry => Number(entry?.item?.year) === selectedYear) || null);
+      const summaryEntry = selectedEntry || latest;
       const closest = annotated.reduce((best, entry) => {
         if (!best) return entry;
         return Math.abs(entry.signedPct) < Math.abs(best.signedPct) ? entry : best;
       }, null);
-      const latestSummary = winnerMarginLabelShort(
-        latest.repVotes,
-        latest.demVotes,
-        latest.totalVotes,
-        latest.item.rep_candidate,
-        latest.item.dem_candidate
+      const summaryLine = winnerMarginLabelShort(
+        summaryEntry.repVotes,
+        summaryEntry.demVotes,
+        summaryEntry.totalVotes,
+        summaryEntry.item.rep_candidate,
+        summaryEntry.item.dem_candidate
       );
       const earliest = annotated[0];
-      const historyShift = describeTrendShift(latest.signedPct, earliest ? earliest.signedPct : NaN, earliest ? earliest.item.year : '');
+      const historyShift = describeTrendShift(summaryEntry.signedPct, earliest ? earliest.signedPct : NaN, earliest ? earliest.item.year : '');
       let streakCount = 0;
       for (let i = annotated.length - 1; i >= 0; i -= 1) {
         if (annotated[i].winnerMeta.partyClass !== latest.winnerMeta.partyClass) break;
         streakCount += 1;
       }
-      const streakLabel = latest.winnerMeta.partyClass === 'tie'
+      const latestStreakLabel = latest.winnerMeta.partyClass === 'tie'
         ? 'Latest result was an even race.'
         : `${latest.winnerMeta.partyClass === 'rep' ? 'Republican' : 'Democratic'} streak: ${streakCount} election${streakCount === 1 ? '' : 's'}.`;
+      const summaryNoteSuffix = selectedEntry && selectedEntry !== latest
+        ? `Selected year ${summaryEntry.item.year}; latest available ${latest.item.year}.`
+        : latestStreakLabel;
 
       const summaryBadges = [];
-      if (latest.shiftMeta) {
+      if (summaryEntry.shiftMeta) {
         summaryBadges.push(
-          `<span class="focus-trend-summary-badge ${latest.shiftMeta.cls}">${escapeHtml(latest.shiftMeta.text)}</span>`
+          `<span class="focus-trend-summary-badge ${summaryEntry.shiftMeta.cls}">${escapeHtml(summaryEntry.shiftMeta.text)}</span>`
         );
       }
-      if (latest.flip && latest.flip.flipped) {
+      if (summaryEntry.flip && summaryEntry.flip.flipped) {
         summaryBadges.push(
-          `<span class="focus-trend-summary-badge ${latest.flip.to === 'R' ? 'rep' : 'dem'}">${escapeHtml(`Flip ${latest.flip.from}->${latest.flip.to}`)}</span>`
+          `<span class="focus-trend-summary-badge ${summaryEntry.flip.to === 'R' ? 'rep' : 'dem'}">${escapeHtml(`Flip ${summaryEntry.flip.from}->${summaryEntry.flip.to}`)}</span>`
         );
       }
       if (fallbackBadge) {
@@ -9213,15 +9222,15 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="focus-trend-plot">
           <div class="focus-trend-summary">
             <div class="focus-trend-summary-copy">
-              <span class="focus-trend-summary-kicker">Trend at a glance</span>
-              <div class="focus-trend-summary-call">${escapeHtml(`${latest.item.year}: ${latestSummary}`)}</div>
-              <div class="focus-trend-summary-note">${escapeHtml(`Showing ${annotated.length} elections from ${earliest.item.year} to ${latest.item.year}. ${streakLabel}`)}</div>
+              <span class="focus-trend-summary-kicker">${escapeHtml(selectedEntry ? 'Trend at a glance (selected year)' : 'Trend at a glance')}</span>
+              <div class="focus-trend-summary-call">${escapeHtml(`${summaryEntry.item.year}: ${summaryLine}`)}</div>
+              <div class="focus-trend-summary-note">${escapeHtml(`Showing ${annotated.length} elections from ${earliest.item.year} to ${latest.item.year}. ${summaryNoteSuffix}`)}</div>
             </div>
             <div class="focus-trend-summary-badges">${summaryBadges.join('')}</div>
             <div class="focus-trend-stats">
               <div class="focus-trend-stat">
-                <span class="focus-trend-stat-label">Latest</span>
-                <span class="focus-trend-stat-value ${latest.winnerMeta.partyClass}">${escapeHtml(`${latest.item.year}: ${latestSummary}`)}</span>
+                <span class="focus-trend-stat-label">${escapeHtml(selectedEntry ? 'Selected' : 'Latest')}</span>
+                <span class="focus-trend-stat-value ${summaryEntry.winnerMeta.partyClass}">${escapeHtml(`${summaryEntry.item.year}: ${summaryLine}`)}</span>
               </div>
               <div class="focus-trend-stat">
                 <span class="focus-trend-stat-label">Closest</span>
@@ -9332,6 +9341,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         let series = [];
         const trendOptions = {};
+        trendOptions.selectedYear = Number(year);
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
         } else if (meta.kind === 'region' && meta.regionKey) {
