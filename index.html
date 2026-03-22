@@ -199,6 +199,13 @@
   body.colorblind-mode .legend-scale-caption .dem {
     color: #1d4ed8 !important;
   }
+
+  @media (min-width: 769px) {
+    .main-controls {
+      overflow: visible !important; /* Allows dropdowns to pop out of the container */
+      max-height: none !important;  /* Prevents the container from clipping its children */
+    }
+  }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
