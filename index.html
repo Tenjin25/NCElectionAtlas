@@ -6606,6 +6606,27 @@ body { height: var(--app-height); }
       overflow-x: visible !important;
       max-height: none !important; /* Managed by the parent flexbox now */
     }
+
+    /* Keep minimize behavior intact after moving groups outside #controls-content */
+    #main-controls.main-controls.minimized .control-group-search,
+    #main-controls.main-controls.minimized .control-group-contest,
+    #main-controls.main-controls.minimized #controls-content {
+      display: none !important;
+    }
+
+    /* Desktop fallback: force downward contest chooser via expandable list mode. */
+    #contestSelect.contest-select-force-down {
+      position: relative !important;
+      z-index: 10010 !important;
+    }
+
+    #contestSelect.contest-select-force-down.contest-select-expanded {
+      max-height: min(52vh, 420px) !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      background: rgba(255, 255, 255, 0.98) !important;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
+    }
   }
     </style>
 </head>
@@ -19850,6 +19871,73 @@ document.addEventListener('DOMContentLoaded', function() {
       window.addEventListener('resize', fixPCLayout);
       // Also run immediately in case DOM is already ready
       fixPCLayout();
+    })();
+  </script>
+  <script>
+    // Force desktop contest picker to expand downward instead of relying on browser popup direction.
+    (function() {
+      function wireContestSelectForceDown() {
+        const select = document.getElementById('contestSelect');
+        if (!select || select.dataset.forceDownWired === '1') return;
+        select.dataset.forceDownWired = '1';
+        select.classList.add('contest-select-force-down');
+
+        let expanded = false;
+
+        function isDesktop() {
+          return window.innerWidth >= 769;
+        }
+
+        function collapse() {
+          if (!expanded) return;
+          select.size = 1;
+          select.classList.remove('contest-select-expanded');
+          expanded = false;
+        }
+
+        function expand() {
+          if (!isDesktop() || expanded) return;
+          const optionCount = Math.max(2, (select.options && select.options.length) ? select.options.length : 2);
+          select.size = Math.min(14, optionCount);
+          select.classList.add('contest-select-expanded');
+          expanded = true;
+        }
+
+        select.addEventListener('mousedown', (event) => {
+          if (!isDesktop()) return;
+          if (!expanded) {
+            event.preventDefault();
+            expand();
+          }
+        });
+
+        select.addEventListener('keydown', (event) => {
+          if (!isDesktop()) return;
+          if ((event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') && !expanded) {
+            event.preventDefault();
+            expand();
+            return;
+          }
+          if (event.key === 'Escape') {
+            collapse();
+          }
+        });
+
+        select.addEventListener('change', collapse);
+        select.addEventListener('blur', () => {
+          window.setTimeout(collapse, 120);
+        });
+
+        window.addEventListener('resize', () => {
+          if (!isDesktop()) collapse();
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireContestSelectForceDown, { once: true });
+      } else {
+        wireContestSelectForceDown();
+      }
     })();
   </script>
 </body>
