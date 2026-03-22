@@ -6607,10 +6607,10 @@ body { height: var(--app-height); }
 
     #contestSearch,
     #contestSelect {
-      min-height: 54px !important;
-      font-size: 16px !important;
+      min-height: 58px !important;
+      font-size: 17px !important;
       border-radius: 16px !important;
-      padding: 12px 14px !important;
+      padding: 13px 16px !important;
     }
 
     /* 3. Make ONLY the layers and analytics scroll */
@@ -6635,7 +6635,7 @@ body { height: var(--app-height); }
     }
 
     #contestSelect.contest-select-force-down.contest-select-expanded {
-      max-height: min(60vh, 520px) !important;
+      max-height: min(68vh, 640px) !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
       background: rgba(255, 255, 255, 0.98) !important;
@@ -19912,7 +19912,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function expand() {
           if (!isDesktop() || expanded) return;
           const optionCount = Math.max(2, (select.options && select.options.length) ? select.options.length : 2);
-          select.size = Math.min(14, optionCount);
+          select.size = Math.min(18, optionCount);
           select.classList.add('contest-select-expanded');
           expanded = true;
         }
@@ -19927,9 +19927,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         select.addEventListener('keydown', (event) => {
           if (!isDesktop()) return;
-          if ((event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') && !expanded) {
+          if ((event.key === 'Enter' || event.key === ' ') && !expanded) {
             event.preventDefault();
             expand();
+            return;
+          }
+          if (!expanded && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+            event.preventDefault();
             return;
           }
           if (event.key === 'Escape') {
