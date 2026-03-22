@@ -6513,11 +6513,13 @@ body { height: var(--app-height); }
 
   /* THE DEFINITIVE FIX: ENDS THE DROPDOWN CLIPPING WAR */
   @media (min-width: 769px) {
+    /* Using #main-controls.main-controls makes the rule 'heavier' so it wins */
     #main-controls.main-controls {
       max-height: none !important;
       overflow: visible !important;
     }
 
+    /* Moves the scrollbar to the content inside so the dropdown can escape */
     .controls-content {
       max-height: 75vh !important;
       overflow-y: auto !important;
