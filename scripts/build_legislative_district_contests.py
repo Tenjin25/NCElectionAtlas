@@ -70,6 +70,26 @@ def _top_candidate(cand_votes: dict[str, int]) -> str:
     return sorted(cand_votes.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)[0][0]
 
 
+def _candidate_with_fallback(candidate: str, *, votes: int, party: str) -> str:
+    """
+    Ensure district rows do not emit empty major-party candidate labels.
+    """
+    c = str(candidate or "").strip()
+    if c:
+        return c
+    if votes <= 0:
+        if party == "dem":
+            return "No Democratic Candidate"
+        if party == "rep":
+            return "No Republican Candidate"
+        return ""
+    if party == "dem":
+        return "Democratic Candidate (Unspecified)"
+    if party == "rep":
+        return "Republican Candidate (Unspecified)"
+    return ""
+
+
 def _build_payload_from_aggregates(
     district_totals: dict[str, dict[str, int]],
     district_dem_candidates: dict[str, dict[str, int]],
@@ -112,14 +132,24 @@ def _build_payload_from_aggregates(
             winner = "DEM"
         else:
             winner = "TIE"
+        dem_candidate = _candidate_with_fallback(
+            _top_candidate(district_dem_candidates.get(district, {})),
+            votes=dem,
+            party="dem",
+        )
+        rep_candidate = _candidate_with_fallback(
+            _top_candidate(district_rep_candidates.get(district, {})),
+            votes=rep,
+            party="rep",
+        )
 
         results[district] = {
             "dem_votes": dem,
             "rep_votes": rep,
             "other_votes": oth,
             "total_votes": total_votes,
-            "dem_candidate": _top_candidate(district_dem_candidates.get(district, {})),
-            "rep_candidate": _top_candidate(district_rep_candidates.get(district, {})),
+            "dem_candidate": dem_candidate,
+            "rep_candidate": rep_candidate,
             "margin": margin,
             "margin_pct": round(margin_pct, 2),
             "winner": winner,
