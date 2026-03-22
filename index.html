@@ -6502,6 +6502,25 @@ body { height: var(--app-height); }
         calc(100% - 10px) 15px;
     }
   }
+
+  /* Desktop dropdown escape hatch: keep select menus from being clipped/flipped by panel bounds. */
+  @media (min-width: 769px) {
+    #main-controls {
+      z-index: 10005 !important;
+    }
+
+    .main-controls {
+      position: fixed !important;
+      overflow: visible !important;
+      max-height: none !important;
+    }
+
+    .main-controls .controls-content,
+    .controls-content {
+      overflow: visible !important;
+      max-height: none !important;
+    }
+  }
     </style>
 </head>
 <body>
@@ -9420,9 +9439,7 @@ document.addEventListener('DOMContentLoaded', function() {
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
       barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
-      barMidLabelEl.textContent = o > 0
-        ? `50% | Other ${formatPctForCloseRace(otherPct, marginPct)}%`
-        : '50%';
+      barMidLabelEl.textContent = '50%';
       barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
     }
 
@@ -11624,6 +11641,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeRaceDisplayDigits(marginPct, value = null) {
       const pct = Math.abs(Number(marginPct) || 0);
       const v = Math.abs(Number(value));
+      if (pct < 0.05) return 3;
       if (pct < 0.1 && Number.isFinite(v) && v > 0 && Number(v.toFixed(2)) === 0) return 3;
       return 2;
     }
@@ -12091,9 +12109,7 @@ document.addEventListener('DOMContentLoaded', function() {
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
       barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
-      barMidLabelEl.textContent = o > 0
-        ? `50% | Other ${formatPctForCloseRace(otherPct, marginPct)}%`
-        : '50%';
+      barMidLabelEl.textContent = '50%';
       barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
       if (totalMetaEl) totalMetaEl.textContent = `${total.toLocaleString()} total votes`;
       if (leadMetaEl) {
