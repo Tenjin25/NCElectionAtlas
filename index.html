@@ -10724,6 +10724,46 @@ document.addEventListener('DOMContentLoaded', function() {
       populateContestSelectFromCSV(electionData);
     }
 
+    let contestChangeInFlight = false;
+    let queuedContestSelection = null;
+
+    function shouldRefreshCountyDetailsOnContestChange() {
+      const view = String(currentView || '').toLowerCase();
+      return view === 'counties' || view === 'vtds_2000';
+    }
+
+    async function handleContestSelectionChange(contestKey) {
+      queuedContestSelection = (contestKey || '').toString().trim();
+      if (contestChangeInFlight) return;
+
+      contestChangeInFlight = true;
+      try {
+        while (true) {
+          const nextContest = queuedContestSelection;
+          queuedContestSelection = null;
+          await applyContest(nextContest);
+
+          // If users switched again while we were loading, apply the newest selection next.
+          if (queuedContestSelection && queuedContestSelection !== nextContest) {
+            continue;
+          }
+
+          if (
+            shouldRefreshCountyDetailsOnContestChange() &&
+            typeof window.lastSelectedCounty === 'string' &&
+            window.lastSelectedCounty.trim()
+          ) {
+            showCountyDetails(window.lastSelectedCounty.trim());
+          }
+          break;
+        }
+      } catch (err) {
+        console.warn('Contest change failed:', err?.message || err);
+      } finally {
+        contestChangeInFlight = false;
+      }
+    }
+
     function populateContestSelectFromManifest(manifestEntries) {
 	      const q = (contestSearchQuery || '').toString().trim().toUpperCase();
 	      const sel = document.getElementById('contestSelect');
@@ -10868,11 +10908,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      sel.appendChild(fragment);
 	      sel.dataset.populated = 'true';
 	      sel.onchange = () => {
-	        applyContest(sel.value);
-	        if (typeof lastSelectedCounty !== 'undefined' && lastSelectedCounty) {
-	          showCountyDetails(lastSelectedCounty);
-	        }
-	        saveUIState();
+	        handleContestSelectionChange(sel.value);
 	      };
 	    }
 
@@ -10908,7 +10944,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sel) {
           sel.innerHTML = '<option value="">No contests available for this view</option>';
           sel.dataset.populated = 'true';
-          sel.onchange = () => { applyContest(sel.value); };
+          sel.onchange = () => { handleContestSelectionChange(sel.value); };
         }
         return;
       }
@@ -11023,12 +11059,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var spinner = document.getElementById('contest-loading-spinner');
   if (spinner) spinner.style.display = 'none';
       sel.onchange = () => {
-        // Always use applyContest - it will check for colorblind mode automatically
-        applyContest(sel.value);
-        // Explicitly update sidebar for last selected county
-        if (typeof lastSelectedCounty !== 'undefined' && lastSelectedCounty) {
-          showCountyDetails(lastSelectedCounty);
-        }
+        handleContestSelectionChange(sel.value);
       };
 
     }
@@ -11049,7 +11080,7 @@ document.addEventListener('DOMContentLoaded', function() {
           sel.appendChild(opt);
         }
       });
-      sel.onchange = () => { applyContest(sel.value); };
+      sel.onchange = () => { handleContestSelectionChange(sel.value); };
     }
 
     function populateContestSelectForStateSenate(csvData) {
@@ -11068,7 +11099,7 @@ document.addEventListener('DOMContentLoaded', function() {
           sel.appendChild(opt);
         }
       });
-      sel.onchange = () => { applyContest(sel.value); };
+      sel.onchange = () => { handleContestSelectionChange(sel.value); };
     }
 
     function populateContestSelectFromCongressionalCSV(csvData) {
@@ -11087,7 +11118,7 @@ document.addEventListener('DOMContentLoaded', function() {
           sel.appendChild(opt);
         }
       });
-      sel.onchange = () => { applyContest(sel.value); };
+      sel.onchange = () => { handleContestSelectionChange(sel.value); };
     }
 
     function setAnalysisMode(mode) {
