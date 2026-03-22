@@ -6583,9 +6583,13 @@ body { height: var(--app-height); }
 
   @media (min-width: 769px) {
     /* 1. Force the main container to be an 'open' window */
+    .main-controls,
+    #main-controls,
     #main-controls.main-controls {
-      overflow: visible !important;
       max-height: none !important;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
     }
 
     /* 2. Unlock the scrolling area so the dropdown can escape its borders */
