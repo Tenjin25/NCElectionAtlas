@@ -2683,19 +2683,19 @@ body { height: var(--app-height); }
 
   .recount-radar-badge {
     display: none;
-    margin-top: 10px;
+    margin-top: 8px;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: 8px;
+    padding: 6px 11px;
     border-radius: 999px;
-    border: 1px solid rgba(251, 191, 36, 0.42);
-    background:
-      linear-gradient(115deg, rgba(120, 53, 15, 0.88) 0%, rgba(146, 64, 14, 0.82) 55%, rgba(154, 52, 18, 0.78) 100%);
+    border: 1px solid rgba(253, 186, 116, 0.58);
+    background: linear-gradient(130deg, rgba(127, 29, 29, 0.72) 0%, rgba(194, 65, 12, 0.56) 60%, rgba(120, 53, 15, 0.52) 100%);
     color: #fff7ed;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
   }
 
   .recount-radar-badge.is-visible {
@@ -2703,45 +2703,7 @@ body { height: var(--app-height); }
   }
 
   .recount-radar-badge .recount-label {
-    display: inline-flex;
-    align-items: center;
-    min-height: 20px;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: rgba(254, 243, 199, 0.28);
-    border: 1px solid rgba(254, 243, 199, 0.42);
-    color: #fde68a;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .recount-radar-badge .recount-focus {
-    color: #fff7ed;
-    font-weight: 800;
-    white-space: nowrap;
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .recount-radar-badge .recount-divider {
-    color: rgba(254, 215, 170, 0.86);
-    font-weight: 700;
-  }
-
-  .recount-radar-badge .recount-meta {
-    color: rgba(255, 237, 213, 0.94);
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .recount-radar-badge .recount-meta strong {
-    color: #ffffff;
-    font-weight: 900;
+    color: #fed7aa;
   }
 
   .map-topbar-hints {
@@ -4447,48 +4409,6 @@ body { height: var(--app-height); }
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
-  #contestSelect {
-    appearance: none;
-    padding-right: 40px;
-  }
-
-  .contest-select-wrap::after {
-    content: '\25BE';
-    position: absolute;
-    top: 50%;
-    right: 14px;
-    transform: translateY(-50%);
-    color: #64748b;
-    font-size: 14px;
-    pointer-events: none;
-  }
-
-  @media (min-width: 769px) {
-    .contest-select-wrap.select-expanded {
-      z-index: 1200;
-    }
-
-    .contest-select-wrap.select-expanded::after {
-      display: none;
-    }
-
-    /* Chrome/Brave desktop fallback: expand inline list downward instead of native popup direction heuristics. */
-    .contest-select-wrap.select-expanded #contestSelect {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
-      max-height: min(72vh, 680px);
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.98);
-      border-color: rgba(59, 130, 246, 0.45);
-      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
-      font-size: 15px;
-      line-height: 1.35;
-    }
-  }
-
   #help-btn,
   #accessibility-toggle,
   #label-toggle {
@@ -4610,65 +4530,37 @@ body { height: var(--app-height); }
   }
 
   .statewide-race-alert {
-    margin-top: 10px;
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 10px;
+    margin-top: 8px;
+    display: grid;
+    gap: 3px;
     padding: 8px 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    background: rgba(255, 255, 255, 0.94);
-    color: #1f2937;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.005em;
-    line-height: 1.4;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    background: rgba(248, 250, 252, 0.88);
   }
 
   .statewide-race-alert.recount {
-    border-color: rgba(234, 88, 12, 0.34);
-    background:
-      linear-gradient(112deg, rgba(255, 237, 213, 0.92) 0%, rgba(254, 215, 170, 0.56) 100%);
-    color: #7c2d12;
+    border-color: rgba(202, 138, 4, 0.54);
+    background: rgba(254, 243, 199, 0.42);
   }
 
   .statewide-race-alert.litigation {
-    border-color: rgba(217, 119, 6, 0.3);
-    background:
-      linear-gradient(112deg, rgba(254, 249, 195, 0.94) 0%, rgba(253, 224, 71, 0.38) 100%);
-    color: #713f12;
+    border-color: rgba(234, 88, 12, 0.48);
+    background: rgba(255, 237, 213, 0.46);
   }
 
   .statewide-race-alert-label {
-    display: inline-flex;
-    align-items: center;
-    min-height: 22px;
-    padding: 0 8px;
-    border-radius: 999px;
     font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .statewide-race-alert.recount .statewide-race-alert-label {
-    border: 1px solid rgba(194, 65, 12, 0.32);
-    background: rgba(255, 247, 237, 0.78);
-    color: #9a3412;
-  }
-
-  .statewide-race-alert.litigation .statewide-race-alert-label {
-    border: 1px solid rgba(180, 83, 9, 0.3);
-    background: rgba(254, 252, 232, 0.8);
-    color: #854d0e;
+    color: #7c2d12;
   }
 
   .statewide-race-alert-text {
-    display: inline-block;
-    min-width: 0;
-    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #7c2d12;
   }
 
   .statewide-competitive {
@@ -6921,68 +6813,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-  // Desktop-only fallback for Chromium browsers where the native <select> popup
-  // may render upward when the option list is long.
-  (function wireDesktopContestSelectDirection() {
-    const sel = document.getElementById('contestSelect');
-    const wrap = sel && sel.closest ? sel.closest('.contest-select-wrap') : null;
-    if (!sel || !wrap || sel.dataset.desktopDirectionWired === 'true') return;
-    sel.dataset.desktopDirectionWired = 'true';
-
-    const isDesktop = () => !!(window.matchMedia && window.matchMedia('(min-width: 769px)').matches);
-    const openSize = () => {
-      const count = Array.from(sel.options || []).filter(opt => opt && !opt.disabled).length;
-      return Math.max(2, Math.min(24, count || 2));
-    };
-
-    let expanded = false;
-
-    const closeExpanded = () => {
-      if (!expanded) return;
-      expanded = false;
-      wrap.classList.remove('select-expanded');
-      sel.size = 1;
-    };
-
-    const openExpanded = () => {
-      if (!isDesktop() || expanded) return;
-      expanded = true;
-      wrap.classList.add('select-expanded');
-      sel.size = openSize();
-    };
-
-    sel.addEventListener('mousedown', function(ev) {
-      if (!isDesktop()) return;
-      if (!expanded) {
-        ev.preventDefault();
-        openExpanded();
-        sel.focus();
-      }
-    });
-
-    sel.addEventListener('keydown', function(ev) {
-      if (!isDesktop()) return;
-      if (!expanded && (ev.key === 'Enter' || ev.key === ' ')) {
-        ev.preventDefault();
-        openExpanded();
-      } else if (ev.key === 'Escape') {
-        closeExpanded();
-      }
-    });
-
-    sel.addEventListener('change', closeExpanded);
-    sel.addEventListener('blur', () => setTimeout(closeExpanded, 120));
-
-    document.addEventListener('mousedown', function(ev) {
-      if (!expanded) return;
-      if (wrap.contains(ev.target)) return;
-      closeExpanded();
-    });
-
-    window.addEventListener('resize', function() {
-      if (!isDesktop()) closeExpanded();
-    });
-  })();
   updateLegendColors(); // Ensure correct colors on load
 });
 </script>
@@ -9520,7 +9350,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    function updateVoteCounterSummaryLegacy(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
+    function updateVoteCounterSummary(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
@@ -9584,7 +9414,7 @@ document.addEventListener('DOMContentLoaded', function() {
       barRep.style.width = `${repPct.toFixed(4)}%`;
       barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
       barMidLabelEl.textContent = o > 0
-        ? `Other ${formatPctForCloseRace(otherPct, marginPct)}%`
+        ? `50% | Other ${formatPctForCloseRace(otherPct, marginPct)}%`
         : '50%';
       barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
     }
@@ -9672,14 +9502,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return { cls: 'tie', text: 'First available result' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
-      const shiftAbs = Math.abs(shift);
-      if (shiftAbs < 0.01) {
+      if (Math.abs(shift) < 0.01) {
         return { cls: 'tie', text: `No shift vs ${prevYear}` };
       }
-      const shiftLabel = formatPctForCloseRace(shiftAbs, shiftAbs);
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `${shift > 0 ? 'R' : 'D'} +${shiftLabel} vs ${prevYear}`
+        text: `${shift > 0 ? 'R' : 'D'} +${Math.abs(shift).toFixed(2)} vs ${prevYear}`
       };
     }
 
@@ -9708,7 +9536,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
         const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
-        const marginPct = totalVotes > 0 ? Math.abs(repPct - demPct) : 0;
         const signedPct = Number(item.margin_pct || 0);
         const winnerMeta = getTrendWinnerMeta(item);
         const leadLabel = leadMarginPctLabel(repVotes, demVotes, totalVotes);
@@ -9724,7 +9551,6 @@ document.addEventListener('DOMContentLoaded', function() {
           demPct,
           repPct,
           otherPct,
-          marginPct,
           signedPct,
           winnerMeta,
           leadLabel,
@@ -9793,7 +9619,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : '';
           const leadSummary = entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel;
           const otherChip = entry.otherPct >= 0.05
-            ? `<span class="focus-trend-chip">Other ${escapeHtml(formatPctForCloseRace(entry.otherPct, entry.marginPct))}%</span>`
+            ? `<span class="focus-trend-chip">Other ${escapeHtml(entry.otherPct.toFixed(2))}%</span>`
             : '';
           return `
             <div class="focus-trend-entry">
@@ -9807,8 +9633,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span class="focus-trend-entry-margin">${escapeHtml(leadSummary)}</span>
                 </div>
                 <div class="focus-trend-entry-scale">
-                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${formatPctForCloseRace(entry.demPct, entry.marginPct)}%`)}</span>
-                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${formatPctForCloseRace(entry.repPct, entry.marginPct)}%`)}</span>
+                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${entry.demPct.toFixed(2)}%`)}</span>
+                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${entry.repPct.toFixed(2)}%`)}</span>
                 </div>
                 <div class="focus-trend-entry-bar" aria-hidden="true">
                   <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
@@ -10966,7 +10792,35 @@ document.addEventListener('DOMContentLoaded', function() {
       debugLog(`Analysis mode set to: ${mode}`);
     }
 
-    function updateStatewideResultsLegacy(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
+    function isStatewideContestType(contestType) {
+      const key = String(contestType || '').trim().toLowerCase();
+      if (!key) return false;
+      if (key === 'state_house' || key === 'state_senate' || key === 'us_house') return false;
+      return true;
+    }
+
+    function buildStatewideCloseRaceAlertHTML(contestType, year, marginPct) {
+      if (!isStatewideContestType(contestType)) return '';
+      if (!Number.isFinite(marginPct) || marginPct > 1.0) return '';
+
+      const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
+      const marginLabel = formatMarginPctForDisplay(marginPct);
+      const alertLabel = inRecountRange ? 'Recount Watch' : 'Litigation Watch';
+      const detail = inRecountRange
+        ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
+        : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
+      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
+      const className = inRecountRange ? 'recount' : 'litigation';
+
+      return (
+        `<div class="statewide-race-alert ${className}" role="status" aria-live="polite">` +
+          `<span class="statewide-race-alert-label">${escapeHtml(alertLabel)}</span>` +
+          `<span class="statewide-race-alert-text">${escapeHtml(`${contestLabel}: ${detail}`)}</span>` +
+        `</div>`
+      );
+    }
+
+    function updateStatewideResults(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
       const statewideContent = document.getElementById('statewide-content');
       const tempBar = document.getElementById('statewide-temperature-bar');
       if (!statewideContent) return;
@@ -10985,6 +10839,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
         const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+        const marginLabel = formatMarginPctForDisplay(marginPct);
         const winner = demPct > repPct ? 'Democratic' : 'Republican';
         let officeName = formatContestName(contestType, year);
         let demKey = `${year}|${officeName}|Democrat`;
@@ -11759,25 +11614,45 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
+    function closeRaceDisplayDigits(marginPct, value = null) {
+      const pct = Math.abs(Number(marginPct) || 0);
+      const v = Math.abs(Number(value));
+      if (pct < 0.1 && Number.isFinite(v) && v > 0 && Number(v.toFixed(2)) === 0) return 3;
+      return 2;
+    }
+
+    function formatPctForCloseRace(value, marginPct) {
+      const numeric = Number(value || 0);
+      const digits = closeRaceDisplayDigits(marginPct, numeric);
+      return numeric.toFixed(digits);
+    }
+
+    function marginDisplayDigits(marginPct) {
+      const pct = Math.abs(Number(marginPct) || 0);
+      return pct < 0.05 ? 3 : 2;
+    }
+
+    function formatMarginPctForDisplay(marginPct) {
+      const pct = Math.abs(Number(marginPct) || 0);
+      return pct.toFixed(marginDisplayDigits(pct));
+    }
+
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      return `${formatMarginPctForDisplay(pct)}%`;
+      return `${formatMarginPctForDisplay(marginPctValue(repVotes, demVotes, totalVotes))}%`;
     }
 
     // Lead pill uses numeric margin only; party context comes from winner color/label.
     function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      return `${formatMarginPctForDisplay(pct)}%`;
+      return `${formatMarginPctForDisplay(marginPctValue(repVotes, demVotes, totalVotes))}%`;
     }
 
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      const pct = marginPctValue(repVotes, demVotes, totalVotes);
-      const pctLabel = `${formatMarginPctForDisplay(pct)}%`;
+      const pctLabel = `${formatMarginPctForDisplay(marginPctValue(repVotes, demVotes, totalVotes))}%`;
       if (margin > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
@@ -11814,29 +11689,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const to = winnerFromSignedMarginPct(curSignedPct);
       const flipped = (from !== 'T' && to !== 'T' && from !== to);
       return { flipped, from, to };
-    }
-
-    function closeRaceDisplayDigits(marginPct, value = null) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      const v = Math.abs(Number(value));
-      if (pct < 0.1 && Number.isFinite(v) && v > 0 && Number(v.toFixed(2)) === 0) return 3;
-      return 2;
-    }
-
-    function formatPctForCloseRace(value, marginPct) {
-      const numeric = Number(value || 0);
-      const digits = closeRaceDisplayDigits(marginPct, numeric);
-      return numeric.toFixed(digits);
-    }
-
-    function marginDisplayDigits(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct < 0.05 ? 3 : 2;
-    }
-
-    function formatMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct.toFixed(marginDisplayDigits(pct));
     }
 
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
@@ -12233,54 +12085,19 @@ document.addEventListener('DOMContentLoaded', function() {
       barRep.style.width = `${repPct.toFixed(4)}%`;
       barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
       barMidLabelEl.textContent = o > 0
-        ? `Other ${formatPctForCloseRace(otherPct, marginPct)}%`
+        ? `50% | Other ${formatPctForCloseRace(otherPct, marginPct)}%`
         : '50%';
       barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
       if (totalMetaEl) totalMetaEl.textContent = `${total.toLocaleString()} total votes`;
       if (leadMetaEl) {
-        if (winnerParty === 'tie') {
-          leadMetaEl.textContent = 'Even race';
-        } else {
-          const compactLead = compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate);
-          const voteMargin = Math.abs(r - d);
-          const voteWord = voteMargin === 1 ? 'vote' : 'votes';
-          leadMetaEl.textContent = marginPct < 0.5
-            ? `${compactLead} | ${voteMargin.toLocaleString()} ${voteWord} margin`
-            : compactLead;
-        }
+        leadMetaEl.textContent = winnerParty === 'tie'
+          ? 'Even race'
+          : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate);
         leadMetaEl.dataset.party = winnerParty;
       }
       if (demShareFill) demShareFill.style.width = `${demPct.toFixed(2)}%`;
       if (repShareFill) repShareFill.style.width = `${repPct.toFixed(2)}%`;
       if (otherShareFill) otherShareFill.style.width = `${otherPct.toFixed(2)}%`;
-    }
-
-    function isStatewideContestType(contestType) {
-      const key = String(contestType || '').trim().toLowerCase();
-      if (!key) return false;
-      if (key === 'state_house' || key === 'state_senate' || key === 'us_house') return false;
-      return true;
-    }
-
-    function buildStatewideCloseRaceAlertHTML(contestType, year, marginPct) {
-      if (!isStatewideContestType(contestType)) return '';
-      if (!Number.isFinite(marginPct) || marginPct > 1.0) return '';
-
-      const inRecountRange = marginPct <= RECOUNT_MARGIN_THRESHOLD_PCT;
-      const marginLabel = formatMarginPctForDisplay(marginPct);
-      const alertLabel = inRecountRange ? 'Recount Watch' : 'Litigation Watch';
-      const detail = inRecountRange
-        ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
-        : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
-      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
-      const className = inRecountRange ? 'recount' : 'litigation';
-
-      return (
-        `<div class="statewide-race-alert ${className}" role="status" aria-live="polite">` +
-          `<span class="statewide-race-alert-label">${escapeHtml(alertLabel)}</span>` +
-          `<span class="statewide-race-alert-text">${escapeHtml(`${contestLabel}: ${detail}`)}</span>` +
-        `</div>`
-      );
     }
 
     function updateStatewideResults(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
@@ -13107,8 +12924,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const focusLabel = recountFocusLabelFromMeta(state.meta || null);
       const safeFocusLabel = escapeHtml(focusLabel || 'Focused race');
       const voteLabel = marginVotes === 1 ? 'vote' : 'votes';
-      const pctLabel = formatMarginPctForDisplay(marginPct);
-      const html = `<span class="recount-label">Recount Watch</span><span class="recount-focus">${safeFocusLabel}</span><span class="recount-divider">\u2022</span><span class="recount-meta"><strong>${pctLabel}%</strong> margin (${marginVotes.toLocaleString()} ${voteLabel})</span>`;
+      const html = `<span class="recount-label">Recount Watch</span><span>${safeFocusLabel}: Margin ${marginVotes.toLocaleString()} ${voteLabel} (${formatMarginPctForDisplay(marginPct)}%)</span>`;
       setRecountRadarBadgeVisible(true, html);
     }
 
@@ -14670,7 +14486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'district', scope, districtNum: Number(districtNum), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = signedMarginPctFromContestRow(row, contestType);
+      const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winnerRaw = (row.winner || '').toString().toUpperCase();
       const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
@@ -14684,7 +14500,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevResults = prevCached?.prevNode?.general?.results || null;
         if (prevResults) {
           const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
-          if (prevRow) prevSignedForFlip = signedMarginPctFromContestRow(prevRow, contestType);
+          if (prevRow) prevSignedForFlip = Number(prevRow.margin_pct || 0);
         }
       } catch (_) {}
 
@@ -15213,9 +15029,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function isMobileEditableField(node) {
       if (!node || !node.tagName) return false;
       const tag = node.tagName.toLowerCase();
-      // Keep native dropdowns stable; focus-mode shifts are only useful for text entry.
-      if (tag === 'select') return false;
-      if (tag !== 'input' && tag !== 'textarea') return false;
+      if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') return false;
       return !!(node.closest && (node.closest('#map-topbar') || node.closest('#main-controls')));
     }
 
@@ -17495,7 +17309,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.style.top = top + 'px';
     }
 
-    function showDistrictDetailsLegacy(districtNum) {
+    function showDistrictDetails(districtNum) {
       if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
@@ -17537,7 +17351,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
             const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
-            const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+            const marginPct = Math.abs(demPct - repPct);
             const winner = demPct > repPct ? 'Democratic' : 'Republican';
             
             // Determine competitiveness
@@ -17607,7 +17421,7 @@ document.addEventListener('DOMContentLoaded', function() {
       detailsDiv.style.display = 'block';
     }
 
-    function showStateDistrictDetailsLegacy(districtNum, chamber) {
+    function showStateDistrictDetails(districtNum, chamber) {
       if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
@@ -17724,7 +17538,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes) * 100.0;
       const repPct = (repVotes / totalVotes) * 100.0;
       const othPct = (otherVotes / totalVotes) * 100.0;
-      const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      const marginPct = Math.abs(repPct - demPct);
       const winnerParty = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'TIE');
 
       let compLabel = '';
@@ -18468,21 +18282,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
       return ((Number(repVotes) - Number(demVotes)) / t) * 100;
-    }
-
-    function signedMarginPctFromContestRow(row, contestType = '') {
-      if (!row || typeof row !== 'object') return 0;
-      const key = String(contestType || '').trim();
-      const demVotes = key ? Number(row[`${key}_dem`] ?? row.dem_votes ?? row.dem ?? 0) : Number(row.dem_votes ?? row.dem ?? 0);
-      const repVotes = key ? Number(row[`${key}_rep`] ?? row.rep_votes ?? row.rep ?? 0) : Number(row.rep_votes ?? row.rep ?? 0);
-      const otherVotes = key ? Number(row[`${key}_other`] ?? row.other_votes ?? row.other ?? 0) : Number(row.other_votes ?? row.other ?? 0);
-      const totalRaw = key
-        ? Number(row[`${key}_total`] ?? row.total_votes ?? row.total ?? 0)
-        : Number(row.total_votes ?? row.total ?? 0);
-      const totalVotes = totalRaw > 0 ? totalRaw : (demVotes + repVotes + otherVotes);
-      if (totalVotes > 0) return signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-      const fallback = Number(row.margin_pct);
-      return Number.isFinite(fallback) ? fallback : 0;
     }
 
     function colorForShiftMode(shiftPct) {
@@ -19575,7 +19374,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const winner = repPct > demPct ? 'R' : 'D';
-        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+        const marginPct = Math.abs(repPct - demPct);
         let color = colorForMarginMode(marginPct, winner);
         if (mode === 'demographics') {
           const demoRow = getDistrictDemographics('congressional', district);
@@ -19692,7 +19491,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalVotes += rowTotalVotes;
             currentDistrictTurnoutTotals[String(Number(districtId))] = rowTotalVotes;
 
-            const signed = signedMarginPctFromContestRow(row, contestType);
+            const signed = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, rowTotalVotes);
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
@@ -19710,14 +19509,14 @@ document.addEventListener('DOMContentLoaded', function() {
               );
             } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
-              const prevSigned = prevRow ? signedMarginPctFromContestRow(prevRow, contestType) : 0;
+              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
               const f = flipInfo(prevSigned, signed);
               color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
             } else if (mode === 'winners') {
               color = colorForWinnerMode(winner);
             } else if (mode === 'shift' && prevResults && prevYear) {
               const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
-              const prevSigned = prevRow ? signedMarginPctFromContestRow(prevRow, contestType) : 0;
+              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
               color = colorForShiftMode(signed - prevSigned);
             } else {
               color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
@@ -19883,7 +19682,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
       const otherPct = ((totalVotes - totalDem - totalRep) / totalVotes) * 100;
       const winner = repPct > demPct ? 'R' : 'D';
-      const marginPct = marginPctValue(totalRep, totalDem, totalVotes);
+      const marginPct = Math.abs(repPct - demPct);
       const color = colorForMarginMode(marginPct, winner);
 
       // Apply uniform color to all districts (showing statewide result)
