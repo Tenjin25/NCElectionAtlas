@@ -6582,32 +6582,17 @@ body { height: var(--app-height); }
   }
 
   @media (min-width: 769px) {
-    /* 1. Force the main container to be an 'open' window */
-    .main-controls,
-    #main-controls,
-    #main-controls.main-controls {
+    html body #main-controls.main-controls {
       max-height: none !important;
       overflow: visible !important;
-      overflow-x: visible !important;
-      overflow-y: visible !important;
+      /* This is the secret sauce: */
+      padding-bottom: 500px !important;
+      margin-bottom: -500px !important;
     }
 
-    /* 2. Unlock the scrolling area so the dropdown can escape its borders */
     #main-controls .controls-content {
-      overflow: visible !important; /* This is the 'jailbreak' */
-      max-height: none !important;
-    }
-
-    /* 3. Since we removed the scroll from the main box,
-          we put it on the individual groups IF they get too long */
-    .control-group {
       overflow: visible !important;
-    }
-
-    /* 4. Ensure the dropdown is at the very top of the visual stack */
-    #contestSelect {
-      position: relative !important;
-      z-index: 10007 !important;
+      max-height: none !important;
     }
   }
     </style>
@@ -7483,6 +7468,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const p = (path || '').toString().trim();
       if (!p) return p;
       try { return new URL(p, window.location.href).toString(); } catch (_) { return p; }
+    }
+
+    // Cache destroyer token for static data requests.
+    // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
+    const DATA_CACHE_BUSTER = '2026-03-22-1';
+
+    function withCacheBuster(path) {
+      const p = (path || '').toString().trim();
+      if (!p) return p;
+      if (/^mapbox:\/\//i.test(p)) return p;
+      if (/[?&]v=/.test(p)) return p;
+      const sep = p.includes('?') ? '&' : '?';
+      return `${p}${sep}v=${encodeURIComponent(DATA_CACHE_BUSTER)}`;
     }
 
     const CONFIG = {
@@ -10095,14 +10093,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     async function loadJSON(path) {
-      const r = await fetch(path);
-      if (!r.ok) throw new Error(`${path} fetch failed: ${r.status}`);
+      const requestPath = withCacheBuster(path);
+      const r = await fetch(requestPath, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
       return r.json();
     }
 
 	    async function loadCSV(path) {
-	      const r = await fetch(path);
-	      if (!r.ok) throw new Error(`${path} fetch failed: ${r.status}`);
+	      const requestPath = withCacheBuster(path);
+	      const r = await fetch(requestPath, { cache: 'no-store' });
+	      if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
 	      return r.text();
 	    }
 
@@ -10117,7 +10117,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      const y = Number(year);
 	      const path = PRESIDENT_OPEN_ELECTIONS_CSV[y];
 	      if (!path) throw new Error(`No OpenElections CSV configured for president ${year}`);
-	      const downloadUrl = toAbsoluteUrl(path);
+	      const downloadUrl = withCacheBuster(toAbsoluteUrl(path));
 
 	      function extractPrecinctCode(precinctRaw) {
 	        const p = (precinctRaw || '').toString().trim();
