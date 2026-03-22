@@ -7981,6 +7981,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let urlStateRestoreInFlight = false;
     let saveUIStateTimer = null;
     let urlPopstateSyncWired = false;
+    let analyticsPanelsTimer = null;
+    let analyticsPanelsRequestId = 0;
     const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
     const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics']);
 
@@ -14228,6 +14230,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!card) return;
       const body = card.querySelector('.analytics-card-body');
       if (!body) return;
+      if (!contestType || !year) {
+        body.innerHTML = 'Select a county-level contest to load unmatched precinct audit data.';
+        return;
+      }
+      if (currentView !== 'counties' && currentView !== 'vtds_2000') {
+        body.innerHTML = 'Ghost precinct audit is available in county view.';
+        return;
+      }
       try {
         await ensureUnmatchedAuditDataLoaded();
       } catch (err) {
@@ -14278,6 +14288,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const body = document.querySelector('#ghost-precinct-card .analytics-card-body');
         if (body) body.innerHTML = 'Ghost precinct tracker unavailable for this selection.';
       }
+    }
+
+    function scheduleAnalyticsPanelsUpdate(contestType, year, contestRows = null, delayMs = 120) {
+      analyticsPanelsRequestId += 1;
+      const requestId = analyticsPanelsRequestId;
+      if (analyticsPanelsTimer) {
+        clearTimeout(analyticsPanelsTimer);
+        analyticsPanelsTimer = null;
+      }
+      analyticsPanelsTimer = setTimeout(() => {
+        analyticsPanelsTimer = null;
+        const run = () => {
+          if (requestId !== analyticsPanelsRequestId) return;
+          updateAnalyticsPanels(contestType, year, Array.isArray(contestRows) ? contestRows : []).catch(() => {});
+        };
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(() => run(), { timeout: 1200 });
+        } else {
+          setTimeout(run, 0);
+        }
+      }, Math.max(0, Number(delayMs) || 0));
     }
 
     async function jumpToRegion(regionKey) {
@@ -18327,7 +18358,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateRecountRadarBadge(); } catch (_) {}
       try { updateBellwetherLayerVisibility(); } catch (_) {}
       try { setSplitTicketOverlayVisibility(); } catch (_) {}
-      try { await updateAnalyticsPanels('', '', []); } catch (_) {}
+      try { scheduleAnalyticsPanelsUpdate('', '', [], 0); } catch (_) {}
     }
 
     async function init() {
@@ -18871,7 +18902,7 @@ document.addEventListener('DOMContentLoaded', function() {
         await applyStatewideContestToDistricts(contestType, year);
       }
       if (currentView !== 'counties') {
-        try { await updateAnalyticsPanels(contestType, year, []); } catch (_) {}
+        try { scheduleAnalyticsPanelsUpdate(contestType, year, [], 180); } catch (_) {}
       }
       if (previousRegionPinnedState?.meta?.regionKey) {
         try {
@@ -19314,16 +19345,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         applyLayerOpacityTuning();
-        try { await updateAnalyticsPanels(contestType, year, contestData); } catch (_) {}
+        try { scheduleAnalyticsPanelsUpdate(contestType, year, contestData, 150); } catch (_) {}
         setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})`);
         setStatus(`Applied demographic mode: ${formatContestName(contestType, year)} ${year}`);
         return;
       }
 
-      // Keep previous-cycle county totals loaded for hover flip chips across modes.
-      // Precinct-level prior margins remain opt-in for shift/flip mode to keep non-shift
-      // contest switches lightweight when precinct overlay is enabled.
-      const needsPrevData = true;
+      // Load previous-cycle county totals only for shift/flip to keep normal contest
+      // switches lightweight when precinct overlay is disabled.
+      const needsPrevData = (mode === 'shift' || mode === 'flips');
       const needsPrevPrecinctMargins = needsPrecinctDetail && (mode === 'shift' || mode === 'flips');
       if (needsPrevData) {
         try {
@@ -19340,6 +19370,15 @@ document.addEventListener('DOMContentLoaded', function() {
             hasPrecinctMargins: false
           };
         }
+      } else {
+        vizPrevCache = {
+          contestType,
+          year: Number(year),
+          prevYear: null,
+          prevPrecinctMarginByNorm: new Map(),
+          prevCountyTotals: {},
+          hasPrecinctMargins: false
+        };
       }
 
       if (mode === 'shift') {
@@ -19528,7 +19567,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       applyLayerOpacityTuning();
-      try { await updateAnalyticsPanels(contestType, year, contestData); } catch (_) {}
+      try { scheduleAnalyticsPanelsUpdate(contestType, year, contestData, 150); } catch (_) {}
   setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})`);
       setStatus(`Applied contest: ${formatContestName(contestType, year)} ${year}`);
     }
@@ -19624,7 +19663,6 @@ document.addEventListener('DOMContentLoaded', function() {
       map.setPaintProperty('district-fill', 'fill-color', expr);
       applyLayerOpacityTuning();
       setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totals.dem, totals.rep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
-      try { await updateAnalyticsPanels(contestType, year, []); } catch (_) {}
       if (mode === 'demographics') {
         setStatewideContestTitle(`US House (${year}) - Congressional demographic profile`);
         setStatus(`Applied demographic mode for Congressional districts.`);
