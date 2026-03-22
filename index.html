@@ -19398,9 +19398,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Load previous-cycle county totals only for shift/flip to keep normal contest
-      // switches lightweight when precinct overlay is disabled.
-      const needsPrevData = (mode === 'shift' || mode === 'flips');
+      // Keep prior county totals in county view so hover chips can show flips
+      // even when the main map mode is not Shift/Flips.
+      const needsPrevData = (mode === 'shift' || mode === 'flips' || currentView === 'counties');
       const needsPrevPrecinctMargins = needsPrecinctDetail && (mode === 'shift' || mode === 'flips');
       if (needsPrevData) {
         try {
