@@ -6512,6 +6512,75 @@ body { height: var(--app-height); }
     }
   }
 
+  /* Ribbon + UI aesthetic polish */
+  :root {
+    --state-ribbon: linear-gradient(90deg, #991b1b 0%, #dc2626 20%, #f8fafc 50%, #2563eb 80%, #1e40af 100%);
+    --state-accent-gradient: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #b91c1c 100%);
+    --ui-bg: rgba(255, 255, 255, 0.93);
+    --ui-border: rgba(15, 23, 42, 0.14);
+    --ui-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  }
+
+  @media (min-width: 769px) {
+    .map-topbar {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 12%, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0) 48%),
+        linear-gradient(145deg, rgba(11, 28, 48, 0.94) 0%, rgba(30, 64, 175, 0.82) 62%, rgba(127, 29, 29, 0.72) 100%);
+      border: 1px solid rgba(191, 219, 254, 0.22);
+      box-shadow: 0 20px 54px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+
+    .map-topbar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 14px;
+      right: 14px;
+      height: 3px;
+      border-radius: 0 0 999px 999px;
+      background: var(--state-ribbon);
+      opacity: 0.95;
+      pointer-events: none;
+    }
+
+    .map-topbar-badge {
+      border: 1px solid rgba(191, 219, 254, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 18px rgba(15, 23, 42, 0.22);
+      background: linear-gradient(130deg, rgba(220, 38, 38, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+    }
+
+    .fly-search-submit {
+      border: 1px solid rgba(191, 219, 254, 0.28);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28), 0 8px 18px rgba(127, 29, 29, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      text-shadow: 0 1px 0 rgba(15, 23, 42, 0.28);
+    }
+
+    .fly-search-submit:hover {
+      filter: saturate(1.06) brightness(1.02);
+    }
+
+    .fly-search-chip,
+    .mobile-topbar-toggle {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(191, 219, 254, 0.3);
+      color: #e2e8f0;
+    }
+
+    .context-banner-item {
+      border: 1px solid rgba(191, 219, 254, 0.2);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.07) 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .controls-title-pill,
+    .legend-badge {
+      border-color: rgba(226, 232, 240, 0.28);
+      text-shadow: 0 1px 0 rgba(15, 23, 42, 0.24);
+    }
+  }
+
   @media (min-width: 769px) {
     /* This selector is so 'heavy' it will crush almost any other rule */
     html body #main-controls.main-controls {
