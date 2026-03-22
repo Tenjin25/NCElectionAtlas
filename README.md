@@ -94,6 +94,15 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** March 22, 2026
 
+### County Precision + Hover Flip Fixes (March 22, 2026)
+
+- Scoped the close-margin precision tweak to **county contexts only** so statewide formatting behavior stays unchanged.
+- Updated county-facing result surfaces to use county precision for tight races (`0.02%` style instead of `0.020%` unless margins are sub-`0.005%`):
+  - county sidebar margin + vote-share lines
+  - county vote-counter lead/margin/share labels
+  - county hover result-card margin label
+- Restored county hover `Flip` badges outside Shift/Flips map mode by keeping prior-cycle county totals loaded in counties view.
+
 ### Pipeline + Data Refresh (March 22, 2026)
 
 - Hardened auto-generated precinct override logic in `scripts/build_district_contests_from_batch_shatter.py` to skip null/NaN precinct IDs before normalization.
