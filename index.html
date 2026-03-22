@@ -4174,11 +4174,12 @@ body { height: var(--app-height); }
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
+    left: 12px;
+    right: 12px;
+    height: 3px;
+    border-radius: 0 0 999px 999px;
     background: var(--state-ribbon);
-    opacity: 0.88;
+    opacity: 0.86;
     pointer-events: none;
   }
 
@@ -4205,8 +4206,7 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     width: fit-content;
-    min-height: 28px;
-    padding: 0 10px;
+    padding: 4px 10px;
     border-radius: 999px;
     background: rgba(15, 23, 42, 0.06);
     color: #334155;
@@ -4748,9 +4748,11 @@ body { height: var(--app-height); }
   .legend::before {
     content: '';
     display: block;
-    height: 4px;
+    height: 3px;
+    margin: 0 12px;
+    border-radius: 0 0 999px 999px;
     background: var(--state-ribbon);
-    opacity: 0.9;
+    opacity: 0.86;
   }
 
   .legend-header {
