@@ -3059,9 +3059,9 @@ body { height: var(--app-height); }
       width: min(var(--desktop-left-w), calc(100vw - 40px));
       min-width: 0;
       max-width: var(--desktop-left-w);
-      max-height: none;
+      max-height: none !important;
       padding: 16px;
-      overflow: visible;
+      overflow: visible !important;
     }
 
     .controls-content {
@@ -6511,20 +6511,20 @@ body { height: var(--app-height); }
     }
   }
 
-  /* THE DEFINITIVE FIX: ENDS THE DROPDOWN CLIPPING WAR */
   @media (min-width: 769px) {
-    /* Using #main-controls.main-controls makes the rule 'heavier' so it wins */
+    /* Use the ID and Class together to make this the strongest rule in the file */
     #main-controls.main-controls {
       max-height: none !important;
       overflow: visible !important;
     }
 
-    /* Moves the scrollbar to the content inside so the dropdown can escape */
+    /* Keep the scrollbar inside the content area so the dropdown can 'escape' */
     .controls-content {
-      max-height: 75vh !important;
+      max-height: 70vh !important;
       overflow-y: auto !important;
       overflow-x: visible !important;
       padding-right: 10px;
+      margin-right: -10px;
     }
   }
     </style>
