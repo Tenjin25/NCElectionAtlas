@@ -102,6 +102,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - county vote-counter lead/margin/share labels
   - county hover result-card margin label
 - Restored county hover `Flip` badges outside Shift/Flips map mode by keeping prior-cycle county totals loaded in counties view.
+- Preserved statewide candidate labels when switching from Counties view to Congressional/State House/State Senate views on statewide contests (candidate names now carry through district-view statewide summaries).
 
 ### Pipeline + Data Refresh (March 22, 2026)
 
