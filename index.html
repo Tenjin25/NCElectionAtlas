@@ -8068,6 +8068,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${window.location.origin}${nextPath}`;
     }
 
+    function clearURLStateFromAddressBar() {
+      const cleanPath = `${window.location.pathname}${window.location.hash || ''}`;
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`;
+      if (cleanPath === currentPath) return;
+      try {
+        window.history.replaceState(null, '', cleanPath);
+      } catch (_) {}
+    }
+
     function saveUIState() {
       if (urlStateRestoreInFlight) return;
       if (saveUIStateTimer) clearTimeout(saveUIStateTimer);
@@ -8130,6 +8139,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function restoreUIState() {
       const state = parseURLStateFromLocation();
+      const shouldClearURLState = !!state.hasAny;
 
       if (!state.hasAny) {
         if (!urlPopstateSyncWired) {
@@ -8180,6 +8190,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       } finally {
         urlStateRestoreInFlight = false;
+        if (shouldClearURLState) {
+          clearURLStateFromAddressBar();
+        }
         if (!urlPopstateSyncWired) {
           urlPopstateSyncWired = true;
           window.addEventListener('popstate', () => {
