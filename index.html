@@ -6582,28 +6582,29 @@ body { height: var(--app-height); }
   }
 
   @media (min-width: 769px) {
-    /* 1. Force the main container to be an 'open' window */
+    /* 1. Make the main wrapper an open window */
     #main-controls.main-controls {
+      display: flex !important;
+      flex-direction: column !important;
       overflow: visible !important;
-      max-height: none !important;
+      max-height: calc(100vh - 40px) !important;
     }
 
-    /* 2. Unlock the scrolling area so the dropdown can escape its borders */
-    #main-controls .controls-content {
-      overflow: visible !important; /* This is the 'jailbreak' */
-      max-height: none !important;
-    }
-
-    /* 3. Since we removed the scroll from the main box,
-          we put it on the individual groups IF they get too long */
-    .control-group {
+    /* 2. Ensure the top boxes stay visible and don't scroll */
+    .control-group-search,
+    .control-group-contest {
       overflow: visible !important;
+      flex: 0 0 auto !important;
+      padding: 10px 16px !important;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
 
-    /* 4. Ensure the dropdown is at the very top of the visual stack */
-    #contestSelect {
-      position: relative !important;
-      z-index: 10007 !important;
+    /* 3. Make ONLY the layers and analytics scroll */
+    #controls-content {
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      overflow-x: visible !important;
+      max-height: none !important; /* Managed by the parent flexbox now */
     }
   }
     </style>
@@ -19826,6 +19827,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.onload = init;
+  </script>
+  <script>
+    // This script surgically moves the Search and Contest Selection out of the
+    // 'scrolling jail' so they can pop out over the map on PC.
+    (function() {
+      function fixPCLayout() {
+        if (window.innerWidth < 769) return;
+        const content = document.getElementById('controls-content');
+        const contestGroup = document.querySelector('.control-group-contest');
+        const searchGroup = document.querySelector('.control-group-search');
+
+        if (content && contestGroup && searchGroup) {
+          // Move them to be BEFORE the scrolling content div
+          content.parentNode.insertBefore(searchGroup, content);
+          content.parentNode.insertBefore(contestGroup, content);
+          console.log('PC Layout: Search and Contest moved to fixed top zone.');
+        }
+      }
+      // Run on load and resize
+      window.addEventListener('DOMContentLoaded', fixPCLayout);
+      window.addEventListener('resize', fixPCLayout);
+      // Also run immediately in case DOM is already ready
+      fixPCLayout();
+    })();
   </script>
 </body>
 </html>
