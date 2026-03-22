@@ -4395,7 +4395,8 @@ body { height: var(--app-height); }
 
   .contest-toolbar {
     gap: 10px !important;
-    margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 0;
   }
 
   .contest-toolbar label {
@@ -7130,6 +7131,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="control-group control-group-contest">
                 <span class="section-kicker">Contest</span>
+                <div class="contest-search-wrap">
+                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
+                </div>
+                <div class="contest-select-wrap">
+                  <select id="contestSelect" data-testid="contest-select" aria-label="Select contest">
+                      <option value="">Select a Contest...</option>
+                  </select>
+                </div>
                 <div class="contest-toolbar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <label>Tools:</label>
                   <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" data-testid="tool-colorblind" aria-label="Toggle color blind mode" aria-pressed="false" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
@@ -7144,14 +7153,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="balanced">Balanced</option>
                     <option value="instagram">Instagram</option>
                     <option value="tiktok">TikTok</option>
-                  </select>
-                </div>
-                <div class="contest-search-wrap">
-                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
-                </div>
-                <div class="contest-select-wrap">
-                  <select id="contestSelect" data-testid="contest-select" aria-label="Select contest">
-                      <option value="">Select a Contest...</option>
                   </select>
                 </div>
                 <div class="controls-panel-note">
