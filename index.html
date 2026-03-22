@@ -9545,6 +9545,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const total = d + r + o;
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
 
       const winnerEl = document.getElementById('focus-winner');
       const marginEl = document.getElementById('focus-margin');
@@ -9590,7 +9591,9 @@ document.addEventListener('DOMContentLoaded', function() {
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
-      const leadLabel = focusLeadMarginLabel(r, d, total);
+      const leadLabel = isCountyContext
+        ? leadCountyMarginPctLabel(r, d, total)
+        : focusLeadMarginLabel(r, d, total);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
@@ -9602,9 +9605,13 @@ document.addEventListener('DOMContentLoaded', function() {
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
-      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
+      barDemLabelEl.textContent = isCountyContext
+        ? `${shortCandidateLabel(resolvedCandidates.demCandidate, 'Dem')} ${formatPctForCountyCloseRace(demPct, marginPct)}%`
+        : formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
       barMidLabelEl.textContent = '50%';
-      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
+      barRepLabelEl.textContent = isCountyContext
+        ? `${shortCandidateLabel(resolvedCandidates.repCandidate, 'Rep')} ${formatPctForCountyCloseRace(repPct, marginPct)}%`
+        : formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
     }
 
     function updateVoteCounter(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
@@ -9619,14 +9626,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (repVotes / totalVotes) * 100;
       const otherPct = (otherVotes / totalVotes) * 100;
       const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
+      const pctFormatter = isCountyContext ? formatPctForCountyCloseRace : formatPctForCloseRace;
       
       animateCounter('dem-count', demVotes);
       animateCounter('rep-count', repVotes);
       animateCounter('other-count', otherVotes);
       
-      document.getElementById('dem-percent').textContent = formatPctForCloseRace(demPct, marginPct) + '%';
-      document.getElementById('rep-percent').textContent = formatPctForCloseRace(repPct, marginPct) + '%';
-      document.getElementById('other-percent').textContent = formatPctForCloseRace(otherPct, marginPct) + '%';
+      document.getElementById('dem-percent').textContent = pctFormatter(demPct, marginPct) + '%';
+      document.getElementById('rep-percent').textContent = pctFormatter(repPct, marginPct) + '%';
+      document.getElementById('other-percent').textContent = pctFormatter(otherPct, marginPct) + '%';
       updateVoteCounterSummary(demVotes, repVotes, otherVotes, candidates, meta);
       
       showVoteCounter();
@@ -11822,6 +11831,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return numeric.toFixed(digits);
     }
 
+    function formatPctForCountyCloseRace(value, marginPct) {
+      const numeric = Number(value || 0);
+      const digits = countyMarginDisplayDigits(marginPct);
+      return numeric.toFixed(digits);
+    }
+
     function marginDisplayDigits(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
       return pct < 0.05 ? 3 : 2;
@@ -12263,6 +12278,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const total = d + r + o;
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
 
       const winnerEl = document.getElementById('focus-winner');
       const marginEl = document.getElementById('focus-margin');
@@ -12321,7 +12337,9 @@ document.addEventListener('DOMContentLoaded', function() {
         : (winnerParty === 'dem'
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
-      const leadLabel = focusLeadMarginLabel(r, d, total);
+      const leadLabel = isCountyContext
+        ? leadCountyMarginPctLabel(r, d, total)
+        : focusLeadMarginLabel(r, d, total);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
@@ -12333,14 +12351,20 @@ document.addEventListener('DOMContentLoaded', function() {
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
       barRep.style.width = `${repPct.toFixed(4)}%`;
-      barDemLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
+      barDemLabelEl.textContent = isCountyContext
+        ? `${shortCandidateLabel(resolvedCandidates.demCandidate, 'Dem')} ${formatPctForCountyCloseRace(demPct, marginPct)}%`
+        : formatFocusBarLabel(resolvedCandidates.demCandidate, demPct, 'Dem', marginPct);
       barMidLabelEl.textContent = '50%';
-      barRepLabelEl.textContent = formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
+      barRepLabelEl.textContent = isCountyContext
+        ? `${shortCandidateLabel(resolvedCandidates.repCandidate, 'Rep')} ${formatPctForCountyCloseRace(repPct, marginPct)}%`
+        : formatFocusBarLabel(resolvedCandidates.repCandidate, repPct, 'Rep', marginPct);
       if (totalMetaEl) totalMetaEl.textContent = `${total.toLocaleString()} total votes`;
       if (leadMetaEl) {
         leadMetaEl.textContent = winnerParty === 'tie'
           ? 'Even race'
-          : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate);
+          : (isCountyContext
+            ? compactCountyWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)
+            : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate));
         leadMetaEl.dataset.party = winnerParty;
       }
       if (demShareFill) demShareFill.style.width = `${demPct.toFixed(2)}%`;
@@ -12492,11 +12516,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return `<span class="meta-chip flip ${cls}"><span class="dot"></span>Flip ${labelFrom}\u2192${labelTo}</span>`;
     }
 
-    function buildResultCardHTML(title, subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate) {
+    function buildResultCardHTML(title, subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, options = {}) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const total = d + r + o;
+      const useCountyPrecision = String(options?.precision || '').toLowerCase() === 'county';
       if (total <= 0) {
         return `<div class="result-card"><div class="rc-sub">${subtitle || ''}</div><div style="margin-top:8px;color:#64748b;">No data</div></div>`;
       }
@@ -12505,7 +12530,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (r / total) * 100.0;
       const otherPct = (o / total) * 100.0;
 
-      const marginLabel = winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
+      const marginLabel = useCountyPrecision
+        ? compactCountyWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '')
+        : winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
       const demFull = fullCandidateLabel(demCandidate, 'Democratic');
       const repFull = fullCandidateLabel(repCandidate, 'Republican');
 
@@ -14500,7 +14527,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
-        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
         ${splitInsightLine}
         ${demoLine}
       `;
@@ -15595,8 +15622,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes * 100);
       const repPct = (repVotes / totalVotes * 100);
       const rawMarginPctForDisplay = marginPctValue(repVotes, demVotes, totalVotes);
-      const demPctLabel = formatPctForCloseRace(demPct, rawMarginPctForDisplay);
-      const repPctLabel = formatPctForCloseRace(repPct, rawMarginPctForDisplay);
+      const demPctLabel = formatPctForCountyCloseRace(demPct, rawMarginPctForDisplay);
+      const repPctLabel = formatPctForCountyCloseRace(repPct, rawMarginPctForDisplay);
       // Candidate names
   let demCandidate = (countyData[`${contestType}_dem_candidate`] || '').toString().trim() || getCandidateName(year, formatContestName(contestType, year), 'Democrat');
   let repCandidate = (countyData[`${contestType}_rep_candidate`] || '').toString().trim() || getCandidateName(year, formatContestName(contestType, year), 'Republican');
@@ -15729,7 +15756,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add Other votes if they exist
   if (otherVotes > 0) {
     const otherPct = (otherVotes / totalVotes * 100);
-    const otherPctLabel = formatPctForCloseRace(otherPct, rawMarginPctForDisplay);
+    const otherPctLabel = formatPctForCountyCloseRace(otherPct, rawMarginPctForDisplay);
     sidebarContent += `<p class="sidebar-breakdown"><span style="color: #6b7280; font-weight: bold;">Other Candidates</span> : ${otherPctLabel}% (${otherVotes.toLocaleString()})</p>`;
   }
   
