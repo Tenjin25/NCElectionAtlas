@@ -6582,64 +6582,28 @@ body { height: var(--app-height); }
   }
 
   @media (min-width: 769px) {
-    /* 1. Make the main wrapper an open window */
+    /* 1. Force the main container to be an 'open' window */
     #main-controls.main-controls {
-      display: flex !important;
-      flex-direction: column !important;
       overflow: visible !important;
-      max-height: calc(100vh - 40px) !important;
+      max-height: none !important;
     }
 
-    /* 2. Ensure the top boxes stay visible and don't scroll */
-    .control-group-search,
-    .control-group-contest {
+    /* 2. Unlock the scrolling area so the dropdown can escape its borders */
+    #main-controls .controls-content {
+      overflow: visible !important; /* This is the 'jailbreak' */
+      max-height: none !important;
+    }
+
+    /* 3. Since we removed the scroll from the main box,
+          we put it on the individual groups IF they get too long */
+    .control-group {
       overflow: visible !important;
-      flex: 0 0 auto !important;
-      padding: 10px 16px !important;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
 
-    /* Keep contest controls at the very top and give them more visual weight. */
-    .control-group-contest {
-      padding-top: 10px !important;
-      padding-bottom: 10px !important;
-    }
-
-    #contestSearch,
+    /* 4. Ensure the dropdown is at the very top of the visual stack */
     #contestSelect {
-      min-height: 48px !important;
-      font-size: 14px !important;
-      border-radius: 14px !important;
-      padding: 9px 12px !important;
-    }
-
-    /* 3. Make ONLY the layers and analytics scroll */
-    #controls-content {
-      flex: 1 1 auto !important;
-      overflow-y: auto !important;
-      overflow-x: visible !important;
-      max-height: none !important; /* Managed by the parent flexbox now */
-    }
-
-    /* Keep minimize behavior intact after moving groups outside #controls-content */
-    #main-controls.main-controls.minimized .control-group-search,
-    #main-controls.main-controls.minimized .control-group-contest,
-    #main-controls.main-controls.minimized #controls-content {
-      display: none !important;
-    }
-
-    /* Desktop fallback: force downward contest chooser via expandable list mode. */
-    #contestSelect.contest-select-force-down {
       position: relative !important;
-      z-index: 10010 !important;
-    }
-
-    #contestSelect.contest-select-force-down.contest-select-expanded {
-      max-height: min(48vh, 420px) !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      background: rgba(255, 255, 255, 0.98) !important;
-      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.24) !important;
+      z-index: 10007 !important;
     }
   }
     </style>
@@ -19862,97 +19826,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.onload = init;
-  </script>
-  <script>
-    // This script surgically moves the Search and Contest Selection out of the
-    // 'scrolling jail' so they can pop out over the map on PC.
-    (function() {
-      function fixPCLayout() {
-        if (window.innerWidth < 769) return;
-        const content = document.getElementById('controls-content');
-        const contestGroup = document.querySelector('.control-group-contest');
-        const searchGroup = document.querySelector('.control-group-search');
-
-        if (content && contestGroup && searchGroup) {
-          // Move them to be BEFORE the scrolling content div
-          content.parentNode.insertBefore(contestGroup, content);
-          content.parentNode.insertBefore(searchGroup, content);
-          console.log('PC Layout: Search and Contest moved to fixed top zone.');
-        }
-      }
-      // Run on load and resize
-      window.addEventListener('DOMContentLoaded', fixPCLayout);
-      window.addEventListener('resize', fixPCLayout);
-      // Also run immediately in case DOM is already ready
-      fixPCLayout();
-    })();
-  </script>
-  <script>
-    // Force desktop contest picker to expand downward instead of relying on browser popup direction.
-    (function() {
-      function wireContestSelectForceDown() {
-        const select = document.getElementById('contestSelect');
-        if (!select || select.dataset.forceDownWired === '1') return;
-        select.dataset.forceDownWired = '1';
-        select.classList.add('contest-select-force-down');
-
-        let expanded = false;
-
-        function isDesktop() {
-          return window.innerWidth >= 769;
-        }
-
-        function collapse() {
-          if (!expanded) return;
-          select.size = 1;
-          select.classList.remove('contest-select-expanded');
-          expanded = false;
-        }
-
-        function expand() {
-          if (!isDesktop() || expanded) return;
-          const optionCount = Math.max(2, (select.options && select.options.length) ? select.options.length : 2);
-          select.size = Math.min(10, optionCount);
-          select.classList.add('contest-select-expanded');
-          expanded = true;
-        }
-
-        select.addEventListener('mousedown', (event) => {
-          if (!isDesktop()) return;
-          if (!expanded) {
-            event.preventDefault();
-            expand();
-          }
-        });
-
-        select.addEventListener('keydown', (event) => {
-          if (!isDesktop()) return;
-          if ((event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') && !expanded) {
-            event.preventDefault();
-            expand();
-            return;
-          }
-          if (event.key === 'Escape') {
-            collapse();
-          }
-        });
-
-        select.addEventListener('change', collapse);
-        select.addEventListener('blur', () => {
-          window.setTimeout(collapse, 120);
-        });
-
-        window.addEventListener('resize', () => {
-          if (!isDesktop()) collapse();
-        });
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', wireContestSelectForceDown, { once: true });
-      } else {
-        wireContestSelectForceDown();
-      }
-    })();
   </script>
 </body>
 </html>
