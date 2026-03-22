@@ -10204,6 +10204,52 @@ document.addEventListener('DOMContentLoaded', function() {
       return true;
     }
 
+    function refreshPinnedCountyForContest(contestType, year) {
+      const pinned = voteCounterPinned || null;
+      const meta = pinned?.meta || null;
+      if (!meta || meta.kind !== 'county') return false;
+      if (!contestType || !currentElectionResults) return false;
+
+      const countyNorm = normalizeCountyToken(meta.county || window.lastSelectedCounty || '');
+      if (!countyNorm) return false;
+
+      let row = currentElectionResults[countyNorm] || null;
+      if (!row && currentElectionResults) {
+        for (const key of Object.keys(currentElectionResults)) {
+          if (normalizeCountyToken(key) === countyNorm) {
+            row = currentElectionResults[key];
+            break;
+          }
+        }
+      }
+      if (!row) return false;
+
+      const demVotes = Number(row[`${contestType}_dem`] || 0);
+      const repVotes = Number(row[`${contestType}_rep`] || 0);
+      const otherVotes = Number(row[`${contestType}_other`] || 0);
+      const countyDisplay = displayCountyName(row.county || meta.county || countyNorm);
+
+      pinVoteCounterState(
+        `Selected: ${countyDisplay} County`,
+        `${formatContestName(contestType, year)} ${year}`,
+        demVotes,
+        repVotes,
+        otherVotes,
+        {
+          ...meta,
+          kind: 'county',
+          county: countyDisplay.toUpperCase(),
+          contestType,
+          year: Number(year)
+        },
+        {
+          demCandidate: row[`${contestType}_dem_candidate`] || pinned?.candidates?.demCandidate || '',
+          repCandidate: row[`${contestType}_rep_candidate`] || pinned?.candidates?.repCandidate || ''
+        }
+      );
+      return true;
+    }
+
     function clearVoteCounterHoverState() {
       if (voteCounterPinned) return;
       if (!voteCounterHoverActive) return;
@@ -19506,6 +19552,8 @@ document.addEventListener('DOMContentLoaded', function() {
         await new Promise(resolve => setTimeout(resolve, 0));
         if (staleCheck()) return;
       }
+      try { refreshPinnedCountyForContest(contestType, year); } catch (_) {}
+      if (staleCheck()) return;
 
       // Calculate statewide totals
       let statewidedemVotes = 0;
