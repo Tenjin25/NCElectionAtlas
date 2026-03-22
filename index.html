@@ -6583,25 +6583,19 @@ body { height: var(--app-height); }
 
   @media (min-width: 769px) {
     html body #main-controls.main-controls {
+      display: flex !important;
+      flex-direction: column !important;
       max-height: none !important;
       overflow: visible !important;
     }
 
     #main-controls .controls-content {
-      max-height: 72vh !important;
-      overflow-y: auto !important;
-      overflow-x: visible !important;
-      padding-right: 10px;
-      margin-right: -10px;
-    }
-
-    #controls-content.contest-select-open {
-      overflow: visible !important;
-    }
-
-    #contestSelect.contest-select-expanded {
-      position: relative !important;
-      z-index: 10007 !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow: auto !important;
+      padding-right: 4px !important;
+      margin-right: -4px !important;
+      scrollbar-gutter: stable both-edges !important;
     }
   }
     </style>
@@ -6906,14 +6900,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (contestSearch && !contestSearch.dataset.wired) {
     contestSearch.dataset.wired = 'true';
     let raf = null;
-      contestSearch.addEventListener('input', function() {
-        contestSearchQuery = (contestSearch.value || '').toString();
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          try { collapseDesktopContestSelect(); } catch (_) {}
-          const sel = document.getElementById('contestSelect');
-          const keep = sel ? sel.value : '';
-          try { updateContestSelectForCurrentView(); } catch (_) {}
+    contestSearch.addEventListener('input', function() {
+      contestSearchQuery = (contestSearch.value || '').toString();
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const sel = document.getElementById('contestSelect');
+        const keep = sel ? sel.value : '';
+        try { updateContestSelectForCurrentView(); } catch (_) {}
         const sel2 = document.getElementById('contestSelect');
         if (sel2 && keep) {
           const exists = Array.from(sel2.options || []).some(o => o && o.value === keep);
@@ -18040,105 +18033,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (sel.dataset.deferredLoading) delete sel.dataset.deferredLoading;
     }
 
-    let desktopContestSelectWired = false;
-    const DESKTOP_CONTEST_SELECT_MAX_ROWS = 8;
-
-    function isDesktopContestSelectViewport() {
-      return !!(window.matchMedia && window.matchMedia('(min-width: 769px)').matches);
-    }
-
-    function getDesktopContestSelectRowCount(sel) {
-      const optionCount = Array.from(sel?.options || [])
-        .filter(opt => opt && !opt.disabled && String(opt.value || '').trim())
-        .length;
-      if (!optionCount) return 1;
-      return Math.max(4, Math.min(DESKTOP_CONTEST_SELECT_MAX_ROWS, optionCount));
-    }
-
-    function collapseDesktopContestSelect(sel = null) {
-      const selectEl = sel || document.getElementById('contestSelect');
-      if (!selectEl) return;
-      selectEl.size = 1;
-      selectEl.dataset.expanded = 'false';
-      selectEl.classList.remove('contest-select-expanded');
-      const controlsContent = document.getElementById('controls-content');
-      if (controlsContent) controlsContent.classList.remove('contest-select-open');
-    }
-
-    function expandDesktopContestSelect(sel = null) {
-      const selectEl = sel || document.getElementById('contestSelect');
-      if (!selectEl || selectEl.disabled || !isDesktopContestSelectViewport()) return;
-      const rows = getDesktopContestSelectRowCount(selectEl);
-      if (rows <= 1) return;
-      selectEl.size = rows;
-      selectEl.dataset.expanded = 'true';
-      selectEl.classList.add('contest-select-expanded');
-      const controlsContent = document.getElementById('controls-content');
-      if (controlsContent) controlsContent.classList.add('contest-select-open');
-    }
-
-    function wireDesktopContestSelectBehavior() {
-      if (desktopContestSelectWired) return;
-      const sel = document.getElementById('contestSelect');
-      if (!sel) return;
-      desktopContestSelectWired = true;
-      collapseDesktopContestSelect(sel);
-
-      sel.addEventListener('mousedown', (event) => {
-        if (!isDesktopContestSelectViewport()) return;
-        if (sel.dataset.expanded === 'true') return;
-        event.preventDefault();
-        expandDesktopContestSelect(sel);
-        try { sel.focus({ preventScroll: true }); } catch (_) { sel.focus(); }
-      });
-
-      sel.addEventListener('keydown', (event) => {
-        if (!isDesktopContestSelectViewport()) return;
-        const key = String(event.key || '');
-        if (sel.dataset.expanded !== 'true' && (key === 'ArrowDown' || key === 'ArrowUp')) {
-          event.preventDefault();
-          return;
-        }
-        if (key === 'Escape') {
-          event.preventDefault();
-          collapseDesktopContestSelect(sel);
-          return;
-        }
-        if ((key === 'Enter' || key === ' ') && sel.dataset.expanded !== 'true') {
-          event.preventDefault();
-          expandDesktopContestSelect(sel);
-        }
-      });
-
-      sel.addEventListener('change', () => {
-        collapseDesktopContestSelect(sel);
-      });
-
-      sel.addEventListener('blur', () => {
-        window.setTimeout(() => {
-          if (document.activeElement === sel) return;
-          collapseDesktopContestSelect(sel);
-        }, 90);
-      });
-
-      document.addEventListener('pointerdown', (event) => {
-        if (!isDesktopContestSelectViewport()) {
-          collapseDesktopContestSelect(sel);
-          return;
-        }
-        if (sel.dataset.expanded !== 'true') return;
-        if (event.target === sel) return;
-        if (event.target && event.target.nodeType === 1 && sel.contains(event.target)) return;
-        collapseDesktopContestSelect(sel);
-      }, true);
-
-      window.addEventListener('resize', () => {
-        if (!isDesktopContestSelectViewport()) {
-          collapseDesktopContestSelect(sel);
-        }
-      }, { passive: true });
-    }
-
     function syncCurrentViewLayersAfterHydration() {
       if (currentView === 'districts') {
         addDistrictLayers();
@@ -18366,7 +18260,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function init() {
       try {
-        try { wireDesktopContestSelectBehavior(); } catch (_) {}
         setStatus('Loading counties...');
         if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.counties?.url) {
           map.addSource('counties', { type: 'vector', url: CONFIG.tilesets.sources.counties.url });
