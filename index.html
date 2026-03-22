@@ -6825,10 +6825,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (copyLinkBtn) {
     copyLinkBtn.onclick = function() {
       (async () => {
+        let href = window.location.href;
         try {
-          if (typeof writeURLStateFromUI === 'function') writeURLStateFromUI();
+          if (typeof writeURLStateFromUI === 'function') {
+            const generated = writeURLStateFromUI();
+            if (generated) href = generated;
+          }
         } catch (_) {}
-        const href = window.location.href;
         try {
           if (navigator?.clipboard?.writeText) {
             await navigator.clipboard.writeText(href);
@@ -8061,12 +8064,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (urlStateRestoreInFlight) return;
       const params = collectURLStateFromUI();
       const query = params.toString();
-      const nextURL = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash || ''}`;
-      const currentURL = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`;
-      if (nextURL === currentURL) return;
-      try {
-        window.history.replaceState(null, '', nextURL);
-      } catch (_) {}
+      const nextPath = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash || ''}`;
+      return `${window.location.origin}${nextPath}`;
     }
 
     function saveUIState() {
@@ -8074,7 +8073,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (saveUIStateTimer) clearTimeout(saveUIStateTimer);
       saveUIStateTimer = setTimeout(() => {
         saveUIStateTimer = null;
-        writeURLStateFromUI();
+        // Keep URL state in "share-only" mode: do not rewrite the visible address bar during normal browsing.
+        // The full state URL is generated only when the user explicitly chooses Copy Link.
       }, 90);
     }
 
@@ -8180,7 +8180,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       } finally {
         urlStateRestoreInFlight = false;
-        writeURLStateFromUI();
         if (!urlPopstateSyncWired) {
           urlPopstateSyncWired = true;
           window.addEventListener('popstate', () => {
