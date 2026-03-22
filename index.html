@@ -6505,20 +6505,23 @@ body { height: var(--app-height); }
 
   /* Desktop dropdown escape hatch: keep select menus from being clipped/flipped by panel bounds. */
   @media (min-width: 769px) {
-    #main-controls {
+    .main-controls {
+      position: fixed !important;
+      top: 20px !important;
+      left: 24px !important;
+      width: min(var(--desktop-left-w), calc(100vw - 48px)) !important;
+      overflow: visible !important;
+      max-height: none !important;
       z-index: 10005 !important;
     }
 
-    .main-controls {
-      position: fixed !important;
-      overflow: visible !important;
-      max-height: none !important;
-    }
-
-    .main-controls .controls-content,
     .controls-content {
-      overflow: visible !important;
-      max-height: none !important;
+      min-height: 0;
+      max-height: 70vh !important;
+      overflow-y: auto !important;
+      overflow-x: visible !important;
+      padding-right: 6px;
+      margin-right: -6px;
     }
   }
     </style>
