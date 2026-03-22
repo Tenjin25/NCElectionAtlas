@@ -19747,6 +19747,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function applyStatewideContestToDistricts(contestType, year) {
+      let statewideDemCandidate = '';
+      let statewideRepCandidate = '';
+      try {
+        const contestCandidates = await getContestCandidates(contestType, year);
+        statewideDemCandidate = stripRunningMateName((contestCandidates?.dem || '').toString().trim());
+        statewideRepCandidate = stripRunningMateName((contestCandidates?.rep || '').toString().trim());
+      } catch (_) {}
+      const resolvedStatewideCandidates = () => ({
+        demCandidate: statewideDemCandidate || getCandidateName(year, formatContestName(contestType, year), 'Democrat'),
+        repCandidate: statewideRepCandidate || getCandidateName(year, formatContestName(contestType, year), 'Republican')
+      });
+
       // Prefer district-level results reallocated to 2024 lines when available.
       if (currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate') {
         const districtScope = currentView === 'districts'
@@ -19790,6 +19802,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
           Object.keys(districtResults).forEach(districtId => {
             const row = districtResults[districtId] || {};
+            if (!statewideDemCandidate) statewideDemCandidate = stripRunningMateName((row.dem_candidate || '').toString().trim());
+            if (!statewideRepCandidate) statewideRepCandidate = stripRunningMateName((row.rep_candidate || '').toString().trim());
             const adjusted = applyScenarioShiftToVotes(
               '',
               Number(row.dem_votes) || 0,
@@ -19887,7 +19901,15 @@ document.addEventListener('DOMContentLoaded', function() {
             setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Reallocated to ${linesLabel}${coverageText}`);
             setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
           }
-          setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year} (${linesLabel})`, totalDem, totalRep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
+          setVoteCounterBaselineState(
+            'Statewide',
+            `${formatContestName(contestType, year)} ${year} (${linesLabel})`,
+            totalDem,
+            totalRep,
+            totalOther,
+            { kind: 'statewide', contestType, year: Number(year) },
+            resolvedStatewideCandidates()
+          );
           return;
         }
       }
@@ -19941,6 +19963,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalRep = 0;
         let totalVotes = 0;
         contestData.forEach(row => {
+          if (!statewideDemCandidate) statewideDemCandidate = stripRunningMateName((row[`${contestType}_dem_candidate`] || '').toString().trim());
+          if (!statewideRepCandidate) statewideRepCandidate = stripRunningMateName((row[`${contestType}_rep_candidate`] || '').toString().trim());
           const countyNorm = normalizeCountyToken(row?.county || '');
           const fallbackTotal = (Number(row[`${contestType}_dem`]) || 0) + (Number(row[`${contestType}_rep`]) || 0);
           const adjusted = applyScenarioShiftToVotes(
@@ -19958,7 +19982,15 @@ document.addEventListener('DOMContentLoaded', function() {
           totalRep += repVotes;
         });
         const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
-        setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totalDem, totalRep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
+        setVoteCounterBaselineState(
+          'Statewide',
+          `${formatContestName(contestType, year)} ${year}`,
+          totalDem,
+          totalRep,
+          totalOther,
+          { kind: 'statewide', contestType, year: Number(year) },
+          resolvedStatewideCandidates()
+        );
         setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile`);
         setStatus(mapped > 0
           ? `Applied demographic mode for ${getReadableViewLabel(currentView)}.`
@@ -19972,6 +20004,8 @@ document.addEventListener('DOMContentLoaded', function() {
       let totalVotes = 0;
 
       contestData.forEach(row => {
+        if (!statewideDemCandidate) statewideDemCandidate = stripRunningMateName((row[`${contestType}_dem_candidate`] || '').toString().trim());
+        if (!statewideRepCandidate) statewideRepCandidate = stripRunningMateName((row[`${contestType}_rep_candidate`] || '').toString().trim());
         const countyNorm = normalizeCountyToken(row?.county || '');
         const fallbackTotal = (Number(row[`${contestType}_dem`]) || 0) + (Number(row[`${contestType}_rep`]) || 0);
         const adjusted = applyScenarioShiftToVotes(
@@ -20014,7 +20048,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Statewide Result`);
       setStatus(`Applied statewide contest: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
-      setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totalDem, totalRep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
+      setVoteCounterBaselineState(
+        'Statewide',
+        `${formatContestName(contestType, year)} ${year}`,
+        totalDem,
+        totalRep,
+        totalOther,
+        { kind: 'statewide', contestType, year: Number(year) },
+        resolvedStatewideCandidates()
+      );
     }
 
     window.onload = init;
