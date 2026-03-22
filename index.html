@@ -8536,26 +8536,20 @@ document.addEventListener('DOMContentLoaded', function() {
         queueViewportPrecinctCountUpdate({ ensureLoaded: true });
       };
 
-      const deferForMobile = isMobileViewportNow() || isTouchInteractionMode();
-      if (!deferForMobile) {
-        beginLoad();
-        return;
-      }
-
-      // Keep county-first paint responsive on mobile; load centroid stats after first idle.
+      // Keep county-first paint responsive on all devices; load centroid stats after first idle.
       setViewportPrecinctCountText('Viewing -- precincts');
       let kicked = false;
       const kick = () => {
         if (kicked) return;
         kicked = true;
         if (typeof window.requestIdleCallback === 'function') {
-          window.requestIdleCallback(() => beginLoad(), { timeout: 2800 });
+          window.requestIdleCallback(() => beginLoad(), { timeout: 4200 });
         } else {
-          setTimeout(beginLoad, 450);
+          setTimeout(beginLoad, 900);
         }
       };
       map.once('idle', kick);
-      setTimeout(kick, 1600);
+      setTimeout(kick, 2600);
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
@@ -10175,14 +10169,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadJSON(path) {
       const requestPath = withCacheBuster(path);
-      const r = await fetch(requestPath, { cache: 'no-store' });
+      const r = await fetch(requestPath, { cache: 'force-cache' });
       if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
       return r.json();
     }
 
 	    async function loadCSV(path) {
 	      const requestPath = withCacheBuster(path);
-	      const r = await fetch(requestPath, { cache: 'no-store' });
+	      const r = await fetch(requestPath, { cache: 'force-cache' });
 	      if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
 	      return r.text();
 	    }
@@ -18372,7 +18366,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         scheduleStartupPrecinctCentroidPreload();
         setStatus('Counties loaded');
-        const deferHeavyHydration = isMobileViewportNow() || isTouchInteractionMode();
+        // Defer heavy hydration on desktop too so the map shell becomes interactive quickly.
+        const deferHeavyHydration = true;
         if (deferHeavyHydration) setContestSelectDeferredLoading(true);
         const hydrationPromise = deferHeavyHydration
           ? scheduleDeferredAtlasHydration()
