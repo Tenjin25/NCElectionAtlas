@@ -92,7 +92,32 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 21, 2026
+**Last updated:** March 22, 2026
+
+### Pipeline + Data Refresh (March 22, 2026)
+
+- Hardened auto-generated precinct override logic in `scripts/build_district_contests_from_batch_shatter.py` to skip null/NaN precinct IDs before normalization.
+- Updated `scripts/build_district_results_2024_lines.py` so district slices now preserve contest-wide Democratic/Republican candidate names (`dem_candidate`, `rep_candidate`) instead of writing blank placeholders.
+- Added optional CLI arguments to `scripts/split_district_results_by_contest_year.py`:
+  - `--src` to point at an alternate consolidated district-results JSON
+  - `--out-dir` to write split outputs/manifests to a custom directory
+- Refreshed precinct matching artifacts:
+  - `data/mappings/precinct_variant_overrides.json`
+  - `data/reports/unmatched_precinct_examples.csv`
+  - `data/reports/unmatched_precinct_summary.csv`
+
+### Desktop Controls, URL Share Flow, and Performance (March 21-22, 2026)
+
+- Stabilized desktop contest picker behavior: contest controls stay at the top of the rail, dropdowns open downward more reliably, and desktop overflow clipping was removed.
+- Reduced control-panel jitter while opening/selecting contests by tightening desktop topbar/control offset handling.
+- Refined desktop atlas control colors/contrast for improved readability across long analysis sessions.
+- Added share-only URL behavior: URL params (`view`, `contest`, `mode`, `lines`, `focus`, `democontrast`) are consumed on load, then cleared from the address bar.
+- `Copy Link` now generates the current deep-link state on demand before copying (with clipboard fallback messaging).
+- Added deferred hydration so counties/map shell render first while contest and district manifests load in the background.
+- Added cache-buster-aware data loading with cached fetches to reduce stale static-file issues while keeping repeat requests fast.
+- Deferred analytics card refresh (`Realignment Index`, `Ghost Precinct Tracker`) with debounced idle scheduling to improve contest-switch responsiveness.
+- Tightened close-race margin formatting so extremely close contests retain higher precision consistently across focus/tooltip labels.
+- Improved district candidate labeling in newer 2024-lines outputs so uncontested/edge slices are less likely to fall back to generic party labels.
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -445,6 +470,24 @@ py scripts/build_historical_district_contests_2024_lines.py `
   --jobs 4
 ```
 
+### Splitting Consolidated District Results JSON
+
+Use `scripts/split_district_results_by_contest_year.py` to split a consolidated district-results file into per-scope/per-contest/per-year JSON slices.
+
+Default input/output paths:
+
+```powershell
+py scripts/split_district_results_by_contest_year.py
+```
+
+Custom input/output paths (new optional flags):
+
+```powershell
+py scripts/split_district_results_by_contest_year.py `
+  --src data/nc_district_results_2022_lines_hybrid.json `
+  --out-dir data/district_contests_hybrid
+```
+
 ### Rebuilding Demographic Layers
 
 Rebuild county-level demographics (DP1 JSON used in county mode):
@@ -537,7 +580,7 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
 
 ## Troubleshooting
 
-- **Contest shows but hover displays just `D`/`R`:** Candidate names are missing in that slice. District hover falls back to `data/contests/<contest>_<year>.json` when available.
+- **Contest shows but hover displays just `D`/`R`:** Candidate names are missing in that slice. Newly generated 2024-lines district slices now carry `dem_candidate`/`rep_candidate`; older slices may still need fallback from `data/contests/<contest>_<year>.json`.
 - **New contests don't show in dropdown:** Ensure the correct manifest is updated:
   - Counties view → `data/contests/manifest.json`
   - District views → `data/district_contests/manifest.json`
