@@ -4463,6 +4463,30 @@ body { height: var(--app-height); }
     pointer-events: none;
   }
 
+  @media (min-width: 769px) {
+    .contest-select-wrap.select-expanded {
+      z-index: 1200;
+    }
+
+    .contest-select-wrap.select-expanded::after {
+      display: none;
+    }
+
+    /* Chrome/Brave desktop fallback: expand inline list downward instead of native popup direction heuristics. */
+    .contest-select-wrap.select-expanded #contestSelect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      max-height: min(52vh, 440px);
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.98);
+      border-color: rgba(59, 130, 246, 0.45);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+    }
+  }
+
   #help-btn,
   #accessibility-toggle,
   #label-toggle {
@@ -6895,6 +6919,68 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+  // Desktop-only fallback for Chromium browsers where the native <select> popup
+  // may render upward when the option list is long.
+  (function wireDesktopContestSelectDirection() {
+    const sel = document.getElementById('contestSelect');
+    const wrap = sel && sel.closest ? sel.closest('.contest-select-wrap') : null;
+    if (!sel || !wrap || sel.dataset.desktopDirectionWired === 'true') return;
+    sel.dataset.desktopDirectionWired = 'true';
+
+    const isDesktop = () => !!(window.matchMedia && window.matchMedia('(min-width: 769px)').matches);
+    const openSize = () => {
+      const count = Array.from(sel.options || []).filter(opt => opt && !opt.disabled).length;
+      return Math.max(2, Math.min(14, count || 2));
+    };
+
+    let expanded = false;
+
+    const closeExpanded = () => {
+      if (!expanded) return;
+      expanded = false;
+      wrap.classList.remove('select-expanded');
+      sel.size = 1;
+    };
+
+    const openExpanded = () => {
+      if (!isDesktop() || expanded) return;
+      expanded = true;
+      wrap.classList.add('select-expanded');
+      sel.size = openSize();
+    };
+
+    sel.addEventListener('mousedown', function(ev) {
+      if (!isDesktop()) return;
+      if (!expanded) {
+        ev.preventDefault();
+        openExpanded();
+        sel.focus();
+      }
+    });
+
+    sel.addEventListener('keydown', function(ev) {
+      if (!isDesktop()) return;
+      if (!expanded && (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'ArrowDown')) {
+        ev.preventDefault();
+        openExpanded();
+      } else if (ev.key === 'Escape') {
+        closeExpanded();
+      }
+    });
+
+    sel.addEventListener('change', closeExpanded);
+    sel.addEventListener('blur', () => setTimeout(closeExpanded, 120));
+
+    document.addEventListener('mousedown', function(ev) {
+      if (!expanded) return;
+      if (wrap.contains(ev.target)) return;
+      closeExpanded();
+    });
+
+    window.addEventListener('resize', function() {
+      if (!isDesktop()) closeExpanded();
+    });
+  })();
   updateLegendColors(); // Ensure correct colors on load
 });
 </script>
@@ -9432,7 +9518,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    function updateVoteCounterSummary(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
+    function updateVoteCounterSummaryLegacy(demVotes, repVotes, otherVotes = 0, candidates = null, meta = null) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
@@ -10876,7 +10962,7 @@ document.addEventListener('DOMContentLoaded', function() {
       debugLog(`Analysis mode set to: ${mode}`);
     }
 
-    function updateStatewideResults(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
+    function updateStatewideResultsLegacy(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
       const statewideContent = document.getElementById('statewide-content');
       const tempBar = document.getElementById('statewide-temperature-bar');
       if (!statewideContent) return;
@@ -17383,7 +17469,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.style.top = top + 'px';
     }
 
-    function showDistrictDetails(districtNum) {
+    function showDistrictDetailsLegacy(districtNum) {
       if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
@@ -17495,7 +17581,7 @@ document.addEventListener('DOMContentLoaded', function() {
       detailsDiv.style.display = 'block';
     }
 
-    function showStateDistrictDetails(districtNum, chamber) {
+    function showStateDistrictDetailsLegacy(districtNum, chamber) {
       if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
       const nameEl = document.getElementById('county-name');
