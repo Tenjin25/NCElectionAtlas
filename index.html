@@ -4479,11 +4479,13 @@ body { height: var(--app-height); }
       left: 0;
       width: 100%;
       height: auto;
-      max-height: min(52vh, 440px);
+      max-height: min(72vh, 680px);
       overflow-y: auto;
       background: rgba(255, 255, 255, 0.98);
       border-color: rgba(59, 130, 246, 0.45);
       box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+      font-size: 15px;
+      line-height: 1.35;
     }
   }
 
@@ -6930,7 +6932,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isDesktop = () => !!(window.matchMedia && window.matchMedia('(min-width: 769px)').matches);
     const openSize = () => {
       const count = Array.from(sel.options || []).filter(opt => opt && !opt.disabled).length;
-      return Math.max(2, Math.min(14, count || 2));
+      return Math.max(2, Math.min(24, count || 2));
     };
 
     let expanded = false;
@@ -6960,7 +6962,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     sel.addEventListener('keydown', function(ev) {
       if (!isDesktop()) return;
-      if (!expanded && (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'ArrowDown')) {
+      if (!expanded && (ev.key === 'Enter' || ev.key === ' ')) {
         ev.preventDefault();
         openExpanded();
       } else if (ev.key === 'Escape') {

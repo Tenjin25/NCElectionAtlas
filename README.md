@@ -411,6 +411,40 @@ py scripts/build_district_contests_from_batch_shatter.py `
 
 This produces three district slice files (congressional, state_house, state_senate) and updates the manifest.
 
+### Rebuilding Historical District Slices on 2024 Lines (2000-2022)
+
+Use `scripts/build_historical_district_contests_2024_lines.py` to batch-build historical district slices against 2024 district assignments.
+
+Before running, make sure the Python runtime has `pandas` installed:
+
+```powershell
+py -m pip install pandas
+```
+
+Run the historical build (parallel example):
+
+```powershell
+py scripts/build_historical_district_contests_2024_lines.py `
+  --min-year 2000 `
+  --max-year 2022 `
+  --jobs 4
+```
+
+Outputs are written to:
+
+- `data/district_contests_2024_lines/*.json`
+- `data/district_contests_2024_lines/manifest.json`
+
+If `py` points to the wrong interpreter, pass an explicit runtime:
+
+```powershell
+py scripts/build_historical_district_contests_2024_lines.py `
+  --python-exe "C:\Users\Shama\AppData\Local\Programs\Python\Python314\python.exe" `
+  --min-year 2000 `
+  --max-year 2022 `
+  --jobs 4
+```
+
 ### Rebuilding Demographic Layers
 
 Rebuild county-level demographics (DP1 JSON used in county mode):
