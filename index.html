@@ -6515,11 +6515,22 @@ body { height: var(--app-height); }
 
   /* Ribbon + UI aesthetic polish */
   :root {
-    --state-ribbon: linear-gradient(90deg, #991b1b 0%, #dc2626 20%, #f8fafc 50%, #2563eb 80%, #1e40af 100%);
-    --state-accent-gradient: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #b91c1c 100%);
-    --ui-bg: rgba(255, 255, 255, 0.93);
-    --ui-border: rgba(15, 23, 42, 0.14);
-    --ui-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    --state-ribbon: linear-gradient(92deg, #8f2433 0%, #cd4a44 24%, #f6f4ef 50%, #3b67a6 76%, #1b3d74 100%);
+    --state-accent-gradient: linear-gradient(136deg, #8f2433 0%, #305f98 100%);
+    --ui-bg: rgba(255, 255, 255, 0.95);
+    --ui-border: rgba(18, 33, 52, 0.15);
+    --ui-shadow: 0 18px 42px rgba(16, 30, 49, 0.2);
+    --ui-text: #122236;
+    --ui-muted: #4a5f77;
+    --ui-accent: #2f5f98;
+    --ui-accent-2: #204672;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 16% 10%, rgba(48, 95, 152, 0.17) 0%, rgba(48, 95, 152, 0) 44%),
+      radial-gradient(circle at 86% 9%, rgba(143, 36, 51, 0.14) 0%, rgba(143, 36, 51, 0) 40%),
+      #f3f6fb;
   }
 
   @media (min-width: 769px) {
@@ -6527,10 +6538,10 @@ body { height: var(--app-height); }
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(circle at 16% 12%, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0) 48%),
-        linear-gradient(145deg, rgba(11, 28, 48, 0.94) 0%, rgba(30, 64, 175, 0.82) 62%, rgba(127, 29, 29, 0.72) 100%);
-      border: 1px solid rgba(191, 219, 254, 0.22);
-      box-shadow: 0 20px 54px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        radial-gradient(circle at 14% 12%, rgba(120, 164, 216, 0.22) 0%, rgba(120, 164, 216, 0) 50%),
+        linear-gradient(145deg, rgba(13, 31, 52, 0.95) 0%, rgba(35, 76, 121, 0.84) 58%, rgba(120, 42, 54, 0.76) 100%);
+      border: 1px solid rgba(199, 217, 241, 0.3);
+      box-shadow: 0 20px 52px rgba(15, 26, 41, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     }
 
     .map-topbar::before {
@@ -6547,38 +6558,92 @@ body { height: var(--app-height); }
     }
 
     .map-topbar-badge {
-      border: 1px solid rgba(191, 219, 254, 0.24);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 18px rgba(15, 23, 42, 0.22);
-      background: linear-gradient(130deg, rgba(220, 38, 38, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%);
+      border: 1px solid rgba(206, 226, 247, 0.32);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 18px rgba(15, 23, 42, 0.24);
+      background: linear-gradient(130deg, rgba(205, 74, 68, 0.3) 0%, rgba(59, 103, 166, 0.3) 100%);
     }
 
     .fly-search-submit {
-      border: 1px solid rgba(191, 219, 254, 0.28);
-      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28), 0 8px 18px rgba(127, 29, 29, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(213, 174, 128, 0.34);
+      background: var(--state-accent-gradient);
+      box-shadow: 0 10px 22px rgba(32, 70, 114, 0.3), 0 8px 18px rgba(122, 41, 54, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.2);
       text-shadow: 0 1px 0 rgba(15, 23, 42, 0.28);
     }
 
     .fly-search-submit:hover {
-      filter: saturate(1.06) brightness(1.02);
+      filter: saturate(1.08) brightness(1.03);
     }
 
     .fly-search-chip,
     .mobile-topbar-toggle {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(191, 219, 254, 0.3);
-      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(206, 226, 247, 0.32);
+      color: #e6edf7;
     }
 
     .context-banner-item {
-      border: 1px solid rgba(191, 219, 254, 0.2);
+      border: 1px solid rgba(206, 226, 247, 0.24);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.07) 100%);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
+    .main-controls,
+    .legend,
+    .vote-counter,
+    #status-panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 249, 253, 0.95) 100%);
+      border-color: rgba(73, 96, 127, 0.26);
+      box-shadow: 0 18px 40px rgba(17, 32, 50, 0.2);
+    }
+
+    .main-controls .control-group {
+      border-color: rgba(96, 123, 157, 0.2);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(244, 248, 253, 0.9) 100%);
+    }
+
     .controls-title-pill,
     .legend-badge {
-      border-color: rgba(226, 232, 240, 0.28);
+      background: linear-gradient(125deg, #8f2433 0%, #305f98 100%);
+      border-color: rgba(234, 220, 197, 0.62);
+      color: #f8fafc;
+      box-shadow: 0 10px 22px rgba(23, 45, 70, 0.28);
       text-shadow: 0 1px 0 rgba(15, 23, 42, 0.24);
+    }
+
+    .view-toggle-btn.active,
+    .viz-mode-btn.active,
+    .mode-toggle.active {
+      background: linear-gradient(180deg, #295a92 0%, #1e426b 100%);
+      border-color: rgba(224, 190, 142, 0.78);
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(19, 42, 68, 0.28);
+    }
+
+    .view-toggle-btn:not(.active),
+    .viz-mode-btn:not(.active),
+    .region-jump-btn {
+      border-color: rgba(97, 126, 161, 0.34);
+      background: rgba(255, 255, 255, 0.88);
+      color: #1e3350;
+    }
+
+    #contestSearch,
+    #contestSelect,
+    #scenario-scope,
+    #overlay-opacity-preset {
+      border-color: rgba(97, 126, 161, 0.44) !important;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 249, 253, 0.98) 100%) !important;
+      color: #14263c !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 1px 2px rgba(17, 34, 54, 0.05);
+    }
+
+    #contestSearch:focus,
+    #contestSelect:focus,
+    #scenario-scope:focus,
+    #overlay-opacity-preset:focus {
+      border-color: rgba(47, 95, 152, 0.78) !important;
+      box-shadow: 0 0 0 3px rgba(70, 120, 186, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+      outline: none;
     }
   }
 
