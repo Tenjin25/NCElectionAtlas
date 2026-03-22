@@ -7165,9 +7165,15 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button type="button" class="region-jump-btn" data-region-jump="triangle">Triangle</button>
                   <button type="button" class="region-jump-btn" data-region-jump="triad">Triad</button>
                   <button type="button" class="region-jump-btn" data-region-jump="charlotte">Charlotte</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="asheville">Asheville</button>
                   <button type="button" class="region-jump-btn" data-region-jump="mountains">Mountains</button>
                   <button type="button" class="region-jump-btn" data-region-jump="coast">Coast</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="innerbanks">Inner Banks</button>
                   <button type="button" class="region-jump-btn" data-region-jump="sandhills">Sandhills</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="fayetteville">Fayetteville</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="capefear">Cape Fear</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="i95">I-95</button>
+                  <button type="button" class="region-jump-btn" data-region-jump="foothills">Foothills</button>
                 </div>
             </div>
             <div class="control-group" style="margin-bottom:10px;">
@@ -7634,10 +7640,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Definitions used:
     // - Triangle: Research Triangle Regional Partnership
     // - Triad: Piedmont Triad Regional Council
-    // - Charlotte: 2024 Charlotte-Concord-Gastonia NC counties (BLS/OMB metro definition)
+    // - Charlotte: Expanded greater-Charlotte NC footprint
+    //   (Charlotte-Concord-Gastonia NC metro counties plus nearby commuter counties)
+    // - Asheville: Asheville metro-area counties
     // - Mountains: NC Office of State Archaeology mountain region
+    // - Inner Banks: NC inland coastal plain counties east of I-95
     // - Coast: NC DEQ CAMA counties
     // - Sandhills: NCGS 143B-28.1 Sandhills (South Central) region
+    // - Fayetteville: Greater Fayetteville commuting footprint
+    // - Cape Fear: Lower Cape Fear counties
+    // - I-95: Core NC counties along the I-95 corridor
+    // - Foothills: Unifour and adjacent foothills counties
     const REGION_JUMPS = {
       triangle: {
         label: 'Research Triangle',
@@ -7652,12 +7665,22 @@ document.addEventListener('DOMContentLoaded', function() {
       charlotte: {
         label: 'Charlotte Metro',
         bounds: [[-81.95, 34.55], [-79.95, 35.95]],
-        counties: ['Anson', 'Cabarrus', 'Gaston', 'Iredell', 'Lincoln', 'Mecklenburg', 'Rowan', 'Union']
+        counties: ['Alexander', 'Anson', 'Cabarrus', 'Catawba', 'Cleveland', 'Gaston', 'Iredell', 'Lincoln', 'Mecklenburg', 'Rowan', 'Stanly', 'Union']
+      },
+      asheville: {
+        label: 'Asheville Metro',
+        bounds: [[-83.05, 34.92], [-82.10, 36.25]],
+        counties: ['Buncombe', 'Haywood', 'Henderson', 'Madison', 'Transylvania']
       },
       mountains: {
         label: 'Western Mountains',
         bounds: [[-84.45, 34.90], [-81.30, 36.65]],
         counties: ['Alleghany', 'Ashe', 'Avery', 'Buncombe', 'Burke', 'Caldwell', 'Clay', 'Cherokee', 'Graham', 'Haywood', 'Henderson', 'Jackson', 'Macon', 'Madison', 'McDowell', 'Mitchell', 'Polk', 'Rutherford', 'Swain', 'Transylvania', 'Watauga', 'Wilkes', 'Yancey']
+      },
+      innerbanks: {
+        label: 'Inner Banks',
+        bounds: [[-78.85, 34.75], [-76.25, 36.35]],
+        counties: ['Beaufort', 'Carteret', 'Craven', 'Lenoir', 'Pitt']
       },
       coast: {
         label: 'NC Coast',
@@ -7668,6 +7691,26 @@ document.addEventListener('DOMContentLoaded', function() {
         label: 'Sandhills',
         bounds: [[-79.95, 33.90], [-77.35, 35.55]],
         counties: ['Bladen', 'Columbus', 'Cumberland', 'Hoke', 'Montgomery', 'Moore', 'Richmond', 'Robeson', 'Sampson', 'Scotland']
+      },
+      fayetteville: {
+        label: 'Fayetteville Metro',
+        bounds: [[-79.95, 34.55], [-78.35, 35.55]],
+        counties: ['Cumberland', 'Harnett', 'Hoke', 'Moore', 'Robeson']
+      },
+      capefear: {
+        label: 'Cape Fear',
+        bounds: [[-79.75, 33.70], [-77.35, 35.35]],
+        counties: ['Bladen', 'Brunswick', 'Columbus', 'New Hanover', 'Pender']
+      },
+      i95: {
+        label: 'I-95 Corridor',
+        bounds: [[-78.55, 34.20], [-77.05, 36.60]],
+        counties: ['Cumberland', 'Halifax', 'Johnston', 'Nash', 'Northampton', 'Robeson', 'Wilson']
+      },
+      foothills: {
+        label: 'Foothills / Unifour',
+        bounds: [[-82.10, 35.45], [-80.60, 36.30]],
+        counties: ['Alexander', 'Burke', 'Caldwell', 'Catawba']
       }
     };
 

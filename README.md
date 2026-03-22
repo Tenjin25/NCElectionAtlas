@@ -69,7 +69,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
-- **Regional Quick Jumps:** Preset regions like the Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills can zoom the map and pin an aggregated regional result summary
+- **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
@@ -272,7 +272,7 @@ The current `index.html` includes several speed-focused improvements that are al
 
 The preset region buttons are more than camera shortcuts. They use curated North Carolina county groups so the app can calculate grouped results and trend history for commonly used regions.
 
-- **Current presets:** Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills
+- **Current presets:** Triangle, Triad, Charlotte Metro, Asheville Metro, Western Mountains, NC Coast, Inner Banks, Sandhills, Fayetteville Metro, Cape Fear, I-95 Corridor, and Foothills / Unifour
 - **How they work:** Clicking a preset zooms the map and pins an aggregated multi-county summary in the top-right analysis panel
 - **Definition note:** These are curated regional groupings for atlas use, so they may not match every economic-development, media-market, or commuting-region definition
 
@@ -280,7 +280,7 @@ The preset region buttons are more than camera shortcuts. They use curated North
 
 - **District-only precinct coloring:** Precinct overlays on district maps work best for statewide contests. True precinct coloring for district-only races still depends on having precinct-level district results.
 - **Non-geographic vote buckets:** Early vote, absentee, provisional, and similar buckets remain in totals but do not map to precinct shapes.
-- **Regional definitions:** Region margins depend on the county set chosen for that preset, so a broader or narrower Charlotte/Triad/Sandhills definition will change the result.
+- **Regional definitions:** Region margins depend on the county set chosen for that preset, so broader or narrower definitions (for example Charlotte, Triad, Coast, or Sandhills) will change the result.
 
 ## What to Expect on the Live Site
 
@@ -289,7 +289,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 - **Interactive Map:** Zoom and pan across North Carolina, with overlays for counties, precincts, and legislative districts.
 - **Contest Picker:** Select from available contests (President, US Senate, Governor, State House, etc.) and election years. Only contests with data will appear.
 - **Dynamic Views:** Switch between Counties, Precincts, Congressional Districts, State House, and State Senate. The map and sidebar update to reflect your selection.
-- **Regional Presets:** Use quick jumps like Triangle, Triad, Charlotte Metro, Mountains, Coast, and Sandhills to zoom and see grouped regional vote summaries.
+- **Regional Presets:** Use quick jumps like Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills to zoom and see grouped regional vote summaries.
 - **Hover and Sidebar Details:** See candidate names, vote totals, margins, and trend lines for any geography.
 - **Demographics Layering:** Use `Demographics` mode to shade geographies by plurality race share, with optional high-contrast rendering for better visibility.
 - **Data Coverage:** Precinct-level results span **2000–2024**. Some contests or years may be incomplete depending on source data availability.
