@@ -3059,9 +3059,17 @@ body { height: var(--app-height); }
       width: min(var(--desktop-left-w), calc(100vw - 40px));
       min-width: 0;
       max-width: var(--desktop-left-w);
-      max-height: min(66vh, calc(100vh - var(--topbar-h, 156px) - 72px));
+      max-height: none;
       padding: 16px;
+      overflow: visible;
+    }
+
+    .controls-content {
+      max-height: 70vh;
       overflow-y: auto;
+      overflow-x: visible;
+      padding-right: 10px;
+      margin-right: -10px;
     }
 
     .main-controls.minimized {
@@ -6503,25 +6511,19 @@ body { height: var(--app-height); }
     }
   }
 
-  /* Desktop dropdown escape hatch: keep select menus from being clipped/flipped by panel bounds. */
+  /* FINAL OVERRIDE: Fixes PC Dropdown Clipping & Positioning */
   @media (min-width: 769px) {
-    .main-controls {
-      position: fixed !important;
-      top: 20px !important;
-      left: 24px !important;
-      width: min(var(--desktop-left-w), calc(100vw - 48px)) !important;
-      overflow: visible !important;
+    #main-controls.main-controls {
       max-height: none !important;
-      z-index: 10005 !important;
+      overflow: visible !important;
     }
 
     .controls-content {
-      min-height: 0;
-      max-height: 70vh !important;
+      max-height: 70vh;
       overflow-y: auto !important;
       overflow-x: visible !important;
-      padding-right: 6px;
-      margin-right: -6px;
+      padding-right: 10px;
+      margin-right: -10px;
     }
   }
     </style>
