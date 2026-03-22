@@ -7736,7 +7736,7 @@ document.addEventListener('DOMContentLoaded', function() {
           dem_candidate: totals.demCandidate,
           rep_candidate: totals.repCandidate,
           winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
-          margin_pct: Number(((margin / totals.total) * 100).toFixed(2))
+          margin_pct: signedMarginPctFromVotes(totals.dem, totals.rep, totals.total)
         });
       }
       return out;
@@ -9558,7 +9558,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = Math.abs(repPct - demPct);
+      const marginPct = marginPctValue(r, d, total);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -9600,7 +9600,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes) * 100;
       const repPct = (repVotes / totalVotes) * 100;
       const otherPct = (otherVotes / totalVotes) * 100;
-      const marginPct = Math.abs(repPct - demPct);
+      const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
       
       animateCounter('dem-count', demVotes);
       animateCounter('rep-count', repVotes);
@@ -9888,7 +9888,7 @@ document.addEventListener('DOMContentLoaded', function() {
           dem_candidate: demCand,
           rep_candidate: repCand,
           winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
-          margin_pct: Number(((margin / tot) * 100).toFixed(2))
+          margin_pct: signedMarginPctFromVotes(dem, rep, tot)
         });
       }
       if (!out.length && contestType === 'us_house' && Array.isArray(congressionalData) && congressionalData.length) {
@@ -9916,7 +9916,7 @@ document.addEventListener('DOMContentLoaded', function() {
               dem_candidate: '',
               rep_candidate: '',
               winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
-              margin_pct: Number(((margin / agg.total) * 100).toFixed(2))
+              margin_pct: signedMarginPctFromVotes(agg.dem, agg.rep, agg.total)
             });
           });
       }
@@ -10984,7 +10984,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = Math.abs(demPct - repPct);
+        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
         const winner = demPct > repPct ? 'Democratic' : 'Republican';
         let officeName = formatContestName(contestType, year);
         let demKey = `${year}|${officeName}|Democrat`;
@@ -12207,7 +12207,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = Math.abs(repPct - demPct);
+      const marginPct = marginPctValue(r, d, total);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -12296,7 +12296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = Math.abs(demPct - repPct);
+        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
         const marginLabel = formatMarginPctForDisplay(marginPct);
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
@@ -12752,7 +12752,7 @@ document.addEventListener('DOMContentLoaded', function() {
           dem_candidate: demCand,
           rep_candidate: repCand,
           winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
-          margin_pct: Number(((margin / tot) * 100).toFixed(2))
+          margin_pct: signedMarginPctFromVotes(dem, rep, tot)
         });
       }
       return out;
@@ -14670,7 +14670,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'district', scope, districtNum: Number(districtNum), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = signedMarginPctFromContestRow(row, contestType);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winnerRaw = (row.winner || '').toString().toUpperCase();
       const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
@@ -14684,7 +14684,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevResults = prevCached?.prevNode?.general?.results || null;
         if (prevResults) {
           const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
-          if (prevRow) prevSignedForFlip = Number(prevRow.margin_pct || 0);
+          if (prevRow) prevSignedForFlip = signedMarginPctFromContestRow(prevRow, contestType);
         }
       } catch (_) {}
 
@@ -17537,7 +17537,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
             const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
-            const marginPct = Math.abs(demPct - repPct);
+            const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
             const winner = demPct > repPct ? 'Democratic' : 'Republican';
             
             // Determine competitiveness
@@ -17724,7 +17724,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes) * 100.0;
       const repPct = (repVotes / totalVotes) * 100.0;
       const othPct = (otherVotes / totalVotes) * 100.0;
-      const marginPct = Math.abs(repPct - demPct);
+      const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
       const winnerParty = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'TIE');
 
       let compLabel = '';
@@ -18468,6 +18468,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
       return ((Number(repVotes) - Number(demVotes)) / t) * 100;
+    }
+
+    function signedMarginPctFromContestRow(row, contestType = '') {
+      if (!row || typeof row !== 'object') return 0;
+      const key = String(contestType || '').trim();
+      const demVotes = key ? Number(row[`${key}_dem`] ?? row.dem_votes ?? row.dem ?? 0) : Number(row.dem_votes ?? row.dem ?? 0);
+      const repVotes = key ? Number(row[`${key}_rep`] ?? row.rep_votes ?? row.rep ?? 0) : Number(row.rep_votes ?? row.rep ?? 0);
+      const otherVotes = key ? Number(row[`${key}_other`] ?? row.other_votes ?? row.other ?? 0) : Number(row.other_votes ?? row.other ?? 0);
+      const totalRaw = key
+        ? Number(row[`${key}_total`] ?? row.total_votes ?? row.total ?? 0)
+        : Number(row.total_votes ?? row.total ?? 0);
+      const totalVotes = totalRaw > 0 ? totalRaw : (demVotes + repVotes + otherVotes);
+      if (totalVotes > 0) return signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const fallback = Number(row.margin_pct);
+      return Number.isFinite(fallback) ? fallback : 0;
     }
 
     function colorForShiftMode(shiftPct) {
@@ -19560,7 +19575,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const winner = repPct > demPct ? 'R' : 'D';
-        const marginPct = Math.abs(repPct - demPct);
+        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
         let color = colorForMarginMode(marginPct, winner);
         if (mode === 'demographics') {
           const demoRow = getDistrictDemographics('congressional', district);
@@ -19677,7 +19692,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalVotes += rowTotalVotes;
             currentDistrictTurnoutTotals[String(Number(districtId))] = rowTotalVotes;
 
-            const signed = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, rowTotalVotes);
+            const signed = signedMarginPctFromContestRow(row, contestType);
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
@@ -19695,14 +19710,14 @@ document.addEventListener('DOMContentLoaded', function() {
               );
             } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedMarginPctFromContestRow(prevRow, contestType) : 0;
               const f = flipInfo(prevSigned, signed);
               color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
             } else if (mode === 'winners') {
               color = colorForWinnerMode(winner);
             } else if (mode === 'shift' && prevResults && prevYear) {
               const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedMarginPctFromContestRow(prevRow, contestType) : 0;
               color = colorForShiftMode(signed - prevSigned);
             } else {
               color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
@@ -19868,7 +19883,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
       const otherPct = ((totalVotes - totalDem - totalRep) / totalVotes) * 100;
       const winner = repPct > demPct ? 'R' : 'D';
-      const marginPct = Math.abs(repPct - demPct);
+      const marginPct = marginPctValue(totalRep, totalDem, totalVotes);
       const color = colorForMarginMode(marginPct, winner);
 
       // Apply uniform color to all districts (showing statewide result)
