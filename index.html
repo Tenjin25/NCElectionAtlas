@@ -9808,7 +9808,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `${shift > 0 ? 'R' : 'D'} +${Math.abs(shift).toFixed(2)} vs ${prevYear}`
+        text: `Shift: ${shift > 0 ? 'R' : 'D'} +${Math.abs(shift).toFixed(2)} vs ${prevYear}`
       };
     }
 
@@ -13158,10 +13158,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hasPrev && prevYear) {
         const delta = cur - prev;
         if (Math.abs(delta) < 0.01) {
-          shiftLabel = `No shift vs ${prevYear}`;
+          shiftLabel = `Shift: No shift vs ${prevYear}`;
           shiftColor = '#64748b';
         } else {
-          shiftLabel = `${delta > 0 ? 'R' : 'D'} +${Math.abs(delta).toFixed(2)} vs ${prevYear}`;
+          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'} +${Math.abs(delta).toFixed(2)} vs ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
         }
       }
