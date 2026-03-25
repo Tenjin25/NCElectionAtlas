@@ -72,6 +72,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
+- **Trajectory / Status Card:** County/district/precinct trend panels include a plain-language trajectory block (status, trend direction, and key shift checkpoints)
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
@@ -92,7 +93,19 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 22, 2026
+**Last updated:** March 25, 2026
+
+### Trajectory Panel Refinement (March 25, 2026)
+
+- Added a dedicated `Trajectory / Status` card to trend history for non-statewide focus contexts (county, district, and precinct with county fallback).
+- Adopted the post-change trajectory wording model in the live `index.html` trend flow:
+  - `Stable Democratic`
+  - `Eroding Democratic`
+  - `Tipping Point`
+  - `Functionally Republican`
+  - `Locked Republican`
+- Added clearer trend direction phrasing (`Consistent/Recent rightward movement`, `Consistent/Recent leftward movement`, `Stable`) and compact checkpoint rows (`Latest`, `Since <prior year>`, `Since <first year>`, optional `Since 2008`).
+- Reworked card presentation for readability on both desktop and mobile while preserving existing focus-trend analytics cards.
 
 ### County Precision + Hover Flip Fixes (March 22, 2026)
 
