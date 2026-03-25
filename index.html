@@ -3495,16 +3495,38 @@ body { height: var(--app-height); }
   }
 
   .focus-trajectory {
+    --trajectory-accent-rgb: 100, 116, 139;
+    --trajectory-accent-soft: rgba(100, 116, 139, 0.2);
+    --trajectory-accent-glow: rgba(100, 116, 139, 0.2);
     position: relative;
     display: grid;
     gap: 10px;
     padding: 12px;
     border-radius: 16px;
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    border: 1px solid var(--trajectory-accent-soft);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.92) 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74), 0 6px 16px rgba(15, 23, 42, 0.08);
     overflow: hidden;
+    isolation: isolate;
     animation: trajectory-fade-up 0.22s ease-out;
+  }
+
+  .focus-trajectory.status-dem {
+    --trajectory-accent-rgb: 37, 99, 235;
+    --trajectory-accent-soft: rgba(37, 99, 235, 0.22);
+    --trajectory-accent-glow: rgba(37, 99, 235, 0.24);
+  }
+
+  .focus-trajectory.status-rep {
+    --trajectory-accent-rgb: 220, 38, 38;
+    --trajectory-accent-soft: rgba(220, 38, 38, 0.24);
+    --trajectory-accent-glow: rgba(220, 38, 38, 0.24);
+  }
+
+  .focus-trajectory.status-competitive {
+    --trajectory-accent-rgb: 217, 119, 6;
+    --trajectory-accent-soft: rgba(217, 119, 6, 0.24);
+    --trajectory-accent-glow: rgba(217, 119, 6, 0.26);
   }
 
   @keyframes trajectory-fade-up {
@@ -3525,8 +3547,27 @@ body { height: var(--app-height); }
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, rgba(37, 99, 235, 0.6) 0%, rgba(100, 116, 139, 0.22) 50%, rgba(220, 38, 38, 0.6) 100%);
+    background: linear-gradient(
+      90deg,
+      rgba(var(--trajectory-accent-rgb), 0.95) 0%,
+      rgba(var(--trajectory-accent-rgb), 0.35) 52%,
+      rgba(var(--trajectory-accent-rgb), 0) 100%
+    );
     pointer-events: none;
+  }
+
+  .focus-trajectory::after {
+    content: '';
+    position: absolute;
+    top: -28%;
+    right: -14%;
+    width: 180px;
+    height: 180px;
+    border-radius: 999px;
+    background: radial-gradient(circle, var(--trajectory-accent-glow) 0%, rgba(255, 255, 255, 0) 70%);
+    opacity: 0.72;
+    pointer-events: none;
+    z-index: -1;
   }
 
   .focus-trajectory-head {
@@ -3535,7 +3576,7 @@ body { height: var(--app-height); }
     justify-content: space-between;
     gap: 8px;
     padding-bottom: 6px;
-    border-bottom: 1px dashed rgba(148, 163, 184, 0.24);
+    border-bottom: 1px dashed rgba(var(--trajectory-accent-rgb), 0.25);
   }
 
   .focus-trajectory-kicker {
@@ -3550,14 +3591,15 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     min-height: 24px;
-    padding: 0 10px;
+    padding: 0 11px;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.18);
     background: rgba(226, 232, 240, 0.84);
     color: #475569;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     white-space: nowrap;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
@@ -3597,7 +3639,7 @@ body { height: var(--app-height); }
     padding: 6px 8px;
     border-radius: 10px;
     border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(255, 255, 255, 0.86);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.9) 100%);
     font-size: 11px;
     line-height: 1.35;
     color: #334155;
@@ -3644,7 +3686,7 @@ body { height: var(--app-height); }
 
   .focus-trajectory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 8px;
   }
 
@@ -3662,7 +3704,12 @@ body { height: var(--app-height); }
     grid-column: 1 / -1;
     gap: 3px;
     padding: 10px 11px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
+    border-color: rgba(var(--trajectory-accent-rgb), 0.28);
+    background: linear-gradient(
+      180deg,
+      rgba(var(--trajectory-accent-rgb), 0.06) 0%,
+      rgba(255, 255, 255, 0.95) 100%
+    );
   }
 
   .focus-trajectory-item.latest .focus-trajectory-label {
@@ -13219,7 +13266,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function classifyCountyTrajectory(series) {
       if (!Array.isArray(series) || !series.length) {
         return {
-          status: 'No trend data',
+          status: 'No trajectory data',
           statusClass: 'competitive',
           trend: 'Not enough history',
           icon: '\u2022',
@@ -13276,40 +13323,40 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deltaTowardGop < -0.5) leftwardSteps += 1;
       }
 
-      let status = 'Tipping Point';
+      let status = 'Toss-Up Battleground';
       let statusClass = 'competitive';
       let icon = '\u25d0';
       const slowTowardGop = rightwardSteps >= 1 || longShiftTowardGop >= 2;
       const slowTowardDem = leftwardSteps >= 1 || longShiftTowardGop <= -2;
 
       if (latestSigned <= -15) {
-        status = slowTowardGop ? 'Locked Democratic (Slow Republican drift)' : 'Locked Democratic';
+        status = slowTowardGop ? 'Durable Democratic (Softening)' : 'Durable Democratic';
         statusClass = 'dem';
         icon = '\u25cf';
       } else if (latestSigned < -5) {
-        status = slowTowardGop ? 'Eroding Democratic' : 'Functionally Democratic';
+        status = slowTowardGop ? 'Democratic Edge (Softening)' : 'Democratic Edge';
         statusClass = 'dem';
         icon = slowTowardGop ? '\u2197' : '\u2198';
       } else if (Math.abs(latestSigned) < 5) {
-        status = 'Tipping Point';
+        status = 'Toss-Up Battleground';
         statusClass = 'competitive';
         icon = '\u25d0';
       } else if (latestSigned >= 5 && latestSigned < 15) {
-        status = slowTowardDem ? 'Eroding Republican' : 'Functionally Republican';
+        status = slowTowardDem ? 'Republican Edge (Softening)' : 'Republican Edge';
         statusClass = 'rep';
         icon = slowTowardDem ? '\u2198' : '\u2197';
       } else if (latestSigned >= 15) {
-        status = slowTowardDem ? 'Locked Republican (Slow Democratic drift)' : 'Locked Republican';
+        status = slowTowardDem ? 'Durable Republican (Softening)' : 'Durable Republican';
         statusClass = 'rep';
         icon = '\u25cf';
       }
 
       let trend = 'Stable';
-      if (rightwardSteps >= 2) trend = '\u2197 Consistent rightward movement';
-      else if (rightwardSteps === 1) trend = '\u2197 Recent rightward movement';
-      else if (leftwardSteps >= 2) trend = '\u2198 Consistent leftward movement';
-      else if (leftwardSteps === 1) trend = '\u2198 Recent leftward movement';
-      else trend = '\u2192 Stable';
+      if (rightwardSteps >= 2) trend = '\u2197 Strong Republican momentum';
+      else if (rightwardSteps === 1) trend = '\u2197 Mild Republican momentum';
+      else if (leftwardSteps >= 2) trend = '\u2198 Strong Democratic momentum';
+      else if (leftwardSteps === 1) trend = '\u2198 Mild Democratic momentum';
+      else trend = '\u2192 Low momentum';
 
       const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
       const prevSigned = previous ? getSignedMarginTowardGop(previous) : null;
@@ -13321,10 +13368,10 @@ document.addEventListener('DOMContentLoaded', function() {
         trend,
         icon,
         details: [
-          { label: 'Latest', value: formatWinnerLabel(latest, latestSigned) },
-          ...(previous ? [{ label: `Since ${previous.year}`, value: formatShiftLabel(recentShiftTowardGop) }] : []),
+          { label: 'Current Margin', value: formatWinnerLabel(latest, latestSigned) },
+          ...(previous ? [{ label: `Cycle Shift (${previous.year}->${latest.year})`, value: formatShiftLabel(recentShiftTowardGop) }] : []),
           { label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop) },
-          ...(row2008 ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008) }] : [])
+          ...(row2008 ? [{ label: 'Post-2008 Shift', value: formatShiftLabel(shiftSince2008) }] : [])
         ]
       };
     }
@@ -13335,8 +13382,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = ['dem', 'rep', 'competitive'].includes(meta.statusClass)
         ? meta.statusClass
         : 'competitive';
-      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Tipping Point'}`;
-      const trendText = String(meta.trend || '\u2192 Stable');
+      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-Up Battleground'}`;
+      const trendText = String(meta.trend || '\u2192 Low momentum');
       const trendClass = trendText.includes('\u2197')
         ? 'rep'
         : (trendText.includes('\u2198') ? 'dem' : 'neutral');
@@ -13348,20 +13395,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
         if (v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
         if (v.includes('\u2192') || /Tie|Even/i.test(v)) return 'neutral';
-        if (String(label || '').toLowerCase() === 'latest') {
+        if (String(label || '').toLowerCase() === 'current margin') {
           if (/\bR\+/.test(v)) return 'rep';
           if (/\bD\+/.test(v)) return 'dem';
         }
         return 'neutral';
       };
       return `
-        <div class="focus-trajectory" role="group" aria-label="Trajectory summary">
+        <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
           <div class="focus-trajectory-head">
-            <span class="focus-trajectory-kicker">Trajectory / Status</span>
+            <span class="focus-trajectory-kicker">Trajectory Profile</span>
             <span class="focus-trajectory-status ${statusClass}">${escapeHtml(statusText)}</span>
           </div>
           <p class="focus-trajectory-trendline ${trendClass}">
-            <span class="trend-tag">Trend</span>
+            <span class="trend-tag">Momentum</span>
             <span class="trend-text">
               ${trendArrow ? `<span class="focus-trajectory-arrow ${trendClass}">${escapeHtml(trendArrow)}</span>` : ''}
               ${escapeHtml(trendBody)}
@@ -13376,7 +13423,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
                 const arrow = arrowMatch ? arrowMatch[1] : '';
                 const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
-                const rowRole = label.toLowerCase() === 'latest' ? 'latest' : 'shift';
+                const rowRole = label.toLowerCase() === 'current margin' ? 'latest' : 'shift';
                 return `
                 <div class="focus-trajectory-item ${tone} ${rowRole}">
                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
