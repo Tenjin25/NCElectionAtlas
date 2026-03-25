@@ -9910,6 +9910,10 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       }
 
+      const trajectoryHtml = options?.trajectoryMeta
+        ? renderTrajectoryBlockHTML(options.trajectoryMeta)
+        : '';
+
       const cards = annotated
         .slice()
         .reverse()
@@ -9982,6 +9986,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
         </div>
+        ${trajectoryHtml}
         <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
@@ -10084,10 +10089,12 @@ document.addEventListener('DOMContentLoaded', function() {
         trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
+          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else if (meta.kind === 'region' && meta.regionKey) {
           series = await getRegionTrendSeries(contestType, meta.regionKey);
         } else if (meta.kind === 'district' && meta.scope && meta.districtNum !== undefined) {
           series = await getDistrictTrendSeries(meta.scope, contestType, meta.districtNum);
+          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else if (meta.kind === 'precinct' && meta.county) {
           series = await getPrecinctTrendSeries(contestType, meta.precinctNorm || meta.precinct || '', meta.county || '');
           if (!series || !series.length) {
@@ -10096,6 +10103,7 @@ document.addEventListener('DOMContentLoaded', function() {
               trendOptions.fallbackBadge = 'Precinct history unavailable - showing county trend';
             }
           }
+          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else {
           series = await getStatewideTrendSeries(contestType);
         }
@@ -16223,7 +16231,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   sidebarContent += `</div>`;
   sidebarContent += `</div>`;
-  sidebarContent += `<div id="county-trajectory-block" class="competitiveness-section" style="margin-top:10px;"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;background:#f8fafc;color:#64748b;">Loading trajectory...</div></div>`;
   // Historical trend (year-by-year margins) for the currently selected contest.
   sidebarContent += `<div class="competitiveness-section">`;
   sidebarContent += '<h5>Historical Trends</h5>';
@@ -16234,10 +16241,6 @@ document.addEventListener('DOMContentLoaded', function() {
   (async () => {
     try {
       const series = await getCountyTrendSeries(contestType, countyName);
-      const trajectoryEl = document.getElementById('county-trajectory-block');
-      if (trajectoryEl) {
-        trajectoryEl.innerHTML = renderTrajectoryBlockHTML(classifyCountyTrajectory(series));
-      }
       const el = document.getElementById('county-trends');
       if (!el) return;
       if (!series.length) {
@@ -16255,8 +16258,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .join('');
     } catch (err) {
-      const trajectoryEl = document.getElementById('county-trajectory-block');
-      if (trajectoryEl) trajectoryEl.innerHTML = '<div style="color:#999;">Failed to load trajectory</div>';
       const el = document.getElementById('county-trends');
       if (el) el.innerHTML = '<div style="color:#999;">Failed to load trends</div>';
       console.warn('Failed to load county trends:', err?.message || err);
