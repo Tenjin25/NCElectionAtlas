@@ -3504,6 +3504,18 @@ body { height: var(--app-height); }
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.92) 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74), 0 6px 16px rgba(15, 23, 42, 0.08);
     overflow: hidden;
+    animation: trajectory-fade-up 0.22s ease-out;
+  }
+
+  @keyframes trajectory-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .focus-trajectory::before {
@@ -3608,6 +3620,9 @@ body { height: var(--app-height); }
 
   .focus-trajectory-trendline .trend-text {
     min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: inherit;
   }
 
@@ -3641,6 +3656,22 @@ body { height: var(--app-height); }
     border: 1px solid rgba(148, 163, 184, 0.16);
     background: rgba(255, 255, 255, 0.82);
     transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+  }
+
+  .focus-trajectory-item.latest {
+    grid-column: 1 / -1;
+    gap: 3px;
+    padding: 10px 11px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
+  }
+
+  .focus-trajectory-item.latest .focus-trajectory-label {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .focus-trajectory-item.latest .focus-trajectory-value {
+    font-size: 13px;
   }
 
   .focus-trajectory-item.dem {
@@ -3690,6 +3721,26 @@ body { height: var(--app-height); }
 
   .focus-trajectory-value.neutral {
     color: #334155;
+  }
+
+  .focus-trajectory-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 14px;
+    font-weight: 900;
+  }
+
+  .focus-trajectory-arrow.dem {
+    color: #1d4ed8;
+  }
+
+  .focus-trajectory-arrow.rep {
+    color: #b91c1c;
+  }
+
+  .focus-trajectory-arrow.neutral {
+    color: #64748b;
   }
 
   .focus-trend-dots {
@@ -5995,6 +6046,10 @@ body { height: var(--app-height); }
     .focus-trajectory-grid {
       grid-template-columns: 1fr;
       gap: 6px;
+    }
+
+    .focus-trajectory-item.latest {
+      padding: 9px 10px;
     }
 
     .focus-trajectory-trendline {
@@ -13281,6 +13336,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const trendClass = trendText.includes('\u2197')
         ? 'rep'
         : (trendText.includes('\u2198') ? 'dem' : 'neutral');
+      const trendArrowMatch = trendText.trim().match(/^([\u2197\u2198\u2192])\s*/);
+      const trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
+      const trendBody = trendArrow ? trendText.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : trendText;
       const detailTone = (label, value) => {
         const v = String(value || '');
         if (v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
@@ -13300,16 +13358,28 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <p class="focus-trajectory-trendline ${trendClass}">
             <span class="trend-tag">Trend</span>
-            <span class="trend-text">${escapeHtml(trendText)}</span>
+            <span class="trend-text">
+              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendClass}">${escapeHtml(trendArrow)}</span>` : ''}
+              ${escapeHtml(trendBody)}
+            </span>
           </p>
           ${details.length ? `
             <div class="focus-trajectory-grid">
               ${details.map(item => {
                 const tone = detailTone(item?.label, item?.value);
+                const label = String(item?.label || '');
+                const valueRaw = String(item?.value || '');
+                const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
+                const arrow = arrowMatch ? arrowMatch[1] : '';
+                const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
+                const rowRole = label.toLowerCase() === 'latest' ? 'latest' : 'shift';
                 return `
-                <div class="focus-trajectory-item ${tone}">
-                  <span class="focus-trajectory-label">${escapeHtml(item.label || '')}</span>
-                  <span class="focus-trajectory-value ${tone}">${escapeHtml(item.value || '')}</span>
+                <div class="focus-trajectory-item ${tone} ${rowRole}">
+                  <span class="focus-trajectory-label">${escapeHtml(label)}</span>
+                  <span class="focus-trajectory-value ${tone}">
+                    ${arrow ? `<span class="focus-trajectory-arrow ${tone}">${escapeHtml(arrow)}</span>` : ''}
+                    ${escapeHtml(valueBody)}
+                  </span>
                 </div>
               `;
               }).join('')}
