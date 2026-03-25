@@ -137,6 +137,27 @@ def build_precinct_to_vtd_map(
     }
 
 
+def precinct_bucket_from_code(precinct_code: str) -> str:
+    """
+    Derive a bucket key for local fallback allocation.
+
+    For NC-style hyphenated codes, keep the first two numeric groups and drop
+    split suffix letters (e.g., "01-14A" -> "01-14"). Otherwise use the first
+    token before a hyphen.
+    """
+    p = _norm(precinct_code)
+    if not p:
+        return ""
+    m = re.fullmatch(r"0*([0-9]{1,3})-0*([0-9]{1,3})(?:[A-Z])?", p)
+    if m:
+        a = int(m.group(1))
+        b = int(m.group(2))
+        aa = str(a).zfill(2) if a < 100 else str(a)
+        bb = str(b).zfill(2) if b < 100 else str(b)
+        return f"{aa}-{bb}"
+    return p.split("-")[0].strip()
+
+
 def _norm(text: str) -> str:
     return str(text).upper().strip()
 
@@ -499,10 +520,12 @@ def allocate_office_results(
         rep = float(row.get("rep_votes", 0) or 0)
         oth = float(row.get("other_votes", 0) or 0)
         county = key.split(" - ", 1)[0] if " - " in key else ""
+        precinct_code = key.split(" - ", 1)[1] if " - " in key else ""
         rows.append(
             {
                 "key": key,
                 "county": county,
+                "precinct_code": precinct_code,
                 "status": status,
                 "dem": dem,
                 "rep": rep,
@@ -536,11 +559,52 @@ def allocate_office_results(
             reverse=True,
         )
 
+    try:
+        year_int = int(year) if year is not None else None
+    except (TypeError, ValueError):
+        year_int = None
+    use_bucket_dynamic_fallback = year_int is not None and year_int < 2016
+
+    county_bucket_dynamic_fallback: dict[tuple[str, str], list[tuple[str, float]]] = {}
+    if use_bucket_dynamic_fallback:
+        county_bucket_dist_votes: dict[tuple[str, str], dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        for rec in rows:
+            if not rec["splits"]:
+                continue
+            if rec["status"] == "non_geographic":
+                continue
+            county = rec["county"]
+            if not county:
+                continue
+            bucket = precinct_bucket_from_code(str(rec.get("precinct_code", "") or ""))
+            if not bucket:
+                continue
+            tot = rec["dem"] + rec["rep"] + rec["oth"]
+            if tot <= 0:
+                continue
+            for district, weight in rec["splits"]:
+                county_bucket_dist_votes[(county, bucket)][district] += tot * float(weight)
+
+        for county_bucket, dmap in county_bucket_dist_votes.items():
+            total = sum(dmap.values())
+            if total <= 0:
+                continue
+            county_bucket_dynamic_fallback[county_bucket] = sorted(
+                [(d, v / total) for d, v in dmap.items()],
+                key=lambda x: x[1],
+                reverse=True,
+            )
+
     for rec in rows:
         splits = rec["splits"]
         county = rec["county"]
         status = rec["status"]
         if not splits:
+            if use_bucket_dynamic_fallback and county and status in {"unmatched", "ambiguous", "no_county", "bad_key"}:
+                bucket = precinct_bucket_from_code(str(rec.get("precinct_code", "") or ""))
+                if bucket and (county, bucket) in county_bucket_dynamic_fallback:
+                    splits = county_bucket_dynamic_fallback[(county, bucket)]
+                    stats["county_fallback_bucket_dynamic"] += 1
             if (
                 county
                 and status in {"non_geographic", "unmatched", "ambiguous", "no_county", "bad_key"}
@@ -562,10 +626,6 @@ def allocate_office_results(
                 stats["county_fallback"] += 1
             # Legacy safety net: for older cycles, prefer preventing dropped votes.
             if not splits and county and county_fallback_legacy:
-                try:
-                    year_int = int(year) if year is not None else None
-                except (TypeError, ValueError):
-                    year_int = None
                 if (
                     year_int is not None
                     and year_int <= 2020
@@ -815,9 +875,9 @@ def main() -> None:
             }
             print(
                 f"{year} {office_key}: matched precinct keys -> "
-                f"house {hstats['crosswalk_matched']}/{hstats['total']} ({hcov:.1f}%, vtd bridge {hstats.get('vtd_bridge', 0)}, county fb {hstats.get('county_fallback', 0)}, county non-geo fb {hstats.get('county_fallback_non_geo', 0)}, legacy fb {hstats.get('county_fallback_legacy', 0)}), "
-                f"senate {sstats['crosswalk_matched']}/{sstats['total']} ({scov:.1f}%, vtd bridge {sstats.get('vtd_bridge', 0)}, county fb {sstats.get('county_fallback', 0)}, county non-geo fb {sstats.get('county_fallback_non_geo', 0)}, legacy fb {sstats.get('county_fallback_legacy', 0)}), "
-                f"cd118 {cstats['crosswalk_matched']}/{cstats['total']} ({ccov:.1f}%, vtd bridge {cstats.get('vtd_bridge', 0)}, county fb {cstats.get('county_fallback', 0)}, county non-geo fb {cstats.get('county_fallback_non_geo', 0)}, legacy fb {cstats.get('county_fallback_legacy', 0)})"
+                f"house {hstats['crosswalk_matched']}/{hstats['total']} ({hcov:.1f}%, vtd bridge {hstats.get('vtd_bridge', 0)}, bucket fb {hstats.get('county_fallback_bucket_dynamic', 0)}, county fb {hstats.get('county_fallback', 0)}, county non-geo fb {hstats.get('county_fallback_non_geo', 0)}, legacy fb {hstats.get('county_fallback_legacy', 0)}), "
+                f"senate {sstats['crosswalk_matched']}/{sstats['total']} ({scov:.1f}%, vtd bridge {sstats.get('vtd_bridge', 0)}, bucket fb {sstats.get('county_fallback_bucket_dynamic', 0)}, county fb {sstats.get('county_fallback', 0)}, county non-geo fb {sstats.get('county_fallback_non_geo', 0)}, legacy fb {sstats.get('county_fallback_legacy', 0)}), "
+                f"cd118 {cstats['crosswalk_matched']}/{cstats['total']} ({ccov:.1f}%, vtd bridge {cstats.get('vtd_bridge', 0)}, bucket fb {cstats.get('county_fallback_bucket_dynamic', 0)}, county fb {cstats.get('county_fallback', 0)}, county non-geo fb {cstats.get('county_fallback_non_geo', 0)}, legacy fb {cstats.get('county_fallback_legacy', 0)})"
             )
 
     out_json = args.output if args.output else (data_dir / "nc_district_results_2022_lines.json")

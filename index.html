@@ -13279,25 +13279,27 @@ document.addEventListener('DOMContentLoaded', function() {
       let status = 'Tipping Point';
       let statusClass = 'competitive';
       let icon = '\u25d0';
+      const slowTowardGop = rightwardSteps >= 1 || longShiftTowardGop >= 2;
+      const slowTowardDem = leftwardSteps >= 1 || longShiftTowardGop <= -2;
 
-      if (latestSigned <= -15 && rightwardSteps === 0) {
-        status = 'Stable Democratic';
+      if (latestSigned <= -15) {
+        status = slowTowardGop ? 'Locked Democratic (Slow Republican drift)' : 'Locked Democratic';
         statusClass = 'dem';
         icon = '\u25cf';
-      } else if (latestSigned < -5 && (rightwardSteps >= 1 || longShiftTowardGop >= 3)) {
-        status = 'Eroding Democratic';
+      } else if (latestSigned < -5) {
+        status = slowTowardGop ? 'Eroding Democratic' : 'Functionally Democratic';
         statusClass = 'dem';
-        icon = '\u2198';
+        icon = slowTowardGop ? '\u2197' : '\u2198';
       } else if (Math.abs(latestSigned) < 5) {
         status = 'Tipping Point';
         statusClass = 'competitive';
         icon = '\u25d0';
       } else if (latestSigned >= 5 && latestSigned < 15) {
-        status = 'Functionally Republican';
+        status = slowTowardDem ? 'Eroding Republican' : 'Functionally Republican';
         statusClass = 'rep';
-        icon = '\u2197';
+        icon = slowTowardDem ? '\u2198' : '\u2197';
       } else if (latestSigned >= 15) {
-        status = 'Locked Republican';
+        status = slowTowardDem ? 'Locked Republican (Slow Democratic drift)' : 'Locked Republican';
         statusClass = 'rep';
         icon = '\u25cf';
       }
