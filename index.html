@@ -9910,10 +9910,6 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       }
 
-      const trajectoryHtml = options?.trajectoryMeta
-        ? renderTrajectoryBlockHTML(options.trajectoryMeta)
-        : '';
-
       const cards = annotated
         .slice()
         .reverse()
@@ -9986,7 +9982,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
         </div>
-        ${trajectoryHtml}
         <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
@@ -10089,12 +10084,10 @@ document.addEventListener('DOMContentLoaded', function() {
         trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
-          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else if (meta.kind === 'region' && meta.regionKey) {
           series = await getRegionTrendSeries(contestType, meta.regionKey);
         } else if (meta.kind === 'district' && meta.scope && meta.districtNum !== undefined) {
           series = await getDistrictTrendSeries(meta.scope, contestType, meta.districtNum);
-          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else if (meta.kind === 'precinct' && meta.county) {
           series = await getPrecinctTrendSeries(contestType, meta.precinctNorm || meta.precinct || '', meta.county || '');
           if (!series || !series.length) {
@@ -10103,7 +10096,6 @@ document.addEventListener('DOMContentLoaded', function() {
               trendOptions.fallbackBadge = 'Precinct history unavailable - showing county trend';
             }
           }
-          if (series && series.length) trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
         } else {
           series = await getStatewideTrendSeries(contestType);
         }
@@ -12923,138 +12915,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
       return out;
-    }
-
-
-    function classifyCountyTrajectory(series) {
-      if (!Array.isArray(series) || !series.length) {
-        return {
-          status: 'No trend data',
-          trend: 'Not enough history',
-          tone: '#64748b',
-          icon: '•',
-          details: []
-        };
-      }
-
-      function getSignedMarginTowardGop(row) {
-        if (!row) return 0;
-        const explicit = Number(row.margin_pct);
-        const winnerRaw = (row.winner || '').toString().trim().toUpperCase();
-        const winnerNorm = winnerRaw === 'R' ? 'REP' : winnerRaw === 'D' ? 'DEM' : winnerRaw;
-        if (Number.isFinite(explicit) && explicit !== 0) {
-          if (winnerNorm === 'REP') return Math.abs(explicit);
-          if (winnerNorm === 'DEM') return -Math.abs(explicit);
-        }
-        const repVotes = Number(row.rep_votes);
-        const demVotes = Number(row.dem_votes);
-        const totalVotes = Number(row.total_votes);
-        if (Number.isFinite(repVotes) && Number.isFinite(demVotes) && Number.isFinite(totalVotes) && totalVotes > 0) {
-          return ((repVotes - demVotes) / totalVotes) * 100;
-        }
-        return 0;
-      }
-
-      function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return 'Even';
-        return `${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}`;
-      }
-
-      function formatWinnerLabel(row, signedMargin) {
-        const absMargin = Math.abs(signedMargin);
-        if (absMargin < 0.005) return `${row.year} Tie`;
-        return `${row.year} ${signedMargin > 0 ? 'R' : 'D'} ${absMargin.toFixed(2)} pts`;
-      }
-
-      const sorted = series.slice().sort((a, b) => Number(a.year) - Number(b.year));
-      const latest = sorted[sorted.length - 1];
-      const latestSigned = getSignedMarginTowardGop(latest);
-      const absMargin = Math.abs(latestSigned);
-      const first = sorted[0];
-      const firstSigned = getSignedMarginTowardGop(first);
-      const longShiftTowardGop = latestSigned - firstSigned;
-      const row2008 = sorted.find(row => Number(row.year) === 2008);
-      const shiftSince2008 = row2008 ? latestSigned - getSignedMarginTowardGop(row2008) : null;
-
-      const recentSlice = sorted.slice(-3);
-      let rightwardSteps = 0;
-      let leftwardSteps = 0;
-      for (let i = 1; i < recentSlice.length; i++) {
-        const prev = getSignedMarginTowardGop(recentSlice[i - 1]);
-        const curr = getSignedMarginTowardGop(recentSlice[i]);
-        const deltaTowardGop = curr - prev;
-        if (deltaTowardGop > 0.5) rightwardSteps++;
-        if (deltaTowardGop < -0.5) leftwardSteps++;
-      }
-
-      let status = 'Tipping Point';
-      let tone = '#6b7280';
-      let icon = '◐';
-
-      if (latestSigned <= -15 && rightwardSteps === 0) {
-        status = 'Stable Democratic';
-        tone = '#2563eb';
-        icon = '●';
-      } else if (latestSigned < -5 && (rightwardSteps >= 1 || longShiftTowardGop >= 3)) {
-        status = 'Eroding Democratic';
-        tone = '#1d4ed8';
-        icon = '↘';
-      } else if (Math.abs(latestSigned) < 5) {
-        status = 'Tipping Point';
-        tone = '#7c3aed';
-        icon = '◐';
-      } else if (latestSigned >= 5 && latestSigned < 15) {
-        status = 'Functionally Republican';
-        tone = '#dc2626';
-        icon = '↗';
-      } else if (latestSigned >= 15) {
-        status = 'Locked Republican';
-        tone = '#b91c1c';
-        icon = '●';
-      }
-
-      let trend = 'Stable';
-      if (rightwardSteps >= 2) trend = 'Consistent rightward movement';
-      else if (rightwardSteps === 1) trend = 'Recent rightward movement';
-      else if (leftwardSteps >= 2) trend = 'Consistent leftward movement';
-      else if (leftwardSteps === 1) trend = 'Recent leftward movement';
-
-      const prev = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-      const prevSigned = prev ? getSignedMarginTowardGop(prev) : null;
-      const recentShiftTowardGop = prev ? (latestSigned - prevSigned) : null;
-
-      return {
-        status,
-        trend,
-        tone,
-        icon,
-        details: [
-          { label: 'Latest', value: formatWinnerLabel(latest, latestSigned) },
-          ...(prev ? [{ label: `Since ${prev.year}`, value: formatShiftLabel(recentShiftTowardGop) }] : []),
-          { label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop) },
-          ...(row2008 ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008) }] : [])
-        ]
-      };
-    }
-
-    function renderTrajectoryBlockHTML(meta) {
-      if (!meta) return '';
-      const details = Array.isArray(meta.details) ? meta.details : [];
-      return `
-        <div class="trajectory-section" style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;background:#f8fafc;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
-            <h5 style="margin:0;font-size:14px;letter-spacing:0.02em;text-transform:uppercase;color:#334155;">Trajectory / Status</h5>
-            <span style="color:${meta.tone};font-weight:800;font-size:13px;">${meta.icon} ${meta.status}</span>
-          </div>
-          <div style="color:#475569;margin:0 0 10px 0;font-size:13px;font-weight:600;">Trend: ${meta.trend}</div>
-          ${details.map(item => `
-            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:2px 0;">
-              <span style="color:#64748b;">${item.label}</span>
-              <span style="font-weight:700;color:#0f172a;text-align:right;">${item.value}</span>
-            </div>
-          `).join('')}
-        </div>
-      `;
     }
 
     async function getPrecinctTrendSeries(contestType, precinctNormRaw, countyNameRaw = '') {
