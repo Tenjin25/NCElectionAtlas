@@ -12917,6 +12917,104 @@ document.addEventListener('DOMContentLoaded', function() {
       return out;
     }
 
+
+    function classifyCountyTrajectory(series) {
+      if (!Array.isArray(series) || !series.length) {
+        return {
+          status: 'No trend data',
+          trend: 'Not enough history',
+          tone: '#64748b',
+          icon: '•',
+          details: []
+        };
+      }
+
+      const sorted = series.slice().sort((a, b) => Number(a.year) - Number(b.year));
+      const latest = sorted[sorted.length - 1];
+      const latestMargin = Number(latest.margin_pct) || 0;
+      const latestWinner = (latest.winner || '').toString().toUpperCase();
+      const absMargin = Math.abs(latestMargin);
+      const first = sorted[0];
+      const firstMargin = Number(first.margin_pct) || 0;
+      const longShiftTowardGop = latestMargin - firstMargin;
+
+      const recentSlice = sorted.slice(-3);
+      let rightwardSteps = 0;
+      let leftwardSteps = 0;
+      for (let i = 1; i < recentSlice.length; i++) {
+        const prev = Number(recentSlice[i - 1].margin_pct) || 0;
+        const curr = Number(recentSlice[i].margin_pct) || 0;
+        const deltaTowardGop = curr - prev;
+        if (deltaTowardGop > 0.5) rightwardSteps++;
+        if (deltaTowardGop < -0.5) leftwardSteps++;
+      }
+
+      let status = 'Tipping Point';
+      let tone = '#6b7280';
+      let icon = '◐';
+
+      if (latestWinner === 'DEM' && absMargin >= 15 && rightwardSteps === 0) {
+        status = 'Stable Democratic';
+        tone = '#2563eb';
+        icon = '●';
+      } else if (latestWinner === 'DEM' && (rightwardSteps >= 1 || longShiftTowardGop >= 3)) {
+        status = 'Eroding Democratic';
+        tone = '#1d4ed8';
+        icon = '↘';
+      } else if (latestWinner === 'REP' && absMargin < 8) {
+        status = 'Functionally Republican';
+        tone = '#dc2626';
+        icon = '↗';
+      } else if (latestWinner === 'REP' && absMargin >= 8) {
+        status = 'Locked Republican';
+        tone = '#b91c1c';
+        icon = '●';
+      }
+
+      let trend = 'Mixed movement';
+      if (rightwardSteps >= 2) trend = 'Consistent rightward movement';
+      else if (rightwardSteps === 1) trend = 'Recent rightward movement';
+      else if (leftwardSteps >= 2) trend = 'Consistent leftward movement';
+      else if (leftwardSteps === 1) trend = 'Recent leftward movement';
+
+      const prev = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
+      const prevMargin = prev ? (Number(prev.margin_pct) || 0) : null;
+      const recentShiftTowardGop = prev ? (latestMargin - prevMargin) : null;
+
+      return {
+        status,
+        trend,
+        tone,
+        icon,
+        details: [
+          { label: 'Latest', value: `${latest.year} ${latestWinner === 'DEM' ? 'D' : latestWinner === 'REP' ? 'R' : 'Tie'} ${absMargin.toFixed(2)} pts` },
+          ...(prev ? [{ label: `Since ${prev.year}`, value: `${recentShiftTowardGop >= 0 ? 'R+' : 'D+'}${Math.abs(recentShiftTowardGop).toFixed(2)}` }] : []),
+          { label: `Since ${first.year}`, value: `${longShiftTowardGop >= 0 ? 'R+' : 'D+'}${Math.abs(longShiftTowardGop).toFixed(2)}` },
+          { label: 'Recent pattern', value: trend }
+        ]
+      };
+    }
+
+    function renderTrajectoryBlockHTML(meta) {
+      if (!meta) return '';
+      const details = Array.isArray(meta.details) ? meta.details : [];
+      return `
+        <div class="trajectory-section">
+          <h5>Trajectory</h5>
+          <p style="color:${meta.tone};font-weight:800;font-size:16px;margin:0 0 4px 0;">
+            ${meta.icon} ${meta.status}
+          </p>
+          <p style="color:#475569;margin:0 0 8px 0;font-size:13px;">${meta.trend}</p>
+          ${details.map(item => `
+            <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;">
+              <span style="color:#64748b;">${item.label}</span>
+              <span style="font-weight:700;color:#0f172a;">${item.value}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     async function getPrecinctTrendSeries(contestType, precinctNormRaw, countyNameRaw = '') {
       const entries = (contestManifest || [])
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
@@ -16091,6 +16189,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   sidebarContent += `</div>`;
   sidebarContent += `</div>`;
+  sidebarContent += `<div id="county-trajectory-block" class="competitiveness-section" style="margin-top:10px;color:#94a3b8;">Loading trajectory...</div>`;
   // Historical trend (year-by-year margins) for the currently selected contest.
   sidebarContent += `<div class="competitiveness-section">`;
   sidebarContent += '<h5>Historical Trends</h5>';
@@ -16101,6 +16200,10 @@ document.addEventListener('DOMContentLoaded', function() {
   (async () => {
     try {
       const series = await getCountyTrendSeries(contestType, countyName);
+      const trajectoryEl = document.getElementById('county-trajectory-block');
+      if (trajectoryEl) {
+        trajectoryEl.innerHTML = renderTrajectoryBlockHTML(classifyCountyTrajectory(series));
+      }
       const el = document.getElementById('county-trends');
       if (!el) return;
       if (!series.length) {
@@ -16118,6 +16221,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .join('');
     } catch (err) {
+      const trajectoryEl = document.getElementById('county-trajectory-block');
+      if (trajectoryEl) trajectoryEl.innerHTML = '<div style="color:#999;">Failed to load trajectory</div>';
       const el = document.getElementById('county-trends');
       if (el) el.innerHTML = '<div style="color:#999;">Failed to load trends</div>';
       console.warn('Failed to load county trends:', err?.message || err);
