@@ -457,6 +457,18 @@ def allocate_office_results(
     )
     stats = defaultdict(int)
     rows: list[dict] = []
+    dem_candidate = ""
+    rep_candidate = ""
+
+    # Candidate names are contest-wide and should be preserved in district slices.
+    for src_row in office_results.values():
+        src_obj = src_row or {}
+        if not dem_candidate:
+            dem_candidate = str(src_obj.get("dem_candidate", "") or "").strip()
+        if not rep_candidate:
+            rep_candidate = str(src_obj.get("rep_candidate", "") or "").strip()
+        if dem_candidate and rep_candidate:
+            break
 
     for precinct_key, row in office_results.items():
         stats["total"] += 1
@@ -585,8 +597,8 @@ def allocate_office_results(
             "rep_votes": rep,
             "other_votes": oth,
             "total_votes": total_votes,
-            "dem_candidate": "",
-            "rep_candidate": "",
+            "dem_candidate": dem_candidate,
+            "rep_candidate": rep_candidate,
             "margin": margin,
             "margin_pct": round(margin_pct, 2),
             "winner": winner,
@@ -643,9 +655,13 @@ def main() -> None:
     voting_geojson = data_dir / "Voting_Precincts.geojson"
     vtd_2008 = data_dir / "census" / "tl_2008_37_vtd00_merged.geojson"
     vtd_2012 = data_dir / "census" / "tl_2012_37_vtd10" / "tl_2012_37_vtd10.shp"
-    vtd_2020 = (data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp")
-    if not vtd_2020.exists():
-        vtd_2020 = data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp"
+    vtd_2020_candidates = [
+        data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.geojson",
+        data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.geojson",
+        data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp",
+        data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp",
+    ]
+    vtd_2020 = next((p for p in vtd_2020_candidates if p.exists()), vtd_2020_candidates[0])
 
     if not in_json.exists():
         raise FileNotFoundError(f"Missing {in_json}")

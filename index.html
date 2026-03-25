@@ -7937,6 +7937,7 @@ document.addEventListener('DOMContentLoaded', function() {
       paths: {
         counties: withBase('./data/census/tl_2020_37_county20.geojson'),
         precincts: withBase('./data/Voting_Precincts.geojson'),
+        precincts_fallback_vtd20: withBase('./data/census/tl_2020_37_vtd20/tl_2020_37_vtd20.geojson'),
         precinct_centroids: withBase('./data/precinct_centroids.geojson'),
         precinct_aliases: withBase('./data/precinct_alias_index.json'),
         precinct_variant_overrides: withBase('./data/mappings/precinct_variant_overrides.json'),
@@ -8314,6 +8315,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctCentroidsData = null; // Cached centroids GeoJSON so we can annotate with has_polygon after polygons load.
     let precinctCentroidsLoaded = false;
     let precinctCentroidsLoadInFlight = false;
+    let countyNameByFipsMapCache = null; // Map<string fips3, string county_name>
     let precinctCodeIndexByCounty = null; // Map<string countyNorm, Set<string prec_id>> built from precinct centroids.
     let precinctAliasIndexByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctAliasLoadInFlight = false;
@@ -16700,17 +16702,61 @@ document.addEventListener('DOMContentLoaded', function() {
       updatePrecinctVisibility();
     }
 
+    async function ensureCountyNameByFipsMap() {
+      if (countyNameByFipsMapCache) return countyNameByFipsMapCache;
+      const idx = new Map();
+      let countiesGeoJSON = (window.countiesData && window.countiesData.features) ? window.countiesData : null;
+      if (!countiesGeoJSON) {
+        try {
+          countiesGeoJSON = await loadJSON(CONFIG.paths.counties);
+        } catch (_) {
+          countiesGeoJSON = null;
+        }
+      }
+      (countiesGeoJSON?.features || []).forEach(feature => {
+        const props = feature?.properties || {};
+        const rawFips = (props.COUNTYFP20 || props.COUNTYFP || props.GEOID || '').toString();
+        const fips = rawFips.replace(/[^0-9]/g, '').slice(-3).padStart(3, '0');
+        const countyName = (props.NAME20 || props.CountyName || props.COUNTYNAME || props.county_nam || props.NAME || '').toString().trim().toUpperCase();
+        if (fips && countyName) idx.set(fips, countyName);
+      });
+      countyNameByFipsMapCache = idx;
+      return countyNameByFipsMapCache;
+    }
+
     async function ensurePrecinctSourceLoaded() {
       if (precinctSourceLoaded || map.getSource('precincts')) return true;
       if (precinctLoadInFlight) return false;
       precinctLoadInFlight = true;
       setStatus('Loading precinct geometry...');
-      const precincts = await loadJSON(CONFIG.paths.precincts);
+      let usedVtdFallback = false;
+      let precincts = null;
+      try {
+        precincts = await loadJSON(CONFIG.paths.precincts);
+      } catch (err) {
+        const fallbackPath = CONFIG.paths?.precincts_fallback_vtd20;
+        if (!fallbackPath) {
+          precinctLoadInFlight = false;
+          throw err;
+        }
+        try {
+          precincts = await loadJSON(fallbackPath);
+          usedVtdFallback = true;
+          console.warn('Primary precinct geometry load failed; using VTD20 fallback:', err?.message || err);
+        } catch (fallbackErr) {
+          precinctLoadInFlight = false;
+          throw fallbackErr;
+        }
+      }
+      let countyNameByFips = null;
+      try { countyNameByFips = await ensureCountyNameByFipsMap(); } catch (_) { countyNameByFips = null; }
       precincts.features = (precincts.features || []).map(feature => {
         const original = feature.properties || {};
-        const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME || '').toString().trim();
+        const rawFips = (original.COUNTYFP20 || original.COUNTYFP || '').toString().replace(/[^0-9]/g, '').slice(-3).padStart(3, '0');
+        const countyFromFips = (countyNameByFips && rawFips) ? (countyNameByFips.get(rawFips) || '') : '';
+        const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME20 || original.NAME || countyFromFips || '').toString().trim();
         const countyNorm = countyRaw.replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
-        const precRaw = (original.prec_id || original.PREC_ID || '').toString().trim();
+        const precRaw = (original.prec_id || original.PREC_ID || original.VTDST20 || original.VTDST10 || original.VTDST00 || '').toString().trim();
         const precinctRaw = countyRaw && precRaw ? `${countyRaw} - ${precRaw}` : countyRaw;
         const precinctNorm = (precinctRaw || '').replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
         feature.properties = {
@@ -16763,7 +16809,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('Failed to apply cached precinct colors:', err?.message || err);
       }
       applyLayerOpacityTuning();
-      setStatus('Precinct geometry ready');
+      setStatus(usedVtdFallback ? 'Precinct geometry ready (VTD20 fallback)' : 'Precinct geometry ready');
       return true;
     }
 

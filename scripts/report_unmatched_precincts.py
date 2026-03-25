@@ -23,9 +23,13 @@ def main() -> None:
     voting_geojson = data_dir / "Voting_Precincts.geojson"
     vtd_2008 = data_dir / "census" / "tl_2008_37_vtd00_merged.geojson"
     vtd_2012 = data_dir / "census" / "tl_2012_37_vtd10" / "tl_2012_37_vtd10.shp"
-    vtd_2020 = data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp"
-    if not vtd_2020.exists():
-        vtd_2020 = data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp"
+    vtd_2020_candidates = [
+        data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.geojson",
+        data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.geojson",
+        data_dir / "census" / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp",
+        data_dir / "tl_2020_37_vtd20" / "tl_2020_37_vtd20.shp",
+    ]
+    vtd_2020 = next((p for p in vtd_2020_candidates if p.exists()), vtd_2020_candidates[0])
     out_dir = data_dir / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
 
