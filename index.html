@@ -13323,7 +13323,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deltaTowardGop < -0.5) leftwardSteps += 1;
       }
 
-      let status = 'Toss-Up Battleground';
+      let status = 'On the Cusp';
       let statusClass = 'competitive';
       let icon = '\u25d0';
       const slowTowardGop = rightwardSteps >= 1 || longShiftTowardGop >= 2;
@@ -13338,7 +13338,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statusClass = 'dem';
         icon = slowTowardGop ? '\u2197' : '\u2198';
       } else if (Math.abs(latestSigned) < 5) {
-        status = 'Toss-Up Battleground';
+        status = 'On the Cusp';
         statusClass = 'competitive';
         icon = '\u25d0';
       } else if (latestSigned >= 5 && latestSigned < 15) {
@@ -13382,7 +13382,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = ['dem', 'rep', 'competitive'].includes(meta.statusClass)
         ? meta.statusClass
         : 'competitive';
-      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-Up Battleground'}`;
+      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'On the Cusp'}`;
       const trendText = String(meta.trend || '\u2192 Low momentum');
       const trendClass = trendText.includes('\u2197')
         ? 'rep'
