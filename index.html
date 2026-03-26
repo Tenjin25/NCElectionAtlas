@@ -9782,6 +9782,60 @@ document.addEventListener('DOMContentLoaded', function() {
         .toUpperCase();
     }
 
+    function buildLoadedPrecinctCountyNormIndex() {
+      const byPrecinct = new Map();
+      const absorb = (features) => {
+        (features || []).forEach(feature => {
+          const props = feature?.properties || {};
+          const countyRaw = props.county_norm || props.county_nam || props.COUNTYNAME || props.NAME20 || props.NAME || '';
+          const countyNorm = normalizeCountyToken(countyRaw);
+          const countyName = props.county_nam || props.COUNTYNAME || props.NAME20 || props.NAME || '';
+          const precId = props.prec_id || props.PREC_ID || '';
+          const precinctRaw = props.precinct_norm || (countyName && precId ? `${countyName} - ${precId}` : '');
+          const precinctNorm = normalizeCountyToken(precinctRaw);
+          if (!countyNorm || !precinctNorm) return;
+          if (!byPrecinct.has(precinctNorm)) byPrecinct.set(precinctNorm, countyNorm);
+        });
+      };
+      absorb(precinctCentroidsData?.features);
+      absorb(window.precinctsData?.features);
+      return byPrecinct;
+    }
+
+    function backfillHistoricalPrecinctResultsWithCountyFallback(precinctResults, countyAgg, contestType, year) {
+      const targetYear = Number(year);
+      if (!(precinctResults instanceof Map) || !countyAgg || !Number.isFinite(targetYear) || targetYear > 2020) return 0;
+      const precinctCountyIndex = buildLoadedPrecinctCountyNormIndex();
+      let filled = 0;
+      precinctCountyIndex.forEach((countyNorm, precinctNorm) => {
+        if (!countyNorm || precinctResults.has(precinctNorm)) return;
+        const countyRow = countyAgg[countyNorm];
+        if (!countyRow) return;
+        const demVotes = Number(countyRow[`${contestType}_dem`] || 0);
+        const repVotes = Number(countyRow[`${contestType}_rep`] || 0);
+        const otherVotes = Number(countyRow[`${contestType}_other`] || 0);
+        const totalVotes = Number(countyRow[`${contestType}_total`] || 0);
+        if (totalVotes <= 0) return;
+        const signedPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        precinctResults.set(precinctNorm, {
+          ...countyRow,
+          [`${contestType}_dem`]: demVotes,
+          [`${contestType}_rep`]: repVotes,
+          [`${contestType}_other`]: otherVotes,
+          [`${contestType}_total`]: totalVotes,
+          [`${contestType}_margin_pct`]: signedPct,
+          [`${contestType}_winner`]: signedPct > 0 ? 'REPUBLICAN' : (signedPct < 0 ? 'DEMOCRAT' : 'TIE'),
+          __fallback_scope: 'county',
+          __fallback_reason: 'historical_unmatched_precinct',
+          __fallback_county_norm: countyNorm,
+          __fallback_precinct_norm: precinctNorm,
+          __fallback_year: targetYear
+        });
+        filled += 1;
+      });
+      return filled;
+    }
+
     const PRECINCT_ALIAS_COMMON_WORDS = ['PRECINCT', 'PCT', 'WARD', 'DISTRICT', 'TOWNSHIP', 'BOX', 'VOTING', 'LOCATION'];
 
     function normalizePrecinctAliasToken(value) {
@@ -10921,16 +10975,20 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!norm) return false;
       const row = currentPrecinctResults.get(norm);
       if (!row) return false;
+      const isCountyFallback = String(row?.__fallback_scope || '').toLowerCase() === 'county';
 
       const demVotes = Number(row[`${contestType}_dem`] || 0);
       const repVotes = Number(row[`${contestType}_rep`] || 0);
       const otherVotes = Number(row[`${contestType}_other`] || 0);
       const county = (meta.county || norm.split(' - ')[0] || '').toString().trim().toUpperCase();
       const precinctDisplay = (meta.precinct || norm).toString().trim();
+      const subtitle = isCountyFallback
+        ? `${formatContestName(contestType, year)} ${year} - county fallback`
+        : `${formatContestName(contestType, year)} ${year}`;
 
       pinVoteCounterState(
         `Selected: ${precinctDisplay}`,
-        `${formatContestName(contestType, year)} ${year}`,
+        subtitle,
         demVotes,
         repVotes,
         otherVotes,
@@ -10940,6 +10998,7 @@ document.addEventListener('DOMContentLoaded', function() {
           county,
           precinct: precinctDisplay,
           precinctNorm: norm,
+          fallbackScope: isCountyFallback ? 'county' : '',
           contestType,
           year: Number(year)
         },
@@ -16344,13 +16403,17 @@ document.addEventListener('DOMContentLoaded', function() {
         wireTooltipButtons();
         return;
       }
+      const isCountyFallback = String(row?.__fallback_scope || '').toLowerCase() === 'county';
+      const countyNorm = normalizeCountyToken(row?.__fallback_county_norm || countyName || row?.county || precinctNorm.split(' - ')[0] || '');
 
       const demVotes = Number(row[`${contestType}_dem`] || 0);
       const repVotes = Number(row[`${contestType}_rep`] || 0);
       const otherVotes = Number(row[`${contestType}_other`] || 0);
       const demCandidate = row[`${contestType}_dem_candidate`] || '';
       const repCandidate = row[`${contestType}_rep_candidate`] || '';
-      const subtitle = `${formatContestName(contestType, year)} ${year}`;
+      const subtitle = isCountyFallback
+        ? `${formatContestName(contestType, year)} ${year} - county fallback`
+        : `${formatContestName(contestType, year)} ${year}`;
 
       const signedMarginPct = Number(row[`${contestType}_margin_pct`]);
       const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, demVotes + repVotes + otherVotes) : signedMarginPct;
@@ -16364,6 +16427,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (prevPrecinctMargins?.has(precinctNorm)) {
         const prevMargin = Number(prevPrecinctMargins.get(precinctNorm));
         if (Number.isFinite(prevMargin)) prevSignedForFlip = prevMargin;
+      } else if (isCountyFallback) {
+        const prevCounty = vizPrevCache?.prevCountyTotals?.[countyNorm] || null;
+        if (prevCounty) prevSignedForFlip = signedMarginPctFromVotes(prevCounty.dem, prevCounty.rep, prevCounty.total);
       }
 
       if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
@@ -16387,9 +16453,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const demo = getPrecinctDemographicsRow(precinctNorm, countyName, precId);
         demoLine = buildPrecinctDemographicsHoverHTML(demo);
       } catch (_) {}
+      const fallbackNote = isCountyFallback
+        ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);font-size:12px;color:#334155;"><strong>County fallback:</strong> this historical precinct did not have a direct match in the loaded result slice, so the map is using county-level totals to avoid a blank precinct.</div>`
+        : '';
 
       const inner = `
         <div class="hover-meta">${chips.join('')}</div>
+        ${fallbackNote}
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
         ${trendAtGlance}
         ${demoLine}
@@ -16406,7 +16476,7 @@ document.addEventListener('DOMContentLoaded', function() {
         repVotes,
         otherVotes,
         precinctCandidates,
-        precinctMeta
+        { ...precinctMeta, fallbackScope: isCountyFallback ? 'county' : '' }
       );
       if (pinSelection) {
         pinVoteCounterState(
@@ -16415,7 +16485,7 @@ document.addEventListener('DOMContentLoaded', function() {
           demVotes,
           repVotes,
           otherVotes,
-          precinctMeta,
+          { ...precinctMeta, fallbackScope: isCountyFallback ? 'county' : '' },
           precinctCandidates
         );
       }
@@ -21151,6 +21221,9 @@ document.addEventListener('DOMContentLoaded', function() {
         countyAgg[countyNorm][`${contestType}_total`] += totalVotes;
       }
       currentElectionResults = countyAgg;
+      if (needsPrecinctDetail && currentPrecinctResults) {
+        try { backfillHistoricalPrecinctResultsWithCountyFallback(currentPrecinctResults, countyAgg, contestType, year); } catch (_) {}
+      }
       currentCountyTurnoutTotals = {};
       Object.keys(countyAgg).forEach(countyNorm => {
         currentCountyTurnoutTotals[countyNorm] = Number(countyAgg[countyNorm]?.[`${contestType}_total`] || 0);
@@ -21478,57 +21551,57 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (needsPrecinctDetail) {
         const exprPrecinct = ['case'];
-        for (const row of contestData) {
+        for (const [precinctName, row] of (currentPrecinctResults || new Map()).entries()) {
           if (staleCheck()) return;
-          const precinctNames = precinctNormVariants(row.county);
-          const rowName = (row.county || '').toString();
+          const isCountyFallback = String(row?.__fallback_scope || '').toLowerCase() === 'county';
+          const rowName = isCountyFallback
+            ? String(row?.__fallback_county_norm || row?.county || '')
+            : String(row?.county || '');
           const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-          const countyNorm = normalizeCountyName(countyOnly);
-          const adjusted = applyScenarioShiftToVotes(
-            countyNorm,
-            Number(row[`${contestType}_dem`] || 0),
-            Number(row[`${contestType}_rep`] || 0),
-            Number(row[`${contestType}_other`] || 0),
-            Number(row[`${contestType}_total`] || 0)
-          );
-          const demVotes = Number(adjusted.dem || 0);
-          const repVotes = Number(adjusted.rep || 0);
-          const totalVotes = Number(adjusted.total || 0);
+          const countyNorm = normalizeCountyName(countyOnly || row?.__fallback_county_norm || precinctName.split(' - ')[0] || '');
+          const demVotes = Number(row[`${contestType}_dem`] || 0);
+          const repVotes = Number(row[`${contestType}_rep`] || 0);
+          const otherVotes = Number(row[`${contestType}_other`] || 0);
+          const totalVotes = Number(row[`${contestType}_total`] || 0);
           if (totalVotes === 0) continue;
-          const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+          const signedMarginPctRaw = Number(row[`${contestType}_margin_pct`]);
+          const signedMarginPct = Number.isFinite(signedMarginPctRaw)
+            ? signedMarginPctRaw
+            : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
           const winnerRaw = (row[`${contestType}_winner`] || '').toString().toUpperCase();
           const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (repVotes === demVotes ? 'T' : (repVotes > demVotes ? 'R' : 'D')));
           let color = '#d1d5db';
 
           if (mode === 'flips') {
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            const curSigned = Number.isFinite(signedMarginPct) ? signedMarginPct : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
             let prevSigned = 0;
-            // Use first matching norm (variants exist for precinct naming quirks).
-            for (const n of precinctNames) {
-              if (vizPrevCache?.prevPrecinctMarginByNorm?.has(n)) { prevSigned = vizPrevCache.prevPrecinctMarginByNorm.get(n); break; }
+            if (isCountyFallback) {
+              const prev = vizPrevCache?.prevCountyTotals?.[countyNorm] || null;
+              prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            } else if (vizPrevCache?.prevPrecinctMarginByNorm?.has(precinctName)) {
+              prevSigned = Number(vizPrevCache.prevPrecinctMarginByNorm.get(precinctName)) || 0;
             }
             const f = flipInfo(prevSigned, curSigned);
             color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
           } else if (mode === 'winners') {
             color = colorForWinnerMode(winner);
           } else if (mode === 'shift' && prevPrecinctMarginByNorm) {
-            // Signed margin pct: positive => R, negative => D.
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            const curSigned = Number.isFinite(signedMarginPct) ? signedMarginPct : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
             let prevSigned = 0;
-            // Use first matching norm (variants exist for precinct naming quirks).
-            for (const n of precinctNames) {
-              if (prevPrecinctMarginByNorm.has(n)) { prevSigned = prevPrecinctMarginByNorm.get(n); break; }
+            if (isCountyFallback) {
+              const prev = prevCountyTotals?.[countyNorm] || null;
+              prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            } else if (prevPrecinctMarginByNorm.has(precinctName)) {
+              prevSigned = Number(prevPrecinctMarginByNorm.get(precinctName)) || 0;
             }
             color = colorForShiftMode(curSigned - prevSigned);
           } else {
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+            const curSigned = Number.isFinite(signedMarginPct) ? signedMarginPct : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
             color = colorForMarginMode(Math.abs(curSigned), winner === 'T' ? 'R' : winner);
           }
-          precinctNames.forEach(precinctName => {
-            exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
-            exprPrecinct.push(color);
-            currentPrecinctTurnoutTotals.set(precinctName, totalVotes);
-          });
+          exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
+          exprPrecinct.push(color);
+          if (!isCountyFallback) currentPrecinctTurnoutTotals.set(precinctName, totalVotes);
         }
         exprPrecinct.push('#d1d5db');
         if (staleCheck()) return;

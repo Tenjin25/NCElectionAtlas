@@ -129,6 +129,70 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     );
   });
 
+  test('historical precinct backfill uses county fallback only for 2020 and older', async ({ page }) => {
+    const snapshot = await page.evaluate(() => {
+      if (typeof backfillHistoricalPrecinctResultsWithCountyFallback !== 'function') return null;
+
+      precinctCentroidsData = {
+        type: 'FeatureCollection',
+        features: [
+          { type: 'Feature', properties: { county_nam: 'Wake', prec_id: '01-01', precinct_norm: 'WAKE - 01-01' } },
+          { type: 'Feature', properties: { county_nam: 'Wake', prec_id: '01-02', precinct_norm: 'WAKE - 01-02' } }
+        ]
+      };
+      window.precinctsData = { type: 'FeatureCollection', features: [] };
+
+      const older = new Map([
+        ['WAKE - 01-01', {
+          county: 'WAKE - 01-01',
+          governor_dem: 60,
+          governor_rep: 40,
+          governor_other: 0,
+          governor_total: 100,
+          governor_margin_pct: -20,
+          governor_winner: 'DEMOCRAT'
+        }]
+      ]);
+      const countyAgg = {
+        WAKE: {
+          year: 2020,
+          county: 'Wake',
+          governor_dem: 600,
+          governor_rep: 400,
+          governor_other: 0,
+          governor_total: 1000,
+          governor_dem_candidate: 'Dem',
+          governor_rep_candidate: 'Rep'
+        }
+      };
+
+      const filledOlder = backfillHistoricalPrecinctResultsWithCountyFallback(older, countyAgg, 'governor', 2020);
+      const olderFallback = older.get('WAKE - 01-02') || null;
+
+      const newer = new Map();
+      const filledNewer = backfillHistoricalPrecinctResultsWithCountyFallback(newer, countyAgg, 'governor', 2024);
+
+      return {
+        filledOlder,
+        olderFallbackScope: String(olderFallback?.__fallback_scope || ''),
+        olderFallbackReason: String(olderFallback?.__fallback_reason || ''),
+        olderFallbackTotal: Number(olderFallback?.governor_total || 0),
+        olderFallbackWinner: String(olderFallback?.governor_winner || ''),
+        filledNewer,
+        newerSize: newer.size
+      };
+    });
+
+    expect(snapshot).toBeTruthy();
+    expect(snapshot.filledOlder).toBeGreaterThanOrEqual(1);
+    expect(snapshot.olderFallbackScope).toBe('county');
+    expect(snapshot.olderFallbackReason).toBe('historical_unmatched_precinct');
+    expect(snapshot.olderFallbackTotal).toBe(1000);
+    expect(snapshot.olderFallbackWinner).toMatch(/DEMOCRAT/i);
+    expect(snapshot.filledNewer).toBe(0);
+    expect(snapshot.newerSize).toBe(0);
+  });
+
   test('precinct search selection sets yellow-highlight target and zooms in', async ({ page }) => {
     await page.click('#precinct-toggle');
     await page.waitForFunction(() => {
