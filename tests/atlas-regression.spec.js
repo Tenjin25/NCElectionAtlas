@@ -419,6 +419,57 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(rawToneClasses).toEqual([]);
   });
 
+  test('2026 modeled Senate and Supreme Court contests synthesize county and district slices', async ({ page }) => {
+    await page.waitForFunction(() => {
+      const sel = document.getElementById('contestSelect');
+      const values = Array.from(sel?.options || [])
+        .map((opt) => (opt && opt.value ? String(opt.value).trim() : ''))
+        .filter(Boolean);
+      return values.includes('us_senate_model_2026') && values.includes('nc_supreme_court_model_2026');
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const modeledSnapshot = await page.evaluate(async () => {
+      const sel = document.getElementById('contestSelect');
+      const options = Array.from(sel?.options || []).reduce((acc, opt) => {
+        const value = opt && opt.value ? String(opt.value).trim() : '';
+        if (value) acc[value] = String(opt.textContent || '').trim();
+        return acc;
+      }, {});
+
+      const senateRows = await loadContestSlice('us_senate_model', 2026);
+      const courtRows = await loadContestSlice('nc_supreme_court_model', 2026);
+      const senateDistrictNode = await loadDistrictSlice('congressional', 'us_senate_model', 2026);
+      const courtDistrictNode = await loadDistrictSlice('congressional', 'nc_supreme_court_model', 2026);
+
+      return {
+        senateOptionText: options.us_senate_model_2026 || '',
+        courtOptionText: options.nc_supreme_court_model_2026 || '',
+        senateRows: senateRows.length,
+        courtRows: courtRows.length,
+        senateDemCandidate: String(senateRows[0]?.us_senate_model_dem_candidate || ''),
+        courtDemCandidate: String(courtRows[0]?.nc_supreme_court_model_dem_candidate || ''),
+        senateDistricts: Object.keys(senateDistrictNode?.general?.results || {}).length,
+        courtDistricts: Object.keys(courtDistrictNode?.general?.results || {}).length
+      };
+    });
+
+    expect(modeledSnapshot.senateOptionText).toBe('US Senate Model (2026)');
+    expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Model (2026)');
+    expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
+    expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
+    expect(modeledSnapshot.senateDemCandidate).toBe('Democratic nominee');
+    expect(modeledSnapshot.courtDemCandidate).toBe('Democratic-aligned candidate');
+    expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
+    expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
+
+    await page.selectOption('#contestSelect', 'us_senate_model_2026');
+    await page.waitForFunction(
+      (v) => document.getElementById('contestSelect')?.value === v,
+      'us_senate_model_2026'
+    );
+    await expect(page.locator('#context-contest')).toContainText('US Senate Model 2026');
+  });
+
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
     await page.evaluate(() => {
       const png1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC';

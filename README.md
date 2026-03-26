@@ -75,6 +75,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Trajectory / Status Card:** County/district/precinct trend panels include a plain-language trajectory block (status, trend direction, and key shift checkpoints)
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
+- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -129,6 +130,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Margin/shift formatting:
   - `Latest Result` shows the latest cycle as `YEAR: R+X.XX pts` or `YEAR: D+X.XX pts`
   - Shift rows show directional movement with arrows and points (for example, `↗ R+1.42 pts`)
+
+### Modeled 2026 Statewide Contests (March 26, 2026)
+
+- Added `US Senate Model (2026)` to the contest picker for counties and district views.
+- Added `NC Supreme Court Model (2026)` to the contest picker for counties and district views.
+- The modeled Senate race uses the 2022 US Senate geography as its baseline, then re-centers it to the 2024 Attorney General statewide climate before any user swing is applied.
+- The modeled Supreme Court race uses the 2022 NC Supreme Court Seat 05 baseline, then re-centers it to the 2024 NC Supreme Court Seat 06 statewide climate before any user swing is applied.
+- Both modeled contests reuse the normal `Dem swing` slider, so users can push the synthetic 2026 map further toward either party without leaving the standard contest workflow.
 
 ### County Precision + Hover Flip Fixes (March 22, 2026)
 

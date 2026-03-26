@@ -7691,7 +7691,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 High contrast demographics
               </label>
               <div class="controls-panel-note">
-                Positive swing shifts margins toward Democrats. Negative values shift toward Republicans.
+                Positive swing shifts margins toward Democrats. Negative values shift toward Republicans. Modeled 2026 Senate and Court entries inherit this swing.
               </div>
             </div>
             <div class="control-group control-group-analytics">
@@ -8445,6 +8445,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const BELLWETHER_MIN_COUNTIES = 8;
     const BELLWETHER_MAX_COUNTIES = 20;
     const BELLWETHER_COUNTY_SHARE = 0.15;
+    const MODELED_CONTEST_DEFINITIONS = {
+      'us_senate_model_2026': {
+        contestType: 'us_senate_model',
+        year: 2026,
+        displayName: 'US Senate Model',
+        groupLabel: 'US Senate',
+        baseContestType: 'us_senate',
+        baseYear: 2022,
+        climateContestType: 'attorney_general',
+        climateYear: 2024,
+        demCandidate: 'Democratic nominee',
+        repCandidate: 'Republican nominee',
+        description: '2022 Senate baseline with a 2024 Attorney General climate adjustment'
+      },
+      'nc_supreme_court_model_2026': {
+        contestType: 'nc_supreme_court_model',
+        year: 2026,
+        displayName: 'NC Supreme Court Model',
+        groupLabel: 'NC Supreme Court',
+        baseContestType: 'nc_supreme_court_associate_justice_seat_05',
+        baseYear: 2022,
+        climateContestType: 'nc_supreme_court_associate_justice_seat_06',
+        climateYear: 2024,
+        demCandidate: 'Democratic-aligned candidate',
+        repCandidate: 'Republican-aligned candidate',
+        description: '2022 Supreme Court baseline with a 2024 Supreme Court climate adjustment'
+      }
+    };
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
     let splitTicketCountyOverlayMargins = {};
@@ -8727,6 +8755,52 @@ document.addEventListener('DOMContentLoaded', function() {
     function getActiveDistrictManifest(linesYear = currentDistrictLinesYear) {
       const y = normalizeDistrictLinesYear(linesYear);
       return districtManifestByLines?.[String(y)] || [];
+    }
+
+    function getModeledContestDefinition(contestType, year) {
+      const y = Number(year);
+      return MODELED_CONTEST_DEFINITIONS[`${contestType}_${y}`] || null;
+    }
+
+    function getModeledContestDefinitionByType(contestType) {
+      return Object.values(MODELED_CONTEST_DEFINITIONS).find(def => def.contestType === contestType) || null;
+    }
+
+    function getModeledContestManifestEntries(view = currentView) {
+      const scope = view === 'districts'
+        ? 'congressional'
+        : (view === 'state_house' ? 'state_house' : (view === 'state_senate' ? 'state_senate' : ''));
+      return Object.values(MODELED_CONTEST_DEFINITIONS).map(def => ({
+        year: def.year,
+        scope: scope || undefined,
+        contest_type: def.contestType,
+        file: scope
+          ? `${scope}_${def.contestType}_${def.year}.synthetic.json`
+          : `${def.contestType}_${def.year}.synthetic.json`,
+        rows: 1,
+        districts: scope ? 1 : undefined,
+        major_party_contested: true,
+        modeled: true,
+        synthetic: true
+      }));
+    }
+
+    function mergeManifestEntriesWithModeled(entries, view = currentView) {
+      const merged = [];
+      const seen = new Set();
+      const addEntry = (entry) => {
+        const contestType = (entry?.contest_type || '').toString().trim();
+        const year = Number(entry?.year);
+        const scope = (entry?.scope || '').toString().trim();
+        if (!contestType || !Number.isFinite(year)) return;
+        const key = `${scope}|${contestType}|${year}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(entry);
+      };
+      (Array.isArray(entries) ? entries : []).forEach(addEntry);
+      getModeledContestManifestEntries(view).forEach(addEntry);
+      return merged;
     }
 
     function getDistrictGeometryPath(scope, linesYear = currentDistrictLinesYear) {
@@ -9102,25 +9176,23 @@ document.addEventListener('DOMContentLoaded', function() {
       return normalizeCountyToken(countyNorm) === targetCounty;
     }
 
-    function applyScenarioShiftToVotes(countyNorm, demVotes, repVotes, otherVotes, totalVotes) {
-      function finalizeVoteSet(dIn, rIn, oIn, totalHint = 0) {
-        const d = Math.max(0, Math.round(Number(dIn) || 0));
-        const r = Math.max(0, Math.round(Number(rIn) || 0));
-        const o = Math.max(0, Math.round(Number(oIn) || 0));
-        const sum = d + r + o;
-        const hint = Math.max(0, Math.round(Number(totalHint) || 0));
-        return { dem: d, rep: r, other: o, total: sum > 0 ? sum : hint };
-      }
+    function finalizeVoteSet(dIn, rIn, oIn, totalHint = 0) {
+      const d = Math.max(0, Math.round(Number(dIn) || 0));
+      const r = Math.max(0, Math.round(Number(rIn) || 0));
+      const o = Math.max(0, Math.round(Number(oIn) || 0));
+      const sum = d + r + o;
+      const hint = Math.max(0, Math.round(Number(totalHint) || 0));
+      return { dem: d, rep: r, other: o, total: sum > 0 ? sum : hint };
+    }
 
+    function shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swingPct = 0) {
       const total = Number(totalVotes || 0);
       let dem = Number(demVotes || 0);
       let rep = Number(repVotes || 0);
       const other = Number(otherVotes || 0);
       if (!Number.isFinite(total) || total <= 0) return finalizeVoteSet(dem, rep, other, total);
-      const swing = Number(scenarioSwingPct || 0);
+      const swing = Number(swingPct || 0);
       if (Math.abs(swing) < 0.0001) return finalizeVoteSet(dem, rep, other, total);
-      if (!shouldApplyScenarioToCounty(countyNorm)) return finalizeVoteSet(dem, rep, other, total);
-
       const originalTwoParty = Math.max(0, dem + rep);
       if (originalTwoParty <= 0) return finalizeVoteSet(dem, rep, other, total);
       const deltaVotes = (swing / 200.0) * total; // +/-1 point margin shift == +/-0.5% vote transfer between D/R.
@@ -9133,6 +9205,17 @@ document.addEventListener('DOMContentLoaded', function() {
         rep *= scale;
       }
       return finalizeVoteSet(dem, rep, other, total);
+    }
+
+    function applyScenarioShiftToVotes(countyNorm, demVotes, repVotes, otherVotes, totalVotes) {
+      const swing = Number(scenarioSwingPct || 0);
+      if (Math.abs(swing) < 0.0001) {
+        return finalizeVoteSet(demVotes, repVotes, otherVotes, totalVotes);
+      }
+      if (!shouldApplyScenarioToCounty(countyNorm)) {
+        return finalizeVoteSet(demVotes, repVotes, otherVotes, totalVotes);
+      }
+      return shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swing);
     }
 
     function quantile(sortedValues, p) {
@@ -10862,9 +10945,175 @@ document.addEventListener('DOMContentLoaded', function() {
 	      }));
 	    }
 
+      function computeStatewideMarginPctFromSliceRows(rows, contestType) {
+        const totals = (rows || []).reduce((acc, row) => {
+          acc.dem += Number(row?.[`${contestType}_dem`] || 0);
+          acc.rep += Number(row?.[`${contestType}_rep`] || 0);
+          acc.total += Number(row?.[`${contestType}_total`] || 0);
+          return acc;
+        }, { dem: 0, rep: 0, total: 0 });
+        return signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+      }
+
+      function computeStatewideMarginPctFromDistrictResults(results) {
+        const totals = Object.values(results || {}).reduce((acc, row) => {
+          acc.dem += Number(row?.dem_votes || 0);
+          acc.rep += Number(row?.rep_votes || 0);
+          acc.total += Number(row?.total_votes || 0);
+          return acc;
+        }, { dem: 0, rep: 0, total: 0 });
+        return signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+      }
+
+      function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct) {
+        const baseContestType = modeledDef.baseContestType;
+        const contestType = modeledDef.contestType;
+        const shifted = shiftVotesBySwingPct(
+          Number(baseRow?.[`${baseContestType}_dem`] || 0),
+          Number(baseRow?.[`${baseContestType}_rep`] || 0),
+          Number(baseRow?.[`${baseContestType}_other`] || 0),
+          Number(baseRow?.[`${baseContestType}_total`] || 0),
+          climateSwingPct
+        );
+        const signed = signedMarginPctFromVotes(shifted.dem, shifted.rep, shifted.total);
+        const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+        const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
+        const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
+        return {
+          year: Number(modeledDef.year),
+          county: baseRow?.county || '',
+          [`${contestType}_dem`]: shifted.dem,
+          [`${contestType}_rep`]: shifted.rep,
+          [`${contestType}_other`]: shifted.other,
+          [`${contestType}_total`]: shifted.total,
+          [`${contestType}_dem_candidate`]: modeledDef.demCandidate || '',
+          [`${contestType}_rep_candidate`]: modeledDef.repCandidate || '',
+          [`${contestType}_margin`]: Math.round(shifted.rep - shifted.dem),
+          [`${contestType}_margin_pct`]: signed,
+          [`${contestType}_winner`]: winner,
+          [`${contestType}_color`]: color
+        };
+      }
+
+      async function buildModeledContestSliceRows(modeledDef) {
+        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
+        const climateRows = await loadContestSlice(modeledDef.climateContestType, modeledDef.climateYear);
+        const baseSigned = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
+        const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
+        const climateSwingPct = baseSigned - climateSigned;
+        return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, climateSwingPct));
+      }
+
+      async function buildModeledBaselineContestSliceRows(modeledDef) {
+        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
+        return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
+      }
+
+      function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct) {
+        const shifted = shiftVotesBySwingPct(
+          Number(baseRow?.dem_votes || 0),
+          Number(baseRow?.rep_votes || 0),
+          Number(baseRow?.other_votes || 0),
+          Number(baseRow?.total_votes || 0),
+          climateSwingPct
+        );
+        const signed = signedMarginPctFromVotes(shifted.dem, shifted.rep, shifted.total);
+        const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+        const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
+        const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
+        return {
+          ...baseRow,
+          dem_votes: shifted.dem,
+          rep_votes: shifted.rep,
+          other_votes: shifted.other,
+          total_votes: shifted.total,
+          dem_candidate: modeledDef.demCandidate || '',
+          rep_candidate: modeledDef.repCandidate || '',
+          margin: Math.round(shifted.rep - shifted.dem),
+          margin_pct: signed,
+          winner,
+          competitiveness: {
+            ...(baseRow?.competitiveness || {}),
+            color
+          }
+        };
+      }
+
+      async function buildModeledDistrictSliceNode(scope, modeledDef, linesYear) {
+        const baseNode = await loadDistrictSlice(scope, modeledDef.baseContestType, modeledDef.baseYear, linesYear);
+        const climateNode = await loadDistrictSlice(scope, modeledDef.climateContestType, modeledDef.climateYear, linesYear);
+        const baseResults = baseNode?.general?.results || null;
+        const climateResults = climateNode?.general?.results || null;
+        if (!baseResults || !Object.keys(baseResults).length) return null;
+        if (!climateResults || !Object.keys(climateResults).length) return null;
+
+        const baseSigned = computeStatewideMarginPctFromDistrictResults(baseResults);
+        const climateSigned = computeStatewideMarginPctFromDistrictResults(climateResults);
+        const climateSwingPct = baseSigned - climateSigned;
+        const modeledResults = {};
+        Object.keys(baseResults).forEach(districtId => {
+          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, climateSwingPct);
+        });
+
+        return {
+          year: Number(modeledDef.year),
+          scope,
+          contest_type: modeledDef.contestType,
+          meta: {
+            ...(baseNode?.meta || {}),
+            source: 'modeled_contest',
+            office: modeledDef.displayName,
+            modeled: true,
+            model_base: `${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} ${modeledDef.baseYear}`,
+            model_climate: `${formatContestName(modeledDef.climateContestType, modeledDef.climateYear)} ${modeledDef.climateYear}`,
+            model_swing_pct: Number(climateSwingPct.toFixed(2))
+          },
+          general: {
+            ...(baseNode?.general || {}),
+            results: modeledResults
+          }
+        };
+      }
+
+      async function buildModeledBaselineDistrictSliceNode(scope, modeledDef, linesYear) {
+        const baseNode = await loadDistrictSlice(scope, modeledDef.baseContestType, modeledDef.baseYear, linesYear);
+        const baseResults = baseNode?.general?.results || null;
+        if (!baseResults || !Object.keys(baseResults).length) return null;
+
+        const modeledResults = {};
+        Object.keys(baseResults).forEach(districtId => {
+          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, 0);
+        });
+
+        return {
+          year: Number(modeledDef.baseYear),
+          scope,
+          contest_type: modeledDef.contestType,
+          meta: {
+            ...(baseNode?.meta || {}),
+            source: 'modeled_contest_baseline',
+            office: modeledDef.displayName,
+            modeled: true,
+            model_base: `${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} ${modeledDef.baseYear}`,
+            model_swing_pct: 0
+          },
+          general: {
+            ...(baseNode?.general || {}),
+            results: modeledResults
+          }
+        };
+      }
+
 	    async function loadContestSlice(contestType, year) {
 	      const key = `${contestType}_${year}`;
 	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
+
+        const modeledDef = getModeledContestDefinition(contestType, year);
+        if (modeledDef) {
+          const modeledRows = await buildModeledContestSliceRows(modeledDef);
+          contestSliceCache.set(key, modeledRows);
+          return modeledRows;
+        }
 
 	      try {
 	        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
@@ -10909,6 +11158,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const key = `${contestType}_${year}`;
         if (contestCandidateCache.has(key)) return contestCandidateCache.get(key);
         const empty = { dem: '', rep: '' };
+        const modeledDef = getModeledContestDefinition(contestType, year);
+        if (modeledDef) {
+          const out = {
+            dem: modeledDef.demCandidate || '',
+            rep: modeledDef.repCandidate || ''
+          };
+          contestCandidateCache.set(key, out);
+          return out;
+        }
         try {
           const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
           const rows = payload?.rows || [];
@@ -10928,11 +11186,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-    async function loadDistrictSlice(scope, contestType, year) {
+    async function loadDistrictSlice(scope, contestType, year, linesYearOverride = currentDistrictLinesYear) {
       const key = `${scope}_${contestType}_${year}`;
-      const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
+      const linesYear = normalizeDistrictLinesYear(linesYearOverride);
       const cacheKey = `${linesYear}|${key}`;
       if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
+
+      const modeledDef = getModeledContestDefinition(contestType, year);
+      if (modeledDef) {
+        const modeledNode = await buildModeledDistrictSliceNode(scope, modeledDef, linesYear);
+        districtSliceCache.set(cacheKey, modeledNode);
+        return modeledNode;
+      }
 
       const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
       for (const path of candidatePaths) {
@@ -11120,6 +11385,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatContestName(contestType, year) {
+	      const modeledDef = getModeledContestDefinition(contestType, year) || getModeledContestDefinitionByType(contestType);
+	      if (modeledDef?.displayName) {
+	        return modeledDef.displayName;
+	      }
 	      const nameMap = {
 	        'president': 'President of the United States',
 	        'governor': 'Governor',
@@ -11327,6 +11596,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	      });
 
 	      function groupLabelForContestType(contestType) {
+          const modeledDef = getModeledContestDefinitionByType(contestType);
+          if (modeledDef?.groupLabel) return modeledDef.groupLabel;
 	        if (contestType === 'president') return 'US President';
 	        if (contestType === 'us_senate') return 'US Senate';
 	        if (contestType === 'governor') return 'NC Governor';
@@ -11402,7 +11673,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        items.forEach(item => {
 	          const opt = document.createElement('option');
 	          opt.value = `${item.contestType}_${item.year}`;
-	          if (isJudicial) {
+            const modeledDef = getModeledContestDefinition(item.contestType, item.year);
+	          if (isJudicial || modeledDef) {
 	            opt.textContent = `${formatContestName(item.contestType, item.year)} (${item.year})`;
 	          } else {
 	            opt.textContent = `${label} (${item.year})`;
@@ -11444,8 +11716,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      if (Array.isArray(entries) && entries.length > 0) {
-        populateContestSelectFromManifest(entries);
+      const entriesWithModels = mergeManifestEntriesWithModeled(entries, currentView);
+      if (Array.isArray(entriesWithModels) && entriesWithModels.length > 0) {
+        populateContestSelectFromManifest(entriesWithModels);
         return;
       }
 
@@ -19603,6 +19876,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function getPreviousContestSlice(contestType, year) {
       const y = Number(year);
+      const modeledDef = getModeledContestDefinition(contestType, y);
+      if (modeledDef) {
+        const rows = await buildModeledBaselineContestSliceRows(modeledDef);
+        if (rows && rows.length) return { year: modeledDef.baseYear, rows };
+        return null;
+      }
       const candidates = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
       for (const cy of candidates) {
         const rows = await tryLoadContestSliceStrict(contestType, cy);
@@ -19824,6 +20103,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function getPreviousDistrictSlice(scope, contestType, year, linesYear = currentDistrictLinesYear) {
       const y = Number(year);
+      const modeledDef = getModeledContestDefinition(contestType, y);
+      if (modeledDef) {
+        const node = await buildModeledBaselineDistrictSliceNode(scope, modeledDef, normalizeDistrictLinesYear(linesYear));
+        const results = node?.general?.results || null;
+        if (results && Object.keys(results).length) return { year: modeledDef.baseYear, node };
+        return null;
+      }
       const candidates = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
       for (const cy of candidates) {
         const node = await tryLoadDistrictSliceStrict(scope, contestType, cy, linesYear);
