@@ -72,8 +72,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Emerging Republican Edge`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
-- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing
+- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Reinforcing Republican Stronghold`, `Emerging Republican Edge`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
+- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests
@@ -106,16 +106,20 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `position`: `Stronghold`, `Lean`, `Edge`, or `Battleground`
 - Example live statuses now include labels such as:
   - `Durable Democratic Stronghold`
+  - `Reinforcing Democratic Stronghold`
   - `Reinforcing Republican Lean`
+  - `Reinforcing Republican Stronghold`
   - `Emerging Democratic Edge`
   - `Realigned Republican Stronghold`
   - `Battleground`
 - Updated momentum wording to shorter directional calls:
-  - `→ Stable`
-  - `↗ Republican trend`
-  - `↗ Accelerating Republican trend`
-  - `↘ Democratic trend`
-  - `↘ Accelerating Democratic trend`
+  - `↔ Stable`
+  - `→ Republican trend`
+  - `→ Accelerating Republican trend`
+  - `← Democratic trend`
+  - `← Accelerating Democratic trend`
+  - `← Long-run Democratic drift`
+  - `→ Long-run Republican drift`
 - Kept the shorter checkpoint rows in the trajectory card:
   - `Latest Result`
   - `Last Cycle` or `Since <year>`
@@ -124,6 +128,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Moved the composite trajectory category pill beneath the `Trajectory Snapshot` heading so longer status labels have more horizontal room and wrap more cleanly.
 - Added a `Census Context` county sidebar card with qualitative population/growth framing such as `Urban anchor county`, `Metro spillover`, `High-growth coastal county`, `Slow-growth or declining county`, and `Mixed-growth county`.
 - The Census insight now reads from cleaned Vintage 2025 county population estimates in `data/CO-EST2025-POP-37-clean.csv`, released March 26, 2026, so it can reference actual 2020-2025 growth and the July 1, 2024 to July 1, 2025 change instead of only static county buckets.
+- Added a trajectory-level `Census check` note when growth patterns strongly corroborate the election trend, including fast-growing suburban reinforcement cases and leftward drift in metro spillover counties.
 - The Census card is intentionally qualitative; it summarizes recent population-pattern context rather than presenting a raw Census table.
 
 ### Modeled 2026 Statewide Contests (March 26, 2026)
