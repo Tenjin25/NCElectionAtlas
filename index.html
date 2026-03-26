@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset='utf-8'>
+  <title>North Carolina Election Atlas (2000-2024)</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover'>
+  <meta name="author" content="Shamar Davis">
+  <meta name="copyright" content="© 2026 Shamar Does Elections. All Rights Reserved.">
+  <!-- Watermark: SDE Creator Attribution | Created by Shamar Davis | Copyright 2026 Shamar Does Elections -->
+  <meta property="og:title" content="NC Election Atlas (2000-2024)">
+  <meta property="og:description" content="Interactive visualization of North Carolina election trends from 2000 to 2024, with county, precinct, and district views.">
+  <meta property="og:image" content="preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=optional" rel="stylesheet">
   <style>
   /* Mobile Styles - Enhanced for touch and small screens */
   @media (max-width: 768px) {
@@ -569,20 +583,6 @@
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <meta charset='utf-8'>
-    <title>North Carolina Election Atlas (2000-2024)</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover'>
-    <meta name="author" content="Shamar Davis">
-    <meta name="copyright" content="© 2026 Shamar Does Elections. All Rights Reserved.">
-    <!-- Watermark: SDE Creator Attribution | Created by Shamar Davis | Copyright 2026 Shamar Does Elections -->
-    <meta property="og:title" content="NC Election Atlas (2000-2024)">
-    <meta property="og:description" content="Interactive visualization of North Carolina election trends from 2000 to 2024, with county, precinct, and district views.">
-    <meta property="og:image" content="preview.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet'>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
 /* Sidebar is disabled by default; show only when html has .sidebar-enabled. */
 #sidebar, #sidebar-float-toggle { display: none; }
@@ -3530,6 +3530,85 @@ body { height: var(--app-height); }
     background: rgba(254, 243, 199, 0.92);
   }
 
+  .focus-census-insight {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.94) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .focus-census-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .focus-census-kicker {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .focus-census-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 26px;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(14, 116, 144, 0.18);
+    background: rgba(236, 254, 255, 0.92);
+    color: #155e75;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+
+  .focus-census-pill-emoji,
+  .focus-census-inline-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    line-height: 1;
+  }
+
+  .focus-census-summary,
+  .focus-census-note,
+  .focus-census-source {
+    margin: 0;
+  }
+
+  .focus-census-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: #0f172a;
+  }
+
+  .focus-census-note {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #334155;
+  }
+
+  .focus-census-source {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #64748b;
+  }
+
   .focus-trajectory {
     --trajectory-accent-rgb: 100, 116, 139;
     --trajectory-accent-soft: rgba(100, 116, 139, 0.2);
@@ -3615,6 +3694,15 @@ body { height: var(--app-height); }
     border-bottom: 1px dashed rgba(var(--trajectory-accent-rgb), 0.25);
   }
 
+  .focus-trajectory-head-badges {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
   .focus-trajectory-kicker {
     font-size: 10px;
     font-weight: 800;
@@ -3626,33 +3714,61 @@ body { height: var(--app-height); }
   .focus-trajectory-status {
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
-    padding: 0 11px;
+    gap: 6px;
+    min-height: 26px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 5px 11px;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.18);
     background: rgba(226, 232, 240, 0.84);
     color: #475569;
     font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    text-transform: none;
     white-space: nowrap;
+    text-align: center;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
-  .focus-trajectory-status.tone-dem {
+  .focus-trajectory-strength {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.84);
+    color: #334155;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .focus-trajectory-status.tone-dem,
+  .focus-trajectory-strength.tone-dem {
     color: #1d4ed8;
     border-color: rgba(37, 99, 235, 0.2);
     background: rgba(219, 234, 254, 0.88);
   }
 
-  .focus-trajectory-status.tone-rep {
+  .focus-trajectory-status.tone-rep,
+  .focus-trajectory-strength.tone-rep {
     color: #b91c1c;
     border-color: rgba(220, 38, 38, 0.2);
     background: rgba(254, 226, 226, 0.84);
   }
 
-  .focus-trajectory-status.tone-competitive {
+  .focus-trajectory-status.tone-competitive,
+  .focus-trajectory-strength.tone-competitive {
     color: #92400e;
     border-color: rgba(217, 119, 6, 0.24);
     background: rgba(254, 243, 199, 0.9);
@@ -3784,7 +3900,7 @@ body { height: var(--app-height); }
 
   .focus-trajectory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 8px;
   }
 
@@ -3850,11 +3966,14 @@ body { height: var(--app-height); }
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: #64748b;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .focus-trajectory-value {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
     min-width: 0;
     font-size: 12px;
@@ -3862,6 +3981,8 @@ body { height: var(--app-height); }
     line-height: 1.3;
     color: #0f172a;
     font-variant-numeric: tabular-nums;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .focus-trajectory-value.tone-dem {
@@ -6226,10 +6347,16 @@ body { height: var(--app-height); }
       gap: 6px;
     }
 
+    .focus-trajectory-head-badges,
+    .focus-census-head {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
     .focus-trajectory-status {
       min-height: 22px;
-      padding: 0 9px;
-      font-size: 10px;
+      padding: 5px 9px;
+      font-size: 9px;
     }
 
     .focus-trajectory-grid {
@@ -6258,6 +6385,25 @@ body { height: var(--app-height); }
       font-size: 10px;
       padding: 6px 7px;
       line-height: 1.35;
+    }
+
+    .focus-census-insight {
+      gap: 7px;
+      padding: 10px;
+      border-radius: 14px;
+    }
+
+    .focus-census-pill {
+      font-size: 10px;
+    }
+
+    .focus-census-summary {
+      font-size: 12px;
+    }
+
+    .focus-census-note,
+    .focus-census-source {
+      font-size: 11px;
     }
 
     .focus-trend-stats {
@@ -10482,6 +10628,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const trajectoryHtml = options?.trajectoryMeta
         ? renderTrajectoryBlockHTML(options.trajectoryMeta)
         : '';
+      const focusCensusHtml = options?.censusContext
+        ? renderFocusCensusInsightHTML(options.censusContext, options?.censusContextTitle || 'County Census Insight')
+        : '';
 
       const cards = annotated
         .slice()
@@ -10556,6 +10705,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </div>
         ${trajectoryHtml}
+        ${focusCensusHtml}
         <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
@@ -10675,6 +10825,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (meta.kind !== 'statewide' && series && series.length) {
           trendOptions.trajectoryMeta = classifyCountyTrajectory(series);
+        }
+        if ((meta.kind === 'county' || meta.kind === 'precinct') && meta.county) {
+          try {
+            trendOptions.censusContext = getNcCensusContext(meta.county);
+            trendOptions.censusContextTitle = meta.kind === 'precinct'
+              ? `${displayCountyName(meta.county)} County Census Insight`
+              : 'County Census Insight';
+          } catch (_) {}
         }
         if (reqId !== voteCounterTrendRequestId) return;
         renderFocusTrendSeries(series, baseCaption, trendOptions);
@@ -13835,7 +13993,9 @@ document.addEventListener('DOMContentLoaded', function() {
       else if (origin === 'Emerging') iconTone = 'emerging';
       else if (origin === 'Realigned') iconTone = 'realigned';
 
-      let status = side === 'Competitive' ? 'Battleground' : `${origin} ${side} ${position}`;
+      const statusMain = side === 'Competitive' ? 'Battleground' : `${origin} ${side}`;
+      const statusStrength = side === 'Competitive' ? '' : position;
+      let status = side === 'Competitive' ? 'Battleground' : `${statusMain} ${position}`;
       let statusClass = side === 'Republican' ? 'rep' : (side === 'Democratic' ? 'dem' : 'competitive');
 
       let trend = '→ Stable';
@@ -13886,6 +14046,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       return {
         status,
+        statusMain,
+        statusStrength,
         statusClass,
         trend,
         icon,
@@ -13991,6 +14153,27 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
+    function renderFocusCensusInsightHTML(context, title = 'County Census Insight') {
+      if (!context) return '';
+      return `
+        <div class="focus-census-insight" role="note" aria-label="${escapeHtml(title)}">
+          <div class="focus-census-head">
+            <span class="focus-census-kicker">${escapeHtml(title)}</span>
+            <span class="focus-census-pill">
+              <span class="focus-census-pill-emoji">${escapeHtml(context.signalEmoji || '📊')}</span>
+              ${escapeHtml(context.signalLabel || 'Steady population signal')}
+            </span>
+          </div>
+          <p class="focus-census-summary">
+            <span class="focus-census-inline-emoji">${escapeHtml(context.patternEmoji || '🧭')}</span>
+            ${escapeHtml(context.patternLabel || 'Mixed local and regional forces')}
+          </p>
+          ${context.noteLabel ? `<p class="focus-census-note">${escapeHtml(context.noteLabel)}</p>` : ''}
+          ${context.sourceNote ? `<p class="focus-census-source">${escapeHtml(context.sourceNote)}</p>` : ''}
+        </div>
+      `;
+    }
+
     function renderTrajectoryBlockHTML(meta) {
       if (!meta) return '';
       const details = Array.isArray(meta.details) ? meta.details : [];
@@ -13998,7 +14181,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? meta.statusClass
         : 'competitive';
       const statusToneClass = trajectoryToneClass(statusClass);
-      const statusText = meta.status || 'Toss-up';
+      const statusText = meta.status || meta.statusMain || 'Toss-up';
       const iconText = String(meta.icon || '').trim();
       const iconToneClass = trajectoryToneClass(meta.iconTone || 'neutral');
       const trendText = String(meta.trend || '\u2192 Little directional change');
@@ -14025,7 +14208,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
           <div class="focus-trajectory-head">
             <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
-            <span class="focus-trajectory-status ${statusToneClass}">${iconText ? `<span class="trajectory-icon ${iconToneClass}">${escapeHtml(iconText)}</span>` : ""}${escapeHtml(statusText)}</span>
+            <div class="focus-trajectory-head-badges">
+              <span class="focus-trajectory-status ${statusToneClass}">${iconText ? `<span class="trajectory-icon ${iconToneClass}">${escapeHtml(iconText)}</span>` : ""}${escapeHtml(statusText)}</span>
+            </div>
           </div>
           <p class="focus-trajectory-trendline ${trendToneClass}">
             <span class="trend-tag">Momentum</span>
@@ -21584,4 +21769,3 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
-

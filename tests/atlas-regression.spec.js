@@ -405,10 +405,15 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     const statusText = (await page.locator('.focus-trajectory-status').textContent() || '').trim();
     expect(statusText).toMatch(/(?:Durable|Reinforcing|Emerging|Realigned)\s+(?:Democratic|Republican)\s+(?:Stronghold|Lean|Edge)|Battleground/i);
     expect(statusText).not.toMatch(/Softening|On the Cusp|Toss-Up \(Balanced\)/i);
+    await expect(page.locator('.focus-trajectory-strength')).toHaveCount(0);
 
     const labels = await page.locator('.focus-trajectory-label').allTextContents();
     expect(labels).toContain('Latest Result');
     expect(labels.some((label) => /^Last Cycle$|^Since \d{4}$/.test((label || '').trim()))).toBeTruthy();
+
+    await expect(page.locator('.focus-census-insight')).toContainText('County Census Insight');
+    await expect(page.locator('.focus-census-insight')).toContainText(/Population signal|Urban anchor|Metro spillover|Coastal growth|Rural slowdown|Mixed growth/i);
+    await expect(page.locator('.focus-census-insight')).toContainText(/Why it matters|growth|county/i);
 
     const censusSnapshot = await page.evaluate(() => {
       const context = typeof getNcCensusContext === 'function' ? getNcCensusContext('WAKE') : null;
