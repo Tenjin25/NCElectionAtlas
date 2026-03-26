@@ -3604,19 +3604,19 @@ body { height: var(--app-height); }
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
-  .focus-trajectory-status.dem {
+  .focus-trajectory-status.tone-dem {
     color: #1d4ed8;
     border-color: rgba(37, 99, 235, 0.2);
     background: rgba(219, 234, 254, 0.88);
   }
 
-  .focus-trajectory-status.rep {
+  .focus-trajectory-status.tone-rep {
     color: #b91c1c;
     border-color: rgba(220, 38, 38, 0.2);
     background: rgba(254, 226, 226, 0.84);
   }
 
-  .focus-trajectory-status.competitive {
+  .focus-trajectory-status.tone-competitive {
     color: #92400e;
     border-color: rgba(217, 119, 6, 0.24);
     background: rgba(254, 243, 199, 0.9);
@@ -3668,19 +3668,19 @@ body { height: var(--app-height); }
     color: inherit;
   }
 
-  .focus-trajectory-trendline.rep {
+  .focus-trajectory-trendline.tone-rep {
     color: #b91c1c;
     border-color: rgba(220, 38, 38, 0.22);
     background: rgba(254, 242, 242, 0.86);
   }
 
-  .focus-trajectory-trendline.dem {
+  .focus-trajectory-trendline.tone-dem {
     color: #1d4ed8;
     border-color: rgba(37, 99, 235, 0.22);
     background: rgba(239, 246, 255, 0.9);
   }
 
-  .focus-trajectory-trendline.neutral {
+  .focus-trajectory-trendline.tone-neutral {
     color: #475569;
   }
 
@@ -3700,17 +3700,17 @@ body { height: var(--app-height); }
     color: #0f172a;
   }
 
-  .focus-trajectory-meaning.dem {
+  .focus-trajectory-meaning.tone-dem {
     border-color: rgba(37, 99, 235, 0.26);
     background: rgba(239, 246, 255, 0.9);
   }
 
-  .focus-trajectory-meaning.rep {
+  .focus-trajectory-meaning.tone-rep {
     border-color: rgba(220, 38, 38, 0.24);
     background: rgba(254, 242, 242, 0.88);
   }
 
-  .focus-trajectory-meaning.competitive {
+  .focus-trajectory-meaning.tone-competitive {
     border-color: rgba(217, 119, 6, 0.24);
     background: rgba(255, 251, 235, 0.9);
   }
@@ -3722,16 +3722,19 @@ body { height: var(--app-height); }
   }
 
   .focus-trajectory-item {
+    --trajectory-item-shadow: inset 3px 0 0 rgba(100, 116, 139, 0.34);
     display: grid;
+    min-width: 0;
     gap: 2px;
     padding: 8px 9px;
     border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.16);
     background: rgba(255, 255, 255, 0.82);
+    box-shadow: var(--trajectory-item-shadow);
     transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
   }
 
-  .focus-trajectory-item.latest {
+  .focus-trajectory-item.is-latest {
     grid-column: 1 / -1;
     gap: 3px;
     padding: 10px 11px;
@@ -3743,45 +3746,50 @@ body { height: var(--app-height); }
     );
   }
 
-  .focus-trajectory-item.latest .focus-trajectory-label {
+  .focus-trajectory-item.is-latest .focus-trajectory-label {
     font-size: 9px;
     letter-spacing: 0.08em;
   }
 
-  .focus-trajectory-item.latest .focus-trajectory-value {
+  .focus-trajectory-item.is-latest .focus-trajectory-value {
     font-size: 13px;
   }
 
-  .focus-trajectory-item.dem {
+  .focus-trajectory-item.tone-dem {
+    --trajectory-item-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.42);
     border-color: rgba(37, 99, 235, 0.18);
-    box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.42);
   }
 
-  .focus-trajectory-item.rep {
+  .focus-trajectory-item.tone-rep {
+    --trajectory-item-shadow: inset 3px 0 0 rgba(220, 38, 38, 0.42);
     border-color: rgba(220, 38, 38, 0.18);
-    box-shadow: inset 3px 0 0 rgba(220, 38, 38, 0.42);
   }
 
-  .focus-trajectory-item.neutral {
-    box-shadow: inset 3px 0 0 rgba(100, 116, 139, 0.34);
+  .focus-trajectory-item.tone-neutral {
+    --trajectory-item-shadow: inset 3px 0 0 rgba(100, 116, 139, 0.34);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .focus-trajectory-item:hover {
       transform: translateY(-1px);
-      box-shadow: inset 3px 0 0 rgba(100, 116, 139, 0.34), 0 4px 10px rgba(15, 23, 42, 0.08);
+      box-shadow: var(--trajectory-item-shadow), 0 4px 10px rgba(15, 23, 42, 0.08);
     }
   }
 
   .focus-trajectory-label {
     font-size: 10px;
     font-weight: 800;
+    line-height: 1.3;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: #64748b;
   }
 
   .focus-trajectory-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
     font-size: 12px;
     font-weight: 900;
     line-height: 1.3;
@@ -3789,15 +3797,15 @@ body { height: var(--app-height); }
     font-variant-numeric: tabular-nums;
   }
 
-  .focus-trajectory-value.dem {
+  .focus-trajectory-value.tone-dem {
     color: #1d4ed8;
   }
 
-  .focus-trajectory-value.rep {
+  .focus-trajectory-value.tone-rep {
     color: #b91c1c;
   }
 
-  .focus-trajectory-value.neutral {
+  .focus-trajectory-value.tone-neutral {
     color: #334155;
   }
 
@@ -3809,15 +3817,15 @@ body { height: var(--app-height); }
     font-weight: 900;
   }
 
-  .focus-trajectory-arrow.dem {
+  .focus-trajectory-arrow.tone-dem {
     color: #1d4ed8;
   }
 
-  .focus-trajectory-arrow.rep {
+  .focus-trajectory-arrow.tone-rep {
     color: #b91c1c;
   }
 
-  .focus-trajectory-arrow.neutral {
+  .focus-trajectory-arrow.tone-neutral {
     color: #64748b;
   }
 
@@ -6126,7 +6134,7 @@ body { height: var(--app-height); }
       gap: 6px;
     }
 
-    .focus-trajectory-item.latest {
+    .focus-trajectory-item.is-latest {
       padding: 9px 10px;
     }
 
@@ -13306,7 +13314,7 @@ document.addEventListener('DOMContentLoaded', function() {
           status: 'No trajectory data',
           statusClass: 'competitive',
           trend: 'Not enough history',
-          icon: '\u2022',
+          icon: '',
           meaning: 'Select a context with multiple election cycles to compute directional movement.',
           details: []
         };
@@ -13331,7 +13339,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '\u2192 Even';
+        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '\u2192 No clear shift';
         return `${delta > 0 ? '\u2197' : '\u2198'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
       }
 
@@ -13361,86 +13369,72 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deltaTowardGop < -0.5) leftwardSteps += 1;
       }
 
-      let status = 'Toss-Up (Balanced)';
+      let status = 'Toss-up';
       let statusClass = 'competitive';
-      let icon = '\u25d0';
+      let icon = '';
       const driftTowardGopStrong = rightwardSteps >= 2 || longShiftTowardGop >= 4;
       const driftTowardGopMild = !driftTowardGopStrong && (rightwardSteps >= 1 || longShiftTowardGop >= 2);
       const driftTowardDemStrong = leftwardSteps >= 2 || longShiftTowardGop <= -4;
       const driftTowardDemMild = !driftTowardDemStrong && (leftwardSteps >= 1 || longShiftTowardGop <= -2);
 
       if (latestSigned <= -15) {
-        if (driftTowardGopStrong) status = 'Durable Democratic (R Drift)';
-        else if (driftTowardGopMild) status = 'Durable Democratic (Slight R Drift)';
-        else status = 'Durable Democratic (Holding)';
+        status = (driftTowardGopStrong || driftTowardGopMild)
+          ? 'Durable Democratic (Softening)'
+          : 'Durable Democratic';
         statusClass = 'dem';
-        icon = '\u25cf';
       } else if (latestSigned < -5) {
         status = (driftTowardGopStrong || driftTowardGopMild)
-          ? 'Democratic Lean (Narrowing)'
-          : 'Democratic Lean (Holding)';
+          ? 'Democratic Edge (Softening)'
+          : 'Democratic Edge';
         statusClass = 'dem';
-        icon = (driftTowardGopStrong || driftTowardGopMild) ? '\u2197' : '\u2198';
       } else if (Math.abs(latestSigned) < 5) {
-        if (Math.abs(latestSigned) < 2) status = 'Toss-Up (Balanced)';
-        else status = latestSigned < 0 ? 'Toss-Up (D Tilt)' : 'Toss-Up (R Tilt)';
+        status = 'On the Cusp';
         statusClass = 'competitive';
-        icon = '\u25d0';
       } else if (latestSigned >= 5 && latestSigned < 15) {
         status = (driftTowardDemStrong || driftTowardDemMild)
-          ? 'Republican Lean (Narrowing)'
-          : 'Republican Lean (Holding)';
+          ? 'Republican Edge (Softening)'
+          : 'Republican Edge';
         statusClass = 'rep';
-        icon = (driftTowardDemStrong || driftTowardDemMild) ? '\u2198' : '\u2197';
       } else if (latestSigned >= 15) {
-        if (driftTowardDemStrong) status = 'Durable Republican (D Drift)';
-        else if (driftTowardDemMild) status = 'Durable Republican (Slight D Drift)';
-        else status = 'Durable Republican (Holding)';
+        status = (driftTowardDemStrong || driftTowardDemMild)
+          ? 'Durable Republican (Softening)'
+          : 'Durable Republican';
         statusClass = 'rep';
-        icon = '\u25cf';
       }
 
-      let trend = 'Stable';
-      if (rightwardSteps >= 2) trend = '\u2197 Strong Republican momentum';
-      else if (rightwardSteps === 1) trend = '\u2197 Mild Republican momentum';
-      else if (leftwardSteps >= 2) trend = '\u2198 Strong Democratic momentum';
-      else if (leftwardSteps === 1) trend = '\u2198 Mild Democratic momentum';
-      else trend = '\u2192 Low momentum';
+      let trend = '\u2192 Little directional change';
+      if (rightwardSteps >= 2) trend = '\u2197 Strong Republican trend';
+      else if (rightwardSteps === 1) trend = '\u2197 Mild Republican trend';
+      else if (leftwardSteps >= 2) trend = '\u2198 Strong Democratic trend';
+      else if (leftwardSteps === 1) trend = '\u2198 Mild Democratic trend';
 
-      let meaning = 'Both parties are close enough that small turnout changes can flip the outcome.';
-      if (status.startsWith('Durable Democratic')) {
-        if (status.includes('(R Drift)')) {
-          meaning = 'Still strongly Democratic, but rightward movement is now material.';
-        } else if (status.includes('(Slight R Drift)')) {
-          meaning = 'Still strongly Democratic with early signs of rightward drift.';
-        } else {
-          meaning = 'Democrats hold a large cushion and it is largely holding.';
-        }
-      } else if (status.startsWith('Democratic Lean')) {
-        meaning = status.includes('(Narrowing)')
-          ? 'Democrats lead, but the edge is narrowing.'
-          : 'Democrats lead with a moderate, relatively steady edge.';
-      } else if (status.startsWith('Toss-Up')) {
-        if (status.includes('(D Tilt)')) meaning = 'Very competitive, with a slight Democratic tilt right now.';
-        else if (status.includes('(R Tilt)')) meaning = 'Very competitive, with a slight Republican tilt right now.';
-        else meaning = 'Evenly balanced; either side can win with small shifts.';
-      } else if (status.startsWith('Republican Lean')) {
-        meaning = status.includes('(Narrowing)')
-          ? 'Republicans lead, but the edge is narrowing.'
-          : 'Republicans lead with a moderate, relatively steady edge.';
-      } else if (status.startsWith('Durable Republican')) {
-        if (status.includes('(D Drift)')) {
-          meaning = 'Still strongly Republican, but leftward movement is now material.';
-        } else if (status.includes('(Slight D Drift)')) {
-          meaning = 'Still strongly Republican with early signs of leftward drift.';
-        } else {
-          meaning = 'Republicans hold a large cushion and it is largely holding.';
-        }
+      let meaning = 'Both parties are close enough that modest turnout changes can flip the outcome.';
+      if (status === 'Durable Democratic') {
+        meaning = 'Democrats have a large cushion and it has held across recent cycles.';
+      } else if (status === 'Durable Democratic (Softening)') {
+        meaning = 'Democrats still lead comfortably, but movement is trending Republican.';
+      } else if (status === 'Democratic Edge') {
+        meaning = 'Democrats are ahead, but the margin is still contestable.';
+      } else if (status === 'Democratic Edge (Softening)') {
+        meaning = 'Democrats lead, but Republican gains are narrowing the cushion.';
+      } else if (status === 'On the Cusp') {
+        meaning = 'Roughly within five points either way; small changes can flip the result.';
+      } else if (status === 'Republican Edge') {
+        meaning = 'Republicans are ahead, but the margin is still contestable.';
+      } else if (status === 'Republican Edge (Softening)') {
+        meaning = 'Republicans lead, but Democratic gains are narrowing the cushion.';
+      } else if (status === 'Durable Republican') {
+        meaning = 'Republicans have a large cushion and it has held across recent cycles.';
+      } else if (status === 'Durable Republican (Softening)') {
+        meaning = 'Republicans still lead comfortably, but movement is trending Democratic.';
       }
 
       const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
       const prevSigned = previous ? getSignedMarginTowardGop(previous) : null;
       const recentShiftTowardGop = previous ? (latestSigned - prevSigned) : null;
+      const cycleShiftLabel = previous
+        ? (Number(previous.year) === Number(first.year) ? 'Last Cycle' : `Since ${previous.year}`)
+        : '';
 
       return {
         status,
@@ -13449,12 +13443,24 @@ document.addEventListener('DOMContentLoaded', function() {
         icon,
         meaning,
         details: [
-          { label: 'Current Margin', value: formatWinnerLabel(latest, latestSigned) },
-          ...(previous ? [{ label: `Cycle Shift (${previous.year}->${latest.year})`, value: formatShiftLabel(recentShiftTowardGop) }] : []),
-          { label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop) },
-          ...(row2008 ? [{ label: 'Post-2008 Shift', value: formatShiftLabel(shiftSince2008) }] : [])
+          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
+          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
+          ...(previous && Number(first.year) !== Number(previous.year)
+            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
+            : []),
+          ...(row2008 && Number(row2008.year) !== Number(first.year)
+            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
+            : [])
         ]
       };
+    }
+
+    function trajectoryToneClass(tone) {
+      const normalized = String(tone || '').trim().toLowerCase();
+      if (normalized === 'dem') return 'tone-dem';
+      if (normalized === 'rep') return 'tone-rep';
+      if (normalized === 'competitive') return 'tone-competitive';
+      return 'tone-neutral';
     }
 
     function renderTrajectoryBlockHTML(meta) {
@@ -13463,12 +13469,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = ['dem', 'rep', 'competitive'].includes(meta.statusClass)
         ? meta.statusClass
         : 'competitive';
-      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-Up (Balanced)'}`;
-      const trendText = String(meta.trend || '\u2192 Low momentum');
+      const statusToneClass = trajectoryToneClass(statusClass);
+      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
+      const trendText = String(meta.trend || '\u2192 Little directional change');
       const meaningText = String(meta.meaning || '').trim();
-      const trendClass = trendText.includes('\u2197')
+      const trendTone = trendText.includes('\u2197')
         ? 'rep'
         : (trendText.includes('\u2198') ? 'dem' : 'neutral');
+      const trendToneClass = trajectoryToneClass(trendTone);
       const trendArrowMatch = trendText.trim().match(/^([\u2197\u2198\u2192])\s*/);
       const trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
       const trendBody = trendArrow ? trendText.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : trendText;
@@ -13477,7 +13485,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
         if (v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
         if (v.includes('\u2192') || /Tie|Even/i.test(v)) return 'neutral';
-        if (String(label || '').toLowerCase() === 'current margin') {
+        if (String(label || '').toLowerCase() === 'latest result') {
           if (/\bR\+/.test(v)) return 'rep';
           if (/\bD\+/.test(v)) return 'dem';
         }
@@ -13486,32 +13494,33 @@ document.addEventListener('DOMContentLoaded', function() {
       return `
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
           <div class="focus-trajectory-head">
-            <span class="focus-trajectory-kicker">Trajectory Profile</span>
-            <span class="focus-trajectory-status ${statusClass}">${escapeHtml(statusText)}</span>
+            <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
+            <span class="focus-trajectory-status ${statusToneClass}">${escapeHtml(statusText)}</span>
           </div>
-          <p class="focus-trajectory-trendline ${trendClass}">
+          <p class="focus-trajectory-trendline ${trendToneClass}">
             <span class="trend-tag">Momentum</span>
             <span class="trend-text">
-              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendClass}">${escapeHtml(trendArrow)}</span>` : ''}
+              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
               ${escapeHtml(trendBody)}
             </span>
           </p>
-          ${meaningText ? `<p class="focus-trajectory-meaning ${statusClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
+          ${meaningText ? `<p class="focus-trajectory-meaning ${statusToneClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
           ${details.length ? `
             <div class="focus-trajectory-grid">
               ${details.map(item => {
                 const tone = detailTone(item?.label, item?.value);
+                const toneClass = trajectoryToneClass(tone);
                 const label = String(item?.label || '');
                 const valueRaw = String(item?.value || '');
                 const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
                 const arrow = arrowMatch ? arrowMatch[1] : '';
                 const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
-                const rowRole = label.toLowerCase() === 'current margin' ? 'latest' : 'shift';
+                const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
                 return `
-                <div class="focus-trajectory-item ${tone} ${rowRole}">
+                <div class="focus-trajectory-item ${toneClass} ${rowRole}">
                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
-                  <span class="focus-trajectory-value ${tone}">
-                    ${arrow ? `<span class="focus-trajectory-arrow ${tone}">${escapeHtml(arrow)}</span>` : ''}
+                  <span class="focus-trajectory-value ${toneClass}">
+                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
                     ${escapeHtml(valueBody)}
                   </span>
                 </div>

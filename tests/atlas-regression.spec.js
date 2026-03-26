@@ -386,6 +386,39 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }, { expectedType, expectedYear }, { timeout: APP_READY_TIMEOUT });
   });
 
+  test('county trajectory card uses scoped tone classes and clearer labels', async ({ page }) => {
+    const contestKey = await pickContestKey(page);
+    expect(contestKey).toBeTruthy();
+
+    await page.selectOption('#contestSelect', contestKey);
+    await page.waitForFunction(
+      (v) => document.getElementById('contestSelect')?.value === v,
+      contestKey
+    );
+
+    await page.evaluate(() => {
+      showCountyDetails('Wake');
+    });
+
+    await page.waitForSelector('.focus-trajectory', { timeout: APP_READY_TIMEOUT });
+
+    const statusText = (await page.locator('.focus-trajectory-status').textContent() || '').trim();
+    expect(statusText).toMatch(/Durable Democratic|Democratic Edge|On the Cusp|Republican Edge|Durable Republican/i);
+    expect(statusText).not.toMatch(/Safe Democratic|Democratic leaning|Republican leaning|Safe Republican|Toss-Up \(Balanced\)/i);
+
+    const labels = await page.locator('.focus-trajectory-label').allTextContents();
+    expect(labels).toContain('Latest Result');
+    expect(labels.some((label) => /^Last Cycle$|^Since \d{4}$/.test((label || '').trim()))).toBeTruthy();
+
+    const rawToneClasses = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('.focus-trajectory *'))
+        .flatMap((el) => Array.from(el.classList || []))
+        .filter((cls) => ['dem', 'rep', 'competitive', 'neutral', 'latest', 'shift'].includes(cls));
+    });
+
+    expect(rawToneClasses).toEqual([]);
+  });
+
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
     await page.evaluate(() => {
       const png1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC';
