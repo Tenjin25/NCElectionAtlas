@@ -471,7 +471,9 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateRows: senateRows.length,
         courtRows: courtRows.length,
         senateDemCandidate: String(senateRows[0]?.us_senate_model_dem_candidate || ''),
+        senateRepCandidate: String(senateRows[0]?.us_senate_model_rep_candidate || ''),
         courtDemCandidate: String(courtRows[0]?.nc_supreme_court_model_dem_candidate || ''),
+        courtRepCandidate: String(courtRows[0]?.nc_supreme_court_model_rep_candidate || ''),
         senateDistricts: Object.keys(senateDistrictNode?.general?.results || {}).length,
         courtDistricts: Object.keys(courtDistrictNode?.general?.results || {}).length
       };
@@ -481,8 +483,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Model (2026)');
     expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
-    expect(modeledSnapshot.senateDemCandidate).toBe('Democratic nominee');
-    expect(modeledSnapshot.courtDemCandidate).toBe('Democratic-aligned candidate');
+    expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
+    expect(modeledSnapshot.senateRepCandidate).toBe('Michael Whatley');
+    expect(modeledSnapshot.courtDemCandidate).toBe('Anita Earls');
+    expect(modeledSnapshot.courtRepCandidate).toBe('Sarah Stevens');
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 
