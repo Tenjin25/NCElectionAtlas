@@ -98,26 +98,30 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ### Trajectory Panel Refinement (March 25, 2026)
 
 - Added a dedicated `Trajectory / Status` card to trend history for non-statewide focus contexts (county, district, and precinct with county fallback).
-- Adopted the post-change trajectory wording model in the live `index.html` trend flow:
-  - `Stable Democratic`
-  - `Eroding Democratic`
-  - `Tipping Point`
-  - `Functionally Republican`
-  - `Locked Republican`
+- Refined trajectory naming in the live `index.html` trend flow to capture subtle movement tiers:
+  - `Durable Democratic (Holding / Slight R Drift / R Drift)`
+  - `Democratic Lean (Holding / Narrowing)`
+  - `Toss-Up (D Tilt / Balanced / R Tilt)`
+  - `Republican Lean (Holding / Narrowing)`
+  - `Durable Republican (Holding / Slight D Drift / D Drift)`
 - Added clearer trend direction phrasing (`Consistent/Recent rightward movement`, `Consistent/Recent leftward movement`, `Stable`) and compact checkpoint rows (`Latest`, `Since <prior year>`, `Since <first year>`, optional `Since 2008`).
 - Reworked card presentation for readability on both desktop and mobile while preserving existing focus-trend analytics cards.
 
 ### Trajectory Meaning Guide (March 26, 2026)
 
-- `Durable Democratic`: Democrats have a large cushion and it has held across recent cycles.
-- `Durable Democratic (Softening)`: Democrats still lead comfortably, but movement is trending Republican.
-- `Democratic Edge`: Democrats are ahead, but the margin is still contestable.
-- `Democratic Edge (Softening)`: Democrats lead, but Republican gains are narrowing the cushion.
-- `On the Cusp`: Roughly within five points either way; small changes can flip the result.
-- `Republican Edge`: Republicans are ahead, but the margin is still contestable.
-- `Republican Edge (Softening)`: Republicans lead, but Democratic gains are narrowing the cushion.
-- `Durable Republican`: Republicans have a large cushion and it has held across recent cycles.
-- `Durable Republican (Softening)`: Republicans still lead comfortably, but movement is trending Democratic.
+- `Durable Democratic (Holding)`: Strong Democratic advantage with little recent erosion.
+- `Durable Democratic (Slight R Drift)`: Still strongly Democratic, with early rightward movement.
+- `Durable Democratic (R Drift)`: Still strongly Democratic, but rightward movement is now material.
+- `Democratic Lean (Holding)`: Democratic lead is meaningful and relatively steady.
+- `Democratic Lean (Narrowing)`: Democratic lead remains, but the margin is tightening.
+- `Toss-Up (D Tilt)`: Highly competitive with a slight Democratic edge.
+- `Toss-Up (Balanced)`: Near-even race where small shifts can change the winner.
+- `Toss-Up (R Tilt)`: Highly competitive with a slight Republican edge.
+- `Republican Lean (Holding)`: Republican lead is meaningful and relatively steady.
+- `Republican Lean (Narrowing)`: Republican lead remains, but the margin is tightening.
+- `Durable Republican (Holding)`: Strong Republican advantage with little recent erosion.
+- `Durable Republican (Slight D Drift)`: Still strongly Republican, with early leftward movement.
+- `Durable Republican (D Drift)`: Still strongly Republican, but leftward movement is now material.
 - Momentum arrows in the trajectory card:
   - `↗` movement toward Republicans
   - `↘` movement toward Democrats

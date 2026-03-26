@@ -13361,30 +13361,41 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deltaTowardGop < -0.5) leftwardSteps += 1;
       }
 
-      let status = 'On the Cusp';
+      let status = 'Toss-Up (Balanced)';
       let statusClass = 'competitive';
       let icon = '\u25d0';
-      const slowTowardGop = rightwardSteps >= 1 || longShiftTowardGop >= 2;
-      const slowTowardDem = leftwardSteps >= 1 || longShiftTowardGop <= -2;
+      const driftTowardGopStrong = rightwardSteps >= 2 || longShiftTowardGop >= 4;
+      const driftTowardGopMild = !driftTowardGopStrong && (rightwardSteps >= 1 || longShiftTowardGop >= 2);
+      const driftTowardDemStrong = leftwardSteps >= 2 || longShiftTowardGop <= -4;
+      const driftTowardDemMild = !driftTowardDemStrong && (leftwardSteps >= 1 || longShiftTowardGop <= -2);
 
       if (latestSigned <= -15) {
-        status = slowTowardGop ? 'Durable Democratic (Softening)' : 'Durable Democratic';
+        if (driftTowardGopStrong) status = 'Durable Democratic (R Drift)';
+        else if (driftTowardGopMild) status = 'Durable Democratic (Slight R Drift)';
+        else status = 'Durable Democratic (Holding)';
         statusClass = 'dem';
         icon = '\u25cf';
       } else if (latestSigned < -5) {
-        status = slowTowardGop ? 'Democratic Edge (Softening)' : 'Democratic Edge';
+        status = (driftTowardGopStrong || driftTowardGopMild)
+          ? 'Democratic Lean (Narrowing)'
+          : 'Democratic Lean (Holding)';
         statusClass = 'dem';
-        icon = slowTowardGop ? '\u2197' : '\u2198';
+        icon = (driftTowardGopStrong || driftTowardGopMild) ? '\u2197' : '\u2198';
       } else if (Math.abs(latestSigned) < 5) {
-        status = 'On the Cusp';
+        if (Math.abs(latestSigned) < 2) status = 'Toss-Up (Balanced)';
+        else status = latestSigned < 0 ? 'Toss-Up (D Tilt)' : 'Toss-Up (R Tilt)';
         statusClass = 'competitive';
         icon = '\u25d0';
       } else if (latestSigned >= 5 && latestSigned < 15) {
-        status = slowTowardDem ? 'Republican Edge (Softening)' : 'Republican Edge';
+        status = (driftTowardDemStrong || driftTowardDemMild)
+          ? 'Republican Lean (Narrowing)'
+          : 'Republican Lean (Holding)';
         statusClass = 'rep';
-        icon = slowTowardDem ? '\u2198' : '\u2197';
+        icon = (driftTowardDemStrong || driftTowardDemMild) ? '\u2198' : '\u2197';
       } else if (latestSigned >= 15) {
-        status = slowTowardDem ? 'Durable Republican (Softening)' : 'Durable Republican';
+        if (driftTowardDemStrong) status = 'Durable Republican (D Drift)';
+        else if (driftTowardDemMild) status = 'Durable Republican (Slight D Drift)';
+        else status = 'Durable Republican (Holding)';
         statusClass = 'rep';
         icon = '\u25cf';
       }
@@ -13396,23 +13407,35 @@ document.addEventListener('DOMContentLoaded', function() {
       else if (leftwardSteps === 1) trend = '\u2198 Mild Democratic momentum';
       else trend = '\u2192 Low momentum';
 
-      let meaning = 'Both parties are within roughly five points, so small turnout shifts can change the winner.';
-      if (status === 'Durable Democratic') {
-        meaning = 'Democrats hold a large cushion and recent cycles have not meaningfully reduced it.';
-      } else if (status === 'Durable Democratic (Softening)') {
-        meaning = 'Democrats still lead comfortably, but recent cycles are moving toward Republicans.';
-      } else if (status === 'Democratic Edge') {
-        meaning = 'Democrats are ahead by a workable margin, but this is not a lock.';
-      } else if (status === 'Democratic Edge (Softening)') {
-        meaning = 'Democrats still lead, but the cushion is narrowing as Republicans gain.';
-      } else if (status === 'Republican Edge') {
-        meaning = 'Republicans are ahead by a workable margin, but this is not a lock.';
-      } else if (status === 'Republican Edge (Softening)') {
-        meaning = 'Republicans still lead, but the cushion is narrowing as Democrats gain.';
-      } else if (status === 'Durable Republican') {
-        meaning = 'Republicans hold a large cushion and recent cycles have not meaningfully reduced it.';
-      } else if (status === 'Durable Republican (Softening)') {
-        meaning = 'Republicans still lead comfortably, but recent cycles are moving toward Democrats.';
+      let meaning = 'Both parties are close enough that small turnout changes can flip the outcome.';
+      if (status.startsWith('Durable Democratic')) {
+        if (status.includes('(R Drift)')) {
+          meaning = 'Still strongly Democratic, but rightward movement is now material.';
+        } else if (status.includes('(Slight R Drift)')) {
+          meaning = 'Still strongly Democratic with early signs of rightward drift.';
+        } else {
+          meaning = 'Democrats hold a large cushion and it is largely holding.';
+        }
+      } else if (status.startsWith('Democratic Lean')) {
+        meaning = status.includes('(Narrowing)')
+          ? 'Democrats lead, but the edge is narrowing.'
+          : 'Democrats lead with a moderate, relatively steady edge.';
+      } else if (status.startsWith('Toss-Up')) {
+        if (status.includes('(D Tilt)')) meaning = 'Very competitive, with a slight Democratic tilt right now.';
+        else if (status.includes('(R Tilt)')) meaning = 'Very competitive, with a slight Republican tilt right now.';
+        else meaning = 'Evenly balanced; either side can win with small shifts.';
+      } else if (status.startsWith('Republican Lean')) {
+        meaning = status.includes('(Narrowing)')
+          ? 'Republicans lead, but the edge is narrowing.'
+          : 'Republicans lead with a moderate, relatively steady edge.';
+      } else if (status.startsWith('Durable Republican')) {
+        if (status.includes('(D Drift)')) {
+          meaning = 'Still strongly Republican, but leftward movement is now material.';
+        } else if (status.includes('(Slight D Drift)')) {
+          meaning = 'Still strongly Republican with early signs of leftward drift.';
+        } else {
+          meaning = 'Republicans hold a large cushion and it is largely holding.';
+        }
       }
 
       const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
@@ -13440,7 +13463,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = ['dem', 'rep', 'competitive'].includes(meta.statusClass)
         ? meta.statusClass
         : 'competitive';
-      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'On the Cusp'}`;
+      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-Up (Balanced)'}`;
       const trendText = String(meta.trend || '\u2192 Low momentum');
       const meaningText = String(meta.meaning || '').trim();
       const trendClass = trendText.includes('\u2197')
