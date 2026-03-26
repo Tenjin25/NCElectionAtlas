@@ -72,7 +72,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Emerging Republican Edge`, or `Battleground`
+- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Emerging Republican Edge`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
 - **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
@@ -121,6 +121,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `Last Cycle` or `Since <year>`
   - optional `Since 2008`
 - Added icon cues for trajectory origin states so the card can distinguish durable, reinforcing, emerging, and realigned paths at a glance.
+- Moved the composite trajectory category pill beneath the `Trajectory Snapshot` heading so longer status labels have more horizontal room and wrap more cleanly.
 - Added a `Census Context` county sidebar card with qualitative population/growth framing such as `Urban anchor county`, `Metro spillover`, `High-growth coastal county`, `Slow-growth or declining county`, and `Mixed-growth county`.
 - The Census insight now reads from cleaned Vintage 2025 county population estimates in `data/CO-EST2025-POP-37-clean.csv`, released March 26, 2026, so it can reference actual 2020-2025 growth and the July 1, 2024 to July 1, 2025 change instead of only static county buckets.
 - The Census card is intentionally qualitative; it summarizes recent population-pattern context rather than presenting a raw Census table.
