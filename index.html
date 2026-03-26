@@ -14,7 +14,7 @@
   <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet'>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=optional" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
   /* Mobile Styles - Enhanced for touch and small screens */
   @media (max-width: 768px) {
@@ -3714,19 +3714,19 @@ body { height: var(--app-height); }
   .focus-trajectory-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     min-height: 26px;
     width: fit-content;
     max-width: 100%;
-    padding: 5px 11px;
+    padding: 4px 9px;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.18);
     background: rgba(226, 232, 240, 0.84);
     color: #475569;
-    font-size: 10px;
+    font-size: clamp(8.5px, 0.2vw + 8px, 9.5px);
     font-weight: 900;
-    letter-spacing: 0.02em;
-    line-height: 1.25;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
     text-transform: none;
     white-space: nowrap;
     text-align: center;
@@ -3779,8 +3779,8 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 6px;
-    font-size: 13px;
+    margin-right: 4px;
+    font-size: 11px;
     line-height: 1;
   }
 
@@ -6355,8 +6355,8 @@ body { height: var(--app-height); }
 
     .focus-trajectory-status {
       min-height: 22px;
-      padding: 5px 9px;
-      font-size: 9px;
+      padding: 4px 8px;
+      font-size: 8.5px;
     }
 
     .focus-trajectory-grid {
