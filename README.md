@@ -72,7 +72,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Trajectory / Status Card:** County/district/precinct trend panels include a plain-language trajectory block (status, trend direction, and key shift checkpoints)
+- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Emerging Republican Edge`, or `Battleground`
+- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests
@@ -96,40 +97,32 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** March 26, 2026
 
-### Trajectory Panel Refinement (March 25, 2026)
+### Trajectory Edge Cases + Census Context (March 26, 2026)
 
-- Added a dedicated `Trajectory / Status` card to trend history for non-statewide focus contexts (county, district, and precinct with county fallback).
-- Restored the richer trajectory naming model in the live card:
-  - `Durable Democratic`
-  - `Durable Democratic (Softening)`
-  - `Democratic Edge`
-  - `Democratic Edge (Softening)`
-  - `On the Cusp`
-  - `Republican Edge`
-  - `Republican Edge (Softening)`
-  - `Durable Republican`
-  - `Durable Republican (Softening)`
-- Tightened checkpoint rows to shorter labels such as `Latest Result`, `Last Cycle`, `Since <year>`, and optional `Since 2008`.
-- Reworked card presentation for readability on both desktop and mobile while preserving existing focus-trend analytics cards.
-
-### Trajectory Meaning Guide (March 26, 2026)
-
-- `Durable Democratic`: Democrats have a large cushion and it has held across recent cycles.
-- `Durable Democratic (Softening)`: Democrats still lead comfortably, but movement is trending Republican.
-- `Democratic Edge`: Democrats are ahead, but the margin is still contestable.
-- `Democratic Edge (Softening)`: Democrats lead, but Republican gains are narrowing the cushion.
-- `On the Cusp`: Roughly within five points either way; small changes can flip the result.
-- `Republican Edge`: Republicans are ahead, but the margin is still contestable.
-- `Republican Edge (Softening)`: Republicans lead, but Democratic gains are narrowing the cushion.
-- `Durable Republican`: Republicans have a large cushion and it has held across recent cycles.
-- `Durable Republican (Softening)`: Republicans still lead comfortably, but movement is trending Democratic.
-- Momentum arrows in the trajectory card:
-  - `↗` movement toward Republicans
-  - `↘` movement toward Democrats
-  - `→` little to no directional movement
-- Margin/shift formatting:
-  - `Latest Result` shows the latest cycle as `YEAR: R+X.XX pts` or `YEAR: D+X.XX pts`
-  - Shift rows show directional movement with arrows and points (for example, `↗ R+1.42 pts`)
+- Promoted the `index_nc_trajectory_edgecases.html` variant into the live `index.html`.
+- Expanded the trajectory classifier so status labels are now composed from:
+  - `origin`: `Durable`, `Reinforcing`, `Emerging`, or `Realigned`
+  - `side`: `Democratic`, `Republican`, or fully neutral `Battleground`
+  - `position`: `Stronghold`, `Lean`, `Edge`, or `Battleground`
+- Example live statuses now include labels such as:
+  - `Durable Democratic Stronghold`
+  - `Reinforcing Republican Lean`
+  - `Emerging Democratic Edge`
+  - `Realigned Republican Stronghold`
+  - `Battleground`
+- Updated momentum wording to shorter directional calls:
+  - `→ Stable`
+  - `↗ Republican trend`
+  - `↗ Accelerating Republican trend`
+  - `↘ Democratic trend`
+  - `↘ Accelerating Democratic trend`
+- Kept the shorter checkpoint rows in the trajectory card:
+  - `Latest Result`
+  - `Last Cycle` or `Since <year>`
+  - optional `Since 2008`
+- Added icon cues for trajectory origin states so the card can distinguish durable, reinforcing, emerging, and realigned paths at a glance.
+- Added a `Census Context` county sidebar card with qualitative population/growth framing such as `Urban anchor county`, `Metro spillover`, `High-growth coastal county`, `Slow-growth or declining county`, and `Mixed-growth county`.
+- The Census card is intentionally qualitative; it summarizes recent population-pattern context rather than presenting a raw Census table.
 
 ### Modeled 2026 Statewide Contests (March 26, 2026)
 

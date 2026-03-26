@@ -386,7 +386,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }, { expectedType, expectedYear }, { timeout: APP_READY_TIMEOUT });
   });
 
-  test('county trajectory card uses scoped tone classes and clearer labels', async ({ page }) => {
+  test('county trajectory card uses scoped tone classes, edge-case labels, and census context', async ({ page }) => {
     const contestKey = await pickContestKey(page);
     expect(contestKey).toBeTruthy();
 
@@ -403,12 +403,31 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     await page.waitForSelector('.focus-trajectory', { timeout: APP_READY_TIMEOUT });
 
     const statusText = (await page.locator('.focus-trajectory-status').textContent() || '').trim();
-    expect(statusText).toMatch(/Durable Democratic|Democratic Edge|On the Cusp|Republican Edge|Durable Republican/i);
-    expect(statusText).not.toMatch(/Safe Democratic|Democratic leaning|Republican leaning|Safe Republican|Toss-Up \(Balanced\)/i);
+    expect(statusText).toMatch(/(?:Durable|Reinforcing|Emerging|Realigned)\s+(?:Democratic|Republican)\s+(?:Stronghold|Lean|Edge)|Battleground/i);
+    expect(statusText).not.toMatch(/Softening|On the Cusp|Toss-Up \(Balanced\)/i);
 
     const labels = await page.locator('.focus-trajectory-label').allTextContents();
     expect(labels).toContain('Latest Result');
     expect(labels.some((label) => /^Last Cycle$|^Since \d{4}$/.test((label || '').trim()))).toBeTruthy();
+
+    const censusSnapshot = await page.evaluate(() => {
+      const context = typeof getNcCensusContext === 'function' ? getNcCensusContext('WAKE') : null;
+      const html = context && typeof renderCensusContextHTML === 'function'
+        ? renderCensusContextHTML(context)
+        : '';
+      return {
+        title: String(context?.title || ''),
+        signal: String(context?.signalLabel || ''),
+        pattern: String(context?.patternLabel || ''),
+        html
+      };
+    });
+    expect(censusSnapshot.title).toBe('Census Context');
+    expect(censusSnapshot.signal).toBeTruthy();
+    expect(censusSnapshot.pattern).toBeTruthy();
+    expect(censusSnapshot.html).toContain('Population signal');
+    expect(censusSnapshot.html).toContain('Growth pattern');
+    expect(censusSnapshot.html).toContain('Why it matters');
 
     const rawToneClasses = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.focus-trajectory *'))
