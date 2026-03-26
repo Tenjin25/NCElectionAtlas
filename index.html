@@ -13978,17 +13978,20 @@ document.addEventListener('DOMContentLoaded', function() {
         origin = crossedParties ? 'Realigned' : 'Emerging';
       }
 
-      // A "realigned stronghold" should feel fully settled, not merely past the 20-point line.
+      // Keep "realigned" reserved for counties that have opened a clearly non-trivial gap.
+      if (origin === 'Realigned' && absLatest < 6) {
+        origin = 'Emerging';
+      }
+
+      // Emerging counties can leave battleground range a bit earlier once they open visible daylight.
       const strongholdThreshold = origin === 'Realigned' ? 24 : 20;
+      const edgeThreshold = origin === 'Emerging' ? 4 : 5;
+      const tiltThreshold = origin === 'Emerging' ? 2.5 : 3;
       let position = 'Battleground';
       if (absLatest >= strongholdThreshold) position = 'Stronghold';
       else if (absLatest >= 10) position = 'Lean';
-      else if (absLatest >= 5) position = 'Edge';
-
-      // If the county is still within battleground range, "realigned" is too definitive.
-      if (origin === 'Realigned' && position === 'Battleground') {
-        origin = 'Emerging';
-      }
+      else if (absLatest >= edgeThreshold) position = 'Edge';
+      else if (absLatest >= tiltThreshold) position = 'Tilt';
 
       const side = latestSigned > 0 ? 'Republican' : (latestSigned < 0 ? 'Democratic' : 'Competitive');
 

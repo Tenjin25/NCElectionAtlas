@@ -403,7 +403,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     await page.waitForSelector('.focus-trajectory', { timeout: APP_READY_TIMEOUT });
 
     const statusText = (await page.locator('.focus-trajectory-status').textContent() || '').trim();
-    expect(statusText).toMatch(/(?:Durable|Reinforcing|Emerging|Realigned)\s+(?:Democratic|Republican)\s+(?:Stronghold|Lean|Edge)|Battleground/i);
+    expect(statusText).toMatch(/(?:Durable|Reinforcing|Emerging|Realigned)\s+(?:Democratic|Republican)\s+(?:Stronghold|Lean|Edge|Tilt)|Battleground/i);
     expect(statusText).not.toMatch(/Softening|On the Cusp|Toss-Up \(Balanced\)/i);
     await expect(page.locator('.focus-trajectory-strength')).toHaveCount(0);
 
@@ -435,6 +435,26 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(censusSnapshot.html).toContain('Population signal');
     expect(censusSnapshot.html).toContain('Growth pattern');
     expect(censusSnapshot.html).toContain('Why it matters');
+
+    const emergingEdgeSnapshot = await page.evaluate(() => {
+      if (typeof classifyCountyTrajectory !== 'function') return null;
+      return classifyCountyTrajectory([
+        { year: 2008, winner: 'DEM', margin_pct: 7.2 },
+        { year: 2020, winner: 'REP', margin_pct: 1.6 },
+        { year: 2024, winner: 'REP', margin_pct: 4.4 }
+      ]);
+    });
+    expect(emergingEdgeSnapshot?.status).toMatch(/Emerging Republican Edge/i);
+
+    const emergingTiltSnapshot = await page.evaluate(() => {
+      if (typeof classifyCountyTrajectory !== 'function') return null;
+      return classifyCountyTrajectory([
+        { year: 2008, winner: 'DEM', margin_pct: 6.4 },
+        { year: 2020, winner: 'REP', margin_pct: 0.9 },
+        { year: 2024, winner: 'REP', margin_pct: 3.1 }
+      ]);
+    });
+    expect(emergingTiltSnapshot?.status).toMatch(/Emerging Republican Tilt/i);
 
     const rawToneClasses = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.focus-trajectory *'))
