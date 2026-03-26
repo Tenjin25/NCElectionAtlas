@@ -8292,6 +8292,7 @@ document.addEventListener('DOMContentLoaded', function() {
         state_senate_2022: withBase('./data/tileset/nc_state_senate_2022_lines_tileset.geojson'),
         state_senate_2024: withBase('./data/tileset/nc_state_senate_2024_lines_tileset.geojson'),
         county_demographics: withBase('./data/county_demographics_2020_dp1.json'),
+        county_population_estimates: withBase('./data/CO-EST2025-POP-37-clean.csv'),
         precinct_demographics: withBase('./data/precinct_demographics_2020_vap.csv'),
         election: withBase('./data/nc_elections_aggregated.json'),
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
@@ -8639,6 +8640,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let stateSenateInfo = null;
     let districtDescriptions = null; // Optional labels like "Sampson & Bladen Counties" or "Concord–Harrisburg"
     let countyDemographics = null; // County-level VAP (18+) + total-pop race/ethnicity from DP1 (includes AIAN/native)
+    let countyPopulationEstimatesByNorm = null; // Map<string countyNorm, growth/estimate summary from Vintage 2025 county estimates>
+    let countyPopulationEstimateStatewide = null; // Statewide NC summary from the same file
     let precinctDemographicsByNorm = null; // Map<string normalized "COUNTY - PREC"> -> row
     let precinctDemographicsByCountyCode = null; // Map<string countyNorm, Map<string code, row>>
     let countyNameMap = {};
@@ -13975,10 +13978,17 @@ document.addEventListener('DOMContentLoaded', function() {
         origin = crossedParties ? 'Realigned' : 'Emerging';
       }
 
+      // A "realigned stronghold" should feel fully settled, not merely past the 20-point line.
+      const strongholdThreshold = origin === 'Realigned' ? 24 : 20;
       let position = 'Battleground';
-      if (absLatest >= 20) position = 'Stronghold';
+      if (absLatest >= strongholdThreshold) position = 'Stronghold';
       else if (absLatest >= 10) position = 'Lean';
       else if (absLatest >= 5) position = 'Edge';
+
+      // If the county is still within battleground range, "realigned" is too definitive.
+      if (origin === 'Realigned' && position === 'Battleground') {
+        origin = 'Emerging';
+      }
 
       const side = latestSigned > 0 ? 'Republican' : (latestSigned < 0 ? 'Democratic' : 'Competitive');
 
@@ -14078,6 +14088,51 @@ document.addEventListener('DOMContentLoaded', function() {
       return 'tone-neutral';
     }
 
+    function buildCountyPopulationEstimateIndex(rows) {
+      const byNorm = new Map();
+      let statewide = null;
+      (Array.isArray(rows) ? rows : []).forEach(row => {
+        const countyName = (row?.county_name || '').toString().trim();
+        const countyNorm = normalizeCountyToken(row?.county_norm || countyName);
+        if (!countyName || !countyNorm) return;
+
+        const population2020 = Number(row?.population_2020 || 0);
+        const population2023 = Number(row?.population_2023 || 0);
+        const population2024 = Number(row?.population_2024 || 0);
+        const population2025 = Number(row?.population_2025 || 0);
+        const changePct2020To2025 = Number(row?.change_2020_2025_pct);
+        const changePct2024To2025 = Number(row?.change_2024_2025_pct);
+        const changePct2023To2024 = population2023 > 0 && population2024 > 0
+          ? ((population2024 - population2023) / population2023) * 100
+          : NaN;
+
+        const entry = {
+          countyName,
+          countyNorm,
+          population2020,
+          population2023,
+          population2024,
+          population2025,
+          change2020To2025: Number(row?.change_2020_2025 || 0),
+          change2024To2025: Number(row?.change_2024_2025 || 0),
+          changePct2020To2025: Number.isFinite(changePct2020To2025) ? changePct2020To2025 : NaN,
+          changePct2024To2025: Number.isFinite(changePct2024To2025) ? changePct2024To2025 : NaN,
+          changePct2023To2024: Number.isFinite(changePct2023To2024) ? changePct2023To2024 : NaN
+        };
+
+        if (countyNorm === 'NORTH CAROLINA') statewide = entry;
+        else byNorm.set(countyNorm, entry);
+      });
+      return { byNorm, statewide };
+    }
+
+    function formatPopulationChangePct(pct) {
+      const value = Number(pct);
+      if (!Number.isFinite(value)) return '';
+      if (Math.abs(value) < 0.05) return 'roughly flat';
+      return `${value > 0 ? 'up' : 'down'} ${Math.abs(value).toFixed(1)}%`;
+    }
+
 
     function getNcCensusContext(countyNorm) {
       const norm = String(countyNorm || '').trim().toUpperCase();
@@ -14093,32 +14148,84 @@ document.addEventListener('DOMContentLoaded', function() {
       let patternLabel = 'Mixed local and regional forces';
       let noteEmoji = '🗳️';
       let noteLabel = 'Population change may shape the electorate over time, even when margins remain stable in the short run.';
+      let sourceNote = 'Qualitative context inspired by recent Census population-estimate patterns; not a raw population table.';
 
-      if (urbanAnchor.has(norm)) {
+      const estimate = countyPopulationEstimatesByNorm?.get(norm) || null;
+      const statewide = countyPopulationEstimateStatewide || null;
+      const totalPct = Number(estimate?.changePct2020To2025);
+      const recentPct = Number(estimate?.changePct2024To2025);
+      const priorPct = Number(estimate?.changePct2023To2024);
+      const stateTotalPct = Number(statewide?.changePct2020To2025);
+      const slowedIn2025 = Number.isFinite(recentPct) && Number.isFinite(priorPct) && recentPct + 0.05 < priorPct;
+      const aboveStatewide = Number.isFinite(totalPct) && Number.isFinite(stateTotalPct) && totalPct > stateTotalPct + 1.25;
+      const belowStatewide = Number.isFinite(totalPct) && Number.isFinite(stateTotalPct) && totalPct < stateTotalPct - 1.25;
+
+      if (estimate) {
+        signalLabel = `Population ${formatPopulationChangePct(totalPct)} since 2020`;
+        noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. 2024 to 2025 change: ${formatPopulationChangePct(recentPct)}.`;
+        sourceNote = 'Based on U.S. Census Bureau Vintage 2025 North Carolina county population estimates, released March 26, 2026 (April 1, 2020 to July 1, 2025).';
+
+        if (urbanAnchor.has(norm)) {
+          signalEmoji = '🏙️';
+          patternEmoji = '🧲';
+          patternLabel = slowedIn2025
+            ? 'Urban anchor with slower 2025 growth'
+            : 'Urban anchor with continued growth';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Growth since 2020 is ${formatPopulationChangePct(totalPct)}, versus ${formatPopulationChangePct(stateTotalPct)} statewide. ${slowedIn2025 ? 'Growth cooled compared with 2023 to 2024.' : 'The county is still adding residents at a steady clip.'}`;
+        } else if (coastalGrowth.has(norm) && !belowStatewide) {
+          signalEmoji = '🌊';
+          patternEmoji = '🏖️';
+          patternLabel = slowedIn2025
+            ? 'Coastal growth still positive but cooling in 2025'
+            : 'Coastal growth running above the statewide pace';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Since 2020, this county is ${formatPopulationChangePct(totalPct)}${aboveStatewide ? ', faster than the statewide pace.' : '.'}`;
+        } else if (metroSpillover.has(norm) && (aboveStatewide || Number(totalPct) >= 8)) {
+          signalEmoji = '📈';
+          patternEmoji = '🌆';
+          patternLabel = slowedIn2025
+            ? 'Metro spillover growth with a slower 2025 pace'
+            : 'Metro spillover / outer-suburban expansion';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. The county is ${formatPopulationChangePct(totalPct)} since 2020 and ${formatPopulationChangePct(recentPct)} from 2024 to 2025.`;
+        } else if (ruralSlowdown.has(norm) || (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0)) {
+          signalEmoji = Number.isFinite(totalPct) && totalPct < 0 ? '📉' : '🌾';
+          patternEmoji = '⬇️';
+          patternLabel = 'Slow-growth or declining county';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Since 2020 this county is ${formatPopulationChangePct(totalPct)}, while the 2024 to 2025 change was ${formatPopulationChangePct(recentPct)}.`;
+        } else {
+          signalEmoji = '⚖️';
+          patternEmoji = '🏡';
+          patternLabel = aboveStatewide
+            ? 'Above-state growth county'
+            : 'Mixed-growth county';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Growth since 2020 is ${formatPopulationChangePct(totalPct)}${Number.isFinite(stateTotalPct) ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide` : ''}.`;
+        }
+      }
+
+      if (!estimate && urbanAnchor.has(norm)) {
         signalEmoji = '🏙️';
         signalLabel = 'Urban anchor county';
         patternEmoji = '🧲';
         patternLabel = 'Jobs and institutions pull in growth';
         noteLabel = 'Large urban counties often absorb new voters first, which can reshape both county margins and nearby suburbs.';
-      } else if (coastalGrowth.has(norm)) {
+      } else if (!estimate && coastalGrowth.has(norm)) {
         signalEmoji = '📈';
         signalLabel = 'High-growth coastal county';
         patternEmoji = '🏖️';
         patternLabel = 'Coastal migration and retirement growth';
         noteLabel = 'Coastal growth can boost raw turnout quickly and may either reinforce or soften the existing partisan lean depending on who is moving in.';
-      } else if (metroSpillover.has(norm)) {
+      } else if (!estimate && metroSpillover.has(norm)) {
         signalEmoji = '📈';
         signalLabel = 'High-growth county';
         patternEmoji = '🌆';
         patternLabel = 'Metro spillover / outer-suburban expansion';
         noteLabel = 'Fast-growing outer-ring counties often show the clearest link between Census-era growth and changing election results.';
-      } else if (ruralSlowdown.has(norm)) {
+      } else if (!estimate && ruralSlowdown.has(norm)) {
         signalEmoji = '🌾';
         signalLabel = 'Slow-growth or declining county';
         patternEmoji = '⬇️';
         patternLabel = 'Rural slowdown / Black Belt population loss';
         noteLabel = 'Places with slower growth or population loss can still shift sharply when the electorate changes composition rather than simply adding new residents.';
-      } else if (mixedTransition.has(norm)) {
+      } else if (!estimate && mixedTransition.has(norm)) {
         signalEmoji = '⚖️';
         signalLabel = 'Mixed-growth county';
         patternEmoji = '🏡';
@@ -14134,7 +14241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         patternLabel,
         noteEmoji,
         noteLabel,
-        sourceNote: 'Qualitative context inspired by recent Census population-estimate patterns; not a raw population table.'
+        sourceNote
       };
     }
 
@@ -19954,6 +20061,18 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (err) {
         countyDemographics = null;
         console.warn('County demographics not loaded:', err?.message || err);
+      }
+
+      try {
+        const countyPopulationEstimatesCSV = await loadCSV(CONFIG.paths.county_population_estimates);
+        const rows = parseCSV(countyPopulationEstimatesCSV);
+        const idx = buildCountyPopulationEstimateIndex(rows);
+        countyPopulationEstimatesByNorm = idx.byNorm;
+        countyPopulationEstimateStatewide = idx.statewide;
+      } catch (err) {
+        countyPopulationEstimatesByNorm = null;
+        countyPopulationEstimateStatewide = null;
+        console.warn('County population estimates not loaded:', err?.message || err);
       }
 
       // Optional precinct demographics (VAP by race from block aggregation).

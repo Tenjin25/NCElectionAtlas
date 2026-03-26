@@ -122,6 +122,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - optional `Since 2008`
 - Added icon cues for trajectory origin states so the card can distinguish durable, reinforcing, emerging, and realigned paths at a glance.
 - Added a `Census Context` county sidebar card with qualitative population/growth framing such as `Urban anchor county`, `Metro spillover`, `High-growth coastal county`, `Slow-growth or declining county`, and `Mixed-growth county`.
+- The Census insight now reads from cleaned Vintage 2025 county population estimates in `data/CO-EST2025-POP-37-clean.csv`, released March 26, 2026, so it can reference actual 2020-2025 growth and the July 1, 2024 to July 1, 2025 change instead of only static county buckets.
 - The Census card is intentionally qualitative; it summarizes recent population-pattern context rather than presenting a raw Census table.
 
 ### Modeled 2026 Statewide Contests (March 26, 2026)

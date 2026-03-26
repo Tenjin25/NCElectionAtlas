@@ -412,8 +412,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(labels.some((label) => /^Last Cycle$|^Since \d{4}$/.test((label || '').trim()))).toBeTruthy();
 
     await expect(page.locator('.focus-census-insight')).toContainText('County Census Insight');
-    await expect(page.locator('.focus-census-insight')).toContainText(/Population signal|Urban anchor|Metro spillover|Coastal growth|Rural slowdown|Mixed growth/i);
-    await expect(page.locator('.focus-census-insight')).toContainText(/Why it matters|growth|county/i);
+    await expect(page.locator('.focus-census-insight')).toContainText(/Population up|Population down|Population roughly flat|Urban anchor/i);
+    await expect(page.locator('.focus-census-insight')).toContainText(/2025 estimate|2024 to 2025|statewide/i);
 
     const censusSnapshot = await page.evaluate(() => {
       const context = typeof getNcCensusContext === 'function' ? getNcCensusContext('WAKE') : null;
@@ -424,12 +424,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         title: String(context?.title || ''),
         signal: String(context?.signalLabel || ''),
         pattern: String(context?.patternLabel || ''),
+        source: String(context?.sourceNote || ''),
         html
       };
     });
     expect(censusSnapshot.title).toBe('Census Context');
-    expect(censusSnapshot.signal).toBeTruthy();
+    expect(censusSnapshot.signal).toMatch(/since 2020/i);
     expect(censusSnapshot.pattern).toBeTruthy();
+    expect(censusSnapshot.source).toMatch(/Vintage 2025/i);
     expect(censusSnapshot.html).toContain('Population signal');
     expect(censusSnapshot.html).toContain('Growth pattern');
     expect(censusSnapshot.html).toContain('Why it matters');
