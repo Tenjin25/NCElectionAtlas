@@ -93,7 +93,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 25, 2026
+**Last updated:** March 26, 2026
 
 ### Trajectory Panel Refinement (March 25, 2026)
 
@@ -106,6 +106,25 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `Locked Republican`
 - Added clearer trend direction phrasing (`Consistent/Recent rightward movement`, `Consistent/Recent leftward movement`, `Stable`) and compact checkpoint rows (`Latest`, `Since <prior year>`, `Since <first year>`, optional `Since 2008`).
 - Reworked card presentation for readability on both desktop and mobile while preserving existing focus-trend analytics cards.
+
+### Trajectory Meaning Guide (March 26, 2026)
+
+- `Durable Democratic`: Democrats have a large cushion and it has held across recent cycles.
+- `Durable Democratic (Softening)`: Democrats still lead comfortably, but movement is trending Republican.
+- `Democratic Edge`: Democrats are ahead, but the margin is still contestable.
+- `Democratic Edge (Softening)`: Democrats lead, but Republican gains are narrowing the cushion.
+- `On the Cusp`: Roughly within five points either way; small changes can flip the result.
+- `Republican Edge`: Republicans are ahead, but the margin is still contestable.
+- `Republican Edge (Softening)`: Republicans lead, but Democratic gains are narrowing the cushion.
+- `Durable Republican`: Republicans have a large cushion and it has held across recent cycles.
+- `Durable Republican (Softening)`: Republicans still lead comfortably, but movement is trending Democratic.
+- Momentum arrows in the trajectory card:
+  - `↗` movement toward Republicans
+  - `↘` movement toward Democrats
+  - `→` little to no directional movement
+- Margin/shift formatting:
+  - `Current Margin` shows the latest cycle as `YEAR: R+X.XX pts` or `YEAR: D+X.XX pts`
+  - Shift rows show directional movement with arrows and points (for example, `↗ R+1.42 pts`)
 
 ### County Precision + Hover Flip Fixes (March 22, 2026)
 

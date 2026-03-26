@@ -3684,6 +3684,37 @@ body { height: var(--app-height); }
     color: #475569;
   }
 
+  .focus-trajectory-meaning {
+    margin: 0;
+    padding: 7px 8px;
+    border-radius: 10px;
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    background: rgba(248, 250, 252, 0.9);
+    font-size: 11px;
+    line-height: 1.4;
+    color: #334155;
+  }
+
+  .focus-trajectory-meaning strong {
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .focus-trajectory-meaning.dem {
+    border-color: rgba(37, 99, 235, 0.26);
+    background: rgba(239, 246, 255, 0.9);
+  }
+
+  .focus-trajectory-meaning.rep {
+    border-color: rgba(220, 38, 38, 0.24);
+    background: rgba(254, 242, 242, 0.88);
+  }
+
+  .focus-trajectory-meaning.competitive {
+    border-color: rgba(217, 119, 6, 0.24);
+    background: rgba(255, 251, 235, 0.9);
+  }
+
   .focus-trajectory-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -6110,6 +6141,12 @@ body { height: var(--app-height); }
       min-height: 18px;
       padding: 0 6px;
       font-size: 9px;
+    }
+
+    .focus-trajectory-meaning {
+      font-size: 10px;
+      padding: 6px 7px;
+      line-height: 1.35;
     }
 
     .focus-trend-stats {
@@ -13270,6 +13307,7 @@ document.addEventListener('DOMContentLoaded', function() {
           statusClass: 'competitive',
           trend: 'Not enough history',
           icon: '\u2022',
+          meaning: 'Select a context with multiple election cycles to compute directional movement.',
           details: []
         };
       }
@@ -13358,6 +13396,25 @@ document.addEventListener('DOMContentLoaded', function() {
       else if (leftwardSteps === 1) trend = '\u2198 Mild Democratic momentum';
       else trend = '\u2192 Low momentum';
 
+      let meaning = 'Both parties are within roughly five points, so small turnout shifts can change the winner.';
+      if (status === 'Durable Democratic') {
+        meaning = 'Democrats hold a large cushion and recent cycles have not meaningfully reduced it.';
+      } else if (status === 'Durable Democratic (Softening)') {
+        meaning = 'Democrats still lead comfortably, but recent cycles are moving toward Republicans.';
+      } else if (status === 'Democratic Edge') {
+        meaning = 'Democrats are ahead by a workable margin, but this is not a lock.';
+      } else if (status === 'Democratic Edge (Softening)') {
+        meaning = 'Democrats still lead, but the cushion is narrowing as Republicans gain.';
+      } else if (status === 'Republican Edge') {
+        meaning = 'Republicans are ahead by a workable margin, but this is not a lock.';
+      } else if (status === 'Republican Edge (Softening)') {
+        meaning = 'Republicans still lead, but the cushion is narrowing as Democrats gain.';
+      } else if (status === 'Durable Republican') {
+        meaning = 'Republicans hold a large cushion and recent cycles have not meaningfully reduced it.';
+      } else if (status === 'Durable Republican (Softening)') {
+        meaning = 'Republicans still lead comfortably, but recent cycles are moving toward Democrats.';
+      }
+
       const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
       const prevSigned = previous ? getSignedMarginTowardGop(previous) : null;
       const recentShiftTowardGop = previous ? (latestSigned - prevSigned) : null;
@@ -13367,6 +13424,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statusClass,
         trend,
         icon,
+        meaning,
         details: [
           { label: 'Current Margin', value: formatWinnerLabel(latest, latestSigned) },
           ...(previous ? [{ label: `Cycle Shift (${previous.year}->${latest.year})`, value: formatShiftLabel(recentShiftTowardGop) }] : []),
@@ -13384,6 +13442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : 'competitive';
       const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'On the Cusp'}`;
       const trendText = String(meta.trend || '\u2192 Low momentum');
+      const meaningText = String(meta.meaning || '').trim();
       const trendClass = trendText.includes('\u2197')
         ? 'rep'
         : (trendText.includes('\u2198') ? 'dem' : 'neutral');
@@ -13414,6 +13473,7 @@ document.addEventListener('DOMContentLoaded', function() {
               ${escapeHtml(trendBody)}
             </span>
           </p>
+          ${meaningText ? `<p class="focus-trajectory-meaning ${statusClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
           ${details.length ? `
             <div class="focus-trajectory-grid">
               ${details.map(item => {
