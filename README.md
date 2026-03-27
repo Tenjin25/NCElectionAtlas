@@ -91,6 +91,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
+- **Political Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
