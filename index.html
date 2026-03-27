@@ -14113,6 +14113,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const longShiftTowardGop = Number(meta?.longShiftTowardGop);
       const recentShiftTowardGop = Number(meta?.recentShiftTowardGop);
       const recentWindowShiftTowardGop = Number(meta?.recentWindowShiftTowardGop);
+      const latestSignedMarginTowardGop = Number(meta?.latestSignedMarginTowardGop);
       const patternLabel = String(context?.patternLabel || '');
       const totalPct = Number(context?.changePct2020To2025);
       const recentPct = Number(context?.changePct2024To2025);
@@ -14134,6 +14135,10 @@ document.addEventListener('DOMContentLoaded', function() {
         (Number.isFinite(longShiftTowardGop) && longShiftTowardGop >= 3);
       const towardDem = /Democratic/i.test(trendText) || towardDemNumeric;
       const towardRep = /Republican/i.test(trendText) || towardRepNumeric;
+      const strongGopLean = Number.isFinite(latestSignedMarginTowardGop) && latestSignedMarginTowardGop >= 12;
+      const recentTickRedder =
+        (Number.isFinite(recentShiftTowardGop) && recentShiftTowardGop >= 0.75) ||
+        (Number.isFinite(recentWindowShiftTowardGop) && recentWindowShiftTowardGop >= 1);
 
       let censusCheck = '';
       if (/\bReinforcing\b/i.test(statusText) && fastGrowth) {
@@ -14148,7 +14153,9 @@ document.addEventListener('DOMContentLoaded', function() {
           : '';
         const stillRepublican = /\bRepublican\b/i.test(statusText) && !/\bDemocratic\b/i.test(statusText);
         censusCheck = stillRepublican
-          ? `Census growth estimates reinforce the “redder when smaller” pattern: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. In fast-growing counties, in-migration can coincide with a Republican edge that sometimes shrinks over time, even if the GOP still leads today.`
+          ? (recentTickRedder && strongGopLean
+            ? `Census growth estimates reinforce that the GOP lean is holding up: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. Even if the margin is less lopsided than earlier years as the county became less rural/exurban, the Republican edge remains clear today—and has even ticked redder in the most recent cycle.`
+            : `Census growth estimates reinforce the “redder when smaller” pattern: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. In fast-growing counties, the GOP edge can stay in place even as the county becomes less rural, even if Democrats narrow the margin over time.`)
           : `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
       } else if (towardRep && slowGrowth && repGrowthPattern) {
         censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
