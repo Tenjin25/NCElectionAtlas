@@ -103,6 +103,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Added a short **Census check** callout in the Trends panel that cross-checks trajectory language against county population-growth patterns (Vintage 2025 estimates).
 - Expanded the Census check trigger so fast-growth, outer-suburban counties (for example, Union) can still surface a growth/lean note even when the most recent cycle is a small bounce.
+- Adjusted **Momentum** so fast-growth, outer-suburban counties can surface a `← Long-run Democratic drift` call at smaller long-run deltas when the county remains Republican-leaning but has clearly softened over time.
 - Refined the `County Census Insight` buckets so transition counties read as `Small-metro / outer-suburban transition`, and military-hub counties (for example, Cumberland/Onslow/Wayne/Craven/Hoke) get a note that year-to-year estimates can be choppy.
 - Restyled the Census check callout to match the compact “Meaning” card typography while remaining visually distinct.
 - Clarified the **Political Categories** legend language so it’s consistent everywhere: the color spectrum is the signed two-party margin (Rep% − Dem%), while category chips represent absolute margin thresholds (|Rep% − Dem%|).
