@@ -32,7 +32,7 @@ The live app is now presented as **North Carolina Election Atlas**, which is the
 North Carolina's election data is complex: precinct boundaries and IDs change frequently, and non-geographic voting buckets (like early voting or absentee) do not map cleanly to physical locations. This project focuses on two hard problems:
 
 - **Making historical precinct-level results usable with modern geometry** (handling precinct ID changes, splits, merges, and early-vote/absentee buckets that don't map to geography)
-- **Showing district results on a single, consistent set of district lines** — all district views use the court-ordered 2022 MQP lines (see below), with results reallocated via block/VAP crosswalks
+- **Showing district results on consistent district lines** — district views default to the court-ordered 2022 MQP lines (see below), with an optional toggle to 2024 lines for comparison; results are reallocated via block/VAP crosswalks where needed
 
 The project is powered by prebuilt JSON data slices and raw [OpenElections](https://openelections.net/) precinct CSVs, with geometry from NCSBE and Census Bureau TIGER files.
 
@@ -42,7 +42,7 @@ The project is powered by prebuilt JSON data slices and raw [OpenElections](http
 - **Students and educators:** Explore long-run election trends (2000-2024) with map-first visuals that are easier to use in class projects.
 - **Political junkies and campaign watchers:** Compare margins, flips, shifts, and district outcomes quickly across multiple election years.
 - **Data journalists and researchers:** Use the map for rapid story discovery, then trace the underlying JSON/CSV inputs and coverage diagnostics in this repo.
-- **Civic tech and redistricting users:** Inspect how statewide results look when reallocated to a consistent district baseline (2022 MQP lines).
+- **Civic tech and redistricting users:** Inspect how statewide results look when reallocated to a consistent district baseline (2022 MQP), and compare against the 2024 line option.
 
 ### Quick Start by Audience
 
@@ -53,7 +53,7 @@ The project is powered by prebuilt JSON data slices and raw [OpenElections](http
 
 ## Why the 2022 Court-Ordered (MQP) Lines?
 
-All three district views (Congressional, State House, State Senate) use the **court-ordered "MQP" remedial maps** drawn in 2022 by court-appointed Special Masters following the NC Supreme Court's ruling that the legislature's own maps were unconstitutional partisan gerrymanders.
+District views (Congressional, State House, State Senate) default to the **court-ordered "MQP" remedial maps** drawn in 2022 by court-appointed Special Masters following the NC Supreme Court's ruling that the legislature's own maps were unconstitutional partisan gerrymanders.
 
 These lines were chosen as the consistent historical baseline for two reasons:
 
@@ -66,13 +66,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Features
 
 - **Multiple Views:** Counties, Precincts (zoomed in), Congressional Districts, State House, State Senate
+- **District Lines Toggle (2022 vs 2024):** District views can switch between the 2022 MQP baseline and a 2024 line option; the first 2024 load can take longer while boundary GeoJSON downloads/parses
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 - **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic Stronghold`, `Reinforcing Republican Stronghold`, `Emerging Republican Edge`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
+- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic (Stronghold)`, `Reinforcing Republican (Advantage)`, `Emerging Republican (Edge)`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
 - **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
 - **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 - **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
@@ -95,7 +96,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 26, 2026
+**Last updated:** March 27, 2026
+
+### Trajectory Wording + 2024 Lines Loading Notice (March 27, 2026)
+
+- Standardized the trajectory label format to `Origin Side (Position)` (for example: `Emerging Republican (Edge)`), with positions `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`.
+- Refined `Emerging` descriptions to explicitly call out “closing the gap” cases (for example, Cabarrus: GOP still leads but trends Democratic over time).
+- Added a loading modal when switching to 2024 district lines so the UI explains the first-time boundary load delay.
 
 ### Trajectory Edge Cases + Census Context (March 26, 2026)
 
@@ -103,14 +110,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Expanded the trajectory classifier so status labels are now composed from:
   - `origin`: `Durable`, `Reinforcing`, `Emerging`, or `Realigned`
   - `side`: `Democratic`, `Republican`, or fully neutral `Battleground`
-  - `position`: `Stronghold`, `Lean`, `Edge`, or `Battleground`
+  - `position`: `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`
 - Example live statuses now include labels such as:
-  - `Durable Democratic Stronghold`
-  - `Reinforcing Democratic Stronghold`
-  - `Reinforcing Republican Lean`
-  - `Reinforcing Republican Stronghold`
-  - `Emerging Democratic Edge`
-  - `Realigned Republican Stronghold`
+  - `Durable Democratic (Stronghold)`
+  - `Reinforcing Democratic (Stronghold)`
+  - `Reinforcing Republican (Advantage)`
+  - `Reinforcing Republican (Stronghold)`
+  - `Emerging Democratic (Edge)`
+  - `Realigned Republican (Stronghold)`
   - `Battleground`
 - Updated momentum wording to shorter directional calls:
   - `↔ Stable`
@@ -357,7 +364,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 | Census block geography | US Census Bureau TIGER/Line files |
 | Block-to-precinct crosswalks | Derived from 2020 Census block assignments |
 | Block-to-block crosswalks (cross-vintage) | [NHGIS Longitudinal Block Crosswalks](https://www.nhgis.org/documentation/tabular-data/crosswalks) |
-| District lines (2022 MQP) | Court-ordered remedial maps, NC Supreme Court 2022 |
+| District lines (2022 MQP + optional 2024) | Court-ordered remedial maps (2022 MQP); US Census TIGER/Line 2024 (CD/SLDL/SLDU) |
 
 ## Getting Started
 
