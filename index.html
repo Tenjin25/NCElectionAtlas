@@ -3687,9 +3687,10 @@ body { height: var(--app-height); }
 
   .focus-trajectory-head {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 6px;
     padding-bottom: 6px;
     border-bottom: 1px dashed rgba(var(--trajectory-accent-rgb), 0.25);
   }
@@ -13914,6 +13915,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const coastalGrowth = new Set(['BRUNSWICK', 'NEW HANOVER', 'PENDER', 'ONSLOW', 'CURRITUCK', 'CARTERET']);
       const ruralSlowdown = new Set(['ROBESON', 'BLADEN', 'RICHMOND', 'ANSON', 'MARTIN', 'GATES', 'HALIFAX', 'SCOTLAND', 'WASHINGTON', 'BERTIE', 'NORTHAMPTON']);
       const mixedTransition = new Set(['PASQUOTANK', 'ALAMANCE', 'DAVIDSON', 'ROWAN', 'NASH', 'PITT', 'CUMBERLAND', 'RANDOLPH', 'CATAWBA']);
+      const institutionalHub = new Set(['CUMBERLAND']);
 
       let signalEmoji = '📊';
       let signalLabel = 'Steady population signal';
@@ -13934,6 +13936,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const belowStatewide = Number.isFinite(totalPct) && Number.isFinite(stateTotalPct) && totalPct < stateTotalPct - 1.25;
       const isFlatOrDeclining = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
       const isUrbanish = urbanAnchor.has(norm) || metroSpillover.has(norm) || mixedTransition.has(norm) || (Number(estimate?.population2025) >= 150000);
+      const isInstitutionalHub = institutionalHub.has(norm);
 
       if (estimate) {
         signalLabel = `Population ${formatPopulationChangePct(totalPct)} since 2020`;
@@ -13961,11 +13964,20 @@ document.addEventListener('DOMContentLoaded', function() {
             ? 'Metro spillover growth with a slower 2025 pace'
             : 'Metro spillover / outer-suburban expansion';
           noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. The county is ${formatPopulationChangePct(totalPct)} since 2020 and ${formatPopulationChangePct(recentPct)} from 2024 to 2025.`;
+        } else if (isUrbanish && (belowStatewide || slowedIn2025) && !isFlatOrDeclining) {
+          signalEmoji = '🏙️';
+          patternEmoji = '🧭';
+          patternLabel = 'Urban county with slower growth than statewide';
+          const slowdownClause = slowedIn2025 ? 'Growth cooled compared with 2023 to 2024.' : '';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Growth since 2020 is ${formatPopulationChangePct(totalPct)}, versus ${formatPopulationChangePct(stateTotalPct)} statewide. ${slowdownClause} Slower growth can mean less in-migration-driven electorate churn, so political change may show up more through turnout, registration, and coalition shifts than sheer population inflow.`;
         } else if (isUrbanish && isFlatOrDeclining) {
           signalEmoji = '🏙️';
           patternEmoji = '📉';
           patternLabel = 'Urban county with flat/declining population';
-          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Since 2020 this county is ${formatPopulationChangePct(totalPct)}, while the 2024 to 2025 change was ${formatPopulationChangePct(recentPct)}. Flat or declining growth often means less in-migration-driven electorate churn, so shifts may show up more through turnout and coalition change than sheer population inflow.`;
+          const hubClause = isInstitutionalHub
+            ? 'In institutional hubs (e.g., military-heavy counties like Cumberland/Fayetteville), year-to-year estimates can be choppy, and political change may track voter turnover and participation as much as net in-migration.'
+            : 'Flat or declining growth often means less in-migration-driven electorate churn, so shifts may show up more through turnout and coalition change than sheer population inflow.';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Since 2020 this county is ${formatPopulationChangePct(totalPct)}, while the 2024 to 2025 change was ${formatPopulationChangePct(recentPct)}. ${hubClause}`;
         } else if (ruralSlowdown.has(norm) || isFlatOrDeclining) {
           signalEmoji = Number.isFinite(totalPct) && totalPct < 0 ? '📉' : '🌾';
           patternEmoji = '⬇️';
@@ -14056,9 +14068,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const statewideClause = Number.isFinite(stateTotalPct)
           ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide`
           : '';
-        censusCheck = `Census growth estimates support that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
+        censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
       } else if (/Republican/i.test(trendText) && slowGrowth && repGrowthPattern) {
-        censusCheck = `Census growth estimates support that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
+        censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
       }
 
       if (!censusCheck) return meta;
@@ -17616,9 +17628,8 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (_) {}
 
   // Census growth context (Vintage 2025 estimates when available).
-  try {
-    sidebarContent += renderCensusContextHTML(getNcCensusContext(norm));
-  } catch (_) {}
+  // Note: Census context is rendered in the trend panel (on click) so the
+  // sidebar stays focused on point-in-time totals and breakdowns.
 
   // Competitiveness
   const competitiveness = tierMeta?.label || 'Tossup';
