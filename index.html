@@ -3813,11 +3813,8 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 12px;
-    width: 12px;
-    margin-right: 2px;
+    min-width: 14px;
     font-weight: 900;
-    line-height: 1;
   }
 
   .focus-trajectory-arrow.tone-dem {
@@ -3832,34 +3829,39 @@ body { height: var(--app-height); }
     color: #64748b;
   }
 
-  /* RIGHT (→) */
-  @keyframes arrowSlideRight {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(3px); }
+  @keyframes trajectory-arrow-nudge-rep {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(1.5px); opacity: 0.86; }
   }
 
-  /* LEFT (←) */
-  @keyframes arrowSlideLeft {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-3px); }
+  @keyframes trajectory-arrow-nudge-dem {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(-1.5px); opacity: 0.86; }
   }
 
-  /* NEUTRAL */
-  @keyframes arrowPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+  @keyframes trajectory-arrow-breathe {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.08); opacity: 1; }
   }
 
-  .focus-trajectory-arrow.dir-right {
-    animation: arrowSlideRight 1.1s ease-in-out infinite;
+  .focus-trajectory-arrow.tone-rep {
+    animation: trajectory-arrow-nudge-rep 1.4s ease-in-out infinite;
   }
 
-  .focus-trajectory-arrow.dir-left {
-    animation: arrowSlideLeft 1.1s ease-in-out infinite;
+  .focus-trajectory-arrow.tone-dem {
+    animation: trajectory-arrow-nudge-dem 1.4s ease-in-out infinite;
   }
 
   .focus-trajectory-arrow.tone-neutral {
-    animation: arrowPulse 1.4s ease-in-out infinite;
+    animation: trajectory-arrow-breathe 1.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .focus-trajectory-arrow.tone-rep,
+    .focus-trajectory-arrow.tone-dem,
+    .focus-trajectory-arrow.tone-neutral {
+      animation: none !important;
+    }
   }
 
   .focus-trend-dots {
@@ -13645,8 +13647,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '\u2192 No clear shift';
-        return `${delta > 0 ? '\u2197' : '\u2198'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
+        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '\u2194 No clear shift';
+        return `${delta > 0 ? '\u2192' : '\u2190'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
       }
 
       function formatWinnerLabel(row, signedMargin) {
@@ -13708,17 +13710,17 @@ document.addEventListener('DOMContentLoaded', function() {
         statusClass = 'rep';
       }
 
-      let trend = '\u2192 Little directional change';
+      let trend = '\u2194 Little directional change';
       const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
       const prevSigned = previous ? getSignedMarginTowardGop(previous) : null;
       const recentShiftTowardGop = previous ? (latestSigned - prevSigned) : null;
       const recentShiftAbs = Number.isFinite(recentShiftTowardGop) ? Math.abs(recentShiftTowardGop) : 0;
       if (recentShiftAbs < 2 && rightwardSteps < 2 && leftwardSteps < 2) {
-        trend = '\u2192 Stable';
-      } else if (rightwardSteps >= 2) trend = '\u2197 Strong Republican trend';
-      else if (rightwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2197 Mild Republican trend';
-      else if (leftwardSteps >= 2) trend = '\u2198 Strong Democratic trend';
-      else if (leftwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2198 Mild Democratic trend';
+        trend = '\u2194 Stable';
+      } else if (rightwardSteps >= 2) trend = '\u2192 Strong Republican trend';
+      else if (rightwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2192 Mild Republican trend';
+      else if (leftwardSteps >= 2) trend = '\u2190 Strong Democratic trend';
+      else if (leftwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2190 Mild Democratic trend';
 
       let meaning = 'Both parties are close enough that modest turnout changes can flip the outcome.';
       if (status === 'Durable Democratic') {
@@ -13764,13 +13766,6 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
 
-    function trajectoryArrowDirectionClass(arrow) {
-      const value = String(arrow || '').trim();
-      if (value === '\u2192') return 'dir-right';
-      if (value === '\u2190') return 'dir-left';
-      return '';
-    }
-
     function trajectoryToneClass(tone) {
       const normalized = String(tone || '').trim().toLowerCase();
       if (normalized === 'dem') return 'tone-dem';
@@ -13787,23 +13782,28 @@ document.addEventListener('DOMContentLoaded', function() {
         : 'competitive';
       const statusToneClass = trajectoryToneClass(statusClass);
       const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
-      const trendText = String(meta.trend || '\u2192 Little directional change');
+      const trendText = String(meta.trend || '\u2194 Little directional change');
       const meaningText = String(meta.meaning || '').trim();
-      const trendTone = trendText.includes('\u2197')
+
+      // Normalize legacy diagonal arrows to horizontal so trend direction is always shown left/right.
+      const normalizeTrajectoryArrow = (arrow) => {
+        if (arrow === '\u2197') return '\u2192'; // ↗ -> →
+        if (arrow === '\u2198') return '\u2190'; // ↘ -> ←
+        return arrow;
+      };
+
+      const trendTone = (trendText.includes('\u2192') || trendText.includes('\u2197'))
         ? 'rep'
-        : (trendText.includes('\u2198') ? 'dem' : 'neutral');
+        : ((trendText.includes('\u2190') || trendText.includes('\u2198')) ? 'dem' : 'neutral');
       const trendToneClass = trajectoryToneClass(trendTone);
-      const trendArrowMatch = trendText.trim().match(/^([\u2197\u2198\u2192])\s*/);
-      let trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
-      if (trendArrow === '\u2197') trendArrow = '\u2192';
-      if (trendArrow === '\u2198') trendArrow = '\u2190';
-      const trendArrowDirClass = trajectoryArrowDirectionClass(trendArrow);
-      const trendBody = trendArrow ? trendText.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : trendText;
+      const trendArrowMatch = trendText.trim().match(/^([\u2190\u2192\u2194\u2197\u2198])\s*/);
+      const trendArrow = trendArrowMatch ? normalizeTrajectoryArrow(trendArrowMatch[1]) : '';
+      const trendBody = trendArrow ? trendText.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : trendText;
       const detailTone = (label, value) => {
         const v = String(value || '');
-        if (v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
-        if (v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
-        if (v.includes('\u2192') || /Tie|Even/i.test(v)) return 'neutral';
+        if (v.includes('\u2192') || v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
+        if (v.includes('\u2190') || v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
+        if (v.includes('\u2194') || /Tie|Even/i.test(v)) return 'neutral';
         if (String(label || '').toLowerCase() === 'latest result') {
           if (/\bR\+/.test(v)) return 'rep';
           if (/\bD\+/.test(v)) return 'dem';
@@ -13819,7 +13819,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <p class="focus-trajectory-trendline ${trendToneClass}">
             <span class="trend-tag">Momentum</span>
             <span class="trend-text">
-              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass} ${trendArrowDirClass}">${escapeHtml(trendArrow)}</span>` : ''}
+              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
               ${escapeHtml(trendBody)}
             </span>
           </p>
@@ -13828,21 +13828,18 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="focus-trajectory-grid">
               ${details.map(item => {
                 const tone = detailTone(item?.label, item?.value);
-                const toneClass = trajectoryToneClass(tone);
-                const label = String(item?.label || '');
-                const valueRaw = String(item?.value || '');
-                const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
-                let arrow = arrowMatch ? arrowMatch[1] : '';
-                if (arrow === '\u2197') arrow = '\u2192';
-                if (arrow === '\u2198') arrow = '\u2190';
-                const arrowDirClass = trajectoryArrowDirectionClass(arrow);
-                const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
-                const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
-                return `
-                <div class="focus-trajectory-item ${toneClass} ${rowRole}">
-                  <span class="focus-trajectory-label">${escapeHtml(label)}</span>
+                  const toneClass = trajectoryToneClass(tone);
+                  const label = String(item?.label || '');
+                  const valueRaw = String(item?.value || '');
+                  const arrowMatch = valueRaw.trim().match(/^([\u2190\u2192\u2194\u2197\u2198])\s*/);
+                  const arrow = arrowMatch ? normalizeTrajectoryArrow(arrowMatch[1]) : '';
+                  const valueBody = arrow ? valueRaw.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : valueRaw;
+                  const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
+                  return `
+                 <div class="focus-trajectory-item ${toneClass} ${rowRole}">
+                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
                   <span class="focus-trajectory-value ${toneClass}">
-                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass} ${arrowDirClass}">${escapeHtml(arrow)}</span>` : ''}
+                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
                     ${escapeHtml(valueBody)}
                   </span>
                 </div>
@@ -21372,4 +21369,3 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
-
