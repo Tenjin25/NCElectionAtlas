@@ -10628,8 +10628,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           </div>
         </div>
-        ${focusCensusHtml}
         ${trajectoryHtml}
+        ${focusCensusHtml}
         <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
@@ -13842,6 +13842,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const slowedIn2025 = Number.isFinite(recentPct) && Number.isFinite(priorPct) && recentPct + 0.05 < priorPct;
       const aboveStatewide = Number.isFinite(totalPct) && Number.isFinite(stateTotalPct) && totalPct > stateTotalPct + 1.25;
       const belowStatewide = Number.isFinite(totalPct) && Number.isFinite(stateTotalPct) && totalPct < stateTotalPct - 1.25;
+      const isFlatOrDeclining = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
+      const isUrbanish = urbanAnchor.has(norm) || metroSpillover.has(norm) || mixedTransition.has(norm) || (Number(estimate?.population2025) >= 150000);
 
       if (estimate) {
         signalLabel = `Population ${formatPopulationChangePct(totalPct)} since 2020`;
@@ -13869,7 +13871,12 @@ document.addEventListener('DOMContentLoaded', function() {
             ? 'Metro spillover growth with a slower 2025 pace'
             : 'Metro spillover / outer-suburban expansion';
           noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. The county is ${formatPopulationChangePct(totalPct)} since 2020 and ${formatPopulationChangePct(recentPct)} from 2024 to 2025.`;
-        } else if (ruralSlowdown.has(norm) || (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0)) {
+        } else if (isUrbanish && isFlatOrDeclining) {
+          signalEmoji = '🏙️';
+          patternEmoji = '📉';
+          patternLabel = 'Urban county with flat/declining population';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Since 2020 this county is ${formatPopulationChangePct(totalPct)}, while the 2024 to 2025 change was ${formatPopulationChangePct(recentPct)}. Flat or declining growth often means less in-migration-driven electorate churn, so shifts may show up more through turnout and coalition change than sheer population inflow.`;
+        } else if (ruralSlowdown.has(norm) || isFlatOrDeclining) {
           signalEmoji = Number.isFinite(totalPct) && totalPct < 0 ? '📉' : '🌾';
           patternEmoji = '⬇️';
           patternLabel = 'Slow-growth or declining county';
@@ -13946,7 +13953,7 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       const slowGrowth = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
       const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county/i.test(patternLabel);
-      const repGrowthPattern = /Slow-growth|declining county|Rural slowdown/i.test(patternLabel);
+      const repGrowthPattern = /Slow-growth|declining county|Rural slowdown|flat\/declining population|Urban county with flat\/declining population/i.test(patternLabel);
 
       let censusCheck = '';
       if (/\bReinforcing\b/i.test(statusText) && fastGrowth) {
