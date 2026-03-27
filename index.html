@@ -14068,7 +14068,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const statewideClause = Number.isFinite(stateTotalPct)
           ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide`
           : '';
-        censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
+        const stillRepublican = /\bRepublican\b/i.test(statusText) && !/\bDemocratic\b/i.test(statusText);
+        censusCheck = stillRepublican
+          ? `Census growth estimates reinforce the “redder when smaller” pattern: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. In fast-growing counties, in-migration can coincide with a Republican edge that sometimes shrinks over time, even if the GOP still leads today.`
+          : `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
       } else if (/Republican/i.test(trendText) && slowGrowth && repGrowthPattern) {
         censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
       }
