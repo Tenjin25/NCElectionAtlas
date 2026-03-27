@@ -3813,13 +3813,11 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 14px;
+    min-width: 12px;
+    width: 12px;
+    margin-right: 2px;
     font-weight: 900;
-    will-change: transform, opacity;
-    transform: translate3d(0, 0, 0);
-    animation-duration: 1.2s;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
+    line-height: 1;
   }
 
   .focus-trajectory-arrow.tone-dem {
@@ -3834,59 +3832,34 @@ body { height: var(--app-height); }
     color: #64748b;
   }
 
+  /* RIGHT (→) */
+  @keyframes arrowSlideRight {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+  }
+
+  /* LEFT (←) */
+  @keyframes arrowSlideLeft {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-3px); }
+  }
+
+  /* NEUTRAL */
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
   .focus-trajectory-arrow.dir-right {
-    animation-name: trajectory-arrow-right;
+    animation: arrowSlideRight 1.1s ease-in-out infinite;
   }
 
-  .focus-trajectory-arrow.dir-up-right {
-    animation-name: trajectory-arrow-up-right;
+  .focus-trajectory-arrow.dir-left {
+    animation: arrowSlideLeft 1.1s ease-in-out infinite;
   }
 
-  .focus-trajectory-arrow.dir-down-right {
-    animation-name: trajectory-arrow-down-right;
-  }
-
-  @keyframes trajectory-arrow-right {
-    0%,
-    100% {
-      transform: translate3d(0, 0, 0);
-      opacity: 0.72;
-    }
-    50% {
-      transform: translate3d(4px, 0, 0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes trajectory-arrow-up-right {
-    0%,
-    100% {
-      transform: translate3d(0, 0, 0);
-      opacity: 0.72;
-    }
-    50% {
-      transform: translate3d(4px, -3px, 0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes trajectory-arrow-down-right {
-    0%,
-    100% {
-      transform: translate3d(0, 0, 0);
-      opacity: 0.72;
-    }
-    50% {
-      transform: translate3d(4px, 3px, 0);
-      opacity: 1;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .focus-trajectory-arrow {
-      animation: none !important;
-      opacity: 1;
-    }
+  .focus-trajectory-arrow.tone-neutral {
+    animation: arrowPulse 1.4s ease-in-out infinite;
   }
 
   .focus-trend-dots {
@@ -13791,20 +13764,19 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
 
+    function trajectoryArrowDirectionClass(arrow) {
+      const value = String(arrow || '').trim();
+      if (value === '\u2192') return 'dir-right';
+      if (value === '\u2190') return 'dir-left';
+      return '';
+    }
+
     function trajectoryToneClass(tone) {
       const normalized = String(tone || '').trim().toLowerCase();
       if (normalized === 'dem') return 'tone-dem';
       if (normalized === 'rep') return 'tone-rep';
       if (normalized === 'competitive') return 'tone-competitive';
       return 'tone-neutral';
-    }
-
-    function trajectoryArrowDirectionClass(arrow) {
-      const value = String(arrow || '').trim();
-      if (value === '↗') return 'dir-up-right';
-      if (value === '↘') return 'dir-down-right';
-      if (value === '→') return 'dir-right';
-      return '';
     }
 
     function renderTrajectoryBlockHTML(meta) {
@@ -13822,7 +13794,9 @@ document.addEventListener('DOMContentLoaded', function() {
         : (trendText.includes('\u2198') ? 'dem' : 'neutral');
       const trendToneClass = trajectoryToneClass(trendTone);
       const trendArrowMatch = trendText.trim().match(/^([\u2197\u2198\u2192])\s*/);
-      const trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
+      let trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
+      if (trendArrow === '\u2197') trendArrow = '\u2192';
+      if (trendArrow === '\u2198') trendArrow = '\u2190';
       const trendArrowDirClass = trajectoryArrowDirectionClass(trendArrow);
       const trendBody = trendArrow ? trendText.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : trendText;
       const detailTone = (label, value) => {
@@ -13858,7 +13832,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const label = String(item?.label || '');
                 const valueRaw = String(item?.value || '');
                 const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
-                const arrow = arrowMatch ? arrowMatch[1] : '';
+                let arrow = arrowMatch ? arrowMatch[1] : '';
+                if (arrow === '\u2197') arrow = '\u2192';
+                if (arrow === '\u2198') arrow = '\u2190';
                 const arrowDirClass = trajectoryArrowDirectionClass(arrow);
                 const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
                 const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
