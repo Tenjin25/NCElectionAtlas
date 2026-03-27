@@ -14129,8 +14129,15 @@ document.addEventListener('DOMContentLoaded', function() {
         (Number.isFinite(stateTotalPct) && totalPct > stateTotalPct + 1.25)
       );
       const slowGrowth = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
-      const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county/i.test(patternLabel);
+      const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county|Coastal growth/i.test(patternLabel);
       const repGrowthPattern = /Slow-growth|declining county|Rural slowdown/i.test(patternLabel);
+      const growthLabel = (() => {
+        if (/Metro spillover|outer-suburban expansion/i.test(patternLabel)) return 'fast outer-suburban growth';
+        if (/Urban anchor/i.test(patternLabel)) return 'continued urban growth';
+        if (/Coastal growth/i.test(patternLabel)) return 'fast coastal growth';
+        if (/Above-state growth county/i.test(patternLabel)) return 'above-average growth';
+        return 'fast county growth';
+      })();
       const towardDemNumeric =
         (Number.isFinite(recentShiftTowardGop) && recentShiftTowardGop <= -2) ||
         (Number.isFinite(recentWindowShiftTowardGop) && recentWindowShiftTowardGop <= -3) ||
@@ -14148,10 +14155,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let censusCheck = '';
       if (/\bReinforcing\b/i.test(statusText) && fastGrowth) {
-        let growthLabel = 'fast county growth';
-        if (/Metro spillover|outer-suburban expansion/i.test(patternLabel)) growthLabel = 'fast outer-suburban growth';
-        else if (/Urban anchor/i.test(patternLabel)) growthLabel = 'continued urban growth';
-        else if (/Coastal growth/i.test(patternLabel)) growthLabel = 'fast coastal growth';
         censusCheck = `Census growth estimates also support the reinforcing call: population is ${formatPopulationChangePct(totalPct)} since 2020, and ${growthLabel} is happening while the county keeps moving in the same partisan direction.`;
       } else if (towardDem && fastGrowth && demGrowthPattern) {
         const statewideClause = Number.isFinite(stateTotalPct)
@@ -14160,9 +14163,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const stillRepublican = /\bRepublican\b/i.test(statusText) && !/\bDemocratic\b/i.test(statusText);
         censusCheck = stillRepublican
           ? (recentTickRedder && strongGopLean
-            ? `Census growth estimates reinforce that the GOP lean is holding up: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. Even if the margin is less lopsided than earlier years as the county became less rural/exurban, the Republican edge remains clear today—and has even ticked redder in the most recent cycle.`
-            : `Census growth estimates reinforce the “redder when smaller” pattern: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. In fast-growing counties, the GOP edge can stay in place even as the county becomes less rural, even if Democrats narrow the margin over time.`)
-          : `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
+            ? `Census growth estimates suggest churn: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. With ${growthLabel}, you might expect faster political change, but the GOP edge remains large—and even moved redder in the most recent cycle.`
+            : `Census growth estimates support the shift: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. With ${growthLabel}, Democrats often gain ground even while Republicans still lead.`)
+          : `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a county seeing ${growthLabel}.`;
       } else if (towardRep && slowGrowth && repGrowthPattern) {
         censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
       }

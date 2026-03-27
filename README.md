@@ -111,6 +111,24 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Standardized the trajectory label format to `Origin Side (Position)` (for example: `Emerging Republican (Edge)`), with positions `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`.
 - Refined `Emerging` descriptions to explicitly call out “closing the gap” cases (for example, Cabarrus: GOP still leads but trends Democratic over time).
 - Added a loading modal when switching to 2024 district lines so the UI explains the first-time boundary load delay.
+- Trajectory Snapshot glossary (the `Meaning:` line and status chip are generated from the same rules everywhere):
+  - `Origin`:
+    - `Durable`: long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
+    - `Reinforcing`: the county is moving further in the same direction as its current lean.
+    - `Emerging`: the county still leans one way, but the underlying movement points the other way (a “closing the gap” trajectory).
+    - `Realigned`: the county’s lean has flipped versus its longer-run baseline.
+  - `Side`: `Democratic` / `Republican` reflect the *current* lean (the most recent margin), not the direction of change.
+  - `Position`:
+    - `Stronghold`: very safe margin.
+    - `Advantage`: clear but not extreme margin.
+    - `Edge`: modest margin (close enough that a normal-swing cycle can narrow quickly).
+    - `Tilt`: very close margin.
+    - `Battleground`: essentially even / too close to call cleanly.
+  - `Momentum` (trend line):
+    - `↔ Stable`: little directional change.
+    - `← Democratic trend` / `→ Republican trend`: consistent shift over recent cycles.
+    - `←/→ Accelerating ... trend`: the most recent window is moving faster than the longer-run pace.
+    - `←/→ Long-run ... drift`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
 
 ### Trajectory Edge Cases + Census Context (March 26, 2026)
 
