@@ -14024,6 +14024,17 @@ document.addEventListener('DOMContentLoaded', function() {
             ? 'Metro spillover growth with a slower 2025 pace'
             : 'Metro spillover / outer-suburban expansion';
           noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. The county is ${formatPopulationChangePct(totalPct)} since 2020 and ${formatPopulationChangePct(recentPct)} from 2024 to 2025.`;
+        } else if (mixedTransition.has(norm) && !isFlatOrDeclining) {
+          signalEmoji = aboveStatewide ? '📈' : '⚖️';
+          patternEmoji = '🏡';
+          patternLabel = slowedIn2025
+            ? 'Small-metro / exurban transition with cooling growth'
+            : 'Small-metro / exurban transition';
+          const statewideClause = Number.isFinite(stateTotalPct)
+            ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide`
+            : '';
+          const slowdownClause = slowedIn2025 ? ' Growth cooled compared with 2023 to 2024.' : '';
+          noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Growth since 2020 is ${formatPopulationChangePct(totalPct)}${statewideClause}. 2024 to 2025 change: ${formatPopulationChangePct(recentPct)}.${slowdownClause} Counties in this bucket often sit between metro growth and rural stability, so partisan change can be gradual.`;
         } else if (isUrbanish && (belowStatewide || slowedIn2025) && !isFlatOrDeclining) {
           signalEmoji = '🏙️';
           patternEmoji = '🧭';
@@ -14081,7 +14092,7 @@ document.addEventListener('DOMContentLoaded', function() {
         signalEmoji = '⚖️';
         signalLabel = 'Mixed-growth county';
         patternEmoji = '🏡';
-        patternLabel = 'Small-metro / suburban transition';
+        patternLabel = 'Small-metro / exurban transition';
         noteLabel = 'These counties often sit between metro growth and rural stability, making them useful early-warning signs for political change.';
       }
 
