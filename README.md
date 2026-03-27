@@ -99,6 +99,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** March 27, 2026
 
+### Census Check + Legend Clarification (March 27, 2026)
+
+- Added a short **Census check** callout in the Trends panel that cross-checks trajectory language against county population-growth patterns (Vintage 2025 estimates).
+- Expanded the Census check trigger so fast-growth, outer-suburban counties (for example, Union) can still surface a growth/lean note even when the most recent cycle is a small bounce.
+- Restyled the Census check callout to match the compact “Meaning” card typography while remaining visually distinct.
+- Clarified the **Political Categories** legend language so it’s consistent everywhere: the color spectrum is the signed two-party margin (Rep% − Dem%), while category chips represent absolute margin thresholds (|Rep% − Dem%|).
+
 ### Trajectory Wording + 2024 Lines Loading Notice (March 27, 2026)
 
 - Standardized the trajectory label format to `Origin Side (Position)` (for example: `Emerging Republican (Edge)`), with positions `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`.
