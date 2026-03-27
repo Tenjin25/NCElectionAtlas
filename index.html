@@ -10681,7 +10681,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = String(options?.trajectoryMeta?.censusCheck || '').trim();
         if (!text) return '';
         const trendText = String(options?.trajectoryMeta?.trend || '');
-        const tone = trendText.includes('←') ? 'dem' : (trendText.includes('→') ? 'rep' : 'neutral');
+        let tone = trendText.includes('←') ? 'dem' : (trendText.includes('→') ? 'rep' : 'neutral');
+        if (tone === 'neutral') {
+          const windowShift = Number(options?.trajectoryMeta?.recentWindowShiftTowardGop);
+          const longShift = Number(options?.trajectoryMeta?.longShiftTowardGop);
+          const shift = Number.isFinite(windowShift) ? windowShift : longShift;
+          if (Number.isFinite(shift)) {
+            if (shift <= -3) tone = 'dem';
+            else if (shift >= 3) tone = 'rep';
+          }
+        }
         const toneClass = trajectoryToneClass(tone);
         return `
           <div class="focus-census-check ${toneClass}" role="note" aria-label="Census check">
@@ -14112,6 +14121,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!meta || !context) return meta;
       const statusText = String(meta?.status || meta?.statusMain || '');
       const trendText = String(meta?.trend || '');
+      const longShiftTowardGop = Number(meta?.longShiftTowardGop);
+      const recentShiftTowardGop = Number(meta?.recentShiftTowardGop);
+      const recentWindowShiftTowardGop = Number(meta?.recentWindowShiftTowardGop);
       const patternLabel = String(context?.patternLabel || '');
       const totalPct = Number(context?.changePct2020To2025);
       const recentPct = Number(context?.changePct2024To2025);
@@ -14123,6 +14135,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const slowGrowth = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
       const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county/i.test(patternLabel);
       const repGrowthPattern = /Slow-growth|declining county|Rural slowdown/i.test(patternLabel);
+      const towardDemNumeric =
+        (Number.isFinite(recentShiftTowardGop) && recentShiftTowardGop <= -2) ||
+        (Number.isFinite(recentWindowShiftTowardGop) && recentWindowShiftTowardGop <= -3) ||
+        (Number.isFinite(longShiftTowardGop) && longShiftTowardGop <= -3);
+      const towardRepNumeric =
+        (Number.isFinite(recentShiftTowardGop) && recentShiftTowardGop >= 2) ||
+        (Number.isFinite(recentWindowShiftTowardGop) && recentWindowShiftTowardGop >= 3) ||
+        (Number.isFinite(longShiftTowardGop) && longShiftTowardGop >= 3);
+      const towardDem = /Democratic/i.test(trendText) || towardDemNumeric;
+      const towardRep = /Republican/i.test(trendText) || towardRepNumeric;
 
       let censusCheck = '';
       if (/\bReinforcing\b/i.test(statusText) && fastGrowth) {
@@ -14131,7 +14153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (/Urban anchor/i.test(patternLabel)) growthLabel = 'continued urban growth';
         else if (/Coastal growth/i.test(patternLabel)) growthLabel = 'fast coastal growth';
         censusCheck = `Census growth estimates also support the reinforcing call: population is ${formatPopulationChangePct(totalPct)} since 2020, and ${growthLabel} is happening while the county keeps moving in the same partisan direction.`;
-      } else if (/Democratic/i.test(trendText) && fastGrowth && demGrowthPattern) {
+      } else if (towardDem && fastGrowth && demGrowthPattern) {
         const statewideClause = Number.isFinite(stateTotalPct)
           ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide`
           : '';
@@ -14139,7 +14161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         censusCheck = stillRepublican
           ? `Census growth estimates reinforce the “redder when smaller” pattern: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}. In fast-growing counties, in-migration can coincide with a Republican edge that sometimes shrinks over time, even if the GOP still leads today.`
           : `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020${statewideClause}, consistent with electorate churn in a fast-growing county.`;
-      } else if (/Republican/i.test(trendText) && slowGrowth && repGrowthPattern) {
+      } else if (towardRep && slowGrowth && repGrowthPattern) {
         censusCheck = `Census growth estimates reinforce that movement: population is ${formatPopulationChangePct(totalPct)} since 2020, consistent with slower electorate turnover in a county trending Republican.`;
       }
 
@@ -14436,6 +14458,11 @@ document.addEventListener('DOMContentLoaded', function() {
         trend,
         icon,
         iconTone,
+        latestSignedMarginTowardGop: latestSigned,
+        firstSignedMarginTowardGop: firstSigned,
+        longShiftTowardGop,
+        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
+        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
         meaning,
         details: [
           { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
