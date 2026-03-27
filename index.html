@@ -3609,6 +3609,48 @@ body { height: var(--app-height); }
     color: #64748b;
   }
 
+  .focus-census-check {
+    display: grid;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    background: rgba(248, 250, 252, 0.92);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .focus-census-check-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .focus-census-check-body {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #334155;
+  }
+
+  .focus-census-check.tone-dem {
+    border-color: rgba(37, 99, 235, 0.24);
+    background: rgba(239, 246, 255, 0.9);
+  }
+
+  .focus-census-check.tone-rep {
+    border-color: rgba(220, 38, 38, 0.22);
+    background: rgba(254, 242, 242, 0.88);
+  }
+
+  .focus-census-check.tone-competitive,
+  .focus-census-check.tone-neutral {
+    border-color: rgba(217, 119, 6, 0.22);
+    background: rgba(254, 243, 199, 0.74);
+  }
+
   .focus-trajectory {
     --trajectory-accent-rgb: 100, 116, 139;
     --trajectory-accent-soft: rgba(100, 116, 139, 0.2);
@@ -3706,17 +3748,23 @@ body { height: var(--app-height); }
   .focus-trajectory-status {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     min-height: 24px;
-    padding: 0 11px;
+    max-width: 100%;
+    padding: 4px 11px;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.18);
     background: rgba(226, 232, 240, 0.84);
     color: #475569;
     font-size: 10px;
     font-weight: 800;
+    line-height: 1.25;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    white-space: nowrap;
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
@@ -3749,7 +3797,8 @@ body { height: var(--app-height); }
   .focus-trajectory-trendline {
     margin: 0;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 8px;
     min-height: 30px;
     padding: 6px 8px;
@@ -3778,10 +3827,12 @@ body { height: var(--app-height); }
 
   .focus-trajectory-trendline .trend-text {
     min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    display: inline;
     color: inherit;
+  }
+
+  .focus-trajectory-trendline .focus-trajectory-arrow {
+    margin-right: 4px;
   }
 
   .focus-trajectory-trendline.tone-rep {
@@ -3809,6 +3860,8 @@ body { height: var(--app-height); }
     font-size: 11px;
     line-height: 1.4;
     color: #334155;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .focus-trajectory-meaning strong {
@@ -10624,6 +10677,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const trajectoryHtml = options?.trajectoryMeta
         ? renderTrajectoryBlockHTML(options.trajectoryMeta)
         : '';
+      const censusCheckHtml = (() => {
+        const text = String(options?.trajectoryMeta?.censusCheck || '').trim();
+        if (!text) return '';
+        const trendText = String(options?.trajectoryMeta?.trend || '');
+        const tone = trendText.includes('←') ? 'dem' : (trendText.includes('→') ? 'rep' : 'neutral');
+        const toneClass = trajectoryToneClass(tone);
+        return `
+          <div class="focus-census-check ${toneClass}" role="note" aria-label="Census check">
+            <span class="focus-census-check-kicker">Census check</span>
+            <p class="focus-census-check-body">${escapeHtml(text)}</p>
+          </div>
+        `;
+      })();
       const focusCensusHtml = options?.censusContext
         ? renderFocusCensusInsightHTML(options.censusContext, options?.censusContextTitle || 'County Census Insight')
         : '';
@@ -10701,6 +10767,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </div>
         ${trajectoryHtml}
+        ${censusCheckHtml}
         ${focusCensusHtml}
         <div class="focus-trend-list">${cards}</div>
       `;
@@ -14401,7 +14468,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
       const trendText = String(meta.trend || '\u2194 Little directional change');
       const meaningText = String(meta.meaning || '').trim();
-      const censusCheckText = String(meta.censusCheck || '').trim();
 
       // Normalize legacy diagonal arrows to horizontal so trend direction is always shown left/right.
       const normalizeTrajectoryArrow = (arrow) => {
@@ -14442,7 +14508,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </span>
           </p>
           ${meaningText ? `<p class="focus-trajectory-meaning ${statusToneClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
-          ${censusCheckText ? `<p class="focus-trajectory-meaning ${trendToneClass}"><strong>Census check:</strong> ${escapeHtml(censusCheckText)}</p>` : ''}
           ${details.length ? `
             <div class="focus-trajectory-grid">
               ${details.map(item => {
