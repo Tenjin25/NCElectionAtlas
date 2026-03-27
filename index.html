@@ -3666,6 +3666,7 @@ body { height: var(--app-height); }
     align-items: center;
     gap: 6px;
     color: inherit;
+    line-height: 1.2;
   }
 
   .focus-trajectory-trendline.tone-rep {
@@ -3813,8 +3814,20 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 14px;
+    width: 14px;
     min-width: 14px;
+    line-height: 1;
+    vertical-align: middle;
+    position: relative;
+    top: -0.5px;
     font-weight: 900;
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    transform-origin: center;
+    animation-duration: 1.2s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
   }
 
   .focus-trajectory-arrow.tone-dem {
@@ -3827,6 +3840,61 @@ body { height: var(--app-height); }
 
   .focus-trajectory-arrow.tone-neutral {
     color: #64748b;
+  }
+
+  .focus-trajectory-arrow.dir-right {
+    animation-name: trajectory-arrow-right;
+  }
+
+  .focus-trajectory-arrow.dir-up-right {
+    animation-name: trajectory-arrow-up-right;
+  }
+
+  .focus-trajectory-arrow.dir-down-right {
+    animation-name: trajectory-arrow-down-right;
+  }
+
+  @keyframes trajectory-arrow-right {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0.72;
+    }
+    50% {
+      transform: translate3d(4px, 0, 0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes trajectory-arrow-up-right {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0.72;
+    }
+    50% {
+      transform: translate3d(4px, -3px, 0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes trajectory-arrow-down-right {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0.72;
+    }
+    50% {
+      transform: translate3d(4px, 3px, 0);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .focus-trajectory-arrow {
+      animation: none !important;
+      opacity: 1;
+    }
   }
 
   .focus-trend-dots {
@@ -13739,6 +13807,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return 'tone-neutral';
     }
 
+    function trajectoryArrowDirectionClass(arrow) {
+      const value = String(arrow || '').trim();
+      if (value === '↗') return 'dir-up-right';
+      if (value === '↘') return 'dir-down-right';
+      if (value === '→') return 'dir-right';
+      return '';
+    }
+
     function renderTrajectoryBlockHTML(meta) {
       if (!meta) return '';
       const details = Array.isArray(meta.details) ? meta.details : [];
@@ -13776,7 +13852,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <p class="focus-trajectory-trendline ${trendToneClass}">
             <span class="trend-tag">Momentum</span>
             <span class="trend-text">
-              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
+              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass} ${trendArrowDirClass}">${escapeHtml(trendArrow)}</span>` : ''}
               ${escapeHtml(trendBody)}
             </span>
           </p>
@@ -13796,7 +13872,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="focus-trajectory-item ${toneClass} ${rowRole}">
                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
                   <span class="focus-trajectory-value ${toneClass}">
-                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
+                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass} ${arrowDirClass}">${escapeHtml(arrow)}</span>` : ''}
                     ${escapeHtml(valueBody)}
                   </span>
                 </div>
