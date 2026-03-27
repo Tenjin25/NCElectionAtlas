@@ -8127,12 +8127,12 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="modal-body">
           <h3>Modes</h3>
-          <p><strong>Margins</strong>: colors show the <strong>two-party margin</strong> (absolute value of Rep% − Dem%). Darker = less competitive.</p>
+          <p><strong>Margins</strong>: colors show the <strong>two-party margin</strong> (Rep% − Dem%). Red shades = Republican lead; blue shades = Democratic lead. Darker = a larger lead (less competitive).</p>
           <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
           <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
 
           <h3>Political Categories</h3>
-          <p>Category names are just shorthand for margin ranges:</p>
+          <p>Category names are just shorthand for <strong>absolute</strong> margin ranges (|Rep% − Dem%|):</p>
           <ul>
             <li><strong>Annihilation</strong>: &ge;40%</li>
             <li><strong>Dominant</strong>: 30–39.99%</li>
@@ -13516,9 +13516,9 @@ document.addEventListener('DOMContentLoaded', function() {
         content.innerHTML = buildDemographicsLegendHTML();
       } else {
         if (header) header.textContent = 'Political Categories';
-        if (subtitle) subtitle.textContent = 'A compact spectrum from strongest Republican to strongest Democratic performance.';
+        if (subtitle) subtitle.textContent = 'Buckets by two-party margin (Rep% − Dem%). Red = Republican lead; blue = Democratic lead.';
         if (badge) badge.textContent = 'Margins';
-        if (footer) footer.textContent = 'Read left to right: stronger Republican, tossup, then stronger Democratic.';
+        if (footer) footer.textContent = 'Darker shades mean a larger lead; category chips are the absolute margin thresholds.';
         content.innerHTML = content.dataset.marginsHtml;
       }
 
