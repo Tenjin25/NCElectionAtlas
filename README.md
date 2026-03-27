@@ -110,7 +110,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Standardized the trajectory label format to `Origin Side (Position)` (for example: `Emerging Republican (Edge)`), with positions `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`.
 - Refined `Emerging` descriptions to explicitly call out “closing the gap” cases (for example, Cabarrus: GOP still leads but trends Democratic over time).
-- Added a loading modal when switching to 2024 district lines so the UI explains the first-time boundary load delay.
+- Added an inline loading hint when switching to 2024 district lines so the UI explains the first-time boundary load delay without a modal popup.
 - Trajectory Snapshot glossary (the `Meaning:` line and status chip are generated from the same rules everywhere):
   - `Origin`:
     - `Durable`: long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
