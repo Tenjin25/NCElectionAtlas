@@ -3666,7 +3666,6 @@ body { height: var(--app-height); }
     align-items: center;
     gap: 6px;
     color: inherit;
-    line-height: 1.2;
   }
 
   .focus-trajectory-trendline.tone-rep {
@@ -3814,17 +3813,10 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 14px;
-    width: 14px;
     min-width: 14px;
-    line-height: 1;
-    vertical-align: middle;
-    position: relative;
-    top: -0.5px;
     font-weight: 900;
     will-change: transform, opacity;
     transform: translate3d(0, 0, 0);
-    transform-origin: center;
     animation-duration: 1.2s;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
@@ -13831,6 +13823,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const trendToneClass = trajectoryToneClass(trendTone);
       const trendArrowMatch = trendText.trim().match(/^([\u2197\u2198\u2192])\s*/);
       const trendArrow = trendArrowMatch ? trendArrowMatch[1] : '';
+      const trendArrowDirClass = trajectoryArrowDirectionClass(trendArrow);
       const trendBody = trendArrow ? trendText.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : trendText;
       const detailTone = (label, value) => {
         const v = String(value || '');
@@ -13866,6 +13859,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const valueRaw = String(item?.value || '');
                 const arrowMatch = valueRaw.trim().match(/^([\u2197\u2198\u2192])\s*/);
                 const arrow = arrowMatch ? arrowMatch[1] : '';
+                const arrowDirClass = trajectoryArrowDirectionClass(arrow);
                 const valueBody = arrow ? valueRaw.trim().replace(/^([\u2197\u2198\u2192])\s*/, '') : valueRaw;
                 const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
                 return `
