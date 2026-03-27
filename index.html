@@ -13974,8 +13974,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const metroSpillover = new Set(['JOHNSTON', 'UNION', 'CABARRUS', 'IREDELL', 'HARNETT', 'CHATHAM', 'PENDER', 'FRANKLIN', 'GASTON', 'CLEVELAND']);
       const coastalGrowth = new Set(['BRUNSWICK', 'NEW HANOVER', 'PENDER', 'ONSLOW', 'CURRITUCK', 'CARTERET']);
       const ruralSlowdown = new Set(['ROBESON', 'BLADEN', 'RICHMOND', 'ANSON', 'MARTIN', 'GATES', 'HALIFAX', 'SCOTLAND', 'WASHINGTON', 'BERTIE', 'NORTHAMPTON']);
-      const mixedTransition = new Set(['PASQUOTANK', 'ALAMANCE', 'DAVIDSON', 'ROWAN', 'NASH', 'PITT', 'CUMBERLAND', 'RANDOLPH', 'CATAWBA']);
-      const institutionalHub = new Set(['CUMBERLAND']);
+      const mixedTransition = new Set(['PASQUOTANK', 'ALAMANCE', 'DAVIDSON', 'ROWAN', 'NASH', 'PITT', 'CUMBERLAND', 'RANDOLPH', 'CATAWBA', 'WAYNE', 'CRAVEN']);
+      const institutionalHub = new Set(['CUMBERLAND', 'HOKE', 'ONSLOW', 'WAYNE', 'CRAVEN']);
 
       let signalEmoji = '📊';
       let signalLabel = 'Steady population signal';
@@ -14028,8 +14028,8 @@ document.addEventListener('DOMContentLoaded', function() {
           signalEmoji = aboveStatewide ? '📈' : '⚖️';
           patternEmoji = '🏡';
           patternLabel = slowedIn2025
-            ? 'Small-metro / exurban transition with cooling growth'
-            : 'Small-metro / exurban transition';
+            ? 'Small-metro / outer-suburban transition with cooling growth'
+            : 'Small-metro / outer-suburban transition';
           const statewideClause = Number.isFinite(stateTotalPct)
             ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide`
             : '';
@@ -14062,6 +14062,10 @@ document.addEventListener('DOMContentLoaded', function() {
             : 'Mixed-growth county';
           noteLabel = `2025 estimate: ${Number(estimate.population2025 || 0).toLocaleString()}. Growth since 2020 is ${formatPopulationChangePct(totalPct)}${Number.isFinite(stateTotalPct) ? ` versus ${formatPopulationChangePct(stateTotalPct)} statewide` : ''}.`;
         }
+
+        if (isInstitutionalHub && !/institutional hubs|military/i.test(noteLabel)) {
+          noteLabel += ' Military hubs can show choppy year-to-year estimates; political change may track turnover as much as net in-migration.';
+        }
       }
 
       if (!estimate && urbanAnchor.has(norm)) {
@@ -14092,8 +14096,12 @@ document.addEventListener('DOMContentLoaded', function() {
         signalEmoji = '⚖️';
         signalLabel = 'Mixed-growth county';
         patternEmoji = '🏡';
-        patternLabel = 'Small-metro / exurban transition';
+        patternLabel = 'Small-metro / outer-suburban transition';
         noteLabel = 'These counties often sit between metro growth and rural stability, making them useful early-warning signs for political change.';
+      }
+
+      if (!/institutional hubs|military/i.test(noteLabel) && isInstitutionalHub) {
+        noteLabel += ' Military hubs can show choppy year-to-year estimates; political change may track turnover as much as net in-migration.';
       }
 
       return {
@@ -14129,7 +14137,7 @@ document.addEventListener('DOMContentLoaded', function() {
         (Number.isFinite(stateTotalPct) && totalPct > stateTotalPct + 1.25)
       );
       const slowGrowth = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
-      const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county|Coastal growth/i.test(patternLabel);
+      const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban|Above-state growth county|Coastal growth/i.test(patternLabel);
       const repGrowthPattern = /Slow-growth|declining county|Rural slowdown/i.test(patternLabel);
       const growthLabel = (() => {
         if (/Metro spillover|outer-suburban expansion/i.test(patternLabel)) return 'fast outer-suburban growth';
