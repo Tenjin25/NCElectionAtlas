@@ -8116,6 +8116,24 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
+    <!-- District Lines Loading Modal (2024 lines can take longer to load) -->
+    <div class="modal-backdrop" id="district-lines-loading-backdrop" aria-hidden="true" style="display:none;">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="district-lines-loading-title">
+        <div class="modal-head">
+          <h2 id="district-lines-loading-title">Loading 2024 district lines</h2>
+          <button class="modal-close" id="district-lines-loading-close" type="button" title="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+            <span class="spinner" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;">
+              <svg width="18" height="18" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.4 31.4" transform="rotate(-90 25 25)"/></svg>
+            </span>
+            <span>First-time load can take <b>10–30 seconds</b> while the boundary GeoJSON downloads and parses.</span>
+          </p>
+          <p class="meta-subtle" style="margin-top:10px;">This delay is normal. Once loaded, switching between 2022 and 2024 lines is much faster (cached in-memory).</p>
+        </div>
+      </div>
+    </div>
 
     <script>
     // --- CONFIG ---
@@ -9050,6 +9068,55 @@ document.addEventListener('DOMContentLoaded', function() {
       }));
     }
 
+    let districtLinesLoadingModalWired = false;
+
+    function wireDistrictLinesLoadingModal() {
+      if (districtLinesLoadingModalWired) return;
+      districtLinesLoadingModalWired = true;
+      const backdrop = document.getElementById('district-lines-loading-backdrop');
+      const closeBtn = document.getElementById('district-lines-loading-close');
+      if (closeBtn) closeBtn.addEventListener('click', () => hideDistrictLinesLoadingModal());
+      if (backdrop) {
+        backdrop.addEventListener('click', (ev) => {
+          if (ev.target === backdrop) hideDistrictLinesLoadingModal();
+        });
+      }
+      document.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Escape') return;
+        const open = backdrop && backdrop.style.display === 'flex';
+        if (open) hideDistrictLinesLoadingModal();
+      });
+    }
+
+    function showDistrictLinesLoadingModal() {
+      wireDistrictLinesLoadingModal();
+      const backdrop = document.getElementById('district-lines-loading-backdrop');
+      const closeBtn = document.getElementById('district-lines-loading-close');
+      if (!backdrop) return;
+      backdrop.style.display = 'flex';
+      backdrop.setAttribute('aria-hidden', 'false');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function hideDistrictLinesLoadingModal() {
+      const backdrop = document.getElementById('district-lines-loading-backdrop');
+      if (!backdrop) return;
+      backdrop.style.display = 'none';
+      backdrop.setAttribute('aria-hidden', 'true');
+    }
+
+    function shouldWarnDistrictLinesLoad(linesYear) {
+      const y = normalizeDistrictLinesYear(linesYear);
+      if (y !== 2024) return false;
+      const scopes = ['congressional', 'state_house', 'state_senate'];
+      return scopes.some(scope => {
+        const path = getDistrictGeometryPath(scope, y);
+        if (!path) return false;
+        const cacheKey = `${scope}:${path}`;
+        return !districtGeometryCache.has(cacheKey);
+      });
+    }
+
     async function setDistrictLinesMode(linesYear) {
       const nextYear = normalizeDistrictLinesYear(linesYear);
       if (nextYear === normalizeDistrictLinesYear(currentDistrictLinesYear)) {
@@ -9068,10 +9135,14 @@ document.addEventListener('DOMContentLoaded', function() {
       updateDistrictLinesToggleUI();
 
       if (appReady) {
+        const showLoading = nextYear === 2024 && shouldWarnDistrictLinesLoad(nextYear);
         try {
+          if (showLoading) showDistrictLinesLoadingModal();
           await refreshDistrictGeometrySources(nextYear);
         } catch (err) {
           console.warn('District geometry refresh failed:', err?.message || err);
+        } finally {
+          if (showLoading) hideDistrictLinesLoadingModal();
         }
       }
 
@@ -13781,6 +13852,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!countyName || !countyNorm) return;
 
         const population2020 = Number(row?.population_2020 || 0);
+        const population2021 = Number(row?.population_2021 || 0);
+        const population2022 = Number(row?.population_2022 || 0);
         const population2023 = Number(row?.population_2023 || 0);
         const population2024 = Number(row?.population_2024 || 0);
         const population2025 = Number(row?.population_2025 || 0);
@@ -13790,13 +13863,30 @@ document.addEventListener('DOMContentLoaded', function() {
           ? ((population2024 - population2023) / population2023) * 100
           : NaN;
 
+        const populationSeries = [population2020, population2021, population2022, population2023, population2024, population2025];
+        const hasCompleteSeries = populationSeries.every(value => Number.isFinite(value) && value > 0);
+        const deltas = hasCompleteSeries
+          ? populationSeries.slice(1).map((value, idx) => value - populationSeries[idx])
+          : [];
+        const hasUp = deltas.some(delta => delta > 0);
+        const hasDown = deltas.some(delta => delta < 0);
+        const monotoneUp = hasCompleteSeries && hasUp && !hasDown;
+        const monotoneDown = hasCompleteSeries && hasDown && !hasUp;
+        const volatile = hasCompleteSeries && hasUp && hasDown;
+
         const entry = {
           countyName,
           countyNorm,
           population2020,
+          population2021,
+          population2022,
           population2023,
           population2024,
           population2025,
+          populationSeries,
+          monotoneUp,
+          monotoneDown,
+          volatile,
           change2020To2025: Number(row?.change_2020_2025 || 0),
           change2024To2025: Number(row?.change_2024_2025 || 0),
           changePct2020To2025: Number.isFinite(changePct2020To2025) ? changePct2020To2025 : NaN,
@@ -13953,7 +14043,7 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       const slowGrowth = (Number.isFinite(totalPct) && totalPct < 1) || (Number.isFinite(recentPct) && recentPct < 0);
       const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban expansion|Above-state growth county/i.test(patternLabel);
-      const repGrowthPattern = /Slow-growth|declining county|Rural slowdown|flat\/declining population|Urban county with flat\/declining population/i.test(patternLabel);
+      const repGrowthPattern = /Slow-growth|declining county|Rural slowdown/i.test(patternLabel);
 
       let censusCheck = '';
       if (/\bReinforcing\b/i.test(statusText) && fastGrowth) {
@@ -14021,6 +14111,7 @@ document.addEventListener('DOMContentLoaded', function() {
           statusClass: 'competitive',
           trend: 'Not enough history',
           icon: '',
+          iconTone: 'competitive',
           meaning: 'Select a context with multiple election cycles to compute directional movement.',
           details: []
         };
@@ -14045,8 +14136,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '\u2194 No clear shift';
-        return `${delta > 0 ? '\u2192' : '\u2190'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
+        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '↔ No clear shift';
+        return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
       }
 
       function formatWinnerLabel(row, signedMargin) {
@@ -14055,7 +14146,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${row.year}: ${signedMargin > 0 ? 'R' : 'D'}+${absMargin.toFixed(2)} pts`;
       }
 
-      const sorted = series.slice().sort((a, b) => Number(a.year) - Number(b.year));
+      const sorted = series
+        .slice()
+        .filter(row => row && Number.isFinite(Number(row.year)))
+        .sort((a, b) => Number(a.year) - Number(b.year));
+
+      if (!sorted.length) {
+        return {
+          status: 'No trajectory data',
+          statusClass: 'competitive',
+          trend: 'Not enough history',
+          icon: '',
+          iconTone: 'competitive',
+          meaning: 'Select a context with multiple election cycles to compute directional movement.',
+          details: []
+        };
+      }
+
       const latest = sorted[sorted.length - 1];
       const latestSigned = getSignedMarginTowardGop(latest);
       const first = sorted[0];
@@ -14063,6 +14170,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const longShiftTowardGop = latestSigned - firstSigned;
       const row2008 = sorted.find(row => Number(row.year) === 2008);
       const shiftSince2008 = row2008 ? latestSigned - getSignedMarginTowardGop(row2008) : null;
+      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
+      const previousSigned = previous ? getSignedMarginTowardGop(previous) : null;
+      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
+      const recentWindowStart = sorted.length >= 3 ? sorted[Math.max(0, sorted.length - 3)] : first;
+      const recentWindowStartSigned = recentWindowStart ? getSignedMarginTowardGop(recentWindowStart) : null;
+      const recentWindowShiftTowardGop = Number.isFinite(recentWindowStartSigned)
+        ? (latestSigned - recentWindowStartSigned)
+        : recentShiftTowardGop;
+      const cycleShiftLabel = previous
+        ? (Number(previous.year) === Number(first.year) ? 'Last Cycle' : `Since ${previous.year}`)
+        : '';
 
       const recentSlice = sorted.slice(-3);
       let rightwardSteps = 0;
@@ -14075,81 +14193,167 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deltaTowardGop < -0.5) leftwardSteps += 1;
       }
 
-      let status = 'Toss-up';
-      let statusClass = 'competitive';
-      let icon = '';
-      const driftTowardGopStrong = rightwardSteps >= 2 || longShiftTowardGop >= 4;
-      const driftTowardGopMild = !driftTowardGopStrong && (rightwardSteps >= 1 || longShiftTowardGop >= 2);
-      const driftTowardDemStrong = leftwardSteps >= 2 || longShiftTowardGop <= -4;
-      const driftTowardDemMild = !driftTowardDemStrong && (leftwardSteps >= 1 || longShiftTowardGop <= -2);
+      const absLatest = Math.abs(latestSigned);
+      const absFirst = Math.abs(firstSigned);
+      const sameSideLongTerm =
+        (latestSigned > 0 && firstSigned > 0) ||
+        (latestSigned < 0 && firstSigned < 0);
+      const crossedParties =
+        (latestSigned > 0 && firstSigned < 0) ||
+        (latestSigned < 0 && firstSigned > 0);
+      const towardCurrentSide = Number.isFinite(recentShiftTowardGop)
+        ? (latestSigned > 0 ? recentShiftTowardGop : (latestSigned < 0 ? -recentShiftTowardGop : 0))
+        : 0;
+      const towardCurrentSideLong = Number.isFinite(longShiftTowardGop)
+        ? (latestSigned > 0 ? longShiftTowardGop : (latestSigned < 0 ? -longShiftTowardGop : 0))
+        : 0;
+      const towardCurrentSideWindow = Number.isFinite(recentWindowShiftTowardGop)
+        ? (latestSigned > 0 ? recentWindowShiftTowardGop : (latestSigned < 0 ? -recentWindowShiftTowardGop : 0))
+        : towardCurrentSide;
+      const awayFromCurrentSide = Number.isFinite(recentShiftTowardGop)
+        ? -towardCurrentSide
+        : 0;
+      const awayFromCurrentSideLong = Number.isFinite(towardCurrentSideLong)
+        ? -towardCurrentSideLong
+        : 0;
 
-      if (latestSigned <= -15) {
-        status = (driftTowardGopStrong || driftTowardGopMild)
-          ? 'Durable Democratic (Softening)'
-          : 'Durable Democratic';
-        statusClass = 'dem';
-      } else if (latestSigned < -5) {
-        status = (driftTowardGopStrong || driftTowardGopMild)
-          ? 'Democratic Edge (Softening)'
-          : 'Democratic Edge';
-        statusClass = 'dem';
-      } else if (Math.abs(latestSigned) < 5) {
-        status = 'On the Cusp';
-        statusClass = 'competitive';
-      } else if (latestSigned >= 5 && latestSigned < 15) {
-        status = (driftTowardDemStrong || driftTowardDemMild)
-          ? 'Republican Edge (Softening)'
-          : 'Republican Edge';
-        statusClass = 'rep';
-      } else if (latestSigned >= 15) {
-        status = (driftTowardDemStrong || driftTowardDemMild)
-          ? 'Durable Republican (Softening)'
-          : 'Durable Republican';
-        statusClass = 'rep';
+      let origin = 'Durable';
+
+      if (
+        crossedParties ||
+        (Math.abs(longShiftTowardGop) >= 25 && !sameSideLongTerm) ||
+        (Math.abs(longShiftTowardGop) >= 35 && absFirst < 12)
+      ) {
+        origin = 'Realigned';
+      } else if (
+        absLatest >= 15 &&
+        towardCurrentSide >= 3 &&
+        towardCurrentSideLong >= 5 &&
+        sameSideLongTerm &&
+        absFirst >= 10
+      ) {
+        origin = 'Reinforcing';
+      } else if (
+        towardCurrentSideLong >= 8 ||
+        (absLatest >= 10 && absFirst < 8 && towardCurrentSideWindow >= 3)
+      ) {
+        origin = 'Emerging';
       }
 
-      let trend = '\u2194 Little directional change';
-      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-      const prevSigned = previous ? getSignedMarginTowardGop(previous) : null;
-      const recentShiftTowardGop = previous ? (latestSigned - prevSigned) : null;
-      const recentShiftAbs = Number.isFinite(recentShiftTowardGop) ? Math.abs(recentShiftTowardGop) : 0;
-      if (recentShiftAbs < 2 && rightwardSteps < 2 && leftwardSteps < 2) {
-        trend = '\u2194 Stable';
-      } else if (rightwardSteps >= 2) trend = '\u2192 Strong Republican trend';
-      else if (rightwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2192 Mild Republican trend';
-      else if (leftwardSteps >= 2) trend = '\u2190 Strong Democratic trend';
-      else if (leftwardSteps === 1 && recentShiftAbs >= 2) trend = '\u2190 Mild Democratic trend';
-
-      let meaning = 'Both parties are close enough that modest turnout changes can flip the outcome.';
-      if (status === 'Durable Democratic') {
-        meaning = 'Democrats have a large cushion and it has held across recent cycles.';
-      } else if (status === 'Durable Democratic (Softening)') {
-        meaning = 'Democrats still lead comfortably, but movement is trending Republican.';
-      } else if (status === 'Democratic Edge') {
-        meaning = 'Democrats are ahead, but the margin is still contestable.';
-      } else if (status === 'Democratic Edge (Softening)') {
-        meaning = 'Democrats lead, but Republican gains are narrowing the cushion.';
-      } else if (status === 'On the Cusp') {
-        meaning = 'Roughly within five points either way; small changes can flip the result.';
-      } else if (status === 'Republican Edge') {
-        meaning = 'Republicans are ahead, but the margin is still contestable.';
-      } else if (status === 'Republican Edge (Softening)') {
-        meaning = 'Republicans lead, but Democratic gains are narrowing the cushion.';
-      } else if (status === 'Durable Republican') {
-        meaning = 'Republicans have a large cushion and it has held across recent cycles.';
-      } else if (status === 'Durable Republican (Softening)') {
-        meaning = 'Republicans still lead comfortably, but movement is trending Democratic.';
+      if (
+        origin === 'Emerging' &&
+        sameSideLongTerm &&
+        ((latestSigned >= 15 && firstSigned >= 8) || (latestSigned <= -15 && firstSigned <= -8))
+      ) {
+        origin = towardCurrentSide >= 3 ? 'Reinforcing' : 'Durable';
       }
 
-      const cycleShiftLabel = previous
-        ? (Number(previous.year) === Number(first.year) ? 'Last Cycle' : `Since ${previous.year}`)
-        : '';
+      if (origin === 'Reinforcing' && (!sameSideLongTerm || absFirst < 8)) {
+        origin = crossedParties ? 'Realigned' : 'Emerging';
+      }
+
+      // Keep "realigned" reserved for counties that have opened a clearly non-trivial gap.
+      if (origin === 'Realigned' && absLatest < 6) {
+        origin = 'Emerging';
+      }
+
+      // Emerging counties can leave battleground range a bit earlier once they open visible daylight.
+      const strongholdThreshold = origin === 'Realigned' ? 24 : 20;
+      const edgeThreshold = origin === 'Emerging' ? 4 : 5;
+      const tiltThreshold = origin === 'Emerging' ? 2.5 : 3;
+      let position = 'Battleground';
+      if (absLatest >= strongholdThreshold) position = 'Stronghold';
+      else if (absLatest >= 10) position = 'Advantage';
+      else if (absLatest >= edgeThreshold) position = 'Edge';
+      else if (absLatest >= tiltThreshold) position = 'Tilt';
+
+      const side = latestSigned > 0 ? 'Republican' : (latestSigned < 0 ? 'Democratic' : 'Competitive');
+
+      let icon = '⚖️';
+      let iconTone = 'competitive';
+      if (origin === 'Durable') icon = '🔒';
+      else if (origin === 'Reinforcing') icon = '📈';
+      else if (origin === 'Emerging') icon = '🌱';
+      else if (origin === 'Realigned') icon = '🔄';
+      if (origin === 'Durable') iconTone = 'durable';
+      else if (origin === 'Reinforcing') iconTone = 'reinforcing';
+      else if (origin === 'Emerging') iconTone = 'emerging';
+      else if (origin === 'Realigned') iconTone = 'realigned';
+
+      const statusMain = side === 'Competitive' ? 'Battleground' : `${origin} ${side}`;
+      const statusStrength = side === 'Competitive' ? '' : position;
+      let status = side === 'Competitive' ? 'Battleground' : `${statusMain} (${position})`;
+      let statusClass = side === 'Republican' ? 'rep' : (side === 'Democratic' ? 'dem' : 'competitive');
+
+      let trend = '↔ Stable';
+      if ((recentShiftTowardGop ?? 0) >= 5 || rightwardSteps >= 2) {
+        trend = '→ Accelerating Republican trend';
+      } else if ((recentShiftTowardGop ?? 0) >= 2 || rightwardSteps === 1) {
+        trend = '→ Republican trend';
+      } else if ((recentShiftTowardGop ?? 0) <= -5 || leftwardSteps >= 2) {
+        trend = '← Accelerating Democratic trend';
+      } else if ((recentShiftTowardGop ?? 0) <= -2 || leftwardSteps === 1) {
+        trend = '← Democratic trend';
+      } else if (awayFromCurrentSideLong >= 8 && side !== 'Competitive') {
+        trend = side === 'Republican' ? '← Long-run Democratic drift' : '→ Long-run Republican drift';
+      }
+
+      let meaning = 'Close enough that modest turnout changes can flip the outcome.';
+      if (origin === 'Realigned') {
+        if (side === 'Republican') {
+          meaning = 'A long-run shift toward Republicans has moved this county into a clearer GOP lean.';
+        } else if (side === 'Democratic') {
+          meaning = 'A long-run shift toward Democrats has moved this county into a clearer Democratic lean.';
+        } else {
+          meaning = 'A long-run shift has pulled this county into genuinely competitive territory.';
+        }
+      } else if (origin === 'Emerging') {
+        const awayFromLeaderLong = awayFromCurrentSideLong >= 4;
+        const awayFromLeaderRecent = awayFromCurrentSide >= 2;
+        const trendTowardDem = /Democratic/.test(trend);
+        const trendTowardRep = /Republican/.test(trend);
+        if (side === 'Republican') {
+          meaning = (awayFromLeaderLong || awayFromLeaderRecent || trendTowardDem)
+            ? 'Republicans still lead, but Democrats have been steadily closing the gap over the last few cycles.'
+            : 'A newer Republican lean is taking shape, but it is still an emerging pattern (not yet a long-run lock).';
+        } else if (side === 'Democratic') {
+          meaning = (awayFromLeaderLong || awayFromLeaderRecent || trendTowardRep)
+            ? 'Democrats still lead, but Republicans have been steadily closing the gap over the last few cycles.'
+            : 'A newer Democratic lean is taking shape, but it is still an emerging pattern (not yet a long-run lock).';
+        } else {
+          meaning = 'The county is moving, but the longer-run direction is still unsettled.';
+        }
+      } else if (origin === 'Reinforcing') {
+        if (side === 'Republican') {
+          meaning = 'The county already leaned Republican, and recent cycles are strengthening that advantage.';
+        } else if (side === 'Democratic') {
+          meaning = 'The county already leaned Democratic, and recent cycles are strengthening that advantage.';
+        }
+      } else {
+        if (side === 'Republican') {
+          meaning = 'The county has a durable Republican lean, with no sustained recent break from that pattern.';
+        } else if (side === 'Democratic') {
+          meaning = 'The county has a durable Democratic lean, with no sustained recent break from that pattern.';
+        }
+      }
+
+      const alreadyMentionsNarrowing = /narrow|closing|gaining|soften/i.test(meaning);
+      if (!alreadyMentionsNarrowing && awayFromCurrentSideLong >= 6 && side !== 'Competitive') {
+        meaning += side === 'Republican'
+          ? ' Long-run: Democrats have narrowed the gap even if Republicans still lead.'
+          : ' Long-run: Republicans have narrowed the gap even if Democrats still lead.';
+      } else if (awayFromCurrentSide >= 3 && absLatest >= 10 && side !== 'Competitive') {
+        meaning += ' The margin is still sizable, but the recent trend has softened that advantage.';
+      }
 
       return {
         status,
+        statusMain,
+        statusStrength,
         statusClass,
         trend,
         icon,
+        iconTone,
         meaning,
         details: [
           { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
