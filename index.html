@@ -14287,7 +14287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      if (!Number.isFinite(rep) || !Number.isFinite(dem) || !Number.isFinite(prevRep) || !Number.isFinite(prevDem)) return '';
 	      const repGrowth = rep - prevRep;
 	      const demGrowth = dem - prevDem;
-	      if (repGrowth > demGrowth) return '🔴 Reinforcing Growth';
+	      if (repGrowth > demGrowth) return '📈 Reinforcing Growth';
 	      if (demGrowth > repGrowth) return '🔵 Diluting Growth';
 	      return '⚖️ Balanced Growth';
 	    }

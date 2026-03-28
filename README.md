@@ -151,7 +151,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	    - `🎲 Stage 4: Tossup Range` (R+0 to R+5)
 	    - `🧭 Stage 5: Democratic Lean` (D+)
 	  - `Growth Dynamic` (appended under `Latest Result`):
-	    - `🔴 Reinforcing Growth`: Republican raw vote growth exceeds Democratic growth vs the prior cycle.
+	    - `📈 Reinforcing Growth`: Republican raw vote growth exceeds Democratic growth vs the prior cycle.
 	    - `🔵 Diluting Growth`: Democratic raw vote growth exceeds Republican growth vs the prior cycle.
 	    - `⚖️ Balanced Growth`: equal growth.
 
