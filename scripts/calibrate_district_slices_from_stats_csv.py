@@ -10,6 +10,10 @@ Usage:
   python scripts/calibrate_district_slices_from_stats_csv.py ^
     --map data/district_contests/state_house_president_2020.json=\"data/district-statistics 2020 Pres State House 2022.csv\" ^
     --map data/district_contests/state_house_president_2024.json=\"data/district-statistics 2024 Pres State House 2022.csv\"
+
+Formatting:
+  By default this script preserves the target JSON's formatting style (pretty vs minified).
+  Use --format pretty/minify to force an output style.
 """
 
 from __future__ import annotations
@@ -89,8 +93,9 @@ def apportion_votes(total: int, dem_share: float, rep_share: float, oth_share: f
     return base[0], base[1], base[2]
 
 
-def calibrate_slice(target_json: Path, stats_csv: Path) -> dict:
-    payload = json.loads(target_json.read_text(encoding="utf-8"))
+def calibrate_slice(target_json: Path, stats_csv: Path, *, format_mode: str = "auto") -> dict:
+    raw_text = target_json.read_text(encoding="utf-8")
+    payload = json.loads(raw_text)
     stats = load_stats(stats_csv)
 
     results = payload.get("general", {}).get("results", {})
@@ -144,7 +149,19 @@ def calibrate_slice(target_json: Path, stats_csv: Path) -> dict:
             max_margin_delta = delta
             max_margin_dist = district_id
 
-    target_json.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    # Preserve input formatting by default: pretty JSON (multi-line) vs minified (single-line).
+    was_pretty = ("\n" in raw_text.strip()) and (len(raw_text.strip().splitlines()) > 1)
+    if format_mode == "auto":
+        format_mode = "pretty" if was_pretty else "minify"
+
+    if format_mode == "pretty":
+        out_text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    elif format_mode == "minify":
+        out_text = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    else:
+        raise ValueError(f"Unexpected format_mode: {format_mode}")
+
+    target_json.write_text(out_text, encoding="utf-8")
     return {
         "target_json": str(target_json),
         "stats_csv": str(stats_csv),
@@ -176,12 +193,18 @@ def main() -> None:
         required=True,
         help="Mapping of target_json=stats_csv. Repeat for multiple files.",
     )
+    parser.add_argument(
+        "--format",
+        choices=["auto", "pretty", "minify"],
+        default="auto",
+        help="Output JSON formatting. auto preserves the target file style (default).",
+    )
     args = parser.parse_args()
 
     summaries = []
     for raw in args.map:
         target, stats = parse_map_arg(raw)
-        summaries.append(calibrate_slice(target, stats))
+        summaries.append(calibrate_slice(target, stats, format_mode=args.format))
 
     print(json.dumps({"updated": summaries}, indent=2))
 
