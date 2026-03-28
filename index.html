@@ -14352,20 +14352,40 @@ document.addEventListener('DOMContentLoaded', function() {
 	          subtype = 'Active Suburban Transition';
 	          momentum = '← Accelerating Democratic trend';
 	        }
+	        // --- ACTIVE TRANSITION (reverse / D-hold narrowing)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 20 && current_margin < -5 && current_margin > -10) {
+	          subtype = 'Active Republican Transition';
+	          momentum = '→ Accelerating Republican trend';
+	        }
 	        // --- SUBURBANIZING (Union-type)
 	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -5 && Number.isFinite(shift_since_2020) && shift_since_2020 > 0) {
 	          subtype = 'Suburbanizing (Lagging)';
 	          momentum = '↔ Long-term Democratic pressure, short-term Republican reinforcement';
+	        }
+	        // --- SUBURBANIZING (reverse / long-run GOP, short-run Dem)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 5 && Number.isFinite(shift_since_2020) && shift_since_2020 < 0) {
+	          subtype = 'Counter-Suburbanizing (Lagging)';
+	          momentum = '↔ Long-term Republican pressure, short-term Democratic reinforcement';
 	        }
 	        // --- SOFTENING RED (Brunswick-type)
 	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 <= -1 && current_margin > 10) {
 	          subtype = 'Softening Republican';
 	          momentum = '← Democratic trend';
 	        }
+	        // --- SOFTENING BLUE (reverse)
+	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 >= 1 && current_margin < -10) {
+	          subtype = 'Softening Democratic';
+	          momentum = '→ Republican trend';
+	        }
 	        // --- REINFORCING REPUBLICAN (Randolph-type)
 	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 10 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 0) {
 	          subtype = 'Reinforcing Republican';
 	          momentum = '→ Republican trend';
+	        }
+	        // --- REINFORCING DEMOCRATIC (reverse)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -10 && Number.isFinite(shift_since_2020) && shift_since_2020 <= 0) {
+	          subtype = 'Reinforcing Democratic';
+	          momentum = '← Democratic trend';
 	        }
 	        // --- REALIGNING REPUBLICAN (Caroline-type)
 	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 15 && current_margin < 15) {

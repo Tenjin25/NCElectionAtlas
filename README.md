@@ -135,9 +135,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	    - `←/→ Long-run ... drift`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
 	  - `Subtype` (structured add-on line under the status pill):
 	    - `Active Suburban Transition`: long-run Democratic movement with a still-Republican but narrower current margin.
+	    - `Active Republican Transition`: long-run Republican movement with a still-Democratic but narrower current margin.
 	    - `Suburbanizing (Lagging)`: long-run Democratic pressure, but the most recent cycle moved more Republican.
+	    - `Counter-Suburbanizing (Lagging)`: long-run Republican pressure, but the most recent cycle moved more Democratic.
 	    - `Softening Republican`: recent Democratic movement in a still-strong Republican county.
+	    - `Softening Democratic`: recent Republican movement in a still-strong Democratic county.
 	    - `Reinforcing Republican`: long-run and short-run movement both favor Republicans.
+	    - `Reinforcing Democratic`: long-run and short-run movement both favor Democrats.
 	    - `Realigning Republican` / `Realigning Democratic`: long-run movement is large enough to suggest a structural shift in coalition.
 	    - `Stable / Mixed`: does not strongly match one of the above patterns.
 	  - `Stage of Transition` (neutral add-on line, based only on the current margin):
