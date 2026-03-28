@@ -72,12 +72,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
-- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic (Stronghold)`, `Reinforcing Republican (Advantage)`, `Emerging Republican (Edge)`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
-- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
-- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
-- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests
+	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
+	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic (Stronghold)`, `Reinforcing Republican (Advantage)`, `Emerging Republican (Edge)`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
+	- **Trajectory Snapshot Add-ons (Structured):** Appends a subtype line, a neutral transition-stage line (🛡️/🧩/⚖️/🎲/🧭), and a `Growth Dynamic` note beneath the `Latest Result` row (vote-growth comparison vs the prior cycle)
+	- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
+	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
+	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
+	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
+	- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -113,24 +115,41 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Standardized the trajectory label format to `Origin Side (Position)` (for example: `Emerging Republican (Edge)`), with positions `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`.
 - Refined `Emerging` descriptions to explicitly call out “closing the gap” cases (for example, Cabarrus: GOP still leads but trends Democratic over time).
 - Added an inline loading hint when switching to 2024 district lines so the UI explains the first-time boundary load delay without a modal popup.
-- Trajectory Snapshot glossary (the `Meaning:` line and status chip are generated from the same rules everywhere):
-  - `Origin`:
-    - `Durable`: long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
-    - `Reinforcing`: the county is moving further in the same direction as its current lean.
-    - `Emerging`: the county still leans one way, but the underlying movement points the other way (a “closing the gap” trajectory).
-    - `Realigned`: the county’s lean has flipped versus its longer-run baseline.
-  - `Side`: `Democratic` / `Republican` reflect the *current* lean (the most recent margin), not the direction of change.
-  - `Position`:
-    - `Stronghold`: very safe margin.
-    - `Advantage`: clear but not extreme margin.
-    - `Edge`: modest margin (close enough that a normal-swing cycle can narrow quickly).
-    - `Tilt`: very close margin.
-    - `Battleground`: essentially even / too close to call cleanly.
-  - `Momentum` (trend line):
-    - `↔ Stable`: little directional change.
-    - `← Democratic trend` / `→ Republican trend`: consistent shift over recent cycles.
-    - `←/→ Accelerating ... trend`: the most recent window is moving faster than the longer-run pace.
-    - `←/→ Long-run ... drift`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
+	- Trajectory Snapshot glossary (the `Meaning:` line and status chip are generated from the same rules everywhere):
+	  - `Origin`:
+	    - `Durable`: long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
+	    - `Reinforcing`: the county is moving further in the same direction as its current lean.
+	    - `Emerging`: the county still leans one way, but the underlying movement points the other way (a “closing the gap” trajectory).
+	    - `Realigned`: the county’s lean has flipped versus its longer-run baseline.
+	  - `Side`: `Democratic` / `Republican` reflect the *current* lean (the most recent margin), not the direction of change.
+	  - `Position`:
+	    - `Stronghold`: very safe margin.
+	    - `Advantage`: clear but not extreme margin.
+	    - `Edge`: modest margin (close enough that a normal-swing cycle can narrow quickly).
+	    - `Tilt`: very close margin.
+	    - `Battleground`: essentially even / too close to call cleanly.
+	  - `Momentum` (trend line):
+	    - `↔ Stable`: little directional change.
+	    - `← Democratic trend` / `→ Republican trend`: consistent shift over recent cycles.
+	    - `←/→ Accelerating ... trend`: the most recent window is moving faster than the longer-run pace.
+	    - `←/→ Long-run ... drift`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
+	  - `Subtype` (structured add-on line under the status pill):
+	    - `Active Suburban Transition`: long-run Democratic movement with a still-Republican but narrower current margin.
+	    - `Suburbanizing (Lagging)`: long-run Democratic pressure, but the most recent cycle moved more Republican.
+	    - `Softening Republican`: recent Democratic movement in a still-strong Republican county.
+	    - `Reinforcing Republican`: long-run and short-run movement both favor Republicans.
+	    - `Realigning Republican` / `Realigning Democratic`: long-run movement is large enough to suggest a structural shift in coalition.
+	    - `Stable / Mixed`: does not strongly match one of the above patterns.
+	  - `Stage of Transition` (neutral add-on line, based only on the current margin):
+	    - `🛡️ Stage 1: Deep Red` (R+25+)
+	    - `🧩 Stage 2: Softening Red` (R+15 to R+25)
+	    - `⚖️ Stage 3: Competitive Edge` (R+5 to R+15)
+	    - `🎲 Stage 4: Tossup Range` (R+0 to R+5)
+	    - `🧭 Stage 5: Democratic Lean` (D+)
+	  - `Growth Dynamic` (appended under `Latest Result`):
+	    - `🔴 Reinforcing Growth`: Republican raw vote growth exceeds Democratic growth vs the prior cycle.
+	    - `🔵 Diluting Growth`: Democratic raw vote growth exceeds Republican growth vs the prior cycle.
+	    - `⚖️ Balanced Growth`: equal growth.
 
 ### Trajectory Edge Cases + Census Context (March 26, 2026)
 

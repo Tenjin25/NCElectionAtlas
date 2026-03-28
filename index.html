@@ -14272,11 +14272,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	    function getTransitionStage(current_margin) {
 	      const margin = Number(current_margin);
 	      if (!Number.isFinite(margin)) return '';
-	      if (margin >= 25) return 'Stage 1: Deep Red';
-	      if (margin >= 15) return 'Stage 2: Softening Red';
-	      if (margin >= 5) return 'Stage 3: Competitive Edge';
-	      if (margin >= 0) return 'Stage 4: Tossup Range';
-	      return 'Stage 5: Democratic Lean';
+	      if (margin >= 25) return '🛡️ Stage 1: Deep Red';
+	      if (margin >= 15) return '🧩 Stage 2: Softening Red';
+	      if (margin >= 5) return '⚖️ Stage 3: Competitive Edge';
+	      if (margin >= 0) return '🎲 Stage 4: Tossup Range';
+	      return '🧭 Stage 5: Democratic Lean';
 	    }
 
 	    function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
