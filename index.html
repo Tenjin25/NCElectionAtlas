@@ -3598,15 +3598,21 @@ body { height: var(--app-height); }
     margin: 0;
   }
 
-  .focus-census-summary {
-    display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.4;
-    color: #0f172a;
-  }
+	  .focus-census-summary {
+	    display: flex;
+	    align-items: flex-start;
+	    gap: 7px;
+	    font-size: 13px;
+	    font-weight: 800;
+	    line-height: 1.4;
+	    color: #0f172a;
+	  }
+
+	  .focus-census-chips {
+	    display: flex;
+	    flex-wrap: wrap;
+	    gap: 6px;
+	  }
 
   .focus-census-note {
     font-size: 12px;
@@ -3728,15 +3734,30 @@ body { height: var(--app-height); }
     z-index: -1;
   }
 
-  .focus-trajectory-head {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 6px;
-    padding-bottom: 6px;
-    border-bottom: 1px dashed rgba(var(--trajectory-accent-rgb), 0.25);
-  }
+	  .focus-trajectory-head {
+	    display: flex;
+	    flex-direction: column;
+	    align-items: flex-start;
+	    justify-content: flex-start;
+	    gap: 6px;
+	    padding-bottom: 6px;
+	    border-bottom: 1px dashed rgba(var(--trajectory-accent-rgb), 0.25);
+	  }
+
+	  .focus-trajectory-subtype {
+	    font-size: 11px;
+	    line-height: 1.35;
+	    color: #475569;
+	    font-weight: 800;
+	  }
+
+	  .focus-trajectory-stage {
+	    font-size: 10px;
+	    line-height: 1.35;
+	    color: #64748b;
+	    font-weight: 800;
+	    letter-spacing: 0.02em;
+	  }
 
   .focus-trajectory-kicker {
     font-size: 10px;
@@ -3826,11 +3847,12 @@ body { height: var(--app-height); }
     text-transform: uppercase;
   }
 
-  .focus-trajectory-trendline .trend-text {
-    min-width: 0;
-    display: inline;
-    color: inherit;
-  }
+	  .focus-trajectory-trendline .trend-text {
+	    min-width: 0;
+	    display: inline;
+	    color: inherit;
+	  }
+
 
   .focus-trajectory-trendline .focus-trajectory-arrow {
     margin-right: 4px;
@@ -3921,9 +3943,16 @@ body { height: var(--app-height); }
     letter-spacing: 0.08em;
   }
 
-  .focus-trajectory-item.is-latest .focus-trajectory-value {
-    font-size: 13px;
-  }
+	  .focus-trajectory-item.is-latest .focus-trajectory-value {
+	    font-size: 13px;
+	  }
+
+	  .focus-trajectory-growth {
+	    font-size: 10px;
+	    font-weight: 800;
+	    line-height: 1.35;
+	    color: #64748b;
+	  }
 
   .focus-trajectory-item.tone-dem {
     --trajectory-item-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.42);
@@ -14208,39 +14237,164 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
-    function renderFocusCensusInsightHTML(context, title = 'County Census Insight') {
-      if (!context) return '';
-      return `
-        <div class="focus-census-insight" role="note" aria-label="${escapeHtml(title)}">
-          <div class="focus-census-head">
-            <span class="focus-census-kicker">${escapeHtml(title)}</span>
-            <span class="focus-census-pill">
+	    function renderFocusCensusInsightHTML(context, title = 'County Census Insight') {
+	      if (!context) return '';
+	      const growthType = classifyGrowthType(context?.countyNorm || '', Number(context?.changePct2020To2025));
+	      const growthChipHtml = growthType
+	        ? `
+	          <div class="focus-census-chips" aria-label="Growth type">
+	            <span class="focus-trend-chip">${escapeHtml(growthType)}</span>
+	          </div>
+	        `
+	        : '';
+	      return `
+	        <div class="focus-census-insight" role="note" aria-label="${escapeHtml(title)}">
+	          <div class="focus-census-head">
+	            <span class="focus-census-kicker">${escapeHtml(title)}</span>
+	            <span class="focus-census-pill">
               <span class="focus-census-pill-emoji">${escapeHtml(context.signalEmoji || '📊')}</span>
               ${escapeHtml(context.signalLabel || 'Steady population signal')}
             </span>
           </div>
-          <p class="focus-census-summary">
-            <span class="focus-census-inline-emoji">${escapeHtml(context.patternEmoji || '🧭')}</span>
-            ${escapeHtml(context.patternLabel || 'Mixed local and regional forces')}
-          </p>
-          ${context.noteLabel ? `<p class="focus-census-note">${escapeHtml(context.noteLabel)}</p>` : ''}
-          ${context.sourceNote ? `<p class="focus-census-source">${escapeHtml(context.sourceNote)}</p>` : ''}
-        </div>
-      `;
-    }
+	          <p class="focus-census-summary">
+	            <span class="focus-census-inline-emoji">${escapeHtml(context.patternEmoji || '🧭')}</span>
+	            ${escapeHtml(context.patternLabel || 'Mixed local and regional forces')}
+	          </p>
+	          ${growthChipHtml}
+	          ${context.noteLabel ? `<p class="focus-census-note">${escapeHtml(context.noteLabel)}</p>` : ''}
+	          ${context.sourceNote ? `<p class="focus-census-source">${escapeHtml(context.sourceNote)}</p>` : ''}
+	        </div>
+	      `;
+	    }
 
-    function classifyCountyTrajectory(series, unitNoun = 'county', censusContext = null) {
-      if (!Array.isArray(series) || !series.length) {
-        return {
-          status: 'No trajectory data',
-          statusClass: 'competitive',
-          trend: 'Not enough history',
-          icon: '',
-          iconTone: 'competitive',
-          meaning: 'Select a context with multiple election cycles to compute directional movement.',
-          details: []
-        };
-      }
+	    // --- Structured classification helpers (Trajectory + Census) ---
+	    // NOTE: These are additive; they do not change map rendering or event listeners.
+	    function getTransitionStage(current_margin) {
+	      const margin = Number(current_margin);
+	      if (!Number.isFinite(margin)) return '';
+	      if (margin >= 25) return 'Stage 1: Deep Red';
+	      if (margin >= 15) return 'Stage 2: Softening Red';
+	      if (margin >= 5) return 'Stage 3: Competitive Edge';
+	      if (margin >= 0) return 'Stage 4: Tossup Range';
+	      return 'Stage 5: Democratic Lean';
+	    }
+
+	    function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
+	      const rep = Number(rep_votes);
+	      const dem = Number(dem_votes);
+	      const prevRep = Number(prev_rep_votes);
+	      const prevDem = Number(prev_dem_votes);
+	      if (!Number.isFinite(rep) || !Number.isFinite(dem) || !Number.isFinite(prevRep) || !Number.isFinite(prevDem)) return '';
+	      const repGrowth = rep - prevRep;
+	      const demGrowth = dem - prevDem;
+	      if (repGrowth > demGrowth) return '🔴 Reinforcing Growth';
+	      if (demGrowth > repGrowth) return '🔵 Diluting Growth';
+	      return '⚖️ Balanced Growth';
+	    }
+
+	    function classifyGrowthType(countyName, growthRate) {
+	      const norm = String(countyName || '').trim().toUpperCase();
+	      if (!norm) return '🏭 Stable / Local Growth';
+
+	      const coastal = new Set([
+	        'BRUNSWICK', 'NEW HANOVER', 'PENDER', 'ONSLOW', 'CARTERET', 'CRAVEN',
+	        'PAMLICO', 'BEAUFORT', 'HYDE', 'DARE', 'TYRRELL', 'CURRITUCK',
+	        'PASQUOTANK', 'CAMDEN', 'CHOWAN', 'PERQUIMANS'
+	      ]);
+	      const charlotteMetro = new Set([
+	        'MECKLENBURG', 'UNION', 'CABARRUS', 'GASTON', 'IREDELL', 'ROWAN',
+	        'LINCOLN', 'STANLY', 'CLEVELAND', 'CATAWBA'
+	      ]);
+	      const i95Corridor = new Set([
+	        'NORTHAMPTON', 'HALIFAX', 'EDGECOMBE', 'NASH', 'WILSON', 'JOHNSTON',
+	        'HARNETT', 'CUMBERLAND', 'ROBESON', 'SAMPSON', 'WAYNE', 'DUPLIN'
+	      ]);
+
+	      if (coastal.has(norm)) return '🌊 Coastal Growth';
+	      if (charlotteMetro.has(norm)) return '🌆 Metro Spillover';
+	      if (i95Corridor.has(norm)) return '🛣️ Corridor Growth';
+
+	      void growthRate;
+	      return '🏭 Stable / Local Growth';
+	    }
+
+	    function classifyCountyTrajectory(dataOrSeries, unitNoun = 'county', censusContext = null) {
+	      const looksLikeShiftData = dataOrSeries && !Array.isArray(dataOrSeries) && (
+	        Object.prototype.hasOwnProperty.call(dataOrSeries, 'current_margin') ||
+	        Object.prototype.hasOwnProperty.call(dataOrSeries, 'shift_since_2020') ||
+	        Object.prototype.hasOwnProperty.call(dataOrSeries, 'shift_since_2008') ||
+	        Object.prototype.hasOwnProperty.call(dataOrSeries, 'shift_since_2000')
+	      );
+
+	      // Structured snapshot classifier: accepts precomputed deltas.
+	      if (looksLikeShiftData) {
+	        const current_margin = Number(dataOrSeries?.current_margin);
+	        const shift_since_2020 = Number(dataOrSeries?.shift_since_2020);
+	        const shift_since_2008 = Number(dataOrSeries?.shift_since_2008);
+	        const shift_since_2000 = Number(dataOrSeries?.shift_since_2000);
+
+	        const deriveBaseFromMargin = (margin) => {
+	          const m = Number(margin);
+	          if (!Number.isFinite(m)) return 'Competitive';
+	          if (m >= 25) return 'Durable Republican (Stronghold)';
+	          if (m >= 15) return 'Likely Republican';
+	          if (m >= 5) return 'Republican Lean';
+	          if (m >= 0) return 'Tossup Range';
+	          return 'Democratic Lean';
+	        };
+
+	        const base = String(dataOrSeries?.base || '').trim() || deriveBaseFromMargin(current_margin);
+	        let subtype = 'Stable / Mixed';
+	        let momentum = '→ Mixed trajectory';
+
+	        // --- ACTIVE TRANSITION (Cabarrus-type)
+	        if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -20 && current_margin > 5 && current_margin < 10) {
+	          subtype = 'Active Suburban Transition';
+	          momentum = '← Accelerating Democratic trend';
+	        }
+	        // --- SUBURBANIZING (Union-type)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -5 && Number.isFinite(shift_since_2020) && shift_since_2020 > 0) {
+	          subtype = 'Suburbanizing (Lagging)';
+	          momentum = '↔ Long-term Democratic pressure, short-term Republican reinforcement';
+	        }
+	        // --- SOFTENING RED (Brunswick-type)
+	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 <= -1 && current_margin > 10) {
+	          subtype = 'Softening Republican';
+	          momentum = '← Democratic trend';
+	        }
+	        // --- REINFORCING REPUBLICAN (Randolph-type)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 10 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 0) {
+	          subtype = 'Reinforcing Republican';
+	          momentum = '→ Republican trend';
+	        }
+	        // --- REALIGNING REPUBLICAN (Caroline-type)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 15 && current_margin < 15) {
+	          subtype = 'Realigning Republican';
+	          momentum = '→ Strong Republican momentum';
+	        }
+	        // --- REALIGNING DEMOCRATIC (Chesterfield-type)
+	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -15 && current_margin < 0) {
+	          subtype = 'Realigning Democratic';
+	          momentum = '← Democratic momentum';
+	        }
+
+	        // Keep for optional downstream display / debugging.
+	        void shift_since_2008;
+	        return { base, subtype, momentum };
+	      }
+
+	      const series = dataOrSeries;
+	      if (!Array.isArray(series) || !series.length) {
+	        return {
+	          status: 'No trajectory data',
+	          statusClass: 'competitive',
+	          trend: 'Not enough history',
+	          icon: '',
+	          iconTone: 'competitive',
+	          meaning: 'Select a context with multiple election cycles to compute directional movement.',
+	          details: []
+	        };
+	      }
 
       const unit = String(unitNoun || 'county').trim() || 'county';
       const unitLower = unit.toLowerCase();
@@ -14301,16 +14455,20 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       }
 
-      const latest = sorted[sorted.length - 1];
-      const latestSigned = getSignedMarginTowardGop(latest);
-      const first = sorted[0];
-      const firstSigned = getSignedMarginTowardGop(first);
-      const longShiftTowardGop = latestSigned - firstSigned;
-      const row2008 = sorted.find(row => Number(row.year) === 2008);
-      const shiftSince2008 = row2008 ? latestSigned - getSignedMarginTowardGop(row2008) : null;
-      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-      const previousSigned = previous ? getSignedMarginTowardGop(previous) : null;
-      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
+	      const latest = sorted[sorted.length - 1];
+	      const latestSigned = getSignedMarginTowardGop(latest);
+	      const first = sorted[0];
+	      const firstSigned = getSignedMarginTowardGop(first);
+	      const longShiftTowardGop = latestSigned - firstSigned;
+	      const row2008 = sorted.find(row => Number(row.year) === 2008);
+	      const shiftSince2008 = row2008 ? latestSigned - getSignedMarginTowardGop(row2008) : null;
+	      const row2020 = sorted.find(row => Number(row.year) === 2020);
+	      const shiftSince2020 = row2020 ? latestSigned - getSignedMarginTowardGop(row2020) : NaN;
+	      const row2000 = sorted.find(row => Number(row.year) === 2000);
+	      const shiftSince2000 = (row2000 || first) ? latestSigned - getSignedMarginTowardGop(row2000 || first) : NaN;
+	      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
+	      const previousSigned = previous ? getSignedMarginTowardGop(previous) : null;
+	      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
       const recentWindowStart = sorted.length >= 3 ? sorted[Math.max(0, sorted.length - 3)] : first;
       const recentWindowStartSigned = recentWindowStart ? getSignedMarginTowardGop(recentWindowStart) : null;
       const recentWindowShiftTowardGop = Number.isFinite(recentWindowStartSigned)
@@ -14484,39 +14642,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      const alreadyMentionsNarrowing = /narrow|closing|gaining|soften/i.test(meaning);
-      if (!alreadyMentionsNarrowing && awayFromCurrentSideLong >= 6 && side !== 'Competitive') {
-        meaning += side === 'Republican'
-          ? ' Long-run: Democrats have narrowed the gap even if Republicans still lead.'
-          : ' Long-run: Republicans have narrowed the gap even if Democrats still lead.';
-      } else if (awayFromCurrentSide >= 3 && absLatest >= 10 && side !== 'Competitive') {
-        meaning += ' The margin is still sizable, but the recent trend has softened that advantage.';
-      }
+	      const alreadyMentionsNarrowing = /narrow|closing|gaining|soften/i.test(meaning);
+	      if (!alreadyMentionsNarrowing && awayFromCurrentSideLong >= 6 && side !== 'Competitive') {
+	        meaning += side === 'Republican'
+	          ? ' Long-run: Democrats have narrowed the gap even if Republicans still lead.'
+	          : ' Long-run: Republicans have narrowed the gap even if Democrats still lead.';
+	      } else if (awayFromCurrentSide >= 3 && absLatest >= 10 && side !== 'Competitive') {
+	        meaning += ' The margin is still sizable, but the recent trend has softened that advantage.';
+	      }
 
-      return {
-        status,
-        statusMain,
-        statusStrength,
-        statusClass,
-        trend,
-        icon,
-        iconTone,
-        latestSignedMarginTowardGop: latestSigned,
-        firstSignedMarginTowardGop: firstSigned,
-        longShiftTowardGop,
-        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
-        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
-        meaning,
-        details: [
-          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
-          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
-          ...(previous && Number(first.year) !== Number(previous.year)
-            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
-            : []),
-          ...(row2008 && Number(row2008.year) !== Number(first.year)
-            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
-            : [])
-        ]
+	      const structured = classifyCountyTrajectory({
+	        base: status,
+	        current_margin: latestSigned,
+	        shift_since_2020: shiftSince2020,
+	        shift_since_2008: shiftSince2008,
+	        shift_since_2000: shiftSince2000
+	      });
+	      const subtype = String(structured?.subtype || '').trim();
+	      const transitionStage = getTransitionStage(latestSigned);
+	      const growthDynamic = getGrowthDynamic(latest?.rep_votes, latest?.dem_votes, previous?.rep_votes, previous?.dem_votes);
+	      const structuredMomentum = String(structured?.momentum || '').trim();
+	      const trendStructured = structuredMomentum || trend;
+	
+	      return {
+	        status,
+	        statusMain,
+	        statusStrength,
+	        statusClass,
+	        trend: trendStructured,
+	        trendLegacy: trend,
+	        subtype,
+	        transitionStage,
+	        growthDynamic,
+	        shiftSince2000,
+	        shiftSince2008: Number.isFinite(shiftSince2008) ? shiftSince2008 : NaN,
+	        shiftSince2020,
+	        icon,
+	        iconTone,
+	        latestSignedMarginTowardGop: latestSigned,
+	        firstSignedMarginTowardGop: firstSigned,
+	        longShiftTowardGop,
+	        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
+	        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
+	        meaning,
+	        details: [
+	          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
+	          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
+	          ...(previous && Number(first.year) !== Number(previous.year)
+	            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
+	            : []),
+	          ...(row2008 && Number(row2008.year) !== Number(first.year)
+	            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
+	            : [])
+	        ]
       };
     }
 
@@ -14534,10 +14712,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = ['dem', 'rep', 'competitive'].includes(meta.statusClass)
         ? meta.statusClass
         : 'competitive';
-      const statusToneClass = trajectoryToneClass(statusClass);
-      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
-      const trendText = String(meta.trend || '\u2194 Little directional change');
-      const meaningText = String(meta.meaning || '').trim();
+	      const statusToneClass = trajectoryToneClass(statusClass);
+	      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
+	      const trendText = String(meta.trend || '\u2194 Little directional change');
+	      const meaningText = String(meta.meaning || '').trim();
+	      const subtypeText = String(meta.subtype || '').trim();
+	      const stageText = String(meta.transitionStage || '').trim();
+	      const growthDynamicText = String(meta.growthDynamic || '').trim();
 
       // Normalize legacy diagonal arrows to horizontal so trend direction is always shown left/right.
       const normalizeTrajectoryArrow = (arrow) => {
@@ -14566,17 +14747,19 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       return `
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
-          <div class="focus-trajectory-head">
-            <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
-            <span class="focus-trajectory-status ${statusToneClass}">${escapeHtml(statusText)}</span>
-          </div>
-          <p class="focus-trajectory-trendline ${trendToneClass}">
-            <span class="trend-tag">Momentum</span>
-            <span class="trend-text">
-              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
-              ${escapeHtml(trendBody)}
-            </span>
-          </p>
+	          <div class="focus-trajectory-head">
+	            <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
+	            <span class="focus-trajectory-status ${statusToneClass}">${escapeHtml(statusText)}</span>
+	            ${subtypeText ? `<span class="focus-trajectory-subtype">${escapeHtml(subtypeText)}</span>` : ''}
+	            ${stageText ? `<span class="focus-trajectory-stage">${escapeHtml(stageText)}</span>` : ''}
+	          </div>
+	          <p class="focus-trajectory-trendline ${trendToneClass}">
+	            <span class="trend-tag">Momentum</span>
+	            <span class="trend-text">
+	              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
+	              ${escapeHtml(trendBody)}
+	            </span>
+	          </p>
           ${meaningText ? `<p class="focus-trajectory-meaning ${statusToneClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
           ${details.length ? `
             <div class="focus-trajectory-grid">
@@ -14590,14 +14773,15 @@ document.addEventListener('DOMContentLoaded', function() {
                   const valueBody = arrow ? valueRaw.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : valueRaw;
                   const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
                   return `
-                 <div class="focus-trajectory-item ${toneClass} ${rowRole}">
-                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
-                  <span class="focus-trajectory-value ${toneClass}">
-                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
-                    ${escapeHtml(valueBody)}
-                  </span>
-                </div>
-              `;
+	                 <div class="focus-trajectory-item ${toneClass} ${rowRole}">
+	                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
+	                  <span class="focus-trajectory-value ${toneClass}">
+	                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
+	                    ${escapeHtml(valueBody)}
+	                  </span>
+	                  ${(rowRole === 'is-latest' && growthDynamicText) ? `<span class="focus-trajectory-growth">${escapeHtml(growthDynamicText)}</span>` : ''}
+	                </div>
+	              `;
               }).join('')}
             </div>
           ` : ''}
