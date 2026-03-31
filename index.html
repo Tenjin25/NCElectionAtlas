@@ -14409,6 +14409,38 @@ document.addEventListener('DOMContentLoaded', function() {
       return 'neutral';
     }
 
+
+    function getDurabilityLabel({ shiftSince2008 = 0, shiftSince2020 = 0, currentMargin = 0, hasHistoricalFlip = false, reinforcingCurrent = false } = {}) {
+      const longShift = Math.abs(Number(shiftSince2008) || 0);
+      const recentShift = Math.abs(Number(shiftSince2020) || 0);
+      const margin = Math.abs(Number(currentMargin) || 0);
+
+      if ((hasHistoricalFlip && margin >= 12 && (reinforcingCurrent || recentShift >= 4)) || (longShift > 20 && margin > 15)) return 'durable';
+      if ((hasHistoricalFlip && margin >= 8) || (longShift > 15 && recentShift > 5) || (margin >= 10 && recentShift >= 4)) return 'likely';
+      if (recentShift > 5 || (hasHistoricalFlip && margin >= 5)) return 'emerging';
+      return 'uncertain';
+    }
+
+    function getDurabilityText(durability) {
+      if (durability === 'durable') {
+        return 'This is a durable shift, not a short-term fluctuation.';
+      }
+      if (durability === 'likely') {
+        return 'The trend is well-established and likely to continue.';
+      }
+      if (durability === 'emerging') {
+        return 'The trend is strengthening but still developing.';
+      }
+      return 'The next comparable result will show whether this is a lasting shift.';
+    }
+
+    function getDurabilityBadge(durability) {
+      if (durability === 'durable') return '🟢 High confidence';
+      if (durability === 'likely') return '🟡 Medium confidence';
+      if (durability === 'emerging') return '🟠 Developing';
+      return '🔴 Low confidence';
+    }
+
     function buildViralFocusBlock({
       focusName = 'This place',
       annotated = [],
@@ -14459,8 +14491,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const hasHistoricalFlip = Number.isFinite(Number(historicalFlipYear)) || (earliestParty && latestParty && earliestParty !== latestParty && earliestParty !== 'tie' && latestParty !== 'tie');
       const latestMarginAbs = Math.abs(Number(latest?.item?.margin ?? latest?.item?.signedMargin ?? latest?.signedMargin ?? 0));
       const recentShiftAbs = Math.abs(Number(summaryEntry?.shiftSince2020 ?? selectedEntry?.shiftSince2020 ?? 0));
+      const longShiftAbs = Math.abs(Number(historyShift?.value ?? historyShift?.delta ?? 0));
       const stillCompetitive = latestMarginAbs <= 8.5;
       const movementDetected = recentShiftAbs >= 2 || /realign|emerging|reinforcing|accelerating|drift|closing|narrow/i.test(`${trendText} ${subtypeText} ${whyItMatters} ${stageText}`);
+      const durability = getDurabilityLabel({
+        shiftSince2008: longShiftAbs,
+        shiftSince2020: recentShiftAbs,
+        currentMargin: latestMarginAbs,
+        hasHistoricalFlip,
+        reinforcingCurrent
+      });
+      const durabilityText = getDurabilityText(durability);
+      const durabilityBadge = getDurabilityBadge(durability);
       const viralMode = flipInfoMeta.flipped
         ? 'fresh-flip'
         : hasHistoricalFlip
@@ -14486,7 +14528,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : viralMode === 'competitive-movement'
               ? `${focusName} is still competitive enough to watch closely, but the trend line is now leaning ${tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'away from dead-even')}.`
               : `${focusName} has not flipped yet, but the direction of travel is getting easier to spot.`;
-      const summary = [quickRead, trendText, growthPattern || growthSignal || whyItMatters, selectedVsLatest]
+      const summary = [quickRead, trendText, growthPattern || growthSignal || whyItMatters, durabilityText, selectedVsLatest]
         .filter(Boolean)
         .join(' ');
 
@@ -14527,7 +14569,19 @@ document.addEventListener('DOMContentLoaded', function() {
           title: growthDynamic || watchLabel,
           body: flipInfoMeta.flipped
             ? 'A fresh flip often gets tested in the next comparable cycle.'
-            : 'The next comparable result will show whether this is a blip or a durable trend.'
+            : durabilityText
+        },
+        {
+          tone: durability === 'durable' ? 'rep' : (durability === 'likely' ? tone : 'neutral'),
+          kicker: '🎯 Confidence',
+          title: durabilityBadge,
+          body: durability === 'durable'
+            ? 'This pattern already looks locked in unless the coalition changes materially.'
+            : durability === 'likely'
+              ? 'The trend has enough history behind it to take seriously.'
+              : durability === 'emerging'
+                ? 'There is a real signal here, but it is still forming.'
+                : 'Treat this as early movement rather than settled realignment.'
         }
       ];
 
