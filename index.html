@@ -1356,6 +1356,114 @@ body { height: var(--app-height); }
   color: #1f2937;
 }
 
+/* Viral-tier focus explainer */
+.focus-viral {
+  margin: 0 0 14px 0;
+  display: grid;
+  gap: 10px;
+}
+.focus-viral-hero {
+  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.96));
+  color: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+}
+.focus-viral-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(191, 219, 254, 0.96);
+  margin-bottom: 8px;
+}
+.focus-viral-headline {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #fff;
+}
+.focus-viral-summary {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.98);
+}
+.focus-viral-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.focus-viral-card {
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.98);
+  padding: 12px;
+}
+.focus-viral-card-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
+}
+.focus-viral-card strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0f172a;
+}
+.focus-viral-card p {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+}
+.focus-viral-card.rep strong,
+.focus-viral-card.rep .focus-viral-card-kicker {
+  color: #991b1b;
+}
+.focus-viral-card.dem strong,
+.focus-viral-card.dem .focus-viral-card-kicker {
+  color: #1d4ed8;
+}
+.focus-viral-card.neutral strong,
+.focus-viral-card.neutral .focus-viral-card-kicker {
+  color: #334155;
+}
+.focus-viral-bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.focus-viral-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #334155;
+}
+.focus-viral-bullets .bullet-emoji {
+  width: 18px;
+  flex: 0 0 18px;
+}
+@media (max-width: 768px) {
+  .focus-viral-hero { padding: 13px 14px; }
+  .focus-viral-headline { font-size: 16px; }
+  .focus-viral-grid { grid-template-columns: 1fr; }
+}
+
 /* Visualization Mode Tabs - VoteHub Style */
 .viz-modes {
   position: absolute;
@@ -10705,13 +10813,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const toneClass = trajectoryToneClass(tone);
         return `
           <p class="focus-census-check ${toneClass}" role="note" aria-label="Census check">
-            <strong>Census check:</strong> ${escapeHtml(text)}
+            <strong>Population impact:</strong> ${escapeHtml(text)}
           </p>
         `;
       })();
       const focusCensusHtml = options?.censusContext
         ? renderFocusCensusInsightHTML(options.censusContext, options?.censusContextTitle || 'County Census Insight')
         : '';
+      const viralFocusHtml = buildViralFocusBlock({
+        focusName: options?.focusName || caption || 'This place',
+        summaryEntry,
+        latest,
+        earliest,
+        selectedEntry,
+        summaryLine,
+        historyShift,
+        trajectoryMeta: options?.trajectoryMeta,
+        censusContext: options?.censusContext
+      });
 
       const cards = annotated
         .slice()
@@ -10761,6 +10880,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .join('');
 
       chartEl.innerHTML = `
+        ${viralFocusHtml}
         <div class="focus-trend-plot">
           <div class="focus-trend-summary">
             <div class="focus-trend-summary-copy">
@@ -10914,9 +11034,18 @@ document.addEventListener('DOMContentLoaded', function() {
             trendOptions.censusContextTitle = meta.kind === 'precinct'
               ? `${displayCountyName(meta.county)} County Census Insight`
               : 'County Census Insight';
+            trendOptions.focusName = meta.kind === 'precinct'
+              ? `${displayCountyName(meta.county)} precinct`
+              : displayCountyName(meta.county);
           } catch (_) {
             censusContext = null;
           }
+        } else if (meta.kind === 'district' && meta.scope && meta.districtNum !== undefined) {
+          trendOptions.focusName = `${displayDistrictScope(meta.scope)} ${meta.districtNum}`;
+        } else if (meta.kind === 'region' && meta.regionKey) {
+          trendOptions.focusName = String(meta.regionKey || 'This region').replace(/[-_]/g, ' ');
+        } else if (meta.kind === 'statewide') {
+          trendOptions.focusName = 'North Carolina';
         }
 
         if (meta.kind !== 'statewide' && series && series.length) {
@@ -14267,6 +14396,125 @@ document.addEventListener('DOMContentLoaded', function() {
 	      `;
 	    }
 
+
+    function normalizeDirectionalTone(text, fallbackShift = NaN) {
+      const raw = String(text || '').trim();
+      if (/[←↘]/.test(raw) || /democrat/i.test(raw) || /\bD\+/.test(raw)) return 'dem';
+      if (/[→↗]/.test(raw) || /republican/i.test(raw) || /\bR\+/.test(raw)) return 'rep';
+      if (Number.isFinite(Number(fallbackShift))) {
+        if (Number(fallbackShift) > 0.1) return 'rep';
+        if (Number(fallbackShift) < -0.1) return 'dem';
+      }
+      return 'neutral';
+    }
+
+    function buildViralFocusBlock({
+      focusName = 'This place',
+      summaryEntry = null,
+      latest = null,
+      earliest = null,
+      selectedEntry = null,
+      summaryLine = '',
+      historyShift = null,
+      trajectoryMeta = null,
+      censusContext = null
+    } = {}) {
+      if (!summaryEntry || !latest || !earliest) return '';
+      const tone = normalizeDirectionalTone(
+        trajectoryMeta?.trend || historyShift?.text || summaryLine,
+        trajectoryMeta?.recentWindowShiftTowardGop
+      );
+      const flipInfoMeta = summaryEntry?.flip || { flipped: false, from: 'T', to: 'T' };
+      const modeLabel = flipInfoMeta.flipped
+        ? `Why ${focusName} flipped ${flipInfoMeta.to === 'R' ? 'Republican' : 'Democratic'}`
+        : `Why ${focusName} is moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'the way it is')}`;
+
+      const trendText = String(trajectoryMeta?.trend || trajectoryMeta?.trendLegacy || historyShift?.text || 'Mixed trajectory').trim();
+      const subtypeText = String(trajectoryMeta?.subtype || trajectoryMeta?.status || '').trim();
+      const growthSignal = String(censusContext?.signalLabel || '').trim();
+      const growthPattern = String(censusContext?.patternLabel || '').trim();
+      const whyItMatters = String(censusContext?.noteLabel || trajectoryMeta?.meaning || '').trim();
+      const stageText = String(trajectoryMeta?.transitionStage || '').trim();
+      const growthDynamic = String(trajectoryMeta?.growthDynamic || '').trim();
+      const latestResult = `${summaryEntry.item.year}: ${summaryLine}`;
+      const longShiftText = String(historyShift?.text || '').replace(/^Shift:\s*/i, '').trim() || 'No major long-run shift yet';
+      const selectedVsLatest = selectedEntry && selectedEntry !== latest
+        ? `Selected year ${summaryEntry.item.year}; latest available result is ${latest.item.year}.`
+        : `Latest result: ${latestResult}.`;
+
+      const quickRead = flipInfoMeta.flipped
+        ? `${focusName} did not just inch over the line — it actually flipped in ${summaryEntry.item.year}.`
+        : `${focusName} is not necessarily flipping yet, but the direction of travel is getting easier to spot.`;
+      const summary = [quickRead, trendText, growthPattern || growthSignal || whyItMatters, selectedVsLatest]
+        .filter(Boolean)
+        .join(' ');
+
+      const watchLabel = tone === 'rep'
+        ? 'Watch whether new growth keeps reinforcing the GOP edge.'
+        : (tone === 'dem'
+          ? 'Watch whether continued churn keeps narrowing the Republican advantage.'
+          : 'Watch whether the next cycle breaks the current equilibrium.');
+
+      const cards = [
+        {
+          tone,
+          kicker: '🧭 Direction',
+          title: trendText,
+          body: subtypeText || 'This is the clearest top-line read of where the county is heading.'
+        },
+        {
+          tone: 'neutral',
+          kicker: '🔄 Long-run shift',
+          title: longShiftText,
+          body: stageText || `Compared with ${earliest.item.year}, the county has meaningfully changed even if the winner stayed the same.`
+        },
+        {
+          tone: 'neutral',
+          kicker: '📈 Population story',
+          title: growthPattern || growthSignal || 'Population trend is mixed',
+          body: whyItMatters || 'Population change helps explain how fast a county can evolve politically.'
+        },
+        {
+          tone,
+          kicker: '👀 What to watch',
+          title: growthDynamic || watchLabel,
+          body: flipInfoMeta.flipped
+            ? 'A fresh flip often gets tested in the next comparable cycle.'
+            : 'The next comparable result will show whether this is a blip or a durable trend.'
+        }
+      ];
+
+      const bulletLines = [
+        { emoji: '🏁', text: latestResult },
+        { emoji: '🗳️', text: flipInfoMeta.flipped ? `Flip: ${flipInfoMeta.from}→${flipInfoMeta.to}` : `Current pattern: ${subtypeText || (tone === 'rep' ? 'Republican-leaning movement' : (tone === 'dem' ? 'Democratic-leaning movement' : 'mixed movement'))}` },
+        { emoji: '📍', text: growthPattern || growthSignal || 'Population change is not giving a strong directional clue yet.' }
+      ].filter(item => String(item.text || '').trim());
+
+      return `
+        <section class="focus-viral" aria-label="At a glance explainer">
+          <div class="focus-viral-hero">
+            <div class="focus-viral-eyebrow">🔥 At a glance</div>
+            <h3 class="focus-viral-headline">${escapeHtml(modeLabel)}</h3>
+            <p class="focus-viral-summary">${escapeHtml(summary)}</p>
+          </div>
+          <div class="focus-viral-grid">
+            ${cards.map(card => `
+              <div class="focus-viral-card ${escapeHtml(card.tone || 'neutral')}">
+                <span class="focus-viral-card-kicker">${escapeHtml(card.kicker || '')}</span>
+                <strong>${escapeHtml(card.title || '')}</strong>
+                <p>${escapeHtml(card.body || '')}</p>
+              </div>
+            `).join('')}
+          </div>
+          <ul class="focus-viral-bullets">
+            ${bulletLines.map(item => `
+              <li><span class="bullet-emoji">${escapeHtml(item.emoji)}</span><span>${escapeHtml(item.text)}</span></li>
+            `).join('')}
+          </ul>
+        </section>
+      `;
+    }
+
 	    // --- Structured classification helpers (Trajectory + Census) ---
 	    // NOTE: These are additive; they do not change map rendering or event listeners.
 	    function getTransitionStage(current_margin) {
@@ -14768,13 +15016,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return `
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
 	          <div class="focus-trajectory-head">
-	            <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
+	            <span class="focus-trajectory-kicker">Long-term trend</span>
 	            <span class="focus-trajectory-status ${statusToneClass}">${escapeHtml(statusText)}</span>
 	            ${subtypeText ? `<span class="focus-trajectory-subtype">${escapeHtml(subtypeText)}</span>` : ''}
 	            ${stageText ? `<span class="focus-trajectory-stage">${escapeHtml(stageText)}</span>` : ''}
 	          </div>
 	          <p class="focus-trajectory-trendline ${trendToneClass}">
-	            <span class="trend-tag">Momentum</span>
+	            <span class="trend-tag">Recent direction</span>
 	            <span class="trend-text">
 	              ${trendArrow ? `<span class="focus-trajectory-arrow ${trendToneClass}">${escapeHtml(trendArrow)}</span>` : ''}
 	              ${escapeHtml(trendBody)}
