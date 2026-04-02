@@ -8146,7 +8146,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
         <div class="legend-context-chips" id="legend-context-chips">
-          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether stars show top predictive precincts: matched the statewide winner in each of the last three available cycles and stayed closest to the statewide margin.">&#9733; Bellwether: top predictive precincts</span>
+          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether counties match the statewide winner in each of the last three available cycles and stay closest to the statewide two-party margin. (When precincts are enabled, stars mark the top predictive precincts too.)">&#9733; Bellwether</span>
           <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
         </div>
     </div>
@@ -8597,9 +8597,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .sort((a, b) => Number(a.year) - Number(b.year));
 
       const out = [];
-      for (const e of entries) {
-        const year = Number(e.year);
+      const loaded = await mapWithConcurrency(entries, 4, async (e) => {
+        const year = Number(e?.year);
+        if (!Number.isFinite(year)) return null;
         const rows = await loadContestSlice(contestType, year, { preferCounty: true });
+        return { year, rows };
+      });
+      for (const bundle of loaded) {
+        if (!bundle) continue;
+        const year = Number(bundle.year);
+        const rows = bundle.rows || [];
         const totals = aggregateContestRowsForRegion(rows, contestType, regionKey);
         if (!totals.total) continue;
         const margin = totals.rep - totals.dem;
@@ -10760,6 +10767,30 @@ document.addEventListener('DOMContentLoaded', function() {
         .replace(/'/g, '&#39;');
     }
 
+    async function mapWithConcurrency(items, limit, mapper) {
+      const list = Array.isArray(items) ? items : [];
+      const concurrency = Math.max(1, Number(limit) || 1);
+      const results = new Array(list.length);
+      let nextIdx = 0;
+
+      async function worker() {
+        while (true) {
+          const idx = nextIdx;
+          nextIdx += 1;
+          if (idx >= list.length) return;
+          try {
+            results[idx] = await mapper(list[idx], idx);
+          } catch (_) {
+            results[idx] = null;
+          }
+        }
+      }
+
+      const workers = Array.from({ length: Math.min(concurrency, list.length) }, () => worker());
+      await Promise.all(workers);
+      return results;
+    }
+
     function describeTrendShift(currentSignedPct, prevSignedPct, prevYear) {
       if (!Number.isFinite(Number(prevSignedPct))) {
         return { cls: 'tie', text: 'First available result' };
@@ -10999,9 +11030,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .sort((a, b) => Number(a.year) - Number(b.year));
 
       const out = [];
-      for (const e of entries) {
-        const year = Number(e.year);
+      const loaded = await mapWithConcurrency(entries, 4, async (e) => {
+        const year = Number(e?.year);
+        if (!Number.isFinite(year)) return null;
         const rows = await loadContestSlice(contestType, year);
+        return { year, rows };
+      });
+      for (const bundle of loaded) {
+        if (!bundle) continue;
+        const year = Number(bundle.year);
+        const rows = bundle.rows || [];
         let dem = 0, rep = 0, oth = 0, tot = 0;
         let demCand = '', repCand = '';
         rows.forEach(r => {
@@ -14115,9 +14153,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const target = (countyName || '').toString().trim().toUpperCase();
       const out = [];
-      for (const e of entries) {
-        const year = Number(e.year);
+      const loaded = await mapWithConcurrency(entries, 4, async (e) => {
+        const year = Number(e?.year);
+        if (!Number.isFinite(year)) return null;
         const rows = await loadContestSlice(contestType, year);
+        return { year, rows };
+      });
+      for (const bundle of loaded) {
+        if (!bundle) continue;
+        const year = Number(bundle.year);
+        const rows = bundle.rows || [];
         // Rows are precinct-level: "COUNTY - PREC". Aggregate to county.
         let dem = 0, rep = 0, oth = 0, tot = 0;
         let demCand = '', repCand = '';
@@ -15336,9 +15381,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const out = [];
-      for (const e of entries) {
-        const year = Number(e.year);
+      const loaded = await mapWithConcurrency(entries, 4, async (e) => {
+        const year = Number(e?.year);
+        if (!Number.isFinite(year)) return null;
         const rows = await loadContestSlice(contestType, year);
+        return { year, rows };
+      });
+      for (const bundle of loaded) {
+        if (!bundle) continue;
+        const year = Number(bundle.year);
+        const rows = bundle.rows || [];
         let dem = 0;
         let rep = 0;
         let oth = 0;
@@ -15819,8 +15871,24 @@ document.addEventListener('DOMContentLoaded', function() {
       return !!(countyNorm && bellwetherCountyNorms && bellwetherCountyNorms.has(countyNorm));
     }
 
+    function bellwetherCountyNameExpr() {
+      return ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'NAME'], ['get', 'county_nam'], ['get', 'COUNTYNAME'], ['get', 'County'], ['get', 'name']]];
+    }
+
+    function syncBellwetherCountyLayerFilter() {
+      try {
+        if (!map || !map.getLayer || !map.getLayer('bellwether-county-outline')) return;
+        const values = Array.from(bellwetherCountyNorms || []);
+        const filter = values.length
+          ? ['in', bellwetherCountyNameExpr(), ['literal', values]]
+          : ['==', ['get', '_'], '__'];
+        map.setFilter('bellwether-county-outline', filter);
+      } catch (_) {}
+    }
+
     function setBellwetherCountyNorms(normSet) {
       bellwetherCountyNorms = normSet instanceof Set ? new Set(normSet) : new Set();
+      syncBellwetherCountyLayerFilter();
     }
 
     function updateSplitTicketLegendChipVisibility() {
@@ -16119,17 +16187,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateBellwetherLegendChipVisibility() {
       const chip = document.getElementById('legend-bellwether-chip');
       if (!chip) return;
-      const count = bellwetherPrecinctNorms && bellwetherPrecinctNorms.size ? bellwetherPrecinctNorms.size : 0;
-      const active = !!(precinctsEnabled && currentView === 'counties' && count > 0);
+      const precinctCount = bellwetherPrecinctNorms && bellwetherPrecinctNorms.size ? bellwetherPrecinctNorms.size : 0;
+      const countyCount = bellwetherCountyNorms && bellwetherCountyNorms.size ? bellwetherCountyNorms.size : 0;
+      const active = !!(currentView === 'counties' && (countyCount > 0 || precinctCount > 0));
       chip.style.display = active ? 'inline-flex' : 'none';
       if (active) {
-        chip.textContent = `\u2605 Bellwether: top predictive precincts (${count.toLocaleString()})`;
+        const precinctClause = precinctsEnabled && precinctCount > 0 ? `, ${precinctCount.toLocaleString()} precincts` : '';
+        chip.textContent = `\u2605 Bellwether: ${countyCount.toLocaleString()} counties${precinctClause}`;
       }
     }
 
     function updateBellwetherLayerVisibility() {
       const minZoom = CONFIG.precincts?.minZoom || 8.5;
-      const visible = !!(
+      const precinctVisible = !!(
         precinctsEnabled
         && currentView === 'counties'
         && map.getZoom() >= Math.max(6.5, minZoom - 2.0)
@@ -16137,7 +16207,18 @@ document.addEventListener('DOMContentLoaded', function() {
         && bellwetherPrecinctNorms.size > 0
       );
       if (map.getLayer('bellwether-stars')) {
-        map.setLayoutProperty('bellwether-stars', 'visibility', visible ? 'visible' : 'none');
+        map.setLayoutProperty('bellwether-stars', 'visibility', precinctVisible ? 'visible' : 'none');
+      }
+
+      const countyVisible = !!(
+        currentView === 'counties'
+        && map.getZoom() >= 5.5
+        && bellwetherCountyNorms
+        && bellwetherCountyNorms.size > 0
+      );
+      if (map.getLayer('bellwether-county-outline')) {
+        map.setLayoutProperty('bellwether-county-outline', 'visibility', countyVisible ? 'visible' : 'none');
+        if (countyVisible) syncBellwetherCountyLayerFilter();
       }
       updateBellwetherLegendChipVisibility();
     }
@@ -18464,6 +18545,21 @@ document.addEventListener('DOMContentLoaded', function() {
           layout: { visibility: 'none' },
           filter: ['==', ['get', '_'], '__'],
           paint: { 'line-color': 'rgba(15, 23, 42, 0.55)', 'line-width': 3, 'line-opacity': 0.95 }
+        });
+        // Bellwether counties outline (filter + visibility wired at runtime).
+        addLayerWithOptionalSourceLayer({
+          id: 'bellwether-county-outline',
+          type: 'line',
+          source: 'counties',
+          beforeId: baseSymbolLayerId,
+          layout: { visibility: 'none' },
+          filter: ['==', ['get', '_'], '__'],
+          paint: {
+            'line-color': 'rgba(250, 204, 21, 0.92)',
+            'line-width': 3,
+            'line-opacity': 0.95,
+            'line-blur': 0.3
+          }
         });
         // County label layer (disabled for precinct geometry performance)
         addLayerWithOptionalSourceLayer({
