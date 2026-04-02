@@ -86,7 +86,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
 - **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
-- **Barometer Counties:** Highlights counties that mirror the statewide two-party margin most closely across the last 2–3 available cycles for the selected contest (a fast way to see “state-like” counties)
+- **Barometer Counties (Optional):** Click the `Barometer` legend chip to outline counties that mirror the statewide two-party margin most closely across the last 2–3 available cycles for the selected contest (purple outline; off by default)
 - **Story Copy + Loading Skeletons:** Story cards can be copied to clipboard in one click, and trend/story panels show lightweight skeleton loaders while data is loading
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
@@ -260,10 +260,11 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
 - Reworked split-ticket controls into a `Pres-Gov` overlay mode: President remains the base contest while Governor colors are layered on top for crossover analysis.
 - Added a topbar `Recount Radar` badge that activates at zoomed-in levels when focused margins are within the `0.5%` recount threshold.
-- Added a `Barometer` overlay (legend chip/count) that surfaces counties closest to the statewide two-party margin across the last 2–3 available cycles (no winner-match requirement).
+- Added a `Barometer` overlay (legend chip) that surfaces counties closest to the statewide two-party margin across the last 2–3 available cycles (no winner-match requirement; click to enable/disable; off by default).
 - Upgraded the county “At a glance” + “Story” blocks (April 2, 2026):
   - “At a glance” is a structured 1-line headline + max-3 bullets (+ optional momentum micro-line), with subtle red/blue/neutral tinting.
   - “Story” is an editorial card with a `Barometer` chip (partisan lean + strength), a short narrative summary, and a one-sentence “What to watch” line.
+  - Improved `Democratic` barometer-chip contrast on the dark story card background for better visibility.
   - Added one-click `Copy` for story text, plus a small `Vs NC` line when the current statewide margin is available (helps users anchor “how state-like” a place is).
   - Standardized long-run and momentum shift formatting to `2` decimals in the story/at-a-glance surfaces.
   - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
@@ -287,7 +288,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added toolbar utility actions: `Copy Link`, `Reset View`, and `Reset Swing`.
 - Expanded keyboard shortcuts for faster analyst workflow (`B` colorblind, `T` split-ticket, `G` GPS locate, `X` snapshot, `C` copy link, `R` reset view).
 - Added ARIA/state semantics and stable `data-testid` hooks across key controls to improve accessibility and regression-test durability.
-- Added URL-driven state restore/sync for deep-linkable map sessions (`view`, `contest`, `mode`, `lines`, `focus`).
+- Added URL-driven state restore/sync for deep-linkable map sessions (`view`, `contest`, `mode`, `lines`, `focus`, `barometer`).
 
 ### Precinct Matching and Outlier Cleanup
 

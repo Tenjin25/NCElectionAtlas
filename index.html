@@ -1448,6 +1448,15 @@ body { height: var(--app-height); }
   color: rgba(226, 232, 240, 0.98);
   border-color: rgba(148, 163, 184, 0.26);
 }
+.focus-story .focus-barometer[data-tone="dem"] {
+  background: rgba(59, 130, 246, 0.34);
+  border-color: rgba(191, 219, 254, 0.52);
+  color: rgba(219, 234, 254, 0.98);
+}
+.focus-story .focus-barometer-track {
+  background: linear-gradient(90deg, rgba(147, 197, 253, 0.92), rgba(148, 163, 184, 0.45), rgba(254, 202, 202, 0.82));
+  border-color: rgba(226, 232, 240, 0.18);
+}
 .focus-barometer-track {
   position: relative;
   width: 64px;
@@ -5821,6 +5830,19 @@ body { height: var(--app-height); }
     white-space: normal;
   }
 
+  #legend-bellwether-chip {
+    cursor: pointer;
+    border-color: rgba(168, 85, 247, 0.32);
+    background: rgba(233, 213, 255, 0.86);
+    color: #581c87;
+  }
+  #legend-bellwether-chip[data-enabled="true"] {
+    background: rgba(168, 85, 247, 0.18);
+    border-color: rgba(216, 180, 254, 0.48);
+    color: #581c87;
+  }
+  #legend-bellwether-chip:hover { filter: brightness(1.03); }
+
   .legend-scale-shell {
     display: grid;
     gap: 10px;
@@ -7850,6 +7872,15 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+  const barometerChip = document.getElementById('legend-bellwether-chip');
+  if (barometerChip) {
+    barometerChip.onclick = function() {
+      if (typeof toggleBarometerOverlay === 'function') {
+        toggleBarometerOverlay().catch(() => {});
+      }
+    };
+  }
+
   const gpsBtn = document.getElementById('gps-locate-btn');
   if (gpsBtn) {
     gpsBtn.onclick = function() {
@@ -9122,6 +9153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let splitTicketOverlayCache = new Map();
     let splitTicketCountyOverlayMargins = {};
     let splitTicketOverlayMeta = null; // { overlayContestType, overlayYear, baseYear, governorValue, presidentValue }
+    let barometerOverlayEnabled = false;
     let bellwetherPrecinctNorms = new Set();
     let bellwetherCountyNorms = new Set();
     let bellwetherCache = new Map();
@@ -9164,12 +9196,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const focus = String(params.get('focus') || '').trim();
       const linesRaw = String(params.get('lines') || '').trim();
       const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
+      const barometerRaw = String(params.get('barometer') || params.get('bar') || '').trim().toLowerCase();
+      const barometerEnabled = barometerRaw
+        ? (barometerRaw === '1' || barometerRaw === 'true' || barometerRaw === 'on' || barometerRaw === 'yes')
+        : null;
       const demoContrastRaw = String(params.get('democontrast') || params.get('demo_contrast') || '').trim().toLowerCase();
       const demoContrastHigh = demoContrastRaw
         ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
         : null;
-      const hasAny = !!(view || contest || mode || focus || lines !== null || demoContrastHigh !== null);
-      return { hasAny, view, contest, mode, focus, lines, demoContrastHigh };
+      const hasAny = !!(view || contest || mode || focus || lines !== null || barometerEnabled !== null || demoContrastHigh !== null);
+      return { hasAny, view, contest, mode, focus, lines, barometerEnabled, demoContrastHigh };
     }
 
     function getFocusURLTokenFromState() {
@@ -9216,6 +9252,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (currentVizMode && currentVizMode !== 'margins') params.set('mode', currentVizMode);
       const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
       if (linesYear !== 2022) params.set('lines', String(linesYear));
+      if (barometerOverlayEnabled) params.set('barometer', '1');
       if (demographicsHighContrastEnabled) params.set('democontrast', 'high');
       const focusToken = getFocusURLTokenFromState();
       if (focusToken) params.set('focus', focusToken);
@@ -9320,6 +9357,12 @@ document.addEventListener('DOMContentLoaded', function() {
           demographicsHighContrastEnabled = !!state.demoContrastHigh;
           const demoContrastToggle = document.getElementById('demographics-contrast-toggle');
           if (demoContrastToggle) demoContrastToggle.checked = demographicsHighContrastEnabled;
+        }
+
+        if (state.barometerEnabled !== null) {
+          barometerOverlayEnabled = !!state.barometerEnabled;
+          try { updateBellwetherLegendChipVisibility(); } catch (_) {}
+          try { updateFiltersActiveChip(); } catch (_) {}
         }
 
         if (state.lines !== null && state.lines !== normalizeDistrictLinesYear(currentDistrictLinesYear)) {
@@ -16732,15 +16775,50 @@ document.addEventListener('DOMContentLoaded', function() {
       saveUIState();
     }
 
+    async function toggleBarometerOverlay() {
+      if (currentView !== 'counties') {
+        setStatus('Barometer overlay is available in Counties view only.');
+        return;
+      }
+
+      if (barometerOverlayEnabled) {
+        barometerOverlayEnabled = false;
+        bellwetherRequestId += 1;
+        setBellwetherCountyNorms(new Set());
+        updateBellwetherLayerVisibility();
+        updateBellwetherLegendChipVisibility();
+        updateFiltersActiveChip();
+        setStatus('Barometer overlay disabled.');
+        saveUIState();
+        return;
+      }
+
+      barometerOverlayEnabled = true;
+      updateBellwetherLegendChipVisibility();
+      updateFiltersActiveChip();
+      const contestType = currentContestMeta?.contestType || parseContestValue(document.getElementById('contestSelect')?.value || '')?.[0] || '';
+      const year = currentContestMeta?.year || parseContestValue(document.getElementById('contestSelect')?.value || '')?.[1] || '';
+      await refreshBellwetherOverlayForContest(contestType, year);
+      const count = bellwetherCountyNorms && bellwetherCountyNorms.size ? bellwetherCountyNorms.size : 0;
+      setStatus(count ? `Barometer overlay enabled (${count.toLocaleString()} counties).` : 'Barometer overlay enabled (no counties matched this selection).');
+      saveUIState();
+    }
+
     function updateBellwetherLegendChipVisibility() {
       const chip = document.getElementById('legend-bellwether-chip');
       if (!chip) return;
       const countyCount = bellwetherCountyNorms && bellwetherCountyNorms.size ? bellwetherCountyNorms.size : 0;
-      const active = !!(currentView === 'counties' && countyCount > 0);
-      chip.style.display = active ? 'inline-flex' : 'none';
-      if (active) {
-        chip.textContent = `Barometer: ${countyCount.toLocaleString()} counties`;
+      const canShow = currentView === 'counties';
+      chip.style.display = canShow ? 'inline-flex' : 'none';
+      chip.dataset.enabled = barometerOverlayEnabled ? 'true' : 'false';
+      if (!canShow) return;
+      if (!barometerOverlayEnabled) {
+        chip.textContent = 'Barometer (off)';
+        chip.title = 'Click to enable Barometer county outlines (closest mirrors of statewide margin across the last 2–3 cycles).';
+        return;
       }
+      chip.textContent = countyCount > 0 ? `Barometer: ${countyCount.toLocaleString()} counties` : 'Barometer (on)';
+      chip.title = 'Click to disable Barometer county outlines.';
     }
 
     function updateFiltersActiveChip() {
@@ -16749,6 +16827,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const labels = [];
       if (precinctsEnabled) labels.push('Precincts');
       if (splitTicketOverlayEnabled) labels.push('Pres-Gov');
+      if (barometerOverlayEnabled) labels.push('Barometer');
       if (turnoutBivariateEnabled) labels.push('Turnout opacity');
       if (document.body.classList.contains('colorblind-mode')) labels.push('Colorblind');
       if (currentVizMode && currentVizMode !== 'margins') {
@@ -16770,7 +16849,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const countyVisible = !!(
-        currentView === 'counties'
+        barometerOverlayEnabled
+        && currentView === 'counties'
         && map.getZoom() >= 5.5
         && bellwetherCountyNorms
         && bellwetherCountyNorms.size > 0
@@ -17055,6 +17135,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // Clear stale overlays immediately so a contest switch doesn't keep showing the prior set.
       setBellwetherCountyNorms(new Set());
       updateBellwetherLayerVisibility();
+      updateBellwetherLegendChipVisibility();
+      if (!barometerOverlayEnabled) return;
 
       const cacheKey = `${contestType}_${Number(year)}`;
       const countyPromise = bellwetherCountyCache.has(cacheKey)
@@ -17704,7 +17786,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (isBellwetherCounty(norm)) {
-        chips.push('<span class="result-chip" style="background:rgba(250,204,21,0.18);color:#7c2d12;border-color:rgba(202,138,4,0.58);">Barometer County</span>');
+        chips.push('<span class="result-chip" style="background:rgba(168,85,247,0.16);color:#581c87;border-color:rgba(216,180,254,0.55);">Barometer County</span>');
       }
 
       const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
@@ -18902,7 +18984,7 @@ document.addEventListener('DOMContentLoaded', function() {
       sidebarContent += `</div>`;
 
       if (isBellwetherCounty(norm)) {
-        sidebarContent += `<div style="margin:0 0 10px 0;padding:8px 10px;border-radius:10px;background:rgba(250,204,21,0.16);border:1px solid rgba(202,138,4,0.5);color:#7c2d12;font-size:13px;font-weight:700;">Barometer County</div>`;
+        sidebarContent += `<div style="margin:0 0 10px 0;padding:8px 10px;border-radius:10px;background:rgba(168,85,247,0.14);border:1px solid rgba(216,180,254,0.52);color:#581c87;font-size:13px;font-weight:700;">Barometer County</div>`;
       }
 
       const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
@@ -19120,7 +19202,7 @@ document.addEventListener('DOMContentLoaded', function() {
           layout: { visibility: 'none' },
           filter: ['==', ['get', '_'], '__'],
           paint: {
-            'line-color': 'rgba(250, 204, 21, 0.92)',
+            'line-color': 'rgba(168, 85, 247, 0.92)',
             'line-width': 3,
             'line-opacity': 0.95,
             'line-blur': 0.3
