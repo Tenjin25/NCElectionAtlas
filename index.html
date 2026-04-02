@@ -1547,6 +1547,39 @@ body { height: var(--app-height); }
   .focus-glance-bullets li { grid-template-columns: 82px minmax(0, 1fr); }
 }
 
+/* Skeleton loader (trend/story) */
+.focus-skeleton {
+  display: grid;
+  gap: 10px;
+}
+.sk {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+.sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-60%);
+  background: linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.18), transparent);
+  animation: sk-shimmer 1.1s ease-in-out infinite;
+}
+@keyframes sk-shimmer {
+  from { transform: translateX(-60%); }
+  to { transform: translateX(60%); }
+}
+.sk.h24 { height: 24px; }
+.sk.h14 { height: 14px; border-radius: 999px; }
+.sk.h110 { height: 110px; }
+.sk.w40 { width: 40%; }
+.sk.w55 { width: 55%; }
+.sk.w65 { width: 65%; }
+.sk.w85 { width: 85%; }
+.sk.w100 { width: 100%; }
+
 /* Premium editorial "Story" card (shareable) */
 .focus-story {
   margin: 0 0 14px 0;
@@ -1568,6 +1601,28 @@ body { height: var(--app-height); }
   justify-content: space-between;
   gap: 10px;
 }
+.focus-story-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.focus-story-copy {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.32);
+  color: rgba(226, 232, 240, 0.98);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.focus-story-copy:hover { background: rgba(15, 23, 42, 0.44); }
+.focus-story-copy:active { transform: translateY(1px); }
+.focus-story-copy:focus-visible {
+  outline: 2px solid rgba(191, 219, 254, 0.75);
+  outline-offset: 2px;
+}
 .focus-story-kicker {
   font-size: 11px;
   font-weight: 900;
@@ -1582,6 +1637,14 @@ body { height: var(--app-height); }
   font-weight: 900;
   color: #fff;
 }
+.focus-story-vs {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 900;
+  color: rgba(226, 232, 240, 0.92);
+}
+.focus-story-vs strong { color: #fff; }
 .focus-story-summary {
   margin: 0;
   font-size: 13px;
@@ -7668,24 +7731,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const pressed = document.body.classList.contains('colorblind-mode');
     accBtn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
   }
-  if (accBtn) {
-    syncColorblindToggleAria();
-    accBtn.onclick = function() {
-      document.body.classList.toggle('colorblind-mode');
-      updateLegendColors();
+    if (accBtn) {
       syncColorblindToggleAria();
+      accBtn.onclick = function() {
+        document.body.classList.toggle('colorblind-mode');
+        updateLegendColors();
+        syncColorblindToggleAria();
       if (typeof splitTicketOverlayCache !== 'undefined' && splitTicketOverlayCache && typeof splitTicketOverlayCache.clear === 'function') {
         splitTicketOverlayCache.clear();
       }
       // Reapply current contest with new color mode
       const contestSelect = document.getElementById('contestSelect');
       const contestKey = contestSelect && contestSelect.value;
-      if (contestKey) {
-        applyContest(contestKey);
-      }
-      try { saveUIState(); } catch (_) {}
-    };
-  }
+        if (contestKey) {
+          applyContest(contestKey);
+        }
+        try { updateFiltersActiveChip(); } catch (_) {}
+        try { saveUIState(); } catch (_) {}
+      };
+    }
 
   function openHelp() {
     if (!helpBackdrop) return;
@@ -7919,6 +7983,7 @@ document.addEventListener('DOMContentLoaded', function() {
     bivariateToggle.addEventListener('change', function() {
       turnoutBivariateEnabled = !!this.checked;
       if (typeof applyLayerOpacityTuning === 'function') applyLayerOpacityTuning();
+      try { updateFiltersActiveChip(); } catch (_) {}
     });
   }
   const demographicsContrastToggle = document.getElementById('demographics-contrast-toggle');
@@ -8331,6 +8396,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-context-chips" id="legend-context-chips">
           <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Barometer counties are the best statewide-margin mirrors across the last 2–3 available cycles (closest to the statewide two-party margin).">Barometer</span>
           <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
+          <span class="legend-context-chip" id="filters-active-chip" data-testid="filters-active-chip" title="Active toggles" style="display:none;"></span>
         </div>
     </div>
   </div>
@@ -8364,6 +8430,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div class="context-actions">
         <button class="context-clear" id="vote-context-clear" title="Clear selection" type="button">Clear</button>
+        <button class="context-clear" id="vote-context-reset" title="Reset atlas to defaults" type="button" aria-label="Reset atlas to defaults">Reset</button>
         <button class="context-minimize" id="vote-context-minimize" title="Minimize vote counter" type="button" aria-expanded="true">-</button>
       </div>
     </div>
@@ -10940,7 +11007,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const chartEl = document.getElementById('focus-trend-chart');
       if (captionEl) captionEl.textContent = caption;
       if (chartEl) {
-        chartEl.innerHTML = `<div class="focus-trend-empty">${message}</div>`;
+        const msg = String(message || '');
+        if (/^Loading trend history/i.test(msg)) {
+          chartEl.innerHTML = `
+            <div class="focus-skeleton" aria-label="Loading trend history">
+              <div class="sk h24 w55"></div>
+              <div class="sk h14 w85"></div>
+              <div class="sk h14 w65"></div>
+              <div class="sk h110 w100"></div>
+              <div class="sk h14 w85"></div>
+            </div>
+          `;
+        } else {
+          chartEl.innerHTML = `<div class="focus-trend-empty">${message}</div>`;
+        }
       }
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
@@ -11117,18 +11197,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const focusCensusHtml = options?.censusContext
         ? renderFocusCensusInsightHTML(options.censusContext, options?.censusContextTitle || 'County Census Insight')
         : '';
-      const viralFocusHtml = buildViralFocusBlock({
-        focusName: options?.focusName || caption || 'This place',
-        annotated,
-        summaryEntry,
-        latest,
-        earliest,
-        selectedEntry,
-        summaryLine,
-        historyShift,
-        trajectoryMeta: options?.trajectoryMeta,
-        censusContext: options?.censusContext
-      });
+      const focusKind = String(options?.focusKind || '').trim();
+      const enableViral = focusKind === 'county' || focusKind === 'precinct';
+      const viralFocusHtml = enableViral
+        ? buildViralFocusBlock({
+          focusName: options?.focusName || caption || 'This place',
+          annotated,
+          summaryEntry,
+          latest,
+          earliest,
+          selectedEntry,
+          summaryLine,
+          historyShift,
+          trajectoryMeta: options?.trajectoryMeta,
+          censusContext: options?.censusContext
+        })
+        : '';
 
       const cards = annotated
         .slice()
@@ -11313,6 +11397,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const trendOptions = {};
         trendOptions.selectedYear = Number(year);
         trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
+        trendOptions.focusKind = meta.kind;
         let censusContext = null;
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
@@ -11610,6 +11695,16 @@ document.addEventListener('DOMContentLoaded', function() {
           clearPinnedVoteCounterState();
         });
       }
+      const resetBtn = document.getElementById('vote-context-reset');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const ok = window.confirm('Reset atlas to defaults? This clears selections and turns off active toggles.');
+          if (!ok) return;
+          window.location.href = window.location.pathname;
+        });
+      }
       const minimizeBtn = document.getElementById('vote-context-minimize');
       if (minimizeBtn) {
         minimizeBtn.addEventListener('click', (e) => {
@@ -11619,6 +11714,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         setVoteCounterMinimizedState(false);
       }
+      document.addEventListener('click', async (e) => {
+        const btn = e.target && typeof e.target.closest === 'function'
+          ? e.target.closest('[data-action="copy-story"]')
+          : null;
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const story = btn.closest('.focus-story');
+        if (!story) return;
+        const title = story.querySelector('.focus-story-title')?.textContent?.trim() || 'Story';
+        const vs = story.querySelector('.focus-story-vs')?.textContent?.trim() || '';
+        const summary = story.querySelector('.focus-story-summary')?.textContent?.trim() || '';
+        const mini = Array.from(story.querySelectorAll('.focus-story-mini')).map(card => {
+          const k = card.querySelector('.k')?.textContent?.trim() || '';
+          const v = card.querySelector('.v')?.textContent?.trim() || '';
+          return k && v ? `${k}: ${v}` : '';
+        }).filter(Boolean);
+        const watch = story.querySelector('.focus-story-watch')?.textContent?.trim() || '';
+        const text = [title, vs, summary, '', ...mini, '', watch].filter(Boolean).join('\n');
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          setStatus('Story copied to clipboard.');
+          try { announceForScreenReader('Story copied to clipboard.'); } catch (_) {}
+        } catch (_) {
+          setStatus('Copy failed. Your browser may block clipboard access.');
+        }
+      }, { passive: false });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        try { hideAllSearchDropdowns(); } catch (_) {}
+        if (voteCounterPinned) {
+          clearPinnedVoteCounterState();
+          setStatus('Cleared pinned selection.');
+        }
+      });
       window.addEventListener('resize', queueVoteBreakdownLayoutMeasure, { passive: true });
       queueVoteBreakdownLayoutMeasure();
     });
@@ -14810,11 +14951,11 @@ document.addEventListener('DOMContentLoaded', function() {
           return '\u2014';
         }
         if (Math.abs(delta) < 0.05) {
-          return `↔ 0.0 since ${baseYear}`;
+          return `↔ 0.00 since ${baseYear}`;
         }
         const side = delta > 0 ? 'R' : 'D';
         const arrow = delta > 0 ? '→' : '←';
-        return `${arrow} ${side}+${Math.abs(delta).toFixed(1)} since ${baseYear}`;
+        return `${arrow} ${side}+${Math.abs(delta).toFixed(2)} since ${baseYear}`;
       })();
 
       function shortPopulationContext(context) {
@@ -14920,7 +15061,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (Math.abs(recentShiftSince2020) < 0.75) return '→ Momentum: ↔ steady since 2020.';
         const arrow = recentShiftSince2020 > 0 ? '→' : '←';
         const side = recentShiftSince2020 > 0 ? 'R' : 'D';
-        return `→ Momentum: ${arrow} ${side}+${Math.abs(recentShiftSince2020).toFixed(1)} since 2020.`;
+        return `→ Momentum: ${arrow} ${side}+${Math.abs(recentShiftSince2020).toFixed(2)} since 2020.`;
       })();
 
       const momentumMini = (() => {
@@ -14928,7 +15069,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(recentShiftSince2020) || selectedYear <= 2020) return '—';
         if (Math.abs(recentShiftSince2020) < 0.75) return 'Steady since 2020';
         const side = recentShiftSince2020 > 0 ? 'R' : 'D';
-        return `${side}+${Math.abs(recentShiftSince2020).toFixed(1)} since 2020`;
+        return `${side}+${Math.abs(recentShiftSince2020).toFixed(2)} since 2020`;
       })();
 
       const popEffect = classifyPopulationEffect(tone, contextBullet);
@@ -14942,6 +15083,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(signed)) return 50;
         const clamped = Math.max(-max, Math.min(max, signed));
         return 50 + (clamped / max) * 50;
+      })();
+
+      const vsNcLine = (() => {
+        const meta = lastContestSliceMeta || null;
+        const ct = String(meta?.contestType || currentContestMeta?.contestType || '').trim();
+        const y = Number(meta?.year || currentContestMeta?.year);
+        if (!ct || !Number.isFinite(y) || y !== selectedYear) return '';
+        const rows = Array.isArray(meta?.rows) ? meta.rows : null;
+        if (!rows || !rows.length) return '';
+        let sd = 0;
+        let sr = 0;
+        rows.forEach(r => {
+          sd += Number(r?.[`${ct}_dem`] || 0);
+          sr += Number(r?.[`${ct}_rep`] || 0);
+        });
+        const two = sd + sr;
+        if (!Number.isFinite(two) || two <= 0) return '';
+        const stateSigned = ((sr - sd) / two) * 100;
+        const delta = Number(selectedSigned) - stateSigned;
+        if (!Number.isFinite(delta)) return '';
+        if (Math.abs(delta) < 0.005) return 'Vs NC: even';
+        const side = delta > 0 ? 'R' : 'D';
+        const word = delta > 0 ? 'redder' : 'bluer';
+        return `Vs NC: ${side}+${Math.abs(delta).toFixed(2)} ${word}`;
       })();
 
       function buildNarrativeSentence() {
@@ -15004,9 +15169,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const longRunLabel = (() => {
         const delta = Number(longShift);
         if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) return '—';
-        if (Math.abs(delta) < 0.05) return `0.0 since ${baseYear}`;
+        if (Math.abs(delta) < 0.05) return `0.00 since ${baseYear}`;
         const side = delta > 0 ? 'R' : 'D';
-        return `${side}+${Math.abs(delta).toFixed(1)} since ${baseYear}`;
+        return `${side}+${Math.abs(delta).toFixed(2)} since ${baseYear}`;
       })();
 
       return `
@@ -15029,15 +15194,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <section class="focus-story ${toneClass}" aria-label="Story mode">
           <div class="focus-story-head">
             <span class="focus-story-kicker">Story</span>
-            <span class="focus-barometer" data-tone="${escapeHtml(barTone)}" data-strength="${escapeHtml(barStrength)}" aria-label="${escapeHtml(`Barometer: ${barLabel}`)}" title="${escapeHtml('Barometer: partisan lean (dot) + strength (size)')}">
-              <span>Barometer</span>
-              <span class="focus-barometer-track" aria-hidden="true">
-                <span class="focus-barometer-dot" style="left:${barPosPct.toFixed(2)}%;"></span>
+            <div class="focus-story-actions">
+              <button class="focus-story-copy" type="button" data-action="copy-story" aria-label="Copy story summary" title="Copy story summary">Copy</button>
+              <span class="focus-barometer" data-tone="${escapeHtml(barTone)}" data-strength="${escapeHtml(barStrength)}" aria-label="${escapeHtml(`Barometer: ${barLabel}`)}" title="${escapeHtml('Barometer: partisan lean (dot) + strength (size)')}">
+                <span>Barometer</span>
+                <span class="focus-barometer-track" aria-hidden="true">
+                  <span class="focus-barometer-dot" style="left:${barPosPct.toFixed(2)}%;"></span>
+                </span>
+                <span>${escapeHtml(barLabel)}</span>
               </span>
-              <span>${escapeHtml(barLabel)}</span>
-            </span>
+            </div>
           </div>
           <h3 class="focus-story-title">${escapeHtml(storyTitle)}</h3>
+          ${vsNcLine ? `<p class="focus-story-vs"><strong>${escapeHtml(vsNcLine)}</strong></p>` : ''}
           <p class="focus-story-summary">${escapeHtml(storySummary)}</p>
           <div class="focus-story-grid">
             <div class="focus-story-mini">
@@ -16075,6 +16244,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (contestEl) contestEl.textContent = contestValue ? `${formatContestName(contestType, year)} ${year}` : 'Select a contest';
       if (focusEl) focusEl.textContent = getReadableFocusLabel();
       updateControlSummary(contestValue);
+      try { updateFiltersActiveChip(); } catch (_) {}
       try {
         if (typeof window.syncInitialTopbarOffset === 'function') {
           window.syncInitialTopbarOffset();
@@ -16527,6 +16697,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setSplitTicketOverlayVisibility();
         try { applyLayerOpacityTuning(); } catch (_) {}
         syncSplitTicketToggleUI();
+        try { updateFiltersActiveChip(); } catch (_) {}
         setStatus('Split-ticket overlay disabled.');
         saveUIState();
         return;
@@ -16545,6 +16716,7 @@ document.addEventListener('DOMContentLoaded', function() {
       splitTicketOverlayMeta = null;
       splitTicketCountyOverlayMargins = {};
       syncSplitTicketToggleUI();
+      try { updateFiltersActiveChip(); } catch (_) {}
 
       const targetValue = presidentValue;
       if (sel.value !== targetValue) {
@@ -16571,6 +16743,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
+    function updateFiltersActiveChip() {
+      const chip = document.getElementById('filters-active-chip');
+      if (!chip) return;
+      const labels = [];
+      if (precinctsEnabled) labels.push('Precincts');
+      if (splitTicketOverlayEnabled) labels.push('Pres-Gov');
+      if (turnoutBivariateEnabled) labels.push('Turnout opacity');
+      if (document.body.classList.contains('colorblind-mode')) labels.push('Colorblind');
+      if (currentVizMode && currentVizMode !== 'margins') {
+        labels.push(`Mode: ${getReadableModeLabel(currentVizMode)}`);
+      }
+      const active = labels.length > 0;
+      chip.style.display = active ? 'inline-flex' : 'none';
+      if (!active) return;
+      chip.textContent = `Active: ${labels.length}`;
+      chip.title = `Active toggles: ${labels.join(', ')}`;
+    }
+
     function updateBellwetherLayerVisibility() {
       const minZoom = CONFIG.precincts?.minZoom || 8.5;
       void minZoom;
@@ -16590,6 +16780,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (countyVisible) syncBellwetherCountyLayerFilter();
       }
       updateBellwetherLegendChipVisibility();
+      updateFiltersActiveChip();
     }
 
     function ensureBellwetherLayer() {
@@ -19583,6 +19774,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setBellwetherFeatures(new Set());
         updateBellwetherLayerVisibility();
       }
+      try { updateFiltersActiveChip(); } catch (_) {}
       saveUIState();
     }
 

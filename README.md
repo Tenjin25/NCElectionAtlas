@@ -74,7 +74,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic (Stronghold)`, `Reinforcing Republican (Advantage)`, `Emerging Republican (Edge)`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
-	- **Trajectory Snapshot Add-ons (Structured):** Appends a subtype line, a neutral transition-stage line (🛡️/🧩/⚖️/🎲/🧭), and a `Growth Dynamic` note beneath the `Latest Result` row (vote-growth comparison vs the prior cycle)
+	- **Trajectory Snapshot Add-ons (Structured):** Appends a subtype line, a `Margin Category` line (Stronghold/Safe/Likely/Lean/Tilt/Tossup), and a `Growth Dynamic` note beneath the `Latest Result` row (`Votes vs last cycle: R +X, D +Y`)
 	- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
 	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
@@ -87,6 +87,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
 - **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
 - **Barometer Counties:** Highlights counties that mirror the statewide two-party margin most closely across the last 2–3 available cycles for the selected contest (a fast way to see “state-like” counties)
+- **Story Copy + Loading Skeletons:** Story cards can be copied to clipboard in one click, and trend/story panels show lightweight skeleton loaders while data is loading
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
@@ -99,7 +100,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** March 27, 2026
+**Last updated:** April 2, 2026
 
 ### Census Check + Legend Clarification (March 27, 2026)
 
@@ -263,6 +264,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Upgraded the county “At a glance” + “Story” blocks (April 2, 2026):
   - “At a glance” is a structured 1-line headline + max-3 bullets (+ optional momentum micro-line), with subtle red/blue/neutral tinting.
   - “Story” is an editorial card with a `Barometer` chip (partisan lean + strength), a short narrative summary, and a one-sentence “What to watch” line.
+  - Added one-click `Copy` for story text, plus a small `Vs NC` line when the current statewide margin is available (helps users anchor “how state-like” a place is).
+  - Standardized long-run and momentum shift formatting to `2` decimals in the story/at-a-glance surfaces.
   - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
