@@ -8090,7 +8090,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="legend-handle" aria-hidden="true"></div>
               <div class="legend-copy">
                 <span class="legend-kicker">Map key</span>
-                <h4>Political Categories</h4>
+                <h4>Margin Categories</h4>
                 <p class="legend-subtitle" id="legend-subtitle">Two-party margin buckets for the selected contest.</p>
               </div>
             </div>
@@ -8119,9 +8119,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
               <div class="legend-scale-caption">
-                <span class="rep">Stronger Republican</span>
+                <span class="rep">Republican Annihilation</span>
                 <span>Tossup</span>
-                <span class="dem">Stronger Democratic</span>
+                <span class="dem">Democratic Annihilation</span>
               </div>
               <div class="legend-axis margins">
                 <span class="rep">R +40</span>
@@ -8287,7 +8287,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
           <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
 
-          <h3>Political Categories</h3>
+          <h3>Margin Categories</h3>
           <p>Category names are just shorthand for <strong>absolute</strong> margin ranges (|Rep% − Dem%|):</p>
           <ul>
             <li><strong>Annihilation</strong>: &ge;40%</li>
@@ -13602,9 +13602,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-scale-shell">
           ${buildLegendSpectrum(colors, 'margins')}
           <div class="legend-scale-caption">
-            <span class="rep">Stronger Republican</span>
+            <span class="rep">Republican Annihilation</span>
             <span>Tossup</span>
-            <span class="dem">Stronger Democratic</span>
+            <span class="dem">Democratic Annihilation</span>
           </div>
           <div class="legend-axis margins">
             <span class="rep">R +40</span>
@@ -13744,7 +13744,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         content.innerHTML = buildDemographicsLegendHTML();
       } else {
-        if (header) header.textContent = 'Political Categories';
+        if (header) header.textContent = 'Margin Categories';
         if (subtitle) subtitle.textContent = 'Buckets by two-party margin (Rep% − Dem%). Red = Republican lead; blue = Democratic lead.';
         if (badge) badge.textContent = 'Margins';
         if (footer) footer.textContent = 'Darker shades mean a larger lead; category chips are the absolute margin thresholds.';
