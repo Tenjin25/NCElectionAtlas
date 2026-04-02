@@ -1692,6 +1692,8 @@ body { height: var(--app-height); }
   .vote-counter-row { gap: 14px; }
   .vote-count { font-size: 20px; }
   .vote-percent { font-size: 12px; }
+  .focus-trend-empty { min-height: 76px; }
+  .focus-trend-chart { max-height: 240px; overflow: auto; }
 }
 
 .vote-counter-row {
@@ -8146,7 +8148,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
         <div class="legend-context-chips" id="legend-context-chips">
-          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether counties match the statewide winner in each of the last three available cycles and stay closest to the statewide two-party margin. (When precincts are enabled, stars mark the top predictive precincts too.)">&#9733; Bellwether</span>
+          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Bellwether counties match the statewide winner in the last 2–3 available cycles and stay closest to the statewide two-party margin. (When precincts are enabled, stars mark the top predictive precincts too.)">&#9733; Bellwether</span>
           <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
         </div>
     </div>
@@ -8218,11 +8220,11 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div class="focus-trend" id="focus-trend">
         <div class="focus-trend-head">
-          <span class="focus-trend-title">Trend</span>
+          <span class="focus-trend-title">Trends</span>
           <span class="focus-trend-caption" id="focus-trend-caption">Statewide history</span>
         </div>
         <div class="focus-trend-chart" id="focus-trend-chart">
-          <div class="focus-trend-empty">Select a contest to load trend history.</div>
+          <div class="focus-trend-empty">Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span></div>
         </div>
       </div>
     </div>
@@ -8836,6 +8838,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const BELLWETHER_MIN_COUNTIES = 8;
     const BELLWETHER_MAX_COUNTIES = 20;
     const BELLWETHER_COUNTY_SHARE = 0.15;
+    const BELLWETHER_COUNTY_MAX_ERR_PCT = 12; // max abs error vs statewide margin in any cycle
+    const BELLWETHER_COUNTY_MAX_AVG_ERR_PCT = 9; // avg abs error vs statewide margin across cycles
+    const BELLWETHER_PRECINCT_MAX_ERR_PCT = 18;
+    const BELLWETHER_PRECINCT_MAX_AVG_ERR_PCT = 12;
     const MODELED_CONTEST_DEFINITIONS = {
       'us_senate_model_2026': {
         contestType: 'us_senate_model',
@@ -11101,7 +11107,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const [contestType, year] = parseContestValue(contestValue);
       if (!contestType || !year) {
-        renderFocusTrendEmpty('Select a contest to load trend history.', 'Trend history');
+        renderFocusTrendEmpty('Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span>', 'Trends');
         return;
       }
 
@@ -11227,7 +11233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshFocusTrend(voteCounterBaseline);
       } else {
         setVoteCounterContext('Statewide', 'Hover a county or district', { showClear: false });
-        renderFocusTrendEmpty('Select a contest to load trend history.', 'Trend history');
+        renderFocusTrendEmpty('Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span>', 'Trends');
         hideVoteCounter();
       }
       updateRecountRadarBadge();
@@ -11721,6 +11727,12 @@ document.addEventListener('DOMContentLoaded', function() {
           return modeledRows;
         }
 
+        const manifestHasEntries = Array.isArray(contestManifest) && contestManifest.length > 0;
+        const manifestEntry = manifestHasEntries
+          ? (contestManifest.find(e => e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope) || null)
+          : null;
+        const manifestFile = (manifestEntry?.file || '').toString().trim();
+
         // Prefer OpenElections CSV for older presidential cycles to avoid a known-missing JSON fetch (and console 404 noise).
         if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
           try {
@@ -11733,7 +11745,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
 	      try {
-	        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
+          if (manifestHasEntries && !manifestEntry) {
+            // Manifest is present but this contest/year isn't indexed: don't guess a JSON filename that will 404.
+            const fallback = (electionData || []).filter(row => row.year == year);
+            contestSliceCache.set(key, fallback);
+            return fallback;
+          }
+
+          const payloadPath = manifestFile
+            ? `${CONFIG.paths.contests_dir}/${manifestFile}`
+            : `${CONFIG.paths.contests_dir}/${key}.json`;
+	        const payload = await loadJSON(payloadPath);
 	        const rows = (payload.rows || []).map(r => ({
 	          year: Number(year),
 	          county: r.county,
@@ -16328,7 +16350,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function computeBellwetherCountyNormSet(contestType, year) {
       const cycleYears = getBellwetherCycleYears(contestType, year, BELLWETHER_CYCLE_COUNT);
-      if (cycleYears.length < BELLWETHER_CYCLE_COUNT) return new Set();
+      const requiredCycles = Math.min(BELLWETHER_CYCLE_COUNT, cycleYears.length);
+      if (requiredCycles < 2) return new Set();
 
       const scores = new Map();
       for (const cycleYear of cycleYears) {
@@ -16375,9 +16398,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const countySignedMarginPct = ((totals.rep - totals.dem) / twoPartyVotes) * 100;
           const marginError = Math.abs(countySignedMarginPct - statewideSignedMarginPct);
 
-          const current = scores.get(countyNorm) || { hits: 0, errorSum: 0, voteSum: 0 };
+          const current = scores.get(countyNorm) || { hits: 0, errorSum: 0, maxError: 0, voteSum: 0 };
           current.hits += 1;
           current.errorSum += marginError;
+          current.maxError = Math.max(current.maxError || 0, marginError);
           current.voteSum += twoPartyVotes;
           scores.set(countyNorm, current);
         });
@@ -16385,28 +16409,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const finalists = [];
       scores.forEach((value, norm) => {
-        if (!value || value.hits !== cycleYears.length) return;
+        if (!value || value.hits !== requiredCycles) return;
         finalists.push({
           norm,
-          avgError: value.errorSum / cycleYears.length,
+          avgError: value.errorSum / requiredCycles,
+          maxError: value.maxError || 0,
           voteSum: value.voteSum
         });
       });
       if (!finalists.length) return new Set();
 
       finalists.sort((a, b) => (
-        (a.avgError - b.avgError)
+        (a.maxError - b.maxError)
+        || (a.avgError - b.avgError)
         || (b.voteSum - a.voteSum)
         || a.norm.localeCompare(b.norm)
       ));
 
       const cap = getBellwetherCountyCap();
-      return new Set(finalists.slice(0, cap).map(item => item.norm));
+      const filtered = finalists.filter(item => (
+        Number(item.maxError) <= BELLWETHER_COUNTY_MAX_ERR_PCT
+        && Number(item.avgError) <= BELLWETHER_COUNTY_MAX_AVG_ERR_PCT
+      ));
+      const picked = filtered.length ? filtered : finalists;
+      return new Set(picked.slice(0, cap).map(item => item.norm));
     }
 
     async function computeBellwetherPrecinctNormSet(contestType, year) {
       const cycleYears = getBellwetherCycleYears(contestType, year, BELLWETHER_CYCLE_COUNT);
-      if (cycleYears.length < BELLWETHER_CYCLE_COUNT) return new Set();
+      const requiredCycles = Math.min(BELLWETHER_CYCLE_COUNT, cycleYears.length);
+      if (requiredCycles < 2) return new Set();
 
       const scores = new Map();
       for (const cycleYear of cycleYears) {
@@ -16441,9 +16473,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const precinctSignedMarginPct = ((repVotes - demVotes) / twoPartyVotes) * 100;
           const marginError = Math.abs(precinctSignedMarginPct - statewideSignedMarginPct);
 
-          const current = scores.get(precinctNorm) || { hits: 0, errorSum: 0, voteSum: 0 };
+          const current = scores.get(precinctNorm) || { hits: 0, errorSum: 0, maxError: 0, voteSum: 0 };
           current.hits += 1;
           current.errorSum += marginError;
+          current.maxError = Math.max(current.maxError || 0, marginError);
           current.voteSum += twoPartyVotes;
           scores.set(precinctNorm, current);
           seenCycleNorms.add(precinctNorm);
@@ -16452,23 +16485,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const finalists = [];
       scores.forEach((value, norm) => {
-        if (!value || value.hits !== cycleYears.length) return;
+        if (!value || value.hits !== requiredCycles) return;
         finalists.push({
           norm,
-          avgError: value.errorSum / cycleYears.length,
+          avgError: value.errorSum / requiredCycles,
+          maxError: value.maxError || 0,
           voteSum: value.voteSum
         });
       });
       if (!finalists.length) return new Set();
 
       finalists.sort((a, b) => (
-        (a.avgError - b.avgError)
+        (a.maxError - b.maxError)
+        || (a.avgError - b.avgError)
         || (b.voteSum - a.voteSum)
         || a.norm.localeCompare(b.norm)
       ));
 
       const cap = getBellwetherMarkerCap();
-      return new Set(finalists.slice(0, cap).map(item => item.norm));
+      const filtered = finalists.filter(item => (
+        Number(item.maxError) <= BELLWETHER_PRECINCT_MAX_ERR_PCT
+        && Number(item.avgError) <= BELLWETHER_PRECINCT_MAX_AVG_ERR_PCT
+      ));
+      const picked = filtered.length ? filtered : finalists;
+      return new Set(picked.slice(0, cap).map(item => item.norm));
     }
 
     async function refreshBellwetherOverlayForContest(contestType, year) {
@@ -16481,6 +16521,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      // Clear stale overlays immediately so a contest switch doesn't keep showing the prior set.
+      bellwetherPrecinctNorms = new Set();
+      setBellwetherCountyNorms(new Set());
+      setBellwetherFeatures(new Set());
+      updateBellwetherLayerVisibility();
+
       if (precinctsEnabled) {
         try {
           await ensurePrecinctCentroidsLoaded();
@@ -16490,12 +16536,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const cacheKey = `${contestType}_${Number(year)}`;
-      const precinctPromise = bellwetherCache.has(cacheKey)
-        ? Promise.resolve(bellwetherCache.get(cacheKey))
-        : computeBellwetherPrecinctNormSet(contestType, year).then(normSet => {
-          bellwetherCache.set(cacheKey, normSet);
-          return normSet;
-        });
+      const precinctPromise = precinctsEnabled
+        ? (bellwetherCache.has(cacheKey)
+          ? Promise.resolve(bellwetherCache.get(cacheKey))
+          : computeBellwetherPrecinctNormSet(contestType, year).then(normSet => {
+            bellwetherCache.set(cacheKey, normSet);
+            return normSet;
+          }))
+        : Promise.resolve(new Set());
       const countyPromise = bellwetherCountyCache.has(cacheKey)
         ? Promise.resolve(bellwetherCountyCache.get(cacheKey))
         : computeBellwetherCountyNormSet(contestType, year).then(normSet => {
@@ -16972,18 +17020,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function updateAnalyticsPanels(contestType, year, contestRows = null) {
-      try {
-        await renderRealignmentIndex(contestType, year, Array.isArray(contestRows) ? contestRows : []);
-      } catch (err) {
-        const body = document.querySelector('#realignment-index-card .analytics-card-body');
-        if (body) body.innerHTML = 'Realignment index unavailable for this selection.';
-      }
-      try {
-        await renderGhostPrecinctTracker(contestType, year);
-      } catch (err) {
-        const body = document.querySelector('#ghost-precinct-card .analytics-card-body');
-        if (body) body.innerHTML = 'Ghost precinct tracker unavailable for this selection.';
-      }
+      const rows = Array.isArray(contestRows) ? contestRows : [];
+      const tasks = [
+        renderRealignmentIndex(contestType, year, rows).catch(() => {
+          const body = document.querySelector('#realignment-index-card .analytics-card-body');
+          if (body) body.innerHTML = 'Realignment index unavailable for this selection.';
+        }),
+        renderGhostPrecinctTracker(contestType, year).catch(() => {
+          const body = document.querySelector('#ghost-precinct-card .analytics-card-body');
+          if (body) body.innerHTML = 'Ghost precinct tracker unavailable for this selection.';
+        })
+      ];
+      await Promise.allSettled(tasks);
     }
 
     function scheduleAnalyticsPanelsUpdate(contestType, year, contestRows = null, delayMs = 120) {
@@ -16993,6 +17041,12 @@ document.addEventListener('DOMContentLoaded', function() {
         clearTimeout(analyticsPanelsTimer);
         analyticsPanelsTimer = null;
       }
+      try {
+        const realBody = document.querySelector('#realignment-index-card .analytics-card-body');
+        if (realBody) realBody.innerHTML = contestType && year ? 'Loading…' : 'Select a contest to load top shifting precincts.';
+        const ghostBody = document.querySelector('#ghost-precinct-card .analytics-card-body');
+        if (ghostBody) ghostBody.innerHTML = contestType && year ? 'Loading…' : 'Waiting for contest selection.';
+      } catch (_) {}
       analyticsPanelsTimer = setTimeout(() => {
         analyticsPanelsTimer = null;
         const run = () => {
@@ -17000,7 +17054,7 @@ document.addEventListener('DOMContentLoaded', function() {
           updateAnalyticsPanels(contestType, year, Array.isArray(contestRows) ? contestRows : []).catch(() => {});
         };
         if (typeof window.requestIdleCallback === 'function') {
-          window.requestIdleCallback(() => run(), { timeout: 1200 });
+          window.requestIdleCallback(() => run(), { timeout: 800 });
         } else {
           setTimeout(run, 0);
         }
@@ -18631,6 +18685,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       ensureSplitTicketOverlayLayers();
       updatePrecinctVisibility();
+      try { updateBellwetherLayerVisibility(); } catch (_) {}
     }
 
     async function ensureCountyNameByFipsMap() {
