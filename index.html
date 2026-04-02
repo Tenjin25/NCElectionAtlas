@@ -11241,10 +11241,19 @@ document.addEventListener('DOMContentLoaded', function() {
         ? renderFocusCensusInsightHTML(options.censusContext, options?.censusContextTitle || 'County Census Insight')
         : '';
       const focusKind = String(options?.focusKind || '').trim();
-      const enableViral = focusKind === 'county' || focusKind === 'precinct';
+      const enableViral = focusKind === 'county' || focusKind === 'precinct' || focusKind === 'statewide';
+      const focusNoun = (() => {
+        if (focusKind === 'statewide') return 'state';
+        if (focusKind === 'county') return 'county';
+        if (focusKind === 'precinct') return fallbackBadge ? 'county' : 'precinct';
+        if (focusKind === 'region') return 'region';
+        if (focusKind === 'district') return 'district';
+        return 'place';
+      })();
       const viralFocusHtml = enableViral
         ? buildViralFocusBlock({
           focusName: options?.focusName || caption || 'This place',
+          focusNoun,
           annotated,
           summaryEntry,
           latest,
@@ -14923,6 +14932,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildViralFocusBlock({
       focusName = 'This place',
+      focusNoun = 'place',
       annotated = [],
       summaryEntry = null,
       latest = null,
@@ -14936,6 +14946,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!summaryEntry || !latest || !earliest) return '';
 
       const safeFocus = String(focusName || 'This place').trim() || 'This place';
+      const noun = (() => {
+        const raw = String(focusNoun || '').trim().toLowerCase();
+        if (!raw) return 'place';
+        if (raw === 'statewide') return 'state';
+        if (raw === 'state') return 'state';
+        if (raw === 'county') return 'county';
+        if (raw === 'precinct') return 'precinct';
+        if (raw === 'region') return 'region';
+        if (raw === 'district') return 'district';
+        return raw;
+      })();
       const marginTier = competitivenessTierMetaFromSignedMarginPct(summaryEntry?.signedPct);
 
       const yearToSigned = new Map();
@@ -14965,10 +14986,23 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (latest?.flip?.to === 'R' ? { cls: 'rep', text: 'Recent flip → R' } : (latest?.flip?.to === 'D' ? { cls: 'dem', text: 'Recent flip → D' } : { cls: 'neutral', text: 'Recent flip' }))
         : null;
 
-      const tone = normalizeDirectionalTone(
-        trajectoryMeta?.trend || historyShift?.text || summaryLine,
-        recentShiftSince2020
-      );
+      const longShiftSign = Number.isFinite(longShift)
+        ? (longShift > 0.75 ? 'rep' : (longShift < -0.75 ? 'dem' : 'neutral'))
+        : 'neutral';
+      const recentShiftSign = Number.isFinite(recentShiftSince2020)
+        ? (recentShiftSince2020 > 0.75 ? 'rep' : (recentShiftSince2020 < -0.75 ? 'dem' : 'neutral'))
+        : 'neutral';
+      const tone = (() => {
+        if (isRecentFlip) {
+          if (latest?.flip?.to === 'R') return 'rep';
+          if (latest?.flip?.to === 'D') return 'dem';
+        }
+        if (recentShiftSign !== 'neutral') return recentShiftSign;
+        if (longShiftSign !== 'neutral') return longShiftSign;
+        if (marginTier?.party === 'rep') return 'rep';
+        if (marginTier?.party === 'dem') return 'dem';
+        return 'neutral';
+      })();
       const toneClass = tone === 'rep' ? 'tone-rep' : (tone === 'dem' ? 'tone-dem' : 'tone-neutral');
 
       const directionBullet = (() => {
@@ -15077,9 +15111,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const longSign = Number.isFinite(longDelta) ? (longDelta > 0.75 ? 'rep' : (longDelta < -0.75 ? 'dem' : 'neutral')) : 'neutral';
         const recentSign = Number.isFinite(recentDelta) ? (recentDelta > 0.75 ? 'rep' : (recentDelta < -0.75 ? 'dem' : 'neutral')) : 'neutral';
         if (longSign === 'rep' && recentSign === 'rep') return 'Reinforcing Republican';
-        if (longSign === 'rep' && recentSign === 'dem') return 'Softening Republican';
         if (longSign === 'dem' && recentSign === 'dem') return 'Reinforcing Democratic';
-        if (longSign === 'dem' && recentSign === 'rep') return 'Softening Democratic';
+        if (longSign === 'rep' && recentSign === 'dem') {
+          if (marginTier?.party === 'rep') return 'Softening Republican';
+          if (marginTier?.party === 'dem') return 'Rebounding Democratic';
+          return 'Mixed trajectory';
+        }
+        if (longSign === 'dem' && recentSign === 'rep') {
+          if (marginTier?.party === 'dem') return 'Softening Democratic';
+          if (marginTier?.party === 'rep') return 'Rebounding Republican';
+          return 'Mixed trajectory';
+        }
 
         // If one of the shift windows is neutral/missing, keep the label consistent with the current lean
         // and the most recent clear movement (so the headline and Direction line don't contradict).
@@ -15096,7 +15138,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const classificationSentence = classification
         ? `${classification.slice(0, 1).toLowerCase()}${classification.slice(1)}`
         : 'mixed';
-      const headline = `${safeFocus} is a ${classificationSentence} county${growthHeadline ? ` with ${growthHeadline}` : ''}.`;
+      const headline = `${safeFocus} is a ${classificationSentence} ${noun}${growthHeadline ? ` with ${growthHeadline}` : ''}.`;
 
       const microInsight = (() => {
         if (isRecentFlip) return '→ Momentum: recent flip — next cycle decides if it sticks.';
@@ -15160,26 +15202,52 @@ document.addEventListener('DOMContentLoaded', function() {
           return `A recent flip is the headline; the next comparable cycle decides whether it sticks.${popClause}`.trim();
         }
         const accel = Number.isFinite(recentShiftSince2020) && Math.abs(recentShiftSince2020) >= 3;
-        const soften = Number.isFinite(longShift) && Number.isFinite(recentShiftSince2020)
-          && (Math.sign(longShift) !== 0)
-          && (Math.sign(recentShiftSince2020) !== 0)
-          && (Math.sign(longShift) !== Math.sign(recentShiftSince2020));
-        const baseDir = tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'mixed');
-        if (soften && baseDir !== 'mixed') {
-          const core = baseDir === 'Republican'
-            ? 'This looks more like a softening-red county than one actively trending left.'
-            : 'This looks more like a softening-blue county than one actively trending right.';
-          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
-          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the pattern.`;
-          return core;
-        }
-        if (baseDir !== 'mixed') {
+        const longDir = longShiftSign;
+        const recentDir = recentShiftSign;
+        const currentParty = marginTier?.party || 'tie';
+
+        if (longDir !== 'neutral' && recentDir !== 'neutral' && longDir === recentDir) {
+          const baseDir = longDir === 'rep' ? 'Republican' : 'Democratic';
           const verb = accel ? 'is being reinforced by recent results' : 'still holds in recent results';
           const core = `A long-running ${baseDir} drift ${verb}.`;
           if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
           if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the trend.`;
           return core;
         }
+
+        if (longDir !== 'neutral' && recentDir !== 'neutral' && longDir !== recentDir) {
+          let core = '';
+          if (currentParty === 'rep' && recentDir === 'dem') {
+            core = `This looks more like a softening-red ${noun} than one actively trending right.`;
+          } else if (currentParty === 'dem' && recentDir === 'rep') {
+            core = `This looks more like a softening-blue ${noun} than one actively trending left.`;
+          } else if (recentDir === 'rep' && longDir === 'dem') {
+            core = `A long-running Democratic drift is being checked by a recent Republican tick.`;
+          } else if (recentDir === 'dem' && longDir === 'rep') {
+            core = `A long-running Republican drift is being checked by a recent Democratic tick.`;
+          } else {
+            core = `Mixed movement: long-run and recent shifts point in different directions.`;
+          }
+          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
+          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the pattern.`;
+          return core;
+        }
+
+        if (tone === 'rep') {
+          const verb = accel ? 'is being reinforced by recent results' : 'still holds in recent results';
+          const core = `A Republican drift ${verb}.`;
+          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
+          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the trend.`;
+          return core;
+        }
+        if (tone === 'dem') {
+          const verb = accel ? 'is being reinforced by recent results' : 'still holds in recent results';
+          const core = `A Democratic drift ${verb}.`;
+          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
+          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the trend.`;
+          return core;
+        }
+
         return popEffect.effect === 'complicates'
           ? 'Mixed recent movement, with population change adding uncertainty.'
           : 'Mixed recent movement with no single dominant story.';
@@ -15187,17 +15255,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
       function buildWhatToWatchLine() {
         if (isRecentFlip) return 'The next comparable result will show whether this flip was temporary or durable.';
+        if (longShiftSign !== 'neutral' && recentShiftSign !== 'neutral' && longShiftSign !== recentShiftSign) {
+          const word = recentShiftSign === 'rep' ? 'redder' : 'bluer';
+          return `The next comparable result will show whether this ${word} tick is a durable reversal or just a pause in the long-run drift.`;
+        }
         if (tone === 'rep') {
           return popEffect.effect === 'complicates'
-            ? 'If Democrats regain ground next cycle, this may be a softening-red county rather than a locked-in GOP shift.'
+            ? `If Democrats regain ground next cycle, this may be a softening-red ${noun} rather than a locked-in GOP shift.`
             : 'If Republicans expand further here next cycle, this likely confirms a durable realignment.';
         }
         if (tone === 'dem') {
           return popEffect.effect === 'complicates'
-            ? 'If Republicans regain ground next cycle, this may be a softening-blue county rather than a locked-in Democratic shift.'
+            ? `If Republicans regain ground next cycle, this may be a softening-blue ${noun} rather than a locked-in Democratic shift.`
             : 'If Democrats expand further here next cycle, this likely confirms a durable realignment.';
         }
-        return 'The next comparable result will show whether this county breaks toward one party or stays genuinely competitive.';
+        return `The next comparable result will show whether this ${noun} breaks toward one party or stays genuinely competitive.`;
       }
 
       const bullets = [
