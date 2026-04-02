@@ -14568,6 +14568,38 @@ document.addEventListener('DOMContentLoaded', function() {
       censusContext = null
     } = {}) {
       if (!summaryEntry || !latest || !earliest) return '';
+
+      const marginTier = competitivenessTierMetaFromSignedMarginPct(summaryEntry?.signedPct);
+
+      function plainSubtypeLabel(subtypeRaw, toneRaw) {
+        const subtype = String(subtypeRaw || '').trim();
+        const tone = String(toneRaw || '').trim().toLowerCase();
+        if (!subtype) return '';
+        if (/reinforcing republican/i.test(subtype)) return 'Getting more Republican';
+        if (/reinforcing democratic/i.test(subtype)) return 'Getting more Democratic';
+        if (/softening republican/i.test(subtype)) return 'Less Republican than it used to be';
+        if (/softening democratic/i.test(subtype)) return 'Less Democratic than it used to be';
+        if (/realigning republican/i.test(subtype)) return 'Big shift toward Republicans';
+        if (/realigning democratic/i.test(subtype)) return 'Big shift toward Democrats';
+        if (/active suburban transition/i.test(subtype)) return 'Shifting fast (suburban transition)';
+        if (/active republican transition/i.test(subtype)) return 'Shifting fast toward Republicans';
+        if (/counter-suburban/i.test(subtype)) return 'Counter-suburban shift';
+        if (/suburbanizing/i.test(subtype)) return 'Suburban shift';
+        if (/stable|mixed/i.test(subtype)) return 'Mixed / not consistent';
+        if (tone === 'rep') return 'Leaning Republican';
+        if (tone === 'dem') return 'Leaning Democratic';
+        return subtype;
+      }
+
+      function plainTrendLabel(trendRaw, toneRaw) {
+        const raw = String(trendRaw || '').trim();
+        if (!raw) return '';
+        const body = raw.replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/g, '').trim();
+        if (/accelerating/i.test(body)) return `Accelerating`;
+        if (/long-run/i.test(body)) return `Long-run drift`;
+        if (/stable/i.test(body)) return `Stable lately`;
+        return body || raw;
+      }
       const tone = normalizeDirectionalTone(
         trajectoryMeta?.trend || historyShift?.text || summaryLine,
         trajectoryMeta?.recentWindowShiftTowardGop
@@ -14583,8 +14615,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const latestResult = `${summaryEntry.item.year}: ${summaryLine}`;
       const longShiftText = String(historyShift?.text || '').replace(/^Shift:\s*/i, '').trim() || 'No major long-run shift yet';
       const selectedVsLatest = selectedEntry && selectedEntry !== latest
-        ? `Selected year ${summaryEntry.item.year}; latest available result is ${latest.item.year}.`
-        : `Latest result: ${latestResult}.`;
+        ? `Selected: ${summaryEntry.item.year}. Latest available: ${latest.item.year}.`
+        : `Latest: ${latestResult}.`;
       const latestParty = String(latest?.winnerMeta?.partyClass || '').trim();
       const earliestParty = String(earliest?.winnerMeta?.partyClass || '').trim();
       const reinforcingCurrent = /reinforcing|strengthening|accelerating/i.test(`${trendText} ${subtypeText} ${whyItMatters}`);
@@ -14634,9 +14666,16 @@ document.addEventListener('DOMContentLoaded', function() {
             : viralMode === 'competitive-movement'
               ? `${focusName} is still competitive enough to watch closely, but the trend line is now leaning ${tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'away from dead-even')}.`
               : `${focusName} has not flipped yet, but the direction of travel is getting easier to spot.`;
-      const summary = [quickRead, trendText, growthPattern || growthSignal || whyItMatters, selectedVsLatest]
-        .filter(Boolean)
-        .join(' ');
+      const marginTierLabel = marginTier?.label ? `${marginTier.label}` : '';
+      const plainTrend = plainTrendLabel(trendText, tone);
+      const plainSubtype = plainSubtypeLabel(subtypeText, tone);
+      const directionLine = [plainTrend, plainSubtype].filter(Boolean).join(' • ');
+      const summary = [
+        quickRead,
+        selectedVsLatest,
+        marginTierLabel ? `Margin category: ${marginTierLabel}.` : '',
+        (growthPattern || growthSignal) ? `Population: ${growthPattern || growthSignal}.` : ''
+      ].filter(Boolean).join(' ');
 
       const watchLabel = viralMode === 'flipped-and-consolidating'
         ? (tone === 'rep'
@@ -14649,33 +14688,39 @@ document.addEventListener('DOMContentLoaded', function() {
             : (tone === 'dem'
               ? 'Watch whether continued churn keeps narrowing the Republican advantage.'
               : 'Watch whether the next cycle breaks the current equilibrium.');
+      const watchTitle = watchLabel.replace(/^Watch whether\s*/i, '').replace(/\.$/, '');
+      const watchBody = growthDynamic
+        ? `${growthDynamic}. ${flipInfoMeta.flipped ? 'The next comparable cycle is the first test of the flip.' : 'The next comparable cycle is the next check on whether the pattern holds.'}`
+        : (flipInfoMeta.flipped
+            ? 'The next comparable cycle is the first test of the flip.'
+            : (viralMode === 'flipped-and-consolidating'
+              ? 'The next comparable cycle shows whether the post-flip coalition holds.'
+              : 'The next comparable cycle is the next check on whether the pattern holds.'));
 
       const cards = [
         {
           tone,
-          kicker: '🧭 Direction',
-          title: trendText,
-          body: subtypeText || 'This is the clearest top-line read of where the county is heading.'
+          kicker: 'Direction',
+          title: directionLine || trendText || 'Mixed direction',
+          body: whyItMatters || 'Quick read of where results have been moving.'
         },
         {
           tone: 'neutral',
-          kicker: '🔄 Long-run shift',
+          kicker: 'Long-run shift',
           title: longShiftText,
-          body: stageText || `Compared with ${earliest.item.year}, the county has meaningfully changed even if the winner stayed the same.`
+          body: stageText || (marginTierLabel ? `Current margin category: ${marginTierLabel}.` : `Compared with ${earliest.item.year}, the county has meaningfully changed even if the winner stayed the same.`)
         },
         {
           tone: 'neutral',
-          kicker: '📈 Population story',
+          kicker: 'Population',
           title: growthPattern || growthSignal || 'Population trend is mixed',
           body: whyItMatters || 'Population change helps explain how fast a county can evolve politically.'
         },
         {
           tone,
-          kicker: '👀 What to watch',
-          title: growthDynamic || watchLabel,
-          body: flipInfoMeta.flipped
-            ? 'A fresh flip often gets tested in the next comparable cycle.'
-            : 'The next comparable result will show whether this is a blip or a durable trend.'
+          kicker: 'Next test',
+          title: watchTitle || 'Next comparable cycle',
+          body: watchBody
         }
       ];
 
@@ -14688,7 +14733,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return `
         <section class="focus-viral" aria-label="At a glance explainer">
           <div class="focus-viral-hero">
-            <div class="focus-viral-eyebrow">🔥 At a glance</div>
+            <div class="focus-viral-eyebrow">At a glance</div>
             <h3 class="focus-viral-headline">${escapeHtml(modeLabel)}</h3>
             <p class="focus-viral-summary">${escapeHtml(summary)}</p>
           </div>
@@ -14715,11 +14760,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	    function getTransitionStage(current_margin) {
 	      const margin = Number(current_margin);
 	      if (!Number.isFinite(margin)) return '';
-	      if (margin >= 25) return '🛡️ Stage 1: Deep Red';
-	      if (margin >= 15) return '🧩 Stage 2: Softening Red';
-	      if (margin >= 5) return '⚖️ Stage 3: Competitive Edge';
-	      if (margin >= 0) return '🎲 Stage 4: Tossup Range';
-	      return '🧭 Stage 5: Democratic Lean';
+        const tier = competitivenessTierMetaFromSignedMarginPct(margin);
+        if (!tier || !tier.shortLabel) return '';
+        return `Margin: ${tier.shortLabel}`;
 	    }
 
 	    function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
@@ -14730,9 +14773,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	      if (!Number.isFinite(rep) || !Number.isFinite(dem) || !Number.isFinite(prevRep) || !Number.isFinite(prevDem)) return '';
 	      const repGrowth = rep - prevRep;
 	      const demGrowth = dem - prevDem;
-	      if (repGrowth > demGrowth) return '📈 Reinforcing Growth';
-	      if (demGrowth > repGrowth) return '💧 Diluting Growth';
-	      return '🤝 Balanced Growth';
+        const formatSignedCompact = (value) => {
+          const n = Number(value || 0);
+          if (!Number.isFinite(n) || n === 0) return '0';
+          const sign = n > 0 ? '+' : '-';
+          return `${sign}${formatCompactVoteTotal(Math.abs(n))}`;
+        };
+        return `Votes vs last cycle: R ${formatSignedCompact(repGrowth)}, D ${formatSignedCompact(demGrowth)}`;
 	    }
 
 	    function classifyGrowthType(countyName, growthRate) {
