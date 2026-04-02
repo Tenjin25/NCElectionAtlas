@@ -262,7 +262,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added a `Barometer` overlay (legend chip/count) that surfaces counties closest to the statewide two-party margin across the last 2–3 available cycles (no winner-match requirement).
 - Upgraded the county “At a glance” + “Story” blocks (April 2, 2026):
   - “At a glance” is a structured 1-line headline + max-3 bullets (+ optional momentum micro-line), with subtle red/blue/neutral tinting.
-  - “Story” is an editorial card with a confidence badge (Low/Medium/High), a short narrative summary, and a one-sentence “What to watch” line.
+  - “Story” is an editorial card with a `Barometer` chip (partisan lean + strength), a short narrative summary, and a one-sentence “What to watch” line.
   - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
