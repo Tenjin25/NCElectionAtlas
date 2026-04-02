@@ -11490,7 +11490,7 @@ document.addEventListener('DOMContentLoaded', function() {
             censusContext = null;
           }
         } else if (meta.kind === 'district' && meta.scope && meta.districtNum !== undefined) {
-          trendOptions.focusName = `${displayDistrictScope(meta.scope)} ${meta.districtNum}`;
+          trendOptions.focusName = getDistrictTitleForScope(meta.scope, meta.districtNum);
         } else if (meta.kind === 'region' && meta.regionKey) {
           trendOptions.focusName = String(meta.regionKey || 'This region').replace(/[-_]/g, ' ');
         } else if (meta.kind === 'statewide') {
