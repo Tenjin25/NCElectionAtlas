@@ -1483,6 +1483,7 @@ body { height: var(--app-height); }
   gap: 6px;
 }
 .focus-glance-bullets li {
+  position: relative;
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);
   gap: 8px;
@@ -1490,6 +1491,15 @@ body { height: var(--app-height); }
   font-size: 12px;
   line-height: 1.35;
   color: #334155;
+  padding-left: 14px;
+}
+.focus-glance-bullets li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  color: rgba(71, 85, 105, 0.9);
+  font-weight: 900;
 }
 .focus-glance-label {
   font-weight: 900;
@@ -11094,6 +11104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : '';
       const viralFocusHtml = buildViralFocusBlock({
         focusName: options?.focusName || caption || 'This place',
+        annotated,
         summaryEntry,
         latest,
         earliest,
@@ -14762,6 +14773,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const toneClass = tone === 'rep' ? 'tone-rep' : (tone === 'dem' ? 'tone-dem' : 'tone-neutral');
 
       const directionBullet = (() => {
+        if (isRecentFlip) {
+          if (latest?.flip?.to === 'R') return '→ Republican trend';
+          if (latest?.flip?.to === 'D') return '← Democratic trend';
+        }
+        if (Number.isFinite(recentShiftSince2020) && selectedYear > 2020 && Math.abs(recentShiftSince2020) >= 0.75) {
+          return recentShiftSince2020 > 0 ? '→ Republican trend' : '← Democratic trend';
+        }
+        if (Number.isFinite(longShift) && Math.abs(longShift) >= 1.5) {
+          return longShift > 0 ? '→ Long-run Republican drift' : '← Long-run Democratic drift';
+        }
         const shiftMeta = summaryEntry?.shiftMeta || null;
         if (shiftMeta?.cls === 'rep') return '→ Republican trend';
         if (shiftMeta?.cls === 'dem') return '← Democratic trend';
@@ -14795,13 +14816,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const growthBullet = shortPopulationContext(censusContext?.patternLabel) || shortPopulationContext(censusContext?.signalLabel) || '';
-      const growthHeadline = growthBullet
-        ? growthBullet
-            .replace(/\s+county$/i, '')
-            .replace(/slow-growth/i, 'slow growth')
-            .replace(/fast-growth/i, 'fast growth')
-            .trim()
-        : '';
+
+      function growthHeadlinePhrase(bullet) {
+        const raw = String(bullet || '').trim();
+        if (!raw) return '';
+        if (/slow-growth/i.test(raw)) return 'slow growth';
+        if (/declin/i.test(raw)) return 'decline';
+        if (/fast-growth/i.test(raw)) return 'fast growth';
+        if (/outer-suburban/i.test(raw)) return 'outer-suburban growth';
+        if (/metro spillover/i.test(raw)) return 'metro spillover growth';
+        if (/urban anchor/i.test(raw)) return 'urban anchor growth';
+        if (/coastal growth/i.test(raw)) return 'coastal growth';
+        return raw.replace(/\s+county$/i, '').trim().toLowerCase();
+      }
+
+      const growthHeadline = growthHeadlinePhrase(growthBullet);
       const contextBullet = growthBullet || '\u2014';
 
       function classifyPopulationEffect(directionTone, growthText) {
@@ -14852,6 +14881,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (longSign === 'rep' && recentSign === 'dem') return 'Softening Republican';
         if (longSign === 'dem' && recentSign === 'dem') return 'Reinforcing Democratic';
         if (longSign === 'dem' && recentSign === 'rep') return 'Softening Democratic';
+
+        // If one of the shift windows is neutral/missing, keep the label consistent with the current lean
+        // and the most recent clear movement (so the headline and Direction line don't contradict).
+        if (marginTier?.party === 'rep' && recentSign === 'dem') return 'Softening Republican';
+        if (marginTier?.party === 'dem' && recentSign === 'rep') return 'Softening Democratic';
+        if (marginTier?.party === 'rep' && recentSign === 'rep') return 'Reinforcing Republican';
+        if (marginTier?.party === 'dem' && recentSign === 'dem') return 'Reinforcing Democratic';
         if (marginTier?.party === 'rep') return 'Durable Republican';
         if (marginTier?.party === 'dem') return 'Durable Democratic';
         return 'Competitive';
@@ -14861,7 +14897,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const classificationSentence = classification
         ? `${classification.slice(0, 1).toLowerCase()}${classification.slice(1)}`
         : 'mixed';
-      const headline = `${safeFocus} is a ${classificationSentence} county${growthHeadline ? ` with ${growthHeadline.toLowerCase()}` : ''}.`;
+      const headline = `${safeFocus} is a ${classificationSentence} county${growthHeadline ? ` with ${growthHeadline}` : ''}.`;
 
       const microInsight = (() => {
         if (isRecentFlip) return '→ Momentum: recent flip — next cycle decides if it sticks.';
@@ -14870,6 +14906,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const arrow = recentShiftSince2020 > 0 ? '→' : '←';
         const side = recentShiftSince2020 > 0 ? 'R' : 'D';
         return `→ Momentum: ${arrow} ${side}+${Math.abs(recentShiftSince2020).toFixed(1)} since 2020.`;
+      })();
+
+      const momentumMini = (() => {
+        if (isRecentFlip) return 'Recent flip';
+        if (!Number.isFinite(recentShiftSince2020) || selectedYear <= 2020) return '—';
+        if (Math.abs(recentShiftSince2020) < 0.75) return 'Steady since 2020';
+        const side = recentShiftSince2020 > 0 ? 'R' : 'D';
+        return `${side}+${Math.abs(recentShiftSince2020).toFixed(1)} since 2020`;
       })();
 
       const popEffect = classifyPopulationEffect(tone, contextBullet);
@@ -14933,9 +14977,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const storySummary = buildNarrativeSentence();
       const whatToWatch = buildWhatToWatchLine();
       const longRunLabel = (() => {
-        if (!Number.isFinite(longShift) || Math.abs(longShift) < 5) return 'Long-run: modest drift';
-        const side = longShift > 0 ? 'Republican' : 'Democratic';
-        return `Long-run: ${side} drift`;
+        const delta = Number(longShift);
+        if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) return '—';
+        if (Math.abs(delta) < 0.05) return `0.0 since ${baseYear}`;
+        const side = delta > 0 ? 'R' : 'D';
+        return `${side}+${Math.abs(delta).toFixed(1)} since ${baseYear}`;
       })();
 
       return `
@@ -14979,8 +15025,8 @@ document.addEventListener('DOMContentLoaded', function() {
               <span class="v">${escapeHtml(contextBullet)}</span>
             </div>
             <div class="focus-story-mini">
-              <span class="k">What to watch</span>
-              <span class="v">${escapeHtml(isRecentFlip ? 'Flip durability test' : 'Next-cycle check')}</span>
+              <span class="k">Momentum</span>
+              <span class="v">${escapeHtml(momentumMini)}</span>
             </div>
           </div>
           <p class="focus-story-watch"><strong>What to watch:</strong> ${escapeHtml(whatToWatch)}</p>

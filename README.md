@@ -93,7 +93,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
-- **Political Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
+- **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
@@ -108,7 +108,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Adjusted **Momentum** so fast-growth, outer-suburban counties can surface a `← Long-run Democratic drift` call at smaller long-run deltas when the county remains Republican-leaning but has clearly softened over time.
 - Refined the `County Census Insight` buckets so transition counties read as `Small-metro / outer-suburban transition`, and military-hub counties (for example, Cumberland/Onslow/Wayne/Craven/Hoke) get a note that year-to-year estimates can be choppy.
 - Restyled the Census check callout to match the compact “Meaning” card typography while remaining visually distinct.
-- Clarified the **Political Categories** legend language so it’s consistent everywhere: the color spectrum is the signed two-party margin (Rep% − Dem%), while category chips represent absolute margin thresholds (|Rep% − Dem%|).
+- Clarified the **Margin Categories** legend language so it’s consistent everywhere: the color spectrum is the signed two-party margin (Rep% − Dem%), while category chips represent absolute margin thresholds (|Rep% − Dem%|).
 
 ### Trajectory Wording + 2024 Lines Loading Notice (March 27, 2026)
 
@@ -144,16 +144,15 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	    - `Reinforcing Democratic`: long-run and short-run movement both favor Democrats.
 	    - `Realigning Republican` / `Realigning Democratic`: long-run movement is large enough to suggest a structural shift in coalition.
 	    - `Stable / Mixed`: does not strongly match one of the above patterns.
-	  - `Stage of Transition` (neutral add-on line, based only on the current margin):
-	    - `🛡️ Stage 1: Deep Red` (R+25+)
-	    - `🧩 Stage 2: Softening Red` (R+15 to R+25)
-	    - `⚖️ Stage 3: Competitive Edge` (R+5 to R+15)
-	    - `🎲 Stage 4: Tossup Range` (R+0 to R+5)
-	    - `🧭 Stage 5: Democratic Lean` (D+)
+	  - `Margin Category` (neutral add-on line, based only on the current margin):
+	    - `Margin: Stronghold R/D` (20%+)
+	    - `Margin: Safe R/D` (10%–20%)
+	    - `Margin: Likely R/D` (5.5%–10%)
+	    - `Margin: Lean R/D` (1%–5.5%)
+	    - `Margin: Tilt R/D` (0.5%–1%)
+	    - `Margin: Tossup R/D` (0%–0.5%)
 	  - `Growth Dynamic` (appended under `Latest Result`):
-	    - `📈 Reinforcing Growth`: Republican raw vote growth exceeds Democratic growth vs the prior cycle.
-	    - `💧 Diluting Growth`: Democratic raw vote growth exceeds Republican growth vs the prior cycle.
-	    - `🤝 Balanced Growth`: equal growth.
+	    - `Votes vs last cycle: R +X, D +Y` (raw two-party vote deltas vs the prior cycle).
 
 ### Trajectory Edge Cases + Census Context (March 26, 2026)
 
@@ -260,7 +259,11 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Improved candidate label rendering and short-name logic (including better suffix handling like `Jr.` and Roman numerals).
 - Reworked split-ticket controls into a `Pres-Gov` overlay mode: President remains the base contest while Governor colors are layered on top for crossover analysis.
 - Added a topbar `Recount Radar` badge that activates at zoomed-in levels when focused margins are within the `0.5%` recount threshold.
-- Added bellwether precinct star callouts (plus legend chip/count) for precincts that matched the statewide winner across the last three available cycles.
+- Added bellwether overlays (legend chip/count) for counties and precincts that match the statewide winner across the last 2–3 available cycles and stay closest to the statewide two-party margin.
+- Upgraded the county “At a glance” + “Story” blocks (April 2, 2026):
+  - “At a glance” is a structured 1-line headline + max-3 bullets (+ optional momentum micro-line), with subtle red/blue/neutral tinting.
+  - “Story” is an editorial card with a confidence badge (Low/Medium/High), a short narrative summary, and a one-sentence “What to watch” line.
+  - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
