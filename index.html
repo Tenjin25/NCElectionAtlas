@@ -3497,6 +3497,113 @@ body { height: var(--app-height); }
     gap: 8px;
   }
 
+  .focus-trend-howto {
+    border-radius: 14px;
+    border: 1px dashed rgba(148, 163, 184, 0.38);
+    background: rgba(248, 250, 252, 0.88);
+    padding: 8px 10px;
+  }
+
+  .focus-trend-howto summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: #334155;
+    outline: none;
+  }
+
+  .focus-trend-howto summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .focus-trend-howto summary::before {
+    content: 'ℹ️';
+    margin-right: 6px;
+  }
+
+  .focus-trend-howto[open] summary::before {
+    content: '✅';
+  }
+
+  .focus-trend-howto-body {
+    margin-top: 6px;
+    display: grid;
+    gap: 6px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #475569;
+  }
+
+  .focus-trend-howto-body ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .focus-trend-toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .focus-trend-toggle {
+    appearance: none;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(255, 255, 255, 0.92);
+    color: #0f172a;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .focus-trend-toggle:hover {
+    background: #eff6ff;
+    border-color: rgba(37, 99, 235, 0.28);
+  }
+
+  .focus-trend-toggle:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+
+  .focus-trend-toggle-note {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+  }
+
+  .focus-trend-list[data-collapsed="true"] .focus-trend-entry {
+    display: none;
+  }
+
+  .focus-trend-list[data-collapsed="true"] .focus-trend-entry:nth-child(-n+4),
+  .focus-trend-list[data-collapsed="true"] .focus-trend-entry.is-selected {
+    display: grid;
+  }
+
+  .focus-trend-list[data-collapsed="true"] .focus-trend-entry::after {
+    display: none;
+  }
+
+  .focus-trend-entry.is-selected .focus-trend-entry-year {
+    background: rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.35);
+    color: #1d4ed8;
+  }
+
+  .focus-trend-entry.is-selected .focus-trend-entry-card {
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.12);
+  }
+
   .focus-trend-summary-badge {
     display: inline-flex;
     align-items: center;
@@ -3771,6 +3878,7 @@ body { height: var(--app-height); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     min-height: 24px;
     max-width: 100%;
     padding: 4px 11px;
@@ -3788,6 +3896,17 @@ body { height: var(--app-height); }
     overflow-wrap: anywhere;
     word-break: break-word;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .focus-trajectory-status[data-icon]::before {
+    content: attr(data-icon);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: 0;
   }
 
   .focus-trajectory-status.tone-dem {
@@ -8718,8 +8837,8 @@ document.addEventListener('DOMContentLoaded', function() {
         baseYear: 2022,
         climateContestType: 'attorney_general',
         climateYear: 2024,
-        demCandidate: 'Democratic nominee',
-        repCandidate: 'Republican nominee',
+        demCandidate: 'Roy Cooper',
+        repCandidate: 'Michael Whatley',
         description: '2022 Senate baseline with a 2024 Attorney General climate adjustment'
       },
       'nc_supreme_court_model_2026': {
@@ -9836,6 +9955,60 @@ document.addEventListener('DOMContentLoaded', function() {
         .toUpperCase();
     }
 
+    function buildLoadedPrecinctCountyNormIndex() {
+      const byPrecinct = new Map();
+      const absorb = (features) => {
+        (features || []).forEach(feature => {
+          const props = feature?.properties || {};
+          const countyRaw = props.county_norm || props.county_nam || props.COUNTYNAME || props.NAME20 || props.NAME || '';
+          const countyNorm = normalizeCountyToken(countyRaw);
+          const countyName = props.county_nam || props.COUNTYNAME || props.NAME20 || props.NAME || '';
+          const precId = props.prec_id || props.PREC_ID || '';
+          const precinctRaw = props.precinct_norm || (countyName && precId ? `${countyName} - ${precId}` : '');
+          const precinctNorm = normalizeCountyToken(precinctRaw);
+          if (!countyNorm || !precinctNorm) return;
+          if (!byPrecinct.has(precinctNorm)) byPrecinct.set(precinctNorm, countyNorm);
+        });
+      };
+      absorb(precinctCentroidsData?.features);
+      absorb(window.precinctsData?.features);
+      return byPrecinct;
+    }
+
+    function backfillHistoricalPrecinctResultsWithCountyFallback(precinctResults, countyAgg, contestType, year) {
+      const targetYear = Number(year);
+      if (!(precinctResults instanceof Map) || !countyAgg || !Number.isFinite(targetYear) || targetYear > 2020) return 0;
+      const precinctCountyIndex = buildLoadedPrecinctCountyNormIndex();
+      let filled = 0;
+      precinctCountyIndex.forEach((countyNorm, precinctNorm) => {
+        if (!countyNorm || precinctResults.has(precinctNorm)) return;
+        const countyRow = countyAgg[countyNorm];
+        if (!countyRow) return;
+        const demVotes = Number(countyRow[`${contestType}_dem`] || 0);
+        const repVotes = Number(countyRow[`${contestType}_rep`] || 0);
+        const otherVotes = Number(countyRow[`${contestType}_other`] || 0);
+        const totalVotes = Number(countyRow[`${contestType}_total`] || 0);
+        if (totalVotes <= 0) return;
+        const signedPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        precinctResults.set(precinctNorm, {
+          ...countyRow,
+          [`${contestType}_dem`]: demVotes,
+          [`${contestType}_rep`]: repVotes,
+          [`${contestType}_other`]: otherVotes,
+          [`${contestType}_total`]: totalVotes,
+          [`${contestType}_margin_pct`]: signedPct,
+          [`${contestType}_winner`]: signedPct > 0 ? 'REPUBLICAN' : (signedPct < 0 ? 'DEMOCRAT' : 'TIE'),
+          __fallback_scope: 'county',
+          __fallback_reason: 'historical_unmatched_precinct',
+          __fallback_county_norm: countyNorm,
+          __fallback_precinct_norm: precinctNorm,
+          __fallback_year: targetYear
+        });
+        filled += 1;
+      });
+      return filled;
+    }
+
     const PRECINCT_ALIAS_COMMON_WORDS = ['PRECINCT', 'PCT', 'WARD', 'DISTRICT', 'TOWNSHIP', 'BOX', 'VOTING', 'LOCATION'];
 
     function normalizePrecinctAliasToken(value) {
@@ -10575,15 +10748,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function describeTrendShift(currentSignedPct, prevSignedPct, prevYear) {
       if (!Number.isFinite(Number(prevSignedPct))) {
-        return { cls: 'tie', text: 'First available result' };
+        return { cls: 'tie', text: 'Start of history' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
       if (Math.abs(shift) < 0.01) {
-        return { cls: 'tie', text: `No shift since ${prevYear}` };
+        return { cls: 'tie', text: `No meaningful change since ${prevYear}` };
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${Math.abs(shift).toFixed(2)} since ${prevYear}`
+        text: `Toward ${shift > 0 ? 'Republicans' : 'Democrats'}: +${Math.abs(shift).toFixed(2)} pts since ${prevYear}`
       };
     }
 
@@ -10668,6 +10841,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `Selected year ${summaryEntry.item.year}; latest available ${latest.item.year}.`
         : latestStreakLabel;
 
+      const partyWord = (p) => (p === 'R' ? 'Republican' : (p === 'D' ? 'Democratic' : 'Tie'));
+      const flipText = (flip) => `Flip: ${partyWord(flip?.from)}→${partyWord(flip?.to)}`;
+
       const summaryBadges = [];
       if (summaryEntry.shiftMeta) {
         summaryBadges.push(
@@ -10676,7 +10852,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (summaryEntry.flip && summaryEntry.flip.flipped) {
         summaryBadges.push(
-          `<span class="focus-trend-summary-badge ${summaryEntry.flip.to === 'R' ? 'rep' : 'dem'}">${escapeHtml(`Flip ${summaryEntry.flip.from}->${summaryEntry.flip.to}`)}</span>`
+          `<span class="focus-trend-summary-badge ${summaryEntry.flip.to === 'R' ? 'rep' : 'dem'}">${escapeHtml(flipText(summaryEntry.flip))}</span>`
         );
       }
       if (fallbackBadge) {
@@ -10717,19 +10893,20 @@ document.addEventListener('DOMContentLoaded', function() {
         .slice()
         .reverse()
         .map(entry => {
+          const isSelected = selectedYear !== null && Number(entry?.item?.year) === selectedYear;
           const winnerLabel = entry.winnerMeta.partyClass === 'rep'
             ? 'Republican'
             : (entry.winnerMeta.partyClass === 'dem' ? 'Democratic' : 'Tie');
           const totalVotesLabel = `${formatCompactVoteTotal(entry.totalVotes)} votes`;
           const flipChip = entry.flip && entry.flip.flipped
-            ? `<span class="focus-trend-chip flip">${escapeHtml(`Flip ${entry.flip.from}->${entry.flip.to}`)}</span>`
+            ? `<span class="focus-trend-chip flip">${escapeHtml(flipText(entry.flip))}</span>`
             : '';
           const leadSummary = entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel;
           const otherChip = entry.otherPct >= 0.05
             ? `<span class="focus-trend-chip">Other ${escapeHtml(entry.otherPct.toFixed(2))}%</span>`
             : '';
           return `
-            <div class="focus-trend-entry">
+            <div class="focus-trend-entry${isSelected ? ' is-selected' : ''}" data-year="${escapeHtml(entry.item.year)}">
               <span class="focus-trend-entry-year">${escapeHtml(entry.item.year)}</span>
               <div class="focus-trend-entry-card" data-party="${entry.winnerMeta.partyClass}">
                 <div class="focus-trend-entry-head">
@@ -10760,15 +10937,45 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .join('');
 
+      const showLimit = 4;
+      const showToggle = annotated.length > showLimit;
+      const defaultCollapsed = !!(showToggle && typeof isMobileViewportNow === 'function' && isMobileViewportNow());
+      const toggleHtml = showToggle
+        ? `
+          <div class="focus-trend-toggle-row">
+            <button type="button" class="focus-trend-toggle" data-focus-trend-toggle aria-controls="focus-trend-list" aria-expanded="${defaultCollapsed ? 'false' : 'true'}">
+              ${escapeHtml(defaultCollapsed ? `Show all ${annotated.length} elections` : 'Show fewer elections')}
+            </button>
+            <span class="focus-trend-toggle-note" data-focus-trend-toggle-note>
+              ${escapeHtml(defaultCollapsed ? `Showing latest ${Math.min(showLimit, annotated.length)}.` : `Showing all ${annotated.length}.`)}
+            </span>
+          </div>
+        `
+        : '';
+
+      const howToHtml = `
+        <details class="focus-trend-howto">
+          <summary>How to read “Trend at a glance”</summary>
+          <div class="focus-trend-howto-body">
+            <ul>
+              <li><strong>R+</strong>/<strong>D+</strong> = two-party margin for that year (<strong>Rep%</strong> − <strong>Dem%</strong>).</li>
+              <li><strong>Toward Republicans/Democrats</strong> = change vs the previous election in this series.</li>
+              <li><strong>Flip</strong> = winner switched parties between elections.</li>
+            </ul>
+          </div>
+        </details>
+      `;
+
       chartEl.innerHTML = `
         <div class="focus-trend-plot">
           <div class="focus-trend-summary">
             <div class="focus-trend-summary-copy">
               <span class="focus-trend-summary-kicker">${escapeHtml(selectedEntry ? 'Trend at a glance (selected year)' : 'Trend at a glance')}</span>
               <div class="focus-trend-summary-call">${escapeHtml(`${summaryEntry.item.year}: ${summaryLine}`)}</div>
-              <div class="focus-trend-summary-note">${escapeHtml(`Showing ${annotated.length} elections from ${earliest.item.year} to ${latest.item.year}. ${summaryNoteSuffix}`)}</div>
+              <div class="focus-trend-summary-note">${escapeHtml(`Showing ${annotated.length} elections from ${earliest.item.year} to ${latest.item.year}. ${summaryNoteSuffix} R+/D+ uses Rep%−Dem%.`)}</div>
             </div>
             <div class="focus-trend-summary-badges">${summaryBadges.join('')}</div>
+            ${howToHtml}
             <div class="focus-trend-stats">
               <div class="focus-trend-stat">
                 <span class="focus-trend-stat-label">${escapeHtml(selectedEntry ? 'Selected' : 'Latest')}</span>
@@ -10788,8 +10995,29 @@ document.addEventListener('DOMContentLoaded', function() {
         ${trajectoryHtml}
         ${censusCheckHtml}
         ${focusCensusHtml}
-        <div class="focus-trend-list">${cards}</div>
+        ${toggleHtml}
+        <div class="focus-trend-list" id="focus-trend-list" data-collapsed="${defaultCollapsed ? 'true' : 'false'}">${cards}</div>
       `;
+      try {
+        const list = chartEl.querySelector('#focus-trend-list');
+        const btn = chartEl.querySelector('[data-focus-trend-toggle]');
+        const note = chartEl.querySelector('[data-focus-trend-toggle-note]');
+        if (list && btn) {
+          const sync = () => {
+            const collapsed = String(list.getAttribute('data-collapsed') || 'false') === 'true';
+            btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            btn.textContent = collapsed ? `Show all ${annotated.length} elections` : 'Show fewer elections';
+            if (note) note.textContent = collapsed ? `Showing latest ${Math.min(showLimit, annotated.length)}.` : `Showing all ${annotated.length}.`;
+          };
+          btn.addEventListener('click', () => {
+            const collapsed = String(list.getAttribute('data-collapsed') || 'false') === 'true';
+            list.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
+            sync();
+            try { updateMobileOverlayOffsets(); } catch (_) {}
+          });
+          sync();
+        }
+      } catch (_) {}
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
 
@@ -14336,7 +14564,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	        const deriveBaseFromMargin = (margin) => {
 	          const m = Number(margin);
 	          if (!Number.isFinite(m)) return 'Competitive';
-	          if (m >= 25) return 'Durable Republican (Stronghold)';
+	          if (m >= 25) return 'Durable Republican Stronghold';
 	          if (m >= 15) return 'Likely Republican';
 	          if (m >= 5) return 'Republican Lean';
 	          if (m >= 0) return 'Tossup Range';
@@ -14598,7 +14826,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const statusMain = side === 'Competitive' ? 'Battleground' : `${origin} ${side}`;
       const statusStrength = side === 'Competitive' ? '' : position;
-      let status = side === 'Competitive' ? 'Battleground' : `${statusMain} (${position})`;
+      let status = side === 'Competitive' ? 'Battleground' : `${statusMain} ${position}`;
       let statusClass = side === 'Republican' ? 'rep' : (side === 'Democratic' ? 'dem' : 'competitive');
 
       let trend = '↔ Stable';
@@ -14733,7 +14961,10 @@ document.addEventListener('DOMContentLoaded', function() {
         ? meta.statusClass
         : 'competitive';
 	      const statusToneClass = trajectoryToneClass(statusClass);
-	      const statusText = `${String(meta.icon || '').trim() ? `${meta.icon} ` : ''}${meta.status || 'Toss-up'}`;
+	      const rawStatus = String(meta.status || 'Toss-up').trim();
+	      const statusText = rawStatus.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+	      const icon = String(meta.icon || '').trim();
+	      const iconAttr = icon ? ` data-icon="${escapeHtml(icon)}"` : '';
 	      const trendText = String(meta.trend || '\u2194 Little directional change');
 	      const meaningText = String(meta.meaning || '').trim();
 	      const subtypeText = String(meta.subtype || '').trim();
@@ -14769,7 +15000,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
 	          <div class="focus-trajectory-head">
 	            <span class="focus-trajectory-kicker">Trajectory Snapshot</span>
-	            <span class="focus-trajectory-status ${statusToneClass}">${escapeHtml(statusText)}</span>
+	            <span class="focus-trajectory-status ${statusToneClass}"${iconAttr}>${escapeHtml(statusText)}</span>
 	            ${subtypeText ? `<span class="focus-trajectory-subtype">${escapeHtml(subtypeText)}</span>` : ''}
 	            ${stageText ? `<span class="focus-trajectory-stage">${escapeHtml(stageText)}</span>` : ''}
 	          </div>
@@ -15016,10 +15247,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const dir = s > 0 ? 'R' : (s < 0 ? 'D' : 'T');
       const abs = Math.abs(s);
-      const label = abs < 0.01 ? 'No change' : `${dir} + ${abs.toFixed(2)}%`;
+      const label = abs < 0.01
+        ? 'No meaningful change'
+        : `Toward ${dir === 'R' ? 'Republicans' : 'Democrats'} +${abs.toFixed(2)} pts`;
       const dotColor = colorForShiftMode(s);
       const years = (prevYear && year) ? `${prevYear}→${year}` : '';
-      return `<span class="meta-chip shift"><span class="dot" style="background:${dotColor};"></span>Shift: ${label}${years ? ` <span style="color:#64748b;font-weight:800;">(${years})</span>` : ''}</span>`;
+      return `<span class="meta-chip shift"><span class="dot" style="background:${dotColor};"></span>Change: ${label}${years ? ` <span style="color:#64748b;font-weight:800;">(${years})</span>` : ''}</span>`;
     }
 
     function winnerChipHTML(winner) {
@@ -15050,10 +15283,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hasPrev && prevYear) {
         const delta = cur - prev;
         if (Math.abs(delta) < 0.01) {
-          shiftLabel = `Shift: No shift since ${prevYear}`;
+          shiftLabel = `No meaningful change since ${prevYear}`;
           shiftColor = '#64748b';
         } else {
-          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} since ${prevYear}`;
+          shiftLabel = `Toward ${delta > 0 ? 'Republicans' : 'Democrats'}: +${Math.abs(delta).toFixed(2)} pts since ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
         }
       }
@@ -17084,6 +17317,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const MOBILE_SHEET_FLICK_WINDOW_MS = 120;
     const MOBILE_SHEET_FLICK_MIN_TRAVEL_PX = 10;
     let activeMobileSheetKey = null;
+    let mobileSheetVoteCounterSnapshot = null; // null | boolean (was expanded when sheets opened)
     let mobileSheetSystemReady = false;
     let mobileInputFocusWired = false;
     let mobileInputRestoreTimer = null;
@@ -17285,6 +17519,15 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.title = pressed ? `Collapse ${panelLabel} panel` : `Open ${panelLabel} panel`;
       });
       document.body.classList.toggle('mobile-sheet-open', !!activeMobileSheetKey && isMobileViewportNow());
+      try {
+        if (!activeMobileSheetKey && mobileSheetVoteCounterSnapshot !== null) {
+          const blocked = !!(document.body.classList.contains('mobile-input-active') || mobileInputFocusSnapshot);
+          if (!blocked && mobileSheetVoteCounterSnapshot) {
+            setVoteCounterMinimizedState(false);
+          }
+          mobileSheetVoteCounterSnapshot = null;
+        }
+      } catch (_) {}
     }
 
     function expandLegendOnMobile() {
@@ -17331,6 +17574,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!isMobileViewportNow()) return;
       const panel = getMobileSheetPanel(key);
       if (!panel) return;
+      try {
+        if (mobileSheetVoteCounterSnapshot === null) {
+          const counter = document.getElementById('vote-counter');
+          mobileSheetVoteCounterSnapshot = !!(counter && !counter.classList.contains('minimized'));
+        }
+        setVoteCounterMinimizedState(true);
+      } catch (_) {}
       Object.keys(MOBILE_SHEET_PANEL_IDS).forEach(otherKey => {
         if (otherKey === key) return;
         closeMobileSheet(otherKey);
