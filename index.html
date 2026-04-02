@@ -14484,6 +14484,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildViralFocusBlock({
       focusName = 'This place',
+      annotated = [],
       summaryEntry = null,
       latest = null,
       earliest = null,
@@ -14499,10 +14500,6 @@ document.addEventListener('DOMContentLoaded', function() {
         trajectoryMeta?.recentWindowShiftTowardGop
       );
       const flipInfoMeta = summaryEntry?.flip || { flipped: false, from: 'T', to: 'T' };
-      const modeLabel = flipInfoMeta.flipped
-        ? `Why ${focusName} flipped ${flipInfoMeta.to === 'R' ? 'Republican' : 'Democratic'}`
-        : `Why ${focusName} is moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'the way it is')}`;
-
       const trendText = String(trajectoryMeta?.trend || trajectoryMeta?.trendLegacy || historyShift?.text || 'Mixed trajectory').trim();
       const subtypeText = String(trajectoryMeta?.subtype || trajectoryMeta?.status || '').trim();
       const growthSignal = String(censusContext?.signalLabel || '').trim();
@@ -14515,19 +14512,70 @@ document.addEventListener('DOMContentLoaded', function() {
       const selectedVsLatest = selectedEntry && selectedEntry !== latest
         ? `Selected year ${summaryEntry.item.year}; latest available result is ${latest.item.year}.`
         : `Latest result: ${latestResult}.`;
+      const latestParty = String(latest?.winnerMeta?.partyClass || '').trim();
+      const earliestParty = String(earliest?.winnerMeta?.partyClass || '').trim();
+      const reinforcingCurrent = /reinforcing|strengthening|accelerating/i.test(`${trendText} ${subtypeText} ${whyItMatters}`);
+      let historicalFlipYear = null;
+      let historicalFlipTo = '';
+      if (Array.isArray(annotated) && annotated.length > 1) {
+        for (let i = 1; i < annotated.length; i += 1) {
+          const prevParty = String(annotated[i - 1]?.winnerMeta?.partyClass || '').trim();
+          const curParty = String(annotated[i]?.winnerMeta?.partyClass || '').trim();
+          if (!prevParty || !curParty || prevParty === 'tie' || curParty === 'tie') continue;
+          if (prevParty !== curParty) {
+            historicalFlipYear = annotated[i]?.item?.year ?? null;
+            historicalFlipTo = curParty;
+            break;
+          }
+        }
+      }
+      const hasHistoricalFlip = Number.isFinite(Number(historicalFlipYear))
+        || (earliestParty && latestParty && earliestParty !== latestParty && earliestParty !== 'tie' && latestParty !== 'tie');
+      const latestMarginAbs = Math.abs(Number(latest?.item?.margin ?? latest?.item?.signedMargin ?? latest?.signedMargin ?? 0));
+      const recentShiftAbs = Math.abs(Number(summaryEntry?.shiftSince2020 ?? selectedEntry?.shiftSince2020 ?? 0));
+      const stillCompetitive = latestMarginAbs <= 8.5;
+      const movementDetected = recentShiftAbs >= 2
+        || /realign|emerging|reinforcing|accelerating|drift|closing|narrow/i.test(`${trendText} ${subtypeText} ${whyItMatters} ${stageText}`);
+      const viralMode = flipInfoMeta.flipped
+        ? 'fresh-flip'
+        : hasHistoricalFlip
+          ? 'flipped-and-consolidating'
+          : (stillCompetitive && movementDetected)
+            ? 'competitive-movement'
+            : 'moving-not-flipped';
 
-      const quickRead = flipInfoMeta.flipped
+      const modeLabel = viralMode === 'fresh-flip'
+        ? `Why ${focusName} flipped ${flipInfoMeta.to === 'R' ? 'Republican' : 'Democratic'}`
+        : viralMode === 'flipped-and-consolidating'
+          ? `Why ${focusName} ${latestParty === 'rep' ? 'flipped Republican and stayed there' : (latestParty === 'dem' ? 'flipped Democratic and stayed there' : 'changed over time')}`
+          : viralMode === 'competitive-movement'
+            ? `Why ${focusName} is still competitive — but moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'fast')}`
+            : `Why ${focusName} is moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'the way it is')}`;
+
+      const quickRead = viralMode === 'fresh-flip'
         ? `${focusName} did not just inch over the line — it actually flipped in ${summaryEntry.item.year}.`
-        : `${focusName} is not necessarily flipping yet, but the direction of travel is getting easier to spot.`;
+        : viralMode === 'flipped-and-consolidating' && latestParty === 'rep'
+          ? `${focusName} flipped Republican${historicalFlipYear ? ` in ${historicalFlipYear}` : ''} and has${reinforcingCurrent ? ' kept moving right since' : ' stayed on the Republican side since then'}.`
+          : viralMode === 'flipped-and-consolidating' && latestParty === 'dem'
+            ? `${focusName} flipped Democratic${historicalFlipYear ? ` in ${historicalFlipYear}` : ''} and has${reinforcingCurrent ? ' kept moving left since' : ' stayed on the Democratic side since then'}.`
+            : viralMode === 'competitive-movement'
+              ? `${focusName} is still competitive enough to watch closely, but the trend line is now leaning ${tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'away from dead-even')}.`
+              : `${focusName} has not flipped yet, but the direction of travel is getting easier to spot.`;
       const summary = [quickRead, trendText, growthPattern || growthSignal || whyItMatters, selectedVsLatest]
         .filter(Boolean)
         .join(' ');
 
-      const watchLabel = tone === 'rep'
-        ? 'Watch whether new growth keeps reinforcing the GOP edge.'
-        : (tone === 'dem'
-          ? 'Watch whether continued churn keeps narrowing the Republican advantage.'
-          : 'Watch whether the next cycle breaks the current equilibrium.');
+      const watchLabel = viralMode === 'flipped-and-consolidating'
+        ? (tone === 'rep'
+            ? 'Watch whether Republicans keep padding the post-flip margin.'
+            : 'Watch whether Democrats keep padding the post-flip margin.')
+        : viralMode === 'competitive-movement'
+          ? 'Watch whether the next cycle turns movement into a clear advantage.'
+          : tone === 'rep'
+            ? 'Watch whether new growth keeps reinforcing the GOP edge.'
+            : (tone === 'dem'
+              ? 'Watch whether continued churn keeps narrowing the Republican advantage.'
+              : 'Watch whether the next cycle breaks the current equilibrium.');
 
       const cards = [
         {
