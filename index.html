@@ -1609,12 +1609,17 @@ body { height: var(--app-height); }
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
+.focus-story-left,
+.focus-story-right,
 .focus-story-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+.focus-story-left { flex: 1 1 auto; min-width: 0; }
+.focus-story-right { flex: 0 0 auto; }
 .focus-story-copy {
   border: 1px solid rgba(148, 163, 184, 0.28);
   background: rgba(15, 23, 42, 0.32);
@@ -1709,6 +1714,8 @@ body { height: var(--app-height); }
   .focus-story-grid { gap: 8px; }
   .focus-story-mini { padding: 9px 9px 8px; }
   .focus-story-grid { display: none; }
+  .focus-story-head { gap: 8px; }
+  .focus-story-copy { padding: 5px 9px; }
   .focus-story-summary {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -15308,9 +15315,11 @@ document.addEventListener('DOMContentLoaded', function() {
         </section>
         <section class="focus-story ${toneClass}" aria-label="Story mode">
           <div class="focus-story-head">
-            <span class="focus-story-kicker">Story</span>
-            <div class="focus-story-actions">
+            <div class="focus-story-left">
+              <span class="focus-story-kicker">Story</span>
               <button class="focus-story-copy" type="button" data-action="copy-story" aria-label="Copy story summary" title="Copy story summary">Copy</button>
+            </div>
+            <div class="focus-story-right">
               <span class="focus-barometer" data-tone="${escapeHtml(barTone)}" data-strength="${escapeHtml(barStrength)}" aria-label="${escapeHtml(`Barometer: ${barLabel}`)}" title="${escapeHtml('Barometer: partisan lean (dot) + strength (size)')}">
                 <span>Barometer</span>
                 <span class="focus-barometer-track" aria-hidden="true">
