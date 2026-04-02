@@ -1232,7 +1232,7 @@ body { height: var(--app-height); }
   color: #222 !important;
 }
 .census-context-section {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 .census-context-card {
   border: 1px solid rgba(15, 23, 42, 0.10);
@@ -1356,112 +1356,268 @@ body { height: var(--app-height); }
   color: #1f2937;
 }
 
-/* Viral-tier focus explainer */
-.focus-viral {
+/* "At a glance" block (fast read, 1 headline + 3 bullets) */
+.focus-glance {
   margin: 0 0 14px 0;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: rgba(248, 250, 252, 0.98);
+  padding: 12px 12px 10px;
   display: grid;
+  gap: 8px;
+  animation: glance-in 0.18s ease-out;
+}
+.focus-glance.tone-rep {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.72), rgba(248, 250, 252, 0.98));
+}
+.focus-glance.tone-dem {
+  border-color: rgba(37, 99, 235, 0.18);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.74), rgba(248, 250, 252, 0.98));
+}
+.focus-glance.tone-neutral {
+  border-color: rgba(148, 163, 184, 0.28);
+}
+.focus-glance-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
-.focus-viral-hero {
-  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.96));
-  color: #fff;
-  border-radius: 16px;
-  padding: 14px 16px;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
-}
-.focus-viral-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.focus-glance-kicker {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(191, 219, 254, 0.96);
-  margin-bottom: 8px;
+  color: #0f172a;
 }
-.focus-viral-headline {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 800;
-  color: #fff;
+.focus-glance-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  white-space: nowrap;
 }
-.focus-viral-summary {
-  margin: 8px 0 0 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: rgba(226, 232, 240, 0.98);
+.focus-glance-badge.rep {
+  background: rgba(220, 38, 38, 0.10);
+  color: #7f1d1d;
+  border-color: rgba(220, 38, 38, 0.18);
 }
-.focus-viral-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+.focus-glance-badge.dem {
+  background: rgba(37, 99, 235, 0.10);
+  color: #1e3a8a;
+  border-color: rgba(37, 99, 235, 0.18);
 }
-.focus-viral-card {
-  border: 1px solid rgba(15, 23, 42, 0.09);
-  border-radius: 14px;
-  background: rgba(248, 250, 252, 0.98);
-  padding: 12px;
+.focus-glance-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
-.focus-viral-card-kicker {
+.focus-confidence {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #475569;
+  font-weight: 900;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  white-space: nowrap;
 }
-.focus-viral-card strong {
-  display: block;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #0f172a;
-}
-.focus-viral-card p {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #475569;
-}
-.focus-viral-card.rep strong,
-.focus-viral-card.rep .focus-viral-card-kicker {
-  color: #991b1b;
-}
-.focus-viral-card.dem strong,
-.focus-viral-card.dem .focus-viral-card-kicker {
-  color: #1d4ed8;
-}
-.focus-viral-card.neutral strong,
-.focus-viral-card.neutral .focus-viral-card-kicker {
+.focus-confidence[data-level="low"] {
+  background: rgba(148, 163, 184, 0.18);
   color: #334155;
 }
-.focus-viral-bullets {
+.focus-confidence[data-level="medium"] {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #7c2d12;
+}
+.focus-confidence[data-level="high"] {
+  background: rgba(22, 163, 74, 0.14);
+  border-color: rgba(22, 163, 74, 0.22);
+  color: #14532d;
+}
+.focus-confidence-bars {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+.focus-confidence-bars span {
+  width: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
+}
+.focus-confidence[data-level="low"] .focus-confidence-bars span:nth-child(1),
+.focus-confidence[data-level="medium"] .focus-confidence-bars span:nth-child(-n+2),
+.focus-confidence[data-level="high"] .focus-confidence-bars span {
+  background: currentColor;
+  opacity: 0.9;
+}
+.focus-glance-headline {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 900;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.focus-glance-bullets {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
-.focus-viral-bullets li {
-  display: flex;
-  align-items: flex-start;
+.focus-glance-bullets li {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
   gap: 8px;
-  font-size: 13px;
-  line-height: 1.45;
+  align-items: baseline;
+  font-size: 12px;
+  line-height: 1.35;
   color: #334155;
 }
-.focus-viral-bullets .bullet-emoji {
-  width: 18px;
-  flex: 0 0 18px;
+.focus-glance-label {
+  font-weight: 900;
+  color: #475569;
+  letter-spacing: 0.02em;
+}
+.focus-glance-value {
+  color: #0f172a;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.focus-glance-micro {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.focus-glance-micro strong { color: #0f172a; }
+@keyframes glance-in {
+  from { opacity: 0.0; transform: translateY(4px); }
+  to { opacity: 1.0; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-glance { animation: none; }
 }
 @media (max-width: 768px) {
-  .focus-viral-hero { padding: 13px 14px; }
-  .focus-viral-headline { font-size: 16px; }
-  .focus-viral-grid { grid-template-columns: 1fr; }
+  .focus-glance { padding: 10px 10px 9px; }
+  .focus-glance-bullets li { grid-template-columns: 82px minmax(0, 1fr); }
+}
+
+/* Premium editorial "Story" card (shareable) */
+.focus-story {
+  margin: 0 0 14px 0;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.94));
+  color: #fff;
+  padding: 14px 16px 13px;
+  display: grid;
+  gap: 10px;
+  animation: glance-in 0.18s ease-out;
+}
+.focus-story.tone-rep { border-color: rgba(248, 113, 113, 0.30); }
+.focus-story.tone-dem { border-color: rgba(96, 165, 250, 0.30); }
+.focus-story.tone-neutral { border-color: rgba(148, 163, 184, 0.28); }
+.focus-story-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.focus-story-kicker {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(191, 219, 254, 0.96);
+}
+.focus-story-title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #fff;
+}
+.focus-story-summary {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.98);
+}
+.focus-story-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.focus-story-mini {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.30);
+  padding: 10px 10px 9px;
+}
+.focus-story-mini .k {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.94);
+  margin-bottom: 6px;
+}
+.focus-story-mini .v {
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+  color: rgba(248, 250, 252, 0.98);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.focus-story-watch {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(226, 232, 240, 0.98);
+}
+.focus-story-watch strong { color: #fff; }
+@media (max-width: 768px) {
+  .focus-story { padding: 12px 12px 11px; }
+  .focus-story-title { font-size: 16px; }
+  .focus-story-grid { gap: 8px; }
+  .focus-story-mini { padding: 9px 9px 8px; }
+  .focus-story-grid { display: none; }
+  .focus-story-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* Visualization Mode Tabs - VoteHub Style */
@@ -11015,8 +11171,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="focus-trend-stat-value ${closest.winnerMeta.partyClass}">${escapeHtml(`${closest.item.year}: ${winnerMarginLabelFn(closest.repVotes, closest.demVotes, closest.totalVotes, closest.item.rep_candidate, closest.item.dem_candidate)}`)}</span>
               </div>
               <div class="focus-trend-stat">
-                <span class="focus-trend-stat-label">Since ${escapeHtml(earliest.item.year)}</span>
-                <span class="focus-trend-stat-value ${historyShift.cls}">${escapeHtml(historyShift.text)}</span>
+                <span class="focus-trend-stat-label">History</span>
+                <span class="focus-trend-stat-value tie">${escapeHtml(`${earliest.item.year}\u2013${latest.item.year} (${annotated.length} elections)`)}</span>
               </div>
             </div>
           </div>
@@ -14569,188 +14725,265 @@ document.addEventListener('DOMContentLoaded', function() {
     } = {}) {
       if (!summaryEntry || !latest || !earliest) return '';
 
+      const safeFocus = String(focusName || 'This place').trim() || 'This place';
       const marginTier = competitivenessTierMetaFromSignedMarginPct(summaryEntry?.signedPct);
 
-      function plainSubtypeLabel(subtypeRaw, toneRaw) {
-        const subtype = String(subtypeRaw || '').trim();
-        const tone = String(toneRaw || '').trim().toLowerCase();
-        if (!subtype) return '';
-        if (/reinforcing republican/i.test(subtype)) return 'Getting more Republican';
-        if (/reinforcing democratic/i.test(subtype)) return 'Getting more Democratic';
-        if (/softening republican/i.test(subtype)) return 'Less Republican than it used to be';
-        if (/softening democratic/i.test(subtype)) return 'Less Democratic than it used to be';
-        if (/realigning republican/i.test(subtype)) return 'Big shift toward Republicans';
-        if (/realigning democratic/i.test(subtype)) return 'Big shift toward Democrats';
-        if (/active suburban transition/i.test(subtype)) return 'Shifting fast (suburban transition)';
-        if (/active republican transition/i.test(subtype)) return 'Shifting fast toward Republicans';
-        if (/counter-suburban/i.test(subtype)) return 'Counter-suburban shift';
-        if (/suburbanizing/i.test(subtype)) return 'Suburban shift';
-        if (/stable|mixed/i.test(subtype)) return 'Mixed / not consistent';
-        if (tone === 'rep') return 'Leaning Republican';
-        if (tone === 'dem') return 'Leaning Democratic';
-        return subtype;
-      }
+      const yearToSigned = new Map();
+      (Array.isArray(annotated) ? annotated : []).forEach(entry => {
+        const y = Number(entry?.item?.year);
+        if (!Number.isFinite(y)) return;
+        yearToSigned.set(y, Number(entry?.signedPct));
+      });
 
-      function plainTrendLabel(trendRaw, toneRaw) {
-        const raw = String(trendRaw || '').trim();
-        if (!raw) return '';
-        const body = raw.replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/g, '').trim();
-        if (/accelerating/i.test(body)) return `Accelerating`;
-        if (/long-run/i.test(body)) return `Long-run drift`;
-        if (/stable/i.test(body)) return `Stable lately`;
-        return body || raw;
-      }
+      const selectedYear = Number(summaryEntry?.item?.year);
+      const selectedSigned = Number(summaryEntry?.signedPct);
+      const baseYear = yearToSigned.has(2000) ? 2000 : (yearToSigned.has(2008) ? 2008 : Number(earliest?.item?.year));
+      const baseSigned = Number(yearToSigned.get(baseYear));
+      const longShift = (Number.isFinite(selectedSigned) && Number.isFinite(baseSigned)) ? (selectedSigned - baseSigned) : NaN;
+
+      const has2020 = yearToSigned.has(2020);
+      const signed2020 = has2020 ? Number(yearToSigned.get(2020)) : NaN;
+      const recentShiftSince2020 = (has2020 && Number.isFinite(selectedSigned) && Number.isFinite(signed2020) && selectedYear >= 2020)
+        ? (selectedSigned - signed2020)
+        : NaN;
+
+      const isRecentFlip = !!(
+        latest?.flip?.flipped &&
+        Number(latest?.item?.year) === selectedYear
+      );
+      const flipBadge = isRecentFlip
+        ? (latest?.flip?.to === 'R' ? { cls: 'rep', text: 'Recent flip → R' } : (latest?.flip?.to === 'D' ? { cls: 'dem', text: 'Recent flip → D' } : { cls: 'neutral', text: 'Recent flip' }))
+        : null;
+
       const tone = normalizeDirectionalTone(
         trajectoryMeta?.trend || historyShift?.text || summaryLine,
-        trajectoryMeta?.recentWindowShiftTowardGop
+        recentShiftSince2020
       );
-      const flipInfoMeta = summaryEntry?.flip || { flipped: false, from: 'T', to: 'T' };
-      const trendText = String(trajectoryMeta?.trend || trajectoryMeta?.trendLegacy || historyShift?.text || 'Mixed trajectory').trim();
-      const subtypeText = String(trajectoryMeta?.subtype || trajectoryMeta?.status || '').trim();
-      const growthSignal = String(censusContext?.signalLabel || '').trim();
-      const growthPattern = String(censusContext?.patternLabel || '').trim();
-      const whyItMatters = String(censusContext?.noteLabel || trajectoryMeta?.meaning || '').trim();
-      const stageText = String(trajectoryMeta?.transitionStage || '').trim();
-      const growthDynamic = String(trajectoryMeta?.growthDynamic || '').trim();
-      const latestResult = `${summaryEntry.item.year}: ${summaryLine}`;
-      const longShiftText = String(historyShift?.text || '').replace(/^Shift:\s*/i, '').trim() || 'No major long-run shift yet';
-      const selectedVsLatest = selectedEntry && selectedEntry !== latest
-        ? `Selected: ${summaryEntry.item.year}. Latest available: ${latest.item.year}.`
-        : `Latest: ${latestResult}.`;
-      const latestParty = String(latest?.winnerMeta?.partyClass || '').trim();
-      const earliestParty = String(earliest?.winnerMeta?.partyClass || '').trim();
-      const reinforcingCurrent = /reinforcing|strengthening|accelerating/i.test(`${trendText} ${subtypeText} ${whyItMatters}`);
-      let historicalFlipYear = null;
-      let historicalFlipTo = '';
-      if (Array.isArray(annotated) && annotated.length > 1) {
-        for (let i = 1; i < annotated.length; i += 1) {
-          const prevParty = String(annotated[i - 1]?.winnerMeta?.partyClass || '').trim();
-          const curParty = String(annotated[i]?.winnerMeta?.partyClass || '').trim();
-          if (!prevParty || !curParty || prevParty === 'tie' || curParty === 'tie') continue;
-          if (prevParty !== curParty) {
-            historicalFlipYear = annotated[i]?.item?.year ?? null;
-            historicalFlipTo = curParty;
-            break;
-          }
+      const toneClass = tone === 'rep' ? 'tone-rep' : (tone === 'dem' ? 'tone-dem' : 'tone-neutral');
+
+      const directionBullet = (() => {
+        const shiftMeta = summaryEntry?.shiftMeta || null;
+        if (shiftMeta?.cls === 'rep') return '→ Republican trend';
+        if (shiftMeta?.cls === 'dem') return '← Democratic trend';
+        return '↔ No clear trend';
+      })();
+
+      const longBullet = (() => {
+        const delta = longShift;
+        if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) {
+          return '\u2014';
         }
+        if (Math.abs(delta) < 0.05) {
+          return `↔ 0.0 since ${baseYear}`;
+        }
+        const side = delta > 0 ? 'R' : 'D';
+        const arrow = delta > 0 ? '→' : '←';
+        return `${arrow} ${side}+${Math.abs(delta).toFixed(1)} since ${baseYear}`;
+      })();
+
+      function shortPopulationContext(context) {
+        const raw = String(context || '').trim();
+        if (!raw) return '';
+        if (/Slow-growth/i.test(raw)) return 'Slow-growth county';
+        if (/declin/i.test(raw)) return 'Declining county';
+        if (/Urban anchor/i.test(raw)) return 'Urban anchor county';
+        if (/Metro spillover/i.test(raw)) return 'Metro spillover county';
+        if (/outer-suburban/i.test(raw)) return 'Outer-suburban county';
+        if (/Coastal/i.test(raw)) return 'Coastal growth county';
+        if (/Above-state/i.test(raw)) return 'Fast-growth county';
+        return raw.replace(/\s+or\s+declining\b/i, '').trim();
       }
-      const hasHistoricalFlip = Number.isFinite(Number(historicalFlipYear))
-        || (earliestParty && latestParty && earliestParty !== latestParty && earliestParty !== 'tie' && latestParty !== 'tie');
-      const latestMarginAbs = Math.abs(Number(latest?.item?.margin ?? latest?.item?.signedMargin ?? latest?.signedMargin ?? 0));
-      const recentShiftAbs = Math.abs(Number(summaryEntry?.shiftSince2020 ?? selectedEntry?.shiftSince2020 ?? 0));
-      const stillCompetitive = latestMarginAbs <= 8.5;
-      const movementDetected = recentShiftAbs >= 2
-        || /realign|emerging|reinforcing|accelerating|drift|closing|narrow/i.test(`${trendText} ${subtypeText} ${whyItMatters} ${stageText}`);
-      const viralMode = flipInfoMeta.flipped
-        ? 'fresh-flip'
-        : hasHistoricalFlip
-          ? 'flipped-and-consolidating'
-          : (stillCompetitive && movementDetected)
-            ? 'competitive-movement'
-            : 'moving-not-flipped';
 
-      const modeLabel = viralMode === 'fresh-flip'
-        ? `Why ${focusName} flipped ${flipInfoMeta.to === 'R' ? 'Republican' : 'Democratic'}`
-        : viralMode === 'flipped-and-consolidating'
-          ? `Why ${focusName} ${latestParty === 'rep' ? 'flipped Republican and stayed there' : (latestParty === 'dem' ? 'flipped Democratic and stayed there' : 'changed over time')}`
-          : viralMode === 'competitive-movement'
-            ? `Why ${focusName} is still competitive — but moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'fast')}`
-            : `Why ${focusName} is moving ${tone === 'rep' ? 'right' : (tone === 'dem' ? 'left' : 'the way it is')}`;
+      const growthBullet = shortPopulationContext(censusContext?.patternLabel) || shortPopulationContext(censusContext?.signalLabel) || '';
+      const growthHeadline = growthBullet
+        ? growthBullet
+            .replace(/\s+county$/i, '')
+            .replace(/slow-growth/i, 'slow growth')
+            .replace(/fast-growth/i, 'fast growth')
+            .trim()
+        : '';
+      const contextBullet = growthBullet || '\u2014';
 
-      const quickRead = viralMode === 'fresh-flip'
-        ? `${focusName} did not just inch over the line — it actually flipped in ${summaryEntry.item.year}.`
-        : viralMode === 'flipped-and-consolidating' && latestParty === 'rep'
-          ? `${focusName} flipped Republican${historicalFlipYear ? ` in ${historicalFlipYear}` : ''} and has${reinforcingCurrent ? ' kept moving right since' : ' stayed on the Republican side since then'}.`
-          : viralMode === 'flipped-and-consolidating' && latestParty === 'dem'
-            ? `${focusName} flipped Democratic${historicalFlipYear ? ` in ${historicalFlipYear}` : ''} and has${reinforcingCurrent ? ' kept moving left since' : ' stayed on the Democratic side since then'}.`
-            : viralMode === 'competitive-movement'
-              ? `${focusName} is still competitive enough to watch closely, but the trend line is now leaning ${tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'away from dead-even')}.`
-              : `${focusName} has not flipped yet, but the direction of travel is getting easier to spot.`;
-      const marginTierLabel = marginTier?.label ? `${marginTier.label}` : '';
-      const plainTrend = plainTrendLabel(trendText, tone);
-      const plainSubtype = plainSubtypeLabel(subtypeText, tone);
-      const directionLine = [plainTrend, plainSubtype].filter(Boolean).join(' • ');
-      const summary = [
-        quickRead,
-        selectedVsLatest,
-        marginTierLabel ? `Margin category: ${marginTierLabel}.` : '',
-        (growthPattern || growthSignal) ? `Population: ${growthPattern || growthSignal}.` : ''
-      ].filter(Boolean).join(' ');
-
-      const watchLabel = viralMode === 'flipped-and-consolidating'
-        ? (tone === 'rep'
-            ? 'Watch whether Republicans keep padding the post-flip margin.'
-            : 'Watch whether Democrats keep padding the post-flip margin.')
-        : viralMode === 'competitive-movement'
-          ? 'Watch whether the next cycle turns movement into a clear advantage.'
-          : tone === 'rep'
-            ? 'Watch whether new growth keeps reinforcing the GOP edge.'
-            : (tone === 'dem'
-              ? 'Watch whether continued churn keeps narrowing the Republican advantage.'
-              : 'Watch whether the next cycle breaks the current equilibrium.');
-      const watchTitle = watchLabel.replace(/^Watch whether\s*/i, '').replace(/\.$/, '');
-      const watchBody = growthDynamic
-        ? `${growthDynamic}. ${flipInfoMeta.flipped ? 'The next comparable cycle is the first test of the flip.' : 'The next comparable cycle is the next check on whether the pattern holds.'}`
-        : (flipInfoMeta.flipped
-            ? 'The next comparable cycle is the first test of the flip.'
-            : (viralMode === 'flipped-and-consolidating'
-              ? 'The next comparable cycle shows whether the post-flip coalition holds.'
-              : 'The next comparable cycle is the next check on whether the pattern holds.'));
-
-      const cards = [
-        {
-          tone,
-          kicker: 'Direction',
-          title: directionLine || trendText || 'Mixed direction',
-          body: whyItMatters || 'Quick read of where results have been moving.'
-        },
-        {
-          tone: 'neutral',
-          kicker: 'Long-run shift',
-          title: longShiftText,
-          body: stageText || (marginTierLabel ? `Current margin category: ${marginTierLabel}.` : `Compared with ${earliest.item.year}, the county has meaningfully changed even if the winner stayed the same.`)
-        },
-        {
-          tone: 'neutral',
-          kicker: 'Population',
-          title: growthPattern || growthSignal || 'Population trend is mixed',
-          body: whyItMatters || 'Population change helps explain how fast a county can evolve politically.'
-        },
-        {
-          tone,
-          kicker: 'Next test',
-          title: watchTitle || 'Next comparable cycle',
-          body: watchBody
+      function classifyPopulationEffect(directionTone, growthText) {
+        const toneLocal = String(directionTone || '').trim().toLowerCase();
+        const g = String(growthText || '').trim().toLowerCase();
+        if (!g || g === '—') return { effect: 'neutral', line: '' };
+        const fast = /fast-growth|metro|outer-suburban|urban anchor|coastal growth/.test(g);
+        const slow = /slow-growth|declin/.test(g);
+        if (toneLocal === 'rep') {
+          if (slow) return { effect: 'reinforces', line: 'Population change reinforces the current GOP trend.' };
+          if (fast) return { effect: 'complicates', line: 'Population change adds uncertainty to the GOP trend.' };
         }
+        if (toneLocal === 'dem') {
+          if (fast) return { effect: 'reinforces', line: 'Population change reinforces the current Democratic trend.' };
+          if (slow) return { effect: 'complicates', line: 'Population change adds uncertainty to the Democratic trend.' };
+        }
+        return { effect: 'neutral', line: '' };
+      }
+
+      function confidenceForNarrative() {
+        const absMargin = Math.abs(Number(selectedSigned) || 0);
+        if (absMargin < 2) return { level: 'low', label: 'Low' };
+        const dirSign = selectedSigned > 0.1 ? 1 : (selectedSigned < -0.1 ? -1 : 0);
+        let score = 0;
+        const longOk = Number.isFinite(longShift) && Math.abs(longShift) >= 3;
+        if (longOk && dirSign) score += (Math.sign(longShift) === dirSign ? 1 : -1);
+        const recentOk = Number.isFinite(recentShiftSince2020) && Math.abs(recentShiftSince2020) >= 1.25;
+        if (recentOk && dirSign) score += (Math.sign(recentShiftSince2020) === dirSign ? 1 : -1);
+        if (absMargin >= 10) score += 1;
+        else if (absMargin >= 5) score += 0.5;
+        const pop = classifyPopulationEffect(tone, growthBullet);
+        if (pop.effect === 'reinforces') score += 1;
+        if (pop.effect === 'complicates') score -= 1;
+        if (score >= 2.5) return { level: 'high', label: 'High' };
+        if (score >= 1) return { level: 'medium', label: 'Medium' };
+        return { level: 'low', label: 'Low' };
+      }
+
+      function classificationLabel(longDelta, recentDelta, flip) {
+        if (flip) {
+          if (tone === 'rep') return 'Recent flip Republican';
+          if (tone === 'dem') return 'Recent flip Democratic';
+          return 'Recent flip';
+        }
+        const longSign = Number.isFinite(longDelta) ? (longDelta > 0.75 ? 'rep' : (longDelta < -0.75 ? 'dem' : 'neutral')) : 'neutral';
+        const recentSign = Number.isFinite(recentDelta) ? (recentDelta > 0.75 ? 'rep' : (recentDelta < -0.75 ? 'dem' : 'neutral')) : 'neutral';
+        if (longSign === 'rep' && recentSign === 'rep') return 'Reinforcing Republican';
+        if (longSign === 'rep' && recentSign === 'dem') return 'Softening Republican';
+        if (longSign === 'dem' && recentSign === 'dem') return 'Reinforcing Democratic';
+        if (longSign === 'dem' && recentSign === 'rep') return 'Softening Democratic';
+        if (marginTier?.party === 'rep') return 'Durable Republican';
+        if (marginTier?.party === 'dem') return 'Durable Democratic';
+        return 'Competitive';
+      }
+
+      const classification = classificationLabel(longShift, recentShiftSince2020, isRecentFlip);
+      const classificationSentence = classification
+        ? `${classification.slice(0, 1).toLowerCase()}${classification.slice(1)}`
+        : 'mixed';
+      const headline = `${safeFocus} is a ${classificationSentence} county${growthHeadline ? ` with ${growthHeadline.toLowerCase()}` : ''}.`;
+
+      const microInsight = (() => {
+        if (isRecentFlip) return '→ Momentum: recent flip — next cycle decides if it sticks.';
+        if (!Number.isFinite(recentShiftSince2020) || selectedYear <= 2020) return '';
+        if (Math.abs(recentShiftSince2020) < 0.75) return '→ Momentum: ↔ steady since 2020.';
+        const arrow = recentShiftSince2020 > 0 ? '→' : '←';
+        const side = recentShiftSince2020 > 0 ? 'R' : 'D';
+        return `→ Momentum: ${arrow} ${side}+${Math.abs(recentShiftSince2020).toFixed(1)} since 2020.`;
+      })();
+
+      const popEffect = classifyPopulationEffect(tone, contextBullet);
+      const confidence = confidenceForNarrative();
+
+      function buildNarrativeSentence() {
+        if (isRecentFlip) {
+          const popClause = popEffect.effect === 'complicates'
+            ? ' Population change adds uncertainty.'
+            : (popEffect.effect === 'reinforces' ? ' Population change reinforces the new direction.' : '');
+          return `A recent flip is the headline; the next comparable cycle decides whether it sticks.${popClause}`.trim();
+        }
+        const accel = Number.isFinite(recentShiftSince2020) && Math.abs(recentShiftSince2020) >= 3;
+        const soften = Number.isFinite(longShift) && Number.isFinite(recentShiftSince2020)
+          && (Math.sign(longShift) !== 0)
+          && (Math.sign(recentShiftSince2020) !== 0)
+          && (Math.sign(longShift) !== Math.sign(recentShiftSince2020));
+        const baseDir = tone === 'rep' ? 'Republican' : (tone === 'dem' ? 'Democratic' : 'mixed');
+        if (soften && baseDir !== 'mixed') {
+          const core = baseDir === 'Republican'
+            ? 'This looks more like a softening-red county than one actively trending left.'
+            : 'This looks more like a softening-blue county than one actively trending right.';
+          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
+          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the pattern.`;
+          return core;
+        }
+        if (baseDir !== 'mixed') {
+          const verb = accel ? 'is being reinforced by recent results' : 'still holds in recent results';
+          const core = `A long-running ${baseDir} drift ${verb}.`;
+          if (popEffect.effect === 'complicates') return `${core} Population change adds uncertainty.`;
+          if (popEffect.effect === 'reinforces') return `${core} Population change reinforces the trend.`;
+          return core;
+        }
+        return popEffect.effect === 'complicates'
+          ? 'Mixed recent movement, with population change adding uncertainty.'
+          : 'Mixed recent movement with no single dominant story.';
+      }
+
+      function buildWhatToWatchLine() {
+        if (isRecentFlip) return 'The next comparable result will show whether this flip was temporary or durable.';
+        if (tone === 'rep') {
+          return popEffect.effect === 'complicates'
+            ? 'If Democrats regain ground next cycle, this may be a softening-red county rather than a locked-in GOP shift.'
+            : 'If Republicans expand further here next cycle, this likely confirms a durable realignment.';
+        }
+        if (tone === 'dem') {
+          return popEffect.effect === 'complicates'
+            ? 'If Republicans regain ground next cycle, this may be a softening-blue county rather than a locked-in Democratic shift.'
+            : 'If Democrats expand further here next cycle, this likely confirms a durable realignment.';
+        }
+        return 'The next comparable result will show whether this county breaks toward one party or stays genuinely competitive.';
+      }
+
+      const bullets = [
+        { label: 'Direction', value: directionBullet },
+        { label: 'Long-term shift', value: longBullet },
+        { label: 'Population story', value: contextBullet }
       ];
 
-      const bulletLines = [
-        { emoji: '🏁', text: latestResult },
-        { emoji: '🗳️', text: flipInfoMeta.flipped ? `Flip: ${flipInfoMeta.from}→${flipInfoMeta.to}` : `Current pattern: ${subtypeText || (tone === 'rep' ? 'Republican-leaning movement' : (tone === 'dem' ? 'Democratic-leaning movement' : 'mixed movement'))}` },
-        { emoji: '📍', text: growthPattern || growthSignal || 'Population change is not giving a strong directional clue yet.' }
-      ].filter(item => String(item.text || '').trim());
+      const storyTitle = `${safeFocus}: ${classification}`;
+      const storySummary = buildNarrativeSentence();
+      const whatToWatch = buildWhatToWatchLine();
+      const longRunLabel = (() => {
+        if (!Number.isFinite(longShift) || Math.abs(longShift) < 5) return 'Long-run: modest drift';
+        const side = longShift > 0 ? 'Republican' : 'Democratic';
+        return `Long-run: ${side} drift`;
+      })();
 
       return `
-        <section class="focus-viral" aria-label="At a glance explainer">
-          <div class="focus-viral-hero">
-            <div class="focus-viral-eyebrow">At a glance</div>
-            <h3 class="focus-viral-headline">${escapeHtml(modeLabel)}</h3>
-            <p class="focus-viral-summary">${escapeHtml(summary)}</p>
+        <section class="focus-glance ${toneClass}" aria-label="At a glance">
+          <div class="focus-glance-head">
+            <span class="focus-glance-kicker">\uD83D\uDD25 At a glance</span>
+            ${flipBadge ? `<span class="focus-glance-badge ${escapeHtml(flipBadge.cls)}">${escapeHtml(flipBadge.text)}</span>` : ''}
           </div>
-          <div class="focus-viral-grid">
-            ${cards.map(card => `
-              <div class="focus-viral-card ${escapeHtml(card.tone || 'neutral')}">
-                <span class="focus-viral-card-kicker">${escapeHtml(card.kicker || '')}</span>
-                <strong>${escapeHtml(card.title || '')}</strong>
-                <p>${escapeHtml(card.body || '')}</p>
-              </div>
-            `).join('')}
-          </div>
-          <ul class="focus-viral-bullets">
-            ${bulletLines.map(item => `
-              <li><span class="bullet-emoji">${escapeHtml(item.emoji)}</span><span>${escapeHtml(item.text)}</span></li>
+          <div class="focus-glance-headline">${escapeHtml(headline)}</div>
+          <ul class="focus-glance-bullets">
+            ${bullets.map(item => `
+              <li>
+                <span class="focus-glance-label">${escapeHtml(item.label)}:</span>
+                <span class="focus-glance-value">${escapeHtml(item.value)}</span>
+              </li>
             `).join('')}
           </ul>
+          ${microInsight ? `<div class="focus-glance-micro">${escapeHtml(microInsight)}</div>` : ''}
+        </section>
+        <section class="focus-story ${toneClass}" aria-label="Story mode">
+          <div class="focus-story-head">
+            <span class="focus-story-kicker">Story</span>
+            <span class="focus-confidence" data-level="${escapeHtml(confidence.level)}">
+              <span class="focus-confidence-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+              ${escapeHtml(confidence.label)}
+            </span>
+          </div>
+          <h3 class="focus-story-title">${escapeHtml(storyTitle)}</h3>
+          <p class="focus-story-summary">${escapeHtml(storySummary)}</p>
+          <div class="focus-story-grid">
+            <div class="focus-story-mini">
+              <span class="k">Direction</span>
+              <span class="v">${escapeHtml(directionBullet)}</span>
+            </div>
+            <div class="focus-story-mini">
+              <span class="k">Long-run shift</span>
+              <span class="v">${escapeHtml(longRunLabel)}</span>
+            </div>
+            <div class="focus-story-mini">
+              <span class="k">Population story</span>
+              <span class="v">${escapeHtml(contextBullet)}</span>
+            </div>
+            <div class="focus-story-mini">
+              <span class="k">What to watch</span>
+              <span class="v">${escapeHtml(isRecentFlip ? 'Flip durability test' : 'Next-cycle check')}</span>
+            </div>
+          </div>
+          <p class="focus-story-watch"><strong>What to watch:</strong> ${escapeHtml(whatToWatch)}</p>
         </section>
       `;
     }
