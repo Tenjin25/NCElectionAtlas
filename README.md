@@ -73,7 +73,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
 - **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
 	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
-	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Reinforcing Democratic (Stronghold)`, `Reinforcing Republican (Advantage)`, `Emerging Republican (Edge)`, or `Battleground`, with the category pill stacked under the `Trajectory Snapshot` title for more readable long labels
+	- **County Focus Panel (Newsroom-style):** Clicking a county gives a dominant **At a glance** summary (winner, margin strength, vote split, story, “what to watch”), plus a short **Why it votes this way** explainer, a **Confidence** meter, and a one-line **Compared with North Carolina** context sentence; deeper detail stays behind expandable sections
+	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Stable Republican (Stronghold)`, `Strengthening Democratic (Edge)`, `Emerging Republican (Tilt)`, or `Battleground`, with the category pill stacked under the trajectory header for more readable long labels
 	- **Trajectory Snapshot Add-ons (Structured):** Appends a subtype line, a `Margin Category` line (Stronghold/Safe/Likely/Lean/Tilt/Tossup), and a `Growth Dynamic` note beneath the `Latest Result` row (`Votes vs last cycle: R +X, D +Y`)
 	- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
@@ -106,7 +107,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Added a short **Census check** callout in the Trends panel that cross-checks trajectory language against county population-growth patterns (Vintage 2025 estimates).
 - Expanded the Census check trigger so fast-growth, outer-suburban counties (for example, Union) can still surface a growth/lean note even when the most recent cycle is a small bounce.
-- Adjusted **Momentum** so fast-growth, outer-suburban counties can surface a `← Long-run Democratic drift` call at smaller long-run deltas when the county remains Republican-leaning but has clearly softened over time.
+- Adjusted **Momentum** so fast-growth, outer-suburban counties can surface a `← Long-run move left` call at smaller long-run deltas when the county remains Republican-leaning but has clearly softened over time.
 - Refined the `County Census Insight` buckets so transition counties read as `Small-metro / outer-suburban transition`, and military-hub counties (for example, Cumberland/Onslow/Wayne/Craven/Hoke) get a note that year-to-year estimates can be choppy.
 - Restyled the Census check callout to match the compact “Meaning” card typography while remaining visually distinct.
 - Clarified the **Margin Categories** legend language so it’s consistent everywhere: the color spectrum is the signed two-party margin (Rep% − Dem%), while category chips represent absolute margin thresholds (|Rep% − Dem%|).
@@ -118,10 +119,10 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Added an inline loading hint when switching to 2024 district lines so the UI explains the first-time boundary load delay without a modal popup.
 	- Trajectory Snapshot glossary (the `Meaning:` line and status chip are generated from the same rules everywhere):
 	  - `Origin`:
-	    - `Durable`: long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
-	    - `Reinforcing`: the county is moving further in the same direction as its current lean.
+	    - `Stable` (formerly `Durable`): long-running lean with no sustained recent break (even if the margin narrows/widens over decades).
+	    - `Strengthening` (formerly `Reinforcing`): the county is moving further in the same direction as its current lean.
 	    - `Emerging`: the county still leans one way, but the underlying movement points the other way (a “closing the gap” trajectory).
-	    - `Realigned`: the county’s lean has flipped versus its longer-run baseline.
+	    - `Shifted` (formerly `Realigned`): the county’s lean has flipped versus its longer-run baseline.
 	  - `Side`: `Democratic` / `Republican` reflect the *current* lean (the most recent margin), not the direction of change.
 	  - `Position`:
 	    - `Stronghold`: very safe margin.
@@ -131,19 +132,18 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	    - `Battleground`: essentially even / too close to call cleanly.
 	  - `Momentum` (trend line):
 	    - `↔ Stable`: little directional change.
-	    - `← Democratic trend` / `→ Republican trend`: consistent shift over recent cycles.
-	    - `←/→ Accelerating ... trend`: the most recent window is moving faster than the longer-run pace.
-	    - `←/→ Long-run ... drift`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
+	    - `← Moving left` / `→ Moving right`: consistent shift over recent cycles.
+	    - `← Moving left faster` / `→ Moving right faster`: the most recent window is moving faster than the longer-run pace.
+	    - `← Long-run move left` / `→ Long-run move right`: slow multi-decade movement that may not show up strongly in the last 1–2 cycles.
 	  - `Subtype` (structured add-on line under the status pill):
 	    - `Active Suburban Transition`: long-run Democratic movement with a still-Republican but narrower current margin.
 	    - `Active Republican Transition`: long-run Republican movement with a still-Democratic but narrower current margin.
 	    - `Suburbanizing (Lagging)`: long-run Democratic pressure, but the most recent cycle moved more Republican.
 	    - `Counter-Suburbanizing (Lagging)`: long-run Republican pressure, but the most recent cycle moved more Democratic.
-	    - `Softening Republican`: recent Democratic movement in a still-strong Republican county.
-	    - `Softening Democratic`: recent Republican movement in a still-strong Democratic county.
-	    - `Reinforcing Republican`: long-run and short-run movement both favor Republicans.
-	    - `Reinforcing Democratic`: long-run and short-run movement both favor Democrats.
-	    - `Realigning Republican` / `Realigning Democratic`: long-run movement is large enough to suggest a structural shift in coalition.
+	    - `Red-leaning, cooling`: still Republican-leaning, but Democrats have gained ground lately.
+	    - `Blue-leaning, cooling`: still Democratic-leaning, but Republicans have gained ground lately.
+	    - `Moving right` / `Moving left`: long-run and recent movement both point the same way.
+	    - `Breaking right` / `Breaking left`: movement large enough to suggest a structural shift is underway.
 	    - `Stable / Mixed`: does not strongly match one of the above patterns.
 	  - `Margin Category` (neutral add-on line, based only on the current margin):
 	    - `Margin: Stronghold R/D` (20%+)
@@ -159,34 +159,34 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Promoted the `index_nc_trajectory_edgecases.html` variant into the live `index.html`.
 - Expanded the trajectory classifier so status labels are now composed from:
-  - `origin`: `Durable`, `Reinforcing`, `Emerging`, or `Realigned`
+  - `origin` (internal): `Durable`, `Reinforcing`, `Emerging`, or `Realigned` (displayed as `Stable`, `Strengthening`, `Emerging`, or `Shifted`)
   - `side`: `Democratic`, `Republican`, or fully neutral `Battleground`
   - `position`: `Stronghold`, `Advantage`, `Edge`, `Tilt`, or `Battleground`
 - Example live statuses now include labels such as:
-  - `Durable Democratic (Stronghold)`
-  - `Reinforcing Democratic (Stronghold)`
-  - `Reinforcing Republican (Advantage)`
-  - `Reinforcing Republican (Stronghold)`
+  - `Stable Democratic (Stronghold)`
+  - `Strengthening Democratic (Stronghold)`
+  - `Strengthening Republican (Advantage)`
+  - `Strengthening Republican (Stronghold)`
   - `Emerging Democratic (Edge)`
-  - `Realigned Republican (Stronghold)`
+  - `Shifted Republican (Stronghold)`
   - `Battleground`
 - Updated momentum wording to shorter directional calls:
   - `↔ Stable`
-  - `→ Republican trend`
-  - `→ Accelerating Republican trend`
-  - `← Democratic trend`
-  - `← Accelerating Democratic trend`
-  - `← Long-run Democratic drift`
-  - `→ Long-run Republican drift`
+  - `→ Moving right`
+  - `→ Moving right faster`
+  - `← Moving left`
+  - `← Moving left faster`
+  - `← Long-run move left`
+  - `→ Long-run move right`
 - Kept the shorter checkpoint rows in the trajectory card:
   - `Latest Result`
   - `Last Cycle` or `Since <year>`
   - optional `Since 2008`
-- Added icon cues for trajectory origin states so the card can distinguish durable, reinforcing, emerging, and realigned paths at a glance.
+- Added icon cues for trajectory origin states so the card can distinguish stable/strengthening/emerging/shifted paths at a glance.
 - Moved the composite trajectory category pill beneath the `Trajectory Snapshot` heading so longer status labels have more horizontal room and wrap more cleanly.
 - Added a `Census Context` county sidebar card with qualitative population/growth framing such as `Urban anchor county`, `Metro spillover`, `High-growth coastal county`, `Slow-growth or declining county`, and `Mixed-growth county`.
 - The Census insight now reads from cleaned Vintage 2025 county population estimates in `data/CO-EST2025-POP-37-clean.csv`, released March 26, 2026, so it can reference actual 2020-2025 growth and the July 1, 2024 to July 1, 2025 change instead of only static county buckets.
-- Added a trajectory-level `Census check` note when growth patterns strongly corroborate the election trend, including fast-growing suburban reinforcement cases and leftward drift in metro spillover counties.
+- Added a trajectory-level `Census check` note when growth patterns strongly corroborate the election trend, including fast-growing suburban strengthening cases and leftward drift in metro spillover counties.
 - The Census card is intentionally qualitative; it summarizes recent population-pattern context rather than presenting a raw Census table.
 
 ### Modeled 2026 Statewide Contests (March 26, 2026)
@@ -261,13 +261,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Reworked split-ticket controls into a `Pres-Gov` overlay mode: President remains the base contest while Governor colors are layered on top for crossover analysis.
 - Added a topbar `Recount Radar` badge that activates at zoomed-in levels when focused margins are within the `0.5%` recount threshold.
 - Added a `Barometer` overlay (legend chip) that surfaces counties closest to the statewide two-party margin across the last 2–3 available cycles (no winner-match requirement; click to enable/disable; off by default).
-- Upgraded the county “At a glance” + “Story” blocks (April 2, 2026):
-  - “At a glance” is a structured 1-line headline + max-3 bullets (+ optional momentum micro-line), with subtle red/blue/neutral tinting.
-  - “Story” is an editorial card with a `Barometer` chip (partisan lean + strength), a short narrative summary, and a one-sentence “What to watch” line.
-  - Improved `Democratic` barometer-chip contrast on the dark story card background for better visibility.
-  - Added one-click `Copy` for story text, plus a small `Vs NC` line when the current statewide margin is available (helps users anchor “how state-like” a place is).
-  - Standardized long-run and momentum shift formatting to `2` decimals in the story/at-a-glance surfaces.
-  - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
+- Upgraded the county focus experience (April 2–3, 2026):
+  - “At a glance” is now the dominant summary in the county panel: **who won**, **how strong**, and a short analyst-style **story** + **what to watch next**.
+  - Added a newsroom-style **Why it votes this way** block (trend + population context) so the panel answers “why,” not just “what.”
+  - Added a **Confidence** meter (Low/Medium/High) based on margin size plus trend consistency/volatility (updates once history loads).
+  - Added a one-line **Compared with North Carolina** sentence for immediate statewide context.
+  - Added one-click **Copy** for the county summary, and kept the darker “Story details” card available as a subordinate expand/collapse block.
+  - Remembered disclosure open/closed state (Vote details / History / Demographics / Non-geographic votes) per browser to reduce repeated cognitive load.
 - Fixed precinct overlay geometry matching (April 3, 2026): modern contests (2014+) now default to `data/Voting_Precincts.geojson`, while legacy cycles (≤2012) use the Census `VTD20` fallback to reduce missing precinct fills (notably Union 2020 key variants).
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
@@ -335,6 +335,7 @@ The current `index.html` includes several speed-focused improvements that are al
 - **RAF-throttled hover updates:** Hover handlers use `requestAnimationFrame` and feature-state highlighting to reduce pointer-move churn and flicker.
 - **Worker-based CSV parsing fallback:** Historical presidential OpenElections CSVs are stream-parsed in a Web Worker (Papa Parse) when needed, reducing main-thread UI stalls.
 - **Deferred trend loading:** County trend series are loaded asynchronously so contest application and map recoloring happen immediately.
+- **County trend series caching:** Aggregated county history is cached in-session (`countyTrendSeriesCache`) so re-selecting counties is snappier.
 - **Precinct trend matching fallback:** Selected precinct trend lookups now use precinct alias/variant matching across years, then fall back to county history when no valid precinct series is found.
 - **Counties-mode contest switch optimization (March 3, 2026):** Contest changes with `Precincts Off` now avoid unnecessary precinct matching/index work, improving responsiveness and reducing main-thread churn.
 
