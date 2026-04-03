@@ -15855,6 +15855,10 @@ document.addEventListener('DOMContentLoaded', function() {
       function buildWhatToWatchLine(options = {}) {
         const compact = options.compact === true;
         const absMargin = Math.abs(Number(selectedSigned) || 0);
+        const accel = Number.isFinite(recentShiftSince2020) && Math.abs(recentShiftSince2020) >= 3;
+        const growthTag = `${String(growthHeadline || '').toLowerCase()} ${String(contextBullet || '').toLowerCase()}`;
+        const fastGrowth = /fast growth|metro spillover|outer-suburban|urban anchor|coastal growth/.test(growthTag);
+        const slowGrowth = /slow growth|declin/.test(growthTag);
         if (isRecentFlip) return compact ? 'Does the flip hold, or does it snap back?' : 'Next comparable cycle: does the new winner hold, or does it snap back?';
         if (absMargin < 0.5) return compact ? 'Coin-flip territory: tiny turnout shifts can change the winner.' : 'True coin-flip territory: tiny turnout shifts can change the winner.';
         if (absMargin < 1.0) return 'Still very close: a point of swing can change the winner.';
@@ -15865,18 +15869,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (Number.isFinite(recentShiftSince2020) && selectedYear >= 2020 && recentShiftSign !== 'neutral') {
           const dir = recentShiftSign === 'rep' ? 'right' : 'left';
+          if (fastGrowth) {
+            return compact
+              ? `${accel ? 'Growth is the accelerant' : 'Growth is the backdrop'}: another move ${dir} next cycle would make the trend hard to ignore.`
+              : `${accel ? 'With fast growth and recent acceleration' : 'With fast growth in the mix'}, watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
+          }
+          if (slowGrowth && absMargin >= 8) {
+            return compact
+              ? `In a slow-growth county, the key test is whether the margin holds—or starts to drift.`
+              : `With slow growth, margins tend to be sticky—watch whether the next cycle holds steady or starts to drift.`;
+          }
           return compact
             ? `Another move ${dir} next cycle would make the trend hard to ignore.`
             : `Watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
         }
         if (tone === 'rep') {
           return popEffect.effect === 'complicates'
-            ? `If the margin tightens, this may be a red-leaning ${noun} that stays competitive.`
+            ? (fastGrowth
+              ? `Fast growth is the wild card—watch whether the GOP holds its edge as the electorate changes.`
+              : `If the margin tightens, this may be a red-leaning ${noun} that stays competitive.`)
             : 'If the GOP widens the gap again next cycle, the direction looks durable.';
         }
         if (tone === 'dem') {
           return popEffect.effect === 'complicates'
-            ? `If the margin tightens, this may be a blue-leaning ${noun} that stays competitive.`
+            ? (slowGrowth
+              ? `In a slow-growth county, watch whether Democrats can keep adding ground—or whether change cools off.`
+              : `If the margin tightens, this may be a blue-leaning ${noun} that stays competitive.`)
             : 'If Democrats widen the gap again next cycle, the direction looks durable.';
         }
         return `Watch whether this ${noun} breaks clearly toward one side or keeps trading narrow wins.`;
