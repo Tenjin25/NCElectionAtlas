@@ -9220,6 +9220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
     let districtSliceCache = new Map();
+    let countyTrendSeriesCache = new Map(); // Map<string key, Array<seriesRow>> (in-session cache)
     const districtCarryCrosswalkCache = new Map();
     let districtsInfo = null;
     let stateHouseInfo = null;
@@ -15006,6 +15007,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getCountyTrendSeries(contestType, countyName) {
+      const cacheKey = `${String(contestType || '').trim()}|${String(countyName || '').trim().toUpperCase()}`;
+      try {
+        const cached = countyTrendSeriesCache && countyTrendSeriesCache.get ? countyTrendSeriesCache.get(cacheKey) : null;
+        if (Array.isArray(cached)) return cached.slice();
+      } catch (_) {}
+
       const entries = (contestManifest || [])
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
         .slice()
@@ -15052,6 +15059,7 @@ document.addEventListener('DOMContentLoaded', function() {
           margin_pct: Number(marginPct.toFixed(2))
         });
       }
+      try { countyTrendSeriesCache.set(cacheKey, out.slice()); } catch (_) {}
       return out;
     }
 
@@ -19761,6 +19769,10 @@ document.addEventListener('DOMContentLoaded', function() {
     </details>
   `;
   contentEl.innerHTML = sidebarContent;
+  try {
+    const scroller = document.querySelector('.sidebar-content');
+    if (scroller) scroller.scrollTop = 0;
+  } catch (_) {}
   // Populate trends asynchronously from manifest slices (does not block UI).
   (async () => {
     try {
