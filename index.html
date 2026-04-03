@@ -1612,6 +1612,14 @@ body { height: var(--app-height); }
   overflow: hidden;
 }
 .focus-glance-micro strong { color: #0f172a; }
+.focus-glance-micro--full {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+}
+.focus-glance-micro--full span { display: block; }
+.focus-glance-micro--full span + span { margin-top: 4px; }
 @keyframes glance-in {
   from { opacity: 0.0; transform: translateY(4px); }
   to { opacity: 1.0; transform: translateY(0); }
@@ -15756,13 +15764,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const popEffect = classifyPopulationEffect(tone, contextBullet);
 
-      // This line is the "finish" of the glance card: one tight sentence of story + one tight line of what's next.
+      // This is the "finish" of the glance card: two short, scannable lines.
       const microInsight = (() => {
-        const story = buildNarrativeSentence();
-        const watch = buildWhatToWatchLine();
-        if (!story && !watch) return '';
-        if (story && watch) return `Story: ${story} Watch: ${watch}`;
-        return story ? `Story: ${story}` : `Watch: ${watch}`;
+        const story = buildNarrativeSentence({ includePopulation: false, compact: true });
+        const watch = buildWhatToWatchLine({ compact: true });
+        if (!story && !watch) return null;
+        return { story, watch };
       })();
 
       const momentumMini = (() => {
@@ -15808,8 +15815,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return `Compared with NC: ${Math.abs(delta).toFixed(2)} pts ${word}`;
       })();
 
-      function buildNarrativeSentence() {
-        const popClause = popEffect?.line ? ` ${popEffect.line}` : '';
+      function buildNarrativeSentence(options = {}) {
+        const includePopulation = options.includePopulation !== false;
+        const compact = options.compact === true;
+        const popClause = includePopulation && popEffect?.line ? ` ${popEffect.line}` : '';
         if (isRecentFlip) {
           const to = latest?.flip?.to === 'R' ? 'the GOP' : (latest?.flip?.to === 'D' ? 'Democrats' : 'the new side');
           const from = latest?.flip?.from === 'R' ? 'the GOP' : (latest?.flip?.from === 'D' ? 'Democrats' : 'the other side');
@@ -15823,11 +15832,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const recentWord = recentShiftSign === 'rep' ? 'right' : (recentShiftSign === 'dem' ? 'left' : '');
 
         if (hasLong && hasRecent && longShiftSign === recentShiftSign) {
-          const pace = accel ? 'and the pace has picked up recently.' : 'and recent cycles are still moving that way.';
-          return `The big story is a move ${longWord} since ${baseYear}, ${pace}${popClause}`.trim();
+          const pace = accel
+            ? (compact ? 'the pace has picked up lately.' : 'the pace has picked up recently.')
+            : (compact ? 'still drifting that way.' : 'recent cycles are still moving that way.');
+          return `Moved ${longWord} since ${baseYear} — ${pace}${popClause}`.trim();
         }
         if (hasLong && hasRecent && longShiftSign !== recentShiftSign) {
-          return `Long term, it’s moved ${longWord} since ${baseYear}. Lately, it’s nudged ${recentWord} instead.${popClause}`.trim();
+          return `Long-run pull is ${longWord} since ${baseYear}. Recent cycles have nudged ${recentWord}.${popClause}`.trim();
         }
         if (hasLong) {
           return `Over time, it’s moved ${longWord} since ${baseYear}, even if the most recent cycle was quieter.${popClause}`.trim();
@@ -15841,17 +15852,22 @@ document.addEventListener('DOMContentLoaded', function() {
           : 'No single trend dominates here; it tends to swing with the statewide mood.';
       }
 
-      function buildWhatToWatchLine() {
+      function buildWhatToWatchLine(options = {}) {
+        const compact = options.compact === true;
         const absMargin = Math.abs(Number(selectedSigned) || 0);
-        if (isRecentFlip) return 'Next comparable cycle: does the new winner hold, or does it snap back?';
-        if (absMargin < 0.5) return 'True coin-flip territory: tiny turnout shifts can change the winner.';
+        if (isRecentFlip) return compact ? 'Does the flip hold, or does it snap back?' : 'Next comparable cycle: does the new winner hold, or does it snap back?';
+        if (absMargin < 0.5) return compact ? 'Coin-flip territory: tiny turnout shifts can change the winner.' : 'True coin-flip territory: tiny turnout shifts can change the winner.';
         if (absMargin < 1.0) return 'Still very close: a point of swing can change the winner.';
         if (longShiftSign !== 'neutral' && recentShiftSign !== 'neutral' && longShiftSign !== recentShiftSign) {
-          return 'Watch whether the recent pushback continues, or whether the longer-term direction reasserts itself.';
+          return compact
+            ? 'Does the recent pushback stick, or does the longer-run direction return?'
+            : 'Watch whether the recent pushback continues, or whether the longer-term direction reasserts itself.';
         }
         if (Number.isFinite(recentShiftSince2020) && selectedYear >= 2020 && recentShiftSign !== 'neutral') {
           const dir = recentShiftSign === 'rep' ? 'right' : 'left';
-          return `Watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
+          return compact
+            ? `Another move ${dir} next cycle would make the trend hard to ignore.`
+            : `Watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
         }
         if (tone === 'rep') {
           return popEffect.effect === 'complicates'
@@ -15898,7 +15914,12 @@ document.addEventListener('DOMContentLoaded', function() {
               </li>
             `).join('')}
           </ul>
-          ${microInsight ? `<div class="focus-glance-micro">${escapeHtml(microInsight)}</div>` : ''}
+          ${microInsight ? `
+            <div class="focus-glance-micro focus-glance-micro--full">
+              ${microInsight.story ? `<span><strong>Story:</strong> ${escapeHtml(microInsight.story)}</span>` : ''}
+              ${microInsight.watch ? `<span><strong>Watch:</strong> ${escapeHtml(microInsight.watch)}</span>` : ''}
+            </div>
+          `.trim() : ''}
         </section>
         <details class="focus-story-fold" aria-label="Deeper story">
           <summary>Deeper story</summary>
@@ -19736,7 +19757,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `${countyDisplay} is basically tied in ${year}.`
         : `${winner === 'Republican' ? 'GOP' : 'Democrats'} win ${countyDisplay} in ${year} — ${marginShort}.`;
 
-      const glanceMicro = `<strong>Story:</strong> Loading the long-run pattern…`;
+      const glanceMicro = `<span><strong>Story:</strong> Loading the long-run pattern…</span>`;
 
       sidebarContent += `
         <section class="focus-glance ${escapeHtml(toneClass)}" aria-label="At a glance">
@@ -19762,7 +19783,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <span class="focus-glance-value">${escapeHtml(splitShort)}</span>
             </li>
           </ul>
-          <div class="focus-glance-micro" id="county-glance-story">${glanceMicro}</div>
+          <div class="focus-glance-micro focus-glance-micro--full" id="county-glance-story">${glanceMicro}</div>
         </section>
       `;
 
@@ -20073,9 +20094,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ? `This ${noun} has been moving ${directionWord} since ${baseYear}—and ${year} fits the pattern, ${pace}`
             : `Since ${baseYear}, the longer-term pull has been ${directionWord}. In the last few cycles, the movement is ${recentDir === 'neutral' ? 'more muted' : (recentDir === longDir ? 'still in that direction' : 'starting to push back')}.`;
 
+          let streakLine = '';
           if (streak.count >= 3 && streak.party !== 'TIE') {
             const sParty = streak.party === 'REP' ? 'Republicans' : 'Democrats';
-            story += ` ${sParty} have carried it ${streak.count} straight times.`;
+            streakLine = `${sParty} have carried it ${streak.count} straight times.`;
           }
 
           if (partyTone === 'rep' && longDir === 'rep') {
@@ -20102,7 +20124,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const headlineEl = document.getElementById('county-glance-headline');
         if (headlineEl) headlineEl.textContent = headline;
         const storyEl = document.getElementById('county-glance-story');
-        if (storyEl) storyEl.innerHTML = `<strong>Story:</strong> ${escapeHtml(story)}`;
+        if (storyEl) {
+          storyEl.innerHTML = `
+            <span><strong>Story:</strong> ${escapeHtml(story)}</span>
+            ${streakLine ? `<span>${escapeHtml(streakLine)}</span>` : ''}
+          `.trim();
+        }
         const watchEl = document.getElementById('county-watch');
         if (watchEl) watchEl.textContent = watch;
 
