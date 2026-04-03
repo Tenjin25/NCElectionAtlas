@@ -293,6 +293,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ### Precinct Matching and Outlier Cleanup
 
 - Expanded legacy precinct variant handling so older tokens map to modern centroid/geometry IDs more reliably.
+- Updated precinct overlay geometry selection so **modern contests (2014+)** render against `data/Voting_Precincts.geojson` by default; **legacy cycles (≤2012)** fall back to Census `VTD20` geometry. This significantly reduces “missing precinct” fills for 2016/2020-era precinct keys (including Union County 2020 splits/leading-zero variants).
 - Added evidence-based centroid bridge mappings for high-friction county outliers:
   - `PERSON`: `RCTL -> RCOB`
   - `IREDELL`: `BA -> BA-1`, `DV1-B -> DV1B-1`, `DV2-A -> DV2A-1`, `DV3-A/DV3 -> DV3A`
