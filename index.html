@@ -23115,6 +23115,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const expr = ['case'];
+      const countyFillColorByNorm = new Map();
       let countiesProcessed = 0;
       
       for (const countyName of Object.keys(countyAgg)) {
@@ -23168,6 +23169,7 @@ document.addEventListener('DOMContentLoaded', function() {
           countyName
         ]);
         expr.push(color);
+        countyFillColorByNorm.set(countyName, color);
         countiesProcessed++;
       }
       expr.push('#e0e0e0'); // default color
@@ -23222,6 +23224,22 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPrecinctResults = null;
       }
       if (needsPrecinctDetail) {
+        const useVtdCountyBackfill = (() => {
+          const y = Number(year);
+          if (!Number.isFinite(y) || y > 2012) return false;
+          // Only apply this on older-year analysis where we intentionally use VTD20 geometry.
+          return getDesiredPrecinctGeometryMode() === 'vtd20';
+        })();
+        const countyFallbackExpr = (() => {
+          if (!useVtdCountyBackfill || !countyFillColorByNorm.size) return '#d1d5db';
+          const fb = ['case'];
+          countyFillColorByNorm.forEach((color, countyNorm) => {
+            fb.push(['==', ['get', 'county_norm'], countyNorm]);
+            fb.push(color);
+          });
+          fb.push('#d1d5db');
+          return fb;
+        })();
         const exprPrecinct = ['case'];
         for (const row of contestData) {
           if (staleCheck()) return;
@@ -23275,7 +23293,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPrecinctTurnoutTotals.set(precinctName, totalVotes);
           });
         }
-        exprPrecinct.push('#d1d5db');
+        exprPrecinct.push(countyFallbackExpr);
         if (staleCheck()) return;
         // Cache for later, in case precinct overlay loads after the contest is applied.
         lastPrecinctFillExpr = exprPrecinct;
