@@ -23232,7 +23232,11 @@ document.addEventListener('DOMContentLoaded', function() {
           return getDesiredPrecinctGeometryMode() === 'vtd20';
         })();
         const countyFallbackExpr = (() => {
-          if (!useVtdCountyBackfill || !countyFillColorByNorm.size) return '#d1d5db';
+          // For modern precinct geometry, some polygons may exist that have no row in the selected
+          // contest/year (newer splits/renames vs historical exports). Default those to transparent
+          // so the underlying county fill remains visible, instead of showing a “missing” gray block.
+          if (!useVtdCountyBackfill) return 'rgba(0,0,0,0)';
+          if (!countyFillColorByNorm.size) return '#d1d5db';
           const fb = ['case'];
           countyFillColorByNorm.forEach((color, countyNorm) => {
             fb.push(['==', ['get', 'county_norm'], countyNorm]);
