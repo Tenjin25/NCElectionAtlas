@@ -100,7 +100,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** April 2, 2026
+**Last updated:** April 3, 2026
 
 ### Census Check + Legend Clarification (March 27, 2026)
 
@@ -268,6 +268,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - Added one-click `Copy` for story text, plus a small `Vs NC` line when the current statewide margin is available (helps users anchor “how state-like” a place is).
   - Standardized long-run and momentum shift formatting to `2` decimals in the story/at-a-glance surfaces.
   - Mobile keeps “At a glance” above the fold; supporting mini-cards are suppressed on smaller screens to avoid scrolling.
+- Fixed precinct overlay geometry matching (April 3, 2026): modern contests (2014+) now default to `data/Voting_Precincts.geojson`, while legacy cycles (≤2012) use the Census `VTD20` fallback to reduce missing precinct fills (notably Union 2020 key variants).
 - Added statewide what-if swing control and turnout-intensity opacity mode for comparative layering.
 - Added a `Demographics` visualization mode and legend in the map mode controls, including county/district/precinct demographic shading.
 - Added color-coded demographic chips in hover/sidebar details so race-share context is visible without switching panels.
@@ -293,7 +294,6 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ### Precinct Matching and Outlier Cleanup
 
 - Expanded legacy precinct variant handling so older tokens map to modern centroid/geometry IDs more reliably.
-- Updated precinct overlay geometry selection so **modern contests (2014+)** render against `data/Voting_Precincts.geojson` by default; **legacy cycles (≤2012)** fall back to Census `VTD20` geometry. This significantly reduces “missing precinct” fills for 2016/2020-era precinct keys (including Union County 2020 splits/leading-zero variants).
 - Added evidence-based centroid bridge mappings for high-friction county outliers:
   - `PERSON`: `RCTL -> RCOB`
   - `IREDELL`: `BA -> BA-1`, `DV1-B -> DV1B-1`, `DV2-A -> DV2A-1`, `DV3-A/DV3 -> DV3A`
