@@ -5674,17 +5674,35 @@ body { height: var(--app-height); }
 
   .contest-loading-indicator::before {
     content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.34);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    flex: 0 0 auto;
+  }
+
+  /* Escalate to a spinner only for longer loads (set via JS). */
+  .contest-loading-indicator[data-variant="spin"]::before {
     width: 10px;
     height: 10px;
-    border-radius: 999px;
-    border: 2px solid rgba(37, 99, 235, 0.30);
+    background: transparent;
+    box-shadow: none;
+    border: 2px solid rgba(37, 99, 235, 0.26);
     border-top-color: rgba(37, 99, 235, 0.82);
-    animation: contestSpinner 900ms linear infinite;
+    animation: contestSpinner 1100ms linear infinite;
   }
 
   @keyframes contestSpinner {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contest-loading-indicator[data-variant="spin"]::before {
+      animation: none;
+      border-top-color: rgba(37, 99, 235, 0.26);
+    }
   }
 
   .contest-toolbar {
@@ -13584,6 +13602,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     let contestLoadingTimer = null;
+    let contestLoadingSpinnerTimer = null;
     function setContestLoadingUI(isLoading, contestKey = '') {
       try {
         const indicator = document.getElementById('contest-loading-indicator');
@@ -13594,7 +13613,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isLoading) {
           if (contestLoadingTimer) clearTimeout(contestLoadingTimer);
           contestLoadingTimer = null;
+          if (contestLoadingSpinnerTimer) clearTimeout(contestLoadingSpinnerTimer);
+          contestLoadingSpinnerTimer = null;
           indicator.hidden = true;
+          try { delete indicator.dataset.variant; } catch (_) {}
           indicator.textContent = 'Loading…';
           return;
         }
@@ -13609,11 +13631,20 @@ document.addEventListener('DOMContentLoaded', function() {
           label = `Loading ${display}…`;
         }
         indicator.textContent = label;
+        try { indicator.dataset.variant = 'quiet'; } catch (_) {}
         if (!contestLoadingTimer) {
           contestLoadingTimer = setTimeout(() => {
             indicator.hidden = false;
             contestLoadingTimer = null;
-          }, 140);
+            // If we're still loading after a beat, upgrade to a spinner.
+            if (contestLoadingSpinnerTimer) clearTimeout(contestLoadingSpinnerTimer);
+            contestLoadingSpinnerTimer = setTimeout(() => {
+              try {
+                if (!indicator.hidden) indicator.dataset.variant = 'spin';
+              } catch (_) {}
+              contestLoadingSpinnerTimer = null;
+            }, 900);
+          }, 260);
         }
       } catch (_) {}
     }
