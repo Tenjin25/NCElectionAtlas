@@ -1665,6 +1665,89 @@ body { height: var(--app-height); }
 .focus-mini-card .v.rep { color: #7f1d1d; }
 .focus-mini-card .v.dem { color: #1e3a8a; }
 
+.confidence-meter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.confidence-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #334155;
+  white-space: nowrap;
+}
+.confidence-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.30);
+}
+.confidence-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.70), rgba(16, 185, 129, 0.72));
+}
+.confidence-meter[data-level="low"] .confidence-pill {
+  background: rgba(148, 163, 184, 0.18);
+  border-color: rgba(148, 163, 184, 0.34);
+  color: #475569;
+}
+.confidence-meter[data-level="medium"] .confidence-pill {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.22);
+  color: #1e3a8a;
+}
+.confidence-meter[data-level="high"] .confidence-pill {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.28);
+  color: #065f46;
+}
+.confidence-meter[data-level="low"] .confidence-fill { background: rgba(148, 163, 184, 0.65); }
+.confidence-meter[data-level="medium"] .confidence-fill { background: rgba(59, 130, 246, 0.70); }
+.confidence-meter[data-level="high"] .confidence-fill { background: rgba(16, 185, 129, 0.72); }
+
+.focus-why {
+  margin: 0 0 12px 0;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 10px 12px 11px;
+}
+.focus-why-kicker {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0 0 6px 0;
+}
+.focus-why-head {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 900;
+  color: #0f172a;
+}
+.focus-why-lines {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  font-weight: 800;
+}
+.focus-why-lines span { display: block; }
+
 .focus-firsttime-hint {
   margin: -2px 0 12px 0;
   padding: 9px 10px;
@@ -19630,25 +19713,22 @@ document.addEventListener('DOMContentLoaded', function() {
           const stateSigned = ((sr - sd) / two) * 100;
           const delta = Number(signedMarginPct) - stateSigned;
           if (!Number.isFinite(delta)) return '';
-          if (Math.abs(delta) < 0.15) return 'About even with NC';
-          const word = delta > 0 ? 'redder' : 'bluer';
-          return `${Math.abs(delta).toFixed(1)} pts ${word} than NC`;
+          if (Math.abs(delta) < 0.15) return 'About even with North Carolina.';
+          const a = Math.abs(delta);
+          return delta > 0
+            ? `This county is ${a.toFixed(1)} points more Republican than North Carolina.`
+            : `This county voted ${a.toFixed(1)} points to the left of the statewide result.`;
         } catch (_) {
           return '';
         }
       })();
 
-      const popMini = (() => {
+      const censusContext = (() => {
         try {
-          const idx = countyPopulationEstimatesByNorm;
-          if (!idx || !idx.byNorm || typeof idx.byNorm.get !== 'function') return '';
-          const entry = idx.byNorm.get(normalizeCountyToken(countyDisplay)) || idx.byNorm.get(normalizeCountyToken(norm)) || null;
-          if (!entry) return '';
-          const pct = Number(entry.changePct2020To2025);
-          if (!Number.isFinite(pct)) return '';
-          return `Population ${formatPopulationChangePct(pct)} since 2020`;
+          if (typeof getNcCensusContext !== 'function') return null;
+          return getNcCensusContext(norm);
         } catch (_) {
-          return '';
+          return null;
         }
       })();
 
@@ -19686,21 +19766,55 @@ document.addEventListener('DOMContentLoaded', function() {
         </section>
       `;
 
+      const initialConfidence = (() => {
+        const absMargin = Math.abs(Number(signedMarginPct) || 0);
+        if (absMargin >= 10) return { level: 'high', label: 'High', pct: 82 };
+        if (absMargin >= 5) return { level: 'medium', label: 'Medium', pct: 58 };
+        if (absMargin >= 2) return { level: 'medium', label: 'Medium', pct: 46 };
+        return { level: 'low', label: 'Low', pct: 30 };
+      })();
+
       const miniCards = [];
+      miniCards.push({ k: 'Compared with NC', v: vsNcShort || '—' });
+      miniCards.push({
+        k: 'Confidence',
+        html: `
+          <div class="confidence-meter" id="county-confidence-meter" data-level="${escapeHtml(initialConfidence.level)}" aria-label="${escapeHtml(`Confidence: ${initialConfidence.label}`)}" title="Confidence uses margin size + trend consistency + volatility">
+            <span class="confidence-pill">${escapeHtml(initialConfidence.label)}</span>
+            <span class="confidence-track" aria-hidden="true"><span class="confidence-fill" style="width:${escapeHtml(String(initialConfidence.pct))}%;"></span></span>
+          </div>
+        `
+      });
       miniCards.push({ k: 'Total votes', v: totalVotes.toLocaleString() });
-      if (vsNcShort) miniCards.push({ k: 'Compared to NC', v: vsNcShort });
-      if (precincts) miniCards.push({ k: 'Precincts', v: String(precincts) });
-      else if (popMini) miniCards.push({ k: 'Population', v: popMini });
-      miniCards.push({ k: 'What to watch', v: 'Whether the next cycle confirms this direction.' , id: 'county-watch' });
+      miniCards.push({ k: 'What to watch', v: 'Whether the next cycle confirms this direction.', id: 'county-watch' });
 
       sidebarContent += `
         <div class="focus-mini-grid" aria-label="Key facts">
           ${miniCards.slice(0, 4).map(card => `
             <div class="focus-mini-card">
               <span class="k">${escapeHtml(card.k)}</span>
-              <span class="v${partyTone === 'rep' && card.k === 'What to watch' ? ' rep' : (partyTone === 'dem' && card.k === 'What to watch' ? ' dem' : '')}" ${card.id ? `id="${escapeHtml(card.id)}"` : ''}>${escapeHtml(card.v)}</span>
+              ${card.html
+                ? `<div class="v" ${card.id ? `id="${escapeHtml(card.id)}"` : ''}>${card.html}</div>`
+                : `<span class="v${partyTone === 'rep' && card.k === 'What to watch' ? ' rep' : (partyTone === 'dem' && card.k === 'What to watch' ? ' dem' : '')}" ${card.id ? `id="${escapeHtml(card.id)}"` : ''}>${escapeHtml(card.v)}</span>`
+              }
             </div>
           `).join('')}
+        </div>
+        <div class="focus-why" aria-label="Why it votes this way">
+          <div class="focus-why-kicker">Why it votes this way</div>
+          <p class="focus-why-head" id="county-why-head">${escapeHtml((() => {
+            const pat = String(censusContext?.patternLabel || '').trim();
+            if (/Metro spillover|outer-suburban/i.test(pat)) return 'Suburban growth is reshaping the electorate here.';
+            if (/Urban anchor/i.test(pat)) return 'Urban growth keeps this county politically dynamic.';
+            if (/Coastal growth/i.test(pat)) return 'Migration-driven growth can move margins quickly here.';
+            if (/Slow-growth|declin/i.test(pat)) return 'Slow growth often locks in today’s political lean.';
+            if (pat) return 'Population change is part of this county’s political story.';
+            return 'Local turnout and long-run change shape this county.';
+          })())}</p>
+          <p class="focus-why-lines" id="county-why-lines">
+            <span>${escapeHtml(String(censusContext?.signalLabel || 'Loading population context…').replace(/^Population\s+/i, 'Population '))}</span>
+            <span>${escapeHtml('Loading trend context…')}</span>
+          </p>
         </div>
         <div class="focus-firsttime-hint" id="county-firsttime-hint" role="note" hidden>Tip: open “History” for the long-run pattern behind today’s margin.</div>
       `;
@@ -19991,6 +20105,100 @@ document.addEventListener('DOMContentLoaded', function() {
         if (storyEl) storyEl.innerHTML = `<strong>Story:</strong> ${escapeHtml(story)}`;
         const watchEl = document.getElementById('county-watch');
         if (watchEl) watchEl.textContent = watch;
+
+        // Confidence meter (Low/Medium/High): margin size + consistency + volatility.
+        try {
+          const absMargin = Math.abs(Number(anchor?.margin_pct) || 0);
+          const absStep = sorted.slice(1).map((s, idx) => Math.abs(Number(s.margin_pct) - Number(sorted[idx].margin_pct))).filter(n => Number.isFinite(n));
+          const avgStep = absStep.length ? (absStep.reduce((a, b) => a + b, 0) / absStep.length) : 0;
+          const flips = (() => {
+            let lastSign = 0;
+            let count = 0;
+            for (const s of sorted) {
+              const m = Number(s?.margin_pct);
+              if (!Number.isFinite(m)) continue;
+              if (Math.abs(m) < 0.5) continue;
+              const sign = m > 0 ? 1 : -1;
+              if (lastSign && sign !== lastSign) count += 1;
+              lastSign = sign;
+            }
+            return count;
+          })();
+          const marginScore = Math.max(0, Math.min(1, absMargin / 12)) * 55;
+          const consistencyScore = (longDir !== 'neutral' && recentDir !== 'neutral' && longDir === recentDir) ? 30
+            : ((longDir !== 'neutral' || recentDir !== 'neutral') ? 16 : 8);
+          const volatilityPenalty = (flips >= 3 ? 22 : flips === 2 ? 14 : flips === 1 ? 7 : 0) + (avgStep >= 6 ? 10 : avgStep >= 4 ? 5 : 0);
+          const score = Math.max(0, Math.min(100, marginScore + consistencyScore - volatilityPenalty));
+          const level = score >= 70 ? 'high' : (score >= 40 ? 'medium' : 'low');
+          const label = level === 'high' ? 'High' : (level === 'medium' ? 'Medium' : 'Low');
+          const meter = document.getElementById('county-confidence-meter');
+          if (meter) {
+            meter.dataset.level = level;
+            meter.setAttribute('aria-label', `Confidence: ${label}`);
+            const pill = meter.querySelector('.confidence-pill');
+            if (pill) pill.textContent = label;
+            const fill = meter.querySelector('.confidence-fill');
+            if (fill) fill.style.width = `${score.toFixed(0)}%`;
+          }
+        } catch (_) {}
+
+        // "Why it votes this way" (trend + census context, 1 headline + 1–2 lines).
+        try {
+          const patRaw = String(censusContext?.patternLabel || '').trim();
+          const pat = patRaw.toLowerCase();
+          const growthDriver = (() => {
+            if (/metro spillover|outer-suburban/.test(pat)) return 'Suburban growth';
+            if (/urban anchor/.test(pat)) return 'Urban growth';
+            if (/coastal growth|coastal migration/.test(pat)) return 'Coastal in‑migration';
+            if (/slow-growth|declin/.test(pat)) return 'Slow growth';
+            if (/small-metro/.test(pat)) return 'Small‑metro growth';
+            if (patRaw) return patRaw.replace(/\s+with\s+.*$/i, '').replace(/\s+county$/i, '').trim();
+            return 'Local fundamentals';
+          })();
+
+          const whyHeadline = (() => {
+            if (growthDriver === 'Slow growth') {
+              if (partyTone === 'rep') return 'A steady electorate has helped keep this county reliably Republican.';
+              if (partyTone === 'dem') return 'A steady electorate has helped keep this county reliably Democratic.';
+              return 'A steady electorate can keep this county close.';
+            }
+            if (growthDriver === 'Suburban growth' || growthDriver === 'Urban growth' || growthDriver === 'Small‑metro growth') {
+              if (longDir === 'dem') return `${growthDriver} has helped Democrats gain ground over time.`;
+              if (longDir === 'rep') return `${growthDriver} hasn’t translated into a leftward shift here.`;
+              return `${growthDriver} is the big backdrop, but margins haven’t moved cleanly one way.`;
+            }
+            if (growthDriver === 'Coastal in‑migration') {
+              if (longDir === 'dem') return 'In‑migration has helped pull margins left over time.';
+              if (longDir === 'rep') return 'In‑migration hasn’t changed the underlying Republican lean yet.';
+              return 'In‑migration can move margins quickly here—watch the next cycle.';
+            }
+            if (longDir === 'dem') return `${growthDriver} lines up with a long-run move left.`;
+            if (longDir === 'rep') return `${growthDriver} lines up with a long-run move right.`;
+            return `${growthDriver} helps explain why this stays competitive.`;
+          })();
+
+          const line1 = (() => {
+            const sig = String(censusContext?.signalLabel || '').trim();
+            if (sig) return sig.replace(/^Population\s+/i, 'Population ');
+            return '';
+          })();
+          const line2 = (() => {
+            if (longDir === 'neutral' && recentDir === 'neutral') return 'The big driver year-to-year is turnout, not a consistent partisan drift.';
+            if (longDir !== 'neutral' && recentDir === 'neutral') return `The long-run pull is ${directionWord}, but recent cycles have been quieter.`;
+            if (longDir !== 'neutral' && recentDir !== 'neutral' && longDir !== recentDir) return `The long-run pull is ${directionWord}, but lately it’s shown some pushback.`;
+            if (longDir !== 'neutral' && recentDir !== 'neutral' && longDir === recentDir) return `Both the long run and recent cycles point ${directionWord}.`;
+            if (recentDir !== 'neutral') return `Since 2020, the movement has been ${recentDir === 'rep' ? 'right' : 'left'}.`;
+            return '';
+          })();
+
+          const whyHeadEl = document.getElementById('county-why-head');
+          if (whyHeadEl) whyHeadEl.textContent = whyHeadline;
+          const whyLinesEl = document.getElementById('county-why-lines');
+          if (whyLinesEl) {
+            const lines = [line1, line2].filter(Boolean).slice(0, 2);
+            whyLinesEl.innerHTML = lines.map(t => `<span>${escapeHtml(t)}</span>`).join('');
+          }
+        } catch (_) {}
       } catch (_) {}
 
       el.innerHTML = sorted
