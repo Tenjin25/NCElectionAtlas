@@ -1471,6 +1471,23 @@ body { height: var(--app-height); }
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.focus-glance-copy {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.focus-glance-copy:hover { background: rgba(15, 23, 42, 0.06); }
+.focus-glance-copy:active { transform: translateY(1px); }
+.focus-glance-copy:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.65);
+  outline-offset: 2px;
+}
 .focus-barometer {
   display: inline-flex;
   align-items: center;
@@ -1647,6 +1664,18 @@ body { height: var(--app-height); }
 }
 .focus-mini-card .v.rep { color: #7f1d1d; }
 .focus-mini-card .v.dem { color: #1e3a8a; }
+
+.focus-firsttime-hint {
+  margin: -2px 0 12px 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
 
 /* Progressive disclosure blocks inside the Focus panel */
 .focus-disclosure {
@@ -11957,23 +11986,47 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       document.addEventListener('click', async (e) => {
         const btn = e.target && typeof e.target.closest === 'function'
-          ? e.target.closest('[data-action="copy-story"]')
+          ? e.target.closest('[data-action="copy-story"], [data-action="copy-glance"]')
           : null;
         if (!btn) return;
         e.preventDefault();
         e.stopPropagation();
-        const story = btn.closest('.focus-story');
-        if (!story) return;
-        const title = story.querySelector('.focus-story-title')?.textContent?.trim() || 'Story';
-        const vs = story.querySelector('.focus-story-vs')?.textContent?.trim() || '';
-        const summary = story.querySelector('.focus-story-summary')?.textContent?.trim() || '';
-        const mini = Array.from(story.querySelectorAll('.focus-story-mini')).map(card => {
-          const k = card.querySelector('.k')?.textContent?.trim() || '';
-          const v = card.querySelector('.v')?.textContent?.trim() || '';
-          return k && v ? `${k}: ${v}` : '';
-        }).filter(Boolean);
-        const watch = story.querySelector('.focus-story-watch')?.textContent?.trim() || '';
-        const text = [title, vs, summary, '', ...mini, '', watch].filter(Boolean).join('\n');
+        const action = String(btn.dataset.action || '').trim();
+        let text = '';
+        let okLabel = 'Copied to clipboard.';
+        if (action === 'copy-glance') {
+          const glance = btn.closest('.focus-glance');
+          if (!glance) return;
+          const name = document.getElementById('county-name')?.textContent?.trim() || '';
+          const sub = document.getElementById('county-subhead')?.textContent?.trim() || '';
+          const headline = glance.querySelector('.focus-glance-headline')?.textContent?.trim() || '';
+          const bullets = Array.from(glance.querySelectorAll('.focus-glance-bullets li')).map(li => li.textContent?.trim() || '').filter(Boolean);
+          const micro = glance.querySelector('.focus-glance-micro')?.textContent?.trim() || '';
+          const watch = document.getElementById('county-watch')?.textContent?.trim() || '';
+          text = [
+            [name, sub].filter(Boolean).join(' — '),
+            headline,
+            '',
+            ...bullets,
+            micro ? `\n${micro}` : '',
+            watch ? `\nWhat to watch next: ${watch}` : ''
+          ].filter(Boolean).join('\n');
+          okLabel = 'Summary copied to clipboard.';
+        } else {
+          const story = btn.closest('.focus-story');
+          if (!story) return;
+          const title = story.querySelector('.focus-story-title')?.textContent?.trim() || 'Story';
+          const vs = story.querySelector('.focus-story-vs')?.textContent?.trim() || '';
+          const summary = story.querySelector('.focus-story-summary')?.textContent?.trim() || '';
+          const mini = Array.from(story.querySelectorAll('.focus-story-mini')).map(card => {
+            const k = card.querySelector('.k')?.textContent?.trim() || '';
+            const v = card.querySelector('.v')?.textContent?.trim() || '';
+            return k && v ? `${k}: ${v}` : '';
+          }).filter(Boolean);
+          const watch = story.querySelector('.focus-story-watch')?.textContent?.trim() || '';
+          text = [title, vs, summary, '', ...mini, '', watch].filter(Boolean).join('\n');
+          okLabel = 'Story copied to clipboard.';
+        }
         try {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(text);
@@ -11987,8 +12040,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.execCommand('copy');
             ta.remove();
           }
-          setStatus('Story copied to clipboard.');
-          try { announceForScreenReader('Story copied to clipboard.'); } catch (_) {}
+          setStatus(okLabel);
+          try { announceForScreenReader(okLabel); } catch (_) {}
         } catch (_) {
           setStatus('Copy failed. Your browser may block clipboard access.');
         }
@@ -19390,6 +19443,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Guard: election results must exist
       if (!currentElectionResults) {
         if (sidebarReady) {
+          try {
+            const headerTitle = document.querySelector('#sidebar-header h3');
+            if (headerTitle) headerTitle.textContent = 'County Analysis';
+          } catch (_) {}
           contentEl.innerHTML = '<p>Select a contest to see county results.</p>';
           detailsDiv.style.display = 'block';
         }
@@ -19425,6 +19482,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestKey = contestSelect && contestSelect.value;
       if (!contestKey) {
         if (sidebarReady) {
+          try {
+            const headerTitle = document.querySelector('#sidebar-header h3');
+            if (headerTitle) headerTitle.textContent = `${countyDisplay} • County`;
+          } catch (_) {}
           contentEl.innerHTML = '<p>Select a contest to see detailed results.</p>';
           detailsDiv.style.display = 'block';
         }
@@ -19474,6 +19535,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       if (countyNameElement) setFocusNameWithTierBadge(countyNameElement, `${countyDisplay} County`, tierMeta);
+      try {
+        const headerTitle = document.querySelector('#sidebar-header h3');
+        if (headerTitle) headerTitle.textContent = `${countyDisplay} • ${formatContestName(contestType, year)} ${year}`;
+      } catch (_) {}
       // Accessibility palette for winner color
       function cbColorForMargin(marginPct, winner) {
         if (marginPct >= 40) {
@@ -19597,7 +19662,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <section class="focus-glance ${escapeHtml(toneClass)}" aria-label="At a glance">
           <div class="focus-glance-head">
             <span class="focus-glance-kicker">At a glance</span>
-            ${tierMeta?.shortLabel ? `<span class="focus-glance-badge ${escapeHtml(partyTone === 'rep' ? 'rep' : (partyTone === 'dem' ? 'dem' : ''))}">${escapeHtml(tierMeta.shortLabel)}</span>` : ''}
+            <span class="focus-glance-meta">
+              ${tierMeta?.shortLabel ? `<span class="focus-glance-badge ${escapeHtml(partyTone === 'rep' ? 'rep' : (partyTone === 'dem' ? 'dem' : ''))}">${escapeHtml(tierMeta.shortLabel)}</span>` : ''}
+              <button class="focus-glance-copy" type="button" data-action="copy-glance" aria-label="Copy at-a-glance summary" title="Copy summary">Copy</button>
+            </span>
           </div>
           <div class="focus-glance-headline" id="county-glance-headline">${escapeHtml(glanceHeadline)}</div>
           <ul class="focus-glance-bullets">
@@ -19634,6 +19702,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
           `).join('')}
         </div>
+        <div class="focus-firsttime-hint" id="county-firsttime-hint" role="note" hidden>Tip: open “History” for the long-run pattern behind today’s margin.</div>
       `;
 
       // Split-ticket (Pres-Gov lens) and vote breakdown go into progressive disclosure.
@@ -19772,6 +19841,50 @@ document.addEventListener('DOMContentLoaded', function() {
   try {
     const scroller = document.querySelector('.sidebar-content');
     if (scroller) scroller.scrollTop = 0;
+  } catch (_) {}
+  // Remember disclosure state + show first-time hint (non-blocking).
+  try {
+    const LS_DISCLOSURE = 'nc-atlas:focus-disclosures:v1';
+    const LS_HINTS = 'nc-atlas:focus-hints:v1';
+    const readJson = (key) => {
+      try {
+        const raw = window.localStorage ? window.localStorage.getItem(key) : '';
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (_) { return {}; }
+    };
+    const writeJson = (key, value) => {
+      try { if (window.localStorage) window.localStorage.setItem(key, JSON.stringify(value || {})); } catch (_) {}
+    };
+
+    const disclosures = readJson(LS_DISCLOSURE);
+    const hintState = readJson(LS_HINTS);
+    const ids = ['county-vote-details', 'county-history', 'county-nongeo', 'county-demo'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || el.tagName !== 'DETAILS') return;
+      const pref = disclosures[id];
+      if (typeof pref === 'boolean') el.open = pref;
+      el.addEventListener('toggle', () => {
+        const next = readJson(LS_DISCLOSURE);
+        next[id] = !!el.open;
+        writeJson(LS_DISCLOSURE, next);
+        if (id === 'county-history' && el.open) {
+          const hintsNext = readJson(LS_HINTS);
+          hintsNext.historyTipSeen = true;
+          writeJson(LS_HINTS, hintsNext);
+          const hint = document.getElementById('county-firsttime-hint');
+          if (hint) hint.hidden = true;
+        }
+      }, { passive: true });
+    });
+
+    const hint = document.getElementById('county-firsttime-hint');
+    if (hint) {
+      const hasSeen = !!hintState.historyTipSeen;
+      hint.hidden = hasSeen;
+    }
   } catch (_) {}
   // Populate trends asynchronously from manifest slices (does not block UI).
   (async () => {
@@ -21730,6 +21843,10 @@ document.addEventListener('DOMContentLoaded', function() {
       
       nameEl.textContent = `Congressional District ${districtNum}`;
       if (subEl) subEl.textContent = '';
+      try {
+        const headerTitle = document.querySelector('#sidebar-header h3');
+        if (headerTitle) headerTitle.textContent = `CD ${districtNum} • Focus`;
+      } catch (_) {}
       
       // Get district info from districtsInfo CSV
       const districtInfo = (districtsInfo || []).find(d => d.district == districtNum);
@@ -21845,6 +21962,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const title = chamber === 'house' ? `State House District ${districtNum}` : `State Senate District ${districtNum}`;
       nameEl.textContent = title;
       if (subEl) subEl.textContent = '';
+      try {
+        const headerTitle = document.querySelector('#sidebar-header h3');
+        if (headerTitle) headerTitle.textContent = `${chamber === 'house' ? 'HD' : 'SD'} ${districtNum} • Focus`;
+      } catch (_) {}
       
       // Get district info from appropriate CSV
       const districtInfo = chamber === 'house' 
