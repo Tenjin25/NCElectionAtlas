@@ -193,8 +193,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Added `US Senate Model (2026)` to the contest picker for counties and district views.
 - Added `NC Supreme Court Model (2026)` to the contest picker for counties and district views.
-- The modeled Senate race uses the 2022 US Senate geography as its baseline, then re-centers it to the 2024 Attorney General statewide climate before any user swing is applied.
-- The modeled Supreme Court race uses the 2022 NC Supreme Court Seat 05 baseline, then re-centers it to the 2024 NC Supreme Court Seat 06 statewide climate before any user swing is applied.
+- The modeled Senate race blends 2022 US Senate and 2024 President results (county/district-local), then applies calibrated 55–60% turnout before any user swing is applied.
+- The modeled Supreme Court race blends 2022 Seat 03 + Seat 05, then blends that baseline with the 2024 Seat 06 results before any user swing is applied.
 - The 2026 modeled candidate labels are currently `Roy Cooper` vs `Michael Whatley` for Senate and `Anita Earls` vs `Sarah Stevens` for Supreme Court.
 - Both modeled contests reuse the normal `Dem swing` slider, so users can push the synthetic 2026 map further toward either party without leaving the standard contest workflow.
 

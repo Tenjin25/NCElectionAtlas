@@ -9138,12 +9138,13 @@ document.addEventListener('DOMContentLoaded', function() {
         baseYear: 2022,
         climateContestType: 'president',
         climateYear: 2024,
+        blendWeight: 0.5, // 0 => pure climate (2024 Pres), 1 => pure base (2022 Senate)
         turnoutContestType: 'president',
         turnoutYear: 2024,
         turnoutFactor: 0.575,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
-        description: '2022 Senate baseline with a 2024 President climate adjustment + calibrated 55–60% turnout'
+        description: 'Blended 2022 Senate + 2024 President baseline with calibrated 55–60% turnout'
       },
       'nc_supreme_court_model_2026': {
         contestType: 'nc_supreme_court_model',
@@ -9152,11 +9153,16 @@ document.addEventListener('DOMContentLoaded', function() {
         groupLabel: 'NC Supreme Court',
         baseContestType: 'nc_supreme_court_associate_justice_seat_05',
         baseYear: 2022,
+        // Optional base blend: Seat 03 + Seat 05, then blend with the 2024 cycle.
+        baseMixContestType: 'nc_supreme_court_associate_justice_seat_03',
+        baseMixYear: 2022,
+        baseMixWeight: 0.5, // 0 => pure baseMix (Seat 03), 1 => pure base (Seat 05)
         climateContestType: 'nc_supreme_court_associate_justice_seat_06',
         climateYear: 2024,
+        blendWeight: 0.667, // roughly 1/3 Seat03 + 1/3 Seat05 + 1/3 2024 climate
         demCandidate: 'Anita Earls',
         repCandidate: 'Sarah Stevens',
-        description: '2022 Supreme Court baseline with a 2024 Supreme Court climate adjustment'
+        description: 'Blend of 2022 Seat 03 + Seat 05 with a 2024 climate adjustment'
       }
     };
     let splitTicketOverlayEnabled = false;
@@ -12020,7 +12026,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const climateRows = await loadContestSlice(modeledDef.climateContestType, modeledDef.climateYear);
         const baseSigned = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
         const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
-        const climateSwingPct = baseSigned - climateSigned;
+        const climateSwingPct = baseSigned - climateSigned; // fallback when blendWeight isn't enabled
+
+        const blendWeight = Number(modeledDef?.blendWeight);
+        const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
+        const climateSignedByKey = (() => {
+          if (!useBlend) return null;
+          const map = new Map();
+          (climateRows || []).forEach(r => {
+            const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+            if (!key) return;
+            const signed = signedMarginPctFromVotes(
+              Number(r?.[`${modeledDef.climateContestType}_dem`] || 0),
+              Number(r?.[`${modeledDef.climateContestType}_rep`] || 0),
+              Number(r?.[`${modeledDef.climateContestType}_total`] || 0)
+            );
+            map.set(key, signed);
+          });
+          return map.size ? map : null;
+        })();
+
+        const baseMixWeight = Number(modeledDef?.baseMixWeight);
+        const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
+        const baseMixSignedByKey = useBaseMix ? (() => {
+          const map = new Map();
+          // Note: loadContestSlice will resolve modeled contests too, but this is only used for the base-mix inputs.
+          return map;
+        })() : null;
+        if (useBaseMix) {
+          try {
+            const mixRows = await loadContestSlice(modeledDef.baseMixContestType, modeledDef.baseMixYear);
+            (mixRows || []).forEach(r => {
+              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+              if (!key) return;
+              const signed = signedMarginPctFromVotes(
+                Number(r?.[`${modeledDef.baseMixContestType}_dem`] || 0),
+                Number(r?.[`${modeledDef.baseMixContestType}_rep`] || 0),
+                Number(r?.[`${modeledDef.baseMixContestType}_total`] || 0)
+              );
+              baseMixSignedByKey.set(key, signed);
+            });
+          } catch (_) {}
+        }
 
         let turnoutByKey = null;
         let turnoutFallbackRatio = null;
@@ -12059,7 +12106,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const baseTotal = Number(row?.[`${modeledDef.baseContestType}_total`] || 0);
             if (Number.isFinite(baseTotal) && baseTotal > 0) targetTotal = baseTotal * turnoutFallbackRatio;
           }
-          return buildModeledContestRowFromBaseRow(row, modeledDef, climateSwingPct, targetTotal ? { targetTotal } : null);
+
+          let rowSwingPct = climateSwingPct;
+          if (useBlend) {
+            const baseRowSignedRaw = signedMarginPctFromVotes(
+              Number(row?.[`${modeledDef.baseContestType}_dem`] || 0),
+              Number(row?.[`${modeledDef.baseContestType}_rep`] || 0),
+              Number(row?.[`${modeledDef.baseContestType}_total`] || 0)
+            );
+            let baseRowSigned = baseRowSignedRaw;
+            if (useBaseMix && baseMixSignedByKey && baseMixSignedByKey.has(key)) {
+              const mixSigned = Number(baseMixSignedByKey.get(key));
+              if (Number.isFinite(mixSigned)) {
+                baseRowSigned = (baseMixWeight * baseRowSignedRaw) + ((1 - baseMixWeight) * mixSigned);
+              }
+            }
+            const climateRowSigned = (climateSignedByKey && climateSignedByKey.has(key))
+              ? Number(climateSignedByKey.get(key))
+              : climateSigned;
+            const desiredSigned = (blendWeight * baseRowSigned) + ((1 - blendWeight) * climateRowSigned);
+            rowSwingPct = baseRowSignedRaw - desiredSigned;
+          }
+
+          return buildModeledContestRowFromBaseRow(row, modeledDef, rowSwingPct, targetTotal ? { targetTotal } : null);
         });
       }
 
@@ -12113,6 +12182,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const baseSigned = computeStatewideMarginPctFromDistrictResults(baseResults);
         const climateSigned = computeStatewideMarginPctFromDistrictResults(climateResults);
         const climateSwingPct = baseSigned - climateSigned;
+        const blendWeight = Number(modeledDef?.blendWeight);
+        const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
+
+        const baseMixWeight = Number(modeledDef?.baseMixWeight);
+        const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
+        let baseMixResults = null;
+        if (useBaseMix) {
+          try {
+            const baseMixNode = await loadDistrictSlice(scope, modeledDef.baseMixContestType, modeledDef.baseMixYear, linesYear);
+            baseMixResults = baseMixNode?.general?.results || null;
+          } catch (_) {
+            baseMixResults = null;
+          }
+        }
 
         let turnoutResults = null;
         let turnoutFallbackRatio = null;
@@ -12145,7 +12228,38 @@ document.addEventListener('DOMContentLoaded', function() {
             const baseTotal = Number(baseResults[districtId]?.total_votes || 0);
             if (Number.isFinite(baseTotal) && baseTotal > 0) targetTotal = baseTotal * turnoutFallbackRatio;
           }
-          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, climateSwingPct, targetTotal);
+
+          let rowSwingPct = climateSwingPct;
+          if (useBlend) {
+            const baseRow = baseResults[districtId] || {};
+            const climateRow = climateResults[districtId] || {};
+            const baseRowSigned = signedMarginPctFromVotes(
+              Number(baseRow?.dem_votes || 0),
+              Number(baseRow?.rep_votes || 0),
+              Number(baseRow?.total_votes || 0)
+            );
+            let blendedBaseSigned = baseRowSigned;
+            if (useBaseMix && baseMixResults && baseMixResults[districtId]) {
+              const mixRow = baseMixResults[districtId] || {};
+              const mixSigned = signedMarginPctFromVotes(
+                Number(mixRow?.dem_votes || 0),
+                Number(mixRow?.rep_votes || 0),
+                Number(mixRow?.total_votes || 0)
+              );
+              if (Number.isFinite(mixSigned)) {
+                blendedBaseSigned = (baseMixWeight * baseRowSigned) + ((1 - baseMixWeight) * mixSigned);
+              }
+            }
+            const climateRowSigned = signedMarginPctFromVotes(
+              Number(climateRow?.dem_votes || 0),
+              Number(climateRow?.rep_votes || 0),
+              Number(climateRow?.total_votes || 0)
+            );
+            const desiredSigned = (blendWeight * blendedBaseSigned) + ((1 - blendWeight) * climateRowSigned);
+            rowSwingPct = baseRowSigned - desiredSigned;
+          }
+
+          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, rowSwingPct, targetTotal);
         });
 
         return {
@@ -12160,6 +12274,7 @@ document.addEventListener('DOMContentLoaded', function() {
             model_base: `${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} ${modeledDef.baseYear}`,
             model_climate: `${formatContestName(modeledDef.climateContestType, modeledDef.climateYear)} ${modeledDef.climateYear}`,
             model_swing_pct: Number(climateSwingPct.toFixed(2)),
+            model_blend_weight: useBlend ? Number(blendWeight.toFixed(3)) : undefined,
             model_turnout_factor: Number.isFinite(Number(modeledDef?.turnoutFactor)) ? Number(modeledDef.turnoutFactor) : undefined,
             model_turnout_source: (modeledDef?.turnoutContestType && modeledDef?.turnoutYear)
               ? `${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)} ${modeledDef.turnoutYear}`
