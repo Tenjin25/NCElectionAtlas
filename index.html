@@ -9139,6 +9139,18 @@ document.addEventListener('DOMContentLoaded', function() {
         climateContestType: 'president',
         climateYear: 2024,
         blendWeight: 0.5, // 0 => pure climate (2024 Pres), 1 => pure base (2022 Senate)
+        // Candidate effect: Cooper tends to run slightly stronger than a generic D (or 2022 Senate baseline)
+        // in some county types; apply as a small additional D swing on top of the blended baseline.
+        candidateBonusEnabled: true,
+        candidateBonusMaxPts: 0.85,
+        candidateBonusBasePts: 0.25,
+        candidateBonusUrbanPts: 0.15,
+        candidateBonusMetroPts: 0.25,
+        candidateBonusCoastalPts: 0.25,
+        candidateBonusTransitionPts: 0.30,
+        candidateBonusSlowPts: 0.35,
+        candidateBonusInstitutionalExtraPts: 0.15,
+        candidateBonusDistrictPts: 0.25,
         turnoutContestType: 'president',
         turnoutYear: 2024,
         turnoutFactor: 0.575,
@@ -12046,6 +12058,62 @@ document.addEventListener('DOMContentLoaded', function() {
           return map.size ? map : null;
         })();
 
+        const candidateBonusByCounty = (() => {
+          if (!modeledDef?.candidateBonusEnabled) return null;
+          const maxPts = Number(modeledDef?.candidateBonusMaxPts);
+          const basePts = Number(modeledDef?.candidateBonusBasePts);
+          if (!Number.isFinite(maxPts) || maxPts <= 0) return null;
+          if (!Number.isFinite(basePts)) return null;
+
+          const byCountyTotals = (rows, contestType) => {
+            const agg = new Map();
+            (rows || []).forEach(r => {
+              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+              if (!key) return;
+              const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
+              const county = normalizeCountyToken(countyOnly);
+              if (!county) return;
+              const node = agg.get(county) || { dem: 0, rep: 0, total: 0 };
+              node.dem += Number(r?.[`${contestType}_dem`] || 0);
+              node.rep += Number(r?.[`${contestType}_rep`] || 0);
+              node.total += Number(r?.[`${contestType}_total`] || 0);
+              agg.set(county, node);
+            });
+            return agg;
+          };
+
+          const baseAgg = byCountyTotals(baseRows, modeledDef.baseContestType);
+          const out = new Map();
+          baseAgg.forEach((totals, county) => {
+            const ctx = (() => {
+              try { return getNcCensusContext(county); } catch (_) { return null; }
+            })();
+            const pattern = String(ctx?.patternLabel || '');
+            const note = String(ctx?.noteLabel || '');
+            const isInstitutional = /military|institutional hubs/i.test(note);
+
+            let pts = basePts;
+            if (/Urban anchor/i.test(pattern)) pts = Number(modeledDef?.candidateBonusUrbanPts);
+            else if (/Metro spillover|outer-suburban/i.test(pattern)) pts = Number(modeledDef?.candidateBonusMetroPts);
+            else if (/Coastal growth/i.test(pattern)) pts = Number(modeledDef?.candidateBonusCoastalPts);
+            else if (/Small-metro|transition/i.test(pattern)) pts = Number(modeledDef?.candidateBonusTransitionPts);
+            else if (/Slow-growth|declining county|Rural slowdown/i.test(pattern)) pts = Number(modeledDef?.candidateBonusSlowPts);
+            if (!Number.isFinite(pts)) pts = basePts;
+
+            if (isInstitutional) {
+              const extra = Number(modeledDef?.candidateBonusInstitutionalExtraPts);
+              if (Number.isFinite(extra)) pts += extra;
+            }
+
+            // Damp the effect in very deep-blue places; keep it modest everywhere else.
+            const baseRowSigned = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
+            if (Number.isFinite(baseRowSigned) && baseRowSigned <= -20) pts *= 0.6;
+            pts = Math.max(0, Math.min(maxPts, pts));
+            out.set(county, pts);
+          });
+          return out.size ? out : null;
+        })();
+
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
         const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
         const baseMixSignedByKey = useBaseMix ? (() => {
@@ -12128,6 +12196,13 @@ document.addEventListener('DOMContentLoaded', function() {
             rowSwingPct = baseRowSignedRaw - desiredSigned;
           }
 
+          if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
+            const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
+            const county = normalizeCountyToken(countyOnly);
+            const bonus = county ? Number(candidateBonusByCounty.get(county)) : 0;
+            if (Number.isFinite(bonus) && bonus > 0) rowSwingPct += bonus;
+          }
+
           return buildModeledContestRowFromBaseRow(row, modeledDef, rowSwingPct, targetTotal ? { targetTotal } : null);
         });
       }
@@ -12184,6 +12259,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const climateSwingPct = baseSigned - climateSigned;
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
+        const districtBonus = modeledDef?.candidateBonusEnabled ? Number(modeledDef?.candidateBonusDistrictPts) : 0;
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
         const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
@@ -12258,6 +12334,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const desiredSigned = (blendWeight * blendedBaseSigned) + ((1 - blendWeight) * climateRowSigned);
             rowSwingPct = baseRowSigned - desiredSigned;
           }
+
+          if (Number.isFinite(districtBonus) && districtBonus > 0) rowSwingPct += districtBonus;
 
           modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, rowSwingPct, targetTotal);
         });
