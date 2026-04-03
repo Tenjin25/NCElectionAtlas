@@ -5635,6 +5635,159 @@ body { height: var(--app-height); }
     text-transform: uppercase;
   }
 
+  .control-group-primary {
+    border-color: rgba(37, 99, 235, 0.22) !important;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+  }
+
+  .contest-select-wrap-primary #contestSelect {
+    min-height: 54px;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+    border-color: rgba(37, 99, 235, 0.24);
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  }
+
+  .contest-search-wrap-secondary #contestSearch {
+    min-height: 44px;
+    font-size: 13px;
+    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(248, 250, 252, 0.92);
+  }
+
+  .contest-loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.03);
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .contest-loading-indicator::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 2px solid rgba(37, 99, 235, 0.30);
+    border-top-color: rgba(37, 99, 235, 0.82);
+    animation: contestSpinner 900ms linear infinite;
+  }
+
+  @keyframes contestSpinner {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .contest-toolbar {
+    display: grid;
+    gap: 10px;
+  }
+
+  .contest-tools-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .contest-tools-more {
+    width: 100%;
+  }
+
+  .contest-tools-more > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .contest-tools-more > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .contest-tools-more[open] .contest-tools-row-more {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+  }
+
+  .control-group-contest #accessibility-toggle,
+  .control-group-contest #label-toggle {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .control-group-contest #precinct-toggle {
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(16, 185, 129, 0.20);
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+
+  .controls-disclosure-summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+
+  .controls-disclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .controls-disclosure-summary::marker {
+    content: '';
+  }
+
+  .controls-disclosure-hint {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: right;
+    max-width: 56%;
+  }
+
+  .controls-disclosure > .controls-disclosure-summary::after {
+    content: '▾';
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+    flex: 0 0 auto;
+    margin-left: 6px;
+    transform: translateY(-1px) rotate(-90deg);
+    transition: transform 140ms ease, color 140ms ease;
+  }
+
+  .controls-disclosure[open] > .controls-disclosure-summary::after {
+    transform: translateY(-1px) rotate(0deg);
+    color: #334155;
+  }
+
   .contest-search-wrap,
   .contest-select-wrap {
     position: relative;
@@ -8495,6 +8648,44 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button class="desktop-fly-chip" type="button" data-search-example="Wake 01-14">Wake 01-14</button>
                 </div>
             </div>
+            <div class="control-group control-group-contest control-group-primary">
+                <span class="section-kicker">Contest</span>
+                <div class="contest-select-wrap contest-select-wrap-primary">
+                  <select id="contestSelect" data-testid="contest-select" aria-label="Select contest">
+                      <option value="">Select a Contest...</option>
+                  </select>
+                </div>
+                <div class="contest-loading-indicator" id="contest-loading-indicator" aria-live="polite" aria-atomic="true" hidden>Loading…</div>
+                <div class="contest-search-wrap contest-search-wrap-secondary">
+                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
+                </div>
+                <div class="contest-toolbar">
+                  <label>Quick tools</label>
+                  <div class="contest-tools-row">
+                    <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" data-testid="tool-colorblind" aria-label="Toggle color blind mode" aria-pressed="false">&#9855;</button>
+                    <button id="label-toggle" title="Toggle County Labels" data-testid="tool-labels" aria-label="Toggle county labels" aria-pressed="true">Aa</button>
+                    <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" data-testid="tool-precinct-overlay" aria-label="Toggle precinct overlay" aria-pressed="false">Precincts Off</button>
+                    <button id="split-ticket-toggle" title="Overlay Governor over President to highlight split-ticket patterns" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison" aria-pressed="false">Pres-Gov</button>
+                    <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button" data-testid="tool-snapshot" aria-label="Download story snapshot">Story Snapshot</button>
+                    <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select" data-testid="snapshot-variant" aria-label="Story snapshot layout variant">
+                      <option value="balanced">Balanced</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="tiktok">TikTok</option>
+                    </select>
+                    <button id="copy-link-btn" title="Copy shareable link for current map state" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-copy-link" aria-label="Copy shareable map link">Copy Link</button>
+                  </div>
+                  <details class="contest-tools-more" aria-label="More tools">
+                    <summary class="tool-chip-btn tool-chip-btn-muted" role="button">More</summary>
+                    <div class="contest-tools-row contest-tools-row-more">
+                      <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
+                      <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
+                    </div>
+                  </details>
+                </div>
+                <div class="controls-panel-note">
+                  Start here: pick a contest, then click a county or district for the full story. Shortcuts: `P` precincts, `L` labels, `C` copy link.
+                </div>
+            </div>
             <div class="control-summary" id="control-summary">
                 <div class="control-summary-head">
                   <span class="control-summary-kicker">Current map</span>
@@ -8566,38 +8757,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="viz-mode-btn" data-mode="demographics" type="button"><span>Demographics</span></button>
               </div>
             </div>
-            <div class="control-group control-group-contest">
-                <span class="section-kicker">Contest</span>
-                <div class="contest-search-wrap">
-                  <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
-                </div>
-                <div class="contest-select-wrap">
-                  <select id="contestSelect" data-testid="contest-select" aria-label="Select contest">
-                      <option value="">Select a Contest...</option>
-                  </select>
-                </div>
-                <div class="contest-toolbar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <label>Tools:</label>
-                  <button id="accessibility-toggle" title="Accessibility: Color Blind Mode" data-testid="tool-colorblind" aria-label="Toggle color blind mode" aria-pressed="false" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">&#9855;</button>
-                  <button id="label-toggle" title="Toggle County Labels" data-testid="tool-labels" aria-label="Toggle county labels" aria-pressed="true" style="background:#1f2937;color:#fff;border-radius:50%;width:32px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;">Aa</button>
-                  <button id="precinct-toggle" title="Enable Precinct Overlay (Zoom 8.5+)" data-testid="tool-precinct-overlay" aria-label="Toggle precinct overlay" aria-pressed="false" style="background:#065f46;color:#fff;border-radius:8px;height:32px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.10);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;padding:0 10px;">Precincts Off</button>
-                  <button id="split-ticket-toggle" title="Overlay Governor over President to highlight split-ticket patterns" class="tool-chip-btn" type="button" data-testid="tool-split-ticket" aria-label="Toggle split ticket comparison" aria-pressed="false">Pres-Gov</button>
-                  <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
-                  <button id="snapshot-share-btn" title="Download 9:16 social snapshot" class="tool-chip-btn" type="button" data-testid="tool-snapshot" aria-label="Download story snapshot">Story Snapshot</button>
-                  <button id="copy-link-btn" title="Copy shareable link for current map state" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-copy-link" aria-label="Copy shareable map link">Copy Link</button>
-                  <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
-                  <select id="snapshot-variant" title="Story snapshot layout variant" class="tool-chip-select" data-testid="snapshot-variant" aria-label="Story snapshot layout variant">
-                    <option value="balanced">Balanced</option>
-                    <option value="instagram">Instagram</option>
-                    <option value="tiktok">TikTok</option>
-                  </select>
-                </div>
-                <div class="controls-panel-note">
-                  Tips: click a county or district for trends. Shortcuts: `P` precincts, `L` labels, `C` copy link.
-                </div>
-            </div>
-            <div class="control-group control-group-scenario">
-              <span class="section-kicker">What-If Swing</span>
+            <details class="control-group control-group-scenario controls-disclosure" id="scenario-disclosure">
+              <summary class="controls-disclosure-summary">
+                <span class="section-kicker">What-if & overlays</span>
+                <span class="controls-disclosure-hint">Scenario swing, turnout intensity, and contrast controls</span>
+              </summary>
               <div class="scenario-row">
                 <label for="scenario-scope">Scope</label>
                 <select id="scenario-scope" data-testid="scenario-scope" aria-label="Scenario scope">
@@ -8634,9 +8798,12 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="controls-panel-note">
                 Positive swing shifts margins toward Democrats. Negative values shift toward Republicans. Modeled 2026 Senate and Court entries inherit this swing.
               </div>
-            </div>
-            <div class="control-group control-group-analytics">
-              <span class="section-kicker">Advanced Analytics</span>
+            </details>
+            <details class="control-group control-group-analytics controls-disclosure" id="analytics-disclosure">
+              <summary class="controls-disclosure-summary">
+                <span class="section-kicker">Advanced analytics</span>
+                <span class="controls-disclosure-hint">Realignment index and ghost precinct tracker</span>
+              </summary>
               <div class="analytics-card" id="realignment-index-card" data-testid="realignment-index-card">
                 <div class="analytics-card-title">Realignment Index</div>
                 <div class="analytics-card-body">Select a contest to load top shifting precincts.</div>
@@ -8645,7 +8812,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="analytics-card-title">Ghost Precinct Tracker</div>
                 <div class="analytics-card-body">Waiting for contest selection.</div>
               </div>
-            </div>
+            </details>
         </div>
     </div>
 
@@ -12347,18 +12514,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
-        const climateSignedByKey = (() => {
+        const baseContestType = String(modeledDef?.baseContestType || '').trim();
+        const climateContestType = String(modeledDef?.climateContestType || '').trim();
+        const normalizeRowKey = (raw) => (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+        const countyFromRowKey = (key) => {
+          const k = normalizeRowKey(key);
+          if (!k) return '';
+          const countyOnly = k.includes(' - ') ? k.split(' - ', 1)[0] : k;
+          return normalizeCountyToken(countyOnly);
+        };
+        const buildCountyTotals = (rows, contestType) => {
+          const out = new Map();
+          (rows || []).forEach(r => {
+            const key = normalizeRowKey(r?.county || '');
+            if (!key) return;
+            const county = countyFromRowKey(key);
+            if (!county) return;
+            const node = out.get(county) || { dem: 0, rep: 0, other: 0, total: 0 };
+            const dem = Number(r?.[`${contestType}_dem`] || 0);
+            const rep = Number(r?.[`${contestType}_rep`] || 0);
+            const other = Number(r?.[`${contestType}_other`] || 0);
+            const fallbackTotal = dem + rep + other;
+            const total = Math.max(0, Number(r?.[`${contestType}_total`] || fallbackTotal));
+            node.dem += dem;
+            node.rep += rep;
+            node.other += other;
+            node.total += total;
+            out.set(county, node);
+          });
+          return out;
+        };
+
+        // County-first modeling:
+        // - Blend margins at the county level so we don't accidentally drop contest-only buckets like
+        //   "BOE"/absentee groupings present in one slice but not the other.
+        // - Then apply a uniform per-county swing to each base row to preserve the map/precinct architecture.
+        const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
+        const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
+        const climateSignedByCounty = (() => {
           if (!useBlend) return null;
           const map = new Map();
-          (climateRows || []).forEach(r => {
-            const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
-            if (!key) return;
-            const signed = signedMarginPctFromVotes(
-              Number(r?.[`${modeledDef.climateContestType}_dem`] || 0),
-              Number(r?.[`${modeledDef.climateContestType}_rep`] || 0),
-              Number(r?.[`${modeledDef.climateContestType}_total`] || 0)
-            );
-            map.set(key, signed);
+          climateCountyTotals.forEach((totals, county) => {
+            const signed = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
+            map.set(county, signed);
           });
           return map.size ? map : null;
         })();
@@ -12421,28 +12619,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
         const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
-        const baseMixSignedByKey = useBaseMix ? (() => {
+        const baseMixSignedByCounty = useBaseMix ? (() => {
           const map = new Map();
-          // Note: loadContestSlice will resolve modeled contests too, but this is only used for the base-mix inputs.
           return map;
         })() : null;
         if (useBaseMix) {
           try {
             const mixRows = await loadContestSlice(modeledDef.baseMixContestType, modeledDef.baseMixYear);
-            (mixRows || []).forEach(r => {
-              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
-              if (!key) return;
+            const mixCountyTotals = buildCountyTotals(mixRows, modeledDef.baseMixContestType);
+            mixCountyTotals.forEach((totals, county) => {
               const signed = signedMarginPctFromVotes(
-                Number(r?.[`${modeledDef.baseMixContestType}_dem`] || 0),
-                Number(r?.[`${modeledDef.baseMixContestType}_rep`] || 0),
-                Number(r?.[`${modeledDef.baseMixContestType}_total`] || 0)
+                Number(totals.dem || 0),
+                Number(totals.rep || 0),
+                Number(totals.total || 0)
               );
-              baseMixSignedByKey.set(key, signed);
+              baseMixSignedByCounty.set(county, signed);
             });
           } catch (_) {}
         }
 
         let turnoutByKey = null;
+        let turnoutByCounty = null;
         let turnoutFallbackRatio = null;
         const turnoutContestType = String(modeledDef?.turnoutContestType || '').trim();
         const turnoutYear = Number(modeledDef?.turnoutYear);
@@ -12451,12 +12648,17 @@ document.addEventListener('DOMContentLoaded', function() {
           try {
             const turnoutRows = await loadContestSlice(turnoutContestType, turnoutYear);
             const map = new Map();
+            const byCounty = new Map();
             let turnoutStateTotal = 0;
             (turnoutRows || []).forEach(r => {
-              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+              const key = normalizeRowKey(r?.county || '');
               const total = Number(r?.[`${turnoutContestType}_total`] || 0);
               if (!key || !Number.isFinite(total) || total <= 0) return;
               map.set(key, total);
+              const county = countyFromRowKey(key);
+              if (county) {
+                byCounty.set(county, Number(byCounty.get(county) || 0) + total);
+              }
               turnoutStateTotal += total;
             });
             const baseStateTotal = (baseRows || []).reduce((acc, r) => acc + Number(r?.[`${modeledDef.baseContestType}_total`] || 0), 0);
@@ -12464,52 +12666,307 @@ document.addEventListener('DOMContentLoaded', function() {
               turnoutFallbackRatio = (turnoutStateTotal * turnoutFactor) / baseStateTotal;
             }
             turnoutByKey = map.size ? map : null;
+            turnoutByCounty = byCounty.size ? byCounty : null;
           } catch (_) {
             turnoutByKey = null;
+            turnoutByCounty = null;
             turnoutFallbackRatio = null;
           }
         }
 
-        return (baseRows || []).map(row => {
-          const key = (row?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
-          let targetTotal = null;
-          if (turnoutByKey && turnoutByKey.has(key)) {
-            targetTotal = Number(turnoutByKey.get(key)) * Number(modeledDef.turnoutFactor || 0);
-          } else if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0) {
-            const baseTotal = Number(row?.[`${modeledDef.baseContestType}_total`] || 0);
-            if (Number.isFinite(baseTotal) && baseTotal > 0) targetTotal = baseTotal * turnoutFallbackRatio;
-          }
-
-          let rowSwingPct = climateSwingPct;
-          if (useBlend) {
-            const baseRowSignedRaw = signedMarginPctFromVotes(
-              Number(row?.[`${modeledDef.baseContestType}_dem`] || 0),
-              Number(row?.[`${modeledDef.baseContestType}_rep`] || 0),
-              Number(row?.[`${modeledDef.baseContestType}_total`] || 0)
-            );
-            let baseRowSigned = baseRowSignedRaw;
-            if (useBaseMix && baseMixSignedByKey && baseMixSignedByKey.has(key)) {
-              const mixSigned = Number(baseMixSignedByKey.get(key));
+        const countyModelByCounty = (() => {
+          const map = new Map();
+          baseCountyTotals.forEach((totals, county) => {
+            const baseCountySignedRaw = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
+            let baseCountySigned = baseCountySignedRaw;
+            if (useBaseMix && baseMixSignedByCounty && baseMixSignedByCounty.has(county)) {
+              const mixSigned = Number(baseMixSignedByCounty.get(county));
               if (Number.isFinite(mixSigned)) {
-                baseRowSigned = (baseMixWeight * baseRowSignedRaw) + ((1 - baseMixWeight) * mixSigned);
+                baseCountySigned = (baseMixWeight * baseCountySignedRaw) + ((1 - baseMixWeight) * mixSigned);
               }
             }
-            const climateRowSigned = (climateSignedByKey && climateSignedByKey.has(key))
-              ? Number(climateSignedByKey.get(key))
-              : climateSigned;
-            const desiredSigned = (blendWeight * baseRowSigned) + ((1 - blendWeight) * climateRowSigned);
-            rowSwingPct = baseRowSignedRaw - desiredSigned;
-          }
 
-          if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
-            const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
-            const county = normalizeCountyToken(countyOnly);
-            const bonus = county ? Number(candidateBonusByCounty.get(county)) : 0;
-            if (Number.isFinite(bonus) && bonus > 0) rowSwingPct += bonus;
-          }
+            let swingPct = climateSwingPct;
+            if (useBlend) {
+              const climateCountySigned = (climateSignedByCounty && climateSignedByCounty.has(county))
+                ? Number(climateSignedByCounty.get(county))
+                : climateSigned;
+              const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * climateCountySigned);
+              swingPct = baseCountySignedRaw - desiredSigned;
+            }
 
-          return buildModeledContestRowFromBaseRow(row, modeledDef, rowSwingPct, targetTotal ? { targetTotal } : null);
+            if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
+              const bonus = Number(candidateBonusByCounty.get(county) || 0);
+              if (Number.isFinite(bonus) && bonus > 0) swingPct += bonus;
+            }
+
+            const desiredSignedFinal = baseCountySignedRaw - swingPct;
+            map.set(county, {
+              swingPct,
+              desiredSigned: desiredSignedFinal,
+              baseSigned: baseCountySignedRaw
+            });
+          });
+          return map;
+        })();
+
+        // Group base rows by county so we can (a) apply per-county swing and (b) scale turnout
+        // to county totals even when the turnout/climate slice uses extra buckets not present in the base slice.
+        const baseRowsByCounty = new Map();
+        const baseRowKeySet = new Set();
+        (baseRows || []).forEach(row => {
+          const key = normalizeRowKey(row?.county || '');
+          if (!key) return;
+          baseRowKeySet.add(key);
+          const county = countyFromRowKey(key);
+          if (!county) return;
+          const arr = baseRowsByCounty.get(county) || [];
+          arr.push({ row, key });
+          baseRowsByCounty.set(county, arr);
         });
+
+        // Optional QA: detect climate/turnout keys that don't exist in the base slice (e.g. "HOKE - BOE").
+        // These will be redistributed into the modeled county total during scaling rather than silently dropped.
+        try {
+          if (useBlend && (climateRows || []).length) {
+            let missingKeyTotal = 0;
+            (climateRows || []).forEach(r => {
+              const key = normalizeRowKey(r?.county || '');
+              if (!key || baseRowKeySet.has(key)) return;
+              const total = Number(r?.[`${climateContestType}_total`] || 0);
+              if (Number.isFinite(total) && total > 0) missingKeyTotal += total;
+            });
+            if (missingKeyTotal > 2500) {
+              console.warn('[model]', modeledDef?.contestType, modeledDef?.year, 'climate rows contain non-base keys; redistributing county totals for modeling.', { missingKeyTotal });
+            }
+          }
+        } catch (_) {}
+
+        const distributeIntegerTargets = (desiredFloats, targetTotalInt, stableKeys = []) => {
+          const n = Array.isArray(desiredFloats) ? desiredFloats.length : 0;
+          if (!n) return [];
+          const floors = new Array(n).fill(0);
+          const frac = new Array(n).fill(0);
+          let sum = 0;
+          for (let i = 0; i < n; i++) {
+            const v = Math.max(0, Number(desiredFloats[i] || 0));
+            const f = Math.floor(v);
+            floors[i] = f;
+            frac[i] = v - f;
+            sum += f;
+          }
+          let remaining = Math.max(0, Math.round(Number(targetTotalInt) || 0) - sum);
+          if (remaining <= 0) return floors;
+          const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => {
+            const da = frac[a];
+            const db = frac[b];
+            if (db !== da) return db - da;
+            const ka = String(stableKeys[a] || '');
+            const kb = String(stableKeys[b] || '');
+            return ka.localeCompare(kb);
+          });
+          for (let j = 0; j < order.length && remaining > 0; j++) {
+            floors[order[j]] += 1;
+            remaining -= 1;
+          }
+          return floors;
+        };
+
+        const solveMomentConstrainedTargets = (baselineFloats, margins, targetTotal, targetMoment) => {
+          const n = Array.isArray(baselineFloats) ? baselineFloats.length : 0;
+          if (!n) return [];
+          const total = Math.max(0, Number(targetTotal || 0));
+          if (!(total > 0)) return new Array(n).fill(0);
+          const m = (Array.isArray(margins) ? margins : []).map(v => Number(v));
+          if (m.length !== n) return baselineFloats.slice();
+
+          const clampMoment = (moment, allowedTotal, activeIdx) => {
+            if (!(allowedTotal > 0) || !activeIdx.length) return moment;
+            let minM = Infinity;
+            let maxM = -Infinity;
+            activeIdx.forEach(i => {
+              const mi = Number(m[i]);
+              if (!Number.isFinite(mi)) return;
+              if (mi < minM) minM = mi;
+              if (mi > maxM) maxM = mi;
+            });
+            if (!Number.isFinite(minM) || !Number.isFinite(maxM)) return moment;
+            const minMoment = allowedTotal * minM;
+            const maxMoment = allowedTotal * maxM;
+            return Math.max(minMoment, Math.min(maxMoment, Number(moment || 0)));
+          };
+
+          const out = new Array(n).fill(0);
+          let active = Array.from({ length: n }, (_, i) => i);
+          let desiredTotal = total;
+          let desiredMoment = clampMoment(targetMoment, desiredTotal, active);
+
+          for (let iter = 0; iter < 4; iter++) {
+            if (!active.length) break;
+            desiredMoment = clampMoment(desiredMoment, desiredTotal, active);
+
+            let B0 = 0, B1 = 0;
+            let S0 = 0, S1 = 0, S2 = 0;
+            active.forEach(i => {
+              const bi = Math.max(0, Number(baselineFloats[i] || 0));
+              const mi = Number(m[i]);
+              const si = Math.max(1, bi);
+              if (!Number.isFinite(mi)) return;
+              B0 += bi;
+              B1 += bi * mi;
+              S0 += si;
+              S1 += si * mi;
+              S2 += si * mi * mi;
+            });
+
+            if (!(S0 > 0)) break;
+            const det = (S0 * S2) - (S1 * S1);
+            if (!Number.isFinite(det) || Math.abs(det) < 1e-8) {
+              const scale = B0 > 0 ? (desiredTotal / B0) : 0;
+              active.forEach(i => {
+                out[i] = Math.max(0, Number(baselineFloats[i] || 0) * scale);
+              });
+              break;
+            }
+
+            const rhs0 = B0 - desiredTotal;
+            const rhs1 = B1 - desiredMoment;
+            const lambda1 = ((rhs0 * S2) - (rhs1 * S1)) / det;
+            const lambda2 = ((rhs1 * S0) - (rhs0 * S1)) / det;
+
+            let anyNeg = false;
+            active.forEach(i => {
+              const bi = Math.max(0, Number(baselineFloats[i] || 0));
+              const mi = Number(m[i]);
+              const si = Math.max(1, bi);
+              if (!Number.isFinite(mi)) return;
+              const ti = bi - (si * (lambda1 + (lambda2 * mi)));
+              out[i] = Number.isFinite(ti) ? ti : 0;
+              if (out[i] < -0.01) anyNeg = true;
+            });
+
+            if (!anyNeg) {
+              let sum = 0;
+              active.forEach(i => { sum += Math.max(0, out[i]); });
+              if (sum > 0) {
+                const scale = desiredTotal / sum;
+                active.forEach(i => { out[i] = Math.max(0, out[i] * scale); });
+              }
+              break;
+            }
+
+            // Clamp negatives to 0 and retry on the remaining support.
+            const nextActive = [];
+            active.forEach(i => {
+              if (out[i] <= 0) out[i] = 0;
+              if (out[i] > 0) nextActive.push(i);
+            });
+            active = nextActive;
+          }
+
+          // Final normalize (guard against numerical drift).
+          let sumAll = 0;
+          for (let i = 0; i < n; i++) sumAll += Math.max(0, out[i]);
+          if (sumAll > 0) {
+            const scale = total / sumAll;
+            for (let i = 0; i < n; i++) out[i] = Math.max(0, out[i] * scale);
+          }
+          return out;
+        };
+
+        const modeledOut = [];
+        baseRowsByCounty.forEach((items, county) => {
+          const modelMeta = countyModelByCounty && countyModelByCounty.has(county) ? countyModelByCounty.get(county) : null;
+          const swing = modelMeta && Number.isFinite(Number(modelMeta.swingPct)) ? Number(modelMeta.swingPct) : climateSwingPct;
+          const desiredSigned = modelMeta && Number.isFinite(Number(modelMeta.desiredSigned)) ? Number(modelMeta.desiredSigned) : null;
+          const countyTarget = (() => {
+            if (!(turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0)) return null;
+            if (turnoutByCounty && turnoutByCounty.has(county)) return Number(turnoutByCounty.get(county)) * turnoutFactor;
+            if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0 && baseCountyTotals && baseCountyTotals.has(county)) {
+              const baseTotal = Number(baseCountyTotals.get(county)?.total || 0);
+              if (Number.isFinite(baseTotal) && baseTotal > 0) return baseTotal * turnoutFallbackRatio;
+            }
+            return null;
+          })();
+
+          let rowTargets = null;
+          if (Number.isFinite(countyTarget) && countyTarget > 0) {
+            const stableKeys = items.map(it => it.key);
+            const countyTargetInt = Math.max(0, Math.round(countyTarget));
+
+            const rowMargins = items.map(it => {
+              try {
+                const shifted = shiftVotesBySwingPct(
+                  Number(it?.row?.[`${baseContestType}_dem`] || 0),
+                  Number(it?.row?.[`${baseContestType}_rep`] || 0),
+                  Number(it?.row?.[`${baseContestType}_other`] || 0),
+                  Number(it?.row?.[`${baseContestType}_total`] || 0),
+                  swing
+                );
+                return signedMarginPctFromVotes(Number(shifted.dem || 0), Number(shifted.rep || 0), Number(shifted.total || 0));
+              } catch (_) {
+                return 0;
+              }
+            });
+
+            const fixedFloats = items.map(it => {
+              if (!turnoutByKey || !turnoutByKey.has(it.key)) return 0;
+              return Number(turnoutByKey.get(it.key) || 0) * turnoutFactor;
+            });
+            const fixedSum = fixedFloats.reduce((acc, v) => acc + (Number.isFinite(v) ? v : 0), 0);
+            const remainder = Math.max(0, countyTargetInt - fixedSum);
+
+            const weights = items.map(it => {
+              const baseTotal = Math.max(0, Number(it?.row?.[`${baseContestType}_total`] || 0));
+              if (baseTotal > 0) return baseTotal;
+              const dem = Number(it?.row?.[`${baseContestType}_dem`] || 0);
+              const rep = Number(it?.row?.[`${baseContestType}_rep`] || 0);
+              const other = Number(it?.row?.[`${baseContestType}_other`] || 0);
+              return Math.max(0, dem + rep + other);
+            });
+            const weightSum = weights.reduce((acc, v) => acc + (Number.isFinite(v) ? v : 0), 0);
+            const per = items.length ? (remainder / items.length) : 0;
+
+            // Baseline: distribute the "missing-key" portion of turnout by base row size, then nudge
+            // the distribution so the county-wide modeled margin stays close to the blended target.
+            const baselineUnknown = items.map((_, i) => {
+              const w = Number(weights[i] || 0);
+              const alloc = weightSum > 0 ? (remainder * (w / weightSum)) : per;
+              return (Number.isFinite(fixedFloats[i]) && fixedFloats[i] > 0) ? 0 : alloc;
+            });
+
+            let unknownTargets = baselineUnknown;
+            if (Number.isFinite(desiredSigned) && remainder > 0) {
+              const fixedMoment = fixedFloats.reduce((acc, v, i) => acc + ((Number.isFinite(v) ? v : 0) * Number(rowMargins[i] || 0)), 0);
+              const desiredMomentTotal = desiredSigned * countyTargetInt;
+              const desiredUnknownMoment = desiredMomentTotal - fixedMoment;
+              unknownTargets = solveMomentConstrainedTargets(baselineUnknown, rowMargins, remainder, desiredUnknownMoment);
+            }
+
+            const floatTargets = items.map((_, i) => {
+              const f = Number.isFinite(fixedFloats[i]) ? fixedFloats[i] : 0;
+              const u = Number.isFinite(unknownTargets[i]) ? unknownTargets[i] : 0;
+              return Math.max(0, f + u);
+            });
+            rowTargets = distributeIntegerTargets(floatTargets, countyTargetInt, stableKeys);
+          } else if (turnoutByKey && turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0) {
+            // Fallback: if we can't compute a county target, preserve existing row-level turnout scaling.
+            rowTargets = items.map(it => {
+              if (!turnoutByKey.has(it.key)) return 0;
+              const t = Number(turnoutByKey.get(it.key) || 0) * turnoutFactor;
+              return Number.isFinite(t) && t > 0 ? Math.round(t) : 0;
+            });
+          }
+
+          items.forEach((it, idx) => {
+            const targetTotal = rowTargets && Number.isFinite(Number(rowTargets[idx])) && Number(rowTargets[idx]) > 0
+              ? Number(rowTargets[idx])
+              : null;
+            modeledOut.push(buildModeledContestRowFromBaseRow(it.row, modeledDef, swing, targetTotal ? { targetTotal } : null));
+          });
+        });
+
+        return modeledOut;
       }
 
       async function buildModeledBaselineContestSliceRows(modeledDef) {
@@ -13126,6 +13583,41 @@ document.addEventListener('DOMContentLoaded', function() {
       return next;
     }
 
+    let contestLoadingTimer = null;
+    function setContestLoadingUI(isLoading, contestKey = '') {
+      try {
+        const indicator = document.getElementById('contest-loading-indicator');
+        const controlsContent = document.getElementById('controls-content');
+        if (controlsContent) controlsContent.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+
+        if (!indicator) return;
+        if (!isLoading) {
+          if (contestLoadingTimer) clearTimeout(contestLoadingTimer);
+          contestLoadingTimer = null;
+          indicator.hidden = true;
+          indicator.textContent = 'Loading…';
+          return;
+        }
+
+        const key = (contestKey || '').toString().trim();
+        let label = 'Loading…';
+        if (key) {
+          const idx = key.lastIndexOf('_');
+          const ct = idx > 0 ? key.substring(0, idx) : key;
+          const y = idx > 0 ? key.substring(idx + 1) : '';
+          const display = (typeof formatContestName === 'function' && ct && y) ? `${formatContestName(ct, y)} ${y}` : key;
+          label = `Loading ${display}…`;
+        }
+        indicator.textContent = label;
+        if (!contestLoadingTimer) {
+          contestLoadingTimer = setTimeout(() => {
+            indicator.hidden = false;
+            contestLoadingTimer = null;
+          }, 140);
+        }
+      } catch (_) {}
+    }
+
     async function handleContestSelectionChange(contestKey) {
       const queued = queueContestSelection(contestKey);
       if (!contestChangeInFlight && queued.key && queued.key === lastCompletedContestSelection) {
@@ -13140,6 +13632,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const next = queuedContestSelection;
           queuedContestSelection = null;
           if (!next) break;
+          setContestLoadingUI(true, next.key);
           await applyContest(next.key, { selectionSeq: next.seq });
 
           // If users switched again while we were loading, apply the newest selection next.
@@ -13154,6 +13647,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (err) {
         console.warn('Contest change failed:', err?.message || err);
       } finally {
+        setContestLoadingUI(false);
         contestChangeInFlight = false;
       }
     }
@@ -19712,20 +20206,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const toneClass = partyTone === 'rep' ? 'tone-rep' : (partyTone === 'dem' ? 'tone-dem' : 'tone-neutral');
       const noun = 'county';
 
-      // Subhead (contest + strength + optional callouts)
-      const countySubhead = document.getElementById('county-subhead');
-      if (countySubhead) {
-        const strengthPillClass = partyTone === 'rep' ? 'rep' : (partyTone === 'dem' ? 'dem' : '');
-        const bellwetherPill = isBellwetherCounty(norm)
-          ? `<span class="pill" style="background:rgba(168,85,247,0.12);border-color:rgba(216,180,254,0.55);color:#581c87;">Barometer</span>`
-          : '';
-        countySubhead.innerHTML = `
-          <span class="pill"><strong>${escapeHtml(contestLabel)}</strong></span>
-          <span class="pill ${escapeHtml(strengthPillClass)}">${escapeHtml(tierMeta?.shortLabel || tierMeta?.label || 'Tossup')}</span>
-          ${bellwetherPill}
-        `;
-      }
-
       const otherPctLabel = otherVotes > 0
         ? formatPctForCountyCloseRace((otherVotes / totalVotes * 100), rawMarginPctForDisplay)
         : '';
@@ -19737,6 +20217,22 @@ document.addEventListener('DOMContentLoaded', function() {
         ? 'Even'
         : `${winner === 'Republican' ? 'R' : 'D'}+${marginPct}%`;
       const splitShort = `${demPctLabel}% D • ${repPctLabel}% R${otherVotes > 0 ? ` • ${otherPctLabel}% Other` : ''}`;
+
+      // Subhead (result first, then context)
+      const countySubhead = document.getElementById('county-subhead');
+      if (countySubhead) {
+        const strengthPillClass = partyTone === 'rep' ? 'rep' : (partyTone === 'dem' ? 'dem' : '');
+        const bellwetherPill = isBellwetherCounty(norm)
+          ? `<span class="pill" style="background:rgba(168,85,247,0.12);border-color:rgba(216,180,254,0.55);color:#581c87;">Barometer</span>`
+          : '';
+        countySubhead.innerHTML = `
+          <span class="pill ${escapeHtml(strengthPillClass)}"><strong>${escapeHtml(winner === 'Tie' ? 'Even' : shortCandidateLabel(winnerCandidate, winner === 'Republican' ? 'R' : 'D'))}</strong> ${escapeHtml(marginShort)}</span>
+          <span class="pill muted">${escapeHtml(splitShort)}</span>
+          <span class="pill ${escapeHtml(strengthPillClass)}">${escapeHtml(tierMeta?.shortLabel || tierMeta?.label || 'Tossup')}</span>
+          <span class="pill"><strong>${escapeHtml(contestLabel)}</strong></span>
+          ${bellwetherPill}
+        `;
+      }
 
       const vsNcShort = (() => {
         try {
@@ -19772,10 +20268,16 @@ document.addEventListener('DOMContentLoaded', function() {
       })();
 
       const glanceHeadline = winner === 'Tie'
-        ? `${countyDisplay} is basically tied in ${year}.`
-        : `${winner === 'Republican' ? 'GOP' : 'Democrats'} win ${countyDisplay} in ${year} — ${marginShort}.`;
+        ? `${countyDisplay} is essentially tied in ${year}.`
+        : `${countyDisplay} is a ${winner === 'Republican' ? 'GOP' : 'Democratic'} win in ${year} — ${marginShort}.`;
 
-      const glanceMicro = `<span><strong>Story:</strong> Loading the long-run pattern…</span>`;
+      const popBullet = (() => {
+        const pat = String(censusContext?.patternLabel || '').trim();
+        if (!pat) return '—';
+        return pat.replace(/\s+county$/i, '').trim();
+      })();
+
+      const glanceMicro = `<span><strong>Story:</strong> Loading the long-run pattern…</span><span><strong>Watch:</strong> Loading the next-cycle signal…</span>`;
 
       sidebarContent += `
         <section class="focus-glance ${escapeHtml(toneClass)}" aria-label="At a glance">
@@ -19789,16 +20291,16 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="focus-glance-headline" id="county-glance-headline">${escapeHtml(glanceHeadline)}</div>
           <ul class="focus-glance-bullets">
             <li>
-              <span class="focus-glance-label">Winner:</span>
-              <span class="focus-glance-value">${escapeHtml(winnerLabel)}</span>
+              <span class="focus-glance-label">Trend:</span>
+              <span class="focus-glance-value" id="county-glance-trend">${escapeHtml('Loading…')}</span>
             </li>
             <li>
-              <span class="focus-glance-label">Margin:</span>
-              <span class="focus-glance-value">${escapeHtml(`${marginShort}${winner === 'Tie' ? '' : ` (${Math.abs(margin).toLocaleString()} votes)`}`)}</span>
+              <span class="focus-glance-label">Long run:</span>
+              <span class="focus-glance-value" id="county-glance-longrun">${escapeHtml('Loading…')}</span>
             </li>
             <li>
-              <span class="focus-glance-label">Vote split:</span>
-              <span class="focus-glance-value">${escapeHtml(splitShort)}</span>
+              <span class="focus-glance-label">Population:</span>
+              <span class="focus-glance-value">${escapeHtml(popBullet)}</span>
             </li>
           </ul>
           <div class="focus-glance-micro focus-glance-micro--full" id="county-glance-story">${glanceMicro}</div>
@@ -19814,7 +20316,6 @@ document.addEventListener('DOMContentLoaded', function() {
       })();
 
       const miniCards = [];
-      miniCards.push({ k: 'Compared with NC', v: vsNcShort || '—' });
       miniCards.push({
         k: 'Confidence',
         html: `
@@ -19824,6 +20325,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         `
       });
+      miniCards.push({ k: 'Compared with NC', v: vsNcShort || '—' });
       miniCards.push({ k: 'Total votes', v: totalVotes.toLocaleString() });
       miniCards.push({ k: 'What to watch', v: 'Whether the next cycle confirms this direction.', id: 'county-watch' });
 
@@ -20150,6 +20652,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const watchEl = document.getElementById('county-watch');
         if (watchEl) watchEl.textContent = watch;
+
+        // Keep the "At a glance" bullets in sync once history loads.
+        try {
+          const trendEl = document.getElementById('county-glance-trend');
+          if (trendEl) {
+            trendEl.textContent = recentDir === 'neutral'
+              ? '↔ No clear recent direction'
+              : (recentDir === 'rep' ? '→ Moving right lately' : '← Moving left lately');
+          }
+          const longEl = document.getElementById('county-glance-longrun');
+          if (longEl) {
+            const by = Number.isFinite(Number(baseYear)) ? String(baseYear) : '';
+            longEl.textContent = longDir === 'neutral'
+              ? (by ? `↔ No clear drift since ${by}` : '↔ No clear long-run drift')
+              : (longDir === 'rep'
+                ? (by ? `→ Moving right since ${by}` : '→ Long-run move right')
+                : (by ? `← Moving left since ${by}` : '← Long-run move left'));
+          }
+        } catch (_) {}
 
         // Confidence meter (Low/Medium/High): margin size + consistency + volatility.
         try {
@@ -23481,6 +24002,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestType = contestKey.substring(0, lastUnderscoreIndex);
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
+      try { updateContextBanner(); } catch (_) {}
 
       // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
       try {
