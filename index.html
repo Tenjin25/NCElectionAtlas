@@ -9136,11 +9136,14 @@ document.addEventListener('DOMContentLoaded', function() {
         groupLabel: 'US Senate',
         baseContestType: 'us_senate',
         baseYear: 2022,
-        climateContestType: 'attorney_general',
+        climateContestType: 'president',
         climateYear: 2024,
+        turnoutContestType: 'president',
+        turnoutYear: 2024,
+        turnoutFactor: 0.575,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
-        description: '2022 Senate baseline with a 2024 Attorney General climate adjustment'
+        description: '2022 Senate baseline with a 2024 President climate adjustment + calibrated 55–60% turnout'
       },
       'nc_supreme_court_model_2026': {
         contestType: 'nc_supreme_court_model',
@@ -11959,7 +11962,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
       }
 
-      function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct) {
+      function rescaleVoteSetToTargetTotal(voteSet, targetTotal) {
+        const desired = Math.max(0, Math.round(Number(targetTotal) || 0));
+        const baseTotal = Math.max(0, Math.round(Number(voteSet?.total) || 0));
+        if (!Number.isFinite(desired) || desired <= 0 || baseTotal <= 0) return voteSet;
+
+        const scale = desired / baseTotal;
+        let dem = Math.max(0, Math.round((Number(voteSet?.dem) || 0) * scale));
+        let rep = Math.max(0, Math.round((Number(voteSet?.rep) || 0) * scale));
+        const twoParty = dem + rep;
+        if (twoParty > desired && twoParty > 0) {
+          const demShare = dem / twoParty;
+          dem = Math.max(0, Math.round(demShare * desired));
+          rep = Math.max(0, desired - dem);
+          return { dem, rep, other: 0, total: desired };
+        }
+        const other = Math.max(0, desired - twoParty);
+        return { dem, rep, other, total: desired };
+      }
+
+      function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct, turnoutMeta = null) {
         const baseContestType = modeledDef.baseContestType;
         const contestType = modeledDef.contestType;
         const shifted = shiftVotesBySwingPct(
@@ -11969,20 +11991,24 @@ document.addEventListener('DOMContentLoaded', function() {
           Number(baseRow?.[`${baseContestType}_total`] || 0),
           climateSwingPct
         );
-        const signed = signedMarginPctFromVotes(shifted.dem, shifted.rep, shifted.total);
+        const targetTotal = turnoutMeta && Number.isFinite(Number(turnoutMeta.targetTotal))
+          ? Number(turnoutMeta.targetTotal)
+          : null;
+        const scaled = targetTotal ? rescaleVoteSetToTargetTotal(shifted, targetTotal) : shifted;
+        const signed = signedMarginPctFromVotes(scaled.dem, scaled.rep, scaled.total);
         const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
         const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
         const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
         return {
           year: Number(modeledDef.year),
           county: baseRow?.county || '',
-          [`${contestType}_dem`]: shifted.dem,
-          [`${contestType}_rep`]: shifted.rep,
-          [`${contestType}_other`]: shifted.other,
-          [`${contestType}_total`]: shifted.total,
+          [`${contestType}_dem`]: scaled.dem,
+          [`${contestType}_rep`]: scaled.rep,
+          [`${contestType}_other`]: scaled.other,
+          [`${contestType}_total`]: scaled.total,
           [`${contestType}_dem_candidate`]: modeledDef.demCandidate || '',
           [`${contestType}_rep_candidate`]: modeledDef.repCandidate || '',
-          [`${contestType}_margin`]: Math.round(shifted.rep - shifted.dem),
+          [`${contestType}_margin`]: Math.round(scaled.rep - scaled.dem),
           [`${contestType}_margin_pct`]: signed,
           [`${contestType}_winner`]: winner,
           [`${contestType}_color`]: color
@@ -11995,7 +12021,46 @@ document.addEventListener('DOMContentLoaded', function() {
         const baseSigned = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
         const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
         const climateSwingPct = baseSigned - climateSigned;
-        return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, climateSwingPct));
+
+        let turnoutByKey = null;
+        let turnoutFallbackRatio = null;
+        const turnoutContestType = String(modeledDef?.turnoutContestType || '').trim();
+        const turnoutYear = Number(modeledDef?.turnoutYear);
+        const turnoutFactor = Number(modeledDef?.turnoutFactor);
+        if (turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0) {
+          try {
+            const turnoutRows = await loadContestSlice(turnoutContestType, turnoutYear);
+            const map = new Map();
+            let turnoutStateTotal = 0;
+            (turnoutRows || []).forEach(r => {
+              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+              const total = Number(r?.[`${turnoutContestType}_total`] || 0);
+              if (!key || !Number.isFinite(total) || total <= 0) return;
+              map.set(key, total);
+              turnoutStateTotal += total;
+            });
+            const baseStateTotal = (baseRows || []).reduce((acc, r) => acc + Number(r?.[`${modeledDef.baseContestType}_total`] || 0), 0);
+            if (Number.isFinite(turnoutStateTotal) && turnoutStateTotal > 0 && Number.isFinite(baseStateTotal) && baseStateTotal > 0) {
+              turnoutFallbackRatio = (turnoutStateTotal * turnoutFactor) / baseStateTotal;
+            }
+            turnoutByKey = map.size ? map : null;
+          } catch (_) {
+            turnoutByKey = null;
+            turnoutFallbackRatio = null;
+          }
+        }
+
+        return (baseRows || []).map(row => {
+          const key = (row?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+          let targetTotal = null;
+          if (turnoutByKey && turnoutByKey.has(key)) {
+            targetTotal = Number(turnoutByKey.get(key)) * Number(modeledDef.turnoutFactor || 0);
+          } else if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0) {
+            const baseTotal = Number(row?.[`${modeledDef.baseContestType}_total`] || 0);
+            if (Number.isFinite(baseTotal) && baseTotal > 0) targetTotal = baseTotal * turnoutFallbackRatio;
+          }
+          return buildModeledContestRowFromBaseRow(row, modeledDef, climateSwingPct, targetTotal ? { targetTotal } : null);
+        });
       }
 
       async function buildModeledBaselineContestSliceRows(modeledDef) {
@@ -12003,7 +12068,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
       }
 
-      function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct) {
+      function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct, targetTotalOverride = null) {
         const shifted = shiftVotesBySwingPct(
           Number(baseRow?.dem_votes || 0),
           Number(baseRow?.rep_votes || 0),
@@ -12011,19 +12076,23 @@ document.addEventListener('DOMContentLoaded', function() {
           Number(baseRow?.total_votes || 0),
           climateSwingPct
         );
-        const signed = signedMarginPctFromVotes(shifted.dem, shifted.rep, shifted.total);
+        const desired = Number(targetTotalOverride);
+        const scaled = (Number.isFinite(desired) && desired > 0)
+          ? rescaleVoteSetToTargetTotal(shifted, desired)
+          : shifted;
+        const signed = signedMarginPctFromVotes(scaled.dem, scaled.rep, scaled.total);
         const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
         const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
         const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
         return {
           ...baseRow,
-          dem_votes: shifted.dem,
-          rep_votes: shifted.rep,
-          other_votes: shifted.other,
-          total_votes: shifted.total,
+          dem_votes: scaled.dem,
+          rep_votes: scaled.rep,
+          other_votes: scaled.other,
+          total_votes: scaled.total,
           dem_candidate: modeledDef.demCandidate || '',
           rep_candidate: modeledDef.repCandidate || '',
-          margin: Math.round(shifted.rep - shifted.dem),
+          margin: Math.round(scaled.rep - scaled.dem),
           margin_pct: signed,
           winner,
           competitiveness: {
@@ -12044,9 +12113,39 @@ document.addEventListener('DOMContentLoaded', function() {
         const baseSigned = computeStatewideMarginPctFromDistrictResults(baseResults);
         const climateSigned = computeStatewideMarginPctFromDistrictResults(climateResults);
         const climateSwingPct = baseSigned - climateSigned;
+
+        let turnoutResults = null;
+        let turnoutFallbackRatio = null;
+        const turnoutContestType = String(modeledDef?.turnoutContestType || '').trim();
+        const turnoutYear = Number(modeledDef?.turnoutYear);
+        const turnoutFactor = Number(modeledDef?.turnoutFactor);
+        if (turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0) {
+          try {
+            const turnoutNode = await loadDistrictSlice(scope, turnoutContestType, turnoutYear, linesYear);
+            turnoutResults = turnoutNode?.general?.results || null;
+            const turnoutStateTotal = turnoutResults
+              ? Object.values(turnoutResults).reduce((acc, row) => acc + Number(row?.total_votes || 0), 0)
+              : 0;
+            const baseStateTotal = Object.values(baseResults || {}).reduce((acc, row) => acc + Number(row?.total_votes || 0), 0);
+            if (Number.isFinite(turnoutStateTotal) && turnoutStateTotal > 0 && Number.isFinite(baseStateTotal) && baseStateTotal > 0) {
+              turnoutFallbackRatio = (turnoutStateTotal * turnoutFactor) / baseStateTotal;
+            }
+          } catch (_) {
+            turnoutResults = null;
+            turnoutFallbackRatio = null;
+          }
+        }
+
         const modeledResults = {};
         Object.keys(baseResults).forEach(districtId => {
-          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, climateSwingPct);
+          let targetTotal = null;
+          if (turnoutResults && turnoutResults[districtId] && Number.isFinite(Number(turnoutResults[districtId].total_votes))) {
+            targetTotal = Number(turnoutResults[districtId].total_votes) * Number(modeledDef.turnoutFactor || 0);
+          } else if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0) {
+            const baseTotal = Number(baseResults[districtId]?.total_votes || 0);
+            if (Number.isFinite(baseTotal) && baseTotal > 0) targetTotal = baseTotal * turnoutFallbackRatio;
+          }
+          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, climateSwingPct, targetTotal);
         });
 
         return {
@@ -12060,7 +12159,11 @@ document.addEventListener('DOMContentLoaded', function() {
             modeled: true,
             model_base: `${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} ${modeledDef.baseYear}`,
             model_climate: `${formatContestName(modeledDef.climateContestType, modeledDef.climateYear)} ${modeledDef.climateYear}`,
-            model_swing_pct: Number(climateSwingPct.toFixed(2))
+            model_swing_pct: Number(climateSwingPct.toFixed(2)),
+            model_turnout_factor: Number.isFinite(Number(modeledDef?.turnoutFactor)) ? Number(modeledDef.turnoutFactor) : undefined,
+            model_turnout_source: (modeledDef?.turnoutContestType && modeledDef?.turnoutYear)
+              ? `${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)} ${modeledDef.turnoutYear}`
+              : undefined
           },
           general: {
             ...(baseNode?.general || {}),
@@ -12076,7 +12179,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const modeledResults = {};
         Object.keys(baseResults).forEach(districtId => {
-          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, 0);
+          modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, 0, null);
         });
 
         return {
