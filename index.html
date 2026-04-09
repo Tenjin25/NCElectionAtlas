@@ -9587,7 +9587,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-8';
+    const APP_BUILD_ID = '2026-04-09-9';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -12489,26 +12489,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (isDesktopTooltipMode()) {
         const collapsed = presentation === 'desktop-collapsed';
-        const popPieces = collapsed
-          ? [
-            `20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
-            popDelta2024 ? `20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}` : '',
-            popDelta2425 ? `24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}` : ''
-          ].filter(Boolean)
-          : [
-            `20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
-            popDelta2024 ? `20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}` : '',
-            popDelta2425 ? `24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}` : ''
-          ].filter(Boolean);
-
-        const votesLine = hasVote
-          ? `20→24 <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>`
+        const pop2025Line = `Population (20→25): <span style="font-weight:800;">${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}</span>`;
+        const pop2024Line = popDelta2024
+          ? `Population (20→24): <span style="font-weight:800;">${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span>`
           : '';
+        const pop2425Line = popDelta2425
+          ? `Population (24→25): <span style="font-weight:800;">${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}</span>`
+          : '';
+
+        const votesParts = hasVote
+          ? [
+            `Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span>`,
+            `Total vote gain (20→24): <span style="font-weight:800;">${escapeHtml(totalDelta)}</span>`
+          ]
+          : [];
+
+        const lines = [
+          pop2025Line,
+          ...(collapsed ? [] : (pop2024Line ? [pop2024Line] : [])),
+          ...(pop2425Line ? [pop2425Line] : []),
+          ...(collapsed ? [] : votesParts)
+        ];
+
+        // In collapsed hover mode, still show a compact vote line if it's available.
+        if (collapsed && hasVote) {
+          lines.push(`Votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span>`);
+        }
 
         return `
           <div class="tooltip-delta" aria-label="County delta mechanics">
-            <div class="tooltip-delta-line">Population: <span style="font-weight:800;">${popPieces.join(' • ')}</span></div>
-            ${votesLine ? `<div class="tooltip-delta-line">Raw votes: ${votesLine}</div>` : ''}
+            ${lines.map(line => `<div class="tooltip-delta-line">${line}</div>`).join('')}
           </div>
         `.trim();
       }
