@@ -9582,7 +9582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-2';
+    const APP_BUILD_ID = '2026-04-09-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10097,7 +10097,7 @@ document.addEventListener('DOMContentLoaded', function() {
             (rows || []).forEach(r => {
               const rowName = (r?.county || '').toString();
               const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-              const countyNorm = normalizeCountyName(countyOnly);
+              const countyNorm = normalizeCountyToken(countyOnly);
               if (!countyNorm) return;
               const dem = Number(r?.[`${ct}_dem`] || 0);
               const rep = Number(r?.[`${ct}_rep`] || 0);
