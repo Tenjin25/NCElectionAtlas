@@ -8631,6 +8631,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var helpBtn = document.getElementById('help-btn');
   var helpBackdrop = document.getElementById('help-backdrop');
   var helpClose = document.getElementById('help-close');
+  try {
+    var buildEl = document.getElementById('build-stamp');
+    if (buildEl && typeof APP_BUILD_ID !== 'undefined' && APP_BUILD_ID) buildEl.textContent = `Build ${APP_BUILD_ID}`;
+  } catch (_) {}
   function updateLegendColors() {
     // Keep legend swatches aligned with the same color functions used by map fills.
     if (typeof renderLegendForVizMode === 'function') {
@@ -9064,6 +9068,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="sidebar-footer" style="padding: 14px 10px; text-align: center; color: #64748b; font-size: 12px; line-height: 1.45; border-top: 1px solid #e5e7eb; background: #f9fafb;">
         © 2026 Shamar Does Elections. All Rights Reserved.<br>
         Created by Shamar Davis.
+        <div id="build-stamp" style="margin-top:4px;font-size:11px;color:#94a3b8;"></div>
       </div>
     </div>
   <!-- Floating Sidebar Expand/Collapse Button (smaller size) -->
@@ -9577,6 +9582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
+    const APP_BUILD_ID = '2026-04-09-1';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -9672,6 +9678,10 @@ document.addEventListener('DOMContentLoaded', function() {
         minZoom: 8.5
       }
     };
+
+    try {
+      window.__ATLAS_BUILD__ = APP_BUILD_ID;
+    } catch (_) {}
 
     // County memberships back the regional quick jumps so they can drive
     // real regional rollups instead of only camera movement.
