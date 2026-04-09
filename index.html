@@ -9582,7 +9582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-1';
+    const APP_BUILD_ID = '2026-04-09-2';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -14421,17 +14421,105 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function parseCSV(csvText) {
-      try {
-        const result = Papa.parse(csvText, {
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true
-        });
-        if (result.errors.length) {
-          setStatus('CSV Parse Error: ' + result.errors.map(e => e.message).join('; '));
-          console.error(result.errors);
+      function parseCSVFallback(text) {
+        const s = (text ?? '').toString();
+        if (!s.trim()) return [];
+
+        const rows = [];
+        let row = [];
+        let field = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < s.length; i += 1) {
+          const ch = s[i];
+          if (inQuotes) {
+            if (ch === '"') {
+              const next = s[i + 1];
+              if (next === '"') {
+                field += '"';
+                i += 1;
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              field += ch;
+            }
+            continue;
+          }
+
+          if (ch === '"') {
+            inQuotes = true;
+            continue;
+          }
+
+          if (ch === ',') {
+            row.push(field);
+            field = '';
+            continue;
+          }
+
+          if (ch === '\n') {
+            row.push(field);
+            field = '';
+            rows.push(row);
+            row = [];
+            continue;
+          }
+
+          if (ch === '\r') continue;
+          field += ch;
         }
-        return result.data;
+
+        // flush final row
+        row.push(field);
+        rows.push(row);
+
+        const rawHeaders = rows.shift() || [];
+        const headers = rawHeaders.map((h, idx) => {
+          const key = (h ?? '').toString().trim().replace(/^\uFEFF/, '');
+          return key || `col_${idx}`;
+        });
+
+        const isBlankRow = (r) => (r || []).every(v => !(v ?? '').toString().trim());
+        const coerce = (v) => {
+          const t = (v ?? '').toString().trim();
+          if (!t) return '';
+          const lower = t.toLowerCase();
+          if (lower === 'true') return true;
+          if (lower === 'false') return false;
+          if (/^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/.test(t)) {
+            const n = Number(t);
+            if (Number.isFinite(n)) return n;
+          }
+          return t;
+        };
+
+        return rows
+          .filter(r => r && r.length && !isBlankRow(r))
+          .map(r => {
+            const out = {};
+            for (let j = 0; j < headers.length; j += 1) {
+              const key = headers[j];
+              out[key] = coerce(r[j]);
+            }
+            return out;
+          });
+      }
+
+      try {
+        if (typeof Papa !== 'undefined' && Papa && typeof Papa.parse === 'function') {
+          const result = Papa.parse(csvText, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true
+          });
+          if (result.errors.length) {
+            setStatus('CSV Parse Error: ' + result.errors.map(e => e.message).join('; '));
+            console.error(result.errors);
+          }
+          return result.data;
+        }
+        return parseCSVFallback(csvText);
       } catch (err) {
         setStatus('CSV Parse Exception: ' + err.message);
         console.error(err);
