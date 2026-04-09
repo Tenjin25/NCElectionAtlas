@@ -867,12 +867,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 .hover-tooltip .tooltip-quickline .dem { color: #bfdbfe; }
 .hover-tooltip .tooltip-quickline .tie { color: #e2e8f0; }
 
-.hover-tooltip .tooltip-quickline .tier {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  color: rgba(226, 232, 240, 0.86);
-}
+	.hover-tooltip .tooltip-quickline .tier {
+	  font-size: 11px;
+	  font-weight: 900;
+	  letter-spacing: 0.02em;
+	  color: rgba(226, 232, 240, 0.86);
+	}
+	.hover-tooltip .tooltip-quickline .tier::before {
+	  content: "•";
+	  margin: 0 6px 0 4px;
+	  color: rgba(226, 232, 240, 0.7);
+	}
 
 .hover-tooltip .tooltip-insight {
   margin-top: 6px;
@@ -9582,7 +9587,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-5';
+    const APP_BUILD_ID = '2026-04-09-6';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -12483,12 +12488,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (isDesktopTooltipMode()) {
         const parts = [
-          `Pop ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
-          popDelta2024 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span>` : '',
-          popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">24→25 ${escapeHtml(popDelta2425)}</span>` : '',
-          hasVote ? `<span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span>` : '',
-          hasVote ? `<span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span>` : '',
-          hasVote ? `<span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>` : ''
+          `Δ Pop 20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
+          popDelta2024 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">Pop 20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span>` : '',
+          popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">Pop 24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}</span>` : '',
+          hasVote ? `Δ Votes 20→24 <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>` : ''
         ].filter(Boolean);
         return `
           <div class="tooltip-delta" aria-label="County delta mechanics">
