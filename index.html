@@ -653,6 +653,12 @@ body {
 body.focus-active #map {
   filter: brightness(0.92) saturate(0.94);
 }
+body.focus-active .main-controls,
+body.focus-active .vote-counter,
+body.focus-active #sidebar,
+body.focus-active .hover-tooltip {
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.24), 0 6px 16px rgba(0, 0, 0, 0.16);
+}
 /* Prefer dynamic viewport units on mobile browsers (prevents "address bar" jumps). */
 @supports (height: 100dvh) {
   html, body { height: 100dvh; }
@@ -11747,6 +11753,54 @@ document.addEventListener('DOMContentLoaded', function() {
     let voteCounterHover = null;    // {title, sub, dem, rep, other}
     let voteCounterHoverActive = false;
     let voteCounterTrendRequestId = 0;
+    let focusModeActive = false;
+
+    function setFocusModeActive(active) {
+      const next = !!active;
+      if (focusModeActive === next) return;
+      focusModeActive = next;
+      try { document.body.classList.toggle('focus-active', next); } catch (_) {}
+      if (!next) {
+        try {
+          if (map && map.getLayer && map.getLayer('county-stroke-pulse')) {
+            setLayerVisibilityIfExists('county-stroke-pulse', 'none');
+            map.setFilter('county-stroke-pulse', ['==', ['get', '_'], '__']);
+            map.setPaintProperty('county-stroke-pulse', 'line-opacity', 0.0);
+          }
+        } catch (_) {}
+      }
+    }
+
+    function pulseCountySelection(countyNameRaw) {
+      if (!map || !map.getLayer || !map.getLayer('county-stroke-pulse')) return;
+      const countyName = displayCountyName(countyNameRaw);
+      if (!countyName) return;
+      const filter = ['==', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME'], ['get', 'name']], countyName];
+      try { map.setFilter('county-stroke-pulse', filter); } catch (_) {}
+      setLayerVisibilityIfExists('county-stroke-pulse', 'visible');
+      try {
+        map.setPaintProperty('county-stroke-pulse', 'line-opacity-transition', { duration: 160, delay: 0 });
+        map.setPaintProperty('county-stroke-pulse', 'line-width-transition', { duration: 160, delay: 0 });
+        map.setPaintProperty('county-stroke-pulse', 'line-opacity', 0.0);
+        map.setPaintProperty('county-stroke-pulse', 'line-width', 7);
+      } catch (_) {}
+
+      requestAnimationFrame(() => {
+        try {
+          map.setPaintProperty('county-stroke-pulse', 'line-opacity', 0.78);
+          map.setPaintProperty('county-stroke-pulse', 'line-width', 8.5);
+        } catch (_) {}
+        setTimeout(() => {
+          try {
+            map.setPaintProperty('county-stroke-pulse', 'line-opacity', 0.0);
+            map.setPaintProperty('county-stroke-pulse', 'line-width', 7);
+          } catch (_) {}
+        }, 220);
+        setTimeout(() => {
+          try { setLayerVisibilityIfExists('county-stroke-pulse', 'none'); } catch (_) {}
+        }, 520);
+      });
+    }
 
     function setVoteCounterContext(title, sub, {showClear = false} = {}) {
       const t = document.getElementById('vote-context-title');
@@ -12296,6 +12350,10 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       refreshFocusTrend(voteCounterPinned);
+      setFocusModeActive(true);
+      try {
+        if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
+      } catch (_) {}
       updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes)); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
@@ -12305,6 +12363,7 @@ document.addEventListener('DOMContentLoaded', function() {
       voteCounterPinned = null;
       voteCounterHover = null;
       voteCounterHoverActive = false;
+      setFocusModeActive(false);
       if (voteCounterBaseline) {
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
         updateVoteCounter(
@@ -22141,7 +22200,28 @@ document.addEventListener('DOMContentLoaded', function() {
           if (aliasMap.size) idx.set(county, aliasMap);
         });
         precinctAliasIndexByCounty = idx;
-        precinctFriendlyNameByCountyCode = nameIdx;
+        // Only fill in friendly-name labels if we don't already have a dedicated
+        // code->name index (or if it is missing some codes).
+        if (!precinctFriendlyNameByCountyCode) {
+          precinctFriendlyNameByCountyCode = nameIdx;
+        } else {
+          try {
+            nameIdx.forEach((codesMap, county) => {
+              if (!precinctFriendlyNameByCountyCode.has(county)) {
+                precinctFriendlyNameByCountyCode.set(county, codesMap);
+                return;
+              }
+              const existing = precinctFriendlyNameByCountyCode.get(county);
+              if (!existing) {
+                precinctFriendlyNameByCountyCode.set(county, codesMap);
+                return;
+              }
+              codesMap.forEach((label, code) => {
+                if (!existing.has(code)) existing.set(code, label);
+              });
+            });
+          } catch (_) {}
+        }
       } catch (err) {
         console.warn('Failed to load precinct alias index:', err?.message || err);
       } finally {
