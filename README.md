@@ -111,6 +111,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Preserved the district-line toggle behavior (2022 vs 2024) exactly, including existing source switching and contest re-application logic.
 - Updated hover “total” metrics to prefer Redistricting Data Hub CVAP totals when available (ACS 2020–2024 special tabulation; `CVAP_TOT24`), without changing any election computations or contest logic.
 - Added a pinned-tooltip `Copy` button so analysts/reporters can quickly copy the active geography label (county/precinct/district).
+- Tightened the desktop hover tooltip width cap so hover cards stay compact (mobile dock/sheet layout unchanged).
 - Standardized camera padding so search clicks, district clicks, and other zoom-to-feature flows don’t hide the target under the sidebar/bottom sheet.
 - Added keyboard focus rings and `prefers-reduced-motion` support (no feature changes, just safer UX defaults).
 
