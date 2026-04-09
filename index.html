@@ -2406,6 +2406,14 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   border-bottom: none;
 }
 
+.vote-counter[data-mode="hover"] .focus-card {
+  display: none !important;
+}
+
+.vote-counter[data-mode="hover"] .vote-counter-meta {
+  margin-bottom: 8px;
+}
+
 @media (max-width: 768px) {
   .vote-counter {
     position: fixed;
@@ -12674,6 +12682,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function setVoteCounterBaselineState(title, sub, demVotes, repVotes, otherVotes, meta = null, candidates = null) {
       voteCounterBaseline = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
       if (!voteCounterPinned) {
+        try { setVoteCounterMode('baseline'); } catch (_) {}
         setVoteCounterContext(title, sub, { showClear: false });
         updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
         refreshFocusTrend(voteCounterBaseline);
@@ -12686,6 +12695,7 @@ document.addEventListener('DOMContentLoaded', function() {
       voteCounterPinned = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
       voteCounterHover = null;
       voteCounterHoverActive = false;
+      try { setVoteCounterMode('pinned'); } catch (_) {}
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       refreshFocusTrend(voteCounterPinned);
@@ -12704,6 +12714,7 @@ document.addEventListener('DOMContentLoaded', function() {
       voteCounterHoverActive = false;
       setFocusModeActive(false);
       if (voteCounterBaseline) {
+        try { setVoteCounterMode('baseline'); } catch (_) {}
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
         updateVoteCounter(
           voteCounterBaseline.demVotes,
@@ -12715,6 +12726,7 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshFocusTrend(voteCounterBaseline);
       } else {
         const touch = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+        try { setVoteCounterMode('baseline'); } catch (_) {}
         setVoteCounterContext('Statewide', touch ? 'Choose a contest, then tap a county' : 'Choose a contest, then hover a county', { showClear: false });
         try { updateVoteCounter(0, 0, 0, null, { kind: 'statewide' }); } catch (_) {}
         renderFocusTrendEmpty('Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span>', 'Trends');
@@ -12728,6 +12740,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (voteCounterPinned) return; // don't override a pinned selection
       voteCounterHover = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
       voteCounterHoverActive = true;
+      try { setVoteCounterMode('hover'); } catch (_) {}
       setVoteCounterContext(title, sub, { showClear: false });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       updateRecountRadarBadge();
@@ -12849,6 +12862,7 @@ document.addEventListener('DOMContentLoaded', function() {
       voteCounterHover = null;
       voteCounterHoverActive = false;
       if (voteCounterBaseline) {
+        try { setVoteCounterMode('baseline'); } catch (_) {}
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
         updateVoteCounter(
           voteCounterBaseline.demVotes,
@@ -12859,6 +12873,12 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       }
       updateRecountRadarBadge();
+    }
+
+    function setVoteCounterMode(mode) {
+      const el = document.getElementById('vote-counter');
+      if (!el) return;
+      el.dataset.mode = String(mode || '');
     }
 
     function animateCounter(id, targetValue) {
