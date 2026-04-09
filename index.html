@@ -9587,7 +9587,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-6';
+    const APP_BUILD_ID = '2026-04-09-8';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -12445,10 +12445,11 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${sign}${Math.abs(n).toFixed(d)}%`;
     }
 
-    function buildCountyDeltaBlockHTML(countyNorm, contestType) {
+    function buildCountyDeltaBlockHTML(countyNorm, contestType, options = {}) {
       const norm = String(countyNorm || '').trim().toUpperCase();
       const ct = String(contestType || '').trim();
       if (!norm || !ct) return '';
+      const presentation = String(options?.presentation || '').trim(); // 'desktop-collapsed' | 'desktop-expanded' | ''
 
       const pop = countyPopulationEstimatesByNorm?.get(norm) || null;
       const popDeltaRaw = Number(pop?.change2020To2025);
@@ -12487,15 +12488,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalDelta = hasVote ? formatSignedCompactDelta(vote.totalDelta) : '';
 
       if (isDesktopTooltipMode()) {
-        const parts = [
-          `Δ Pop 20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
-          popDelta2024 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">Pop 20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span>` : '',
-          popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">Pop 24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}</span>` : '',
-          hasVote ? `Δ Votes 20→24 <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>` : ''
-        ].filter(Boolean);
+        const collapsed = presentation === 'desktop-collapsed';
+        const popPieces = collapsed
+          ? [
+            `20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
+            popDelta2024 ? `20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}` : '',
+            popDelta2425 ? `24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}` : ''
+          ].filter(Boolean)
+          : [
+            `20→25 ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
+            popDelta2024 ? `20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}` : '',
+            popDelta2425 ? `24→25 ${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}` : ''
+          ].filter(Boolean);
+
+        const votesLine = hasVote
+          ? `20→24 <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>`
+          : '';
+
         return `
           <div class="tooltip-delta" aria-label="County delta mechanics">
-            ${parts.join(' • ')}
+            <div class="tooltip-delta-line">Population: <span style="font-weight:800;">${popPieces.join(' • ')}</span></div>
+            ${votesLine ? `<div class="tooltip-delta-line">Raw votes: ${votesLine}</div>` : ''}
           </div>
         `.trim();
       }
@@ -20772,7 +20785,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'Smart Insights: one of today’s key counties.';
       })();
       const finalInsight = tooltipInsight || smartInsight;
-      const deltaBlock = buildCountyDeltaBlockHTML(norm, contestType);
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      const desktopCollapsed = isDesktopTooltipMode() && !pinnedShell;
+      const deltaBlock = buildCountyDeltaBlockHTML(norm, contestType, { presentation: desktopCollapsed ? 'desktop-collapsed' : 'desktop-expanded' });
       const useCompact = isMobileTooltipMode();
 
       const classicInner = `
@@ -20812,11 +20827,9 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </details>
       `.trim();
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
       const actionHint = useCompact
         ? (pinnedShell ? 'Pinned • tap Close to dismiss' : (isTouchInteractionMode() ? 'Tap to pin details' : 'Click to pin details'))
         : '';
-      const desktopCollapsed = isDesktopTooltipMode() && !pinnedShell;
       const inner = isDesktopTooltipMode()
         ? (desktopCollapsed ? desktopCollapsedInner : classicInner)
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
