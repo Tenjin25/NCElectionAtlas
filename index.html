@@ -15590,18 +15590,21 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Clear all map layers for the active view.
       // Precincts are an overlay; don't destroy precinct layers when switching views.
-      const layerTypes = ['county', 'district', 'state-house', 'state-senate', 'vtds-2000'];
-      layerTypes.forEach(type => {
-        if (map.getLayer(`${type}-fill`)) {
-          map.removeLayer(`${type}-fill`);
-        }
-        if (map.getLayer(`${type}-stroke`)) {
-          map.removeLayer(`${type}-stroke`);
-        }
-        if (map.getLayer(`${type}-stroke-hover`)) {
-          map.removeLayer(`${type}-stroke-hover`);
-        }
-      });
+       const layerTypes = ['county', 'district', 'state-house', 'state-senate', 'vtds-2000'];
+       layerTypes.forEach(type => {
+         if (map.getLayer(`${type}-fill`)) {
+           map.removeLayer(`${type}-fill`);
+         }
+         if (map.getLayer(`${type}-stroke-casing`)) {
+           map.removeLayer(`${type}-stroke-casing`);
+         }
+         if (map.getLayer(`${type}-stroke`)) {
+           map.removeLayer(`${type}-stroke`);
+         }
+         if (map.getLayer(`${type}-stroke-hover`)) {
+           map.removeLayer(`${type}-stroke-hover`);
+         }
+       });
       if (map.getLayer('county-label')) {
         map.removeLayer('county-label');
       }
@@ -23796,6 +23799,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       return {
         congressional: {
+          casing: {
+            'line-color': 'rgba(248, 250, 252, 0.62)',
+            'line-opacity': zoomInterpLinear(stops([0.12, 0.18, 0.30, 0.52, 0.76, 0.90])),
+            'line-width': zoomInterpLinear(stops([1.20, 1.50, 1.86, 2.30, 2.90, 3.40])),
+            'line-blur': zoomInterpLinear(stops([0.75, 0.60, 0.40, 0.18, 0.0, 0.0]))
+          },
           base: {
             'line-color': '#334155',
             'line-opacity': zoomInterpLinear(stops([0.08, 0.14, 0.24, 0.42, 0.68, 0.86])),
@@ -23810,11 +23819,19 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         },
         state_senate: {
+          casing: {
+            'line-color': 'rgba(248, 250, 252, 0.54)',
+            'line-opacity': zoomInterpLinear(stops([0.10, 0.15, 0.24, 0.42, 0.68, 0.84])),
+            'line-width': zoomInterpLinear(stops([1.05, 1.30, 1.62, 2.02, 2.55, 3.00])),
+            'line-blur': zoomInterpLinear(stops([0.80, 0.64, 0.42, 0.18, 0.0, 0.0])),
+            'line-dasharray': [2.6, 1.4]
+          },
           base: {
             'line-color': '#475569',
             'line-opacity': zoomInterpLinear(stops([0.06, 0.10, 0.18, 0.32, 0.56, 0.78])),
             'line-width': zoomInterpLinear(stops([0.50, 0.66, 0.82, 1.05, 1.32, 1.56])),
-            'line-blur': zoomInterpLinear(stops([0.75, 0.60, 0.40, 0.18, 0.0, 0.0]))
+            'line-blur': zoomInterpLinear(stops([0.75, 0.60, 0.40, 0.18, 0.0, 0.0])),
+            'line-dasharray': [2.6, 1.4]
           },
           hover: {
             'line-color': 'rgba(15, 23, 42, 0.74)',
@@ -23824,11 +23841,19 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         },
         state_house: {
+          casing: {
+            'line-color': 'rgba(248, 250, 252, 0.48)',
+            'line-opacity': zoomInterpLinear(stops([0.08, 0.12, 0.20, 0.34, 0.62, 0.80])),
+            'line-width': zoomInterpLinear(stops([0.96, 1.18, 1.46, 1.82, 2.28, 2.70])),
+            'line-blur': zoomInterpLinear(stops([0.88, 0.72, 0.50, 0.22, 0.0, 0.0])),
+            'line-dasharray': [0.8, 1.6]
+          },
           base: {
             'line-color': '#64748b',
             'line-opacity': zoomInterpLinear(stops([0.04, 0.07, 0.13, 0.24, 0.48, 0.70])),
             'line-width': zoomInterpLinear(stops([0.40, 0.52, 0.66, 0.84, 1.08, 1.28])),
-            'line-blur': zoomInterpLinear(stops([0.85, 0.70, 0.48, 0.22, 0.0, 0.0]))
+            'line-blur': zoomInterpLinear(stops([0.85, 0.70, 0.48, 0.22, 0.0, 0.0])),
+            'line-dasharray': [0.8, 1.6]
           },
           hover: {
             'line-color': 'rgba(15, 23, 42, 0.70)',
@@ -23840,12 +23865,12 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     })();
 
-    function applyDistrictStrokeStyle(layerId, scope, { hover = false } = {}) {
+    function applyDistrictStrokeStyle(layerId, scope, { variant = 'base' } = {}) {
       if (!map || !layerId || !map.getLayer(layerId)) return;
       const key = (scope || '').toString();
       const spec = DISTRICT_LINE_STYLE[key];
       if (!spec) return;
-      const paint = hover ? spec.hover : spec.base;
+      const paint = spec?.[variant] || spec.base;
       try { map.setLayoutProperty(layerId, 'line-join', 'round'); } catch (_) {}
       try { map.setLayoutProperty(layerId, 'line-cap', 'round'); } catch (_) {}
       Object.keys(paint).forEach(prop => {
@@ -23863,6 +23888,14 @@ document.addEventListener('DOMContentLoaded', function() {
           source: 'districts',
           beforeId: baseSymbolLayerId,
           paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.58 }
+        });
+        addLayerWithOptionalSourceLayer({
+          id: 'district-stroke-casing',
+          type: 'line',
+          source: 'districts',
+          beforeId: baseSymbolLayerId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.congressional.casing
         });
         addLayerWithOptionalSourceLayer({
           id: 'district-stroke',
@@ -23976,6 +24009,14 @@ document.addEventListener('DOMContentLoaded', function() {
           paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.54 }
         });
         addLayerWithOptionalSourceLayer({
+          id: 'state-house-stroke-casing',
+          type: 'line',
+          source: 'state-house',
+          beforeId: baseSymbolLayerId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.state_house.casing
+        });
+        addLayerWithOptionalSourceLayer({
           id: 'state-house-stroke',
           type: 'line',
           source: 'state-house',
@@ -24083,6 +24124,14 @@ document.addEventListener('DOMContentLoaded', function() {
           source: 'state-senate',
           beforeId: baseSymbolLayerId,
           paint: { 'fill-color': '#e0e0e0', 'fill-opacity': 0.56 }
+        });
+        addLayerWithOptionalSourceLayer({
+          id: 'state-senate-stroke-casing',
+          type: 'line',
+          source: 'state-senate',
+          beforeId: baseSymbolLayerId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.state_senate.casing
         });
         addLayerWithOptionalSourceLayer({
           id: 'state-senate-stroke',
@@ -27505,9 +27554,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const scopeKey = strokeLayerName === 'district-stroke'
                   ? 'congressional'
                   : (strokeLayerName === 'state-house-stroke' ? 'state_house' : 'state_senate');
-                applyDistrictStrokeStyle(strokeLayerName, scopeKey, { hover: false });
-              } catch (_) {}
-            }
+                 applyDistrictStrokeStyle(strokeLayerName, scopeKey, { variant: 'base' });
+               } catch (_) {}
+             }
+             try {
+               const casingLayerName = `${strokeLayerName}-casing`;
+               if (map.getLayer(casingLayerName)) {
+                 const scopeKey = strokeLayerName === 'district-stroke'
+                   ? 'congressional'
+                   : (strokeLayerName === 'state-house-stroke' ? 'state_house' : 'state_senate');
+                 applyDistrictStrokeStyle(casingLayerName, scopeKey, { variant: 'casing' });
+               }
+             } catch (_) {}
 
           const demPct = totalVotes ? (totalDem / totalVotes) * 100 : 0;
           const repPct = totalVotes ? (totalRep / totalVotes) * 100 : 0;
