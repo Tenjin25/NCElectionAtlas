@@ -12447,25 +12447,29 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!vote) {
         try { scheduleHoverRefreshWhenCountyVoteDeltaReady(ct); } catch (_) {}
       }
-      if (!pop || !vote) return '';
-      if (![popDeltaRaw, popPctRaw, vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)))) return '';
+      const hasPop = !!pop && [popDeltaRaw, popPctRaw].every(n => Number.isFinite(Number(n)));
+      if (!hasPop) return '';
 
       const popDelta = formatSignedCompactDelta(popDeltaRaw);
       const popPct = formatSignedPctDelta(popPctRaw, 1);
       const popDelta2425 = Number.isFinite(popDelta2425Raw) ? formatSignedCompactDelta(popDelta2425Raw) : '';
       const popPct2425 = Number.isFinite(popPct2425Raw) ? formatSignedPctDelta(popPct2425Raw, 1) : '';
-      const repDelta = formatSignedCompactDelta(vote.repDelta);
-      const demDelta = formatSignedCompactDelta(vote.demDelta);
-      const totalDelta = formatSignedCompactDelta(vote.totalDelta);
+      const hasVote = !!vote && [vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)));
+      const repDelta = hasVote ? formatSignedCompactDelta(vote.repDelta) : '';
+      const demDelta = hasVote ? formatSignedCompactDelta(vote.demDelta) : '';
+      const totalDelta = hasVote ? formatSignedCompactDelta(vote.totalDelta) : '';
 
       if (isDesktopTooltipMode()) {
+        const parts = [
+          `Pop ${escapeHtml(popDelta)} (${escapeHtml(popPct)})`,
+          popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">24→25 ${escapeHtml(popDelta2425)}</span>` : '',
+          hasVote ? `<span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span>` : '',
+          hasVote ? `<span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span>` : '',
+          hasVote ? `<span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>` : ''
+        ].filter(Boolean);
         return `
           <div class="tooltip-delta" aria-label="County delta mechanics">
-            Pop ${escapeHtml(popDelta)} (${escapeHtml(popPct)}) •
-            ${popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">24→25 ${escapeHtml(popDelta2425)}</span> •` : ''}
-            <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> •
-            <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> •
-            <span style="color:rgba(226,232,240,0.92);font-weight:800;">Total ${escapeHtml(totalDelta)}</span>
+            ${parts.join(' • ')}
           </div>
         `.trim();
       }
@@ -12474,7 +12478,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="tooltip-delta" aria-label="County delta mechanics">
           <div class="tooltip-delta-line">Population (20→25): <span style="font-weight:800;">${escapeHtml(popDelta)} (${escapeHtml(popPct)})</span></div>
           ${popDelta2425 ? `<div class="tooltip-delta-line">Population (24→25): <span style="font-weight:800;">${escapeHtml(popDelta2425)} (${escapeHtml(popPct2425)})</span></div>` : ''}
-          <div class="tooltip-delta-line">Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span></div>
+          ${hasVote ? `<div class="tooltip-delta-line">Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span></div>` : ''}
         </div>
       `.trim();
     }
