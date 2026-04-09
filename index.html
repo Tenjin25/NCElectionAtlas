@@ -11117,7 +11117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     try { window.computeMapViewportPadding = computeMapViewportPadding; } catch (_) {}
 
-    function zoomToClickedPrecinctFeature(feature, { padding = 42, duration = 880, maxZoom = 13.6 } = {}) {
+    function zoomToClickedPrecinctFeature(feature, { padding = 42, duration = 880, maxZoom = 13.8 } = {}) {
       try {
         if (!feature) return;
         const geomType = String(feature?.geometry?.type || '');
@@ -11125,8 +11125,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const coords = feature?.geometry?.coordinates || null;
           if (Array.isArray(coords) && coords.length >= 2) {
             const pad = computeMapViewportPadding(padding);
-            const cap = Number.isFinite(Number(maxZoom)) ? Number(maxZoom) : 13.0;
-            const desired = Math.min(cap, 13.0);
+            const cap = Number.isFinite(Number(maxZoom)) ? Number(maxZoom) : 13.8;
+            const desired = cap;
             map.flyTo({
               center: coords,
               zoom: Math.max(map.getZoom() || 0, desired),
@@ -20248,6 +20248,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demo = countyDemographics?.counties?.[norm] || null;
         demoLine = buildCountyDemographicsHoverHTML(demo, norm);
       } catch (_) {}
+      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || (forceTooltip && isTouchInteractionMode());
+      if (!showDemoLine) demoLine = '';
 
       const chips = [];
       let prevSignedForFlip = null;
@@ -20358,7 +20360,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
@@ -20478,6 +20480,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demo = getPrecinctDemographicsRow(precinctNorm, countyName, precId);
         demoLine = buildPrecinctDemographicsHoverHTML(demo, precinctNorm);
       } catch (_) {}
+      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || pinSelection || (forceTooltip && isTouchInteractionMode());
+      if (!showDemoLine) demoLine = '';
 
       const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
@@ -20548,7 +20552,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showHoverTooltip(
         point.x,
         point.y,
-        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
@@ -20848,7 +20852,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
@@ -24158,7 +24162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : (sourceId === 'state-house' ? `HD ${districtNum}` : `SD ${districtNum}`);
       syncFlySearchInputs(canonicalQuery);
       setFlySearchFeedback('#10b981');
-      map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(40), duration: 900 });
+      map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 900 });
 
       const sidebar = document.getElementById('sidebar');
       if (sidebar && sidebar.classList.contains('minimized')) toggleSidebar();
@@ -24227,7 +24231,7 @@ document.addEventListener('DOMContentLoaded', function() {
       syncFlySearchInputs(matchedTarget);
       setFlySearchFeedback('#10b981');
       if (coords && coords.length >= 2) {
-        zoomToClickedPrecinctFeature(hit, { padding: 42, duration: 920, maxZoom: 13.0 });
+        zoomToClickedPrecinctFeature(hit, { padding: 42, duration: 920, maxZoom: 13.8 });
       }
 
       const resolvedCode = matchedTarget.includes(' - ') ? matchedTarget.split(' - ')[1].trim().toUpperCase() : code;
@@ -24297,7 +24301,7 @@ document.addEventListener('DOMContentLoaded', function() {
           debugLog('[DIAGNOSTIC] Matched county for', countyName, '->', lastSelectedCounty, 'bbox:', bbox);
           syncFlySearchInputs(lastSelectedCounty);
           setFlySearchFeedback('#10b981');
-          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(40), duration: 1000 });
+          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
           const sidebar = document.getElementById('sidebar');
           if (sidebar && sidebar.classList.contains('minimized')) {
