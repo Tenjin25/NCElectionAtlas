@@ -105,6 +105,28 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 9, 2026
 
+### Hover Tooltip Crash Course (April 2026)
+
+The Atlas uses a split hover-tooltip system so the map stays fast on desktop while remaining readable and touch-friendly on mobile.
+
+**Desktop (min-width: 769px)**
+- **Hover** a county/district/precinct to see a **collapsed** quick card (winner/margin + rating, plus compact deltas when available).
+- **Click the hover card** to **pin + expand** it (shows full details, additional stat lines, and extra chips).
+- When pinned, use **Close** to dismiss. Some pinned tooltips also show a **Copy** button for quick label copying.
+
+**Mobile (max-width: 768px)**
+- Hover behaves like a **docked card** (bottom-safe placement) designed for scrolling + tapping.
+- Tap to pin details (and use **Close** to dismiss).
+
+**What you’re seeing**
+- **Winner / margin line:** e.g. `Trump +25.19%` (signed two-party margin).
+- **Rating / tier label:** e.g. `Stronghold Republican` (bucketed margin category for quick scanning).
+- **Flip indicator:** shows when the current result switches party versus the previous comparable cycle (e.g. `Flip: D→R (20→24)`), when prior data exists.
+- **Delta block (only when data exists):**
+  - **Population deltas:** `20→25`, `20→24`, and `24→25` using Census county estimates (Vintage 2025).
+  - **Raw vote deltas:** `R`, `D`, and `Total` vote change `20→24` for the selected contest.
+  - These load asynchronously for some contests; if deltas are missing, the block stays hidden instead of showing placeholders.
+
 ### Premium UI + District Linework + CVAP Totals (April 9, 2026)
 
 - Restyled congressional/state house/state senate boundary strokes to a calmer SCMap-style system: rounded joins/caps, subdued slate color, multi-stop zoom interpolation for opacity/width/blur, and stronger-but-tasteful hover/selection outlines.
