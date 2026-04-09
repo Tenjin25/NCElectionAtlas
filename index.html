@@ -9747,6 +9747,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctAliasIndexByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctFriendlyNameByCountyCode = null; // Map<string countyNorm, Map<string code, string displayName>>
     let precinctFriendlyNamesLoadInFlight = false;
+    let precinctFriendlyNamesFileLoaded = false;
     let precinctAliasLoadInFlight = false;
     let precinctVariantOverridesByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctVariantOverridesLoadInFlight = false;
@@ -22269,7 +22270,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function ensurePrecinctFriendlyNamesIndex() {
-      if (precinctFriendlyNameByCountyCode) return precinctFriendlyNameByCountyCode;
+      if (precinctFriendlyNamesFileLoaded && precinctFriendlyNameByCountyCode) return precinctFriendlyNameByCountyCode;
       if (precinctFriendlyNamesLoadInFlight) return null;
       const path = CONFIG.paths?.precinct_friendly_names;
       if (!path) return null;
@@ -22277,11 +22278,11 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         const payload = await loadJSON(path);
         const counties = payload?.counties || {};
-        const out = new Map();
+        const out = precinctFriendlyNameByCountyCode || new Map();
         Object.entries(counties).forEach(([countyRaw, codesObj]) => {
           const countyNorm = normalizeCountyToken(countyRaw);
           if (!countyNorm || !codesObj || typeof codesObj !== 'object') return;
-          const perCounty = new Map();
+          const perCounty = out.has(countyNorm) ? out.get(countyNorm) : new Map();
           Object.entries(codesObj).forEach(([codeRaw, nameRaw]) => {
             const code = String(codeRaw || '').trim().toUpperCase();
             if (!code) return;
@@ -22289,9 +22290,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!cleaned) return;
             perCounty.set(code, toTitleCaseName(cleaned));
           });
-          if (perCounty.size) out.set(countyNorm, perCounty);
+          if (perCounty && perCounty.size) out.set(countyNorm, perCounty);
         });
         if (out.size) precinctFriendlyNameByCountyCode = out;
+        precinctFriendlyNamesFileLoaded = true;
       } catch (err) {
         console.warn('Failed to load precinct friendly names:', err?.message || err);
       } finally {
