@@ -24461,11 +24461,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Hover Tooltip Functions - VoteHub Style
+    const hoverTooltipSuppression = { key: '', x: 0, y: 0, until: 0 };
+
+    function suppressHoverTooltip(key, x, y, { ms = 30000 } = {}) {
+      const k = (key || '').toString().trim();
+      if (!k) return;
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      hoverTooltipSuppression.key = k;
+      hoverTooltipSuppression.x = Number(x) || 0;
+      hoverTooltipSuppression.y = Number(y) || 0;
+      hoverTooltipSuppression.until = now + Math.max(0, Number(ms) || 0);
+    }
+
+    function clearHoverTooltipSuppression() {
+      hoverTooltipSuppression.key = '';
+      hoverTooltipSuppression.until = 0;
+    }
+
     function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '' } = {}) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       if (isTouchInteractionMode() && !force && !tooltipPinned) return;
       if (tooltipPinned && !force) return;
+
+      // If the user explicitly closed a hover tooltip while the pointer is still sitting on the same feature,
+      // don't immediately reopen it on the next hover refresh (common in precinct mode).
+      try {
+        const key = (copyText || '').toString().trim();
+        const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        if (!pinned && !force && key && hoverTooltipSuppression.key === key && now < hoverTooltipSuppression.until) {
+          const dx = (Number(x) || 0) - (Number(hoverTooltipSuppression.x) || 0);
+          const dy = (Number(y) || 0) - (Number(hoverTooltipSuppression.y) || 0);
+          const dist2 = (dx * dx) + (dy * dy);
+          if (dist2 <= (14 * 14)) return;
+          clearHoverTooltipSuppression();
+        } else if (key && hoverTooltipSuppression.key && key !== hoverTooltipSuppression.key) {
+          clearHoverTooltipSuppression();
+        }
+      } catch (_) {}
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
@@ -24532,6 +24565,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const closeBtn = document.getElementById('tooltip-close-btn');
       if (closeBtn) {
         closeBtn.onclick = () => {
+          try {
+            const tooltip = document.getElementById('hover-tooltip');
+            const key = (tooltip?.dataset?.copyText || '').toString().trim();
+            if (key) suppressHoverTooltip(key, lastPointerPoint?.x || 0, lastPointerPoint?.y || 0);
+          } catch (_) {}
           setTooltipPinned(false);
           const tooltip = document.getElementById('hover-tooltip');
           if (tooltip) tooltip.style.display = 'none';
