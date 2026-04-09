@@ -506,12 +506,24 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 
 - `data/Voting_Precincts.geojson` — Polygon boundaries for all precincts
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
+- `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
+- `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show `Creedmoor (CRDM)`-style names in hover/selection UI
 
 To rebuild from the latest NCSBE shapefile:
 
 ```powershell
 py scripts/build_voting_precincts_geojson.py
 ```
+
+To (re)generate friendly precinct display names from the alias index:
+
+```powershell
+node scripts/build_precinct_friendly_names.js
+```
+
+Notes:
+- This mapping is intentionally **county-scoped**: the same short code can mean different things in different counties.
+- If a code has no known friendly name, the UI falls back to showing the raw code.
 
 ### 3. District Contest Slices (District Views)
 

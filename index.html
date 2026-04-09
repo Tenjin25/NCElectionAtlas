@@ -395,6 +395,7 @@
           { id: 'gps-locate-btn', label: 'Find my precinct by GPS', keyShortcuts: 'G' },
           { id: 'snapshot-share-btn', label: 'Download story snapshot', keyShortcuts: 'X' },
           { id: 'copy-link-btn', label: 'Copy shareable map link', keyShortcuts: 'C' },
+          { id: 'smart-insights-toggle', label: 'Toggle Smart Insights', keyShortcuts: 'I' },
           { id: 'reset-view-btn', label: 'Reset map view', keyShortcuts: 'R' },
           { id: 'scenario-reset-btn', label: 'Reset scenario swing to zero', keyShortcuts: '0' },
           { id: 'snapshot-variant', label: 'Story snapshot layout variant' },
@@ -507,6 +508,10 @@
         }
         if (ev.key === 'c' || ev.key === 'C') {
           const btn = document.getElementById('copy-link-btn');
+          if (btn) btn.click();
+        }
+        if (ev.key === 'i' || ev.key === 'I') {
+          const btn = document.getElementById('smart-insights-toggle');
           if (btn) btn.click();
         }
         if (ev.key === 'r' || ev.key === 'R') {
@@ -776,6 +781,10 @@ body { height: var(--app-height); }
   font-weight: 800;
   line-height: 1.25;
 }
+
+.hover-tooltip .tooltip-quickline .rep { color: #fecaca; }
+.hover-tooltip .tooltip-quickline .dem { color: #bfdbfe; }
+.hover-tooltip .tooltip-quickline .tie { color: #e2e8f0; }
 
 .hover-tooltip .tooltip-quickline .tier {
   font-size: 11px;
@@ -7995,6 +8004,11 @@ body { height: var(--app-height); }
     background: #1e293b;
   }
 
+  #smart-insights-toggle[aria-pressed="true"] {
+    background: #0f766e;
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.24), 0 10px 22px rgba(15, 23, 42, 0.14);
+  }
+
   .tool-chip-select {
     height: 38px;
     min-width: 168px;
@@ -8493,6 +8507,14 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+  const smartInsightsBtn = document.getElementById('smart-insights-toggle');
+  if (smartInsightsBtn) {
+    if (typeof syncSmartInsightsToggleUI === 'function') syncSmartInsightsToggleUI();
+    smartInsightsBtn.onclick = function() {
+      if (typeof toggleSmartInsights === 'function') toggleSmartInsights();
+    };
+  }
+
   const gpsBtn = document.getElementById('gps-locate-btn');
   if (gpsBtn) {
     gpsBtn.onclick = function() {
@@ -8846,6 +8868,7 @@ document.addEventListener('DOMContentLoaded', function() {
                       <option value="tiktok">TikTok</option>
                     </select>
                     <button id="copy-link-btn" title="Copy shareable link for current map state" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-copy-link" aria-label="Copy shareable map link">Copy Link</button>
+                    <button id="smart-insights-toggle" title="Smart Insights (Story Mode): highlight key counties to explore" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-smart-insights" aria-label="Toggle Smart Insights" aria-pressed="false">Smart Insights</button>
                   </div>
                   <details class="contest-tools-more" aria-label="More tools">
                     <summary class="tool-chip-btn tool-chip-btn-muted" role="button">More</summary>
@@ -9318,6 +9341,7 @@ document.addEventListener('DOMContentLoaded', function() {
         precincts_fallback_vtd20: withBase('./data/census/tl_2020_37_vtd20/tl_2020_37_vtd20.geojson'),
         precinct_centroids: withBase('./data/precinct_centroids.geojson'),
         precinct_aliases: withBase('./data/precinct_alias_index.json'),
+        precinct_friendly_names: withBase('./data/precinct_friendly_names.json'),
         precinct_variant_overrides: withBase('./data/mappings/precinct_variant_overrides.json'),
         districts: withBase('./data/tileset/nc_cd118_tileset.geojson'),
         districts_2022: withBase('./data/tileset/nc_cd118_tileset.geojson'),
@@ -9715,6 +9739,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let countyNameByFipsMapCache = null; // Map<string fips3, string county_name>
     let precinctCodeIndexByCounty = null; // Map<string countyNorm, Set<string prec_id>> built from precinct centroids.
     let precinctAliasIndexByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
+    let precinctFriendlyNameByCountyCode = null; // Map<string countyNorm, Map<string code, string displayName>>
+    let precinctFriendlyNamesLoadInFlight = false;
     let precinctAliasLoadInFlight = false;
     let precinctVariantOverridesByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctVariantOverridesLoadInFlight = false;
@@ -9722,6 +9748,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctDotHoverWired = new Set();
     let viewportPrecinctCountRaf = null;
     let startupPrecinctCentroidPreloadScheduled = false;
+    let startupPrecinctAliasPreloadScheduled = false;
     let tooltipPinned = false;
     let precinctDotHoverRaf = null;
     let lastPrecinctDotHoverEvent = null;
@@ -9742,6 +9769,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let turnoutBivariateEnabled = false;
     let demographicsHighContrastEnabled = false;
     let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
+    let smartInsightsEnabled = false; // session-only toggle; default off
+    let smartInsightsLastOverlayKey = '';
+    let smartInsightsActiveCountySet = null; // Set<string countyNorm> (UPPERCASE) for the current contest
+    let smartInsightsReasonsByCounty = null; // Map<string countyNorm, string[]> for tooltips
     const RECOUNT_MARGIN_THRESHOLD_PCT = 0.5;
     const RECOUNT_MIN_ZOOM = 7.25;
     const BELLWETHER_CYCLE_COUNT = 3;
@@ -10508,6 +10539,40 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       map.once('idle', kick);
       setTimeout(kick, 2600);
+    }
+
+    function scheduleStartupPrecinctAliasPreload() {
+      if (startupPrecinctAliasPreloadScheduled) return;
+      startupPrecinctAliasPreloadScheduled = true;
+      const aliasPath = CONFIG.paths?.precinct_aliases;
+      const friendlyPath = CONFIG.paths?.precinct_friendly_names;
+      if (!aliasPath && !friendlyPath) return;
+
+      // Load lightweight code->name labels immediately so hover feels "instant".
+      try {
+        if (friendlyPath && !precinctFriendlyNameByCountyCode && !precinctFriendlyNamesLoadInFlight) {
+          ensurePrecinctFriendlyNamesIndex().catch(() => {});
+        }
+      } catch (_) {}
+
+      const beginLoad = () => {
+        if (!aliasPath) return;
+        if (precinctAliasIndexByCounty || precinctAliasLoadInFlight) return;
+        ensurePrecinctAliasIndex().catch(() => {});
+      };
+
+      let kicked = false;
+      const kick = () => {
+        if (kicked) return;
+        kicked = true;
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(() => beginLoad(), { timeout: 2400 });
+        } else {
+          setTimeout(beginLoad, 450);
+        }
+      };
+      map.once('idle', kick);
+      setTimeout(kick, 1200);
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
@@ -11696,7 +11761,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tag = String(m[1] || '').trim();
         cleanedTitle = String(m[2] || '').trim();
       }
-      if (t) t.textContent = cleanedTitle || '';
+      // Preserve the exact legacy title string (tests + users rely on "Selected:" / "Hover:" prefixes).
+      // Use the separate badge row for the compact context tag + tier badge.
+      if (t) t.textContent = rawTitle || '';
       if (s) s.textContent = sub || '';
       if (c) c.style.display = showClear ? 'inline-flex' : 'none';
       if (b) b.dataset.contextTag = tag ? tag[0].toUpperCase() + tag.slice(1).toLowerCase() : '';
@@ -14869,6 +14936,7 @@ document.addEventListener('DOMContentLoaded', function() {
       applyLayerOpacityTuning();
       setSplitTicketOverlayVisibility();
       updateBellwetherLayerVisibility();
+      try { updateSmartInsightsOverlay(); } catch (_) {}
       updateRecountRadarBadge();
       saveUIState();
     }
@@ -18420,6 +18488,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (precinctsEnabled) labels.push('Precincts');
       if (splitTicketOverlayEnabled) labels.push('Pres-Gov');
       if (barometerOverlayEnabled) labels.push('Barometer');
+      if (smartInsightsEnabled) labels.push('Smart Insights');
       if (turnoutBivariateEnabled) labels.push('Turnout opacity');
       if (document.body.classList.contains('colorblind-mode')) labels.push('Colorblind');
       if (currentVizMode && currentVizMode !== 'margins') {
@@ -18454,6 +18523,165 @@ document.addEventListener('DOMContentLoaded', function() {
       updateBellwetherLegendChipVisibility();
       updateFiltersActiveChip();
     }
+
+    let smartInsightsRequestId = 0;
+
+    function syncSmartInsightsToggleUI() {
+      const btn = document.getElementById('smart-insights-toggle');
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', smartInsightsEnabled ? 'true' : 'false');
+    }
+    window.syncSmartInsightsToggleUI = syncSmartInsightsToggleUI;
+
+    async function computeSmartInsightsCountiesForContest(contestType, year) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      if (!ct || !Number.isFinite(y)) return [];
+      const results = currentElectionResults || null;
+      if (!results) return [];
+      const reasons = new Map(); // countyNorm -> string[]
+      const addReason = (countyNorm, reason) => {
+        const n = String(countyNorm || '').trim().toUpperCase();
+        const r = String(reason || '').trim();
+        if (!n || !r) return;
+        if (!reasons.has(n)) reasons.set(n, []);
+        const arr = reasons.get(n);
+        if (arr && !arr.includes(r)) arr.push(r);
+      };
+
+      const closest = [];
+      Object.entries(results).forEach(([countyNormRaw, row]) => {
+        const countyNorm = String(countyNormRaw || '').trim().toUpperCase();
+        if (!countyNorm) return;
+        const dem = Number(row?.[`${ct}_dem`] || 0);
+        const rep = Number(row?.[`${ct}_rep`] || 0);
+        const total = Number(row?.[`${ct}_total`] || 0);
+        if (!Number.isFinite(total) || total <= 0) return;
+        const signed = signedMarginPctFromVotes(dem, rep, total);
+        if (!Number.isFinite(signed)) return;
+        closest.push({ countyNorm, signed, abs: Math.abs(signed) });
+      });
+      closest.sort((a, b) => a.abs - b.abs);
+      const closestTop = closest.slice(0, 10).map(x => x.countyNorm);
+      closestTop.forEach(n => addReason(n, 'Closest margins'));
+
+      let shiftTop = [];
+      try {
+        const prevCache = await ensurePrevContestCache(ct, y, { includePrecinctMargins: false });
+        const prevTotals = prevCache?.prevCountyTotals || null;
+        if (prevCache?.prevYear && prevTotals) {
+          const shifts = [];
+          closest.forEach(item => {
+            const prev = prevTotals[item.countyNorm] || null;
+            if (!prev || !Number.isFinite(Number(prev.total)) || Number(prev.total) <= 0) return;
+            const prevSigned = signedMarginPctFromVotes(Number(prev.dem || 0), Number(prev.rep || 0), Number(prev.total || 0));
+            if (!Number.isFinite(prevSigned)) return;
+            const delta = item.signed - prevSigned;
+            if (!Number.isFinite(delta)) return;
+            shifts.push({ countyNorm: item.countyNorm, abs: Math.abs(delta) });
+          });
+          shifts.sort((a, b) => b.abs - a.abs);
+          shiftTop = shifts.slice(0, 10).map(x => x.countyNorm);
+          shiftTop.forEach(n => addReason(n, 'Largest shifts'));
+        }
+      } catch (_) {}
+
+      let growthTop = [];
+      try {
+        const growth = [];
+        if (countyPopulationEstimatesByNorm && typeof countyPopulationEstimatesByNorm.forEach === 'function') {
+          countyPopulationEstimatesByNorm.forEach((estimate, countyNorm) => {
+            const n = String(countyNorm || '').trim().toUpperCase();
+            const pct = Number(estimate?.changePct2020To2025);
+            if (!n || !Number.isFinite(pct)) return;
+            growth.push({ countyNorm: n, pct });
+          });
+        }
+        growth.sort((a, b) => b.pct - a.pct);
+        growthTop = growth.slice(0, 10).map(x => x.countyNorm);
+        growthTop.forEach(n => addReason(n, 'Fastest growth'));
+      } catch (_) {}
+
+      const combined = new Set();
+      [...closestTop, ...shiftTop, ...growthTop].forEach(n => { if (n) combined.add(n); });
+      const listUpper = Array.from(combined).slice(0, 24);
+      const trimmedReasons = new Map();
+      listUpper.forEach(n => {
+        if (reasons.has(n)) trimmedReasons.set(n, reasons.get(n) || []);
+      });
+      return { listUpper, reasonsByCounty: trimmedReasons };
+    }
+
+    async function updateSmartInsightsOverlay() {
+      const reqId = ++smartInsightsRequestId;
+      const layerId = 'smart-insights-county-outline';
+      if (!map || !map.getLayer(layerId)) return;
+      if (!smartInsightsEnabled || currentView !== 'counties') {
+        try { map.setLayoutProperty(layerId, 'visibility', 'none'); } catch (_) {}
+        smartInsightsLastOverlayKey = '';
+        smartInsightsActiveCountySet = null;
+        smartInsightsReasonsByCounty = null;
+        updateFiltersActiveChip();
+        return;
+      }
+
+      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const [ct, yRaw] = parseContestValue(contestValue);
+      const y = Number(yRaw);
+      if (!ct || !Number.isFinite(y)) {
+        try { map.setLayoutProperty(layerId, 'visibility', 'none'); } catch (_) {}
+        smartInsightsLastOverlayKey = '';
+        smartInsightsActiveCountySet = null;
+        smartInsightsReasonsByCounty = null;
+        updateFiltersActiveChip();
+        return;
+      }
+
+      const key = `${ct}_${y}`;
+      const computed = await computeSmartInsightsCountiesForContest(ct, y);
+      if (reqId !== smartInsightsRequestId) return;
+      const listUpper = computed && Array.isArray(computed.listUpper) ? computed.listUpper : [];
+      const reasonsByCounty = computed && computed.reasonsByCounty instanceof Map ? computed.reasonsByCounty : new Map();
+      smartInsightsActiveCountySet = new Set(listUpper.map(n => String(n || '').trim().toUpperCase()).filter(Boolean));
+      smartInsightsReasonsByCounty = reasonsByCounty;
+      if (!listUpper || !listUpper.length) {
+        try { map.setLayoutProperty(layerId, 'visibility', 'none'); } catch (_) {}
+        smartInsightsLastOverlayKey = key;
+        updateFiltersActiveChip();
+        return;
+      }
+
+      const countyNameExpr = ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME'], ['get', 'name']]];
+      const filter = ['in', countyNameExpr, ['literal', listUpper]];
+      try { map.setFilter(layerId, filter); } catch (_) {}
+      try { map.setLayoutProperty(layerId, 'visibility', 'visible'); } catch (_) {}
+      smartInsightsLastOverlayKey = key;
+      updateFiltersActiveChip();
+    }
+    window.updateSmartInsightsOverlay = updateSmartInsightsOverlay;
+
+    async function setSmartInsightsEnabled(enabled, { persist = true } = {}) {
+      smartInsightsEnabled = !!enabled;
+      if (persist) {
+        try {
+          if (smartInsightsEnabled) sessionStorage.setItem('smartInsightsEnabled', '1');
+          else sessionStorage.removeItem('smartInsightsEnabled');
+        } catch (_) {}
+      }
+      syncSmartInsightsToggleUI();
+      updateFiltersActiveChip();
+      try { await updateSmartInsightsOverlay(); } catch (_) {}
+    }
+
+    function toggleSmartInsights() {
+      void setSmartInsightsEnabled(!smartInsightsEnabled, { persist: true });
+      try {
+        setStatus(smartInsightsEnabled
+          ? 'Smart Insights enabled: highlighting key counties (closest • biggest shifts • fastest growth).'
+          : 'Smart Insights disabled.');
+      } catch (_) {}
+    }
+    window.toggleSmartInsights = toggleSmartInsights;
 
     function ensureBellwetherLayer() {
       if (!map) return;
@@ -19316,7 +19544,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!contestValue || !row) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
-        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: !!(forceTooltip && isTouchInteractionMode()) }),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19330,7 +19563,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalVotes = Number(row[`${contestType}_total`] || 0);
       if (totalVotes <= 0) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
-        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No data available</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No data available</div>', { pinned: !!(forceTooltip && isTouchInteractionMode()) }),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19401,13 +19639,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (shiftDelta > 0) return 'Republicans gaining ground lately.';
         return '';
       })();
+      const smartInsight = (() => {
+        if (!smartInsightsEnabled || !smartInsightsActiveCountySet || !norm) return '';
+        const countyNorm = String(norm || '').trim().toUpperCase();
+        if (!countyNorm || !smartInsightsActiveCountySet.has(countyNorm)) return '';
+        const reasons = smartInsightsReasonsByCounty?.get(countyNorm) || [];
+        const primary = Array.isArray(reasons) && reasons.length ? String(reasons[0] || '').trim() : '';
+        if (!primary) return 'Smart Insights: one of today’s key counties.';
+        if (/closest/i.test(primary)) return 'Smart Insights: one of the closest margins.';
+        if (/shift/i.test(primary)) return 'Smart Insights: among the biggest shifts.';
+        if (/growth/i.test(primary)) return 'Smart Insights: one of the fastest-growing counties.';
+        return 'Smart Insights: one of today’s key counties.';
+      })();
+      const finalInsight = tooltipInsight || smartInsight;
 
       const compactInner = `
         <div class="tooltip-quickline">
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
-        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+        ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
       `.trim();
 
       const expandedInner = `
@@ -19440,8 +19691,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const fallbackFull = (!precFull && precinctFullNameByNormCache && precinctNorm && precinctFullNameByNormCache.has(precinctNorm))
         ? String(precinctFullNameByNormCache.get(precinctNorm) || '').toString().replace(/\s+/g, ' ').trim()
         : '';
-      const displayPrecinct = precFull || fallbackFull || precId;
-      const title = `${countyName} - ${displayPrecinct}`;
+      const displayCode = precId || (precinctNorm.includes(' - ') ? precinctNorm.split(' - ')[1] : '');
+      const friendlyLabel = displayCode ? formatPrecinctDisplayLabel(countyName, displayCode) : '';
+      const displayPrecinct = precFull || fallbackFull || (friendlyLabel || displayCode);
+      const title = `${displayCountyName(countyName)} - ${displayPrecinct}`;
       setPrecinctHoverFeature(feature);
 
       const contestValue = document.getElementById('contestSelect')?.value || '';
@@ -19463,7 +19716,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const [contestType, year] = parseContestValue(contestValue);
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          point.x,
+          point.y,
+          buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: !!(forceTooltip && isTouchInteractionMode()) }),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19471,7 +19729,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = currentPrecinctResults ? currentPrecinctResults.get(precinctNorm) : null;
       if (!row) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          point.x,
+          point.y,
+          buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>', { pinned: !!(forceTooltip && isTouchInteractionMode()) }),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19519,14 +19782,48 @@ document.addEventListener('DOMContentLoaded', function() {
         demoLine = buildPrecinctDemographicsHoverHTML(demo);
       } catch (_) {}
 
-      const inner = `
-        <div class="hover-meta">${chips.join('')}</div>
-        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
-        ${trendAtGlance}
-        ${demoLine}
-      `;
+      const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
+      const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
+        ? (curSigned - Number(prevSignedForFlip))
+        : NaN;
+      const tooltipInsight = (() => {
+        const abs = Math.abs(Number(curSigned) || 0);
+        if (abs < 0.5) return 'Tiny changes can flip it.';
+        if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
+        if (curSigned > 0 && shiftDelta < 0) return 'Still Republican, but weakening.';
+        if (curSigned < 0 && shiftDelta > 0) return 'Still Democratic, but slipping.';
+        if (shiftDelta < 0) return 'Democrats gaining ground lately.';
+        if (shiftDelta > 0) return 'Republicans gaining ground lately.';
+        return '';
+      })();
+
+      const compactInner = `
+        <div class="tooltip-quickline">
+          <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
+          ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
+        </div>
+        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+      `.trim();
+
+      const expandedInner = `
+        <details class="tooltip-more" aria-label="More details">
+          <summary>Details</summary>
+          <div class="tooltip-more-body">
+            <div class="hover-meta">${chips.join('')}</div>
+            ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+            ${trendAtGlance}
+            ${demoLine}
+          </div>
+        </details>
+      `.trim();
+
+      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
+      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
       const hoverTitle = buildTooltipTitleWithTier(title);
-      showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, inner), { force: !!forceTooltip });
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
       wireTooltipButtons();
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
@@ -19627,8 +19924,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const _demoRow = getDistrictDemographics(scope, districtNum);
       const _demoHTML = buildDemoHTML(_demoRow);
       if (!contestValue) {
-        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell(
+            `${districtLabel} ${districtNum}`,
+            _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>',
+            { pinned: !!(forceTooltip && isTouchInteractionMode()) }
+          ),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19650,8 +19955,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (!row) {
-        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell(
+            `${districtLabel} ${districtNum}`,
+            _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
+            { pinned: !!(forceTooltip && isTouchInteractionMode()) }
+          ),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19661,8 +19974,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherVotes = Number(row.other_votes || 0);
       const totalVotes = Number(row.total_votes || 0);
       if (totalVotes <= 0) {
-        showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`,
-          _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>'), { force: !!forceTooltip });
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell(
+            `${districtLabel} ${districtNum}`,
+            _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
+            { pinned: !!(forceTooltip && isTouchInteractionMode()) }
+          ),
+          { force: !!forceTooltip }
+        );
         wireTooltipButtons();
         return;
       }
@@ -19722,13 +20043,46 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const desc = getDistrictDescription(scope, districtNum);
-      const inner = `
-        <div class="hover-meta">${chips.join('')}</div>
-        ${desc ? `<div style="margin-top:6px;font-size:12px;color:#94a3b8;"><strong style="color:#e2e8f0;">Area:</strong> ${desc}</div>` : ''}
-        ${_demoHTML}
-        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
-      `;
-      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, inner), { force: !!forceTooltip });
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
+      const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
+        ? (signedMarginPct - Number(prevSignedForFlip))
+        : NaN;
+      const tooltipInsight = (() => {
+        const abs = Math.abs(Number(signedMarginPct) || 0);
+        if (abs < 0.5) return 'Tiny changes can flip it.';
+        if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
+        if (signedMarginPct > 0 && shiftDelta < 0) return 'Still Republican, but weakening.';
+        if (signedMarginPct < 0 && shiftDelta > 0) return 'Still Democratic, but slipping.';
+        if (shiftDelta < 0) return 'Democrats gaining ground lately.';
+        if (shiftDelta > 0) return 'Republicans gaining ground lately.';
+        return '';
+      })();
+
+      const compactInner = `
+        <div class="tooltip-quickline">
+          <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
+          ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
+        </div>
+        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+      `.trim();
+
+      const expandedInner = `
+        <details class="tooltip-more" aria-label="More details">
+          <summary>Details</summary>
+          <div class="tooltip-more-body">
+            <div class="hover-meta">${chips.join('')}</div>
+            ${desc ? `<div style="margin-top:6px;font-size:12px;color:#94a3b8;"><strong style="color:#e2e8f0;">Area:</strong> ${desc}</div>` : ''}
+            ${_demoHTML}
+            ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+          </div>
+        </details>
+      `.trim();
+
+      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
+      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
       wireTooltipButtons();
     }
 
@@ -21237,6 +21591,21 @@ document.addEventListener('DOMContentLoaded', function() {
           filter: ['==', ['get', '_'], '__'],
           paint: { 'line-color': 'rgba(15, 23, 42, 0.55)', 'line-width': 3, 'line-opacity': 0.95 }
         });
+        // Soft pulse layer used to briefly highlight a selection without flashing.
+        addLayerWithOptionalSourceLayer({
+          id: 'county-stroke-pulse',
+          type: 'line',
+          source: 'counties',
+          beforeId: baseSymbolLayerId,
+          layout: { visibility: 'none' },
+          filter: ['==', ['get', '_'], '__'],
+          paint: {
+            'line-color': 'rgba(15, 23, 42, 0.55)',
+            'line-width': 7,
+            'line-opacity': 0.0,
+            'line-blur': 1.1
+          }
+        });
         // Bellwether counties outline (filter + visibility wired at runtime).
         addLayerWithOptionalSourceLayer({
           id: 'bellwether-county-outline',
@@ -21250,6 +21619,22 @@ document.addEventListener('DOMContentLoaded', function() {
             'line-width': 3,
             'line-opacity': 0.95,
             'line-blur': 0.3
+          }
+        });
+        // Smart Insights outline (closest margins / biggest shifts / fastest growth). Default off.
+        addLayerWithOptionalSourceLayer({
+          id: 'smart-insights-county-outline',
+          type: 'line',
+          source: 'counties',
+          beforeId: baseSymbolLayerId,
+          layout: { visibility: 'none' },
+          filter: ['==', ['get', '_'], '__'],
+          paint: {
+            'line-color': 'rgba(15, 118, 110, 0.92)',
+            'line-width': 3,
+            'line-opacity': 0.86,
+            'line-blur': 0.7,
+            'line-dasharray': [1.2, 1.0]
           }
         });
         // County label layer (disabled for precinct geometry performance)
@@ -21643,6 +22028,89 @@ document.addEventListener('DOMContentLoaded', function() {
         const payload = await loadJSON(path);
         const counties = payload?.counties || {};
         const idx = new Map();
+        const nameIdx = new Map();
+
+        const normalizeAliasNameCandidate = (raw) => {
+          const s = String(raw || '').trim().toUpperCase();
+          if (!s) return '';
+          const cleaned = s.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+          if (!cleaned) return '';
+          if (/VOTING\s*DISTRICT/i.test(cleaned)) return '';
+          if (/^\d+$/.test(cleaned)) return '';
+          return cleaned;
+        };
+
+        const isCodeLikeToken = (raw) => {
+          const s = String(raw || '').trim().toUpperCase();
+          if (!s) return true;
+          const compact = s.replace(/[^A-Z0-9]/g, '');
+          if (!compact) return true;
+          // Short alphanumeric tokens are usually codes.
+          if (compact.length <= 5 && /^[A-Z0-9]+$/.test(compact)) return true;
+          return false;
+        };
+
+        const scoreNameCandidate = (raw) => {
+          const s = normalizeAliasNameCandidate(raw);
+          if (!s) return -1e9;
+          const letters = (s.match(/[A-Z]/g) || []).length;
+          const digits = (s.match(/[0-9]/g) || []).length;
+          const spaces = (s.match(/\s/g) || []).length;
+          let score = 0;
+          score += letters * 2.2;
+          score -= digits * 3.5;
+          score += spaces * 1.0;
+          score += Math.min(24, s.length);
+          if (/VOTING\s*DISTRICT/i.test(s)) score -= 1000;
+          if (/^(EARLY|ABSENTEE|PROVISIONAL|ONE\s+STOP|MAIL)/i.test(s)) score -= 20;
+          return score;
+        };
+
+        const extractNameFromAlias = (aliasRaw, codeRaw) => {
+          const alias = String(aliasRaw || '').trim().toUpperCase();
+          const code = String(codeRaw || '').trim().toUpperCase();
+          if (!alias || !code) return '';
+          if (alias === code) return '';
+
+          // Common patterns in `precinct_alias_index.json`:
+          // - "CRDM CREEDMOOR" -> code "CRDM", name "CREEDMOOR"
+          // - "01 PATTERSON" -> code "01", name "PATTERSON"
+          // - "CRDMCREEDMOOR" -> code "CRDM", name "CREEDMOOR"
+          let rest = '';
+          if (alias.startsWith(code)) {
+            rest = alias.slice(code.length).trim();
+            rest = rest.replace(/^[_\s]+/, '').trim();
+          }
+          if (!rest) return '';
+          rest = rest.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+          if (!rest) return '';
+          if (/VOTING\s*DISTRICT/i.test(rest)) return '';
+
+          const codeCompact = code.replace(/[^A-Z0-9]/g, '');
+          const restCompact = rest.replace(/[^A-Z0-9]/g, '');
+          if (restCompact === codeCompact) return '';
+          if (restCompact.endsWith(codeCompact) && restCompact.length <= codeCompact.length + 2) return '';
+
+          // Avoid returning another code.
+          if (isCodeLikeToken(rest)) return '';
+
+          return rest;
+        };
+
+        const setBestNameForCode = (countyNorm, codeRaw, candidateRaw) => {
+          const county = String(countyNorm || '').trim().toUpperCase();
+          const code = String(codeRaw || '').trim().toUpperCase();
+          const candidate = normalizeAliasNameCandidate(candidateRaw);
+          if (!county || !code || !candidate) return;
+
+          if (!nameIdx.has(county)) nameIdx.set(county, new Map());
+          const m = nameIdx.get(county);
+          const current = m.get(code) || '';
+          const currentScore = current ? scoreNameCandidate(current) : -1e9;
+          const nextScore = scoreNameCandidate(candidate);
+          if (nextScore > currentScore) m.set(code, candidate);
+        };
+
         Object.entries(counties).forEach(([countyRaw, aliasObj]) => {
           const county = normalizeCountyToken(countyRaw);
           if (!county || !aliasObj || typeof aliasObj !== 'object') return;
@@ -21655,16 +22123,81 @@ document.addEventListener('DOMContentLoaded', function() {
               : [];
             if (!codes.length) return;
             aliasMap.set(alias, codes);
+
+            // Build a reverse "code -> friendly name" index.
+            codes.forEach(code => {
+              const extracted = extractNameFromAlias(alias, code);
+              if (extracted) {
+                setBestNameForCode(county, code, extracted);
+                return;
+              }
+              // If this alias is a name-only key that uniquely points to one code,
+              // keep it as a fallback display name (e.g., "CREEDMOOR" -> ["CRDM"]).
+              if (codes.length === 1 && !isCodeLikeToken(alias)) {
+                setBestNameForCode(county, code, alias);
+              }
+            });
           });
           if (aliasMap.size) idx.set(county, aliasMap);
         });
         precinctAliasIndexByCounty = idx;
+        precinctFriendlyNameByCountyCode = nameIdx;
       } catch (err) {
         console.warn('Failed to load precinct alias index:', err?.message || err);
       } finally {
         precinctAliasLoadInFlight = false;
       }
       return precinctAliasIndexByCounty;
+    }
+
+    async function ensurePrecinctFriendlyNamesIndex() {
+      if (precinctFriendlyNameByCountyCode) return precinctFriendlyNameByCountyCode;
+      if (precinctFriendlyNamesLoadInFlight) return null;
+      const path = CONFIG.paths?.precinct_friendly_names;
+      if (!path) return null;
+      precinctFriendlyNamesLoadInFlight = true;
+      try {
+        const payload = await loadJSON(path);
+        const counties = payload?.counties || {};
+        const out = new Map();
+        Object.entries(counties).forEach(([countyRaw, codesObj]) => {
+          const countyNorm = normalizeCountyToken(countyRaw);
+          if (!countyNorm || !codesObj || typeof codesObj !== 'object') return;
+          const perCounty = new Map();
+          Object.entries(codesObj).forEach(([codeRaw, nameRaw]) => {
+            const code = String(codeRaw || '').trim().toUpperCase();
+            if (!code) return;
+            const cleaned = String(nameRaw || '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!cleaned) return;
+            perCounty.set(code, toTitleCaseName(cleaned));
+          });
+          if (perCounty.size) out.set(countyNorm, perCounty);
+        });
+        if (out.size) precinctFriendlyNameByCountyCode = out;
+      } catch (err) {
+        console.warn('Failed to load precinct friendly names:', err?.message || err);
+      } finally {
+        precinctFriendlyNamesLoadInFlight = false;
+      }
+      return precinctFriendlyNameByCountyCode;
+    }
+
+    function getPrecinctFriendlyName(countyNameOrNorm, precinctCodeRaw) {
+      const countyNorm = normalizeCountyToken(countyNameOrNorm);
+      const code = String(precinctCodeRaw || '').trim().toUpperCase();
+      if (!countyNorm || !code) return '';
+      const perCounty = precinctFriendlyNameByCountyCode ? precinctFriendlyNameByCountyCode.get(countyNorm) : null;
+      const rawName = perCounty ? (perCounty.get(code) || '') : '';
+      if (!rawName) return '';
+      return toTitleCaseName(String(rawName).replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim());
+    }
+
+    function formatPrecinctDisplayLabel(countyNameOrNorm, precinctCodeRaw) {
+      const code = String(precinctCodeRaw || '').trim().toUpperCase();
+      if (!code) return '';
+      const friendly = getPrecinctFriendlyName(countyNameOrNorm, code);
+      if (!friendly) return code;
+      return `${friendly} (${code})`;
     }
 
     async function ensurePrecinctVariantOverrides() {
@@ -22660,6 +23193,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const county = (countyNameRaw || '').toString().trim().toUpperCase();
       const code = (precinctCodeRaw || '').toString().trim().toUpperCase();
       try { await ensurePrecinctCodeIndex(); } catch (_) {}
+      try { await ensurePrecinctAliasIndex(); } catch (_) {}
       if (isNonGeographicPrecinctToken(code, county)) {
         setStatus(`${county} - ${code} is a non-geographic vote bucket (e.g., Early Vote/Absentee) and isn't mapped to a precinct shape.`);
         try { showCountyDetails(county); } catch (_) {}
@@ -22716,6 +23250,9 @@ document.addEventListener('DOMContentLoaded', function() {
         map.flyTo({ center: coords, zoom: Math.max(CONFIG.precincts?.minZoom || 8.5, 10.0), speed: 0.9 });
       }
 
+      const resolvedCode = matchedTarget.includes(' - ') ? matchedTarget.split(' - ')[1].trim().toUpperCase() : code;
+      const displayTitle = `${displayCountyName(county)} - ${formatPrecinctDisplayLabel(county, resolvedCode)}`;
+
       // Pin vote counter if we have precinct-level results keyed by precinct_norm.
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const [contestType, year] = parseContestValue(contestValue);
@@ -22727,12 +23264,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const repVotes = Number(row[`${contestType}_rep`] || 0);
         const otherVotes = Number(row[`${contestType}_other`] || 0);
         pinVoteCounterState(
-          `Selected: ${matchedTarget}`,
+          `Selected: ${displayTitle}`,
           `${formatContestName(contestType, year)} ${year}`,
           demVotes,
           repVotes,
           otherVotes,
-          { kind: 'precinct', county, precinct: matchedTarget, precinctNorm: matchedTarget, contestType, year: Number(year) },
+          { kind: 'precinct', county, precinct: displayTitle, precinctNorm: matchedTarget, contestType, year: Number(year) },
           { demCandidate: row[`${contestType}_dem_candidate`] || '', repCandidate: row[`${contestType}_rep_candidate`] || '' }
         );
       }
@@ -23910,6 +24447,13 @@ document.addEventListener('DOMContentLoaded', function() {
           countyNameMap = buildCountyNameMapFromGeoJSON(counties);
         }
         addCountyLayers();
+        try {
+          const savedSmart = sessionStorage.getItem('smartInsightsEnabled') === '1';
+          if (savedSmart) await setSmartInsightsEnabled(true, { persist: false });
+          else syncSmartInsightsToggleUI();
+        } catch (_) {
+          try { syncSmartInsightsToggleUI(); } catch (_) {}
+        }
         reinforceMapLabelHalos();
         map.once('idle', () => reinforceMapLabelHalos());
         setupCountySearch().catch(err => console.warn('County search setup failed:', err?.message || err));
@@ -23927,6 +24471,7 @@ document.addEventListener('DOMContentLoaded', function() {
           setSplitTicketOverlayVisibility();
         });
         scheduleStartupPrecinctCentroidPreload();
+        scheduleStartupPrecinctAliasPreload();
         setStatus('Counties loaded');
         // Defer heavy hydration on desktop too so the map shell becomes interactive quickly.
         const deferHeavyHydration = true;
@@ -24423,6 +24968,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setRecountRadarBadgeVisible(false);
         lastCompletedContestSelection = '';
         updateContextBanner();
+        try { updateSmartInsightsOverlay(); } catch (_) {}
         return setStatus('Select a contest');
       }
 
@@ -24502,6 +25048,7 @@ document.addEventListener('DOMContentLoaded', function() {
       lastCompletedContestSelection = contestKey;
       updateContextBanner();
       refreshHoverAtPointer().catch(() => {});
+      try { updateSmartInsightsOverlay(); } catch (_) {}
       saveUIState();
     }
 
