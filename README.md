@@ -49,7 +49,7 @@ The project is powered by prebuilt JSON data slices and raw [OpenElections](http
 - **General public:** Open the live site, pick a contest/year, click a county or precinct, and read winner/margin/trend cards.
 - **Students:** Start with Counties view, then switch to Congressional/State House/State Senate to compare the same contest across geographies.
 - **Political junkies:** Use `Split-ticket`, `Shift`, `Flips`, and `Reset View` to scan for realignment and crossover patterns.
-- **Data journalists:** Pin a county/precinct, use `Copy Link` for reproducible map state, and cross-check with files in `data/contests/` and `data/reports/`.
+- **Data journalists:** Pin a county/precinct/district, use `Copy Link` for reproducible map state, use the pinned hover tooltip `Copy` button for quick labels, and cross-check with files in `data/contests/` and `data/reports/`.
 
 ## Why the 2022 Court-Ordered (MQP) Lines?
 
@@ -67,6 +67,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - **Multiple Views:** Counties, Precincts (zoomed in), Congressional Districts, State House, State Senate
 - **District Lines Toggle (2022 vs 2024):** District views can switch between the 2022 MQP baseline and a 2024 line option; the first 2024 load can take longer while boundary GeoJSON downloads/parses
+- **Progressive District Linework (SCMap-style):** Congressional/State House/State Senate boundaries reveal progressively across zoom (faint + slightly blurred statewide, readable mid-zoom, crisp locally) with a clear hierarchy (Congress strongest, State House most delicate)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
@@ -86,22 +87,32 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
+- **CVAP Hover Totals (Optional):** When available, hover cards prefer RDH `CVAP_TOT24` (citizen voting-age population, 18+) for “total” metrics; otherwise they fall back to VAP/total population (this does not change election calculations)
 - **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
 - **Barometer Counties (Optional):** Click the `Barometer` legend chip to outline counties that mirror the statewide two-party margin most closely across the last 2–3 available cycles for the selected contest (purple outline; off by default)
 - **Story Copy + Loading Skeletons:** Story cards can be copied to clipboard in one click, and trend/story panels show lightweight skeleton loaders while data is loading
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state; `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
-- **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, and stronger map label halos for town/county labels
+- **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, keyboard focus rings (`:focus-visible`), reduced-motion support, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March 2026)
+## Recent Updates (March–April 2026)
 
-**Last updated:** April 8, 2026
+**Last updated:** April 9, 2026
+
+### Premium UI + District Linework + CVAP Totals (April 9, 2026)
+
+- Restyled congressional/state house/state senate boundary strokes to a calmer SCMap-style system: rounded joins/caps, subdued slate color, multi-stop zoom interpolation for opacity/width/blur, and stronger-but-tasteful hover/selection outlines.
+- Preserved the district-line toggle behavior (2022 vs 2024) exactly, including existing source switching and contest re-application logic.
+- Updated hover “total” metrics to prefer Redistricting Data Hub CVAP totals when available (ACS 2020–2024 special tabulation; `CVAP_TOT24`), without changing any election computations or contest logic.
+- Added a pinned-tooltip `Copy` button so analysts/reporters can quickly copy the active geography label (county/precinct/district).
+- Standardized camera padding so search clicks, district clicks, and other zoom-to-feature flows don’t hide the target under the sidebar/bottom sheet.
+- Added keyboard focus rings and `prefers-reduced-motion` support (no feature changes, just safer UX defaults).
 
 ### US Senate Model Correctness + Contest Controls (April 3, 2026)
 
@@ -659,6 +670,46 @@ Rebuild district demographic CSVs for congressional/state-house/state-senate ove
 py scripts/build_district_demographics.py
 ```
 
+### Building CVAP Aggregates (Redistricting Data Hub)
+
+The atlas can optionally use **Citizen Voting Age Population (CVAP, 18+)** totals from Redistricting Data Hub (ACS 2020–2024 special tabulation) for hover “total” metrics.
+
+These aggregates are built from a **block-level CVAP CSV keyed by 2020 Census block GEOID** and aggregated onto atlas geographies via 2020 block crosswalks.
+
+**Inputs (defaults):**
+
+- Block CVAP CSV: `data/nc_cvap_2024_2020_b_csv/nc_cvap_2024_2020_b.csv` (one row per `GEOID20`)
+- Crosswalks (if present):
+  - `data/crosswalks/block20_to_precinct.csv`
+  - `data/crosswalks/block20_to_cd118.csv`
+  - `data/crosswalks/block20_to_cd119.csv`
+  - `data/crosswalks/block20_to_2022_state_house.csv`
+  - `data/crosswalks/block20_to_2024_state_house.csv`
+  - `data/crosswalks/block20_to_2022_state_senate.csv`
+  - `data/crosswalks/block20_to_2024_state_senate.csv`
+
+**Outputs (default directory):** `data/cvap_aggregates/`
+
+Run the builder (all outputs):
+
+```powershell
+py scripts/build_cvap_aggregates.py
+```
+
+If you only want the totals used by the current UI, you can limit fields:
+
+```powershell
+py scripts/build_cvap_aggregates.py --fields CVAP_TOT24
+```
+
+If some crosswalks are not available yet (for example, `block20_to_cd119.csv`), skip missing crosswalks:
+
+```powershell
+py scripts/build_cvap_aggregates.py --skip-missing-crosswalks
+```
+
+**Important:** CVAP is used only for hover “total” display metrics when available; it does **not** change election totals, margins, trend logic, or contest allocation math.
+
 ### Improving Wake/Meck Pre-2010 Allocations
 
 Older years have many precinct keys that don't match the modern block-to-precinct crosswalk. When that happens, the builder uses an **unmatched-vote fallback** at the `##-##` level (e.g. `01-07A` becomes `01-07`), reducing "vote smearing" in counties like Wake and Mecklenburg.
@@ -728,6 +779,7 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
 - **Non-geographic votes:** Absentee and early-voting totals are distributed by county weight or candidate share, not mapped 1:1 to precincts. This can smooth precinct-level variation.
 - **Reallocation approximation:** Block-to-district crosswalks use population-based weights, not actual voter rolls. Small precincts straddling district lines may have minor inaccuracies.
 - **Boundary vintage:** The 2022 MQP lines are modern — applying them retroactively to 2000–2020 results is an approximation of what those contests would have looked like under current districts.
+- **CVAP vs VAP vs population:** When CVAP is shown, it represents *citizen voting-age population (18+)* from ACS special tabulation (2020–2024), not total population and not VAP-by-race; race/ethnicity chips in hover panels still reflect DP1 total-population shares.
 
 ## Troubleshooting
 
@@ -737,6 +789,7 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
   - District views → `data/district_contests/manifest.json`
 - **A Council of State contest/year is missing in Counties view:** Check `major_party_contested` in `data/contests/manifest.json`. Unopposed contests are intentionally hidden.
 - **Demographics chips are hard to read in hover cards:** Turn on `High contrast demographics` in controls, then hard refresh (`Ctrl+Shift+R`) to ensure latest CSS/JS assets are loaded.
+- **Hover totals show VAP instead of CVAP:** Ensure `data/cvap_aggregates/*.csv` exists (or rebuild via `py scripts/build_cvap_aggregates.py`) and hard refresh to clear cached assets.
 - **Legend colors do not appear to match map colors in colorblind mode:** Refresh once to clear cached assets; the latest build ties legend swatches to the same palette functions used for map fills.
 - **Wake/Meck district accuracy looks off in older years:** Check unmatched precinct reports and add overrides; rebuild slices.
 
