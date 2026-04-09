@@ -22140,8 +22140,10 @@ document.addEventListener('DOMContentLoaded', function() {
           if (!s) return true;
           const compact = s.replace(/[^A-Z0-9]/g, '');
           if (!compact) return true;
-          // Short alphanumeric tokens are usually codes.
-          if (compact.length <= 5 && /^[A-Z0-9]+$/.test(compact)) return true;
+          // Treat anything with digits as code-like (EH1, 00CRDM, 0001, etc).
+          if (/[0-9]/.test(compact)) return true;
+          // Short all-letter tokens are usually codes (CRDM, BCK, etc) not names.
+          if (compact.length <= 4 && /^[A-Z]+$/.test(compact)) return true;
           return false;
         };
 
@@ -22228,7 +22230,7 @@ document.addEventListener('DOMContentLoaded', function() {
               }
               // If this alias is a name-only key that uniquely points to one code,
               // keep it as a fallback display name (e.g., "CREEDMOOR" -> ["CRDM"]).
-              if (codes.length === 1 && !isCodeLikeToken(alias)) {
+              if (codes.length === 1 && !isCodeLikeToken(alias) && !alias.startsWith(code)) {
                 setBestNameForCode(county, code, alias);
               }
             });
@@ -22298,9 +22300,71 @@ document.addEventListener('DOMContentLoaded', function() {
       return precinctFriendlyNameByCountyCode;
     }
 
+    function resolvePrecinctCanonicalCode(countyNameOrNorm, precinctCodeRaw) {
+      const countyNorm = normalizeCountyToken(countyNameOrNorm);
+      const raw = String(precinctCodeRaw || '').trim().toUpperCase();
+      if (!countyNorm || !raw) return raw;
+
+      const tryCodes = [];
+      const push = (v) => {
+        const s = String(v || '').trim().toUpperCase();
+        if (!s) return;
+        if (!tryCodes.includes(s)) tryCodes.push(s);
+      };
+
+      push(raw);
+      push(raw.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim());
+      push(raw.replace(/[^A-Z0-9]/g, ''));
+
+      // Common variant: leading zero prefixes ("00CRDM" -> "CRDM").
+      const stripped = raw.replace(/^0+/, '');
+      if (stripped && stripped !== raw) {
+        push(stripped);
+        push(stripped.replace(/[^A-Z0-9]/g, ''));
+      }
+
+      // Numeric variants: try normalized and padded forms.
+      if (/^\d+$/.test(raw)) {
+        const n = Number(raw);
+        if (Number.isFinite(n)) {
+          push(String(n));
+          push(String(n).padStart(2, '0'));
+          push(String(n).padStart(3, '0'));
+          push(String(n).padStart(4, '0'));
+        }
+      }
+
+      // If we already have a friendly label for a code variant, treat that as canonical.
+      try {
+        const perCounty = precinctFriendlyNameByCountyCode ? precinctFriendlyNameByCountyCode.get(countyNorm) : null;
+        if (perCounty) {
+          for (const c of tryCodes) {
+            if (perCounty.has(c)) return c;
+          }
+        }
+      } catch (_) {}
+
+      // Otherwise use the county-scoped alias index to map variants back to canonical codes.
+      try {
+        const aliasMap = precinctAliasIndexByCounty ? precinctAliasIndexByCounty.get(countyNorm) : null;
+        if (aliasMap) {
+          for (const token of tryCodes) {
+            if (aliasMap.has(token)) {
+              const codes = aliasMap.get(token) || [];
+              const best = Array.isArray(codes) && codes.length ? String(codes[0] || '').trim().toUpperCase() : '';
+              if (best) return best;
+            }
+          }
+        }
+      } catch (_) {}
+
+      // Fall back to first "clean" variant rather than the raw input.
+      return stripped || raw;
+    }
+
     function getPrecinctFriendlyName(countyNameOrNorm, precinctCodeRaw) {
       const countyNorm = normalizeCountyToken(countyNameOrNorm);
-      const code = String(precinctCodeRaw || '').trim().toUpperCase();
+      const code = resolvePrecinctCanonicalCode(countyNorm, precinctCodeRaw);
       if (!countyNorm || !code) return '';
       const perCounty = precinctFriendlyNameByCountyCode ? precinctFriendlyNameByCountyCode.get(countyNorm) : null;
       const rawName = perCounty ? (perCounty.get(code) || '') : '';
@@ -22309,7 +22373,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatPrecinctDisplayLabel(countyNameOrNorm, precinctCodeRaw) {
-      const code = String(precinctCodeRaw || '').trim().toUpperCase();
+      const code = resolvePrecinctCanonicalCode(countyNameOrNorm, precinctCodeRaw);
       if (!code) return '';
       const friendly = getPrecinctFriendlyName(countyNameOrNorm, code);
       if (!friendly) return code;
@@ -22332,27 +22396,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function pickBestPrecinctDisplayName({ countyName, code, fullName, fallbackFullName } = {}) {
-      const displayCode = String(code || '').trim().toUpperCase();
-      const friendly = displayCode ? getPrecinctFriendlyName(countyName, displayCode) : '';
-      const friendlyLabel = (displayCode && friendly) ? `${friendly} (${displayCode})` : '';
+      const rawCode = String(code || '').trim().toUpperCase();
+      const canonicalCode = rawCode ? resolvePrecinctCanonicalCode(countyName, rawCode) : '';
+      const friendly = rawCode ? getPrecinctFriendlyName(countyName, rawCode) : '';
+      const friendlyLabel = (canonicalCode && friendly) ? `${friendly} (${canonicalCode})` : '';
 
       const full = String(fullName || '').replace(/\s+/g, ' ').trim();
       const fallbackFull = String(fallbackFullName || '').replace(/\s+/g, ' ').trim();
 
       // If the shapefile's "full name" is just a code-ish token (or a "VOTING DISTRICT" placeholder),
       // prefer a real friendly label when we have it.
-      if (friendlyLabel && (isNoisyPrecinctFullName(full, displayCode) || isNoisyPrecinctFullName(fallbackFull, displayCode))) {
+      if (friendlyLabel && (isNoisyPrecinctFullName(full, rawCode) || isNoisyPrecinctFullName(fallbackFull, rawCode))) {
         return friendlyLabel;
       }
 
       // If the full name looks like "CRDM CREEDMOOR" or "01 PATTERSON", prefer the normalized friendly label.
-      if (friendlyLabel && displayCode) {
+      if (friendlyLabel && rawCode) {
         const fullUpper = full.toUpperCase();
         const fullCompact = fullUpper.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
-        if (fullCompact.startsWith(`${displayCode} `) || fullCompact.startsWith(`${displayCode}_`)) return friendlyLabel;
+        if (fullCompact.startsWith(`${rawCode} `) || fullCompact.startsWith(`${rawCode}_`)) return friendlyLabel;
       }
 
-      return full || fallbackFull || friendlyLabel || displayCode;
+      return full || fallbackFull || friendlyLabel || canonicalCode || rawCode;
     }
 
     async function ensurePrecinctVariantOverrides() {

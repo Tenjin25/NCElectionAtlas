@@ -23,7 +23,10 @@ function isCodeLikeToken(raw) {
   if (!s) return true;
   const compact = s.replace(/[^A-Z0-9]/g, '');
   if (!compact) return true;
-  if (compact.length <= 5 && /^[A-Z0-9]+$/.test(compact)) return true;
+  // Treat anything with digits as code-like (EH1, 00CRDM, 0001, etc).
+  if (/[0-9]/.test(compact)) return true;
+  // Short all-letter tokens are usually precinct codes (CRDM, BCK, etc) not names.
+  if (compact.length <= 4 && /^[A-Z]+$/.test(compact)) return true;
   return false;
 }
 
@@ -111,7 +114,9 @@ function buildFriendlyNamesIndex(aliasIndexPayload) {
           setBestNameForCode(perCounty, code, extracted);
           continue;
         }
-        if (codes.length === 1 && !isCodeLikeToken(alias)) {
+        // Only treat an alias key as a "name-only" label when it *doesn't* start with the code token.
+        // This avoids bad picks like "ANTI 00ANTI" becoming a "name" for code "ANTI".
+        if (codes.length === 1 && !isCodeLikeToken(alias) && !alias.startsWith(String(code || '').trim().toUpperCase())) {
           setBestNameForCode(perCounty, code, alias);
         }
       }
