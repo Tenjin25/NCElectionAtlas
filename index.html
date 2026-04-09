@@ -22378,7 +22378,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const code = resolvePrecinctCanonicalCode(countyNameOrNorm, precinctCodeRaw);
       if (!code) return '';
       const friendly = getPrecinctFriendlyName(countyNameOrNorm, code);
-      if (!friendly) return code;
+      if (!friendly) return `Precinct ${code}`;
       return `${friendly} (${code})`;
     }
 
@@ -22419,7 +22419,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (fullCompact.startsWith(`${rawCode} `) || fullCompact.startsWith(`${rawCode}_`)) return friendlyLabel;
       }
 
-      return full || fallbackFull || friendlyLabel || canonicalCode || rawCode;
+      const codeOnly = canonicalCode || rawCode;
+      return full || fallbackFull || friendlyLabel || (codeOnly ? `Precinct ${codeOnly}` : '');
     }
 
     async function ensurePrecinctVariantOverrides() {
