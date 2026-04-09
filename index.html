@@ -19711,6 +19711,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'Smart Insights: one of today’s key counties.';
       })();
       const finalInsight = tooltipInsight || smartInsight;
+      const useCompact = !!(isTouchInteractionMode());
+
+      const classicInner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
+        ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
+        ${splitInsightLine}
+        ${demoLine}
+      `.trim();
 
       const compactInner = `
         <div class="tooltip-quickline">
@@ -19718,9 +19727,6 @@ document.addEventListener('DOMContentLoaded', function() {
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
-      `.trim();
-
-      const expandedInner = `
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
           <div class="tooltip-more-body">
@@ -19732,12 +19738,16 @@ document.addEventListener('DOMContentLoaded', function() {
         </details>
       `.trim();
 
-      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
-      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
+      const inner = useCompact ? compactInner : classicInner;
 
       const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
       const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
+      showHoverTooltip(
+        e.point.x,
+        e.point.y,
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact }),
+        { force: !!forceTooltip }
+      );
       wireTooltipButtons();
     }
 
@@ -19751,8 +19761,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ? String(precinctFullNameByNormCache.get(precinctNorm) || '').toString().replace(/\s+/g, ' ').trim()
         : '';
       const displayCode = precId || (precinctNorm.includes(' - ') ? precinctNorm.split(' - ')[1] : '');
-      const friendlyLabel = displayCode ? formatPrecinctDisplayLabel(countyName, displayCode) : '';
-      const displayPrecinct = precFull || fallbackFull || (friendlyLabel || displayCode);
+      const displayPrecinct = pickBestPrecinctDisplayName({
+        countyName,
+        code: displayCode,
+        fullName: precFull,
+        fallbackFullName: fallbackFull
+      });
       const title = `${displayCountyName(countyName)} - ${displayPrecinct}`;
       setPrecinctHoverFeature(feature);
 
@@ -19858,15 +19872,22 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
       })();
 
+      const useCompact = !!(isTouchInteractionMode());
+
+      const classicInner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+        ${trendAtGlance}
+        ${demoLine}
+      `.trim();
+
       const compactInner = `
         <div class="tooltip-quickline">
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
         ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
-      `.trim();
-
-      const expandedInner = `
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
           <div class="tooltip-more-body">
@@ -19878,11 +19899,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </details>
       `.trim();
 
-      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
-      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
+      const inner = useCompact ? compactInner : classicInner;
       const hoverTitle = buildTooltipTitleWithTier(title);
       const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-      showHoverTooltip(point.x, point.y, buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
+      showHoverTooltip(
+        point.x,
+        point.y,
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact }),
+        { force: !!forceTooltip }
+      );
       wireTooltipButtons();
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
@@ -20118,15 +20143,22 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
       })();
 
+      const useCompact = !!(isTouchInteractionMode());
+
+      const classicInner = `
+        <div class="hover-meta">${chips.join('')}</div>
+        ${desc ? `<div style="margin-top:6px;font-size:12px;color:#94a3b8;"><strong style="color:#e2e8f0;">Area:</strong> ${desc}</div>` : ''}
+        ${_demoHTML}
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate)}
+        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+      `.trim();
+
       const compactInner = `
         <div class="tooltip-quickline">
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
         ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
-      `.trim();
-
-      const expandedInner = `
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
           <div class="tooltip-more-body">
@@ -20138,10 +20170,14 @@ document.addEventListener('DOMContentLoaded', function() {
         </details>
       `.trim();
 
-      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
-      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
+      const inner = useCompact ? compactInner : classicInner;
       const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
+      showHoverTooltip(
+        e.point.x,
+        e.point.y,
+        buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: !useCompact }),
+        { force: !!forceTooltip }
+      );
       wireTooltipButtons();
     }
 
@@ -22280,6 +22316,45 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${friendly} (${code})`;
     }
 
+    function isNoisyPrecinctFullName(fullRaw, codeRaw = '') {
+      const full = String(fullRaw || '').replace(/\s+/g, ' ').trim();
+      const code = String(codeRaw || '').trim().toUpperCase();
+      if (!full) return true;
+      const upper = full.toUpperCase();
+      const compact = upper.replace(/[^A-Z0-9]/g, '');
+      const codeCompact = code ? code.replace(/[^A-Z0-9]/g, '') : '';
+      if (codeCompact && compact === codeCompact) return true;
+      if (/VOTING\s*DISTRICT/i.test(upper)) return true;
+      // "CODE CODE" variants, or short opaque labels.
+      if (codeCompact && compact === (codeCompact + codeCompact)) return true;
+      if (upper.length <= 6 && /^[A-Z0-9]+$/.test(compact)) return true;
+      return false;
+    }
+
+    function pickBestPrecinctDisplayName({ countyName, code, fullName, fallbackFullName } = {}) {
+      const displayCode = String(code || '').trim().toUpperCase();
+      const friendly = displayCode ? getPrecinctFriendlyName(countyName, displayCode) : '';
+      const friendlyLabel = (displayCode && friendly) ? `${friendly} (${displayCode})` : '';
+
+      const full = String(fullName || '').replace(/\s+/g, ' ').trim();
+      const fallbackFull = String(fallbackFullName || '').replace(/\s+/g, ' ').trim();
+
+      // If the shapefile's "full name" is just a code-ish token (or a "VOTING DISTRICT" placeholder),
+      // prefer a real friendly label when we have it.
+      if (friendlyLabel && (isNoisyPrecinctFullName(full, displayCode) || isNoisyPrecinctFullName(fallbackFull, displayCode))) {
+        return friendlyLabel;
+      }
+
+      // If the full name looks like "CRDM CREEDMOOR" or "01 PATTERSON", prefer the normalized friendly label.
+      if (friendlyLabel && displayCode) {
+        const fullUpper = full.toUpperCase();
+        const fullCompact = fullUpper.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (fullCompact.startsWith(`${displayCode} `) || fullCompact.startsWith(`${displayCode}_`)) return friendlyLabel;
+      }
+
+      return full || fallbackFull || friendlyLabel || displayCode;
+    }
+
     async function ensurePrecinctVariantOverrides() {
       if (precinctVariantOverridesByCounty) return precinctVariantOverridesByCounty;
       if (precinctVariantOverridesLoadInFlight) return null;
@@ -23618,10 +23693,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildTooltipShell(title, innerHtml, options = {}) {
       const pinned = options && options.pinned === true;
+      const showClose = !!(pinned || options.showClose === true);
+      const headClass = pinned ? 'is-pinned' : (showClose ? 'is-classic' : 'is-compact');
       return `
-        <div class="tooltip-head ${pinned ? 'is-pinned' : 'is-compact'}">
+        <div class="tooltip-head ${headClass}">
           <div class="tooltip-title">${title}</div>
-          ${pinned ? `
+          ${showClose ? `
             <div class="tooltip-actions">
               <button class="tooltip-btn" id="tooltip-close-btn" type="button">Close</button>
             </div>
