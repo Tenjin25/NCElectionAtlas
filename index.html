@@ -23067,7 +23067,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (parsed.kind === 'cd') return `Congressional District ${parsed.num}`;
       if (parsed.kind === 'hd') return `State House District ${parsed.num}`;
       if (parsed.kind === 'sd') return `State Senate District ${parsed.num}`;
-      if (parsed.kind === 'precinct') return `${parsed.county} ${parsed.code}`;
+      if (parsed.kind === 'precinct') {
+        const countyDisplay = displayCountyName(parsed.county || '');
+        const precinctLabel = formatPrecinctDisplayLabel(countyDisplay || parsed.county || '', parsed.code || '');
+        return `${countyDisplay || (parsed.county || '').toString().trim()} ${precinctLabel || (parsed.code || '').toString().trim()}`.trim();
+      }
       return fallbackRaw;
     }
 
