@@ -810,11 +810,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 .hover-tooltip .tooltip-title-badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: 0.01em;
   border: 1px solid transparent;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.hover-tooltip .tooltip-title-badge:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 .hover-tooltip .tooltip-title-badge.rep {
   color: #fecaca;
@@ -874,9 +880,11 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 		  color: rgba(255, 255, 255, 0.92);
 		}
 	.hover-tooltip .tooltip-quickline .tier::before {
-	  content: "•";
-	  margin: 0 6px 0 4px;
-	  color: rgba(226, 232, 240, 0.7);
+	  content: "";
+	  margin: 0;
+	}
+	.hover-tooltip .tooltip-quickline .tier {
+	  margin-left: 4px;
 	}
 
 .hover-tooltip .tooltip-insight {
