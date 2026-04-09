@@ -24564,11 +24564,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function wireTooltipButtons() {
       const closeBtn = document.getElementById('tooltip-close-btn');
       if (closeBtn) {
-        closeBtn.onclick = () => {
+        closeBtn.onclick = (ev) => {
+          try { ev?.preventDefault?.(); } catch (_) {}
+          try { ev?.stopPropagation?.(); } catch (_) {}
           try {
             const tooltip = document.getElementById('hover-tooltip');
             const key = (tooltip?.dataset?.copyText || '').toString().trim();
-            if (key) suppressHoverTooltip(key, lastPointerPoint?.x || 0, lastPointerPoint?.y || 0);
+            if (key) {
+              let sx = 0;
+              let sy = 0;
+              try {
+                const rect = map && typeof map.getContainer === 'function' ? map.getContainer().getBoundingClientRect() : null;
+                const cx = Number(ev?.clientX);
+                const cy = Number(ev?.clientY);
+                if (rect && Number.isFinite(cx) && Number.isFinite(cy)) {
+                  sx = cx - rect.left;
+                  sy = cy - rect.top;
+                } else if (lastPointerPoint) {
+                  sx = Number(lastPointerPoint.x) || 0;
+                  sy = Number(lastPointerPoint.y) || 0;
+                }
+              } catch (_) {}
+              suppressHoverTooltip(key, sx, sy);
+            }
           } catch (_) {}
           setTooltipPinned(false);
           const tooltip = document.getElementById('hover-tooltip');
@@ -24582,7 +24600,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const copyBtn = document.getElementById('tooltip-copy-btn');
       if (copyBtn) {
-        copyBtn.onclick = async () => {
+        copyBtn.onclick = async (ev) => {
+          try { ev?.preventDefault?.(); } catch (_) {}
+          try { ev?.stopPropagation?.(); } catch (_) {}
           const tooltip = document.getElementById('hover-tooltip');
           const text = (tooltip?.dataset?.copyText || '').toString().trim();
           if (!text) return;
