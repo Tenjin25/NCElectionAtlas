@@ -579,7 +579,10 @@
       });
       if (!countyFeature) return;
       const bbox = turf.bbox(countyFeature);
-      map.fitBounds(bbox, { padding: 40, maxZoom: 10 });
+      const pad = (window && typeof window.computeMapViewportPadding === 'function')
+        ? window.computeMapViewportPadding(40)
+        : 40;
+      map.fitBounds(bbox, { padding: pad, maxZoom: 10 });
     }
   </script>
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
@@ -692,6 +695,29 @@ body { height: var(--app-height); }
 
 .viz-modes, .vote-counter, .main-controls {
   animation: fadeIn 0.5s ease-out;
+}
+
+/* Keyboard focus (premium + accessible) */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.78);
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion preferences without changing layout/logic */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .mapboxgl-canvas-container.mapboxgl-interactive {
+    transition: none !important;
+  }
 }
 /* Removed unused #map.sidebar-minimized selector for clarity */
 
@@ -8786,7 +8812,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       try {
         if (map && typeof map.fitBounds === 'function' && CONFIG?.fitBounds) {
-          map.fitBounds(CONFIG.fitBounds, { padding: 24, duration: 900 });
+          map.fitBounds(CONFIG.fitBounds, { padding: computeMapViewportPadding(24), duration: 900 });
         }
       } catch (_) {}
       if (typeof setStatus === 'function') setStatus('Map reset to statewide view.');
@@ -11088,6 +11114,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       return padding;
     }
+    try { window.computeMapViewportPadding = computeMapViewportPadding; } catch (_) {}
 
     function zoomToClickedPrecinctFeature(feature, { padding = 42, duration = 880, maxZoom = 13.6 } = {}) {
       try {
@@ -19636,7 +19663,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const coords = [lng, lat];
         try { ensureMyLocationSourceAndLayer(coords); } catch (_) {}
-        map.flyTo({ center: coords, zoom: Math.max(11.5, map.getZoom() || 0), speed: 0.95, essential: true });
+        map.flyTo({ center: coords, zoom: Math.max(11.5, map.getZoom() || 0), padding: computeMapViewportPadding(22), speed: 0.95, essential: true });
         map.once('moveend', () => {
           try {
             const point = map.project(coords);
@@ -20087,7 +20114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function jumpToRegion(regionKey) {
       const region = REGION_JUMPS[regionKey];
       if (!region || !map) return;
-      map.fitBounds(region.bounds, { padding: 28, duration: 900 });
+      map.fitBounds(region.bounds, { padding: computeMapViewportPadding(28), duration: 900 });
       try {
         if (typeof window.collapseMobileTopbar === 'function') {
           window.collapseMobileTopbar();
@@ -20155,6 +20182,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!contestValue || !row) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = `${countyDisplay} County`;
         let startText = '';
         try { startText = buildStartHereHintText({ hasContest: false }); } catch (_) { startText = 'Choose a contest to see results.'; }
         showHoverTooltip(
@@ -20163,9 +20191,9 @@ document.addEventListener('DOMContentLoaded', function() {
           buildTooltipShell(
             hoverTitle,
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
-            { pinned: pinnedShell }
+            { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20181,11 +20209,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (totalVotes <= 0) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = `${countyDisplay} County`;
         showHoverTooltip(
           e.point.x,
           e.point.y,
-          buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">No data</div><div style="color:rgba(226,232,240,0.92);">No results reported for this contest.</div>', { pinned: pinnedShell }),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">No data</div><div style="color:rgba(226,232,240,0.92);">No results reported for this contest.</div>', { pinned: pinnedShell, copyText }),
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20316,11 +20345,12 @@ document.addEventListener('DOMContentLoaded', function() {
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
 
       const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
+      const copyText = `${countyDisplay} County`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail') }
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
       try { markOnboardingSeen(); } catch (_) {}
@@ -20365,6 +20395,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = (precinctNorm || title || '').toString().trim();
         let startText = '';
         try { startText = buildStartHereHintText({ hasContest: false }); } catch (_) { startText = 'Choose a contest to see results.'; }
         showHoverTooltip(
@@ -20373,9 +20404,9 @@ document.addEventListener('DOMContentLoaded', function() {
           buildTooltipShell(
             hoverTitle,
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
-            { pinned: pinnedShell }
+            { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20385,11 +20416,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!row) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = (precinctNorm || title || '').toString().trim();
         showHoverTooltip(
           point.x,
           point.y,
-          buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">Not available</div><div style="color:rgba(226,232,240,0.92);">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>', { pinned: pinnedShell }),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">Not available</div><div style="color:rgba(226,232,240,0.92);">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>', { pinned: pinnedShell, copyText }),
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20501,11 +20533,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ? previewInner
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
       const hoverTitle = buildTooltipTitleWithTier(title);
+      const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
         point.y,
-        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail') }
+        buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
       try {
@@ -20611,6 +20644,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
       if (!contestValue) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
         let startText = '';
         try { startText = buildStartHereHintText({ hasContest: false }); } catch (_) { startText = 'Choose a contest to see results.'; }
         showHoverTooltip(
@@ -20619,9 +20653,9 @@ document.addEventListener('DOMContentLoaded', function() {
           buildTooltipShell(
             `${districtLabel} ${districtNum}`,
             `${_demoHTML}<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;margin-top:6px;">${escapeHtml(startText)}</div>`,
-            { pinned: pinnedShell }
+            { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20645,15 +20679,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!row) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
         showHoverTooltip(
           e.point.x,
           e.point.y,
           buildTooltipShell(
             `${districtLabel} ${districtNum}`,
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
-            { pinned: pinnedShell }
+            { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20665,15 +20700,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalVotes = Number(row.total_votes || 0);
       if (totalVotes <= 0) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
         showHoverTooltip(
           e.point.x,
           e.point.y,
           buildTooltipShell(
             `${districtLabel} ${districtNum}`,
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
-            { pinned: pinnedShell }
+            { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -20795,11 +20831,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const inner = deferToPinned
         ? previewInner
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
+      const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: !useCompact }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail') }
+        buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: !useCompact, copyText }),
+        { force: !!forceTooltip, pinned: pinnedShell, context: deferToPinned ? 'preview' : (pinnedShell ? 'pinned' : 'detail'), copyText }
       );
       wireTooltipButtons();
       try { markOnboardingSeen(); } catch (_) {}
@@ -23307,7 +23344,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Array.isArray(bbox) || bbox.length < 4) return;
         map.fitBounds(
           [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-          { padding, duration, maxZoom }
+          { padding: computeMapViewportPadding(padding), duration, maxZoom }
         );
       } catch (_) {}
     }
@@ -24108,7 +24145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : (sourceId === 'state-house' ? `HD ${districtNum}` : `SD ${districtNum}`);
       syncFlySearchInputs(canonicalQuery);
       setFlySearchFeedback('#10b981');
-      map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 40, duration: 900 });
+      map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(40), duration: 900 });
 
       const sidebar = document.getElementById('sidebar');
       if (sidebar && sidebar.classList.contains('minimized')) toggleSidebar();
@@ -24247,7 +24284,7 @@ document.addEventListener('DOMContentLoaded', function() {
           debugLog('[DIAGNOSTIC] Matched county for', countyName, '->', lastSelectedCounty, 'bbox:', bbox);
           syncFlySearchInputs(lastSelectedCounty);
           setFlySearchFeedback('#10b981');
-          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 40, duration: 1000 });
+          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(40), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
           const sidebar = document.getElementById('sidebar');
           if (sidebar && sidebar.classList.contains('minimized')) {
@@ -24424,7 +24461,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Hover Tooltip Functions - VoteHub Style
-    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '' } = {}) {
+    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '' } = {}) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       if (isTouchInteractionMode() && !force && !tooltipPinned) return;
@@ -24433,6 +24470,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
       tooltip.dataset.context = String(context || '');
+      tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}
       
       // Position tooltip near mouse but avoid edges
@@ -24460,6 +24498,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (tooltipPinned) return;
       tooltip.style.display = 'none';
       try { tooltip.dataset.context = ''; } catch (_) {}
+      try { tooltip.dataset.copyText = ''; } catch (_) {}
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
     }
 
@@ -24474,11 +24513,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const pinned = options && options.pinned === true;
       const showClose = !!(pinned || options.showClose === true);
       const headClass = pinned ? 'is-pinned' : (showClose ? 'is-classic' : 'is-compact');
+      const copyText = (options && options.copyText ? String(options.copyText || '') : '').trim();
       return `
         <div class="tooltip-head ${headClass}">
           <div class="tooltip-title">${title}</div>
           ${showClose ? `
             <div class="tooltip-actions">
+              ${(pinned && copyText) ? `<button class="tooltip-btn" id="tooltip-copy-btn" type="button" aria-label="Copy selection label">Copy</button>` : ''}
               <button class="tooltip-btn" id="tooltip-close-btn" type="button">Close</button>
             </div>
           `.trim() : ''}
@@ -24495,9 +24536,36 @@ document.addEventListener('DOMContentLoaded', function() {
           const tooltip = document.getElementById('hover-tooltip');
           if (tooltip) tooltip.style.display = 'none';
           try { if (tooltip) tooltip.dataset.context = ''; } catch (_) {}
+          try { if (tooltip) tooltip.dataset.copyText = ''; } catch (_) {}
           try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
           clearHoverOutline();
           clearVoteCounterHoverState();
+        };
+      }
+      const copyBtn = document.getElementById('tooltip-copy-btn');
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          const tooltip = document.getElementById('hover-tooltip');
+          const text = (tooltip?.dataset?.copyText || '').toString().trim();
+          if (!text) return;
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(text);
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = text;
+              ta.style.position = 'fixed';
+              ta.style.left = '-9999px';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              ta.remove();
+            }
+            setStatus('Copied selection label to clipboard.');
+            try { announceForScreenReader('Copied selection label to clipboard.'); } catch (_) {}
+          } catch (_) {
+            setStatus('Copy failed. Your browser may block clipboard access.');
+          }
         };
       }
     }
@@ -25431,7 +25499,7 @@ document.addEventListener('DOMContentLoaded', function() {
           await hydrationPromise;
         }
 
-        map.fitBounds(CONFIG.fitBounds, { padding: 20 });
+        map.fitBounds(CONFIG.fitBounds, { padding: computeMapViewportPadding(20) });
         // Only enforce a higher min zoom when using a minzoom-limited county tileset.
         if (CONFIG.tilesets?.enabled && CONFIG.tilesets?.sources?.counties?.url && map.getZoom() < 8.05) {
           map.setZoom(8.05);
