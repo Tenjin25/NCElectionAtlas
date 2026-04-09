@@ -20304,6 +20304,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (signedMarginPct - Number(prevSignedForFlip))
         : NaN;
       const tooltipInsight = (() => {
+        // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
+        if (currentVizMode !== 'shift') return '';
         const abs = Math.abs(Number(signedMarginPct) || 0);
         if (abs < 0.5) return 'Tiny changes can flip it.';
         if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
@@ -20504,6 +20506,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (curSigned - Number(prevSignedForFlip))
         : NaN;
       const tooltipInsight = (() => {
+        // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
+        if (currentVizMode !== 'shift') return '';
         const abs = Math.abs(Number(curSigned) || 0);
         if (abs < 0.5) return 'Tiny changes can flip it.';
         if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
@@ -20803,6 +20807,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (signedMarginPct - Number(prevSignedForFlip))
         : NaN;
       const tooltipInsight = (() => {
+        // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
+        if (currentVizMode !== 'shift') return '';
         const abs = Math.abs(Number(signedMarginPct) || 0);
         if (abs < 0.5) return 'Tiny changes can flip it.';
         if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
