@@ -644,6 +644,10 @@ body {
   z-index: 1;
   touch-action: pan-x pan-y pinch-zoom;
 }
+/* Focus mode: dim the base map slightly without changing data colors. */
+body.focus-active #map {
+  filter: brightness(0.92) saturate(0.94);
+}
 /* Prefer dynamic viewport units on mobile browsers (prevents "address bar" jumps). */
 @supports (height: 100dvh) {
   html, body { height: 100dvh; }
@@ -745,6 +749,79 @@ body { height: var(--app-height); }
 .hover-tooltip .tooltip-trends {
   font-size: 12px;
   line-height: 1.6;
+}
+
+.hover-tooltip .tooltip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.hover-tooltip .tooltip-head.is-compact {
+  margin-bottom: 6px;
+}
+
+.hover-tooltip .tooltip-title {
+  margin-bottom: 0;
+}
+
+.hover-tooltip .tooltip-quickline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.hover-tooltip .tooltip-quickline .tier {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(226, 232, 240, 0.86);
+}
+
+.hover-tooltip .tooltip-insight {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.hover-tooltip .tooltip-more {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.hover-tooltip .tooltip-more summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.18);
+  color: rgba(226, 232, 240, 0.96);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hover-tooltip .tooltip-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.hover-tooltip .tooltip-more-body {
+  margin-top: 10px;
 }
 
 .quick-tooltip {
@@ -2139,6 +2216,37 @@ body { height: var(--app-height); }
 
 .vote-counter-context .context-left {
   min-width: 0;
+}
+
+.vote-counter-context .context-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vote-counter-context .context-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.vote-counter-context .context-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.72);
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  white-space: nowrap;
 }
 
 .vote-counter-context .context-title {
@@ -3938,7 +4046,7 @@ body { height: var(--app-height); }
   }
 
   .focus-pill {
-    padding: 10px 12px;
+    padding: 9px 11px;
     border-radius: 14px;
     border: 1px solid rgba(15, 23, 42, 0.08);
     background: rgba(248, 250, 252, 0.92);
@@ -3946,7 +4054,7 @@ body { height: var(--app-height); }
 
   .focus-pill-label {
     display: block;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -3955,8 +4063,8 @@ body { height: var(--app-height); }
 
   .focus-pill-value {
     display: -webkit-box;
-    margin-top: 5px;
-    font-size: 15px;
+    margin-top: 4px;
+    font-size: 16px;
     font-weight: 900;
     color: #0f172a;
     line-height: 1.2;
@@ -3982,6 +4090,53 @@ body { height: var(--app-height); }
 
   .focus-bar-panel {
     margin-bottom: 12px;
+  }
+
+  .focus-insights {
+    display: grid;
+    gap: 10px;
+    margin: 2px 0 12px;
+  }
+
+  .focus-insights:empty {
+    display: none;
+  }
+
+  .focus-watch {
+    padding: 12px 12px 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(248, 250, 252, 0.92);
+    animation: tooltip-in 160ms ease-out;
+  }
+
+  .focus-watch-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .focus-watch-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.95);
+  }
+
+  .focus-watch-copy {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: rgba(226, 232, 240, 0.95);
+  }
+
+  /* Use the same dark surface language as the tooltip to keep hierarchy clear. */
+  .focus-watch {
+    background: rgba(17, 24, 39, 0.94);
+    border-color: rgba(148, 163, 184, 0.22);
   }
 
   .focus-bar-head {
@@ -8928,7 +9083,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="vote-counter" id="vote-counter" data-testid="vote-counter">
     <div class="vote-counter-context" id="vote-counter-context">
       <div class="context-left">
-        <div class="context-title" id="vote-context-title">Statewide Focus</div>
+        <div class="context-title-row">
+          <div class="context-title" id="vote-context-title">Statewide Focus</div>
+          <div class="context-badges" id="vote-context-badges" aria-hidden="true"></div>
+        </div>
         <div class="context-sub" id="vote-context-sub">Hover a county or district</div>
       </div>
       <div class="context-actions">
@@ -8969,9 +9127,10 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="focus-bar-midpoint" aria-hidden="true"></div>
         </div>
       </div>
+      <div class="focus-insights" id="focus-insights" aria-label="At a glance"></div>
       <div class="focus-trend" id="focus-trend">
         <div class="focus-trend-head">
-          <span class="focus-trend-title">Trends</span>
+          <span class="focus-trend-title">Trend + shift</span>
           <span class="focus-trend-caption" id="focus-trend-caption">Statewide history</span>
         </div>
         <div class="focus-trend-chart" id="focus-trend-chart">
@@ -9176,6 +9335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
         district_contests_dir: withBase('./data/district_contests'),
         district_contests_2020_2024_dir: withBase('./data/district_contests_2020_2024'),
+        district_contests_hybrid_dir: withBase('./data/district_contests_hybrid'),
         district_contests_dirs: {
           '2022': withBase('./data/district_contests'),
           '2024': withBase('./data/district_contests_2024_lines')
@@ -9558,6 +9718,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctAliasLoadInFlight = false;
     let precinctVariantOverridesByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctVariantOverridesLoadInFlight = false;
+    let precinctFullNameByNormCache = null; // Map<string precinct_norm, string precinct_display_name> (from precinct polygons when loaded)
     let precinctDotHoverWired = new Set();
     let viewportPrecinctCountRaf = null;
     let startupPrecinctCentroidPreloadScheduled = false;
@@ -9922,12 +10083,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const key = `${scope}_${contestType}_${year}`;
       const out = [];
       const calibrated2020Dir = (CONFIG.paths?.district_contests_2020_2024_dir || '').toString().trim();
+      const hybridDir = (CONFIG.paths?.district_contests_hybrid_dir || '').toString().trim();
       const baseDir = (getActiveDistrictContestsDir(linesYear) || '').toString().trim();
 
       // Prefer calibrated slices only for congressional scope on 2022 lines.
       // Legislative scopes continue to use the primary district_contests data.
       if (ly === 2022 && scope === 'congressional' && Number.isFinite(y) && y >= 2020 && calibrated2020Dir) {
         out.push(`${calibrated2020Dir}/${key}.json`);
+      }
+      // Prefer the hybrid shatter outputs on 2022 lines when available. These tend to have higher
+      // precinct-key match coverage (especially for 2020+ precinct naming) than the legacy slices.
+      if (ly === 2022 && Number.isFinite(y) && y >= 2012 && hybridDir) {
+        out.push(`${hybridDir}/${key}.json`);
       }
       if (baseDir) out.push(`${baseDir}/${key}.json`);
 
@@ -11431,6 +11598,7 @@ document.addEventListener('DOMContentLoaded', function() {
         marginEl.textContent = 'Tie';
         marginEl.className = 'focus-pill-value tie';
         totalEl.textContent = '0';
+        renderVoteContextTierBadge(meta, NaN);
         barDem.style.width = '0%';
         barOther.style.width = '0%';
         barRep.style.width = '0%';
@@ -11444,6 +11612,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
       const marginPct = marginPctValue(r, d, total);
+      const signedMarginPct = signedMarginPctFromVotes(d, r, total);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -11458,6 +11627,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const leadLabel = isCountyContext
         ? leadCountyMarginPctLabel(r, d, total)
         : focusLeadMarginLabel(r, d, total);
+
+      renderVoteContextTierBadge(meta, signedMarginPct);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
@@ -11516,9 +11687,37 @@ document.addEventListener('DOMContentLoaded', function() {
       const t = document.getElementById('vote-context-title');
       const s = document.getElementById('vote-context-sub');
       const c = document.getElementById('vote-context-clear');
-      if (t) t.textContent = title || '';
+      const b = document.getElementById('vote-context-badges');
+      const rawTitle = String(title || '').trim();
+      let cleanedTitle = rawTitle;
+      let tag = '';
+      const m = /^(Hover|Selected|Pinned):\s*(.+)$/i.exec(rawTitle);
+      if (m && m[2]) {
+        tag = String(m[1] || '').trim();
+        cleanedTitle = String(m[2] || '').trim();
+      }
+      if (t) t.textContent = cleanedTitle || '';
       if (s) s.textContent = sub || '';
       if (c) c.style.display = showClear ? 'inline-flex' : 'none';
+      if (b) b.dataset.contextTag = tag ? tag[0].toUpperCase() + tag.slice(1).toLowerCase() : '';
+    }
+
+    function renderVoteContextTierBadge(meta, signedMarginPct) {
+      const b = document.getElementById('vote-context-badges');
+      if (!b) return;
+      const kind = String(meta?.kind || '').toLowerCase();
+      const tag = String(b.dataset.contextTag || '').trim();
+      if (!kind || kind === 'statewide') {
+        b.innerHTML = tag ? `<span class="context-tag">${escapeHtml(tag)}</span>` : '';
+        return;
+      }
+      const tierMeta = competitivenessTierMetaFromSignedMarginPct(Number(signedMarginPct));
+      if (!tierMeta || !tierMeta.label) {
+        b.innerHTML = tag ? `<span class="context-tag">${escapeHtml(tag)}</span>` : '';
+        return;
+      }
+      const partyClass = tierMeta.party === 'rep' ? 'rep' : (tierMeta.party === 'dem' ? 'dem' : 'tie');
+      b.innerHTML = `${tag ? `<span class="context-tag">${escapeHtml(tag)}</span>` : ''}<span class="focus-name-tier-badge ${escapeHtml(partyClass)}">${escapeHtml(tierMeta.label)}</span>`;
     }
 
     function setVoteCounterMinimizedState(minimized) {
@@ -11542,7 +11741,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderFocusTrendEmpty(message, caption = 'Statewide history') {
       const captionEl = document.getElementById('focus-trend-caption');
       const chartEl = document.getElementById('focus-trend-chart');
+      const insightsEl = document.getElementById('focus-insights');
       if (captionEl) captionEl.textContent = caption;
+      if (insightsEl) insightsEl.innerHTML = '';
       if (chartEl) {
         const msg = String(message || '');
         if (/^Loading trend history/i.test(msg)) {
@@ -11744,8 +11945,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (focusKind === 'district') return 'district';
         return 'place';
       })();
-      const viralFocusHtml = enableViral
-        ? buildViralFocusBlock({
+      const viralBlocks = enableViral
+        ? buildViralFocusBlocks({
           focusName: options?.focusName || caption || 'This place',
           focusNoun,
           annotated,
@@ -11758,7 +11959,10 @@ document.addEventListener('DOMContentLoaded', function() {
           trajectoryMeta: options?.trajectoryMeta,
           censusContext: options?.censusContext
         })
-        : '';
+        : { glanceHtml: '', watchHtml: '' };
+
+      const insightsEl = document.getElementById('focus-insights');
+      if (insightsEl) insightsEl.innerHTML = String(viralBlocks?.glanceHtml || '');
 
       const cards = annotated
         .slice()
@@ -11808,7 +12012,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .join('');
 
       chartEl.innerHTML = `
-        ${viralFocusHtml}
         <div class="focus-trend-plot">
           <div class="focus-trend-summary">
             <div class="focus-trend-summary-copy">
@@ -11836,6 +12039,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${trajectoryHtml}
         ${censusCheckHtml}
         ${focusCensusHtml}
+        ${String(viralBlocks?.watchHtml || '')}
         <div class="focus-trend-list">${cards}</div>
       `;
       try { updateMobileOverlayOffsets(); } catch (_) {}
@@ -12579,6 +12783,66 @@ document.addEventListener('DOMContentLoaded', function() {
           return map.size ? map : null;
         })();
 
+        const getPresidentialBaselineMargin = (county) => {
+          if (climateSignedByCounty && climateSignedByCounty.has(county)) {
+            const value = Number(climateSignedByCounty.get(county));
+            if (Number.isFinite(value)) return value;
+          }
+          return Number.isFinite(climateSigned) ? climateSigned : null;
+        };
+
+        const pickClosestPresidentialYear = (year) => {
+          const y = Number(year);
+          const presYears = [2000, 2004, 2008, 2012, 2016, 2020, 2024];
+          if (!Number.isFinite(y)) return 2024;
+          // For midterms (e.g. 2022), prefer the prior presidential year as the closest comparable baseline.
+          const prior = presYears.filter(v => v <= y).sort((a, b) => b - a)[0];
+          if (Number.isFinite(prior)) return prior;
+          return presYears[0];
+        };
+
+        // Senate deviation baseline: measure county ticket-splitting as (Senate - closest prior Pres),
+        // then apply that deviation on top of the model's presidential baseline year.
+        let presBaselineByCountyForDeviation = null;
+        try {
+          if (String(modeledDef?.contestType || '') === 'us_senate_model') {
+            const devYear = pickClosestPresidentialYear(modeledDef?.baseYear);
+            const presRows = await loadContestSlice('president', devYear);
+            const presTotals = buildCountyTotals(presRows, 'president');
+            const map = new Map();
+            presTotals.forEach((totals, county) => {
+              const signed = signedMarginPctFromVotes(
+                Number(totals.dem || 0),
+                Number(totals.rep || 0),
+                Number(totals.total || 0)
+              );
+              map.set(county, signed);
+            });
+            presBaselineByCountyForDeviation = map.size ? map : null;
+          }
+        } catch (_) {
+          presBaselineByCountyForDeviation = null;
+        }
+
+        const clampSenateDeviationForCounty = (deviation, totals) => {
+          const raw = Number(deviation || 0);
+          if (!Number.isFinite(raw)) return 0;
+          const totalDem = Number(totals?.dem || 0);
+          const totalRep = Number(totals?.rep || 0);
+          const twoParty = Math.max(0, totalDem + totalRep);
+          const totalVotes = Math.max(0, Number(totals?.total || totalDem + totalRep));
+          const turnoutScale = Math.min(1, twoParty / 15000);
+          let limit = 12 + (turnoutScale * 18);
+          if (totalVotes < 2500) limit = Math.min(limit, 12);
+          const extraGrace = Math.min(6, Math.max(0, Math.log10(Math.max(1, twoParty)) * 1.5));
+          limit = Math.min(36, limit + extraGrace);
+          limit = Math.max(6, limit);
+          const clamped = Math.max(-limit, Math.min(limit, raw));
+          const smoothingWeight = Math.min(1, twoParty / 12000);
+          const smoothingFactor = 0.75 + (smoothingWeight * 0.25);
+          return clamped * smoothingFactor;
+        };
+
         const candidateBonusByCounty = (() => {
           if (!modeledDef?.candidateBonusEnabled) return null;
           const maxPts = Number(modeledDef?.candidateBonusMaxPts);
@@ -12694,6 +12958,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const countyModelByCounty = (() => {
           const map = new Map();
+          const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
           baseCountyTotals.forEach((totals, county) => {
             const baseCountySignedRaw = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
             let baseCountySigned = baseCountySignedRaw;
@@ -12706,11 +12971,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let swingPct = climateSwingPct;
             if (useBlend) {
-              const climateCountySigned = (climateSignedByCounty && climateSignedByCounty.has(county))
-                ? Number(climateSignedByCounty.get(county))
-                : climateSigned;
-              const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * climateCountySigned);
-              swingPct = baseCountySignedRaw - desiredSigned;
+              if (isSenateDeviationModel) {
+                // Senate calibration: anchor each county to the presidential baseline, then apply a
+                // county-specific deviation measured from the Senate baseline (with light guardrails).
+                const presBaseline = getPresidentialBaselineMargin(county);
+                const baseline = Number.isFinite(Number(presBaseline)) ? Number(presBaseline) : (Number.isFinite(Number(climateSigned)) ? Number(climateSigned) : 0);
+
+                const deviationBaseline = (presBaselineByCountyForDeviation && presBaselineByCountyForDeviation.has(county))
+                  ? Number(presBaselineByCountyForDeviation.get(county))
+                  : baseline;
+                const senateDeviationRaw = baseCountySignedRaw - deviationBaseline;
+                const senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
+                const adjustedSenateMargin = baseline + (blendWeight * senateDeviation);
+                swingPct = baseCountySignedRaw - adjustedSenateMargin;
+              } else {
+                const climateCountySigned = (climateSignedByCounty && climateSignedByCounty.has(county))
+                  ? Number(climateSignedByCounty.get(county))
+                  : climateSigned;
+                const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * climateCountySigned);
+                swingPct = baseCountySignedRaw - desiredSigned;
+              }
             }
 
             if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
@@ -13039,6 +13319,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const climateSwingPct = baseSigned - climateSigned;
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
+        const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
         const districtBonus = modeledDef?.candidateBonusEnabled ? Number(modeledDef?.candidateBonusDistrictPts) : 0;
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
@@ -13075,6 +13356,45 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        const pickClosestPresidentialYear = (year) => {
+          const y = Number(year);
+          const presYears = [2000, 2004, 2008, 2012, 2016, 2020, 2024];
+          if (!Number.isFinite(y)) return 2024;
+          const prior = presYears.filter(v => v <= y).sort((a, b) => b - a)[0];
+          if (Number.isFinite(prior)) return prior;
+          return presYears[0];
+        };
+
+        const clampSenateDeviationForDistrictRow = (deviation, row) => {
+          const raw = Number(deviation || 0);
+          if (!Number.isFinite(raw)) return 0;
+          const dem = Number(row?.dem_votes || 0);
+          const rep = Number(row?.rep_votes || 0);
+          const twoParty = Math.max(0, dem + rep);
+          const totalVotes = Math.max(0, Number(row?.total_votes || twoParty));
+          const turnoutScale = Math.min(1, twoParty / 15000);
+          let limit = 12 + (turnoutScale * 18);
+          if (totalVotes < 2500) limit = Math.min(limit, 12);
+          const extraGrace = Math.min(6, Math.max(0, Math.log10(Math.max(1, twoParty)) * 1.5));
+          limit = Math.min(36, limit + extraGrace);
+          limit = Math.max(6, limit);
+          const clamped = Math.max(-limit, Math.min(limit, raw));
+          const smoothingWeight = Math.min(1, twoParty / 12000);
+          const smoothingFactor = 0.75 + (smoothingWeight * 0.25);
+          return clamped * smoothingFactor;
+        };
+
+        let presDeviationResults = null;
+        if (useBlend && isSenateDeviationModel) {
+          try {
+            const devYear = pickClosestPresidentialYear(modeledDef?.baseYear);
+            const presNode = await loadDistrictSlice(scope, 'president', devYear, linesYear);
+            presDeviationResults = presNode?.general?.results || null;
+          } catch (_) {
+            presDeviationResults = null;
+          }
+        }
+
         const modeledResults = {};
         Object.keys(baseResults).forEach(districtId => {
           let targetTotal = null;
@@ -13094,25 +13414,46 @@ document.addEventListener('DOMContentLoaded', function() {
               Number(baseRow?.rep_votes || 0),
               Number(baseRow?.total_votes || 0)
             );
-            let blendedBaseSigned = baseRowSigned;
-            if (useBaseMix && baseMixResults && baseMixResults[districtId]) {
-              const mixRow = baseMixResults[districtId] || {};
-              const mixSigned = signedMarginPctFromVotes(
-                Number(mixRow?.dem_votes || 0),
-                Number(mixRow?.rep_votes || 0),
-                Number(mixRow?.total_votes || 0)
-              );
-              if (Number.isFinite(mixSigned)) {
-                blendedBaseSigned = (baseMixWeight * baseRowSigned) + ((1 - baseMixWeight) * mixSigned);
-              }
-            }
             const climateRowSigned = signedMarginPctFromVotes(
               Number(climateRow?.dem_votes || 0),
               Number(climateRow?.rep_votes || 0),
               Number(climateRow?.total_votes || 0)
             );
-            const desiredSigned = (blendWeight * blendedBaseSigned) + ((1 - blendWeight) * climateRowSigned);
-            rowSwingPct = baseRowSigned - desiredSigned;
+
+            if (isSenateDeviationModel) {
+              const baseline = Number.isFinite(climateRowSigned) ? climateRowSigned : (Number.isFinite(climateSigned) ? climateSigned : 0);
+              let devBase = baseline;
+              try {
+                const presRow = presDeviationResults ? (presDeviationResults[districtId] || null) : null;
+                if (presRow) {
+                  const presSigned = signedMarginPctFromVotes(
+                    Number(presRow?.dem_votes || 0),
+                    Number(presRow?.rep_votes || 0),
+                    Number(presRow?.total_votes || 0)
+                  );
+                  if (Number.isFinite(presSigned)) devBase = presSigned;
+                }
+              } catch (_) {}
+              const senateDeviationRaw = baseRowSigned - devBase;
+              const senateDeviation = clampSenateDeviationForDistrictRow(senateDeviationRaw, baseRow);
+              const adjustedSenateMargin = baseline + (blendWeight * senateDeviation);
+              rowSwingPct = baseRowSigned - adjustedSenateMargin;
+            } else {
+              let blendedBaseSigned = baseRowSigned;
+              if (useBaseMix && baseMixResults && baseMixResults[districtId]) {
+                const mixRow = baseMixResults[districtId] || {};
+                const mixSigned = signedMarginPctFromVotes(
+                  Number(mixRow?.dem_votes || 0),
+                  Number(mixRow?.rep_votes || 0),
+                  Number(mixRow?.total_votes || 0)
+                );
+                if (Number.isFinite(mixSigned)) {
+                  blendedBaseSigned = (baseMixWeight * baseRowSigned) + ((1 - baseMixWeight) * mixSigned);
+                }
+              }
+              const desiredSigned = (blendWeight * blendedBaseSigned) + ((1 - blendWeight) * climateRowSigned);
+              rowSwingPct = baseRowSigned - desiredSigned;
+            }
           }
 
           if (Number.isFinite(districtBonus) && districtBonus > 0) rowSwingPct += districtBonus;
@@ -16070,7 +16411,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return 'neutral';
     }
 
-    function buildViralFocusBlock({
+    function buildViralFocusBlocks({
       focusName = 'This place',
       focusNoun = 'place',
       annotated = [],
@@ -16083,7 +16424,7 @@ document.addEventListener('DOMContentLoaded', function() {
       trajectoryMeta = null,
       censusContext = null
     } = {}) {
-      if (!summaryEntry || !latest || !earliest) return '';
+      if (!summaryEntry || !latest || !earliest) return { glanceHtml: '', watchHtml: '' };
 
       const safeFocus = String(focusName || 'This place').trim() || 'This place';
       const noun = (() => {
@@ -16276,25 +16617,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const classification = classificationLabel(longShift, recentShiftSince2020, isRecentFlip);
       const headline = (() => {
-        const by = Number.isFinite(Number(baseYear)) ? ` since ${baseYear}` : '';
-        if (isRecentFlip) return `${safeFocus} just flipped — the next cycle decides whether it holds.`;
-        if (longShiftSign === 'rep' && recentShiftSign === 'rep') return `${safeFocus} has been moving right${by}.`;
-        if (longShiftSign === 'dem' && recentShiftSign === 'dem') return `${safeFocus} has been moving left${by}.`;
-        if (marginTier?.party === 'rep' && recentShiftSign === 'dem') return `${safeFocus} still leans Republican, but Democrats have been gaining lately.`;
-        if (marginTier?.party === 'dem' && recentShiftSign === 'rep') return `${safeFocus} still leans Democratic, but Republicans have been gaining lately.`;
-        if (marginTier?.party === 'rep') return `${safeFocus} leans Republican with mixed movement over time.`;
-        if (marginTier?.party === 'dem') return `${safeFocus} leans Democratic with mixed movement over time.`;
-        return `${safeFocus} is competitive, and small swings can decide it.`;
+        const absMargin = Math.abs(Number(selectedSigned) || 0);
+        const leanParty = marginTier?.party || 'neutral';
+        if (isRecentFlip) return 'New flip — watch if it sticks';
+        if (absMargin < 0.5) return 'True tossup';
+        if (absMargin < 1.0) return 'Very close — either side can win';
+        if (leanParty === 'rep' && recentShiftSign === 'dem') return 'Still Republican, but weakening';
+        if (leanParty === 'dem' && recentShiftSign === 'rep') return 'Still Democratic, but slipping';
+        if (recentShiftSign === 'dem') return 'Trending left lately';
+        if (recentShiftSign === 'rep') return 'Trending right lately';
+        if (leanParty === 'rep') return absMargin >= 20 ? 'Deep red — mostly about turnout' : 'Republican edge';
+        if (leanParty === 'dem') return absMargin >= 20 ? 'Deep blue — mostly about turnout' : 'Democratic edge';
+        return 'In play — small swings matter';
       })();
 
       const popEffect = classifyPopulationEffect(tone, contextBullet);
 
-      // This is the "finish" of the glance card: two short, scannable lines.
-      const microInsight = (() => {
-        const story = buildNarrativeSentence({ includePopulation: false, compact: true });
-        const watch = buildWhatToWatchLine({ compact: true });
-        if (!story && !watch) return null;
-        return { story, watch };
+      const glanceDirection = (() => {
+        if (isRecentFlip) return 'Flip in the latest cycle';
+        if (recentShiftSign === 'dem') return 'Moving left lately';
+        if (recentShiftSign === 'rep') return 'Moving right lately';
+        if (longShiftSign === 'dem') return 'Long-run drift left';
+        if (longShiftSign === 'rep') return 'Long-run drift right';
+        return 'No clear direction';
+      })();
+
+      const glanceChange = (() => {
+        const absRecent = Math.abs(Number(recentShiftSince2020));
+        const absLong = Math.abs(Number(longShift));
+        const opposing = longShiftSign !== 'neutral' && recentShiftSign !== 'neutral' && longShiftSign !== recentShiftSign;
+        if (isRecentFlip) return '';
+        if (opposing) return 'Recent pushback vs longer trend';
+        if (Number.isFinite(absRecent) && absRecent >= 3) return 'Momentum accelerating lately';
+        if (recentShiftSign !== 'neutral') return 'Momentum continuing lately';
+        if (Number.isFinite(absLong) && absLong >= 3) return 'Long-run drift, recent steadier';
+        return '';
+      })();
+
+      const glanceMeaning = (() => {
+        const tag = `${String(growthHeadline || '').toLowerCase()} ${String(contextBullet || '').toLowerCase()}`;
+        const fast = /fast growth|metro spillover|outer-suburban|urban anchor|coastal growth/.test(tag);
+        const slow = /slow growth|declin/.test(tag);
+        if (fast) return 'Growth could keep margins moving';
+        if (slow) return 'Stable electorate, margins can be sticky';
+        if (popEffect?.effect === 'reinforces') return 'Demographics likely reinforce the current lean';
+        if (popEffect?.effect === 'complicates') return 'Change adds churn, so trends can wobble';
+        return 'Local change is gradual';
       })();
 
       const momentumMini = (() => {
@@ -16384,20 +16752,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const growthTag = `${String(growthHeadline || '').toLowerCase()} ${String(contextBullet || '').toLowerCase()}`;
         const fastGrowth = /fast growth|metro spillover|outer-suburban|urban anchor|coastal growth/.test(growthTag);
         const slowGrowth = /slow growth|declin/.test(growthTag);
-        if (isRecentFlip) return compact ? 'Does the flip hold, or does it snap back?' : 'Next comparable cycle: does the new winner hold, or does it snap back?';
-        if (absMargin < 0.5) return compact ? 'Coin-flip territory: tiny turnout shifts can change the winner.' : 'True coin-flip territory: tiny turnout shifts can change the winner.';
-        if (absMargin < 1.0) return 'Still very close: a point of swing can change the winner.';
+        if (isRecentFlip) return compact ? 'Does the new winner hold, or snap back?' : 'Next comparable cycle: does the new winner hold, or does it snap back?';
+        if (absMargin < 0.5) return compact ? 'Coin-flip: turnout or ticket-splitting decides it.' : 'True coin-flip: turnout or ticket-splitting can decide it.';
+        if (absMargin < 1.0) return compact ? 'Still very close: small swings decide it.' : 'Still very close: small swings can decide the winner.';
         if (longShiftSign !== 'neutral' && recentShiftSign !== 'neutral' && longShiftSign !== recentShiftSign) {
           return compact
-            ? 'Does the recent pushback stick, or does the longer-run direction return?'
+            ? 'Does the recent pushback stick, or does the longer trend return?'
             : 'Watch whether the recent pushback continues, or whether the longer-term direction reasserts itself.';
         }
         if (Number.isFinite(recentShiftSince2020) && selectedYear >= 2020 && recentShiftSign !== 'neutral') {
           const dir = recentShiftSign === 'rep' ? 'right' : 'left';
           if (fastGrowth) {
             return compact
-              ? `${accel ? 'Growth is the accelerant' : 'Growth is the backdrop'}: another move ${dir} next cycle would make the trend hard to ignore.`
-              : `${accel ? 'With fast growth and recent acceleration' : 'With fast growth in the mix'}, watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
+              ? `${accel ? 'Growth is the accelerant' : 'Growth is the backdrop'}: another move ${dir} next cycle would be a real signal.`
+              : `${accel ? 'With fast growth and recent acceleration' : 'With fast growth in the mix'}, watch whether it keeps moving ${dir}: a repeat next cycle would be a real signal.`;
           }
           if (slowGrowth && absMargin >= 8) {
             return compact
@@ -16405,15 +16773,15 @@ document.addEventListener('DOMContentLoaded', function() {
               : `With slow growth, margins tend to be sticky—watch whether the next cycle holds steady or starts to drift.`;
           }
           return compact
-            ? `Another move ${dir} next cycle would make the trend hard to ignore.`
-            : `Watch whether it keeps moving ${dir}: a repeat next cycle would make the trend hard to ignore.`;
+            ? `Another move ${dir} next cycle would be a real signal.`
+            : `Watch whether it keeps moving ${dir}: a repeat next cycle would be a real signal.`;
         }
         if (tone === 'rep') {
           return popEffect.effect === 'complicates'
             ? (fastGrowth
-              ? `Fast growth is the wild card—watch whether the GOP holds its edge as the electorate changes.`
+              ? `Fast growth is the wild card—watch whether Republicans hold their edge as the electorate changes.`
               : `If the margin tightens, this may be a red-leaning ${noun} that stays competitive.`)
-            : 'If the GOP widens the gap again next cycle, the direction looks durable.';
+            : 'If Republicans widen the gap again next cycle, the direction looks durable.';
         }
         if (tone === 'dem') {
           return popEffect.effect === 'complicates'
@@ -16422,18 +16790,18 @@ document.addEventListener('DOMContentLoaded', function() {
               : `If the margin tightens, this may be a blue-leaning ${noun} that stays competitive.`)
             : 'If Democrats widen the gap again next cycle, the direction looks durable.';
         }
-        return `Watch whether this ${noun} breaks clearly toward one side or keeps trading narrow wins.`;
+        return `Watch whether this ${noun} breaks clearly one way, or stays close.`;
       }
 
-      const bullets = [
-        { label: 'Trend', value: directionBullet },
-        { label: 'Long run', value: longBullet },
-        { label: 'Population', value: contextBullet }
-      ];
+      const glanceBullets = [
+        { label: 'Direction', value: glanceDirection },
+        ...(glanceChange ? [{ label: 'Change', value: glanceChange }] : []),
+        { label: 'Meaning', value: glanceMeaning }
+      ].slice(0, 3);
 
-      const storyTitle = `The story in ${safeFocus}`;
+      const storyTitle = `${safeFocus}: why this matters`;
       const storySummary = buildNarrativeSentence();
-      const whatToWatch = buildWhatToWatchLine();
+      const whatToWatch = buildWhatToWatchLine({ compact: true });
       const longRunLabel = (() => {
         const delta = Number(longShift);
         if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) return '—';
@@ -16442,35 +16810,38 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${side}+${Math.abs(delta).toFixed(2)} since ${baseYear}`;
       })();
 
-      return `
+      const glanceHtml = `
         <section class="focus-glance ${toneClass}" aria-label="At a glance">
           <div class="focus-glance-head">
             <span class="focus-glance-kicker">At a glance</span>
             ${flipBadge ? `<span class="focus-glance-badge ${escapeHtml(flipBadge.cls)}">${escapeHtml(flipBadge.text)}</span>` : ''}
           </div>
-          <div class="focus-glance-headline">${escapeHtml(headline)}</div>
+          <div class="focus-glance-headline"><strong>${escapeHtml(headline)}</strong></div>
           <ul class="focus-glance-bullets">
-            ${bullets.map(item => `
+            ${glanceBullets.map(item => `
               <li>
                 <span class="focus-glance-label">${escapeHtml(item.label)}:</span>
                 <span class="focus-glance-value">${escapeHtml(item.value)}</span>
               </li>
             `).join('')}
           </ul>
-          ${microInsight ? `
-            <div class="focus-glance-micro focus-glance-micro--full">
-              ${microInsight.story ? `<span><strong>Story:</strong> ${escapeHtml(microInsight.story)}</span>` : ''}
-              ${microInsight.watch ? `<span><strong>Watch:</strong> ${escapeHtml(microInsight.watch)}</span>` : ''}
-            </div>
-          `.trim() : ''}
         </section>
-        <details class="focus-story-fold" aria-label="Deeper story">
-          <summary>Deeper story</summary>
-          <section class="focus-story ${toneClass}" aria-label="Story details">
+      `.trim();
+
+      const watchHtml = `
+        <section class="focus-watch" aria-label="What to watch">
+          <div class="focus-watch-head">
+            <span class="focus-watch-kicker">What to watch</span>
+          </div>
+          <p class="focus-watch-copy">${escapeHtml(whatToWatch)}</p>
+        </section>
+        <details class="focus-story-fold" aria-label="Why this matters">
+          <summary>Why this matters</summary>
+          <section class="focus-story ${toneClass}" aria-label="Analyst notes">
             <div class="focus-story-head">
               <div class="focus-story-left">
-                <span class="focus-story-kicker">Story details</span>
-                <button class="focus-story-copy" type="button" data-action="copy-story" aria-label="Copy story summary" title="Copy story summary">Copy</button>
+                <span class="focus-story-kicker">Analyst note</span>
+                <button class="focus-story-copy" type="button" data-action="copy-story" aria-label="Copy analyst note" title="Copy analyst note">Copy</button>
               </div>
               <div class="focus-story-right">
                 <span class="focus-barometer" data-tone="${escapeHtml(barTone)}" data-strength="${escapeHtml(barStrength)}" aria-label="${escapeHtml(`Barometer: ${barLabel}`)}" title="${escapeHtml('Barometer: partisan lean (dot) + strength (size)')}">
@@ -16485,28 +16856,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <h3 class="focus-story-title">${escapeHtml(storyTitle)}</h3>
             ${vsNcLine ? `<p class="focus-story-vs"><strong>${escapeHtml(vsNcLine)}</strong></p>` : ''}
             <p class="focus-story-summary">${escapeHtml(storySummary)}</p>
-            <div class="focus-story-grid">
-              <div class="focus-story-mini">
-                <span class="k">Trend</span>
-                <span class="v">${escapeHtml(directionBullet)}</span>
-              </div>
-              <div class="focus-story-mini">
-                <span class="k">Long run</span>
-                <span class="v">${escapeHtml(longRunLabel)}</span>
-              </div>
-              <div class="focus-story-mini">
-                <span class="k">Population</span>
-                <span class="v">${escapeHtml(contextBullet)}</span>
-              </div>
-              <div class="focus-story-mini">
-                <span class="k">Since 2020</span>
-                <span class="v">${escapeHtml(momentumMini)}</span>
-              </div>
-            </div>
-            <p class="focus-story-watch"><strong>What to watch next:</strong> ${escapeHtml(whatToWatch)}</p>
           </section>
         </details>
-      `;
+      `.trim();
+
+      return { glanceHtml, watchHtml };
     }
 
 	    // --- Structured classification helpers (Trajectory + Census) ---
@@ -19032,15 +19386,48 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);"><div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Pres-Gov Lens</div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Split Shift:</span><strong>${splitInsight.deltaLabel}</strong></div></div>`
         : '';
 
-      const inner = `
-        <div class="hover-meta">${chips.join('')}</div>
-        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
-        ${splitInsightLine}
-        ${demoLine}
-      `;
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
+      const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
+        ? (signedMarginPct - Number(prevSignedForFlip))
+        : NaN;
+      const tooltipInsight = (() => {
+        const abs = Math.abs(Number(signedMarginPct) || 0);
+        if (abs < 0.5) return 'Tiny changes can flip it.';
+        if (!Number.isFinite(shiftDelta) || Math.abs(shiftDelta) < 1.25) return '';
+        if (signedMarginPct > 0 && shiftDelta < 0) return 'Still Republican, but weakening.';
+        if (signedMarginPct < 0 && shiftDelta > 0) return 'Still Democratic, but slipping.';
+        if (shiftDelta < 0) return 'Democrats gaining ground lately.';
+        if (shiftDelta > 0) return 'Republicans gaining ground lately.';
+        return '';
+      })();
+
+      const compactInner = `
+        <div class="tooltip-quickline">
+          <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
+          ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
+        </div>
+        ${tooltipInsight ? `<div class="tooltip-insight">${escapeHtml(tooltipInsight)}</div>` : ''}
+      `.trim();
+
+      const expandedInner = `
+        <details class="tooltip-more" aria-label="More details">
+          <summary>Details</summary>
+          <div class="tooltip-more-body">
+            <div class="hover-meta">${chips.join('')}</div>
+            ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
+            ${splitInsightLine}
+            ${demoLine}
+          </div>
+        </details>
+      `.trim();
+
+      const showExpanded = !!(forceTooltip || tooltipPinned || isTouchInteractionMode());
+      const inner = `${compactInner}${showExpanded ? expandedInner : ''}`;
 
       const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
-      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, inner), { force: !!forceTooltip });
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      showHoverTooltip(e.point.x, e.point.y, buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell }), { force: !!forceTooltip });
       wireTooltipButtons();
     }
 
@@ -19049,7 +19436,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
       const countyName = (props.county_nam || '').toString().trim();
       const precId = (props.prec_id || '').toString().trim();
-      const title = `${countyName} - ${precId}`;
+      const precFull = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
+      const fallbackFull = (!precFull && precinctFullNameByNormCache && precinctNorm && precinctFullNameByNormCache.has(precinctNorm))
+        ? String(precinctFullNameByNormCache.get(precinctNorm) || '').toString().replace(/\s+/g, ' ').trim()
+        : '';
+      const displayPrecinct = precFull || fallbackFull || precId;
+      const title = `${countyName} - ${displayPrecinct}`;
       setPrecinctHoverFeature(feature);
 
       const contestValue = document.getElementById('contestSelect')?.value || '';
@@ -20995,6 +21387,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       let countyNameByFips = null;
       try { countyNameByFips = await ensureCountyNameByFipsMap(); } catch (_) { countyNameByFips = null; }
+      const fullNameByNorm = new Map();
       precincts.features = (precincts.features || []).map(feature => {
         const original = feature.properties || {};
         const rawFips = (original.COUNTYFP20 || original.COUNTYFP || '').toString().replace(/[^0-9]/g, '').slice(-3).padStart(3, '0');
@@ -21002,18 +21395,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME20 || original.NAME || countyFromFips || '').toString().trim();
         const countyNorm = countyRaw.replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
         const precRaw = (original.prec_id || original.PREC_ID || original.VTDST20 || original.VTDST10 || original.VTDST00 || '').toString().trim();
+        const fullNameRaw = (original.enr_desc || original.ENR_DESC || original.precinct_full_name || original.precinct_name || '').toString();
+        const fullName = fullNameRaw.replace(/\s+/g, ' ').trim();
         const precinctRaw = countyRaw && precRaw ? `${countyRaw} - ${precRaw}` : countyRaw;
         const precinctNorm = (precinctRaw || '').replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+        if (precinctNorm && fullName) fullNameByNorm.set(precinctNorm, fullName);
         feature.properties = {
           county_nam: countyRaw,
           county_norm: countyNorm,
           precinct_name: precinctRaw,
           precinct_norm: precinctNorm,
           prec_id: precRaw,
+          precinct_full_name: fullName,
           id: original.id || original.objectid || null
         };
         return feature;
       });
+      precinctFullNameByNormCache = fullNameByNorm.size ? fullNameByNorm : precinctFullNameByNormCache;
       try {
         const s = new Set();
         (precincts.features || []).forEach(f => {
@@ -21026,7 +21424,10 @@ document.addEventListener('DOMContentLoaded', function() {
           precinctCentroidsData.features = (precinctCentroidsData.features || []).map(f => {
             const p = f.properties || {};
             const n = (p.precinct_norm || '').toString().trim().toUpperCase();
-            f.properties = { ...p, has_polygon: !!(n && precinctPolygonNormSet && precinctPolygonNormSet.has(n)) };
+            const full = (!p.precinct_full_name && precinctFullNameByNormCache && n && precinctFullNameByNormCache.has(n))
+              ? String(precinctFullNameByNormCache.get(n) || '').toString().replace(/\s+/g, ' ').trim()
+              : (p.precinct_full_name || p.precinct_desc || '').toString().replace(/\s+/g, ' ').trim();
+            f.properties = { ...p, precinct_full_name: full || (p.precinct_full_name || ''), has_polygon: !!(n && precinctPolygonNormSet && precinctPolygonNormSet.has(n)) };
             return f;
           });
           const src = map.getSource('precinct-centroids');
@@ -21128,7 +21529,9 @@ document.addEventListener('DOMContentLoaded', function() {
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
             if (isTouchInteractionMode()) setTooltipPinned(true);
-            setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${props.prec_id || ''}`.trim());
+            const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
+            const label = full || (props.prec_id || '').toString().trim();
+            setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${label}`.trim());
           }
         } catch (_) {}
       });
@@ -21151,11 +21554,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 .replace(/\s+/g, ' ')
                 .trim()
                 .toUpperCase();
+              const full = (p.precinct_full_name || p.precinct_desc || p.enr_desc || p.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
               f.properties = {
                 ...p,
                 county_nam: county || p.county_nam || '',
                 prec_id: prec || p.prec_id || '',
                 precinct_norm: norm,
+                precinct_full_name: full || (p.precinct_full_name || ''),
                 has_polygon: !!(norm && precinctPolygonNormSet && precinctPolygonNormSet.has(norm))
               };
               return f;
@@ -21414,7 +21819,9 @@ document.addEventListener('DOMContentLoaded', function() {
             renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
             if (props.county_nam && props.prec_id) {
               showCountyDetails(props.county_nam);
-              setStatus(`Selected precinct highlighted in yellow: ${props.county_nam} ${props.prec_id}`);
+              const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
+              const label = full || (props.prec_id || '').toString().trim();
+              setStatus(`Selected precinct highlighted in yellow: ${props.county_nam} ${label}`);
             }
             if (isTouchInteractionMode()) setTooltipPinned(true);
           } catch (_) {}
@@ -22592,13 +22999,16 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.setAttribute('data-pinned', tooltipPinned ? '1' : '0');
     }
 
-    function buildTooltipShell(title, innerHtml) {
+    function buildTooltipShell(title, innerHtml, options = {}) {
+      const pinned = options && options.pinned === true;
       return `
-        <div class="tooltip-head">
+        <div class="tooltip-head ${pinned ? 'is-pinned' : 'is-compact'}">
           <div class="tooltip-title">${title}</div>
-          <div class="tooltip-actions">
-            <button class="tooltip-btn" id="tooltip-close-btn" type="button">Close</button>
-          </div>
+          ${pinned ? `
+            <div class="tooltip-actions">
+              <button class="tooltip-btn" id="tooltip-close-btn" type="button">Close</button>
+            </div>
+          `.trim() : ''}
         </div>
         <div class="tooltip-trends">${innerHtml}</div>
       `;

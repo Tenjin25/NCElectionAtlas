@@ -1494,7 +1494,8 @@ def main() -> None:
                     dem_candidate=dem_candidate,
                     rep_candidate=rep_candidate,
                 )
-                contest_file.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+                # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
+                contest_file.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
                 contests_written += 1
 
             if payload is None:
@@ -1655,7 +1656,8 @@ def main() -> None:
             ),
         }
         for name, payload in payloads.items():
-            (out_dir / name).write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+            # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
+            (out_dir / name).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
             written += 1
 
         if args.write_contests:
@@ -1671,7 +1673,8 @@ def main() -> None:
                     dem_candidate=dem_candidate,
                     rep_candidate=rep_candidate,
                 )
-                contest_file.write_text(json.dumps(contest_payload, separators=(",", ":")), encoding="utf-8")
+                # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
+                contest_file.write_text(json.dumps(contest_payload, indent=2) + "\n", encoding="utf-8")
                 update_contests_manifest(
                     args.contests_manifest,
                     [

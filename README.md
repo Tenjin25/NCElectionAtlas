@@ -80,7 +80,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
 	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target.
+- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer (measured as `2022 Senate margin - closest prior presidential margin`) on top of the presidential baseline with light guardrails, so counties can realistically ticket-split instead of behaving like a presidential clone. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -101,7 +101,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March 2026)
 
-**Last updated:** April 3, 2026
+**Last updated:** April 8, 2026
 
 ### US Senate Model Correctness + Contest Controls (April 3, 2026)
 
@@ -109,6 +109,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Hardened county normalization/join logic by moving the blend step to county aggregates (prevents climate-only buckets from skewing or flipping county totals).
 - Improved modeled turnout redistribution so when the climate slice contains extra buckets (for example, `COUNTY - BOE`), those votes are redistributed into the modeled county total while keeping the blended county margin consistent.
 - Promoted the contest selector into the primary controls, added a polished loading indicator on contest switches, and reduced tool clutter via clearer grouping (no features removed).
+
+### Senate Deviation Calibration + Precinct Labeling (April 8, 2026)
+
+- Upgraded `US Senate Model (2026)` so it is not a simple presidential clone: it now computes a county-level `senateDeviation = senateMargin - presidentialBaselineMargin` (using the closest prior presidential result) and applies that deviation on top of the model’s presidential baseline year with light smoothing/guardrails.
+- Applied the same deviation calibration logic to modeled **district** slices so district view behaves consistently with county view.
+- Precinct hover/selection now prefers full precinct names (when available in precinct geometry) instead of only short codes.
+- Rebuilt 2024-on-2024-lines district slices with an SBE-precinct-based block→precinct crosswalk to reduce misallocation in edge-case counties (notably Gaston HD-108/109/110).
 
 ### Census Check + Legend Clarification (March 27, 2026)
 
@@ -565,6 +572,8 @@ py scripts/build_district_contests_from_batch_shatter.py `
 ```
 
 This produces three district slice files (congressional, state_house, state_senate) and updates the manifest.
+
+**Note (2024 lines accuracy):** If you see obvious district misallocation in modern precinct-coded counties (for example, Gaston precinct numeric codes vs `A`-suffix geometry codes), rebuild using a block→precinct crosswalk derived from the official SBE precinct geometry for the same era. This improves precinct-key match coverage and reduces unmatched-vote smearing.
 
 ### Rebuilding Historical District Slices on 2024 Lines (2000-2022)
 
