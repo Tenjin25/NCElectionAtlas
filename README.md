@@ -125,8 +125,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Upgraded `US Senate Model (2026)` so it is not a simple presidential clone: it now computes a county-level `senateDeviation = senateMargin - presidentialBaselineMargin` (using the closest prior presidential result) and applies that deviation on top of the model’s presidential baseline year with light smoothing/guardrails.
 - Applied the same deviation calibration logic to modeled **district** slices so district view behaves consistently with county view.
-- Precinct hover/selection now prefers full precinct names (when available in precinct geometry) instead of only short codes.
-- Rebuilt 2024-on-2024-lines district slices with an SBE-precinct-based block→precinct crosswalk to reduce misallocation in edge-case counties (notably Gaston HD-108/109/110).
+- Precinct hover/selection now prefers full precinct names (when available in precinct geometry or `data/precinct_friendly_names.json`) instead of only short codes.
+- Rebuilt 2024-on-2024-lines district slices (including midterm years) with an SBE-precinct-based block→precinct crosswalk to reduce misallocation in edge-case counties (notably Gaston HD-108/109/110).
+
+### CVAP Aggregate Robustness (April 9, 2026)
+
+- Hardened CVAP aggregate parsing so the atlas accepts both legacy `CVAP_TOT24` and newer `cvap_total_24` column naming without breaking any UI blocks.
 
 ### Census Check + Legend Clarification (March 27, 2026)
 

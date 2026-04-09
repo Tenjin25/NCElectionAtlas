@@ -23,9 +23,9 @@ function isCodeLikeToken(raw) {
   if (!s) return true;
   const compact = s.replace(/[^A-Z0-9]/g, '');
   if (!compact) return true;
-  // Treat anything with digits as code-like (EH1, 00CRDM, 0001, etc).
+  // Alias keys that include digits are almost always codes, not names (EH1, 0001, 00CRDM).
   if (/[0-9]/.test(compact)) return true;
-  // Short all-letter tokens are usually precinct codes (CRDM, BCK, etc) not names.
+  // Short all-letter tokens are usually precinct codes (CRDM, BCK), not display names.
   if (compact.length <= 4 && /^[A-Z]+$/.test(compact)) return true;
   return false;
 }
@@ -67,7 +67,11 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
   if (restCompact === codeCompact) return '';
   if (restCompact.endsWith(codeCompact) && restCompact.length <= codeCompact.length + 2) return '';
 
-  if (isCodeLikeToken(rest)) return '';
+  // Avoid returning another compact code token. Allow digits/spaces in real names (e.g. "LEXINGTON 1 22").
+  if (!/\s/.test(rest)) {
+    const compactOnly = rest.replace(/[^A-Z0-9]/g, '');
+    if (compactOnly.length <= 6 && /^[A-Z0-9]+$/.test(compactOnly)) return '';
+  }
   const cleaned = normalizeAliasNameCandidate(rest);
   if (!cleaned) return '';
   return cleaned;

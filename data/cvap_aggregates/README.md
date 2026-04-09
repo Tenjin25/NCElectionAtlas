@@ -7,6 +7,10 @@ This folder is intended for outputs generated from Redistricting Data Hub’s **
 
 The script aggregates block-level CVAP (and citizen estimates) onto atlas geographies using the `data/crosswalks/block20_to_*.csv` crosswalks.
 
+Notes:
+- The generator accepts either the original RDH headers (`GEOID20`, `CVAP_TOT24`, etc.) or the optional snake_case headers produced by `scripts/slice_cvap_csv.*` (`block_geoid20`, `cvap_total_24`, etc.).
+- `--fields` can be specified in either style; outputs use exactly the names you pass in `--fields`.
+
 ## Build
 
 From the repo root:

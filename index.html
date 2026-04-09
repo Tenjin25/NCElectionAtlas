@@ -9918,6 +9918,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const f = map.queryRenderedFeatures(e.point, { layers });
       if (f && f.length) return;
       closeHoverUI({ force: true });
+      try { clearSelectedPrecinctNorm(); } catch (_) {}
     });
     map.on('mousemove', (e) => {
       if (isTouchInteractionMode()) return;
@@ -15535,6 +15536,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return CONFIG?.paths?.cvap_aggregates || {};
     }
 
+    function cvapTotalFromAggRow(r) {
+      // Backward/forward compatibility: older aggregates use CVAP_TOT24; renamed outputs may use cvap_total_24.
+      const raw = r?.CVAP_TOT24 ?? r?.cvap_total_24;
+      return Number(raw);
+    }
+
     function coerceDistrictKey(raw) {
       const n = Number(raw);
       if (Number.isFinite(n)) return String(n);
@@ -15555,7 +15562,7 @@ document.addEventListener('DOMContentLoaded', function() {
           (rows || []).forEach(r => {
             const name = (r?.county_name || r?.county || '').toString().trim();
             const norm = normalizeCountyToken(name);
-            const cvap = Number(r?.CVAP_TOT24);
+            const cvap = cvapTotalFromAggRow(r);
             if (!norm || !Number.isFinite(cvap)) return;
             byNorm.set(norm, cvap);
           });
@@ -15583,7 +15590,7 @@ document.addEventListener('DOMContentLoaded', function() {
           (rows || []).forEach(r => {
             const precId = (r?.precinct_id || '').toString().trim();
             const norm = normalizeContestPrecinctNorm(precId);
-            const cvap = Number(r?.CVAP_TOT24);
+            const cvap = cvapTotalFromAggRow(r);
             if (!norm || !Number.isFinite(cvap)) return;
             byNorm.set(norm, cvap);
           });
@@ -15623,7 +15630,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const byDistrict = new Map();
           (rows || []).forEach(r => {
             const dKey = coerceDistrictKey(r?.district);
-            const cvap = Number(r?.CVAP_TOT24);
+            const cvap = cvapTotalFromAggRow(r);
             if (!dKey || !Number.isFinite(cvap)) return;
             byDistrict.set(dKey, cvap);
           });
@@ -24596,6 +24603,7 @@ document.addEventListener('DOMContentLoaded', function() {
           try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
           clearHoverOutline();
           clearVoteCounterHoverState();
+          try { clearSelectedPrecinctNorm(); } catch (_) {}
         };
       }
       const copyBtn = document.getElementById('tooltip-copy-btn');

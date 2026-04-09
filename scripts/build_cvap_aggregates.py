@@ -33,12 +33,51 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 
+CVAP_CODE_TO_SNAKE: Dict[str, str] = {
+    "GEOID20": "block_geoid20",
+    # Citizen estimate (C_*)
+    "C_TOT24": "citizen_total_24",
+    "C_HSP24": "citizen_hispanic_24",
+    "C_NHS24": "citizen_non_hispanic_24",
+    "C_WHT24": "citizen_white_alone_24",
+    "C_BLA24": "citizen_black_alone_24",
+    "C_AMI24": "citizen_aian_alone_24",
+    "C_ASI24": "citizen_asian_alone_24",
+    "C_NHP24": "citizen_nhpi_alone_24",
+    "C_2OM24": "citizen_two_or_more_remainder_24",
+    "C_BLW24": "citizen_black_white_24",
+    "C_AIW24": "citizen_aian_white_24",
+    "C_ASW24": "citizen_asian_white_24",
+    "C_AIB24": "citizen_aian_black_24",
+    "C_AIA24": "citizen_aian_alone_or_combo_24",
+    "C_ASN24": "citizen_asian_alone_or_combo_24",
+    "C_BLK24": "citizen_black_alone_or_combo_24",
+    # CVAP estimate (CVAP_*)
+    "CVAP_TOT24": "cvap_total_24",
+    "CVAP_HSP24": "cvap_hispanic_24",
+    "CVAP_NHS24": "cvap_non_hispanic_24",
+    "CVAP_WHT24": "cvap_white_alone_24",
+    "CVAP_BLA24": "cvap_black_alone_24",
+    "CVAP_AMI24": "cvap_aian_alone_24",
+    "CVAP_ASI24": "cvap_asian_alone_24",
+    "CVAP_NHP24": "cvap_nhpi_alone_24",
+    "CVAP_2OM24": "cvap_two_or_more_remainder_24",
+    "CVAP_BLW24": "cvap_black_white_24",
+    "CVAP_AIW24": "cvap_aian_white_24",
+    "CVAP_ASW24": "cvap_asian_white_24",
+    "CVAP_AIB24": "cvap_aian_black_24",
+    "CVAP_AIA24": "cvap_aian_alone_or_combo_24",
+    "CVAP_ASN24": "cvap_asian_alone_or_combo_24",
+    "CVAP_BLK24": "cvap_black_alone_or_combo_24",
+}
+CVAP_SNAKE_TO_CODE: Dict[str, str] = {v: k for k, v in CVAP_CODE_TO_SNAKE.items()}
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument(
         "--cvap",
         default="data/nc_cvap_2024_2020_b_csv/nc_cvap_2024_2020_b.csv",
-        help="Path to RDH block-level CVAP CSV keyed by GEOID20.",
+        help="Path to RDH block-level CVAP CSV keyed by GEOID20 (or block_geoid20).",
     )
     p.add_argument(
         "--outdir",
@@ -102,19 +141,66 @@ def _to_int(raw: object, default: int = 0) -> int:
 
 
 def read_cvap_header(cvap_path: Path) -> List[str]:
-    with cvap_path.open("r", newline="", encoding="utf-8", errors="ignore") as f:
+    # utf-8-sig strips a BOM if present (common from Excel/PowerShell CSV writers).
+    with cvap_path.open("r", newline="", encoding="utf-8-sig", errors="ignore") as f:
         r = csv.reader(f)
         header = next(r, [])
     return [h.strip() for h in header if h is not None]
 
 
+def detect_geoid_column(header: Sequence[str]) -> Optional[str]:
+    if "GEOID20" in header:
+        return "GEOID20"
+    if "block_geoid20" in header:
+        return "block_geoid20"
+    return None
+
+
 def default_cvap_fields(header: Sequence[str]) -> List[str]:
-    fields = [h for h in header if h.startswith("C_") or h.startswith("CVAP_")]
-    return fields
+    if any(h.startswith("C_") or h.startswith("CVAP_") for h in header):
+        return [h for h in header if h.startswith("C_") or h.startswith("CVAP_")]
+    return [h for h in header if h.startswith("citizen_") or h.startswith("cvap_")]
+
+
+def resolve_requested_fields(
+    header: Sequence[str], requested: Sequence[str]
+) -> Tuple[List[str], List[str], List[str]]:
+    """
+    Resolve requested field names to input-column names present in the CSV.
+
+    Returns (input_columns, output_names, missing_requested).
+    Output names are exactly the requested names (so callers can choose code or snake).
+    """
+    input_cols: List[str] = []
+    output_names: List[str] = []
+    missing: List[str] = []
+
+    header_set = set(header)
+    for f in requested:
+        if f in header_set:
+            input_cols.append(f)
+            output_names.append(f)
+            continue
+
+        snake = CVAP_CODE_TO_SNAKE.get(f)
+        if snake and snake in header_set:
+            input_cols.append(snake)
+            output_names.append(f)
+            continue
+
+        code = CVAP_SNAKE_TO_CODE.get(f)
+        if code and code in header_set:
+            input_cols.append(code)
+            output_names.append(f)
+            continue
+
+        missing.append(f)
+
+    return input_cols, output_names, missing
 
 
 def iter_cvap_rows(
-    cvap_path: Path, usecols: Sequence[str], chunksize: int
+    cvap_path: Path, geoid_column: str, usecols: Sequence[str], chunksize: int
 ) -> Iterable[Tuple[str, List[int]]]:
     """
     Yield (block_geoid20, values[]) for selected fields in the CVAP CSV.
@@ -126,25 +212,26 @@ def iter_cvap_rows(
         pd = None
 
     if pd is None:
-        with cvap_path.open("r", newline="", encoding="utf-8", errors="ignore") as f:
+        with cvap_path.open("r", newline="", encoding="utf-8-sig", errors="ignore") as f:
             r = csv.DictReader(f)
             for row in r:
-                geoid = (row.get("GEOID20") or "").strip()
+                geoid = (row.get(geoid_column) or "").strip()
                 if not geoid:
                     continue
                 vals = [_to_int(row.get(col)) for col in usecols]
                 yield geoid, vals
         return
 
-    usecols_full = ["GEOID20", *usecols]
+    usecols_full = [geoid_column, *usecols]
     for chunk in pd.read_csv(
         cvap_path,
         usecols=usecols_full,
         dtype={c: "string" for c in usecols_full},
+        encoding="utf-8-sig",
         chunksize=chunksize,
         low_memory=True,
     ):
-        geoids = chunk["GEOID20"].astype("string").fillna("")
+        geoids = chunk[geoid_column].astype("string").fillna("")
         col_lists = []
         for col in usecols:
             col_lists.append(chunk[col].astype("string").fillna("0"))
@@ -158,10 +245,12 @@ def iter_cvap_rows(
             yield geoid, vals
 
 
-def load_block_cvap(cvap_path: Path, fields: Sequence[str], chunksize: int) -> Dict[str, List[int]]:
+def load_block_cvap(
+    cvap_path: Path, geoid_column: str, fields: Sequence[str], chunksize: int
+) -> Dict[str, List[int]]:
     block_map: Dict[str, List[int]] = {}
     n = 0
-    for geoid, vals in iter_cvap_rows(cvap_path, fields, chunksize):
+    for geoid, vals in iter_cvap_rows(cvap_path, geoid_column, fields, chunksize):
         block_map[geoid] = vals
         n += 1
         if n % 250_000 == 0:
@@ -183,6 +272,7 @@ def _county_key_from_block_geoid20(geoid20: str) -> Optional[Tuple[str, str, str
 
 def load_cvap_data(
     cvap_path: Path,
+    geoid_column: str,
     fields: Sequence[str],
     chunksize: int,
     *,
@@ -196,7 +286,7 @@ def load_cvap_data(
     block_map: Dict[str, List[int]] = {} if store_blocks else {}
     county_sums: Dict[str, List[int]] = {}
     n = 0
-    for geoid, vals in iter_cvap_rows(cvap_path, fields, chunksize):
+    for geoid, vals in iter_cvap_rows(cvap_path, geoid_column, fields, chunksize):
         if store_blocks:
             block_map[geoid] = vals
         ck = _county_key_from_block_geoid20(geoid)
@@ -500,27 +590,31 @@ def main() -> int:
         raise FileNotFoundError(f"CVAP CSV not found: {cvap_path}")
 
     header = read_cvap_header(cvap_path)
-    if not header or "GEOID20" not in header:
-        raise RuntimeError(f"Unexpected CVAP header (missing GEOID20): {cvap_path}")
+    geoid_column = detect_geoid_column(header)
+    if not header or not geoid_column:
+        raise RuntimeError(
+            f"Unexpected CVAP header (missing GEOID20 or block_geoid20): {cvap_path}"
+        )
 
     if args.fields.strip():
-        fields = [f.strip() for f in args.fields.split(",") if f.strip()]
+        requested = [f.strip() for f in args.fields.split(",") if f.strip()]
+        fields_in, fields_out, missing = resolve_requested_fields(header, requested)
+        if missing:
+            raise RuntimeError(f"Requested fields not found in CVAP CSV: {missing}")
     else:
-        fields = default_cvap_fields(header)
-
-    missing = [f for f in fields if f not in header]
-    if missing:
-        raise RuntimeError(f"Requested fields not found in CVAP CSV: {missing}")
+        fields_out = default_cvap_fields(header)
+        fields_in = list(fields_out)
 
     print(f"CVAP input: {cvap_path}")
-    print(f"Aggregating fields: {len(fields)}")
+    print(f"GEOID column: {geoid_column}")
+    print(f"Aggregating fields: {len(fields_out)}")
     targets = parse_targets(args.targets)
     print(f"Targets: {', '.join(targets)}")
 
     need_blocks = any(t != "county" for t in targets)
 
     block_cvap, county_sums = load_cvap_data(
-        cvap_path, fields, args.chunksize, store_blocks=need_blocks
+        cvap_path, geoid_column, fields_in, args.chunksize, store_blocks=need_blocks
     )
 
     if "county" in targets:
@@ -529,7 +623,7 @@ def main() -> int:
         out_path = outdir / "county_2020__cvap24.csv"
         write_county_aggregate(
             out_path=out_path,
-            fields=fields,
+            fields=fields_out,
             county_sums=county_sums,
             county_names=county_names,
         )
@@ -551,7 +645,7 @@ def main() -> int:
         out_path = outdir / f"{spec.name}__cvap24.csv"
         print(f"\nCrosswalk: {spec.path}")
         header_out, rows_out, stats = aggregate_to_crosswalk(
-            block_cvap=block_cvap, fields=fields, spec=spec
+            block_cvap=block_cvap, fields=fields_out, spec=spec
         )
         write_csv(out_path, header_out, rows_out)
         print(
