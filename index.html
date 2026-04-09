@@ -9582,7 +9582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-04-08-2';
-    const APP_BUILD_ID = '2026-04-09-3';
+    const APP_BUILD_ID = '2026-04-09-5';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -12448,22 +12448,34 @@ document.addEventListener('DOMContentLoaded', function() {
       const pop = countyPopulationEstimatesByNorm?.get(norm) || null;
       const popDeltaRaw = Number(pop?.change2020To2025);
       const popPctRaw = Number(pop?.changePct2020To2025);
+      const popDelta2024Raw = (Number.isFinite(Number(pop?.population2024)) && Number.isFinite(Number(pop?.population2020)))
+        ? (Number(pop.population2024) - Number(pop.population2020))
+        : NaN;
+      const popPct2024Raw = (Number(pop?.population2020) > 0 && Number.isFinite(popDelta2024Raw))
+        ? ((popDelta2024Raw / Number(pop.population2020)) * 100.0)
+        : NaN;
       const popDelta2425Raw = Number(pop?.change2024To2025);
       const popPct2425Raw = Number(pop?.changePct2024To2025);
+
       if (!countyVoteDeltaCache2020to2024.has(ct) && !countyVoteDeltaInflight2020to2024.has(ct)) {
         try { scheduleCountyVoteDeltaCache2020to2024(ct); } catch (_) {}
       }
+
       const vote = getCountyVoteDeltas2020to2024(ct, norm);
       if (!vote) {
         try { scheduleHoverRefreshWhenCountyVoteDeltaReady(ct); } catch (_) {}
       }
+
       const hasPopDelta = !!pop && Number.isFinite(popDeltaRaw);
       if (!hasPopDelta) return '';
 
       const popDelta = formatSignedCompactDelta(popDeltaRaw);
       const popPct = Number.isFinite(popPctRaw) ? formatSignedPctDelta(popPctRaw, 1) : '';
+      const popDelta2024 = Number.isFinite(popDelta2024Raw) ? formatSignedCompactDelta(popDelta2024Raw) : '';
+      const popPct2024 = Number.isFinite(popPct2024Raw) ? formatSignedPctDelta(popPct2024Raw, 1) : '';
       const popDelta2425 = Number.isFinite(popDelta2425Raw) ? formatSignedCompactDelta(popDelta2425Raw) : '';
       const popPct2425 = Number.isFinite(popPct2425Raw) ? formatSignedPctDelta(popPct2425Raw, 1) : '';
+
       const hasVote = !!vote && [vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)));
       const repDelta = hasVote ? formatSignedCompactDelta(vote.repDelta) : '';
       const demDelta = hasVote ? formatSignedCompactDelta(vote.demDelta) : '';
@@ -12472,6 +12484,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isDesktopTooltipMode()) {
         const parts = [
           `Pop ${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}`,
+          popDelta2024 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">20→24 ${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span>` : '',
           popDelta2425 ? `<span style="color:rgba(226,232,240,0.92);font-weight:750;">24→25 ${escapeHtml(popDelta2425)}</span>` : '',
           hasVote ? `<span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span>` : '',
           hasVote ? `<span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span>` : '',
@@ -12487,6 +12500,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return `
         <div class="tooltip-delta" aria-label="County delta mechanics">
           <div class="tooltip-delta-line">Population (20→25): <span style="font-weight:800;">${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}</span></div>
+          ${popDelta2024 ? `<div class="tooltip-delta-line">Population (20→24): <span style="font-weight:800;">${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span></div>` : ''}
           ${popDelta2425 ? `<div class="tooltip-delta-line">Population (24→25): <span style="font-weight:800;">${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}</span></div>` : ''}
           ${hasVote ? `<div class="tooltip-delta-line">Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span></div>` : ''}
         </div>
