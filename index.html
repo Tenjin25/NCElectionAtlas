@@ -8491,6 +8491,77 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       scrollbar-gutter: stable both-edges !important;
     }
   }
+
+  /* Premium refinement pass (keep layout + features intact). */
+  @media (min-width: 769px) {
+    .main-controls,
+    .legend,
+    .vote-counter,
+    #status-panel {
+      box-shadow: 0 16px 36px rgba(17, 32, 50, 0.18);
+      border-color: rgba(73, 96, 127, 0.24);
+    }
+
+    .controls-header {
+      margin-bottom: 12px;
+    }
+
+    .controls-content {
+      gap: 12px;
+    }
+
+    .main-controls .control-group {
+      padding: 12px 13px;
+      border-radius: 16px;
+      border-color: rgba(96, 123, 157, 0.18);
+    }
+
+    .main-controls .control-group label {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(51, 65, 85, 0.86);
+      margin-bottom: 8px;
+    }
+
+    .main-controls input[type="search"],
+    .main-controls input[type="text"],
+    .main-controls select {
+      border-radius: 12px;
+      border-color: rgba(97, 126, 161, 0.40) !important;
+    }
+
+    .main-controls input[type="search"]:focus,
+    .main-controls input[type="text"]:focus,
+    .main-controls select:focus {
+      box-shadow: 0 0 0 3px rgba(70, 120, 186, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .view-toggle-btn,
+    .viz-mode-btn,
+    .region-jump-btn,
+    .mode-toggle,
+    .tool-chip-btn {
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
+    }
+
+    .view-toggle-btn:focus-visible,
+    .viz-mode-btn:focus-visible,
+    .region-jump-btn:focus-visible,
+    .mode-toggle:focus-visible,
+    .tool-chip-btn:focus-visible,
+    .minimize-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(70, 120, 186, 0.18);
+    }
+
+    .vote-counter,
+    .hover-tooltip {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+  }
     </style>
 </head>
 <body>
@@ -23027,6 +23098,82 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
+    const DISTRICT_LINE_STYLE = (() => {
+      function zoomInterpLinear(pairs) {
+        const expr = ['interpolate', ['linear'], ['zoom']];
+        (pairs || []).forEach(([z, v]) => {
+          expr.push(Number(z), Number(v));
+        });
+        return expr;
+      }
+
+      // SCMap-style progressive reveal: faint + slightly blurred statewide, readable mid-zoom, crisp and confident locally.
+      // Use multi-stop interpolation to avoid "popping" and keep performance high.
+      const baseStops = [4.0, 6.0, 7.5, 9.0, 11.0, 13.5];
+
+      function stops(values) {
+        return baseStops.map((z, i) => [z, values[i]]);
+      }
+
+      return {
+        congressional: {
+          base: {
+            'line-color': '#334155',
+            'line-opacity': zoomInterpLinear(stops([0.08, 0.14, 0.24, 0.42, 0.68, 0.86])),
+            'line-width': zoomInterpLinear(stops([0.62, 0.80, 1.00, 1.28, 1.62, 1.92])),
+            'line-blur': zoomInterpLinear(stops([0.65, 0.52, 0.35, 0.15, 0.0, 0.0]))
+          },
+          hover: {
+            'line-color': 'rgba(15, 23, 42, 0.78)',
+            'line-opacity': 0.98,
+            'line-width': zoomInterpLinear(stops([2.0, 2.5, 3.0, 3.6, 4.4, 5.2])),
+            'line-blur': 0.0
+          }
+        },
+        state_senate: {
+          base: {
+            'line-color': '#475569',
+            'line-opacity': zoomInterpLinear(stops([0.06, 0.10, 0.18, 0.32, 0.56, 0.78])),
+            'line-width': zoomInterpLinear(stops([0.50, 0.66, 0.82, 1.05, 1.32, 1.56])),
+            'line-blur': zoomInterpLinear(stops([0.75, 0.60, 0.40, 0.18, 0.0, 0.0]))
+          },
+          hover: {
+            'line-color': 'rgba(15, 23, 42, 0.74)',
+            'line-opacity': 0.98,
+            'line-width': zoomInterpLinear(stops([1.8, 2.2, 2.6, 3.1, 3.8, 4.5])),
+            'line-blur': 0.0
+          }
+        },
+        state_house: {
+          base: {
+            'line-color': '#64748b',
+            'line-opacity': zoomInterpLinear(stops([0.04, 0.07, 0.13, 0.24, 0.48, 0.70])),
+            'line-width': zoomInterpLinear(stops([0.40, 0.52, 0.66, 0.84, 1.08, 1.28])),
+            'line-blur': zoomInterpLinear(stops([0.85, 0.70, 0.48, 0.22, 0.0, 0.0]))
+          },
+          hover: {
+            'line-color': 'rgba(15, 23, 42, 0.70)',
+            'line-opacity': 0.98,
+            'line-width': zoomInterpLinear(stops([1.6, 2.0, 2.3, 2.8, 3.4, 4.0])),
+            'line-blur': 0.0
+          }
+        }
+      };
+    })();
+
+    function applyDistrictStrokeStyle(layerId, scope, { hover = false } = {}) {
+      if (!map || !layerId || !map.getLayer(layerId)) return;
+      const key = (scope || '').toString();
+      const spec = DISTRICT_LINE_STYLE[key];
+      if (!spec) return;
+      const paint = hover ? spec.hover : spec.base;
+      try { map.setLayoutProperty(layerId, 'line-join', 'round'); } catch (_) {}
+      try { map.setLayoutProperty(layerId, 'line-cap', 'round'); } catch (_) {}
+      Object.keys(paint).forEach(prop => {
+        try { map.setPaintProperty(layerId, prop, paint[prop]); } catch (_) {}
+      });
+    }
+
     function addDistrictLayers() {
       if (!map.getSource('districts')) return;
       if (!map.getLayer('district-fill')) {
@@ -23043,18 +23190,19 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'line',
           source: 'districts',
           beforeId: baseSymbolLayerId,
-          paint: { 'line-color': '#1f2937', 'line-width': 2 }
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.congressional.base
         });
         addLayerWithOptionalSourceLayer({
           id: 'district-stroke-hover',
           type: 'line',
           source: 'districts',
           beforeId: baseSymbolLayerId,
-          layout: { visibility: 'none' },
+          layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
           filter: ['==', ['get', '_'], '__'],
-          paint: { 'line-color': 'rgba(15, 23, 42, 0.55)', 'line-width': 4, 'line-opacity': 0.95 }
+          paint: DISTRICT_LINE_STYLE.congressional.hover
         });
-        
+         
         // Add click handler for districts with full trends popup
         map.on('click', 'district-fill', async (e) => {
           if (e.features && e.features[0] && e.features[0].properties) {
@@ -23153,16 +23301,17 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'line',
           source: 'state-house',
           beforeId: baseSymbolLayerId,
-          paint: { 'line-color': '#374151', 'line-width': 1 }
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.state_house.base
         });
         addLayerWithOptionalSourceLayer({
           id: 'state-house-stroke-hover',
           type: 'line',
           source: 'state-house',
           beforeId: baseSymbolLayerId,
-          layout: { visibility: 'none' },
+          layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
           filter: ['==', ['get', '_'], '__'],
-          paint: { 'line-color': 'rgba(15, 23, 42, 0.55)', 'line-width': 3, 'line-opacity': 0.95 }
+          paint: DISTRICT_LINE_STYLE.state_house.hover
         });
         
         // Add click handler for state house districts with full trends popup
@@ -23261,16 +23410,17 @@ document.addEventListener('DOMContentLoaded', function() {
           type: 'line',
           source: 'state-senate',
           beforeId: baseSymbolLayerId,
-          paint: { 'line-color': '#4b5563', 'line-width': 1 }
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: DISTRICT_LINE_STYLE.state_senate.base
         });
         addLayerWithOptionalSourceLayer({
           id: 'state-senate-stroke-hover',
           type: 'line',
           source: 'state-senate',
           beforeId: baseSymbolLayerId,
-          layout: { visibility: 'none' },
+          layout: { visibility: 'none', 'line-join': 'round', 'line-cap': 'round' },
           filter: ['==', ['get', '_'], '__'],
-          paint: { 'line-color': 'rgba(15, 23, 42, 0.55)', 'line-width': 3, 'line-opacity': 0.95 }
+          paint: DISTRICT_LINE_STYLE.state_senate.hover
         });
         
         // Add click handler for state senate districts with full trends popup
@@ -26551,23 +26701,17 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           applyLayerOpacityTuning();
           // Keep stroke styling consistent across modes (no flip outlines outside flip mode).
-          const strokeLayerName = currentView === 'districts'
-            ? 'district-stroke'
-            : (currentView === 'state_house' ? 'state-house-stroke' : 'state-senate-stroke');
-          if (map.getLayer(strokeLayerName)) {
-            try {
-              if (strokeLayerName === 'district-stroke') {
-                map.setPaintProperty(strokeLayerName, 'line-color', '#1f2937');
-                map.setPaintProperty(strokeLayerName, 'line-width', 2);
-              } else if (strokeLayerName === 'state-house-stroke') {
-                map.setPaintProperty(strokeLayerName, 'line-color', '#374151');
-                map.setPaintProperty(strokeLayerName, 'line-width', 1);
-              } else {
-                map.setPaintProperty(strokeLayerName, 'line-color', '#4b5563');
-                map.setPaintProperty(strokeLayerName, 'line-width', 1);
-              }
-            } catch (_) {}
-          }
+           const strokeLayerName = currentView === 'districts'
+             ? 'district-stroke'
+             : (currentView === 'state_house' ? 'state-house-stroke' : 'state-senate-stroke');
+           if (map.getLayer(strokeLayerName)) {
+             try {
+                const scopeKey = strokeLayerName === 'district-stroke'
+                  ? 'congressional'
+                  : (strokeLayerName === 'state-house-stroke' ? 'state_house' : 'state_senate');
+                applyDistrictStrokeStyle(strokeLayerName, scopeKey, { hover: false });
+              } catch (_) {}
+            }
 
           const demPct = totalVotes ? (totalDem / totalVotes) * 100 : 0;
           const repPct = totalVotes ? (totalRep / totalVotes) * 100 : 0;
