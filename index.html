@@ -9572,6 +9572,16 @@ document.addEventListener('DOMContentLoaded', function() {
         county_demographics: withBase('./data/county_demographics_2020_dp1.json'),
         county_population_estimates: withBase('./data/CO-EST2025-POP-37-clean.csv'),
         precinct_demographics: withBase('./data/precinct_demographics_2020_vap.csv'),
+        cvap_aggregates: {
+          county_2020: withBase('./data/cvap_aggregates/county_2020__cvap24.csv'),
+          precinct_2020: withBase('./data/cvap_aggregates/precinct_2020__cvap24.csv'),
+          cd118_2022: withBase('./data/cvap_aggregates/cd118_2022_lines__cvap24.csv'),
+          cd119_2024: withBase('./data/cvap_aggregates/cd119_2024_lines__cvap24.csv'),
+          state_house_2022: withBase('./data/cvap_aggregates/state_house_2022_lines__cvap24.csv'),
+          state_house_2024: withBase('./data/cvap_aggregates/state_house_2024_lines__cvap24.csv'),
+          state_senate_2022: withBase('./data/cvap_aggregates/state_senate_2022_lines__cvap24.csv'),
+          state_senate_2024: withBase('./data/cvap_aggregates/state_senate_2024_lines__cvap24.csv')
+        },
         election: withBase('./data/nc_elections_aggregated.json'),
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
         district_contests_dir: withBase('./data/district_contests'),
@@ -9941,6 +9951,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let countyPopulationEstimateStatewide = null; // Statewide NC summary from the same file
     let precinctDemographicsByNorm = null; // Map<string normalized "COUNTY - PREC"> -> row
     let precinctDemographicsByCountyCode = null; // Map<string countyNorm, Map<string code, row>>
+    let cvapCountyTotalsByNorm = null; // Map<string countyNorm, number CVAP_TOT24>
+    let cvapPrecinctTotalsByNorm = null; // Map<string precinct_norm, number CVAP_TOT24>
+    const cvapDistrictTotalsByScopeYear = {
+      congressional: { '2022': null, '2024': null }, // Map<string districtNum, number>
+      state_house: { '2022': null, '2024': null },
+      state_senate: { '2022': null, '2024': null }
+    };
+    let cvapCountyTotalsLoadPromise = null;
+    let cvapPrecinctTotalsLoadPromise = null;
+    const cvapDistrictTotalsLoadPromises = new Map(); // key `${scope}|${linesYear}` -> Promise<void>
     let countyNameMap = {};
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
@@ -11039,6 +11059,36 @@ document.addEventListener('DOMContentLoaded', function() {
       applySelectedPrecinctHighlightFilter();
     }
 
+    function computeMapViewportPadding(basePadding = 40) {
+      const p = Number(basePadding) || 0;
+      const padding = { top: p, bottom: p, left: p, right: p };
+      try {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return padding;
+        if (sidebar.classList && sidebar.classList.contains('minimized')) return padding;
+        const r = sidebar.getBoundingClientRect();
+        if (!r || !Number.isFinite(r.width) || !Number.isFinite(r.height)) return padding;
+        if (r.width < 120 || r.height < 160) return padding;
+
+        const vw = window.innerWidth || 0;
+        const vh = window.innerHeight || 0;
+        if (!vw || !vh) return padding;
+
+        // Sidebar can behave like a left dock on desktop or a bottom sheet on mobile.
+        const looksLikeBottomSheet = r.width >= vw * 0.72 && r.top >= vh * 0.42;
+        if (looksLikeBottomSheet) {
+          padding.bottom += Math.max(0, Math.round(r.height + 16));
+          return padding;
+        }
+
+        const looksDockedLeft = r.left <= 2 && r.right <= vw * 0.82;
+        if (looksDockedLeft) {
+          padding.left += Math.max(0, Math.round(r.width + 16));
+        }
+      } catch (_) {}
+      return padding;
+    }
+
     function zoomToClickedPrecinctFeature(feature, { padding = 42, duration = 880, maxZoom = 13.6 } = {}) {
       try {
         if (!feature) return;
@@ -11046,10 +11096,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (geomType === 'Point') {
           const coords = feature?.geometry?.coordinates || null;
           if (Array.isArray(coords) && coords.length >= 2) {
+            const pad = computeMapViewportPadding(padding);
+            const cap = Number.isFinite(Number(maxZoom)) ? Number(maxZoom) : 13.0;
+            const desired = Math.min(cap, 13.0);
             map.flyTo({
               center: coords,
-              zoom: Math.max(map.getZoom() || 0, 12.2),
-              speed: 0.92,
+              zoom: Math.max(map.getZoom() || 0, desired),
+              padding: pad,
+              duration,
               essential: true
             });
           }
@@ -11059,7 +11113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Array.isArray(bbox) || bbox.length < 4) return;
         map.fitBounds(
           [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-          { padding, duration, maxZoom }
+          { padding: computeMapViewportPadding(padding), duration, maxZoom }
         );
       } catch (_) {}
     }
@@ -15450,9 +15504,166 @@ document.addEventListener('DOMContentLoaded', function() {
       return `<div class="demo-race-row ${extraClass}"><span class="demo-race-label">Race</span>${chips.join('')}</div>`;
     }
 
-    function buildCountyDemographicsHoverHTML(demo) {
+    function cvapAggPaths() {
+      return CONFIG?.paths?.cvap_aggregates || {};
+    }
+
+    function coerceDistrictKey(raw) {
+      const n = Number(raw);
+      if (Number.isFinite(n)) return String(n);
+      const s = (raw ?? '').toString().trim();
+      return s.replace(/^0+/, '') || s;
+    }
+
+    async function ensureCvapCountyTotalsLoaded() {
+      if (cvapCountyTotalsByNorm && cvapCountyTotalsByNorm.size) return;
+      if (cvapCountyTotalsLoadPromise) return cvapCountyTotalsLoadPromise;
+      const path = cvapAggPaths().county_2020;
+      if (!path) return;
+      cvapCountyTotalsLoadPromise = (async () => {
+        try {
+          const txt = await loadCSV(path);
+          const rows = parseCSV(txt);
+          const byNorm = new Map();
+          (rows || []).forEach(r => {
+            const name = (r?.county_name || r?.county || '').toString().trim();
+            const norm = normalizeCountyToken(name);
+            const cvap = Number(r?.CVAP_TOT24);
+            if (!norm || !Number.isFinite(cvap)) return;
+            byNorm.set(norm, cvap);
+          });
+          cvapCountyTotalsByNorm = byNorm;
+          try { if (lastPointerPoint) queueHoverRefresh(); } catch (_) {}
+        } catch (err) {
+          cvapCountyTotalsByNorm = null;
+        } finally {
+          cvapCountyTotalsLoadPromise = null;
+        }
+      })();
+      return cvapCountyTotalsLoadPromise;
+    }
+
+    async function ensureCvapPrecinctTotalsLoaded() {
+      if (cvapPrecinctTotalsByNorm && cvapPrecinctTotalsByNorm.size) return;
+      if (cvapPrecinctTotalsLoadPromise) return cvapPrecinctTotalsLoadPromise;
+      const path = cvapAggPaths().precinct_2020;
+      if (!path) return;
+      cvapPrecinctTotalsLoadPromise = (async () => {
+        try {
+          const txt = await loadCSV(path);
+          const rows = parseCSV(txt);
+          const byNorm = new Map();
+          (rows || []).forEach(r => {
+            const precId = (r?.precinct_id || '').toString().trim();
+            const norm = normalizeContestPrecinctNorm(precId);
+            const cvap = Number(r?.CVAP_TOT24);
+            if (!norm || !Number.isFinite(cvap)) return;
+            byNorm.set(norm, cvap);
+          });
+          cvapPrecinctTotalsByNorm = byNorm;
+          try { if (lastPointerPoint) queueHoverRefresh(); } catch (_) {}
+        } catch (err) {
+          cvapPrecinctTotalsByNorm = null;
+        } finally {
+          cvapPrecinctTotalsLoadPromise = null;
+        }
+      })();
+      return cvapPrecinctTotalsLoadPromise;
+    }
+
+    function cvapDistrictPathFor(scope, linesYear) {
+      const y = normalizeDistrictLinesYear(linesYear);
+      const paths = cvapAggPaths();
+      if (scope === 'congressional') return y === 2024 ? paths.cd119_2024 : paths.cd118_2022;
+      if (scope === 'state_house') return y === 2024 ? paths.state_house_2024 : paths.state_house_2022;
+      if (scope === 'state_senate') return y === 2024 ? paths.state_senate_2024 : paths.state_senate_2022;
+      return '';
+    }
+
+    async function ensureCvapDistrictTotalsLoaded(scope, linesYear = currentDistrictLinesYear) {
+      const s = (scope || '').toString().trim();
+      if (!cvapDistrictTotalsByScopeYear[s]) return;
+      const y = String(normalizeDistrictLinesYear(linesYear));
+      if (cvapDistrictTotalsByScopeYear[s][y] && cvapDistrictTotalsByScopeYear[s][y].size) return;
+      const key = `${s}|${y}`;
+      if (cvapDistrictTotalsLoadPromises.has(key)) return cvapDistrictTotalsLoadPromises.get(key);
+      const path = cvapDistrictPathFor(s, Number(y));
+      if (!path) return;
+      const p = (async () => {
+        try {
+          const txt = await loadCSV(path);
+          const rows = parseCSV(txt);
+          const byDistrict = new Map();
+          (rows || []).forEach(r => {
+            const dKey = coerceDistrictKey(r?.district);
+            const cvap = Number(r?.CVAP_TOT24);
+            if (!dKey || !Number.isFinite(cvap)) return;
+            byDistrict.set(dKey, cvap);
+          });
+          cvapDistrictTotalsByScopeYear[s][y] = byDistrict;
+          try { if (lastPointerPoint) queueHoverRefresh(); } catch (_) {}
+        } catch (err) {
+          cvapDistrictTotalsByScopeYear[s][y] = null;
+        } finally {
+          cvapDistrictTotalsLoadPromises.delete(key);
+        }
+      })();
+      cvapDistrictTotalsLoadPromises.set(key, p);
+      return p;
+    }
+
+    function getCvapCountyTotal(countyNormRaw) {
+      const norm = normalizeCountyToken(countyNormRaw);
+      if (!norm) return null;
+      if (!cvapCountyTotalsByNorm && !cvapCountyTotalsLoadPromise) {
+        try { void ensureCvapCountyTotalsLoaded(); } catch (_) {}
+      }
+      const v = cvapCountyTotalsByNorm?.get(norm);
+      return Number.isFinite(Number(v)) ? Number(v) : null;
+    }
+
+    function getCvapPrecinctTotal(precinctNormRaw) {
+      const norm = normalizeContestPrecinctNorm(precinctNormRaw);
+      if (!norm) return null;
+      if (!cvapPrecinctTotalsByNorm && !cvapPrecinctTotalsLoadPromise) {
+        try { void ensureCvapPrecinctTotalsLoaded(); } catch (_) {}
+      }
+      const v = cvapPrecinctTotalsByNorm?.get(norm);
+      return Number.isFinite(Number(v)) ? Number(v) : null;
+    }
+
+    function getCvapDistrictTotal(scope, districtNum, linesYear = currentDistrictLinesYear) {
+      const s = (scope || '').toString().trim();
+      const y = String(normalizeDistrictLinesYear(linesYear));
+      const map = cvapDistrictTotalsByScopeYear?.[s]?.[y] || null;
+      const dKey = coerceDistrictKey(districtNum);
+      if (!dKey) return null;
+      if (!map && !cvapDistrictTotalsLoadPromises.has(`${s}|${y}`)) {
+        try { void ensureCvapDistrictTotalsLoaded(s, Number(y)); } catch (_) {}
+      }
+      const v = map?.get(dKey);
+      return Number.isFinite(Number(v)) ? Number(v) : null;
+    }
+
+    function preloadCvapTotals() {
+      try { void ensureCvapCountyTotalsLoaded(); } catch (_) {}
+      try { void ensureCvapPrecinctTotalsLoaded(); } catch (_) {}
+      try {
+        for (const y of [2022, 2024]) {
+          void ensureCvapDistrictTotalsLoaded('congressional', y);
+          void ensureCvapDistrictTotalsLoaded('state_house', y);
+          void ensureCvapDistrictTotalsLoaded('state_senate', y);
+        }
+      } catch (_) {}
+    }
+
+    function buildCountyDemographicsHoverHTML(demo, countyNormRaw = '') {
       if (!demo) return '';
       const vap = numericOrZero(demo.vap_18plus);
+      const countyNorm = normalizeCountyToken(countyNormRaw || demo.county || '');
+      const cvap = countyNorm ? getCvapCountyTotal(countyNorm) : null;
+      const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : vap;
+      const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP (18+):' : 'VAP (18+):';
       const races = buildRaceChipRowHTML(
         demo.white_pop_pct,
         demo.black_pop_pct,
@@ -15466,16 +15677,19 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       return `
         <div class="demo-hover-card">
-          <div class="demo-hover-metric">VAP (18+): ${vap.toLocaleString()}</div>
+          <div class="demo-hover-metric">${metricLabel} ${Math.round(metricValue).toLocaleString()}</div>
           ${races}
-          <div class="demo-hover-note">Race/ethnicity reflects total population (DP1), not VAP-by-race.</div>
+          <div class="demo-hover-note">${Number.isFinite(Number(cvap)) ? 'CVAP totals from ACS special tabulation (2020–2024). ' : ''}Race/ethnicity reflects total population (DP1), not VAP-by-race.</div>
         </div>
       `;
     }
 
-    function buildPrecinctDemographicsHoverHTML(demo) {
+    function buildPrecinctDemographicsHoverHTML(demo, precinctNormRaw = '') {
       if (!demo) return '';
       const vap = numericOrZero(demo.vap_18plus);
+      const cvap = precinctNormRaw ? getCvapPrecinctTotal(precinctNormRaw) : null;
+      const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : vap;
+      const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP (18+):' : 'VAP (18+):';
       const races = buildRaceChipRowHTML(
         demo.white_vap_pct,
         demo.black_vap_pct,
@@ -15490,7 +15704,7 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       return `
         <div class="demo-hover-card">
-          <div class="demo-hover-metric">VAP (18+): ${vap.toLocaleString()}</div>
+          <div class="demo-hover-metric">${metricLabel} ${Math.round(metricValue).toLocaleString()}</div>
           ${races}
         </div>
       `;
@@ -19996,7 +20210,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let demoLine = '';
       try {
         const demo = countyDemographics?.counties?.[norm] || null;
-        demoLine = buildCountyDemographicsHoverHTML(demo);
+        demoLine = buildCountyDemographicsHoverHTML(demo, norm);
       } catch (_) {}
 
       const chips = [];
@@ -20221,7 +20435,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let demoLine = '';
       try {
         const demo = getPrecinctDemographicsRow(precinctNorm, countyName, precId);
-        demoLine = buildPrecinctDemographicsHoverHTML(demo);
+        demoLine = buildPrecinctDemographicsHoverHTML(demo, precinctNorm);
       } catch (_) {}
 
       const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
@@ -20394,7 +20608,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const _demoRow = getDistrictDemographics(scope, districtNum);
-      const _demoHTML = buildDemoHTML(_demoRow);
+      const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
       if (!contestValue) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
         let startText = '';
@@ -23963,7 +24177,7 @@ document.addEventListener('DOMContentLoaded', function() {
       syncFlySearchInputs(matchedTarget);
       setFlySearchFeedback('#10b981');
       if (coords && coords.length >= 2) {
-        map.flyTo({ center: coords, zoom: Math.max(CONFIG.precincts?.minZoom || 8.5, 10.0), speed: 0.9 });
+        zoomToClickedPrecinctFeature(hit, { padding: 42, duration: 920, maxZoom: 13.0 });
       }
 
       const resolvedCode = matchedTarget.includes(' - ') ? matchedTarget.split(' - ')[1].trim().toUpperCase() : code;
@@ -24631,6 +24845,7 @@ document.addEventListener('DOMContentLoaded', function() {
       nameEl.textContent = `Congressional District ${districtNum}`;
 
       const districtInfo = (districtsInfo || []).find(d => d.district == districtNum);
+      const cvapTotal = getCvapDistrictTotal('congressional', districtNum, currentDistrictLinesYear);
       let demographicInfo = '';
       const desc = getDistrictDescription('congressional', districtNum);
       if (districtInfo) {
@@ -24638,7 +24853,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
             <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
-            <div style="font-size:14px;"><strong>Total Population:</strong> ${Number(districtInfo.total_population || 0).toLocaleString()}</div>
+            <div style="font-size:14px;"><strong>${Number.isFinite(Number(cvapTotal)) ? 'CVAP (18+):' : 'Total Population:'}</strong> ${Math.round(Number.isFinite(Number(cvapTotal)) ? Number(cvapTotal) : Number(districtInfo.total_population || 0)).toLocaleString()}</div>
             <div style="font-size:14px;"><strong>White:</strong> ${districtInfo.white_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Black:</strong> ${districtInfo.black_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Hispanic:</strong> ${districtInfo.hispanic_vap_pct}%</div>
@@ -24716,6 +24931,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const infoRow = chamber === 'house'
         ? stateHouseInfo?.find(d => d.district == districtNum)
         : stateSenateInfo?.find(d => d.district == districtNum);
+      const cvapTotal = getCvapDistrictTotal(scope, districtNum, currentDistrictLinesYear);
 
       let demographicInfo = '';
       const desc = getDistrictDescription(scope, districtNum);
@@ -24724,7 +24940,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
             <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
-            <div style="font-size:14px;"><strong>Total Population:</strong> ${Number(infoRow.total_population || 0).toLocaleString()}</div>
+            <div style="font-size:14px;"><strong>${Number.isFinite(Number(cvapTotal)) ? 'CVAP (18+):' : 'Total Population:'}</strong> ${Math.round(Number.isFinite(Number(cvapTotal)) ? Number(cvapTotal) : Number(infoRow.total_population || 0)).toLocaleString()}</div>
             <div style="font-size:14px;"><strong>White:</strong> ${infoRow.white_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Black:</strong> ${infoRow.black_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Hispanic:</strong> ${infoRow.hispanic_vap_pct}%</div>
@@ -24853,10 +25069,15 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) { return null; }
     }
 
-    function buildDemoHTML(demoRow) {
+    function buildDemoHTML(demoRow, scope = '', districtNum = '') {
       if (!demoRow) return '';
+      const cvap = (scope && districtNum)
+        ? getCvapDistrictTotal(scope, districtNum, currentDistrictLinesYear)
+        : null;
+      const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : Number(demoRow.total_population || 0);
+      const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP:' : 'Pop:';
       return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;color:#cbd5e1;">` +
-        `<span style="font-weight:700;color:#e2e8f0;">Pop:</span> ${Number(demoRow.total_population||0).toLocaleString()}` +
+        `<span style="font-weight:700;color:#e2e8f0;">${metricLabel}</span> ${Math.round(metricValue).toLocaleString()}` +
         ` &nbsp;<span style="font-weight:700;color:#e2e8f0;">W:</span>${demoRow.white_vap_pct}%` +
         ` <span style="font-weight:700;color:#e2e8f0;">B:</span>${demoRow.black_vap_pct}%` +
         ` <span style="font-weight:700;color:#e2e8f0;">H:</span>${demoRow.hispanic_vap_pct}%` +
@@ -25055,6 +25276,9 @@ document.addEventListener('DOMContentLoaded', function() {
         precinctDemographicsByCountyCode = null;
         console.warn('Precinct demographics not loaded:', err?.message || err);
       }
+
+      // Optional: preload RDH CVAP aggregates used for hover totals (non-blocking).
+      try { preloadCvapTotals(); } catch (_) {}
 
       try {
         setStatus('Loading congressional districts...');
