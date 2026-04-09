@@ -893,6 +893,16 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   color: rgba(226, 232, 240, 0.92);
 }
 
+.hover-tooltip .tooltip-flip {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+  color: rgba(226, 232, 240, 0.92);
+}
+.hover-tooltip .tooltip-flip.rep { color: #fecaca; }
+.hover-tooltip .tooltip-flip.dem { color: #bfdbfe; }
+
 .hover-tooltip .tooltip-more {
   margin-top: 10px;
   padding-top: 10px;
@@ -16855,6 +16865,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return `<span class="meta-chip flip ${cls}"><span class="dot"></span>Flip ${labelFrom}\u2192${labelTo}</span>`;
     }
 
+    function flipLineHTML(prevSignedPct, curSignedPct, fromYear = null, toYear = null) {
+      const f = flipInfo(prevSignedPct, curSignedPct);
+      if (!f.flipped) return '';
+      const labelFrom = f.from === 'R' ? 'R' : 'D';
+      const labelTo = f.to === 'R' ? 'R' : 'D';
+      const cls = f.to === 'R' ? 'rep' : 'dem';
+      const fy = Number(fromYear);
+      const ty = Number(toYear);
+      const hasYears = Number.isFinite(fy) && Number.isFinite(ty);
+      const years = hasYears ? ` (${String(fy).slice(-2)}\u2192${String(ty).slice(-2)})` : '';
+      const title = hasYears
+        ? ` title="Flip ${labelFrom}\u2192${labelTo} (${fy}\u2192${ty})"`
+        : '';
+      return `<div class="tooltip-flip ${cls}"${title}>Flip: ${labelFrom}\u2192${labelTo}${years}</div>`;
+    }
+
     function buildResultCardHTML(title, subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, options = {}) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
@@ -20593,6 +20619,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
       const tierLong = tierMeta?.label || '';
+      const flipLine = (prevSignedForFlip !== null)
+        ? flipLineHTML(prevSignedForFlip, signedMarginPct, vizPrevCache?.prevYear || null, Number(year))
+        : '';
       const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
         ? (signedMarginPct - Number(prevSignedForFlip))
         : NaN;
@@ -20638,6 +20667,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierLong ? `<span class="tier">${escapeHtml(tierLong)}</span>` : ''}
         </div>
+        ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
       `.trim();
@@ -20647,6 +20677,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
+        ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
         <details class="tooltip-more" aria-label="More details">
@@ -20831,6 +20862,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
+      const flipLine = (prevSignedForFlip !== null)
+        ? flipLineHTML(prevSignedForFlip, curSigned, trendPrevYear, Number(year))
+        : '';
       const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
         ? (curSigned - Number(prevSignedForFlip))
         : NaN;
@@ -21166,6 +21200,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const desc = getDistrictDescription(scope, districtNum);
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
+      const flipLine = (prevSignedForFlip !== null)
+        ? flipLineHTML(prevSignedForFlip, signedMarginPct, prevYearForFlip, Number(year))
+        : '';
       const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
         ? (signedMarginPct - Number(prevSignedForFlip))
         : NaN;
@@ -21198,6 +21235,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
+        ${flipLine}
         ${tooltipInsightForView ? `<div class="tooltip-insight">${escapeHtml(tooltipInsightForView)}</div>` : ''}
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
