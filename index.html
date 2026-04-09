@@ -9936,6 +9936,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile: tapping empty space closes any pinned tooltip/highlight.
     map.on('click', (e) => {
       if (!IS_COARSE_POINTER) return;
+      try { lastPointerPoint = e.point; } catch (_) {}
       const layers = [
         'precinct-dot',
         'precinct-dot-missing',
@@ -10012,6 +10013,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache per contestType so hover rendering stays synchronous/fast.
     const countyVoteDeltaCache2020to2024 = new Map(); // Map<string contestType, Map<string countyNorm, { repDelta, demDelta, totalDelta }>>
     const countyVoteDeltaInflight2020to2024 = new Map(); // Map<string contestType, Promise<void>>
+    const countyVoteDeltaHoverRefreshScheduled = new Set(); // Set<string contestType>
+
+    function scheduleHoverRefreshWhenCountyVoteDeltaReady(contestType) {
+      const ct = (contestType || '').toString();
+      if (!ct) return;
+      if (countyVoteDeltaHoverRefreshScheduled.has(ct)) return;
+      const inflight = countyVoteDeltaInflight2020to2024.get(ct);
+      if (!inflight || typeof inflight.finally !== 'function') return;
+      countyVoteDeltaHoverRefreshScheduled.add(ct);
+      inflight.finally(() => {
+        countyVoteDeltaHoverRefreshScheduled.delete(ct);
+        try {
+          const tooltip = document.getElementById('hover-tooltip');
+          if (!tooltip || tooltip.style.display === 'none') return;
+          const contestKey = (document.getElementById('contestSelect')?.value || '').toString().trim();
+          if (!contestKey) return;
+          const idx = contestKey.lastIndexOf('_');
+          const activeCt = idx > 0 ? contestKey.substring(0, idx) : contestKey;
+          if (activeCt !== ct) return;
+          queueHoverRefresh({ forceTooltip: true });
+        } catch (_) {}
+      });
+    }
 
     function getCountyVoteDeltas2020to2024(contestType, countyNorm) {
       const ct = (contestType || '').toString();
@@ -10086,6 +10110,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       countyVoteDeltaInflight2020to2024.set(ct, p);
       try { await p; } finally { countyVoteDeltaInflight2020to2024.delete(ct); }
+      try {
+        const tooltip = document.getElementById('hover-tooltip');
+        if (tooltip && tooltip.style.display !== 'none') {
+          const contestKey = (document.getElementById('contestSelect')?.value || '').toString().trim();
+          const idx = contestKey.lastIndexOf('_');
+          const activeCt = idx > 0 ? contestKey.substring(0, idx) : contestKey;
+          if (activeCt === ct) queueHoverRefresh({ forceTooltip: true });
+        }
+      } catch (_) {}
     }
 
     function scheduleCountyVoteDeltaCache2020to2024(contestType) {
@@ -12401,6 +12434,9 @@ document.addEventListener('DOMContentLoaded', function() {
         try { scheduleCountyVoteDeltaCache2020to2024(ct); } catch (_) {}
       }
       const vote = getCountyVoteDeltas2020to2024(ct, norm);
+      if (!vote) {
+        try { scheduleHoverRefreshWhenCountyVoteDeltaReady(ct); } catch (_) {}
+      }
       if (!pop || !vote) return '';
       if (![popDeltaRaw, popPctRaw, vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)))) return '';
 
@@ -20882,9 +20918,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    async function refreshHoverAtPointer() {
+    async function refreshHoverAtPointer({ forceTooltip = false } = {}) {
       if (!lastPointerPoint) return;
-      if (tooltipPinned) return;
+      if (tooltipPinned && !forceTooltip) return;
       if (isHoverRefreshSuppressed()) return;
 
       // If precinct overlay is enabled, prefer hovering precincts (dots or polygons) when present.
@@ -20896,7 +20932,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (layers.length) {
           const pf = map.queryRenderedFeatures(lastPointerPoint, { layers });
           if (pf && pf.length) {
-            renderPrecinctHoverAtPoint(lastPointerPoint, pf[0]);
+            renderPrecinctHoverAtPoint(lastPointerPoint, pf[0], { forceTooltip });
             return;
           }
         }
@@ -20909,12 +20945,14 @@ document.addEventListener('DOMContentLoaded', function() {
           ? 'district-fill'
           : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
       if (!map.getLayer(layerName)) {
+        if (tooltipPinned) return;
         clearHoverOutline();
         return;
       }
 
       const features = map.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
       if (!features || !features.length) {
+        if (tooltipPinned) return;
         hideHoverTooltip();
         clearHoverOutline();
         clearVoteCounterHoverState();
@@ -20923,25 +20961,25 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const evt = { point: lastPointerPoint, features };
       if (layerName === 'county-fill') {
-        renderCountyHoverAtPoint(evt);
+        renderCountyHoverAtPoint(evt, { forceTooltip });
       } else if (layerName === 'district-fill') {
-        await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD']);
+        await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-house-fill') {
-        await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD']);
+        await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-senate-fill') {
-        await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD']);
+        await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       }
     }
 
-    function queueHoverRefresh() {
-      if (isTouchInteractionMode() && !tooltipPinned) return;
+    function queueHoverRefresh({ forceTooltip = false } = {}) {
+      if (isTouchInteractionMode() && !tooltipPinned && !forceTooltip) return;
       if (hoverRefreshRaf) return;
       hoverRefreshRaf = requestAnimationFrame(async () => {
         hoverRefreshRaf = null;
         try {
           if (precinctsEnabled && map && typeof map.isMoving === 'function' && map.isMoving()) return;
         } catch (_) {}
-        await refreshHoverAtPointer();
+        await refreshHoverAtPointer({ forceTooltip });
       });
     }
 
@@ -26429,6 +26467,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
       try { updateContextBanner(); } catch (_) {}
+      try { scheduleCountyVoteDeltaCache2020to2024(contestType); } catch (_) {}
 
       // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
       try {
