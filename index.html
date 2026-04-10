@@ -133,25 +133,41 @@
     }
   }
   @media (max-width: 768px) {
-    /* Mobile: dock hover tooltip above bottom legend for easier reading/taps. */
+    /* Mobile: dock hover tooltip above the dock controls for easier reading/taps. */
     #hover-tooltip {
       position: fixed !important;
       left: 8px !important;
       right: 8px !important;
       top: auto !important;
-      bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + 8px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px + var(--vote-counter-h, 0px) + 8px) !important;
       max-width: none !important;
       width: auto !important;
-      max-height: 42vh;
+      max-height: min(54vh, calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
       overflow: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      z-index: 10031 !important;
+    }
+    @supports (height: 100svh) {
+      #hover-tooltip {
+        max-height: min(54svh, calc(100svh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
+      }
     }
     #hover-tooltip .tooltip-btn {
       min-height: 44px;
       padding: 10px 12px;
       font-size: 13px;
       border-radius: 12px;
+    }
+    #hover-tooltip .tooltip-head {
+      flex-direction: column;
+      gap: 8px;
+    }
+    #hover-tooltip .tooltip-actions {
+      width: 100%;
+    }
+    #hover-tooltip .tooltip-btn {
+      flex: 1 1 auto;
     }
   }
     .spinner svg {
@@ -2810,6 +2826,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   /* Allow interacting with tooltip buttons only when pinned. */
   #hover-tooltip[data-pinned="1"] {
     pointer-events: auto;
+  }
+  @media (pointer: coarse) {
+    /* On touch devices, don't let a non-pinned hover shell block panning/zooming. */
+    #hover-tooltip[data-pinned="0"] {
+      pointer-events: none;
+    }
   }
 
   /* Help modal */
@@ -7906,11 +7928,14 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   @media (max-width: 768px) {
     .atlas-credit-bar {
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 12px);
+      /* Tuck credits behind the dock so it doesn't block the map on phones. */
+      bottom: calc(6px + var(--safe-bottom, 0px));
+      z-index: 10018;
       max-width: calc(100vw - 16px);
       padding: 5px 10px;
       font-size: 10px;
       white-space: normal;
+      opacity: 0.85;
     }
   }
 
@@ -8094,7 +8119,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     #hover-tooltip {
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px + var(--vote-counter-h, 0px) + 8px) !important;
     }
 
     body.mobile-sheet-open #hover-tooltip {
@@ -8111,6 +8136,11 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     body.mobile-input-active .vote-counter {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px) !important;
+    }
+    body.mobile-input-active #hover-tooltip {
       opacity: 0;
       pointer-events: none;
       transform: translateY(8px) !important;
@@ -8156,11 +8186,16 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       max-height: calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px)) !important;
     }
 
-    .vote-counter,
-    #hover-tooltip {
+    .vote-counter {
       left: 142px !important;
       right: 8px !important;
       bottom: 8px !important;
+    }
+
+    #hover-tooltip {
+      left: 142px !important;
+      right: 8px !important;
+      bottom: calc(8px + var(--vote-counter-h, 0px) + 8px) !important;
     }
   }
 
@@ -12402,6 +12437,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let voteCounterHoverActive = false;
     let voteCounterTrendRequestId = 0;
     let focusModeActive = false;
+    let voteCounterMinimizeUserOverride = false;
 
     function setFocusModeActive(active) {
       const next = !!active;
@@ -12504,6 +12540,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleVoteCounterMinimized() {
       const counter = document.getElementById('vote-counter');
       if (!counter) return;
+      voteCounterMinimizeUserOverride = true;
       setVoteCounterMinimizedState(!counter.classList.contains('minimized'));
     }
 
@@ -13366,6 +13403,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function showVoteCounter() {
       const counter = document.getElementById('vote-counter');
       if (counter) counter.style.display = 'block';
+      // Mobile: default to a minimized vote counter so it doesn't cover the map unless the user expands it.
+      try {
+        if (counter && isMobileViewportNow && isMobileViewportNow() && !voteCounterMinimizeUserOverride) {
+          setVoteCounterMinimizedState(true);
+        }
+      } catch (_) {}
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
 
@@ -22180,8 +22223,12 @@ document.addEventListener('DOMContentLoaded', function() {
           root.style.removeProperty('--legend-h');
           root.style.removeProperty('--controls-h');
           root.style.removeProperty('--mobile-dock-h');
+          root.style.removeProperty('--vote-counter-h');
           return;
         }
+        const counterVisibleMobile = !!(voteCounter && voteCounter.style.display !== 'none' && voteCounter.getClientRects().length);
+        const vhm = counterVisibleMobile ? Math.round(voteCounter.getBoundingClientRect().height || 0) : 0;
+        root.style.setProperty('--vote-counter-h', `${Math.max(0, vhm)}px`);
         const legend = document.getElementById('legend');
         const controls = document.getElementById('main-controls');
         const legendVisible = !!(legend && legend.classList.contains('mobile-sheet-active'));
@@ -24015,14 +24062,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const minZoom = (CONFIG.precincts?.minZoom || 8.5);
       const z = map.getZoom();
-      const polyVisible = precinctsEnabled && z >= minZoom;
-      const dotVisible = precinctsEnabled && z < minZoom;
+      const wantsPolygons = precinctsEnabled && z >= minZoom;
+      // Keep centroids visible until polygon geometry is actually ready; otherwise users can zoom
+      // into an empty map while the heavy precinct GeoJSON is still loading.
+      const polyVisible = wantsPolygons && !!precinctSourceLoaded;
+      const dotVisible = precinctsEnabled && (!wantsPolygons || !precinctSourceLoaded);
 
       // Auto-load precinct centroids at statewide zoom (fast), polygons later (heavy).
       if (dotVisible && !precinctCentroidsLoaded && !precinctCentroidsLoadInFlight) {
         ensurePrecinctCentroidsLoaded().catch(err => console.warn('Precinct centroids load failed:', err?.message || err));
       }
-      if (polyVisible && !precinctSourceLoaded && !precinctLoadInFlight) {
+      if (wantsPolygons && !precinctSourceLoaded && !precinctLoadInFlight) {
         ensurePrecinctSourceLoaded().catch(err => console.warn('Precinct load failed:', err?.message || err));
       }
       ['precinct-fill', 'precinct-stroke'].forEach(id => {
@@ -24044,7 +24094,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (map.getLayer('precinct-dot-selected')) {
         const selectedHasPolygon = !!(selectedPrecinctNorm && precinctPolygonNormSet && precinctPolygonNormSet.has(selectedPrecinctNorm));
-        const selectedVisible = precinctsEnabled && (dotVisible || (polyVisible && !selectedHasPolygon));
+        const selectedVisible = precinctsEnabled && (dotVisible || (wantsPolygons && !selectedHasPolygon));
         map.setLayoutProperty('precinct-dot-selected', 'visibility', selectedVisible ? 'visible' : 'none');
       }
       setSplitTicketOverlayVisibility();
