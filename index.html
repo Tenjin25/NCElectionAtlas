@@ -1452,18 +1452,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   color: #1e3a8a;
 }
 .focus-subhead .muted { color: #64748b; font-weight: 700; }
-.focus-subhead .pill strong { color: #0f172a; }
-.focus-subhead .pill.rep {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.16);
-  color: #7f1d1d;
-}
-.focus-subhead .pill.dem {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.16);
-  color: #1e3a8a;
-}
-.focus-subhead .muted { color: #64748b; font-weight: 700; }
 /* Mobile: Better spacing for county details */
 @media (max-width: 768px) {
   .county-details {
@@ -3028,6 +3016,32 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .meta-chip.tier .dot {
+    width: 8px;
+    height: 8px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+  }
+
+
+  /* District-only compact badge fix: keep legislative/congressional hover chips uniform
+     without affecting county hover/meta pills. */
+  .hover-meta.hover-meta-district .meta-chip,
+  .hover-meta.hover-meta-district .meta-chip.flip,
+  .hover-meta.hover-meta-district .meta-chip.tier,
+  .hover-meta.hover-meta-district .meta-chip.shift {
+    gap: 8px;
+    padding: 6px 10px;
+    border-width: 1px;
+    box-shadow: none;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+
+  .hover-meta.hover-meta-district .meta-chip .dot,
+  .hover-meta.hover-meta-district .meta-chip.flip .dot,
+  .hover-meta.hover-meta-district .meta-chip.tier .dot,
+  .hover-meta.hover-meta-district .meta-chip.shift .dot {
     width: 8px;
     height: 8px;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
@@ -8646,7 +8660,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       font-feature-settings: "tnum" 1;
     }
   }
-  </style>
+    </style>
 </head>
 <body>
 <!-- Move JS to script block -->
@@ -20822,7 +20836,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const useCompact = isMobileTooltipMode();
 
       const classicInner = `
-        <div class="hover-meta">${chips.join('')}</div>
+        <div class="hover-meta hover-meta-district">${chips.join('')}</div>
         ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
@@ -20851,7 +20865,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
           <div class="tooltip-more-body">
-            <div class="hover-meta">${chips.join('')}</div>
+            <div class="hover-meta hover-meta-district">${chips.join('')}</div>
             ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
             ${splitInsightLine}
             ${demoLine}
