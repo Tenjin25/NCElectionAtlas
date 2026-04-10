@@ -409,6 +409,7 @@
           { id: 'precinct-toggle', label: 'Toggle precinct overlay', keyShortcuts: 'P' },
           { id: 'split-ticket-toggle', label: 'Toggle split ticket comparison', keyShortcuts: 'T' },
           { id: 'gps-locate-btn', label: 'Find my precinct by GPS', keyShortcuts: 'G' },
+          { id: 'follow-hover-toggle', label: 'Toggle auto hover while panning' },
           { id: 'snapshot-share-btn', label: 'Download story snapshot', keyShortcuts: 'X' },
           { id: 'copy-link-btn', label: 'Copy shareable map link', keyShortcuts: 'C' },
           { id: 'smart-insights-toggle', label: 'Toggle Smart Insights', keyShortcuts: 'I' },
@@ -496,6 +497,17 @@
         if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
         const t = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
         if (t === 'input' || t === 'textarea' || t === 'select') return;
+        if (ev.key === 'Escape') {
+          const hb = document.getElementById('help-backdrop');
+          if (hb && hb.style.display === 'flex') return;
+          try { closeHoverUI({ force: true }); } catch (_) {}
+          try { clearPinnedVoteCounterState(); } catch (_) {}
+          try { clearSelectedPrecinctNorm(); } catch (_) {}
+        }
+        if (ev.key === '?' || ev.key === 'h' || ev.key === 'H') {
+          const btn = document.getElementById('help-btn');
+          if (btn) btn.click();
+        }
         if (ev.key === 'p' || ev.key === 'P') {
           if (typeof togglePrecinctOverlay === 'function') togglePrecinctOverlay();
         }
@@ -8277,6 +8289,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.24), 0 10px 22px rgba(15, 23, 42, 0.14);
   }
 
+  #follow-hover-toggle[aria-pressed="true"] {
+    background: #0f766e;
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.24), 0 10px 22px rgba(15, 23, 42, 0.14);
+  }
+
+  @media (min-width: 769px) {
+    #follow-hover-toggle {
+      display: none !important;
+    }
+  }
+
   .tool-chip-select {
     height: 38px;
     min-width: 168px;
@@ -9225,6 +9248,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <details class="contest-tools-more" aria-label="More tools">
                     <summary class="tool-chip-btn tool-chip-btn-muted" role="button">More</summary>
                     <div class="contest-tools-row contest-tools-row-more">
+                      <button id="follow-hover-toggle" title="Auto-update hover tooltip while panning (mobile)" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-follow-hover" aria-label="Toggle auto hover while panning" aria-pressed="false">Auto Hover</button>
                       <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
                       <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
                     </div>
@@ -10025,6 +10049,71 @@ document.addEventListener('DOMContentLoaded', function() {
       return Date.now() < hoverSuppressedUntil;
     }
 
+    // Mobile: optional "auto hover" mode (tooltip follows map center after pan/zoom).
+    const FOLLOW_HOVER_STORAGE_KEY = 'nc-atlas:follow-hover:v1';
+    let followHoverEnabled = false;
+    try {
+      followHoverEnabled = (window.localStorage && window.localStorage.getItem(FOLLOW_HOVER_STORAGE_KEY) === '1');
+    } catch (_) { followHoverEnabled = false; }
+
+    function syncFollowHoverToggleUI() {
+      const btn = document.getElementById('follow-hover-toggle');
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', followHoverEnabled ? 'true' : 'false');
+      btn.textContent = followHoverEnabled ? 'Auto Hover On' : 'Auto Hover';
+    }
+
+    function setFollowHoverEnabled(next) {
+      followHoverEnabled = !!next;
+      try {
+        if (window.localStorage) window.localStorage.setItem(FOLLOW_HOVER_STORAGE_KEY, followHoverEnabled ? '1' : '0');
+      } catch (_) {}
+      syncFollowHoverToggleUI();
+      if (!followHoverEnabled) {
+        try { closeHoverUI({ force: true }); } catch (_) {}
+      } else {
+        try { queueFollowHoverRefresh(); } catch (_) {}
+      }
+      try { setStatus(followHoverEnabled ? 'Auto Hover: ON (pans update tooltip)' : 'Auto Hover: OFF'); } catch (_) {}
+    }
+
+    function getMapCenterPoint() {
+      try {
+        const c = map.getCenter();
+        const pt = map.project(c);
+        if (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) return pt;
+      } catch (_) {}
+      try {
+        const canvas = map.getCanvas();
+        const w = Number(canvas?.clientWidth || canvas?.width || 0);
+        const h = Number(canvas?.clientHeight || canvas?.height || 0);
+        if (w && h) return { x: w / 2, y: h / 2 };
+      } catch (_) {}
+      return null;
+    }
+
+    function queueFollowHoverRefresh() {
+      if (!followHoverEnabled) return false;
+      if (!isTouchInteractionMode()) return false;
+      if (tooltipPinned) return false;
+      if (isHoverRefreshSuppressed()) return false;
+      try {
+        if (document.body.classList.contains('mobile-sheet-open')) return false;
+        if (document.body.classList.contains('mobile-input-active')) return false;
+      } catch (_) {}
+      const pt = getMapCenterPoint();
+      if (!pt) return false;
+      lastPointerPoint = pt;
+      queueHoverRefresh({ forceTooltip: true });
+      return true;
+    }
+
+    const followHoverBtn = document.getElementById('follow-hover-toggle');
+    if (followHoverBtn) {
+      syncFollowHoverToggleUI();
+      followHoverBtn.addEventListener('click', () => setFollowHoverEnabled(!followHoverEnabled));
+    }
+
     // Mobile: tapping empty space closes any pinned tooltip/highlight.
     map.on('click', (e) => {
       if (!IS_COARSE_POINTER) return;
@@ -10066,12 +10155,18 @@ document.addEventListener('DOMContentLoaded', function() {
       queueHoverRefresh();
     });
     map.on('moveend', () => {
-      if (isTouchInteractionMode()) return;
+      if (isTouchInteractionMode()) {
+        try { queueFollowHoverRefresh(); } catch (_) {}
+        return;
+      }
       if (isHoverRefreshSuppressed()) return;
       queueHoverRefresh();
     });
     map.on('zoomend', () => {
-      if (isTouchInteractionMode()) return;
+      if (isTouchInteractionMode()) {
+        try { queueFollowHoverRefresh(); } catch (_) {}
+        return;
+      }
       if (isHoverRefreshSuppressed()) return;
       queueHoverRefresh();
     });

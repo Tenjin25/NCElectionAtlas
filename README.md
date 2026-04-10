@@ -103,7 +103,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 9, 2026
+**Last updated:** April 10, 2026
 
 ### Hover Tooltip Crash Course (April 2026)
 
@@ -113,10 +113,12 @@ The Atlas uses a split hover-tooltip system so the map stays fast on desktop whi
 - **Hover** a county/district/precinct to see a **collapsed** quick card (winner/margin + rating, plus compact deltas when available).
 - **Click the hover card** to **pin + expand** it (shows full details, additional stat lines, and extra chips).
 - When pinned, use **Close** to dismiss. Some pinned tooltips also show a **Copy** button for quick label copying.
+- Shortcut polish: press `Esc` to clear pinned hover/selection, and press `?`/`H` to open Help.
 
 **Mobile (max-width: 768px)**
 - Hover behaves like a **docked card** (bottom-safe placement) designed for scrolling + tapping.
 - Tap to pin details (and use **Close** to dismiss).
+- Optional: enable **More → Auto Hover** to refresh the docked hover card after pan/zoom (samples the map center so you can “browse” without re-tapping).
 
 **What you’re seeing**
 - **Winner / margin line:** e.g. `Trump +25.19%` (signed two-party margin).
