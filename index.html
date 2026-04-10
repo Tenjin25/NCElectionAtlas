@@ -10066,21 +10066,104 @@ document.addEventListener('DOMContentLoaded', function() {
     let countyPopulationEstimatesByNorm = null; // Map<string countyNorm, growth/estimate summary from Vintage 2025 county estimates>
     let countyPopulationEstimateStatewide = null; // Statewide NC summary from the same file
 
-    // --- County deltas (2020 -> 2024) for hover tooltips ---
-    // Cache per contestType so hover rendering stays synchronous/fast.
-    const countyVoteDeltaCache2020to2024 = new Map(); // Map<string contestType, Map<string countyNorm, { repDelta, demDelta, totalDelta }>>
-    const countyVoteDeltaInflight2020to2024 = new Map(); // Map<string contestType, Promise<void>>
-    const countyVoteDeltaHoverRefreshScheduled = new Set(); // Set<string contestType>
+    // --- County raw-vote deltas (cycle-to-cycle) for hover tooltips ---
+    // Cache by (contestType, fromYear, toYear) so hover rendering stays synchronous/fast.
+    const countyVoteDeltaCacheByPair = new Map(); // Map<string key, Map<string countyNorm, { repDelta, demDelta, totalDelta }>>
+    const countyVoteDeltaInflightByPair = new Map(); // Map<string key, Promise<void>>
+    const countyVoteDeltaHoverRefreshScheduledByPair = new Set(); // Set<string key>
+    const contestYearsByTypeCache = new Map(); // Map<string contestType, number[]>
 
-    function scheduleHoverRefreshWhenCountyVoteDeltaReady(contestType) {
-      const ct = (contestType || '').toString();
-      if (!ct) return;
-      if (countyVoteDeltaHoverRefreshScheduled.has(ct)) return;
-      const inflight = countyVoteDeltaInflight2020to2024.get(ct);
+    function countyVoteDeltaPairKey(contestType, fromYear, toYear) {
+      const ct = String(contestType || '').trim();
+      const fy = Number(fromYear);
+      const ty = Number(toYear);
+      if (!ct || !Number.isFinite(fy) || !Number.isFinite(ty) || fy >= ty) return '';
+      return `${ct}__${fy}__${ty}`;
+    }
+
+    function getAvailableContestYearsForType(contestType) {
+      const ct = String(contestType || '').trim();
+      if (!ct) return [];
+      if (contestYearsByTypeCache.has(ct)) return contestYearsByTypeCache.get(ct);
+      const years = new Set();
+      try {
+        (contestManifest || []).forEach(entry => {
+          if (!entry) return;
+          if (String(entry.contest_type || '') !== ct) return;
+          const y = Number(entry.year);
+          const rows = Number(entry.rows || 0) || 0;
+          if (!Number.isFinite(y) || y <= 0) return;
+          if (rows <= 0) return;
+          years.add(y);
+        });
+      } catch (_) {}
+      const out = Array.from(years).filter(Number.isFinite).sort((a, b) => a - b);
+      contestYearsByTypeCache.set(ct, out);
+      return out;
+    }
+
+    function getVoteDeltaPairsForTooltip(contestType, toYear, maxPairs = 2) {
+      const ct = String(contestType || '').trim();
+      const y = Number(toYear);
+      if (!ct || !Number.isFinite(y) || y <= 0) return [];
+      const pairs = [];
+
+      const years = getAvailableContestYearsForType(ct);
+      if (Array.isArray(years) && years.length) {
+        let prev = null;
+        // Prefer "last time this contest was up" when a seat/class cadence exists.
+        // US Senate is a special case: same seat repeats every 6 years, but NC has two seats so
+        // the generic series contains elections every 2 years. For deltas, prefer same-class y-6
+        // when available, otherwise fall back to the most recent earlier year.
+        if (ct === 'us_senate') {
+          const preferred = y - 6;
+          if (years.includes(preferred)) prev = preferred;
+        }
+        if (!Number.isFinite(prev)) {
+          for (let i = years.length - 1; i >= 0; i -= 1) {
+            const yr = Number(years[i]);
+            if (!Number.isFinite(yr)) continue;
+            if (yr < y) { prev = yr; break; }
+          }
+        }
+        if (Number.isFinite(prev)) {
+          pairs.push({ from: prev, to: y });
+          if (pairs.length >= (Number(maxPairs) || 0)) return pairs;
+
+          let prevPrev = null;
+          if (ct === 'us_senate') {
+            const preferredPrev = prev - 6;
+            if (years.includes(preferredPrev)) prevPrev = preferredPrev;
+          }
+          if (!Number.isFinite(prevPrev)) {
+            for (let i = years.length - 1; i >= 0; i -= 1) {
+              const yr = Number(years[i]);
+              if (!Number.isFinite(yr)) continue;
+              if (yr < prev) { prevPrev = yr; break; }
+            }
+          }
+          if (Number.isFinite(prevPrev)) pairs.push({ from: prevPrev, to: prev });
+          return pairs.slice(0, Math.max(0, Number(maxPairs) || 0));
+        }
+      }
+
+      // Fallback: assume 4-year cycles (presidential / many statewide) and let strict loaders decide availability.
+      const fy = y - 4;
+      if (fy >= 2000) pairs.push({ from: fy, to: y });
+      if (pairs.length < (Number(maxPairs) || 0) && fy - 4 >= 2000) pairs.push({ from: fy - 4, to: fy });
+      return pairs.slice(0, Math.max(0, Number(maxPairs) || 0));
+    }
+
+    function scheduleHoverRefreshWhenCountyVoteDeltaReady(contestType, fromYear, toYear) {
+      const key = countyVoteDeltaPairKey(contestType, fromYear, toYear);
+      const ct = String(contestType || '').trim();
+      if (!ct || !key) return;
+      if (countyVoteDeltaHoverRefreshScheduledByPair.has(key)) return;
+      const inflight = countyVoteDeltaInflightByPair.get(key);
       if (!inflight || typeof inflight.finally !== 'function') return;
-      countyVoteDeltaHoverRefreshScheduled.add(ct);
+      countyVoteDeltaHoverRefreshScheduledByPair.add(key);
       inflight.finally(() => {
-        countyVoteDeltaHoverRefreshScheduled.delete(ct);
+        countyVoteDeltaHoverRefreshScheduledByPair.delete(key);
         try {
           const tooltip = document.getElementById('hover-tooltip');
           if (!tooltip || tooltip.style.display === 'none') return;
@@ -10094,38 +10177,42 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    function getCountyVoteDeltas2020to2024(contestType, countyNorm) {
-      const ct = (contestType || '').toString();
-      const norm = (countyNorm || '').toString().trim().toUpperCase();
-      if (!ct || !norm) return null;
-      const cache = countyVoteDeltaCache2020to2024.get(ct);
+    function getCountyVoteDeltasForPair(contestType, countyNorm, fromYear, toYear) {
+      const ct = String(contestType || '').trim();
+      const norm = String(countyNorm || '').trim().toUpperCase();
+      const key = countyVoteDeltaPairKey(ct, fromYear, toYear);
+      if (!ct || !norm || !key) return null;
+      const cache = countyVoteDeltaCacheByPair.get(key);
       if (!cache) return null;
       return cache.get(norm) || null;
     }
 
-    async function ensureCountyVoteDeltaCache2020to2024(contestType) {
-      const ct = (contestType || '').toString();
-      if (!ct) return;
-      if (countyVoteDeltaCache2020to2024.has(ct)) return;
-      if (countyVoteDeltaInflight2020to2024.has(ct)) return countyVoteDeltaInflight2020to2024.get(ct);
+    async function ensureCountyVoteDeltaCacheForPair(contestType, fromYear, toYear) {
+      const ct = String(contestType || '').trim();
+      const fy = Number(fromYear);
+      const ty = Number(toYear);
+      const key = countyVoteDeltaPairKey(ct, fy, ty);
+      if (!ct || !key) return;
+      if (countyVoteDeltaCacheByPair.has(key)) return;
+      if (countyVoteDeltaInflightByPair.has(key)) return countyVoteDeltaInflightByPair.get(key);
 
       const p = (async () => {
         const cache = new Map();
         try {
           // Avoid manufacturing deltas for modeled contests.
           try {
-            const modeled2024 = getModeledContestDefinition(ct, 2024);
-            const modeled2020 = getModeledContestDefinition(ct, 2020);
-            if (modeled2024 || modeled2020) {
-              countyVoteDeltaCache2020to2024.set(ct, cache);
+            const modeledTo = getModeledContestDefinition(ct, ty);
+            const modeledFrom = getModeledContestDefinition(ct, fy);
+            if (modeledTo || modeledFrom) {
+              countyVoteDeltaCacheByPair.set(key, cache);
               return;
             }
           } catch (_) {}
 
-          const rows2020 = await tryLoadContestSliceStrict(ct, 2020);
-          const rows2024 = await tryLoadContestSliceStrict(ct, 2024);
-          if (!(rows2020 && rows2020.length && rows2024 && rows2024.length)) {
-            countyVoteDeltaCache2020to2024.set(ct, cache);
+          const rowsFrom = await tryLoadContestSliceStrict(ct, fy);
+          const rowsTo = await tryLoadContestSliceStrict(ct, ty);
+          if (!(rowsFrom && rowsFrom.length && rowsTo && rowsTo.length)) {
+            countyVoteDeltaCacheByPair.set(key, cache);
             return;
           }
 
@@ -10148,25 +10235,25 @@ document.addEventListener('DOMContentLoaded', function() {
             return out;
           };
 
-          const t20 = totalsByCounty(rows2020);
-          const t24 = totalsByCounty(rows2024);
-          t24.forEach((v24, countyNorm) => {
-            const v20 = t20.get(countyNorm);
-            if (!v20) return;
-            const repDelta = Number(v24.rep || 0) - Number(v20.rep || 0);
-            const demDelta = Number(v24.dem || 0) - Number(v20.dem || 0);
-            const totalDelta = Number(v24.total || 0) - Number(v20.total || 0);
+          const tFrom = totalsByCounty(rowsFrom);
+          const tTo = totalsByCounty(rowsTo);
+          tTo.forEach((vTo, countyNorm) => {
+            const vFrom = tFrom.get(countyNorm);
+            if (!vFrom) return;
+            const repDelta = Number(vTo.rep || 0) - Number(vFrom.rep || 0);
+            const demDelta = Number(vTo.dem || 0) - Number(vFrom.dem || 0);
+            const totalDelta = Number(vTo.total || 0) - Number(vFrom.total || 0);
             if (![repDelta, demDelta, totalDelta].every(n => Number.isFinite(n))) return;
             cache.set(countyNorm, { repDelta, demDelta, totalDelta });
           });
         } catch (err) {
-          console.warn('County 2020→2024 vote delta cache failed for', ct, err?.message || err);
+          console.warn(`County ${fy}→${ty} vote delta cache failed for`, ct, err?.message || err);
         }
-        countyVoteDeltaCache2020to2024.set(ct, cache);
+        countyVoteDeltaCacheByPair.set(key, cache);
       })();
 
-      countyVoteDeltaInflight2020to2024.set(ct, p);
-      try { await p; } finally { countyVoteDeltaInflight2020to2024.delete(ct); }
+      countyVoteDeltaInflightByPair.set(key, p);
+      try { await p; } finally { countyVoteDeltaInflightByPair.delete(key); }
       try {
         const tooltip = document.getElementById('hover-tooltip');
         if (tooltip && tooltip.style.display !== 'none') {
@@ -10178,11 +10265,14 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
-    function scheduleCountyVoteDeltaCache2020to2024(contestType) {
-      const ct = (contestType || '').toString();
-      if (!ct) return;
+    function scheduleCountyVoteDeltaCacheForPair(contestType, fromYear, toYear) {
+      const ct = String(contestType || '').trim();
+      const fy = Number(fromYear);
+      const ty = Number(toYear);
+      const key = countyVoteDeltaPairKey(ct, fy, ty);
+      if (!ct || !key) return;
       const run = () => {
-        try { void ensureCountyVoteDeltaCache2020to2024(ct); } catch (_) {}
+        try { void ensureCountyVoteDeltaCacheForPair(ct, fy, ty); } catch (_) {}
       };
       try {
         if (typeof requestIdleCallback === 'function') {
@@ -10191,6 +10281,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       } catch (_) {}
       try { setTimeout(run, 1200); } catch (_) {}
+    }
+
+    function scheduleCountyVoteDeltaCachesForTooltip(contestType, toYear, maxPairs = 2) {
+      const ct = String(contestType || '').trim();
+      const y = Number(toYear);
+      if (!ct || !Number.isFinite(y)) return;
+      const pairs = getVoteDeltaPairsForTooltip(ct, y, maxPairs);
+      pairs.forEach(pair => {
+        try { scheduleCountyVoteDeltaCacheForPair(ct, pair.from, pair.to); } catch (_) {}
+      });
     }
     let precinctDemographicsByNorm = null; // Map<string normalized "COUNTY - PREC"> -> row
     let precinctDemographicsByCountyCode = null; // Map<string countyNorm, Map<string code, row>>
@@ -12495,14 +12595,50 @@ document.addEventListener('DOMContentLoaded', function() {
       const popDelta2425Raw = Number(pop?.change2024To2025);
       const popPct2425Raw = Number(pop?.changePct2024To2025);
 
-      if (!countyVoteDeltaCache2020to2024.has(ct) && !countyVoteDeltaInflight2020to2024.has(ct)) {
-        try { scheduleCountyVoteDeltaCache2020to2024(ct); } catch (_) {}
+      const selectedYear = (() => {
+        const optYear = Number(options?.year);
+        if (Number.isFinite(optYear) && optYear > 0) return optYear;
+        const metaYear = Number(currentContestMeta?.year);
+        if (Number.isFinite(metaYear) && metaYear > 0) return metaYear;
+        try {
+          const parsed = parseContestValue(document.getElementById('contestSelect')?.value || '');
+          const y = Number(parsed?.[1]);
+          return Number.isFinite(y) ? y : NaN;
+        } catch (_) {
+          return NaN;
+        }
+      })();
+
+      if (Number.isFinite(selectedYear)) {
+        try { scheduleCountyVoteDeltaCachesForTooltip(ct, selectedYear, 2); } catch (_) {}
       }
 
-      const vote = getCountyVoteDeltas2020to2024(ct, norm);
-      if (!vote) {
-        try { scheduleHoverRefreshWhenCountyVoteDeltaReady(ct); } catch (_) {}
+      function shortYearLabel(y) {
+        const n = Number(y);
+        if (!Number.isFinite(n)) return '';
+        const s = String(Math.trunc(n));
+        return s.length >= 2 ? s.slice(-2) : s.padStart(2, '0');
       }
+
+      const votePairs = Number.isFinite(selectedYear) ? getVoteDeltaPairsForTooltip(ct, selectedYear, 2) : [];
+      const voteLines = [];
+      (votePairs || []).forEach(pair => {
+        const fy = Number(pair?.from);
+        const ty = Number(pair?.to);
+        if (!Number.isFinite(fy) || !Number.isFinite(ty)) return;
+        const vote = getCountyVoteDeltasForPair(ct, norm, fy, ty);
+        if (!vote) {
+          try { scheduleHoverRefreshWhenCountyVoteDeltaReady(ct, fy, ty); } catch (_) {}
+          return;
+        }
+        if (![vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)))) return;
+        voteLines.push({
+          label: `${shortYearLabel(fy)}→${shortYearLabel(ty)}`,
+          repDelta: formatSignedCompactDelta(vote.repDelta),
+          demDelta: formatSignedCompactDelta(vote.demDelta),
+          totalDelta: formatSignedCompactDelta(vote.totalDelta)
+        });
+      });
 
       const hasPopDelta = !!pop && Number.isFinite(popDeltaRaw);
       if (!hasPopDelta) return '';
@@ -12514,10 +12650,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const popDelta2425 = Number.isFinite(popDelta2425Raw) ? formatSignedCompactDelta(popDelta2425Raw) : '';
       const popPct2425 = Number.isFinite(popPct2425Raw) ? formatSignedPctDelta(popPct2425Raw, 1) : '';
 
-      const hasVote = !!vote && [vote.repDelta, vote.demDelta, vote.totalDelta].every(n => Number.isFinite(Number(n)));
-      const repDelta = hasVote ? formatSignedCompactDelta(vote.repDelta) : '';
-      const demDelta = hasVote ? formatSignedCompactDelta(vote.demDelta) : '';
-      const totalDelta = hasVote ? formatSignedCompactDelta(vote.totalDelta) : '';
+      const hasVote = voteLines.length > 0;
+      const primaryVote = hasVote ? voteLines[0] : null;
+      const repDelta = primaryVote ? primaryVote.repDelta : '';
+      const demDelta = primaryVote ? primaryVote.demDelta : '';
+      const totalDelta = primaryVote ? primaryVote.totalDelta : '';
 
       if (isDesktopTooltipMode()) {
         const collapsed = presentation === 'desktop-collapsed';
@@ -12530,10 +12667,12 @@ document.addEventListener('DOMContentLoaded', function() {
           : '';
 
         const votesParts = hasVote
-          ? [
-            `Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span>`,
-            `Total vote gain (20→24): <span style="font-weight:800;">${escapeHtml(totalDelta)}</span>`
-          ]
+          ? voteLines.map(v => (
+            `Raw votes (${escapeHtml(v.label)}): ` +
+            `<span style="color:#fecaca;font-weight:800;">R ${escapeHtml(v.repDelta)}</span> • ` +
+            `<span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(v.demDelta)}</span> • ` +
+            `<span style="font-weight:800;">Total ${escapeHtml(v.totalDelta)}</span>`
+          ))
           : [];
 
         const lines = [
@@ -12544,8 +12683,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ];
 
         // In collapsed hover mode, still show a compact vote line if it's available.
-        if (collapsed && hasVote) {
-          lines.push(`Votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span>`);
+        if (collapsed && primaryVote) {
+          lines.push(`Votes (${escapeHtml(primaryVote.label)}): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span>`);
         }
 
         return `
@@ -12560,7 +12699,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="tooltip-delta-line">Population (20→25): <span style="font-weight:800;">${escapeHtml(popDelta)}${popPct ? ` (${escapeHtml(popPct)})` : ''}</span></div>
           ${popDelta2024 ? `<div class="tooltip-delta-line">Population (20→24): <span style="font-weight:800;">${escapeHtml(popDelta2024)}${popPct2024 ? ` (${escapeHtml(popPct2024)})` : ''}</span></div>` : ''}
           ${popDelta2425 ? `<div class="tooltip-delta-line">Population (24→25): <span style="font-weight:800;">${escapeHtml(popDelta2425)}${popPct2425 ? ` (${escapeHtml(popPct2425)})` : ''}</span></div>` : ''}
-          ${hasVote ? `<div class="tooltip-delta-line">Raw votes (20→24): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(totalDelta)}</span></div>` : ''}
+          ${hasVote ? voteLines.map(v => `<div class="tooltip-delta-line">Raw votes (${escapeHtml(v.label)}): <span style="color:#fecaca;font-weight:800;">R ${escapeHtml(v.repDelta)}</span> • <span style="color:#bfdbfe;font-weight:800;">D ${escapeHtml(v.demDelta)}</span> • <span style="font-weight:800;">Total ${escapeHtml(v.totalDelta)}</span></div>`).join('') : ''}
         </div>
       `.trim();
     }
@@ -25947,11 +26086,13 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
         contestManifest = manifest?.files || [];
+        try { contestYearsByTypeCache.clear(); } catch (_) {}
         // Add CSV-backed presidential elections not present in the precomputed contest slices.
         Object.keys(PRESIDENT_OPEN_ELECTIONS_CSV).map(Number).forEach(y => {
           const exists = contestManifest.some(e => e && e.contest_type === 'president' && Number(e.year) === Number(y));
           if (!exists) contestManifest.push({ year: y, contest_type: 'president', file: `open_elections_csv_${y}.csv`, rows: 1 });
         });
+        try { contestYearsByTypeCache.clear(); } catch (_) {}
         electionData = [];
         updateContestSelectForCurrentView();
         setStatus('Election index loaded');
@@ -26728,7 +26869,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
       try { updateContextBanner(); } catch (_) {}
-      try { scheduleCountyVoteDeltaCache2020to2024(contestType); } catch (_) {}
+      try { scheduleCountyVoteDeltaCachesForTooltip(contestType, Number(year), 2); } catch (_) {}
 
       // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
       try {
