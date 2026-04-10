@@ -9248,7 +9248,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <details class="contest-tools-more" aria-label="More tools">
                     <summary class="tool-chip-btn tool-chip-btn-muted" role="button">More</summary>
                     <div class="contest-tools-row contest-tools-row-more">
-                      <button id="follow-hover-toggle" title="Auto-update hover tooltip while panning (mobile)" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-follow-hover" aria-label="Toggle auto hover while panning" aria-pressed="false">Auto Hover</button>
+                      <button id="follow-hover-toggle" title="Auto-update hover tooltip while panning (mobile)" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-follow-hover" aria-label="Toggle auto hover while panning" aria-pressed="false">Auto Hover Off</button>
                       <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
                       <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
                     </div>
@@ -10060,7 +10060,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const btn = document.getElementById('follow-hover-toggle');
       if (!btn) return;
       btn.setAttribute('aria-pressed', followHoverEnabled ? 'true' : 'false');
-      btn.textContent = followHoverEnabled ? 'Auto Hover On' : 'Auto Hover';
+      btn.textContent = followHoverEnabled ? 'Auto Hover On' : 'Auto Hover Off';
     }
 
     function setFollowHoverEnabled(next) {
