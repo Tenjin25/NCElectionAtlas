@@ -103,7 +103,22 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 10, 2026
+**Last updated:** April 11, 2026
+
+### 2022 Lines District Results Fix (April 11, 2026)
+
+District views on the **2022 MQP lines** now **prefer the hybrid district slices** (`data/district_contests_hybrid/`) for all available years (2000+). This closes a real-world mismatch in edge-case counties where the older legacy shatter outputs can smear votes across split precincts.
+
+Why this matters:
+- The legacy district slices in `data/district_contests/` (source: `batch_shatter_vap_party_split`) can under-match in modern precinct-coded counties like Gaston.
+- The hybrid slices are built from the consolidated `nc_district_results_2022_lines_hybrid.json` output with near-100% precinct-key coverage.
+
+Concrete example (what you should see now on 2022 lines):
+- **Governor 2024, State House:** **HD-109 = Stein (D)** in the hybrid slice.  
+  The legacy slice incorrectly showed **Robinson (R)** for HD-109.
+
+Implementation note:
+- The map will still fall back to the legacy `district_contests` slice if a hybrid file for that contest/year is missing, but hybrid is now first choice for 2022-line district views.
 
 ### Hover Tooltip Crash Course (April 2026)
 
@@ -686,6 +701,15 @@ py scripts/split_district_results_by_contest_year.py `
   --src data/nc_district_results_2022_lines_hybrid.json `
   --out-dir data/district_contests_hybrid
 ```
+
+### Hybrid 2022-Lines District Slices
+
+The atlas now prefers **hybrid 2022-lines district slices** when rendering district views on 2022 MQP lines. These files live in:
+
+- `data/district_contests_hybrid/*.json`
+- `data/district_contests_hybrid/manifest.json`
+
+Use these slices if you see suspicious cross-county splits (notably Gaston HD-108/109/110). They generally have higher precinct-key coverage and reduce vote smearing across split precincts.
 
 ### Rebuilding Demographic Layers
 
