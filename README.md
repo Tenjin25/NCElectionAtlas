@@ -83,7 +83,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer (measured as `2022 Senate margin - closest prior presidential margin`) on top of the presidential baseline with light guardrails, so counties can realistically ticket-split instead of behaving like a presidential clone. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
-- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial where available), with synchronized legend colors in both standard and colorblind palettes
+- **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
 - **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
@@ -140,6 +140,11 @@ The Atlas uses a split hover-tooltip system so the map stays fast on desktop whi
 - Tightened the desktop hover tooltip width cap so hover cards stay compact (mobile dock/sheet layout unchanged).
 - Standardized camera padding so search clicks, district clicks, and other zoom-to-feature flows don’t hide the target under the sidebar/bottom sheet.
 - Added keyboard focus rings and `prefers-reduced-motion` support (no feature changes, just safer UX defaults).
+
+### District Demographics Breakdown Expansion (April 10, 2026)
+
+- Expanded the district demographic CSV outputs to include additional VAP race breakdown fields (Native / Asian / Pacific / Multiracial / Other).
+- Updated district sidebar/hover demographic breakdowns to surface those additional lines when a group is a large share (≥ 30%) to keep the card readable while still calling out heavily Native or multiracial districts.
 
 ### US Senate Model Correctness + Contest Controls (April 3, 2026)
 
@@ -411,7 +416,7 @@ The current `index.html` includes several speed-focused improvements that are al
 
 - **Primary signal:** Each geography is colored by the largest reported race share among available fields.
   - County/precinct overlays use white, black, Hispanic, Native, Asian, Pacific, and multiracial shares when present.
-  - District overlays continue to use whichever race-share columns exist in the district CSV inputs.
+  - District overlays use the district CSV race-share columns (white/black/Hispanic, plus Native/Asian/Pacific/Multiracial/Other where present).
 - **Near-tie handling:** If the top two race shares are effectively tied, the map uses a mixed-color class (`Near tie / mixed`) rather than forcing one group.
 - **No-data handling:** Geographies without usable fields render as `No demographic data`.
 
@@ -433,6 +438,7 @@ The current `index.html` includes several speed-focused improvements that are al
 ### Hover/Sidebar Behavior
 
 - County and precinct detail cards include race-share chips for quick demographic context.
+- District detail cards show additional race lines (Native / Asian / Pacific / Multiracial / Other) when a group is ≥ 30%.
 - Hover cards include a compact competitiveness tier chip next to winner/shift/flip badges (instead of relying only on a small title badge).
 - Recent styling passes specifically targeted county hover, precinct hover, and pinned tooltip readability on dark backgrounds.
 - If a field is missing for a group, the chip can display `N/A` while the map still renders any available race shares.
@@ -700,6 +706,8 @@ Rebuild district demographic CSVs for congressional/state-house/state-senate ove
 ```powershell
 py scripts/build_district_demographics.py
 ```
+
+Outputs include `*_vap_pct` fields for white/black/Hispanic plus Native/Asian/Pacific/Multiracial/Other (when available in the underlying VTD demographics file).
 
 ### Building CVAP Aggregates (Redistricting Data Hub)
 
