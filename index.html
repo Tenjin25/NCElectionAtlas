@@ -16621,10 +16621,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
-    function closeRaceDisplayDigits(marginPct) {
+    function preservesTwoDecimalMargin(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      if (pct < 0.02) return 3;
-      return 2;
+      return Number(pct.toFixed(2)) >= 0.02;
+    }
+
+    function closeRaceDisplayDigits(marginPct) {
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatPctForCloseRace(value, marginPct) {
@@ -16640,8 +16643,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function marginDisplayDigits(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct < 0.02 ? 3 : 2;
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatMarginPctForDisplay(marginPct) {
@@ -16675,8 +16677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginDisplayDigits(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct < 0.02 ? 3 : 2;
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatCountyMarginPctForDisplay(marginPct) {
