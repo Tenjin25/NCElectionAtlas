@@ -139,7 +139,7 @@
       left: 8px !important;
       right: 8px !important;
       top: auto !important;
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px + var(--vote-counter-h, 0px) + 8px) !important;
+        bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
       max-width: none !important;
       width: auto !important;
       max-height: min(54vh, calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
@@ -2490,7 +2490,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .vote-counter {
     position: fixed;
     top: auto;
-    bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + 58px);
+    bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + 74px);
     min-width: auto;
     width: min(92vw, 420px);
     max-width: 92vw;
@@ -3390,11 +3390,11 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     html.android-mobile .vote-counter {
-      bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + var(--android-vv-bottom, 0px) + 58px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--android-vv-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px) !important;
     }
 
     html.android-mobile #hover-tooltip {
-      bottom: calc(var(--legend-h, 56px) + var(--safe-bottom, 0px) + var(--android-vv-bottom, 0px) + 8px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--android-vv-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
     }
 
     .contest-toolbar {
@@ -8138,11 +8138,11 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     .vote-counter {
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px) !important;
     }
 
     #hover-tooltip {
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 8px + var(--vote-counter-h, 0px) + 8px) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
     }
 
     body.mobile-sheet-open #hover-tooltip {
