@@ -8631,6 +8631,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let contestManifest = [];
     let districtManifest = [];
     let districtManifestByLines = { '2022': [], '2024': [] };
+    let hybridDistrictManifestKeys = null;
     let currentDistrictLinesYear = 2022;
     const districtGeometryCache = new Map();
     let congressionalData = []; // Optional legacy district-level table
@@ -9004,7 +9005,7 @@ document.addEventListener('DOMContentLoaded', function() {
         out.push(`${calibrated2020Dir}/${key}.json`);
       }
       // Prefer hybrid shatter outputs on 2022 lines when available (higher match coverage in edge-case counties like Gaston).
-      if (ly === 2022 && Number.isFinite(y) && y >= 2000 && hybridDir) {
+      if (ly === 2022 && Number.isFinite(y) && y >= 2000 && hybridDir && hybridDistrictManifestKeys && hybridDistrictManifestKeys.has(key)) {
         out.push(`${hybridDir}/${key}.json`);
       }
       if (baseDir) out.push(`${baseDir}/${key}.json`);
@@ -20183,6 +20184,25 @@ document.addEventListener('DOMContentLoaded', function() {
               console.warn('Primary district manifest not loaded:', err?.message || err);
             }
           }
+        }
+
+        // Hybrid district manifest is optional, but when present it prevents 404 spam
+        // by only attempting hybrid slices that actually exist.
+        try {
+          const hybridDir = (CONFIG.paths?.district_contests_hybrid_dir || withBase('./data/district_contests_hybrid') || '').toString().trim();
+          if (hybridDir) {
+            const hManifest = await loadJSON(`${hybridDir}/manifest.json`);
+            const files = Array.isArray(hManifest?.files) ? hManifest.files : [];
+            hybridDistrictManifestKeys = new Set(
+              files
+                .filter(f => f && f.scope && f.contest_type && f.year)
+                .map(f => `${f.scope}_${f.contest_type}_${f.year}`)
+            );
+          } else {
+            hybridDistrictManifestKeys = null;
+          }
+        } catch (_) {
+          hybridDistrictManifestKeys = null;
         }
 
         if (!loadedAnyDistrictManifest) {
