@@ -10838,8 +10838,8 @@ document.addEventListener('DOMContentLoaded', function() {
         out.push(`${calibrated2020Dir}/${key}.json`);
       }
       // Prefer the hybrid shatter outputs on 2022 lines when available. These tend to have higher
-      // precinct-key match coverage (especially for 2020+ precinct naming) than the legacy slices.
-      if (ly === 2022 && Number.isFinite(y) && y >= 2012 && hybridDir) {
+      // precinct-key match coverage than the legacy slices (including older cycles like 2002/2004/2008/2010).
+      if (ly === 2022 && Number.isFinite(y) && y >= 2000 && hybridDir) {
         out.push(`${hybridDir}/${key}.json`);
       }
       if (baseDir) out.push(`${baseDir}/${key}.json`);

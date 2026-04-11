@@ -8995,12 +8995,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const key = `${scope}_${contestType}_${year}`;
       const out = [];
       const calibrated2020Dir = (CONFIG.paths?.district_contests_2020_2024_dir || '').toString().trim();
+      const hybridDir = (CONFIG.paths?.district_contests_hybrid_dir || withBase('./data/district_contests_hybrid') || '').toString().trim();
       const baseDir = (getActiveDistrictContestsDir(linesYear) || '').toString().trim();
 
       // Prefer calibrated slices only for congressional scope on 2022 lines.
       // Legislative scopes continue to use the primary district_contests data.
       if (ly === 2022 && scope === 'congressional' && Number.isFinite(y) && y >= 2020 && calibrated2020Dir) {
         out.push(`${calibrated2020Dir}/${key}.json`);
+      }
+      // Prefer hybrid shatter outputs on 2022 lines when available (higher match coverage in edge-case counties like Gaston).
+      if (ly === 2022 && Number.isFinite(y) && y >= 2000 && hybridDir) {
+        out.push(`${hybridDir}/${key}.json`);
       }
       if (baseDir) out.push(`${baseDir}/${key}.json`);
 
