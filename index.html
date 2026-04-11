@@ -1786,6 +1786,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   color: #0f172a;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1828,6 +1829,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
 }
@@ -1838,6 +1840,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   color: #475569;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1845,6 +1848,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 .focus-glance-micro--full {
   display: block;
   -webkit-line-clamp: unset;
+  line-clamp: unset;
   -webkit-box-orient: unset;
   overflow: visible;
 }
@@ -1898,6 +1902,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 .focus-mini-card .v.rep { color: #7f1d1d; }
@@ -2205,6 +2210,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
 }
@@ -2228,6 +2234,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-story-summary {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -4254,7 +4261,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     word-break: break-word;
   }
@@ -5718,6 +5727,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       text-overflow: ellipsis;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       max-height: calc(1.2em * 2);
     }
@@ -7100,6 +7110,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
@@ -16610,17 +16621,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
-    function closeRaceDisplayDigits(marginPct, value = null) {
+    function closeRaceDisplayDigits(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      const v = Math.abs(Number(value));
-      if (pct < 0.05) return 3;
-      if (pct < 0.1 && Number.isFinite(v) && v > 0 && Number(v.toFixed(2)) === 0) return 3;
+      if (pct < 0.02) return 3;
       return 2;
     }
 
     function formatPctForCloseRace(value, marginPct) {
       const numeric = Number(value || 0);
-      const digits = closeRaceDisplayDigits(marginPct, numeric);
+      const digits = closeRaceDisplayDigits(marginPct);
       return numeric.toFixed(digits);
     }
 
@@ -16632,7 +16641,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function marginDisplayDigits(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return pct < 0.05 ? 3 : 2;
+      return pct < 0.02 ? 3 : 2;
     }
 
     function formatMarginPctForDisplay(marginPct) {
@@ -16667,7 +16676,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function countyMarginDisplayDigits(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return pct < 0.005 ? 3 : 2;
+      return pct < 0.02 ? 3 : 2;
     }
 
     function formatCountyMarginPctForDisplay(marginPct) {
