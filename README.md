@@ -119,6 +119,7 @@ Concrete example (what you should see now on 2022 lines):
 
 Implementation note:
 - The map will still fall back to the legacy `district_contests` slice if a hybrid file for that contest/year is missing, but hybrid is now first choice for 2022-line district views.
+- Deployment targets `index.html` only (no `index.prefix.html` deployment).
 
 ### Hover Tooltip Crash Course (April 2026)
 
