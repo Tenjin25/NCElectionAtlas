@@ -25907,6 +25907,46 @@ document.addEventListener('DOMContentLoaded', function() {
         .join('');
     }
 
+    function buildDistrictExtraRaceLinesHTML(infoRow, thresholdPct = 30) {
+      if (!infoRow) return '';
+      const threshold = numericOrNull(thresholdPct) ?? 0;
+      const candidates = [
+        { key: 'native_vap_pct', label: 'Native' },
+        { key: 'asian_vap_pct', label: 'Asian' },
+        { key: 'pacific_vap_pct', label: 'Pacific' },
+        { key: 'multiracial_vap_pct', label: 'Multiracial' },
+        { key: 'other_vap_pct', label: 'Other' }
+      ];
+      const lines = [];
+      for (const c of candidates) {
+        const n = numericOrNull(infoRow?.[c.key]);
+        if (n === null) continue;
+        if (n < threshold) continue;
+        lines.push(`<div style="font-size:14px;"><strong>${c.label}:</strong> ${n.toFixed(1)}%</div>`);
+      }
+      return lines.join('');
+    }
+
+    function buildDistrictExtraRaceInlineHTML(infoRow, thresholdPct = 30) {
+      if (!infoRow) return '';
+      const threshold = numericOrNull(thresholdPct) ?? 0;
+      const candidates = [
+        { key: 'native_vap_pct', label: 'N' },
+        { key: 'asian_vap_pct', label: 'A' },
+        { key: 'pacific_vap_pct', label: 'P' },
+        { key: 'multiracial_vap_pct', label: 'M' },
+        { key: 'other_vap_pct', label: 'O' }
+      ];
+      const parts = [];
+      for (const c of candidates) {
+        const n = numericOrNull(infoRow?.[c.key]);
+        if (n === null) continue;
+        if (n < threshold) continue;
+        parts.push(` <span style="font-weight:700;color:#e2e8f0;">${c.label}:</span>${n.toFixed(1)}%`);
+      }
+      return parts.join('');
+    }
+
     function showDistrictDetails(districtNum) {
       if (!SIDEBAR_ENABLED) return;
       const detailsDiv = document.getElementById('county-details');
@@ -25923,6 +25963,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let demographicInfo = '';
       const desc = getDistrictDescription('congressional', districtNum);
       if (districtInfo) {
+        const extraRaceLines = buildDistrictExtraRaceLinesHTML(districtInfo, 30);
         demographicInfo = `
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
@@ -25931,6 +25972,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="font-size:14px;"><strong>White:</strong> ${districtInfo.white_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Black:</strong> ${districtInfo.black_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Hispanic:</strong> ${districtInfo.hispanic_vap_pct}%</div>
+            ${extraRaceLines}
           </div>
         `;
       } else if (desc) {
@@ -26010,6 +26052,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let demographicInfo = '';
       const desc = getDistrictDescription(scope, districtNum);
       if (infoRow) {
+        const extraRaceLines = buildDistrictExtraRaceLinesHTML(infoRow, 30);
         demographicInfo = `
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
@@ -26018,6 +26061,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="font-size:14px;"><strong>White:</strong> ${infoRow.white_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Black:</strong> ${infoRow.black_vap_pct}%</div>
             <div style="font-size:14px;"><strong>Hispanic:</strong> ${infoRow.hispanic_vap_pct}%</div>
+            ${extraRaceLines}
           </div>
         `;
       } else if (desc) {
@@ -26150,11 +26194,13 @@ document.addEventListener('DOMContentLoaded', function() {
         : null;
       const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : Number(demoRow.total_population || 0);
       const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP:' : 'Pop:';
+      const extras = buildDistrictExtraRaceInlineHTML(demoRow, 30);
       return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;color:#cbd5e1;">` +
         `<span style="font-weight:700;color:#e2e8f0;">${metricLabel}</span> ${Math.round(metricValue).toLocaleString()}` +
         ` &nbsp;<span style="font-weight:700;color:#e2e8f0;">W:</span>${demoRow.white_vap_pct}%` +
         ` <span style="font-weight:700;color:#e2e8f0;">B:</span>${demoRow.black_vap_pct}%` +
         ` <span style="font-weight:700;color:#e2e8f0;">H:</span>${demoRow.hispanic_vap_pct}%` +
+        extras +
         `</div>`;
     }
 

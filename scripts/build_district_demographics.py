@@ -8,7 +8,9 @@ Outputs (overwrites existing):
   data/nc_state_senate_districts.csv
 
 Columns written:
-  district, total_population, white_vap_pct, black_vap_pct, hispanic_vap_pct
+  district, total_population,
+  white_vap_pct, black_vap_pct, hispanic_vap_pct,
+  native_vap_pct, asian_vap_pct, pacific_vap_pct, multiracial_vap_pct, other_vap_pct
 
 Usage:
   python scripts/build_district_demographics.py
@@ -44,6 +46,13 @@ DEMO_COLS = {
     "V_20_VAP_White": float,    # VAP White (non-Hispanic)
     "V_20_VAP_Black": float,    # VAP Black (alone or in combination)
     "V_20_VAP_Hispanic": float, # VAP Hispanic
+    "V_20_VAP_Native": float,   # VAP AIAN (alone or in combination)
+    "V_20_VAP_Asian": float,    # VAP Asian (alone or in combination)
+    "V_20_VAP_Pacific": float,  # VAP NHPI (alone or in combination)
+    # "Other" + "Two or more" are only available as non-Hispanic-alone columns in this file.
+    # We still express them as a share of total VAP to keep all *_vap_pct values comparable.
+    "V_20_VAP_NH_OtherAlone": float,
+    "V_20_VAP_NH_TwoOrMore": float,
 }
 
 # ---------------------------------------------------------------------------
@@ -93,13 +102,35 @@ def build_district_demographics(
         print(f"  WARNING: {unmatched} crosswalk rows had no demographic match")
 
     # Weight each demographic value by the area weight for this VTD-district slice
-    for col in ["T_20_CENS_Total", "V_20_VAP_Total", "V_20_VAP_White", "V_20_VAP_Black", "V_20_VAP_Hispanic"]:
+    for col in [
+        "T_20_CENS_Total",
+        "V_20_VAP_Total",
+        "V_20_VAP_White",
+        "V_20_VAP_Black",
+        "V_20_VAP_Hispanic",
+        "V_20_VAP_Native",
+        "V_20_VAP_Asian",
+        "V_20_VAP_Pacific",
+        "V_20_VAP_NH_OtherAlone",
+        "V_20_VAP_NH_TwoOrMore",
+    ]:
         merged[col] = merged[col].fillna(0.0) * merged["area_weight"]
 
     # Aggregate to district level
     agg = (
         merged.groupby("district")[
-            ["T_20_CENS_Total", "V_20_VAP_Total", "V_20_VAP_White", "V_20_VAP_Black", "V_20_VAP_Hispanic"]
+            [
+                "T_20_CENS_Total",
+                "V_20_VAP_Total",
+                "V_20_VAP_White",
+                "V_20_VAP_Black",
+                "V_20_VAP_Hispanic",
+                "V_20_VAP_Native",
+                "V_20_VAP_Asian",
+                "V_20_VAP_Pacific",
+                "V_20_VAP_NH_OtherAlone",
+                "V_20_VAP_NH_TwoOrMore",
+            ]
         ]
         .sum()
         .reset_index()
@@ -114,6 +145,11 @@ def build_district_demographics(
     agg["white_vap_pct"]    = pct(agg["V_20_VAP_White"],    agg["V_20_VAP_Total"])
     agg["black_vap_pct"]    = pct(agg["V_20_VAP_Black"],    agg["V_20_VAP_Total"])
     agg["hispanic_vap_pct"] = pct(agg["V_20_VAP_Hispanic"], agg["V_20_VAP_Total"])
+    agg["native_vap_pct"]   = pct(agg["V_20_VAP_Native"],   agg["V_20_VAP_Total"])
+    agg["asian_vap_pct"]    = pct(agg["V_20_VAP_Asian"],    agg["V_20_VAP_Total"])
+    agg["pacific_vap_pct"]  = pct(agg["V_20_VAP_Pacific"],  agg["V_20_VAP_Total"])
+    agg["other_vap_pct"]    = pct(agg["V_20_VAP_NH_OtherAlone"], agg["V_20_VAP_Total"])
+    agg["multiracial_vap_pct"] = pct(agg["V_20_VAP_NH_TwoOrMore"], agg["V_20_VAP_Total"])
     agg["total_population"] = agg["T_20_CENS_Total"].round(0).astype(int)
 
     # Read the existing CSV to preserve the district number format (e.g. "01" vs "1")
@@ -140,6 +176,11 @@ def build_district_demographics(
                 "white_vap_pct": 0.0,
                 "black_vap_pct": 0.0,
                 "hispanic_vap_pct": 0.0,
+                "native_vap_pct": 0.0,
+                "asian_vap_pct": 0.0,
+                "pacific_vap_pct": 0.0,
+                "multiracial_vap_pct": 0.0,
+                "other_vap_pct": 0.0,
             })
         else:
             r = row.iloc[0]
@@ -149,9 +190,28 @@ def build_district_demographics(
                 "white_vap_pct": float(r["white_vap_pct"]),
                 "black_vap_pct": float(r["black_vap_pct"]),
                 "hispanic_vap_pct": float(r["hispanic_vap_pct"]),
+                "native_vap_pct": float(r["native_vap_pct"]),
+                "asian_vap_pct": float(r["asian_vap_pct"]),
+                "pacific_vap_pct": float(r["pacific_vap_pct"]),
+                "multiracial_vap_pct": float(r["multiracial_vap_pct"]),
+                "other_vap_pct": float(r["other_vap_pct"]),
             })
 
-    result = pd.DataFrame(out_rows, columns=["district", "total_population", "white_vap_pct", "black_vap_pct", "hispanic_vap_pct"])
+    result = pd.DataFrame(
+        out_rows,
+        columns=[
+            "district",
+            "total_population",
+            "white_vap_pct",
+            "black_vap_pct",
+            "hispanic_vap_pct",
+            "native_vap_pct",
+            "asian_vap_pct",
+            "pacific_vap_pct",
+            "multiracial_vap_pct",
+            "other_vap_pct",
+        ],
+    )
     result.to_csv(out_path, index=False)
     print(f"  Written {len(result)} districts to {out_path.relative_to(ROOT)}")
 
