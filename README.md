@@ -127,6 +127,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `data/tmp/block_assign_extract_2024/SL_2024_4.csv`
 - That live allocator path confirms **HD-68 is entirely in Union County**. A Mecklenburg sliver may appear in precinct-overlay review artifacts, but it is not part of the block-level source used to build the live 2024-lines district slice.
 
+### SD-26 Governor 2024 Lines Correction (April 13, 2026)
+
+- Corrected **State Senate District 26** in the live `Governor 2024` file for the **2024 district lines**.
+- Updated live source:
+  - `data/district_contests_2024_lines/state_senate_governor_2024.json`
+- The corrected SD-26 values are **58,375 DEM / 60,243 REP / 6,222 OTH** (`124,840` total; REP +`1.5%`).
+- This promotes the validated temporary senate calibration result into the live 2024-lines senate governor slice.
+
 ### Margin Precision Consistency (April 11, 2026)
 
 - Standardized very-close margin formatting so the atlas keeps **two decimals whenever the margin of victory is `0.02` points or greater**.
