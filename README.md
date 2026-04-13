@@ -117,6 +117,16 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `data/district_contests_dra_review/` for DRA benchmark review copies
 - Only the primary live folders above are used by the atlas unless code is explicitly rewired to an alternate output directory.
 
+### HD-68 Governor 2024 Lines Correction (April 13, 2026)
+
+- Corrected **State House District 68** in the live `Governor 2024` file for the **2024 district lines**.
+- Updated live source:
+  - `data/district_contests_2024_lines/state_house_governor_2024.json`
+- The corrected HD-68 values are **25,832 DEM / 25,847 REP / 3,418 OTH** (`55,097` total; REP +`0.03%`).
+- Verified the live 2024-lines geography against the authoritative block assignment input:
+  - `data/tmp/block_assign_extract_2024/SL_2024_4.csv`
+- That live allocator path confirms **HD-68 is entirely in Union County**. A Mecklenburg sliver may appear in precinct-overlay review artifacts, but it is not part of the block-level source used to build the live 2024-lines district slice.
+
 ### Margin Precision Consistency (April 11, 2026)
 
 - Standardized very-close margin formatting so the atlas keeps **two decimals whenever the margin of victory is `0.02` points or greater**.
