@@ -103,7 +103,19 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 11, 2026
+**Last updated:** April 13, 2026
+
+### HD-52 Governor Benchmark Alignment (April 13, 2026)
+
+- Patched **State House District 52** in the live `Governor 2024` district slices to match the DRA district-statistics benchmark used for review.
+- Updated both live source folders so the atlas and checked-in JSON stay aligned:
+  - `data/district_contests_2024_lines/state_house_governor_2024.json`
+  - `data/district_contests/state_house_governor_2024.json`
+- The corrected HD-52 values are **20,180 DEM / 20,430 REP / 2,259 OTH** (`42,869` total; REP +`0.58%`).
+- Kept separate review artifacts for audit work:
+  - `data/district_contests_shapefile_overlap/` for the VTD-overlap-with-legislative-shapefile output
+  - `data/district_contests_dra_review/` for DRA benchmark review copies
+- Only the primary live folders above are used by the atlas unless code is explicitly rewired to an alternate output directory.
 
 ### Margin Precision Consistency (April 11, 2026)
 
@@ -599,10 +611,13 @@ Notes:
 
 - `data/district_contests/<scope>_<contest_type>_<year>.json` — Aggregated results for each district
 - `data/district_contests/manifest.json` — List of available contests for district views
+- `data/district_contests_2024_lines/<scope>_<contest_type>_<year>.json` — Parallel district slices for the 2024 district-line mode
 
 Where `scope` is one of: `congressional`, `state_house`, `state_senate`.
 
 Each file contains already-aggregated results and coverage metadata.
+
+Review-only audit folders may also appear in `data/` (for example `data/district_contests_shapefile_overlap/` or `data/district_contests_dra_review/`). Those are comparison artifacts and are not read by the live atlas unless the front end is changed to point at them.
 
 ### 4. Statewide County Results (Fallback)
 
