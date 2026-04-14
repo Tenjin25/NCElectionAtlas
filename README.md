@@ -159,6 +159,17 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - The corrected SD-18 values are **61,654 DEM / 62,266 REP / 1,969 OTH** (`125,889` total; REP +`0.49%`).
 - This updates the live 2024-lines SD-18 presidential entry to the requested vote totals.
 
+### SD-43 and SD-44 President Reversion To Earlier 2024-Lines Values (April 14, 2026)
+
+- Restored the earlier **State Senate District 43 and 44** `President 2024` results in the live **2024-lines senate slice**.
+- Transferred the same restored values into the live **2022-lines senate slice** so both line sets match.
+- Updated live sources:
+  - `data/district_contests_2024_lines/state_senate_president_2024.json`
+  - `data/district_contests/state_senate_president_2024.json`
+- Restored values:
+  - **SD-43:** **42,342 DEM / 66,690 REP / 1,311 OTH** (`110,343` total; REP +`22.07%`)
+  - **SD-44:** **33,165 DEM / 81,975 REP / 1,061 OTH** (`116,201` total; REP +`42.0%`)
+
 ### Margin Precision Consistency (April 11, 2026)
 
 - Standardized very-close margin formatting so the atlas keeps **two decimals whenever the margin of victory is `0.02` points or greater**.
