@@ -151,6 +151,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Applied across the affected 2024 senate statewide/judicial contest files, including `Governor 2024`.
 - This keeps SD-43 and SD-44 aligned across 2022-lines and 2024-lines where those districts did not materially change.
 
+### SD-18 President 2024 Lines Correction (April 13, 2026)
+
+- Corrected **State Senate District 18** in the live `President 2024` file for the **2024 district lines**.
+- Updated live source:
+  - `data/district_contests_2024_lines/state_senate_president_2024.json`
+- The corrected SD-18 values are **61,654 DEM / 62,266 REP / 1,969 OTH** (`125,889` total; REP +`0.49%`).
+- This updates the live 2024-lines SD-18 presidential entry to the requested vote totals.
+
 ### Margin Precision Consistency (April 11, 2026)
 
 - Standardized very-close margin formatting so the atlas keeps **two decimals whenever the margin of victory is `0.02` points or greater**.
