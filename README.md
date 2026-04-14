@@ -135,6 +135,22 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - The corrected SD-26 values are **58,375 DEM / 60,243 REP / 6,222 OTH** (`124,840` total; REP +`1.5%`).
 - This promotes the validated temporary senate calibration result into the live 2024-lines senate governor slice.
 
+### SD-44 President 2024 Lines Transfer (April 13, 2026)
+
+- Transferred the live **State Senate District 44** `President 2024` result from the **2022-lines live senate slice** into the **2024-lines live senate slice**.
+- Updated live source:
+  - `data/district_contests_2024_lines/state_senate_president_2024.json`
+- The corrected SD-44 values are **35,233 DEM / 79,448 REP / 1,089 OTH** (`115,770` total; REP +`38.19%`).
+- This makes the live 2024-lines SD-44 presidential entry match the current live 2022-lines senate district result, per the requested transfer.
+
+### SD-43 and SD-44 Senate 2024 Contest Sync To 2022 Lines (April 13, 2026)
+
+- Synced the live **State Senate Districts 43 and 44** entries in the **2022-lines live senate 2024 contest slices** to the current **2024-lines live senate 2024 slices**.
+- Updated live source folder:
+  - `data/district_contests/`
+- Applied across the affected 2024 senate statewide/judicial contest files, including `Governor 2024`.
+- This keeps SD-43 and SD-44 aligned across 2022-lines and 2024-lines where those districts did not materially change.
+
 ### Margin Precision Consistency (April 11, 2026)
 
 - Standardized very-close margin formatting so the atlas keeps **two decimals whenever the margin of victory is `0.02` points or greater**.
