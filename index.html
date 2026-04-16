@@ -19053,11 +19053,16 @@ document.addEventListener('DOMContentLoaded', function() {
       return buildTooltipShell(title, lines);
     }
 
+    function formatShiftLabel(shiftPct) {
+      const s = Number(shiftPct) || 0;
+      const abs = Math.abs(s);
+      if (abs < 0.01) return 'No change';
+      return `${s > 0 ? 'R' : 'D'} + ${abs.toFixed(2)}%`;
+    }
+
     function shiftChipHTML(shiftPct, prevYear, year) {
       const s = Number(shiftPct) || 0;
-      const dir = s > 0 ? 'R' : (s < 0 ? 'D' : 'T');
-      const abs = Math.abs(s);
-      const label = abs < 0.01 ? 'No change' : `${dir} + ${abs.toFixed(2)}%`;
+      const label = formatShiftLabel(s);
       const dotColor = colorForShiftMode(s);
       const years = (prevYear && year) ? `${prevYear}→${year}` : '';
       return `<span class="meta-chip shift"><span class="dot" style="background:${dotColor};"></span>Shift: ${label}${years ? ` <span style="color:#64748b;font-weight:800;">(${years})</span>` : ''}</span>`;
@@ -21051,9 +21056,19 @@ document.addEventListener('DOMContentLoaded', function() {
         prevSignedForFlip = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
       }
 
+      let shiftDeltaForTooltip = NaN;
       if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
-        const prevSigned = (prevSignedForFlip !== null) ? prevSignedForFlip : 0;
-        chips.push(shiftChipHTML(signedMarginPct - prevSigned, vizShiftCache.prevYear, vizShiftCache.year));
+        let prevSignedForShift = prevSignedForFlip;
+        if (prevSignedForShift === null && vizShiftCache?.prevCountyTotals) {
+          const prevTotals = vizShiftCache.prevCountyTotals[norm] || null;
+          if (prevTotals) {
+            prevSignedForShift = signedMarginPctFromVotes(prevTotals.dem, prevTotals.rep, prevTotals.total);
+          }
+        }
+        if (Number.isFinite(Number(prevSignedForShift))) {
+          shiftDeltaForTooltip = signedMarginPct - Number(prevSignedForShift);
+          chips.push(shiftChipHTML(shiftDeltaForTooltip, vizShiftCache.prevYear, vizShiftCache.year));
+        }
       } else {
         chips.push(winnerChipHTML(winner));
       }
@@ -21079,9 +21094,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const flipLine = (prevSignedForFlip !== null)
         ? flipLineHTML(prevSignedForFlip, signedMarginPct, vizPrevCache?.prevYear || null, Number(year))
         : '';
-      const shiftDelta = (prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
-        ? (signedMarginPct - Number(prevSignedForFlip))
-        : NaN;
+      const shiftDelta = Number.isFinite(shiftDeltaForTooltip)
+        ? shiftDeltaForTooltip
+        : ((prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
+          ? (signedMarginPct - Number(prevSignedForFlip))
+          : NaN);
+      const shiftLine = (currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear)
+        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span style="font-weight:800;">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
+        : '';
       const tooltipInsight = (() => {
         // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
         if (currentVizMode !== 'shift') return '';
@@ -21126,6 +21146,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierLong ? `<span class="tier">${escapeHtml(tierLong)}</span>` : ''}
         </div>
+        ${shiftLine}
         ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
@@ -21136,6 +21157,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
+        ${shiftLine}
         ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
