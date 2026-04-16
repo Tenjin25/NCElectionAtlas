@@ -10747,6 +10747,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Candidate effect: Cooper tends to run slightly stronger than a generic D (or 2022 Senate baseline)
         // in some county types; apply as a small additional D swing on top of the blended baseline.
         candidateBonusEnabled: true,
+        candidateBonusMode: 'historical', // historical | heuristic
+        candidateBonusContestType: 'governor', // for historical mode
+        candidateBonusBaselineContestType: 'president', // for historical mode
+        candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
+        candidateBonusWeight: 0.22, // scale the raw Gov-vs-Pres delta down for a Senate model
+        candidateBonusMinTwoPartyVotes: 15000, // damp small counties
+        candidateBonusFallbackToHeuristic: true,
         candidateBonusMaxPts: 0.85,
         candidateBonusBasePts: 0.25,
         candidateBonusUrbanPts: 0.15,
@@ -11281,6 +11288,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (modeledDef?.candidateBonusEnabled) {
         const bsRaw = Number(modeledDef?.candidateBonusScale);
         const bs = Number.isFinite(bsRaw) ? Math.max(0, Math.min(2, bsRaw)) : 1;
+        const mode = String(modeledDef?.candidateBonusMode || '').trim().toLowerCase();
+        if (mode === 'historical') {
+          const years = Array.isArray(modeledDef?.candidateBonusYears) ? modeledDef.candidateBonusYears : [];
+          const yearsLabel = years && years.length ? years.map(v => String(v)).join('/') : '';
+          const srcA = String(modeledDef?.candidateBonusContestType || '').trim();
+          const srcB = String(modeledDef?.candidateBonusBaselineContestType || '').trim();
+          const w = Number(modeledDef?.candidateBonusWeight);
+          const srcLabel = (srcA && srcB && yearsLabel) ? `${srcA} vs ${srcB} ${yearsLabel}` : (srcA && srcB ? `${srcA} vs ${srcB}` : '');
+          if (srcLabel) bits.push(`Bonus src: ${srcLabel}`);
+          if (Number.isFinite(w) && w > 0 && w < 1.5) bits.push(`Bonus wt: ${w.toFixed(2)}`);
+        }
         bits.push(`Bonus: ${bs.toFixed(1)}x`);
       }
 
@@ -14500,61 +14518,168 @@ document.addEventListener('DOMContentLoaded', function() {
           return clamped * smoothingFactor;
         };
 
-        const candidateBonusByCounty = (() => {
+        const candidateBonusNode = await (async () => {
           if (!modeledDef?.candidateBonusEnabled) return null;
           const maxPts = Number(modeledDef?.candidateBonusMaxPts);
           const basePts = Number(modeledDef?.candidateBonusBasePts);
           if (!Number.isFinite(maxPts) || maxPts <= 0) return null;
           if (!Number.isFinite(basePts)) return null;
 
-          const byCountyTotals = (rows, contestType) => {
-            const agg = new Map();
+          const normalizeRowKey = (raw) => (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+          const countyFromRowKey = (key) => {
+            const k = normalizeRowKey(key);
+            if (!k) return '';
+            const countyOnly = k.includes(' - ') ? k.split(' - ', 1)[0] : k;
+            return normalizeCountyToken(countyOnly);
+          };
+          const buildCountyTotalsCompact = (rows, contestType) => {
+            const out = new Map();
             (rows || []).forEach(r => {
-              const key = (r?.county || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+              const key = normalizeRowKey(r?.county || '');
               if (!key) return;
-              const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
-              const county = normalizeCountyToken(countyOnly);
+              const county = countyFromRowKey(key);
               if (!county) return;
-              const node = agg.get(county) || { dem: 0, rep: 0, total: 0 };
-              node.dem += Number(r?.[`${contestType}_dem`] || 0);
-              node.rep += Number(r?.[`${contestType}_rep`] || 0);
-              node.total += Number(r?.[`${contestType}_total`] || 0);
-              agg.set(county, node);
+              const node = out.get(county) || { dem: 0, rep: 0, other: 0, total: 0 };
+              const dem = Number(r?.[`${contestType}_dem`] || 0);
+              const rep = Number(r?.[`${contestType}_rep`] || 0);
+              const other = Number(r?.[`${contestType}_other`] || 0);
+              const fallbackTotal = dem + rep + other;
+              const total = Math.max(0, Number(r?.[`${contestType}_total`] || fallbackTotal));
+              node.dem += dem;
+              node.rep += rep;
+              node.other += other;
+              node.total += total;
+              out.set(county, node);
             });
-            return agg;
+            return out;
           };
 
-          const baseAgg = byCountyTotals(baseRows, modeledDef.baseContestType);
-          const out = new Map();
-          baseAgg.forEach((totals, county) => {
-            const ctx = (() => {
-              try { return getNcCensusContext(county); } catch (_) { return null; }
-            })();
-            const pattern = String(ctx?.patternLabel || '');
-            const note = String(ctx?.noteLabel || '');
-            const isInstitutional = /military|institutional hubs/i.test(note);
+          const computeHeuristicBonus = () => {
+            const baseAgg = buildCountyTotalsCompact(baseRows, modeledDef.baseContestType);
+            const out = new Map();
+            baseAgg.forEach((totals, county) => {
+              const ctx = (() => {
+                try { return getNcCensusContext(county); } catch (_) { return null; }
+              })();
+              const pattern = String(ctx?.patternLabel || '');
+              const note = String(ctx?.noteLabel || '');
+              const isInstitutional = /military|institutional hubs/i.test(note);
 
-            let pts = basePts;
-            if (/Urban anchor/i.test(pattern)) pts = Number(modeledDef?.candidateBonusUrbanPts);
-            else if (/Metro spillover|outer-suburban/i.test(pattern)) pts = Number(modeledDef?.candidateBonusMetroPts);
-            else if (/Coastal growth/i.test(pattern)) pts = Number(modeledDef?.candidateBonusCoastalPts);
-            else if (/Small-metro|transition/i.test(pattern)) pts = Number(modeledDef?.candidateBonusTransitionPts);
-            else if (/Slow-growth|declining county|Rural slowdown/i.test(pattern)) pts = Number(modeledDef?.candidateBonusSlowPts);
-            if (!Number.isFinite(pts)) pts = basePts;
+              let pts = basePts;
+              if (/Urban anchor/i.test(pattern)) pts = Number(modeledDef?.candidateBonusUrbanPts);
+              else if (/Metro spillover|outer-suburban/i.test(pattern)) pts = Number(modeledDef?.candidateBonusMetroPts);
+              else if (/Coastal growth/i.test(pattern)) pts = Number(modeledDef?.candidateBonusCoastalPts);
+              else if (/Small-metro|transition/i.test(pattern)) pts = Number(modeledDef?.candidateBonusTransitionPts);
+              else if (/Slow-growth|declining county|Rural slowdown/i.test(pattern)) pts = Number(modeledDef?.candidateBonusSlowPts);
+              if (!Number.isFinite(pts)) pts = basePts;
 
-            if (isInstitutional) {
-              const extra = Number(modeledDef?.candidateBonusInstitutionalExtraPts);
-              if (Number.isFinite(extra)) pts += extra;
+              if (isInstitutional) {
+                const extra = Number(modeledDef?.candidateBonusInstitutionalExtraPts);
+                if (Number.isFinite(extra)) pts += extra;
+              }
+
+              // Damp the effect in very deep-blue places; keep it modest everywhere else.
+              const baseRowSigned = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
+              if (Number.isFinite(baseRowSigned) && baseRowSigned <= -20) pts *= 0.6;
+              pts = Math.max(0, Math.min(maxPts, pts));
+              out.set(county, pts);
+            });
+            return out.size ? out : null;
+          };
+
+          const computeHistoricalBonus = async () => {
+            const mode = String(modeledDef?.candidateBonusMode || '').trim().toLowerCase();
+            if (mode !== 'historical') return null;
+            const bonusContestType = String(modeledDef?.candidateBonusContestType || '').trim();
+            const baselineContestType = String(modeledDef?.candidateBonusBaselineContestType || '').trim();
+            const years = Array.isArray(modeledDef?.candidateBonusYears) ? modeledDef.candidateBonusYears : [];
+            const weight = Number(modeledDef?.candidateBonusWeight);
+            const minTwoParty = Number(modeledDef?.candidateBonusMinTwoPartyVotes);
+            if (!bonusContestType || !baselineContestType) return null;
+            if (!Array.isArray(years) || !years.length) return null;
+            if (!Number.isFinite(weight) || weight <= 0) return null;
+            const minTp = Number.isFinite(minTwoParty) && minTwoParty > 0 ? minTwoParty : 15000;
+
+            const sumByCounty = new Map();
+            const wByCounty = new Map();
+            for (const yRaw of years) {
+              const y = Number(yRaw);
+              if (!Number.isFinite(y)) continue;
+              let bonusRows = null;
+              let baselineRows = null;
+              try {
+                bonusRows = await loadContestSlice(bonusContestType, y);
+                baselineRows = await loadContestSlice(baselineContestType, y);
+              } catch (_) {
+                bonusRows = null;
+                baselineRows = null;
+              }
+              if (!bonusRows || !baselineRows) continue;
+
+              const bonusAgg = buildCountyTotalsCompact(bonusRows, bonusContestType);
+              const baselineAgg = buildCountyTotalsCompact(baselineRows, baselineContestType);
+              bonusAgg.forEach((bonusTotals, county) => {
+                if (!baselineAgg.has(county)) return;
+                const baselineTotals = baselineAgg.get(county) || {};
+                const govSigned = signedMarginPctFromVotes(
+                  Number(bonusTotals.dem || 0),
+                  Number(bonusTotals.rep || 0),
+                  Number(bonusTotals.total || 0)
+                );
+                const presSigned = signedMarginPctFromVotes(
+                  Number(baselineTotals.dem || 0),
+                  Number(baselineTotals.rep || 0),
+                  Number(baselineTotals.total || 0)
+                );
+                if (!Number.isFinite(govSigned) || !Number.isFinite(presSigned)) return;
+
+                // Positive means the candidate runs more Democratic than President in that county.
+                const rawBonusPts = presSigned - govSigned;
+                if (!Number.isFinite(rawBonusPts) || rawBonusPts <= 0.05) return;
+
+                const twoParty = Math.max(0, Number(bonusTotals.dem || 0) + Number(bonusTotals.rep || 0));
+                const countyWeight = Math.max(0.12, Math.min(1, twoParty / minTp));
+                const damp = 0.70 + (0.30 * countyWeight);
+                const scaled = Math.max(0, rawBonusPts * weight) * damp;
+                const pts = Math.max(0, Math.min(maxPts, scaled));
+
+                sumByCounty.set(county, Number(sumByCounty.get(county) || 0) + (pts * countyWeight));
+                wByCounty.set(county, Number(wByCounty.get(county) || 0) + countyWeight);
+              });
             }
 
-            // Damp the effect in very deep-blue places; keep it modest everywhere else.
-            const baseRowSigned = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
-            if (Number.isFinite(baseRowSigned) && baseRowSigned <= -20) pts *= 0.6;
-            pts = Math.max(0, Math.min(maxPts, pts));
-            out.set(county, pts);
-          });
-          return out.size ? out : null;
+            const out = new Map();
+            sumByCounty.forEach((sum, county) => {
+              const w = Number(wByCounty.get(county) || 0);
+              if (!(w > 0)) return;
+              const v = sum / w;
+              if (Number.isFinite(v) && v > 0) out.set(county, Math.max(0, Math.min(maxPts, v)));
+            });
+            if (!out.size) return null;
+
+            const yearsLabel = years.map(v => String(v)).join('/');
+            return {
+              map: out,
+              source: `${bonusContestType} vs ${baselineContestType} ${yearsLabel}`
+            };
+          };
+
+          const heuristic = computeHeuristicBonus();
+          const historical = await computeHistoricalBonus();
+          if (historical && historical.map && historical.map.size) {
+            const fallback = !!modeledDef?.candidateBonusFallbackToHeuristic;
+            const merged = new Map();
+            if (fallback && heuristic && heuristic.size) {
+              heuristic.forEach((v, k) => merged.set(k, v));
+            }
+            historical.map.forEach((v, k) => merged.set(k, v));
+            return { map: merged.size ? merged : null, source: `historical (${historical.source})` };
+          }
+
+          return { map: heuristic, source: 'heuristic' };
         })();
+        const candidateBonusByCounty = candidateBonusNode?.map || null;
+        const candidateBonusSource = String(candidateBonusNode?.source || '').trim();
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
         const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
@@ -15137,6 +15262,21 @@ document.addEventListener('DOMContentLoaded', function() {
             model_blend_weight: useBlend ? Number(blendWeight.toFixed(3)) : undefined,
             model_turnout_factor: Number.isFinite(Number(modeledDef?.turnoutFactor)) ? Number(modeledDef.turnoutFactor) : undefined,
             model_bonus_scale: modeledDef?.candidateBonusEnabled ? bonusScale : undefined,
+            model_bonus_mode: modeledDef?.candidateBonusEnabled ? String(modeledDef?.candidateBonusMode || '') : undefined,
+            model_bonus_weight: (modeledDef?.candidateBonusEnabled && Number.isFinite(Number(modeledDef?.candidateBonusWeight)))
+              ? Number(modeledDef.candidateBonusWeight)
+              : undefined,
+            model_bonus_source: (() => {
+              if (!modeledDef?.candidateBonusEnabled) return undefined;
+              const mode = String(modeledDef?.candidateBonusMode || '').trim().toLowerCase();
+              if (mode !== 'historical') return mode || 'heuristic';
+              const years = Array.isArray(modeledDef?.candidateBonusYears) ? modeledDef.candidateBonusYears : [];
+              const yearsLabel = years && years.length ? years.map(v => String(v)).join('/') : '';
+              const srcA = String(modeledDef?.candidateBonusContestType || '').trim();
+              const srcB = String(modeledDef?.candidateBonusBaselineContestType || '').trim();
+              const srcLabel = (srcA && srcB && yearsLabel) ? `${srcA} vs ${srcB} ${yearsLabel}` : (srcA && srcB ? `${srcA} vs ${srcB}` : '');
+              return srcLabel || 'historical';
+            })(),
             model_turnout_source: (modeledDef?.turnoutContestType && modeledDef?.turnoutYear)
               ? `${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)} ${modeledDef.turnoutYear}`
               : undefined
