@@ -1,240 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-  /* Mobile Styles - Enhanced for touch and small screens */
-  @media (max-width: 768px) {
-    /* Make minimize buttons touch-friendly */
-    #sidebar-minimize-btn,
-    #main-controls .controls-header #controls-minimize-btn,
-    #legend-minimize-btn {
-      position: absolute !important;
-      top: 8px !important;
-      right: 8px !important;
-      z-index: 10002 !important;
-      font-size: 20px !important;
-      background: #2563eb !important;
-      color: #fff !important;
-      border-radius: 8px !important;
-      min-width: 44px !important;
-      min-height: 44px !important;
-      border: none !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-      padding: 8px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-weight: 700 !important;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-    #main-controls .controls-header #controls-minimize-btn {
-      left: 8px !important;
-      right: auto !important;
-    }
-    .legend-header {
-      position: relative !important;
-      min-height: 56px;
-      padding: 12px 60px 12px 16px !important;
-    }
-    .legend-header h4 {
-      margin: 0 !important;
-      font-size: 16px !important;
-    }
-  }
-  /* Mobile safe-area + scroll ergonomics (iOS notch, bottom gesture bar). */
-  @media (max-width: 768px) {
-    :root {
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
-    }
-
-    body {
-      overscroll-behavior: none;
-    }
-
-    /* Keep top-sheet controls clear of notches and avoid covering the full map. */
-    .main-controls {
-      top: var(--safe-top) !important;
-      left: var(--safe-left) !important;
-      right: var(--safe-right) !important;
-      padding-top: calc(12px + var(--safe-top)) !important;
-      padding-left: calc(16px + var(--safe-left)) !important;
-      padding-right: calc(16px + var(--safe-right)) !important;
-      max-height: calc(52vh - var(--safe-bottom)) !important;
-      overscroll-behavior: contain;
-    }
-
-    .main-controls.minimized {
-      height: auto !important;
-      max-height: none !important;
-      padding: 10px 12px !important;
-      border-radius: 14px !important;
-    }
-
-    /* Bottom-sheet legend should clear the iOS home indicator. */
-    .legend {
-      padding-bottom: calc(8px + var(--safe-bottom)) !important;
-      overscroll-behavior: contain;
-    }
-
-    /* Prefer stable viewport units on mobile (helps Android Chrome with collapsing URL bar). */
-    @supports (height: 100svh) {
-      .main-controls { max-height: 52svh !important; }
-      .legend { max-height: 45svh !important; }
-    }
-
-    /* Avoid iOS zoom-on-focus while keeping text readable. */
-    .control-group select,
-    .main-controls input[type="search"],
-    .main-controls input[type="text"] {
-      font-size: 16px !important;
-    }
-  }
-  @media (max-width: 768px) {
-    /* Legend at bottom of screen on mobile */
-    .legend {
-      position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      max-width: 100vw !important;
-      z-index: 10005 !important;
-      background: #fff !important;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.15) !important;
-      border-radius: 16px 16px 0 0 !important;
-      overflow-y: auto;
-      max-height: 50vh;
-      min-width: auto !important;
-    }
-    .legend.minimized {
-      max-height: 56px !important;
-    }
-    .legend-header {
-      position: sticky;
-      top: 0;
-      background: #fff;
-      z-index: 10006;
-      border-radius: 16px 16px 0 0;
-    }
-    .legend-content {
-      padding: 16px !important;
-    }
-    .legend-item {
-      font-size: 14px !important;
-      margin-bottom: 10px !important;
-    }
-    .legend-color {
-      width: 20px !important;
-      height: 20px !important;
-      margin-right: 12px !important;
-    }
-  }
-  @media (max-width: 768px) {
-    /* Mobile: dock hover tooltip above the dock controls for easier reading/taps. */
-    #hover-tooltip {
-      position: fixed !important;
-      left: 8px !important;
-      right: 8px !important;
-      top: auto !important;
-        bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
-      max-width: none !important;
-      width: auto !important;
-      max-height: min(54vh, calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-      z-index: 10031 !important;
-    }
-    @supports (height: 100svh) {
-      #hover-tooltip {
-        max-height: min(54svh, calc(100svh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
-      }
-    }
-    #hover-tooltip .tooltip-btn {
-      min-height: 44px;
-      padding: 10px 12px;
-      font-size: 13px;
-      border-radius: 12px;
-    }
-    #hover-tooltip .tooltip-head {
-      flex-direction: column;
-      gap: 8px;
-    }
-    #hover-tooltip .tooltip-actions {
-      width: 100%;
-    }
-    #hover-tooltip .tooltip-btn {
-      flex: 1 1 auto;
-    }
-  }
-    .spinner svg {
-      vertical-align: middle;
-    }
-    @keyframes spinner-rotate {
-      to { transform: rotate(360deg); }
-    }
-    .spinner svg circle {
-      animation: spinner-rotate 0.8s linear infinite;
-    }
-    .district-lines-loading-hint {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      font-size: 11px;
-      color: #6b7280;
-    }
-    .district-lines-loading-hint.is-visible {
-      display: flex;
-    }
-  /* Colorblind mode legend readability.
-     Use dashed separators with palette-matched yellow/blue tones (not black). */
-  body.colorblind-mode .legend-spectrum .legend-segment.legend-color {
-    box-sizing: border-box;
-    border: 1px dashed rgba(100, 116, 139, 0.45) !important;
-    box-shadow: none !important;
-  }
-  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(-n+7) {
-    border-color: rgba(217, 119, 6, 0.75) !important;
-  }
-  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(8) {
-    border-color: rgba(100, 116, 139, 0.6) !important;
-  }
-  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(n+9) {
-    border-color: rgba(37, 99, 235, 0.75) !important;
-  }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(-n+3) {
-    border-color: rgba(37, 99, 235, 0.75) !important;
-  }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(4) {
-    border-color: rgba(100, 116, 139, 0.6) !important;
-  }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(n+5) {
-    border-color: rgba(217, 119, 6, 0.75) !important;
-  }
-  body.colorblind-mode .legend-swatch-card .legend-color {
-    border: 1px solid rgba(15, 23, 42, 0.55) !important;
-  }
-  body.colorblind-mode .legend-axis .rep,
-  body.colorblind-mode .legend-scale-caption .rep {
-    color: #b45309 !important;
-  }
-  body.colorblind-mode .legend-axis .dem,
-  body.colorblind-mode .legend-scale-caption .dem {
-    color: #1d4ed8 !important;
-  }
-
-  @media (min-width: 769px) {
-    .main-controls {
-      overflow: visible !important; /* Allows dropdowns to pop out of the container */
-      max-height: none !important;  /* Prevents the container from clipping its children */
-    }
-  }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Define toggleSidebar function before DOMContentLoaded
     const SIDEBAR_ENABLED = false;
@@ -690,6 +456,18 @@ body.focus-active #sidebar,
 body.focus-active .hover-tooltip {
   box-shadow: 0 18px 54px rgba(0, 0, 0, 0.24), 0 6px 16px rgba(0, 0, 0, 0.16);
 }
+
+/* Focus hierarchy: keep the vote counter + focus card as the dominant storytelling surface. */
+body.focus-active .main-controls,
+body.focus-active .legend,
+body.focus-active .viz-modes {
+  opacity: 0.88;
+}
+
+body.focus-active .vote-counter {
+  opacity: 1;
+  box-shadow: 0 22px 70px rgba(15, 23, 42, 0.30), 0 8px 22px rgba(0, 0, 0, 0.18);
+}
 /* Prefer dynamic viewport units on mobile browsers (prevents "address bar" jumps). */
 @supports (height: 100dvh) {
   html, body { height: 100dvh; }
@@ -755,18 +533,19 @@ a:focus-visible {
   background: rgba(17, 24, 39, 0.96);
   color: white;
   padding: 12px 16px;
-  border-radius: 10px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 500;
   pointer-events: auto;
   z-index: 10000;
   max-width: 280px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.25), 0 10px 32px rgba(0, 0, 0, 0.24);
   display: none;
   line-height: 1.5;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(15, 23, 42, 0.20);
   transition: opacity 0.15s ease;
+  animation: tooltip-in 140ms ease-out;
 }
 
 /* UI hierarchy helpers: keep one dominant layer at a time. */
@@ -877,6 +656,36 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 8px;
+}
+
+.hover-tooltip .tooltip-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hover-tooltip .tooltip-btn {
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.hover-tooltip .tooltip-btn:hover {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* Allow interacting with tooltip buttons only when pinned. */
+#hover-tooltip[data-pinned="1"] {
+  pointer-events: auto;
+}
+@media (pointer: coarse) {
+  /* On touch devices, don't let a non-pinned hover shell block panning/zooming. */
+  #hover-tooltip[data-pinned="0"] {
+    pointer-events: none;
+  }
 }
 
 .hover-tooltip .tooltip-head.is-compact {
@@ -1126,132 +935,8 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 
 /* Main Controls */
-.main-controls {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  z-index: 1000;
-  min-width: 380px;
-  max-width: 420px;
-  transition: all 0.3s ease;
-}
-.main-controls input[type="search"],
-.main-controls input[type="text"] {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: rgba(255, 255, 255, 0.98);
-  color: #0f172a;
-  font-size: 14px;
-  outline: none;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
-}
-.main-controls input[type="search"]:focus,
-.main-controls input[type="text"]:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-/* Mobile: Full-width controls at top */
-@media (max-width: 768px) {
-  .main-controls {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-    border-radius: 0 0 16px 16px !important;
-    padding: 16px !important;
-    margin: 0 !important;
-    z-index: 10004 !important;
-    max-height: 56vh !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Keep header + minimize button accessible while scrolling */
-  #main-controls .controls-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: rgba(255, 255, 255, 0.96);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-  }
-  .main-controls.minimized {
-    min-width: 60px !important;
-    max-width: 60px !important;
-    width: 60px !important;
-    left: 8px !important;
-    top: 8px !important;
-    right: auto !important;
-    border-radius: 12px !important;
-  }
-  .controls-header h3 {
-    font-size: 16px !important;
-    padding-right: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #help-btn,
-  #accessibility-toggle,
-  #label-toggle {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    font-size: 18px !important;
-    border-radius: 12px !important;
-  }
-  #precinct-toggle {
-    min-height: 44px !important;
-    height: 44px !important;
-    padding: 0 12px !important;
-    font-size: 13px !important;
-  }
-  .control-group label {
-    font-size: 14px !important;
-  }
-  .control-group select {
-    padding: 12px !important;
-    font-size: 16px !important;
-  }
-  #main-controls .view-toggle-btn {
-    flex: 1 1 calc(50% - 6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-.main-controls.minimized {
-  min-width: 60px;
-  max-width: 60px;
-  padding: 15px;
-}
 .main-controls.minimized .controls-content {
   display: none;
-}
-.main-controls.minimized .controls-header {
-  margin-bottom: 0;
-  justify-content: flex-end;
-}
-.main-controls.minimized .controls-header h3 {
-  display: none;
-}
-.main-controls.minimized .panel-eyebrow,
-.main-controls.minimized .controls-subtitle {
-  display: none !important;
-}
-.main-controls.minimized #help-btn {
-  display: none !important;
 }
 .controls-header {
   display: flex;
@@ -1272,54 +957,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 .controls-content {
   position: relative;
-}
-.analysis-mode {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.mode-toggle {
-  flex: 1;
-  padding: 8px;
-  text-align: center;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 12px;
-  font-weight: 500;
-}
-.mode-toggle.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
-}
-.analysis-mode {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 4px;
-}
-.mode-toggle {
-  flex: 1;
-  text-align: center;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-  color: #6b7280;
-}
-.mode-toggle.active {
-  background: #2563eb;
-  color: white;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
-}
-.mode-toggle:hover:not(.active) {
-  background: #e5e7eb;
-  color: #374151;
 }
 .view-toggle-btn {
   border: 1px solid rgba(15, 23, 42, 0.10);
@@ -1363,51 +1000,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   font-size: 14px;
 }
 
-/* Legend */
-.legend {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-  z-index: 1000;
-  min-width: 250px;
-  border: 1px solid #e5e7eb;
-}
-.legend.minimized .legend-content {
-  display: none;
-}
-.legend-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-  border-radius: 12px 12px 0 0;
-}
-.legend-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #374151;
-}
-.legend-content {
-  padding: 16px 20px;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  margin-right: 10px;
-  flex-shrink: 0;
-}
+/* Legend rules consolidated into the refined legend section below. */
 /* County Details */
 .county-details {
   margin-bottom: 20px;
@@ -2430,6 +2023,51 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   white-space: nowrap;
 }
 
+.vote-counter-context .context-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.04);
+  color: rgba(15, 23, 42, 0.78);
+}
+
+.vote-counter-context .context-pill.modeled {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(15, 23, 42, 0.32);
+  color: #f8fafc;
+}
+
+.vote-counter-context .context-pill.scenario {
+  background: rgba(37, 99, 235, 0.10);
+  border-color: rgba(37, 99, 235, 0.24);
+  color: rgba(30, 64, 175, 0.95);
+}
+
+.vote-counter-context .context-pill.confidence-high {
+  background: rgba(16, 185, 129, 0.10);
+  border-color: rgba(16, 185, 129, 0.28);
+  color: rgba(6, 95, 70, 0.95);
+}
+
+.vote-counter-context .context-pill.confidence-med {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.30);
+  color: rgba(120, 53, 15, 0.95);
+}
+
+.vote-counter-context .context-pill.confidence-low {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.28);
+  color: rgba(127, 29, 29, 0.95);
+}
+
 .vote-counter-context .context-title {
   font-size: 12px;
   font-weight: 800;
@@ -2639,12 +2277,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-size: 22px !important;
   }
   /* Ensure all buttons and interactive elements are touch-friendly */
-  button, select, input, .mode-toggle {
+  button, select, input {
     min-height: 44px !important;
     touch-action: manipulation;
   }
   /* Better tap highlight */
-  button:active, .mode-toggle:active {
+  button:active {
     opacity: 0.7;
     transform: scale(0.97);
   }
@@ -2729,6 +2367,71 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     --ui-muted: #475569;
     --ui-accent: var(--state-blue);
     --ui-accent-2: var(--state-blue-strong);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+  }
+
+  /* Base utilities (used by async status widgets + Mapbox overlays). */
+  .spinner svg {
+    vertical-align: middle;
+  }
+
+  @keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner svg circle {
+    animation: spinner-rotate 0.8s linear infinite;
+  }
+
+  .district-lines-loading-hint {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  .district-lines-loading-hint.is-visible {
+    display: flex;
+  }
+
+  /* Colorblind mode: add subtle dashed segmentation (avoid pure black borders). */
+  body.colorblind-mode .legend-spectrum .legend-segment.legend-color {
+    box-sizing: border-box;
+    border: 1px dashed rgba(100, 116, 139, 0.45) !important;
+    box-shadow: none !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(-n+7) {
+    border-color: rgba(217, 119, 6, 0.75) !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(8) {
+    border-color: rgba(100, 116, 139, 0.6) !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(n+9) {
+    border-color: rgba(37, 99, 235, 0.75) !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(-n+3) {
+    border-color: rgba(37, 99, 235, 0.75) !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(4) {
+    border-color: rgba(100, 116, 139, 0.6) !important;
+  }
+
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(n+5) {
+    border-color: rgba(217, 119, 6, 0.75) !important;
+  }
+
+  body.colorblind-mode .legend-swatch-card .legend-color {
+    border: 1px solid rgba(15, 23, 42, 0.55) !important;
   }
 
   body {
@@ -2744,8 +2447,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     background: linear-gradient(180deg, #e9eff7 0%, #e7edf7 46%, #f0ecf1 100%);
   }
 
-  .main-controls,
-  .legend,
   .sidebar,
   .status-panel,
   .vote-counter,
@@ -2765,11 +2466,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     color: var(--ui-text);
   }
 
-  .main-controls {
-    border-radius: 14px;
-  }
-
-  .legend,
   .vote-counter,
   .viz-modes {
     border-radius: 14px;
@@ -2779,8 +2475,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     border-left: 1px solid var(--ui-border);
   }
 
-  .sidebar-header,
-  .legend-header {
+  .sidebar-header {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.94) 100%);
   }
 
@@ -2826,52 +2521,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     margin-top: 6px;
     border: 1px solid rgba(148, 163, 184, 0.55);
     background: rgba(255, 255, 255, 0.95);
-  }
-
-  .hover-tooltip {
-    border: 1px solid rgba(15, 23, 42, 0.20);
-    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.25);
-    backdrop-filter: blur(14px);
-    border-radius: 14px;
-    max-width: 280px;
-    animation: tooltip-in 140ms ease-out;
-  }
-
-  .hover-tooltip .tooltip-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .hover-tooltip .tooltip-actions {
-    display: flex;
-    gap: 6px;
-  }
-
-  .hover-tooltip .tooltip-btn {
-    border: 1px solid rgba(15, 23, 42, 0.16);
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 10px;
-    padding: 6px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #0f172a;
-  }
-
-  .hover-tooltip .tooltip-btn:hover {
-    background: rgba(255, 255, 255, 0.98);
-  }
-
-  /* Allow interacting with tooltip buttons only when pinned. */
-  #hover-tooltip[data-pinned="1"] {
-    pointer-events: auto;
-  }
-  @media (pointer: coarse) {
-    /* On touch devices, don't let a non-pinned hover shell block panning/zooming. */
-    #hover-tooltip[data-pinned="0"] {
-      pointer-events: none;
-    }
   }
 
   /* Help modal */
@@ -3390,14 +3039,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     color: var(--ui-text);
   }
 
-  .mode-toggle,
   .viz-mode-btn {
     border-radius: 9px;
     font-family: "Manrope", "IBM Plex Sans", sans-serif;
     font-weight: 700;
   }
 
-  .mode-toggle.active,
   .viz-mode-btn.active {
     background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
     box-shadow: 0 8px 18px rgba(37, 99, 235, 0.32);
@@ -5785,6 +5432,8 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   /* Refined control, legend, and statewide surfaces */
   .main-controls {
+    position: fixed;
+    z-index: 1000;
     overflow: hidden;
     border-radius: 24px;
     border: 1px solid rgba(148, 163, 184, 0.18);
@@ -5877,6 +5526,15 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   .main-controls.minimized .controls-kicker,
   .main-controls.minimized .controls-subtitle {
+    display: none !important;
+  }
+
+  .main-controls.minimized .controls-heading,
+  .main-controls.minimized .controls-title-pill {
+    display: none !important;
+  }
+
+  .main-controls.minimized #help-btn {
     display: none !important;
   }
 
@@ -8183,12 +7841,40 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       border-radius: 18px 18px 0 0 !important;
     }
 
+    /* Touch sizing: keep header actions reliably tappable. */
+    #help-btn,
+    .minimize-btn {
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+      border-radius: 12px !important;
+      font-size: 20px !important;
+    }
+
     .vote-counter {
       bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px) !important;
     }
 
+    /* Mobile: dock hover tooltip above the vote counter + bottom dock (keeps tap targets unobstructed). */
     #hover-tooltip {
+      position: fixed !important;
+      left: 8px !important;
+      right: 8px !important;
+      top: auto !important;
       bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
+      width: auto !important;
+      max-width: none !important;
+      z-index: 10031 !important;
+      max-height: min(54vh, calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    @supports (height: 100svh) {
+      #hover-tooltip {
+        max-height: min(54svh, calc(100svh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
+      }
     }
 
     body.mobile-sheet-open #hover-tooltip {
@@ -8445,12 +8131,51 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     margin-bottom: 10px;
   }
 
+  .control-group-scenario {
+    --scenario-label-w: 132px;
+  }
+
   .scenario-row {
     display: grid;
-    grid-template-columns: 74px 1fr auto;
+    grid-template-columns: var(--scenario-label-w, 132px) 1fr auto;
     gap: 8px;
     align-items: center;
     margin-top: 6px;
+  }
+
+  .scenario-helper {
+    grid-column: 1 / -1;
+    margin-top: -2px;
+    margin-left: var(--scenario-label-w, 132px);
+    font-size: 11px;
+    line-height: 1.35;
+    color: #64748b;
+  }
+
+  .scenario-divider {
+    height: 1px;
+    margin: 10px 0 8px;
+    background: rgba(148, 163, 184, 0.18);
+  }
+
+  .scenario-section-head {
+    display: grid;
+    gap: 2px;
+    margin-top: 10px;
+  }
+
+  .scenario-section-title {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.78);
+  }
+
+  .scenario-section-desc {
+    font-size: 12px;
+    line-height: 1.35;
+    color: #475569;
   }
 
   .scenario-row label {
@@ -8460,7 +8185,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .scenario-row-actions {
-    grid-template-columns: 74px 1fr auto;
+    grid-template-columns: var(--scenario-label-w, 132px) 1fr auto;
     margin-top: 4px;
   }
 
@@ -8515,6 +8240,106 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-size: 12px;
     color: #334155;
     font-weight: 700;
+  }
+
+  @media (max-width: 480px) {
+    .control-group-scenario {
+      --scenario-label-w: 112px;
+    }
+  }
+
+  .model-summary-card {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(248, 250, 252, 0.92);
+  }
+
+  .model-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .model-summary-title {
+    font-size: 12px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+  }
+
+  .model-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.04);
+    color: rgba(15, 23, 42, 0.78);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .model-summary-badge.confidence-high {
+    border-color: rgba(16, 185, 129, 0.32);
+    background: rgba(16, 185, 129, 0.10);
+    color: rgba(6, 95, 70, 0.95);
+  }
+
+  .model-summary-badge.confidence-med {
+    border-color: rgba(245, 158, 11, 0.34);
+    background: rgba(245, 158, 11, 0.12);
+    color: rgba(120, 53, 15, 0.95);
+  }
+
+  .model-summary-badge.confidence-low {
+    border-color: rgba(239, 68, 68, 0.32);
+    background: rgba(239, 68, 68, 0.10);
+    color: rgba(127, 29, 29, 0.95);
+  }
+
+  .model-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .model-summary-item {
+    display: grid;
+    gap: 4px;
+    padding: 10px 10px 9px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .model-summary-item span {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .model-summary-item strong {
+    font-size: 12px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+
+  .model-summary-foot {
+    margin-top: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #64748b;
   }
 
   #model-blend,
@@ -8683,8 +8508,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     .view-toggle-btn.active,
-    .viz-mode-btn.active,
-    .mode-toggle.active {
+    .viz-mode-btn.active {
       background: linear-gradient(180deg, #295a92 0%, #1e426b 100%);
       border-color: rgba(224, 190, 142, 0.78);
       color: #ffffff;
@@ -8786,7 +8610,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     .view-toggle-btn,
     .viz-mode-btn,
     .region-jump-btn,
-    .mode-toggle,
     .tool-chip-btn {
       transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.06s ease;
     }
@@ -8794,7 +8617,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     .view-toggle-btn:focus-visible,
     .viz-mode-btn:focus-visible,
     .region-jump-btn:focus-visible,
-    .mode-toggle:focus-visible,
     .tool-chip-btn:focus-visible,
     .minimize-btn:focus-visible {
       outline: none;
@@ -9196,7 +9018,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetModeledContestOverrides(contestType);
         syncModelTuningControls();
         scheduleModelReapply();
-        if (typeof setStatus === 'function') setStatus('Model preset applied: Default.');
+        if (typeof setStatus === 'function') setStatus(`Model preset applied: ${String(presetDef?.label || 'Neutral baseline')}.`);
         try { saveUIState(); } catch (_) {}
         return;
       }
@@ -9536,45 +9358,61 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <details class="control-group control-group-scenario controls-disclosure" id="scenario-disclosure">
               <summary class="controls-disclosure-summary">
-                <span class="section-kicker">What-if & overlays</span>
-                <span class="controls-disclosure-hint">Scenario swing, turnout intensity, and contrast controls</span>
+                <span class="section-kicker">Scenario & model</span>
+                <span class="controls-disclosure-hint">What-if swing, forecast tuning (synthetic contests), and overlays</span>
               </summary>
+              <div class="scenario-section-head">
+                <div class="scenario-section-title">What-if swing</div>
+                <div class="scenario-section-desc">Uniform partisan shift to test sensitivity. Not a forecast.</div>
+              </div>
               <div class="scenario-row">
                 <label for="scenario-scope">Scope</label>
                 <select id="scenario-scope" data-testid="scenario-scope" aria-label="Scenario scope">
                   <option value="statewide">Statewide</option>
                   <option value="wake">Wake County only</option>
                 </select>
+                <div class="scenario-helper">Apply the swing statewide, or only within Wake County.</div>
               </div>
               <div class="scenario-row">
-                <label for="scenario-swing">Dem swing</label>
+                <label for="scenario-swing">What-if swing (D+)</label>
                 <input id="scenario-swing" type="range" min="-15" max="15" step="0.5" value="0" data-testid="scenario-swing" aria-label="Democratic swing percentage" />
                 <span class="scenario-value" id="scenario-swing-value">0.0%</span>
+                <div class="scenario-helper">Positive shifts toward Democrats; negative shifts toward Republicans.</div>
               </div>
               <div class="scenario-row scenario-row-actions">
                 <span></span>
                 <button id="scenario-reset-btn" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="scenario-reset" aria-label="Reset scenario swing">Reset Swing</button>
                 <span></span>
               </div>
+
+              <div class="scenario-divider" aria-hidden="true"></div>
+              <div class="scenario-section-head" id="model-section-head" style="display:none;">
+                <div class="scenario-section-title">Forecast model</div>
+                <div class="scenario-section-desc">History vs. fundamentals blend, turnout intensity, and candidate overperformance. Always uncertain.</div>
+              </div>
               <div class="scenario-row" id="model-preset-row" style="display:none;">
                 <label for="model-preset">Preset</label>
                 <select id="model-preset" data-testid="model-preset" aria-label="Model tuning preset"></select>
                 <span class="scenario-value" aria-hidden="true"></span>
+                <div class="scenario-helper" id="model-preset-helper">Pick a baseline assumption. “Custom” appears when you diverge from presets.</div>
               </div>
               <div class="scenario-row" id="model-blend-row" style="display:none;">
-                <label for="model-blend" id="model-blend-label">Blend</label>
+                <label for="model-blend" id="model-blend-label">History vs. fundamentals</label>
                 <input id="model-blend" type="range" min="0" max="1" step="0.05" value="0.5" data-testid="model-blend" aria-label="Model blend weight" />
                 <span class="scenario-value" id="model-blend-value">50%</span>
+                <div class="scenario-helper" id="model-blend-helper">Higher values lean more on older history; lower values lean more on the current cycle’s fundamentals.</div>
               </div>
               <div class="scenario-row" id="model-turnout-row" style="display:none;">
-                <label for="model-turnout">Turnout</label>
+                <label for="model-turnout">Turnout intensity</label>
                 <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.575" data-testid="model-turnout" aria-label="Model turnout factor" />
                 <span class="scenario-value" id="model-turnout-value">57.5%</span>
+                <div class="scenario-helper" id="model-turnout-helper">Higher turnout increases the turnout-weighted component of the synthetic model.</div>
               </div>
               <div class="scenario-row" id="model-bonus-row" style="display:none;">
-                <label for="model-bonus">Bonus</label>
+                <label for="model-bonus">Candidate overperformance</label>
                 <input id="model-bonus" type="range" min="0" max="1.5" step="0.1" value="1" data-testid="model-bonus" aria-label="Model candidate bonus scale" />
                 <span class="scenario-value" id="model-bonus-value">1.0x</span>
+                <div class="scenario-helper" id="model-bonus-helper">Scales the built-in overperformance overlay (does not guarantee a winner).</div>
               </div>
               <div class="scenario-row scenario-row-actions" id="model-reset-row" style="display:none;">
                 <span></span>
@@ -9582,7 +9420,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span></span>
               </div>
               <div class="model-tuning-note" id="model-tuning-note" style="display:none;">
-                Model tuning only affects the synthetic 2026 modeled contests.
+                Model tuning affects only the synthetic 2026 modeled contests. Treat outputs as scenario guidance, not certainty.
+              </div>
+              <div class="model-summary-card" id="model-summary-card" style="display:none;">
+                <div class="model-summary-head">
+                  <div class="model-summary-title">Model summary</div>
+                  <span class="model-summary-badge" id="model-summary-confidence">Confidence: —</span>
+                </div>
+                <div class="model-summary-grid" role="list" aria-label="Model summary details">
+                  <div class="model-summary-item" role="listitem"><span>Baseline</span><strong id="model-summary-baseline">—</strong></div>
+                  <div class="model-summary-item" role="listitem"><span>Modeled margin</span><strong id="model-summary-margin">—</strong></div>
+                  <div class="model-summary-item" role="listitem"><span>Turnout</span><strong id="model-summary-turnout">—</strong></div>
+                  <div class="model-summary-item" role="listitem"><span>Bonus</span><strong id="model-summary-bonus">—</strong></div>
+                </div>
+                <div class="model-summary-foot" id="model-summary-range">Ranges are heuristic and widen as assumptions become more aggressive.</div>
+              </div>
+
+              <div class="scenario-divider" aria-hidden="true"></div>
+              <div class="scenario-section-head">
+                <div class="scenario-section-title">Overlays</div>
+                <div class="scenario-section-desc">Visual aids only. These do not change results.</div>
               </div>
               <div class="scenario-row">
                 <label for="overlay-opacity-preset">Overlay</label>
@@ -9591,6 +9448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <option value="balanced">Balanced</option>
                   <option value="focus">Data Focus</option>
                 </select>
+                <div class="scenario-helper">Adjust how strongly overlays sit on top of the base map.</div>
               </div>
               <label class="scenario-toggle">
                 <input id="bivariate-opacity-toggle" type="checkbox" data-testid="turnout-bivariate-toggle" aria-label="Enable turnout intensity opacity mode" />
@@ -10812,15 +10670,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const MODELED_CONTEST_OVERRIDES_BY_TYPE = new Map(); // contestType -> { blendWeight?, turnoutFactor?, bonusScale? }
     const MODELED_CONTEST_PRESETS_BY_TYPE = {
       us_senate_model: [
-        { id: 'default', label: 'Default', kind: 'reset' },
-        { id: 'presidential', label: 'Presidential-like', patch: { blendWeight: 0.0, bonusScale: 0.6 } },
-        { id: 'strong_dev', label: 'Strong deviation', patch: { blendWeight: 1.0, bonusScale: 1.0 } },
-        { id: 'high_turnout', label: 'High turnout', patch: { turnoutFactor: 0.68 } }
+        { id: 'default', label: 'Neutral baseline', kind: 'reset', desc: 'Default synthetic model inputs.' },
+        { id: 'presidential', label: 'Neutral baseline (presidential-like)', patch: { blendWeight: 0.0, bonusScale: 0.6 }, desc: 'Leans toward the presidential-style baseline; lower candidate overperformance.' },
+        { id: 'strong_dev', label: 'History-weighted deviation', patch: { blendWeight: 1.0, bonusScale: 1.0 }, desc: 'Leans harder into historical deviation.' },
+        { id: 'high_turnout', label: 'High-turnout environment', patch: { turnoutFactor: 0.68 }, desc: 'Assumes higher participation in the turnout-weighted component.' },
+        { id: 'dem_high_turnout', label: 'Democratic high-turnout', patch: { turnoutFactor: 0.70, blendWeight: 0.30, bonusScale: 0.95 }, desc: 'Higher turnout + more recent climate weight (direction can vary by baseline).' },
+        { id: 'rep_high_turnout', label: 'Republican high-turnout', patch: { turnoutFactor: 0.70, blendWeight: 0.80, bonusScale: 0.95 }, desc: 'Higher turnout + more history weight (direction can vary by baseline).' },
+        { id: 'suburban_rebound', label: 'Suburban rebound', patch: { turnoutFactor: 0.63, blendWeight: 0.45, bonusScale: 1.15 }, desc: 'Moderately higher turnout with elevated candidate overperformance scale.' },
+        { id: 'rural_surge', label: 'Rural surge', patch: { turnoutFactor: 0.62, blendWeight: 0.60, bonusScale: 1.25 }, desc: 'A more aggressive overperformance scale with modestly higher turnout.' },
+        { id: 'incumbent_friendly', label: 'Incumbent-friendly', patch: { bonusScale: 1.35 }, desc: 'Boosts candidate overperformance scale.' },
+        { id: 'volatile', label: 'Volatile / low-confidence', patch: { turnoutFactor: 0.60, blendWeight: 0.55, bonusScale: 1.10 }, confidence: 'low', desc: 'Stress test: wider expected range and lower confidence.' }
       ],
       nc_supreme_court_model: [
-        { id: 'default', label: 'Default', kind: 'reset' },
-        { id: 'more_climate', label: 'More climate', patch: { blendWeight: 0.33 } },
-        { id: 'more_base', label: 'More base', patch: { blendWeight: 0.85 } }
+        { id: 'default', label: 'Neutral baseline', kind: 'reset', desc: 'Default synthetic model inputs.' },
+        { id: 'more_climate', label: 'More recent climate', patch: { blendWeight: 0.33 }, desc: 'Weights the recent climate more heavily.' },
+        { id: 'more_base', label: 'More historical base', patch: { blendWeight: 0.85 }, desc: 'Weights the historical base more heavily.' },
+        { id: 'high_turnout', label: 'High-turnout environment', patch: { turnoutFactor: 0.68 }, desc: 'Shown for parity; applies only when the contest type supports turnout tuning.' },
+        { id: 'suburban_rebound', label: 'Suburban rebound', patch: { blendWeight: 0.52, bonusScale: 1.10 }, desc: 'Shown for parity; applies only when the contest type supports the parameter.' },
+        { id: 'rural_surge', label: 'Rural surge', patch: { blendWeight: 0.66, bonusScale: 1.18 }, desc: 'Shown for parity; applies only when the contest type supports the parameter.' },
+        { id: 'incumbent_friendly', label: 'Incumbent-friendly', patch: { bonusScale: 1.25 }, desc: 'Shown for parity; applies only when the contest type supports the parameter.' },
+        { id: 'volatile', label: 'Volatile / low-confidence', patch: { blendWeight: 0.55 }, confidence: 'low', desc: 'Stress test: wider expected range and lower confidence.' }
       ]
     };
 
@@ -11309,6 +11178,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function syncModelTuningControls() {
       const presetRow = document.getElementById('model-preset-row');
       const preset = document.getElementById('model-preset');
+      const presetHelper = document.getElementById('model-preset-helper');
+      const modelSectionHead = document.getElementById('model-section-head');
+      const summaryCard = document.getElementById('model-summary-card');
       const blendRow = document.getElementById('model-blend-row');
       const turnoutRow = document.getElementById('model-turnout-row');
       const bonusRow = document.getElementById('model-bonus-row');
@@ -11317,10 +11189,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!presetRow || !preset || !blendRow || !turnoutRow || !bonusRow || !resetRow || !note) return;
 
       const blendLabel = document.getElementById('model-blend-label');
+      const blendHelper = document.getElementById('model-blend-helper');
       const blend = document.getElementById('model-blend');
       const blendValue = document.getElementById('model-blend-value');
+      const turnoutHelper = document.getElementById('model-turnout-helper');
       const turnout = document.getElementById('model-turnout');
       const turnoutValue = document.getElementById('model-turnout-value');
+      const bonusHelper = document.getElementById('model-bonus-helper');
       const bonus = document.getElementById('model-bonus');
       const bonusValue = document.getElementById('model-bonus-value');
 
@@ -11339,14 +11214,19 @@ document.addEventListener('DOMContentLoaded', function() {
         bonusRow.style.display = 'none';
         resetRow.style.display = 'none';
         note.style.display = 'none';
+        if (modelSectionHead) modelSectionHead.style.display = 'none';
+        if (summaryCard) summaryCard.style.display = 'none';
         try { updateModeledInputsInline(); } catch (_) {}
+        try { updateModelSummaryCardUI(); } catch (_) {}
         return;
       }
 
       // Presets (contest-type specific)
       const presets = (modeled?.contestType && MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()])
         ? MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()]
-        : [{ id: 'default', label: 'Default', kind: 'reset' }];
+        : [{ id: 'default', label: 'Neutral baseline', kind: 'reset', desc: 'Default synthetic model inputs.' }];
+      let overrideExists = false;
+      let activePreset = 'default';
       try {
         while (preset.firstChild) preset.removeChild(preset.firstChild);
         presets.forEach(p => {
@@ -11355,8 +11235,8 @@ document.addEventListener('DOMContentLoaded', function() {
           opt.textContent = String(p?.label || p?.id || '');
           preset.appendChild(opt);
         });
-        const overrideExists = MODELED_CONTEST_OVERRIDES_BY_TYPE.has(String(modeled?.contestType || '').trim());
-        let activePreset = overrideExists ? 'custom' : 'default';
+        overrideExists = MODELED_CONTEST_OVERRIDES_BY_TYPE.has(String(modeled?.contestType || '').trim());
+        activePreset = overrideExists ? 'custom' : 'default';
         if (overrideExists && baseModeled) {
           const bw = Number(modeled?.blendWeight);
           const tf = Number(modeled?.turnoutFactor);
@@ -11381,9 +11261,25 @@ document.addEventListener('DOMContentLoaded', function() {
         preset.value = activePreset;
       } catch (_) {}
       presetRow.style.display = 'grid';
+      if (modelSectionHead) modelSectionHead.style.display = 'grid';
+      if (presetHelper) {
+        const selectedId = String(preset.value || activePreset || 'default').trim() || 'default';
+        const presetDef = presets.find(p => String(p?.id || '').trim() === selectedId) || null;
+        const msg = selectedId === 'custom'
+          ? 'Custom tuning: your current sliders diverge from the baseline presets.'
+          : (String(presetDef?.desc || '').trim() || 'Pick a baseline assumption. “Custom” appears when you diverge from presets.');
+        presetHelper.textContent = msg;
+      }
 
       const isSenateDeviationModel = String(modeled?.contestType || '') === 'us_senate_model';
-      if (blendLabel) blendLabel.textContent = isSenateDeviationModel ? 'Deviation' : 'Blend';
+      if (blendLabel) blendLabel.textContent = isSenateDeviationModel ? 'Deviation vs. baseline' : 'History vs. fundamentals';
+      if (blendHelper) {
+        blendHelper.textContent = isSenateDeviationModel
+          ? 'Higher values amplify deviation from the baseline; lower values look more presidential-like.'
+          : 'Higher values lean more on older history; lower values lean more on the current cycle’s fundamentals.';
+      }
+      if (turnoutHelper) turnoutHelper.textContent = 'Higher turnout increases the turnout-weighted component of the synthetic model.';
+      if (bonusHelper) bonusHelper.textContent = 'Scales the built-in overperformance overlay (does not guarantee a winner).';
 
       const bw = Number(modeled?.blendWeight);
       const showBlend = Number.isFinite(bw) && bw >= 0 && bw <= 1;
@@ -11408,6 +11304,132 @@ document.addEventListener('DOMContentLoaded', function() {
       resetRow.style.display = anyShown ? 'grid' : 'none';
       note.style.display = anyShown ? 'block' : 'none';
       try { updateModeledInputsInline(); } catch (_) {}
+      try { updateModelSummaryCardUI({ presets, activePreset }); } catch (_) {}
+      if (summaryCard) summaryCard.style.display = 'block';
+    }
+
+    function formatModeledMarginLabelFromSignedPct(signedPct) {
+      const v = Number(signedPct);
+      if (!Number.isFinite(v)) return '—';
+      if (Math.abs(v) < 0.0001) return 'Tie';
+      const abs = Math.abs(v);
+      const pct = `${formatMarginPctForDisplay(abs)}%`;
+      return v > 0 ? `R +${pct}` : `D +${pct}`;
+    }
+
+    function computeModelConfidenceMeta({
+      presetId = '',
+      presetConfidence = '',
+      swingPct = 0,
+      modeled = null,
+      baseModeled = null
+    } = {}) {
+      const absSwing = Math.abs(Number(swingPct) || 0);
+      const swingN = Math.min(1, absSwing / 10);
+
+      const bw = Number(modeled?.blendWeight);
+      const tf = Number(modeled?.turnoutFactor);
+      const bsRaw = Number(modeled?.candidateBonusScale);
+      const bs = Number.isFinite(bsRaw) ? Math.max(0, Math.min(2, bsRaw)) : NaN;
+
+      const baseBw = Number(baseModeled?.blendWeight);
+      const baseTf = Number(baseModeled?.turnoutFactor);
+      const baseBsRaw = Number(baseModeled?.candidateBonusScale);
+      const baseBs = Number.isFinite(baseBsRaw) ? Math.max(0, Math.min(2, baseBsRaw)) : 1;
+
+      const blendN = (Number.isFinite(bw) && Number.isFinite(baseBw)) ? Math.min(1, Math.abs(bw - baseBw) / 0.5) : 0;
+      const turnoutN = (Number.isFinite(tf) && Number.isFinite(baseTf)) ? Math.min(1, Math.abs(tf - baseTf) / 0.15) : 0;
+      const bonusN = Number.isFinite(bs) ? Math.min(1, Math.abs(bs - baseBs) / 0.6) : 0;
+
+      let score = 1
+        - (0.45 * swingN)
+        - (0.25 * turnoutN)
+        - (0.20 * bonusN)
+        - (0.10 * blendN);
+
+      const pid = String(presetId || '').trim().toLowerCase();
+      const pc = String(presetConfidence || '').trim().toLowerCase();
+      if (pid === 'custom') score -= 0.07;
+      if (pid.includes('volatile') || pc === 'low') score = Math.min(score, 0.38);
+      score = Math.max(0.08, Math.min(1, score));
+
+      const label = score >= 0.72 ? 'High' : (score >= 0.48 ? 'Medium' : 'Low');
+      const cls = label === 'High' ? 'confidence-high' : (label === 'Medium' ? 'confidence-med' : 'confidence-low');
+
+      const baseRange = label === 'High' ? 1.4 : (label === 'Medium' ? 2.4 : 3.6);
+      const rangePts = baseRange
+        + Math.min(1.6, absSwing * 0.08)
+        + Math.min(0.9, turnoutN * 0.6)
+        + Math.min(0.8, bonusN * 0.5);
+
+      return { label, className: cls, rangePts: Number.isFinite(rangePts) ? rangePts : baseRange };
+    }
+
+    function updateModelSummaryCardUI({ presets = null, activePreset = '' } = {}) {
+      const card = document.getElementById('model-summary-card');
+      const baselineEl = document.getElementById('model-summary-baseline');
+      const marginEl = document.getElementById('model-summary-margin');
+      const turnoutEl = document.getElementById('model-summary-turnout');
+      const bonusEl = document.getElementById('model-summary-bonus');
+      const confidenceEl = document.getElementById('model-summary-confidence');
+      const rangeEl = document.getElementById('model-summary-range');
+      if (!card || !baselineEl || !marginEl || !turnoutEl || !bonusEl || !confidenceEl || !rangeEl) return;
+
+      const meta = (currentContestMeta && currentContestMeta.contestType)
+        ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+        : getSelectedContestTypeYear();
+      const contestType = String(meta?.contestType || '').trim();
+      const year = Number(meta?.year);
+      const modeled = contestType && Number.isFinite(year) ? getModeledContestDefinition(contestType, year) : null;
+      const baseModeled = contestType && Number.isFinite(year) ? getBaseModeledContestDefinition(contestType, year) : null;
+      if (!modeled) {
+        card.style.display = 'none';
+        return;
+      }
+
+      const presetId = String(activePreset || document.getElementById('model-preset')?.value || 'default').trim() || 'default';
+      const presetList = Array.isArray(presets)
+        ? presets
+        : (modeled?.contestType && MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()])
+          ? MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()]
+          : [];
+      const presetDef = presetList.find(p => String(p?.id || '').trim() === presetId) || null;
+      baselineEl.textContent = (presetId === 'custom')
+        ? 'Custom'
+        : String(presetDef?.label || 'Neutral baseline');
+
+      const state = voteCounterPinned
+        || (voteCounterHoverActive ? voteCounterHover : null)
+        || voteCounterBaseline
+        || null;
+      if (state) {
+        const demVotes = Number(state.demVotes || 0);
+        const repVotes = Number(state.repVotes || 0);
+        const otherVotes = Number(state.otherVotes || 0);
+        const totalVotes = demVotes + repVotes + otherVotes;
+        const signed = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        marginEl.textContent = formatModeledMarginLabelFromSignedPct(signed);
+      } else {
+        marginEl.textContent = '—';
+      }
+
+      turnoutEl.textContent = String(document.getElementById('model-turnout-value')?.textContent || '—').trim() || '—';
+      bonusEl.textContent = String(document.getElementById('model-bonus-value')?.textContent || '—').trim() || '—';
+
+      const confidence = computeModelConfidenceMeta({
+        presetId,
+        presetConfidence: presetDef?.confidence,
+        swingPct: Number(scenarioSwingPct || 0),
+        modeled,
+        baseModeled
+      });
+      confidenceEl.textContent = `Confidence: ${confidence.label}`;
+      confidenceEl.classList.remove('confidence-high', 'confidence-med', 'confidence-low');
+      if (confidence.className) confidenceEl.classList.add(confidence.className);
+
+      const rangePts = Number(confidence.rangePts);
+      const rangeLabel = Number.isFinite(rangePts) ? `Heuristic range: ±${rangePts.toFixed(1)} pts` : 'Heuristic range: —';
+      rangeEl.textContent = `${rangeLabel}. Ranges widen as assumptions become more aggressive.`;
     }
 
     function getModeledContestManifestEntries(view = currentView) {
@@ -12273,6 +12295,7 @@ document.addEventListener('DOMContentLoaded', function() {
       scenarioSwingPct = Number.isFinite(n) ? Math.max(-15, Math.min(15, n)) : 0;
       const labelEl = document.getElementById('scenario-swing-value');
       if (labelEl) labelEl.textContent = `${scenarioSwingPct.toFixed(1)}%`;
+      try { updateModelSummaryCardUI(); } catch (_) {}
     }
 
     // (saveUIState/restoreUIState defined above as no-ops)
@@ -13166,7 +13189,41 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       const partyClass = tierMeta.party === 'rep' ? 'rep' : (tierMeta.party === 'dem' ? 'dem' : 'tie');
-      b.innerHTML = `${tag ? `<span class="context-tag">${escapeHtml(tag)}</span>` : ''}<span class="focus-name-tier-badge ${escapeHtml(partyClass)}">${escapeHtml(tierMeta.label)}</span>`;
+
+      let modeledBadge = '';
+      let swingBadge = '';
+      let confidenceBadge = '';
+      try {
+        const contestType = String(meta?.contestType || currentContestMeta?.contestType || '').trim();
+        const year = Number(meta?.year || currentContestMeta?.year);
+        const modeled = (contestType && Number.isFinite(year)) ? getModeledContestDefinition(contestType, year) : null;
+        const baseModeled = (contestType && Number.isFinite(year)) ? getBaseModeledContestDefinition(contestType, year) : null;
+        if (modeled) {
+          modeledBadge = '<span class="context-pill modeled">Modeled</span>';
+          const swing = Number(scenarioSwingPct || 0);
+          if (Number.isFinite(swing) && Math.abs(swing) >= 0.05) {
+            const abs = Math.abs(swing);
+            swingBadge = `<span class="context-pill scenario">Swing ${swing > 0 ? `D+${abs.toFixed(1)}` : `R+${abs.toFixed(1)}`}</span>`;
+          }
+          const presetId = String(document.getElementById('model-preset')?.value || 'default').trim() || 'default';
+          const presetList = (modeled?.contestType && MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()])
+            ? MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()]
+            : [];
+          const presetDef = presetList.find(p => String(p?.id || '').trim() === presetId) || null;
+          const conf = computeModelConfidenceMeta({
+            presetId,
+            presetConfidence: presetDef?.confidence,
+            swingPct: swing,
+            modeled,
+            baseModeled
+          });
+          const short = conf.label === 'High' ? 'High' : (conf.label === 'Medium' ? 'Med' : 'Low');
+          confidenceBadge = `<span class="context-pill ${escapeHtml(conf.className || '')}">Conf ${escapeHtml(short)}</span>`;
+        }
+      } catch (_) {}
+
+      b.innerHTML = `${tag ? `<span class="context-tag">${escapeHtml(tag)}</span>` : ''}${modeledBadge}${swingBadge}${confidenceBadge}<span class="focus-name-tier-badge ${escapeHtml(partyClass)}">${escapeHtml(tierMeta.label)}</span>`;
+      try { updateModelSummaryCardUI(); } catch (_) {}
     }
 
     function setVoteCounterMinimizedState(minimized) {
@@ -19818,7 +19875,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           if (!isDesktopTooltipMode()) return;
           if (tooltipPinned) return;
-          if (!desktopHoverExpandState || desktopHoverExpandState.kind !== 'county') return;
+          if (!desktopHoverExpandState) return;
           const targetId = String(ev?.target?.id || '');
           if (targetId === 'tooltip-close-btn' || targetId === 'tooltip-copy-btn') return;
 
@@ -21647,7 +21704,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.point.x,
             e.point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -21662,7 +21719,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -21684,7 +21741,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.point.x,
             e.point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No data available</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -21693,7 +21750,7 @@ document.addEventListener('DOMContentLoaded', function() {
           e.point.x,
           e.point.y,
           buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">No data</div><div style="color:rgba(226,232,240,0.92);">No results reported for this contest.</div>', { pinned: pinnedShell, copyText }),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -21826,7 +21883,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ${shiftLine}
         ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
-        ${deltaBlock}
       `.trim();
 
       const compactInner = `
@@ -21837,12 +21893,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ${shiftLine}
         ${flipLine}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
-        ${deltaBlock}
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
           <div class="tooltip-more-body">
             <div class="hover-meta">${chips.join('')}</div>
             ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
+            ${deltaBlock}
             ${splitInsightLine}
             ${demoLine}
           </div>
@@ -21861,7 +21917,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.point.x,
         e.point.y,
         buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
       );
       if (desktopCollapsed) {
         desktopHoverExpandState = {
@@ -21924,7 +21980,7 @@ document.addEventListener('DOMContentLoaded', function() {
             point.x,
             point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -21939,7 +21995,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -21955,7 +22011,7 @@ document.addEventListener('DOMContentLoaded', function() {
             point.x,
             point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -21964,7 +22020,7 @@ document.addEventListener('DOMContentLoaded', function() {
           point.x,
           point.y,
           buildTooltipShell(hoverTitle, '<div class="tooltip-kicker">Not available</div><div style="color:rgba(226,232,240,0.92);">No precinct results loaded for this contest in this view. Switch to Counties and pick the contest.</div>', { pinned: pinnedShell, copyText }),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -22039,6 +22095,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const tooltipInsightForView = isDesktopTooltipMode() ? '' : tooltipInsight;
       const useCompact = isMobileTooltipMode();
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()) || pinSelection);
+      const desktopCollapsed = isDesktopTooltipMode() && !pinnedShell;
+      const fromYear = Number(trendPrevYear);
+      const toYear = Number(year);
+      const shiftClass = Number.isFinite(shiftDelta)
+        ? (Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem'))
+        : 'tie';
+      const shiftLine = (currentVizMode === 'shift' && Number.isFinite(shiftDelta) && Number.isFinite(fromYear) && Number.isFinite(toYear))
+        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${fromYear}→${toYear}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
+        : '';
 
       const classicInner = `
         <div class="hover-meta">${chips.join('')}</div>
@@ -22048,11 +22114,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ${demoLine}
       `.trim();
 
+      const desktopCollapsedInner = `
+        <div class="tooltip-quickline">
+          <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
+          ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
+        </div>
+        ${shiftLine}
+        ${flipLine}
+      `.trim();
+
       const compactInner = `
         <div class="tooltip-quickline">
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
+        ${shiftLine}
         ${tooltipInsightForView ? `<div class="tooltip-insight">${escapeHtml(tooltipInsightForView)}</div>` : ''}
         <details class="tooltip-more" aria-label="More details">
           <summary>Details</summary>
@@ -22065,12 +22141,11 @@ document.addEventListener('DOMContentLoaded', function() {
         </details>
       `.trim();
 
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()) || pinSelection);
       const actionHint = useCompact
         ? (pinnedShell ? 'Pinned • tap Close to dismiss' : (isTouchInteractionMode() ? 'Tap to pin details' : 'Click to pin details'))
         : '';
       const inner = isDesktopTooltipMode()
-        ? classicInner
+        ? (desktopCollapsed ? desktopCollapsedInner : classicInner)
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
       const hoverTitle = buildTooltipTitleWithTier(title);
       const copyText = (precinctNorm || title || '').toString().trim();
@@ -22078,8 +22153,20 @@ document.addEventListener('DOMContentLoaded', function() {
         point.x,
         point.y,
         buildTooltipShell(hoverTitle, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
       );
+      if (desktopCollapsed) {
+        desktopHoverExpandState = {
+          kind: 'precinct',
+          x: point.x,
+          y: point.y,
+          title: hoverTitle,
+          expandedInner: classicInner,
+          copyText
+        };
+      } else {
+        clearDesktopHoverExpandState();
+      }
       wireTooltipButtons();
       try {
         if (pinSelection && !isTouchInteractionMode()) setTooltipPinned(true);
@@ -22196,7 +22283,7 @@ document.addEventListener('DOMContentLoaded', function() {
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>',
               { pinned: pinnedShell, copyText }
             ),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -22211,7 +22298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `${_demoHTML}<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;margin-top:6px;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -22245,7 +22332,7 @@ document.addEventListener('DOMContentLoaded', function() {
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
               { pinned: pinnedShell, copyText }
             ),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -22258,7 +22345,7 @@ document.addEventListener('DOMContentLoaded', function() {
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -22280,7 +22367,7 @@ document.addEventListener('DOMContentLoaded', function() {
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
               { pinned: pinnedShell, copyText }
             ),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
           );
           wireTooltipButtons();
           return;
@@ -22293,7 +22380,7 @@ document.addEventListener('DOMContentLoaded', function() {
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
         );
         wireTooltipButtons();
         return;
@@ -22377,6 +22464,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const tooltipInsightForView = isDesktopTooltipMode() ? '' : tooltipInsight;
       const useCompact = isMobileTooltipMode();
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      const desktopCollapsed = isDesktopTooltipMode() && !pinnedShell;
+      const tierLong = tierMeta?.label || '';
+      const fromYear = Number(vizShiftCache?.prevYear || prevYearForFlip);
+      const toYear = Number(vizShiftCache?.year || year);
+      const shiftClass = Number.isFinite(shiftDelta)
+        ? (Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem'))
+        : 'tie';
+      const shiftLine = (currentVizMode === 'shift' && Number.isFinite(shiftDelta) && Number.isFinite(fromYear) && Number.isFinite(toYear))
+        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${fromYear}→${toYear}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
+        : '';
 
       const classicInner = `
         <div class="hover-meta district-hover-meta">${chips.join('')}</div>
@@ -22386,11 +22484,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ${tooltipInsightForView ? `<div class="tooltip-insight">${escapeHtml(tooltipInsightForView)}</div>` : ''}
       `.trim();
 
+      const desktopCollapsedInner = `
+        <div class="tooltip-quickline">
+          <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
+          ${tierLong ? `<span class="tier">${escapeHtml(tierLong)}</span>` : ''}
+        </div>
+        ${shiftLine}
+        ${flipLine}
+      `.trim();
+
       const compactInner = `
         <div class="tooltip-quickline">
           <span class="${escapeHtml(marginCall.party || 'tie')}">${escapeHtml(marginCall.text || '')}</span>
           ${tierShort ? `<span class="tier">${escapeHtml(tierShort)}</span>` : ''}
         </div>
+        ${shiftLine}
         ${flipLine}
         ${tooltipInsightForView ? `<div class="tooltip-insight">${escapeHtml(tooltipInsightForView)}</div>` : ''}
         <details class="tooltip-more" aria-label="More details">
@@ -22403,21 +22511,31 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         </details>
       `.trim();
-
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
       const actionHint = useCompact
         ? (pinnedShell ? 'Pinned • tap Close to dismiss' : (isTouchInteractionMode() ? 'Tap to pin details' : 'Click to pin details'))
         : '';
       const inner = isDesktopTooltipMode()
-        ? classicInner
+        ? (desktopCollapsed ? desktopCollapsedInner : classicInner)
         : `${useCompact ? compactInner : classicInner}${actionHint ? `<div class="tooltip-hint">${escapeHtml(actionHint)}</div>` : ''}`;
       const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
         buildTooltipShell(`${districtLabel} ${districtNum}`, inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'preview', copyText }
       );
+      if (desktopCollapsed) {
+        desktopHoverExpandState = {
+          kind: 'district',
+          x: e.point.x,
+          y: e.point.y,
+          title: `${districtLabel} ${districtNum}`,
+          expandedInner: classicInner,
+          copyText
+        };
+      } else {
+        clearDesktopHoverExpandState();
+      }
       wireTooltipButtons();
       try { markOnboardingSeen(); } catch (_) {}
     }
@@ -28983,3 +29101,4 @@ document.addEventListener('DOMContentLoaded', function() {
   </script>
 </body>
 </html>
+
