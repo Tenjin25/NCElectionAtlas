@@ -934,6 +934,27 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   color: rgba(226, 232, 240, 0.92);
 }
 
+.hover-tooltip .tooltip-body.desktop-collapsed .tooltip-delta {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.hover-tooltip .tooltip-delta .tooltip-shift {
+  font-weight: 800;
+}
+
+.hover-tooltip .tooltip-delta .tooltip-shift.rep {
+  color: #fecaca;
+}
+
+.hover-tooltip .tooltip-delta .tooltip-shift.dem {
+  color: #bfdbfe;
+}
+
+.hover-tooltip .tooltip-delta .tooltip-shift.tie {
+  color: rgba(226, 232, 240, 0.92);
+}
+
 .hover-tooltip .tooltip-flip {
   margin-top: 6px;
   font-size: 11.5px;
@@ -21126,8 +21147,11 @@ document.addEventListener('DOMContentLoaded', function() {
         : ((prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
           ? (signedMarginPct - Number(prevSignedForFlip))
           : NaN);
+      const shiftClass = Number.isFinite(shiftDelta)
+        ? (Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem'))
+        : 'tie';
       const shiftLine = (currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear)
-        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span style="font-weight:800;">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
+        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
         : '';
       const tooltipInsight = (() => {
         // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
