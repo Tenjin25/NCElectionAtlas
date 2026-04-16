@@ -8483,6 +8483,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     padding: 6px 8px;
   }
 
+  #model-preset {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.55);
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 8px;
+  }
+
   #scenario-swing {
     width: 100%;
   }
@@ -8504,6 +8515,30 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-size: 12px;
     color: #334155;
     font-weight: 700;
+  }
+
+  #model-blend,
+  #model-turnout,
+  #model-bonus {
+    width: 100%;
+  }
+
+  .model-tuning-note {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.35;
+  }
+
+  .model-inputs-inline {
+    margin-top: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.92);
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.35;
   }
 
   .analytics-card {
@@ -9095,6 +9130,118 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Modeled contest tuning (2026 synthetic entries).
+  const modelPreset = document.getElementById('model-preset');
+  const modelBlend = document.getElementById('model-blend');
+  const modelTurnout = document.getElementById('model-turnout');
+  const modelBonus = document.getElementById('model-bonus');
+  const modelResetBtn = document.getElementById('model-reset-btn');
+  let modelTuningTimer = null;
+  const scheduleModelReapply = () => {
+    if (modelTuningTimer) clearTimeout(modelTuningTimer);
+    modelTuningTimer = setTimeout(() => {
+      modelTuningTimer = null;
+      const key = document.getElementById('contestSelect')?.value || '';
+      if (!key || typeof applyContest !== 'function') return;
+      applyContest(key).catch(() => {});
+    }, 220);
+  };
+  const applyModelTuningFromControls = () => {
+    const meta = (currentContestMeta && currentContestMeta.contestType)
+      ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+      : getSelectedContestTypeYear();
+    const contestType = String(meta?.contestType || '').trim();
+    const year = Number(meta?.year);
+    if (!contestType || !Number.isFinite(year)) return;
+    const modeled = getModeledContestDefinition(contestType, year);
+    if (!modeled) return;
+
+    const patch = {};
+    if (modelBlend && document.getElementById('model-blend-row')?.style?.display !== 'none') {
+      const bw = Number(modelBlend.value);
+      if (Number.isFinite(bw) && bw >= 0 && bw <= 1) patch.blendWeight = bw;
+    }
+    if (modelTurnout && document.getElementById('model-turnout-row')?.style?.display !== 'none') {
+      const tf = Number(modelTurnout.value);
+      if (Number.isFinite(tf) && tf > 0) patch.turnoutFactor = tf;
+    }
+    if (modelBonus && document.getElementById('model-bonus-row')?.style?.display !== 'none') {
+      const bs = Number(modelBonus.value);
+      if (Number.isFinite(bs) && bs >= 0) patch.bonusScale = bs;
+    }
+    if (!Object.keys(patch).length) return;
+    setModeledContestOverrides(contestType, patch);
+    syncModelTuningControls();
+    scheduleModelReapply();
+  };
+  if (modelBlend) modelBlend.addEventListener('input', applyModelTuningFromControls);
+  if (modelTurnout) modelTurnout.addEventListener('input', applyModelTuningFromControls);
+  if (modelBonus) modelBonus.addEventListener('input', applyModelTuningFromControls);
+  if (modelPreset) {
+    modelPreset.addEventListener('change', function() {
+      const meta = (currentContestMeta && currentContestMeta.contestType)
+        ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+        : getSelectedContestTypeYear();
+      const contestType = String(meta?.contestType || '').trim();
+      const year = Number(meta?.year);
+      if (!contestType || !Number.isFinite(year)) return;
+      const modeled = getModeledContestDefinition(contestType, year);
+      const base = getBaseModeledContestDefinition(contestType, year);
+      if (!modeled || !base) return;
+
+      const presetId = String(this.value || 'default').trim();
+      const presetList = MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled?.contestType || '').trim()] || [];
+      const presetDef = presetList.find(p => String(p?.id || '') === presetId) || null;
+      if (!presetDef || String(presetDef?.kind) === 'reset' || presetId === 'default') {
+        resetModeledContestOverrides(contestType);
+        syncModelTuningControls();
+        scheduleModelReapply();
+        if (typeof setStatus === 'function') setStatus('Model preset applied: Default.');
+        try { saveUIState(); } catch (_) {}
+        return;
+      }
+
+      const patch = {};
+      const patchIn = presetDef?.patch || {};
+      if (Object.prototype.hasOwnProperty.call(patchIn, 'blendWeight') && Number.isFinite(Number(base?.blendWeight))) {
+        const bw = Number(patchIn.blendWeight);
+        if (Number.isFinite(bw) && bw >= 0 && bw <= 1) patch.blendWeight = bw;
+      }
+      if (Object.prototype.hasOwnProperty.call(patchIn, 'turnoutFactor') && Number.isFinite(Number(base?.turnoutFactor))) {
+        const tf = Number(patchIn.turnoutFactor);
+        if (Number.isFinite(tf) && tf > 0) patch.turnoutFactor = tf;
+      }
+      if (Object.prototype.hasOwnProperty.call(patchIn, 'bonusScale')) {
+        const bs = Number(patchIn.bonusScale);
+        if (Number.isFinite(bs) && bs >= 0) patch.bonusScale = bs;
+      }
+      if (!Object.keys(patch).length) return;
+      setModeledContestOverrides(contestType, patch);
+      syncModelTuningControls();
+      scheduleModelReapply();
+      if (typeof setStatus === 'function') setStatus(`Model preset applied: ${String(presetDef.label || presetId)}.`);
+      try { saveUIState(); } catch (_) {}
+    });
+  }
+  if (modelResetBtn) {
+    modelResetBtn.addEventListener('click', function() {
+      const meta = (currentContestMeta && currentContestMeta.contestType)
+        ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+        : getSelectedContestTypeYear();
+      const contestType = String(meta?.contestType || '').trim();
+      const year = Number(meta?.year);
+      if (!contestType || !Number.isFinite(year)) return;
+      if (!getModeledContestDefinition(contestType, year)) return;
+      resetModeledContestOverrides(contestType);
+      syncModelTuningControls();
+      const key = document.getElementById('contestSelect')?.value || '';
+      if (key && typeof applyContest === 'function') applyContest(key).catch(() => {});
+      if (typeof setStatus === 'function') setStatus('Model tuning reset to defaults.');
+      try { saveUIState(); } catch (_) {}
+    });
+  }
+  try { syncModelTuningControls(); } catch (_) {}
+
   // Contest search (filters dropdown without changing the dataset).
   const contestSearch = document.getElementById('contestSearch');
   if (contestSearch && !contestSearch.dataset.wired) {
@@ -9279,6 +9426,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span class="contest-onboard-copy" id="contest-onboard-copy">Choose a contest, then hover or tap a county. Click/tap to pin details.</span>
                 </div>
                 <div class="contest-loading-indicator" id="contest-loading-indicator" aria-live="polite" aria-atomic="true" hidden>Loading…</div>
+                <div class="model-inputs-inline" id="model-inputs-inline" role="note" hidden></div>
                 <div class="contest-search-wrap contest-search-wrap-secondary">
                   <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
                 </div>
@@ -9407,6 +9555,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span></span>
                 <button id="scenario-reset-btn" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="scenario-reset" aria-label="Reset scenario swing">Reset Swing</button>
                 <span></span>
+              </div>
+              <div class="scenario-row" id="model-preset-row" style="display:none;">
+                <label for="model-preset">Preset</label>
+                <select id="model-preset" data-testid="model-preset" aria-label="Model tuning preset"></select>
+                <span class="scenario-value" aria-hidden="true"></span>
+              </div>
+              <div class="scenario-row" id="model-blend-row" style="display:none;">
+                <label for="model-blend" id="model-blend-label">Blend</label>
+                <input id="model-blend" type="range" min="0" max="1" step="0.05" value="0.5" data-testid="model-blend" aria-label="Model blend weight" />
+                <span class="scenario-value" id="model-blend-value">50%</span>
+              </div>
+              <div class="scenario-row" id="model-turnout-row" style="display:none;">
+                <label for="model-turnout">Turnout</label>
+                <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.575" data-testid="model-turnout" aria-label="Model turnout factor" />
+                <span class="scenario-value" id="model-turnout-value">57.5%</span>
+              </div>
+              <div class="scenario-row" id="model-bonus-row" style="display:none;">
+                <label for="model-bonus">Bonus</label>
+                <input id="model-bonus" type="range" min="0" max="1.5" step="0.1" value="1" data-testid="model-bonus" aria-label="Model candidate bonus scale" />
+                <span class="scenario-value" id="model-bonus-value">1.0x</span>
+              </div>
+              <div class="scenario-row scenario-row-actions" id="model-reset-row" style="display:none;">
+                <span></span>
+                <button id="model-reset-btn" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="model-reset" aria-label="Reset model tuning">Reset Model</button>
+                <span></span>
+              </div>
+              <div class="model-tuning-note" id="model-tuning-note" style="display:none;">
+                Model tuning only affects the synthetic 2026 modeled contests.
               </div>
               <div class="scenario-row">
                 <label for="overlay-opacity-preset">Overlay</label>
@@ -10626,6 +10802,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let unmatchedTopRows = null;
     let lastAriaAnnouncement = '';
     let lastAriaAnnouncedAt = 0;
+    const MODELED_CONTEST_OVERRIDES_BY_TYPE = new Map(); // contestType -> { blendWeight?, turnoutFactor?, bonusScale? }
+    const MODELED_CONTEST_PRESETS_BY_TYPE = {
+      us_senate_model: [
+        { id: 'default', label: 'Default', kind: 'reset' },
+        { id: 'presidential', label: 'Presidential-like', patch: { blendWeight: 0.0, bonusScale: 0.6 } },
+        { id: 'strong_dev', label: 'Strong deviation', patch: { blendWeight: 1.0, bonusScale: 1.0 } },
+        { id: 'high_turnout', label: 'High turnout', patch: { turnoutFactor: 0.68 } }
+      ],
+      nc_supreme_court_model: [
+        { id: 'default', label: 'Default', kind: 'reset' },
+        { id: 'more_climate', label: 'More climate', patch: { blendWeight: 0.33 } },
+        { id: 'more_base', label: 'More base', patch: { blendWeight: 0.85 } }
+      ]
+    };
 
     let urlStateRestoreInFlight = false;
     let saveUIStateTimer = null;
@@ -10653,6 +10843,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const focus = String(params.get('focus') || '').trim();
       const linesRaw = String(params.get('lines') || '').trim();
       const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
+      const swingRaw = String(params.get('swing') || '').trim();
+      const swing = swingRaw ? Number(swingRaw) : null;
+      const sscopeRaw = String(params.get('sscope') || '').trim().toLowerCase();
+      const sscope = sscopeRaw ? (sscopeRaw === 'wake' ? 'wake' : 'statewide') : null;
       const barometerRaw = String(params.get('barometer') || params.get('bar') || '').trim().toLowerCase();
       const barometerEnabled = barometerRaw
         ? (barometerRaw === '1' || barometerRaw === 'true' || barometerRaw === 'on' || barometerRaw === 'yes')
@@ -10661,8 +10855,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const demoContrastHigh = demoContrastRaw
         ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
         : null;
-      const hasAny = !!(view || contest || mode || focus || lines !== null || barometerEnabled !== null || demoContrastHigh !== null);
-      return { hasAny, view, contest, mode, focus, lines, barometerEnabled, demoContrastHigh };
+      const mBlendRaw = String(params.get('mblend') || '').trim();
+      const mTurnoutRaw = String(params.get('mturnout') || '').trim();
+      const mBonusRaw = String(params.get('mbonus') || '').trim();
+      const mBlend = mBlendRaw ? Number(mBlendRaw) : null;
+      const mTurnout = mTurnoutRaw ? Number(mTurnoutRaw) : null;
+      const mBonus = mBonusRaw ? Number(mBonusRaw) : null;
+      const hasAny = !!(
+        view ||
+        contest ||
+        mode ||
+        focus ||
+        lines !== null ||
+        swingRaw ||
+        sscopeRaw ||
+        barometerEnabled !== null ||
+        demoContrastHigh !== null ||
+        mBlendRaw ||
+        mTurnoutRaw ||
+        mBonusRaw
+      );
+      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, mBlend, mTurnout, mBonus };
     }
 
     function getFocusURLTokenFromState() {
@@ -10709,8 +10922,40 @@ document.addEventListener('DOMContentLoaded', function() {
       if (currentVizMode && currentVizMode !== 'margins') params.set('mode', currentVizMode);
       const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
       if (linesYear !== 2022) params.set('lines', String(linesYear));
+      if (Number.isFinite(Number(scenarioSwingPct)) && Math.abs(Number(scenarioSwingPct)) >= 0.05) {
+        params.set('swing', Number(scenarioSwingPct).toFixed(1));
+      }
+      if (String(scenarioScope || '').toLowerCase() === 'wake') {
+        params.set('sscope', 'wake');
+      }
       if (barometerOverlayEnabled) params.set('barometer', '1');
       if (demographicsHighContrastEnabled) params.set('democontrast', 'high');
+
+      try {
+        const idx = contestValue ? contestValue.lastIndexOf('_') : -1;
+        const contestType = idx > 0 ? contestValue.substring(0, idx) : '';
+        const year = idx > 0 ? Number(contestValue.substring(idx + 1)) : NaN;
+        const modeled = contestType && Number.isFinite(year) ? getModeledContestDefinition(contestType, year) : null;
+        const baseModeled = contestType && Number.isFinite(year) ? getBaseModeledContestDefinition(contestType, year) : null;
+        if (modeled && baseModeled) {
+          const bw = Number(modeled?.blendWeight);
+          const bwBase = Number(baseModeled?.blendWeight);
+          if (Number.isFinite(bw) && Number.isFinite(bwBase) && Math.abs(bw - bwBase) > 1e-6) {
+            params.set('mblend', bw.toFixed(3));
+          }
+          const tf = Number(modeled?.turnoutFactor);
+          const tfBase = Number(baseModeled?.turnoutFactor);
+          if (Number.isFinite(tf) && Number.isFinite(tfBase) && Math.abs(tf - tfBase) > 1e-6) {
+            params.set('mturnout', tf.toFixed(3));
+          }
+          const bs = Number(modeled?.candidateBonusScale);
+          const bsBase = Number.isFinite(Number(baseModeled?.candidateBonusScale)) ? Number(baseModeled.candidateBonusScale) : 1;
+          if (Number.isFinite(bs) && Number.isFinite(bsBase) && Math.abs(bs - bsBase) > 1e-6) {
+            params.set('mbonus', bs.toFixed(2));
+          }
+        }
+      } catch (_) {}
+
       const focusToken = getFocusURLTokenFromState();
       if (focusToken) params.set('focus', focusToken);
       return params;
@@ -10834,6 +11079,19 @@ document.addEventListener('DOMContentLoaded', function() {
           switchVizMode(state.mode);
         }
 
+        if (state.sscope !== null) {
+          scenarioScope = String(state.sscope || 'statewide').toLowerCase() === 'wake' ? 'wake' : 'statewide';
+          const scopeEl = document.getElementById('scenario-scope');
+          if (scopeEl) scopeEl.value = scenarioScope;
+        }
+
+        if (state.swing !== null && Number.isFinite(Number(state.swing))) {
+          const swing = Math.max(-15, Math.min(15, Number(state.swing)));
+          const swingEl = document.getElementById('scenario-swing');
+          if (swingEl) swingEl.value = String(swing);
+          if (typeof setScenarioSwingFromControl === 'function') setScenarioSwingFromControl(swing);
+        }
+
         const contestValue = String(state.contest || '').trim();
         if (contestValue) {
           const contestSelect = document.getElementById('contestSelect');
@@ -10842,6 +11100,26 @@ document.addEventListener('DOMContentLoaded', function() {
             Array.from(contestSelect.options || []).some(opt => String(opt?.value || '').trim() === contestValue)
           );
           if (hasContest && contestSelect) {
+            try {
+              const idx = contestValue.lastIndexOf('_');
+              const contestType = idx > 0 ? contestValue.substring(0, idx) : '';
+              const year = idx > 0 ? Number(contestValue.substring(idx + 1)) : NaN;
+              if (contestType && Number.isFinite(year)) {
+                const patch = {};
+                if (state.mBlend !== null && Number.isFinite(Number(state.mBlend)) && Number(state.mBlend) >= 0 && Number(state.mBlend) <= 1) {
+                  patch.blendWeight = Number(state.mBlend);
+                }
+                if (state.mTurnout !== null && Number.isFinite(Number(state.mTurnout)) && Number(state.mTurnout) > 0) {
+                  patch.turnoutFactor = Number(state.mTurnout);
+                }
+                if (state.mBonus !== null && Number.isFinite(Number(state.mBonus)) && Number(state.mBonus) >= 0) {
+                  patch.bonusScale = Number(state.mBonus);
+                }
+                if (Object.keys(patch).length) {
+                  setModeledContestOverrides(contestType, patch);
+                }
+              }
+            } catch (_) {}
             contestSelect.value = contestValue;
             await applyContest(contestValue);
           }
@@ -10904,11 +11182,214 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getModeledContestDefinition(contestType, year) {
       const y = Number(year);
-      return MODELED_CONTEST_DEFINITIONS[`${contestType}_${y}`] || null;
+      const base = MODELED_CONTEST_DEFINITIONS[`${contestType}_${y}`] || null;
+      if (!base) return null;
+      const out = { ...base };
+      if (!Number.isFinite(Number(out.candidateBonusScale))) out.candidateBonusScale = 1;
+      const override = MODELED_CONTEST_OVERRIDES_BY_TYPE.get(String(base.contestType || '').trim()) || null;
+      if (override) {
+        const blendWeight = Number(override?.blendWeight);
+        if (Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1) out.blendWeight = blendWeight;
+        const turnoutFactor = Number(override?.turnoutFactor);
+        if (Number.isFinite(turnoutFactor) && turnoutFactor > 0) out.turnoutFactor = turnoutFactor;
+        const bonusScale = Number(override?.bonusScale);
+        if (Number.isFinite(bonusScale) && bonusScale >= 0) out.candidateBonusScale = Math.max(0, Math.min(2, bonusScale));
+      }
+      return out;
     }
 
     function getModeledContestDefinitionByType(contestType) {
-      return Object.values(MODELED_CONTEST_DEFINITIONS).find(def => def.contestType === contestType) || null;
+      const base = Object.values(MODELED_CONTEST_DEFINITIONS).find(def => def.contestType === contestType) || null;
+      if (!base) return null;
+      return getModeledContestDefinition(base.contestType, base.year) || { ...base, candidateBonusScale: 1 };
+    }
+
+    function getBaseModeledContestDefinition(contestType, year) {
+      const y = Number(year);
+      const base = MODELED_CONTEST_DEFINITIONS[`${contestType}_${y}`] || null;
+      if (!base) return null;
+      const out = { ...base };
+      if (!Number.isFinite(Number(out.candidateBonusScale))) out.candidateBonusScale = 1;
+      return out;
+    }
+
+    function setModeledContestOverrides(contestType, patch) {
+      const key = String(contestType || '').trim();
+      if (!key) return;
+      const prev = MODELED_CONTEST_OVERRIDES_BY_TYPE.get(key) || {};
+      MODELED_CONTEST_OVERRIDES_BY_TYPE.set(key, { ...prev, ...(patch || {}) });
+    }
+
+    function resetModeledContestOverrides(contestType) {
+      const key = String(contestType || '').trim();
+      if (!key) return;
+      MODELED_CONTEST_OVERRIDES_BY_TYPE.delete(key);
+    }
+
+    function getSelectedContestTypeYear() {
+      const contestKey = String(document.getElementById('contestSelect')?.value || '').trim();
+      if (!contestKey) return { contestType: '', year: NaN, contestKey: '' };
+      const idx = contestKey.lastIndexOf('_');
+      if (idx <= 0) return { contestType: '', year: NaN, contestKey };
+      return {
+        contestType: contestKey.substring(0, idx),
+        year: Number(contestKey.substring(idx + 1)),
+        contestKey
+      };
+    }
+
+    function updateModeledInputsInline() {
+      const el = document.getElementById('model-inputs-inline');
+      if (!el) return;
+
+      const meta = (currentContestMeta && currentContestMeta.contestType)
+        ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+        : getSelectedContestTypeYear();
+      const contestType = String(meta?.contestType || '').trim();
+      const year = Number(meta?.year);
+      const modeledDef = contestType && Number.isFinite(year) ? getModeledContestDefinition(contestType, year) : null;
+      if (!modeledDef) {
+        el.hidden = true;
+        el.textContent = '';
+        return;
+      }
+
+      const bits = [];
+      try {
+        bits.push(`Base: ${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} (${modeledDef.baseYear})`);
+        bits.push(`Climate: ${formatContestName(modeledDef.climateContestType, modeledDef.climateYear)} (${modeledDef.climateYear})`);
+      } catch (_) {
+        bits.push(`Base: ${String(modeledDef.baseContestType || '')} ${String(modeledDef.baseYear || '')}`);
+        bits.push(`Climate: ${String(modeledDef.climateContestType || '')} ${String(modeledDef.climateYear || '')}`);
+      }
+
+      const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
+      const bw = Number(modeledDef?.blendWeight);
+      if (Number.isFinite(bw) && bw >= 0 && bw <= 1) {
+        bits.push(`${isSenateDeviationModel ? 'Deviation' : 'Blend'}: ${Math.round(bw * 100)}%`);
+      }
+
+      const tf = Number(modeledDef?.turnoutFactor);
+      if (Number.isFinite(tf) && tf > 0 && modeledDef?.turnoutContestType && Number.isFinite(Number(modeledDef?.turnoutYear))) {
+        try {
+          bits.push(`Turnout: ${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
+        } catch (_) {
+          bits.push(`Turnout: ${String(modeledDef.turnoutContestType)} ${String(modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
+        }
+      }
+
+      if (modeledDef?.candidateBonusEnabled) {
+        const bsRaw = Number(modeledDef?.candidateBonusScale);
+        const bs = Number.isFinite(bsRaw) ? Math.max(0, Math.min(2, bsRaw)) : 1;
+        bits.push(`Bonus: ${bs.toFixed(1)}x`);
+      }
+
+      el.textContent = `Model inputs: ${bits.join(' • ')}`;
+      el.hidden = false;
+    }
+
+    function syncModelTuningControls() {
+      const presetRow = document.getElementById('model-preset-row');
+      const preset = document.getElementById('model-preset');
+      const blendRow = document.getElementById('model-blend-row');
+      const turnoutRow = document.getElementById('model-turnout-row');
+      const bonusRow = document.getElementById('model-bonus-row');
+      const resetRow = document.getElementById('model-reset-row');
+      const note = document.getElementById('model-tuning-note');
+      if (!presetRow || !preset || !blendRow || !turnoutRow || !bonusRow || !resetRow || !note) return;
+
+      const blendLabel = document.getElementById('model-blend-label');
+      const blend = document.getElementById('model-blend');
+      const blendValue = document.getElementById('model-blend-value');
+      const turnout = document.getElementById('model-turnout');
+      const turnoutValue = document.getElementById('model-turnout-value');
+      const bonus = document.getElementById('model-bonus');
+      const bonusValue = document.getElementById('model-bonus-value');
+
+      const meta = (currentContestMeta && currentContestMeta.contestType)
+        ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+        : getSelectedContestTypeYear();
+      const contestType = String(meta?.contestType || '').trim();
+      const year = Number(meta?.year);
+      const modeled = contestType && Number.isFinite(year) ? getModeledContestDefinition(contestType, year) : null;
+      const baseModeled = contestType && Number.isFinite(year) ? getBaseModeledContestDefinition(contestType, year) : null;
+
+      if (!modeled) {
+        presetRow.style.display = 'none';
+        blendRow.style.display = 'none';
+        turnoutRow.style.display = 'none';
+        bonusRow.style.display = 'none';
+        resetRow.style.display = 'none';
+        note.style.display = 'none';
+        try { updateModeledInputsInline(); } catch (_) {}
+        return;
+      }
+
+      // Presets (contest-type specific)
+      const presets = (modeled?.contestType && MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()])
+        ? MODELED_CONTEST_PRESETS_BY_TYPE[String(modeled.contestType).trim()]
+        : [{ id: 'default', label: 'Default', kind: 'reset' }];
+      try {
+        while (preset.firstChild) preset.removeChild(preset.firstChild);
+        presets.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = String(p?.id || '');
+          opt.textContent = String(p?.label || p?.id || '');
+          preset.appendChild(opt);
+        });
+        const overrideExists = MODELED_CONTEST_OVERRIDES_BY_TYPE.has(String(modeled?.contestType || '').trim());
+        let activePreset = overrideExists ? 'custom' : 'default';
+        if (overrideExists && baseModeled) {
+          const bw = Number(modeled?.blendWeight);
+          const tf = Number(modeled?.turnoutFactor);
+          const bs = Number(modeled?.candidateBonusScale);
+          const same = (a, b, tol = 0.0001) => (Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= tol);
+          for (const p of presets) {
+            if (String(p?.kind) === 'reset') continue;
+            const patch = p?.patch || {};
+            let ok = true;
+            if (Object.prototype.hasOwnProperty.call(patch, 'blendWeight')) ok = ok && same(bw, Number(patch.blendWeight), 0.0006);
+            if (Object.prototype.hasOwnProperty.call(patch, 'turnoutFactor')) ok = ok && same(tf, Number(patch.turnoutFactor), 0.0006);
+            if (Object.prototype.hasOwnProperty.call(patch, 'bonusScale')) ok = ok && same(bs, Number(patch.bonusScale), 0.011);
+            if (ok) { activePreset = String(p.id); break; }
+          }
+        }
+        if (overrideExists && activePreset === 'custom') {
+          const opt = document.createElement('option');
+          opt.value = 'custom';
+          opt.textContent = 'Custom';
+          preset.appendChild(opt);
+        }
+        preset.value = activePreset;
+      } catch (_) {}
+      presetRow.style.display = 'grid';
+
+      const isSenateDeviationModel = String(modeled?.contestType || '') === 'us_senate_model';
+      if (blendLabel) blendLabel.textContent = isSenateDeviationModel ? 'Deviation' : 'Blend';
+
+      const bw = Number(modeled?.blendWeight);
+      const showBlend = Number.isFinite(bw) && bw >= 0 && bw <= 1;
+      blendRow.style.display = showBlend ? 'grid' : 'none';
+      if (showBlend && blend) blend.value = String(bw);
+      if (showBlend && blendValue) blendValue.textContent = `${Math.round(bw * 100)}%`;
+
+      const tf = Number(modeled?.turnoutFactor);
+      const showTurnout = Number.isFinite(tf) && tf > 0;
+      turnoutRow.style.display = showTurnout ? 'grid' : 'none';
+      if (showTurnout && turnout) turnout.value = String(tf);
+      if (showTurnout && turnoutValue) turnoutValue.textContent = `${(tf * 100).toFixed(1)}%`;
+
+      const bsRaw = Number(modeled?.candidateBonusScale);
+      const bs = Number.isFinite(bsRaw) ? Math.max(0, Math.min(2, bsRaw)) : 1;
+      const showBonus = !!modeled?.candidateBonusEnabled;
+      bonusRow.style.display = showBonus ? 'grid' : 'none';
+      if (showBonus && bonus) bonus.value = String(bs);
+      if (showBonus && bonusValue) bonusValue.textContent = `${bs.toFixed(1)}x`;
+
+      const anyShown = showBlend || showTurnout || showBonus;
+      resetRow.style.display = anyShown ? 'grid' : 'none';
+      note.style.display = anyShown ? 'block' : 'none';
+      try { updateModeledInputsInline(); } catch (_) {}
     }
 
     function getModeledContestManifestEntries(view = currentView) {
@@ -14171,7 +14652,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
               const bonus = Number(candidateBonusByCounty.get(county) || 0);
-              if (Number.isFinite(bonus) && bonus > 0) swingPct += bonus;
+              const scale = Number(modeledDef?.candidateBonusScale);
+              const mult = Number.isFinite(scale) ? Math.max(0, Math.min(2, scale)) : 1;
+              if (Number.isFinite(bonus) && bonus > 0 && mult > 0) swingPct += bonus * mult;
             }
 
             const desiredSignedFinal = baseCountySignedRaw - swingPct;
@@ -14496,7 +14979,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
         const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
-        const districtBonus = modeledDef?.candidateBonusEnabled ? Number(modeledDef?.candidateBonusDistrictPts) : 0;
+        const bonusScaleRaw = Number(modeledDef?.candidateBonusScale);
+        const bonusScale = Number.isFinite(bonusScaleRaw) ? Math.max(0, Math.min(2, bonusScaleRaw)) : 1;
+        const districtBonus = modeledDef?.candidateBonusEnabled ? (Number(modeledDef?.candidateBonusDistrictPts) * bonusScale) : 0;
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
         const useBaseMix = !!(modeledDef?.baseMixContestType && Number.isFinite(Number(modeledDef?.baseMixYear)) && Number.isFinite(baseMixWeight) && baseMixWeight >= 0 && baseMixWeight <= 1);
@@ -14651,6 +15136,7 @@ document.addEventListener('DOMContentLoaded', function() {
             model_swing_pct: Number(climateSwingPct.toFixed(2)),
             model_blend_weight: useBlend ? Number(blendWeight.toFixed(3)) : undefined,
             model_turnout_factor: Number.isFinite(Number(modeledDef?.turnoutFactor)) ? Number(modeledDef.turnoutFactor) : undefined,
+            model_bonus_scale: modeledDef?.candidateBonusEnabled ? bonusScale : undefined,
             model_turnout_source: (modeledDef?.turnoutContestType && modeledDef?.turnoutYear)
               ? `${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)} ${modeledDef.turnoutYear}`
               : undefined
@@ -25248,6 +25734,24 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       }
 
+      // Also pin the hover-style precinct context so the trend panel/tooltips stay consistent with map clicks.
+      try {
+        if (coords && coords.length >= 2 && typeof renderPrecinctHoverAtPoint === 'function') {
+          const projected = map && typeof map.project === 'function' ? map.project(coords) : null;
+          if (projected && Number.isFinite(projected.x) && Number.isFinite(projected.y)) {
+            const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
+            let feature = hit;
+            if (layers.length && typeof map.queryRenderedFeatures === 'function') {
+              const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
+              if (rendered && rendered.length) feature = rendered[0];
+            }
+            setTooltipPinned(false);
+            renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
+            if (isTouchInteractionMode()) setTooltipPinned(true);
+          }
+        }
+      } catch (_) {}
+
       const sidebar = document.getElementById('sidebar');
       if (sidebar && sidebar.classList.contains('minimized')) toggleSidebar();
     }
@@ -27116,6 +27620,8 @@ document.addEventListener('DOMContentLoaded', function() {
       );
 
       if (!contestKey) {
+        currentContestMeta = { contestType: '', year: '' };
+        try { syncModelTuningControls(); } catch (_) {}
         try { applyLayerOpacityTuning(); } catch (_) {}
         splitTicketCountyOverlayMargins = {};
         try { setSplitTicketOverlayVisibility(); } catch (_) {}
@@ -27149,6 +27655,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestType = contestKey.substring(0, lastUnderscoreIndex);
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
+      try { syncModelTuningControls(); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
       try { scheduleCountyVoteDeltaCachesForTooltip(contestType, Number(year), 2); } catch (_) {}
 

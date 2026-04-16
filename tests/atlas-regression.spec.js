@@ -249,72 +249,6 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       }
     }, { timeout: APP_READY_TIMEOUT });
 
-    const clickHandle = await page.waitForFunction(() => {
-      try {
-        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return null;
-        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
-        if (!norm) return null;
-
-        const src = map.getSource('precinct-centroids');
-        const gj = src ? (src._data || src.data) : null;
-        const features = gj?.features || [];
-        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
-        const coords = hit?.geometry?.coordinates;
-        if (!Array.isArray(coords) || coords.length < 2) return null;
-
-        const projected = map.project(coords);
-        if (!projected) return null;
-        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
-        if (!layers.length) return null;
-        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
-        if (!rendered || !rendered.length) return null;
-        const container = map.getContainer && map.getContainer();
-        const rect = container && container.getBoundingClientRect ? container.getBoundingClientRect() : null;
-        if (!rect) return null;
-        return {
-          x: Math.round(rect.left + projected.x),
-          y: Math.round(rect.top + projected.y)
-        };
-      } catch (_) {
-        return null;
-      }
-    }, { timeout: APP_READY_TIMEOUT });
-    const clickPoint = await clickHandle.jsonValue();
-    expect(clickPoint && Number.isFinite(clickPoint.x) && Number.isFinite(clickPoint.y)).toBeTruthy();
-
-    const pinnedFromSelection = await page.evaluate(() => {
-      try {
-        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return false;
-        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
-        if (!norm) return false;
-        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
-        if (!layers.length) return false;
-
-        const src = map.getSource('precinct-centroids');
-        const gj = src ? (src._data || src.data) : null;
-        const features = gj?.features || [];
-        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
-        const coords = hit?.geometry?.coordinates;
-        if (!Array.isArray(coords) || coords.length < 2) return false;
-
-        const projected = map.project(coords);
-        if (!projected) return false;
-        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
-        const feature = rendered && rendered.length ? rendered[0] : null;
-        if (!feature || typeof renderPrecinctHoverAtPoint !== 'function') return false;
-
-        renderPrecinctHoverAtPoint(
-          { x: projected.x, y: projected.y },
-          feature,
-          { forceTooltip: true, pinSelection: true }
-        );
-        return true;
-      } catch (_) {
-        return false;
-      }
-    });
-    expect(pinnedFromSelection).toBeTruthy();
-
     await page.waitForFunction(() => {
       try {
         const pinnedMeta = (typeof voteCounterPinned !== 'undefined' && voteCounterPinned) ? voteCounterPinned.meta : null;
@@ -375,35 +309,16 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       }
     }, { timeout: APP_READY_TIMEOUT });
 
-    const pinnedFromSelection = await page.evaluate(() => {
+    await page.waitForFunction(() => {
       try {
-        if (typeof map === 'undefined' || !map || typeof selectedPrecinctNorm === 'undefined') return false;
-        const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
-        if (!norm) return false;
-        const layers = ['precinct-fill', 'precinct-dot', 'precinct-dot-missing'].filter((id) => map.getLayer(id));
-        if (!layers.length) return false;
-        const src = map.getSource('precinct-centroids');
-        const gj = src ? (src._data || src.data) : null;
-        const features = gj?.features || [];
-        const hit = features.find((f) => String(f?.properties?.precinct_norm || '').trim().toUpperCase() === norm);
-        const coords = hit?.geometry?.coordinates;
-        if (!Array.isArray(coords) || coords.length < 2) return false;
-        const projected = map.project(coords);
-        if (!projected) return false;
-        const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
-        const feature = rendered && rendered.length ? rendered[0] : null;
-        if (!feature || typeof renderPrecinctHoverAtPoint !== 'function') return false;
-        renderPrecinctHoverAtPoint(
-          { x: projected.x, y: projected.y },
-          feature,
-          { forceTooltip: true, pinSelection: true }
-        );
-        return true;
+        const pinnedMeta = (typeof voteCounterPinned !== 'undefined' && voteCounterPinned) ? voteCounterPinned.meta : null;
+        const title = (document.getElementById('vote-context-title')?.textContent || '').trim();
+        const caption = (document.getElementById('focus-trend-caption')?.textContent || '').trim();
+        return !!(pinnedMeta && pinnedMeta.kind === 'precinct' && /^Selected:/i.test(title) && /WAKE -/i.test(caption));
       } catch (_) {
         return false;
       }
-    });
-    expect(pinnedFromSelection).toBeTruthy();
+    }, { timeout: APP_READY_TIMEOUT });
 
     const secondContestKey = await page.evaluate((current) => {
       const sel = document.getElementById('contestSelect');
