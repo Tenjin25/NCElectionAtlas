@@ -3018,6 +3018,31 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .meta-chip.shift .dot { background: #0ea5e9; }
   .meta-chip.flip .dot { background: #a855f7; }
 
+  .meta-chip.shift .shift-value {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+  }
+
+  .meta-chip.shift.county-shift {
+    padding: 6px 11px;
+  }
+
+  .meta-chip.shift.county-shift .shift-value {
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: 0.02em;
+  }
+
+  .meta-chip.shift .shift-value.rep { color: #b91c1c; }
+  .meta-chip.shift .shift-value.dem { color: #1d4ed8; }
+  .meta-chip.shift .shift-value.tie { color: #475569; }
+
+  .meta-chip.shift .shift-years {
+    color: #64748b;
+    font-weight: 800;
+  }
+
   .meta-chip.flip.dem {
     border-color: rgba(37, 99, 235, 0.65);
     background: rgba(37, 99, 235, 0.18);
@@ -3048,7 +3073,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
 	  .meta-chip.tier {
 	    padding: 6px 10px;
-	    font-size: 13px;
+      font-size: 12px;
 	    font-weight: 800;
 	    border-width: 1px;
 	    box-shadow: none;
@@ -19057,15 +19082,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
       if (abs < 0.01) return 'No change';
-      return `${s > 0 ? 'R' : 'D'} + ${abs.toFixed(2)}%`;
+      return `${s > 0 ? 'R' : 'D'}+${abs.toFixed(2)}`;
     }
 
-    function shiftChipHTML(shiftPct, prevYear, year) {
+    function shiftChipHTML(shiftPct, prevYear, year, options = {}) {
       const s = Number(shiftPct) || 0;
       const label = formatShiftLabel(s);
+      const partyClass = Math.abs(s) < 0.01 ? 'tie' : (s > 0 ? 'rep' : 'dem');
       const dotColor = colorForShiftMode(s);
       const years = (prevYear && year) ? `${prevYear}→${year}` : '';
-      return `<span class="meta-chip shift"><span class="dot" style="background:${dotColor};"></span>Shift: ${label}${years ? ` <span style="color:#64748b;font-weight:800;">(${years})</span>` : ''}</span>`;
+      const variantClass = options && options.variant === 'county' ? ' county-shift' : '';
+      return `<span class="meta-chip shift${variantClass}"><span class="dot" style="background:${dotColor};"></span>Shift: <span class="shift-value ${partyClass}">${escapeHtml(label)}</span>${years ? ` <span class="shift-years">(${escapeHtml(years)})</span>` : ''}</span>`;
     }
 
     function winnerChipHTML(winner) {
@@ -21067,7 +21094,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (Number.isFinite(Number(prevSignedForShift))) {
           shiftDeltaForTooltip = signedMarginPct - Number(prevSignedForShift);
-          chips.push(shiftChipHTML(shiftDeltaForTooltip, vizShiftCache.prevYear, vizShiftCache.year));
+          chips.push(shiftChipHTML(shiftDeltaForTooltip, vizShiftCache.prevYear, vizShiftCache.year, { variant: 'county' }));
         }
       } else {
         chips.push(winnerChipHTML(winner));

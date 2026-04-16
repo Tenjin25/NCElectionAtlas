@@ -103,7 +103,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 13, 2026
+**Last updated:** April 15, 2026
+
+### District/County Badge Polish (April 15, 2026)
+
+- Normalized district hover badge sizing so the rating/tier chip matches the winner chip visual scale.
+- Updated shift formatting to compact party notation (`R+5.40`, `D+1.00`) for cleaner county summaries.
+- Added party-color emphasis for shift values (red for Republican-leaning movement, blue for Democratic-leaning movement) while keeping years/range text muted.
+- Introduced a county-only shift chip variant with slightly stronger type weight/size so county mode reads clearly without changing precinct or district chip styling.
 
 ### HD-52 Governor Benchmark Alignment (April 13, 2026)
 
