@@ -15448,7 +15448,21 @@ document.addEventListener('DOMContentLoaded', function() {
             let weightedSigned = 0;
             let weightedTotal = 0;
             map.forEach((node, county) => {
-              const countyWeight = Math.max(0, Number(baseCountyTotals.get(county)?.total || 0));
+              const countyWeight = (() => {
+                const baseTotal = Math.max(0, Number(baseCountyTotals.get(county)?.total || 0));
+                const turnoutActive = !!(turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0);
+                if (turnoutActive) {
+                  if (turnoutByCounty && turnoutByCounty.has(county)) {
+                    const t = Number(turnoutByCounty.get(county)) * turnoutFactor;
+                    if (Number.isFinite(t) && t > 0) return t;
+                  }
+                  if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0 && baseTotal > 0) {
+                    const t = baseTotal * turnoutFallbackRatio;
+                    if (Number.isFinite(t) && t > 0) return t;
+                  }
+                }
+                return baseTotal;
+              })();
               if (!(countyWeight > 0)) return;
               const signed = Number(node?.desiredSigned);
               if (!Number.isFinite(signed)) return;
