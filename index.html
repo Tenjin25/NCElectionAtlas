@@ -10340,7 +10340,7 @@ document.addEventListener('DOMContentLoaded', function() {
       clearCountyDetails();
       pinVoteCounterState(
         region.label,
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         totals.dem,
         totals.rep,
         totals.other,
@@ -10878,6 +10878,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contestType: 'us_senate_model',
         year: 2026,
         displayName: 'US Senate Model',
+        optionLabel: 'US Senate (2026) model',
         groupLabel: 'US Senate',
         baseContestType: 'us_senate',
         baseYear: 2022,
@@ -10887,6 +10888,10 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineRecentWeight: 0.60,
         baselineSecondWeight: 0.25,
         baselineLongRunWeight: 0.15,
+        baselineReliabilityMinVotes: 12000,
+        baselineReliabilityMaxVotes: 90000,
+        baselineReliabilityFloor: 0.48,
+        statewideRecenterStrength: 0.90,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         trendNudgeMaxPts: 0.75,
         stableCountyBrakeMin: 0.52,
@@ -10927,6 +10932,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contestType: 'nc_supreme_court_model',
         year: 2026,
         displayName: 'NC Supreme Court Model',
+        optionLabel: 'NC Associate Justice Seat 1 (2026) Model',
         groupLabel: 'NC Supreme Court',
         baseContestType: 'nc_supreme_court_associate_justice_seat_05',
         baseYear: 2022,
@@ -11413,17 +11419,51 @@ document.addEventListener('DOMContentLoaded', function() {
       return out;
     }
 
+    function invalidateModeledContestCaches(contestType) {
+      const key = String(contestType || '').trim();
+      if (!key) return;
+      const modeledYears = new Set();
+      try {
+        Object.values(MODELED_CONTEST_DEFINITIONS || {}).forEach(def => {
+          if (!def) return;
+          if (String(def.contestType || '').trim() !== key) return;
+          const y = Number(def.year);
+          if (Number.isFinite(y)) modeledYears.add(y);
+        });
+      } catch (_) {}
+      if (!modeledYears.size) return;
+
+      modeledYears.forEach(year => {
+        const contestKey = `${key}_${year}`;
+        contestSliceCache.delete(contestKey);
+      });
+
+      const districtKeysToDelete = [];
+      districtSliceCache.forEach((_, cacheKey) => {
+        const rawKey = String(cacheKey || '');
+        for (const year of modeledYears) {
+          if (rawKey.endsWith(`_${key}_${year}`)) {
+            districtKeysToDelete.push(rawKey);
+            break;
+          }
+        }
+      });
+      districtKeysToDelete.forEach(k => districtSliceCache.delete(k));
+    }
+
     function setModeledContestOverrides(contestType, patch) {
       const key = String(contestType || '').trim();
       if (!key) return;
       const prev = MODELED_CONTEST_OVERRIDES_BY_TYPE.get(key) || {};
       MODELED_CONTEST_OVERRIDES_BY_TYPE.set(key, { ...prev, ...(patch || {}) });
+      invalidateModeledContestCaches(key);
     }
 
     function resetModeledContestOverrides(contestType) {
       const key = String(contestType || '').trim();
       if (!key) return;
       MODELED_CONTEST_OVERRIDES_BY_TYPE.delete(key);
+      invalidateModeledContestCaches(key);
     }
 
     function getSelectedContestTypeYear() {
@@ -14204,7 +14244,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       pinVoteCounterState(
         `Selected: ${precinctDisplay}`,
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         demVotes,
         repVotes,
         otherVotes,
@@ -14252,7 +14292,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       pinVoteCounterState(
         `Selected: ${countyDisplay} County`,
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         demVotes,
         repVotes,
         otherVotes,
@@ -14854,6 +14894,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const stateSeries = getStateSeriesSigned();
         const statewideWeightedBaselineSigned = blendSeries(stateSeries, climateSigned);
+        const clampSignedMargin = (value) => {
+          const v = Number(value);
+          if (!Number.isFinite(v)) return 0;
+          return Math.max(-80, Math.min(80, v));
+        };
+        const statewideTargetSigned = (() => {
+          if (useBlend) {
+            // Keep the county model anchored to a deterministic statewide target.
+            return clampSignedMargin((blendWeight * baseSigned) + ((1 - blendWeight) * statewideWeightedBaselineSigned));
+          }
+          return clampSignedMargin(climateSigned);
+        })();
 
         const getPresidentialBaselineMargin = (county) => {
           const series = getCountySeriesSigned(county);
@@ -15196,6 +15248,18 @@ document.addEventListener('DOMContentLoaded', function() {
           const safeBrakeMargin = Number.isFinite(Number(modeledDef?.safeCountyBrakeMargin))
             ? Number(modeledDef.safeCountyBrakeMargin)
             : 18;
+          const reliabilityMinVotes = Number.isFinite(Number(modeledDef?.baselineReliabilityMinVotes))
+            ? Number(modeledDef.baselineReliabilityMinVotes)
+            : 12000;
+          const reliabilityMaxVotes = Number.isFinite(Number(modeledDef?.baselineReliabilityMaxVotes))
+            ? Number(modeledDef.baselineReliabilityMaxVotes)
+            : 90000;
+          const reliabilityFloor = Number.isFinite(Number(modeledDef?.baselineReliabilityFloor))
+            ? Number(modeledDef.baselineReliabilityFloor)
+            : 0.48;
+          const statewideRecenterStrength = Number.isFinite(Number(modeledDef?.statewideRecenterStrength))
+            ? Number(modeledDef.statewideRecenterStrength)
+            : 0.90;
 
           const classifyTrendTag = (recent, second, long) => {
             const recentShift = (Number.isFinite(recent) && Number.isFinite(second)) ? (recent - second) : NaN;
@@ -15272,11 +15336,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const trendTag = classifyTrendTag(countyRecent, countySecond, countyLong);
             const countyType = classifyCountyBehaviorType(county, totals);
             const behavior = getBehaviorMultipliers(countyType, trendTag, volatility);
+            const countyTotalVotes = Math.max(0, Number(totals?.total || 0));
+            const reliabilitySpan = Math.max(1, reliabilityMaxVotes - reliabilityMinVotes);
+            const reliabilityT = Math.max(0, Math.min(1, (countyTotalVotes - reliabilityMinVotes) / reliabilitySpan));
+            const reliabilityScale = Math.max(0.25, Math.min(1, reliabilityFloor + ((1 - reliabilityFloor) * reliabilityT)));
             const turnoutShift = (Number(turnoutFactor || 0) - 0.575) * 100;
             let trendNudge = 0;
             if (trendTag === 'right') trendNudge = Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
             else if (trendTag === 'left') trendNudge = -Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
             else if (trendTag === 'volatile') trendNudge = (recentShift >= 0 ? 0.16 : -0.16);
+            trendNudge *= reliabilityScale;
 
             const weightedCountyBaseline = getPresidentialBaselineMargin(county);
             const weightedCountyBase = Number.isFinite(Number(weightedCountyBaseline))
@@ -15308,6 +15377,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
             let elasticPull = pullFromBase * behavior.elasticity;
+            elasticPull *= (0.70 + (0.30 * reliabilityScale));
 
             // Stability brake: safe + low-volatility counties should resist dramatic movement.
             const safeMargin = Math.abs(baseCountySignedRaw);
@@ -15330,19 +15400,49 @@ document.addEventListener('DOMContentLoaded', function() {
               const bonus = Number(candidateBonusByCounty.get(county) || 0);
               const scale = Number(modeledDef?.candidateBonusScale);
               const mult = Number.isFinite(scale) ? Math.max(0, Math.min(2, scale)) : 1;
-              if (Number.isFinite(bonus) && bonus > 0 && mult > 0) swingPct += bonus * mult;
+              if (Number.isFinite(bonus) && bonus > 0 && mult > 0) swingPct += bonus * mult * reliabilityScale;
             }
 
-            const desiredSignedFinal = baseCountySignedRaw - swingPct;
+            const desiredSignedFinal = clampSignedMargin(baseCountySignedRaw - swingPct);
+            swingPct = baseCountySignedRaw - desiredSignedFinal;
             map.set(county, {
               swingPct,
               desiredSigned: desiredSignedFinal,
               baseSigned: baseCountySignedRaw,
               countyType,
               trendTag,
-              volatility
+              volatility,
+              reliabilityScale
             });
           });
+
+          if (map.size && Number.isFinite(statewideTargetSigned) && statewideRecenterStrength > 0) {
+            let weightedSigned = 0;
+            let weightedTotal = 0;
+            map.forEach((node, county) => {
+              const countyWeight = Math.max(0, Number(baseCountyTotals.get(county)?.total || 0));
+              if (!(countyWeight > 0)) return;
+              const signed = Number(node?.desiredSigned);
+              if (!Number.isFinite(signed)) return;
+              weightedSigned += signed * countyWeight;
+              weightedTotal += countyWeight;
+            });
+            if (weightedTotal > 0) {
+              const currentStateSigned = weightedSigned / weightedTotal;
+              const recenterStep = (statewideTargetSigned - currentStateSigned) * Math.max(0, Math.min(1.25, statewideRecenterStrength));
+              if (Math.abs(recenterStep) >= 0.02) {
+                map.forEach((node) => {
+                  if (!node) return;
+                  const baseSignedNode = Number(node.baseSigned);
+                  if (!Number.isFinite(baseSignedNode)) return;
+                  const shiftedDesired = clampSignedMargin(Number(node.desiredSigned || 0) + recenterStep);
+                  node.desiredSigned = shiftedDesired;
+                  node.swingPct = baseSignedNode - shiftedDesired;
+                });
+              }
+            }
+          }
+
           return map;
         })();
 
@@ -16332,6 +16432,14 @@ document.addEventListener('DOMContentLoaded', function() {
 	      return nameMap[contestType] || contestType.toUpperCase();
 	    }
 
+    function formatContestLabel(contestType, year) {
+      const modeledDef = getModeledContestDefinition(contestType, year) || getModeledContestDefinitionByType(contestType);
+      const modeledOptionLabel = String(modeledDef?.optionLabel || '').trim();
+      if (modeledOptionLabel) return modeledOptionLabel;
+      const officeName = formatContestName(contestType, year);
+      return Number.isFinite(Number(year)) ? `${officeName} ${year}` : officeName;
+    }
+
     function populateContestSelectFromElectionJSON(electionData) {
       if (!Array.isArray(electionData) || electionData.length === 0) return;
       if (contestManifest && contestManifest.length > 0) {
@@ -16617,7 +16725,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	          const opt = document.createElement('option');
 	          opt.value = `${item.contestType}_${item.year}`;
             const modeledDef = getModeledContestDefinition(item.contestType, item.year);
-            const modeledSuffix = modeledDef ? ' [Modeled]' : '';
+            const modeledOptionLabel = String(modeledDef?.optionLabel || '').trim();
+            const modeledSuffix = modeledDef && !modeledOptionLabel ? ' [Modeled]' : '';
+            if (modeledOptionLabel) {
+              opt.textContent = modeledOptionLabel;
+            } else
 	          if (isJudicial || modeledDef) {
               opt.textContent = `${formatContestName(item.contestType, item.year)} (${item.year})${modeledSuffix}`;
 	          } else {
@@ -16873,7 +16985,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const detail = inRecountRange
         ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
         : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
-      const contestLabel = `${formatContestName(contestType, year)} ${year}`;
+      const contestLabel = `${formatContestLabel(contestType, year)}`;
       const className = inRecountRange ? 'recount' : 'litigation';
 
       return (
@@ -17174,7 +17286,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!row) return true;
         pinVoteCounterState(
           `Selected: ${title}`,
-          `${formatContestName(contestType, year)} ${year}`,
+          `${formatContestLabel(contestType, year)}`,
           Number(row.dem_votes || 0),
           Number(row.rep_votes || 0),
           Number(row.other_votes || 0),
@@ -20590,7 +20702,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (viewEl) viewEl.textContent = getReadableViewLabel(currentView);
       if (modeEl) modeEl.textContent = getReadableModeLabel(currentVizMode);
-      if (contestEl) contestEl.textContent = contestValue ? `${formatContestName(contestType, year)} ${year}` : 'Select a contest';
+      if (contestEl) contestEl.textContent = contestValue ? `${formatContestLabel(contestType, year)}` : 'Select a contest';
       if (focusEl) focusEl.textContent = getReadableFocusLabel();
       updateControlSummary(contestValue);
       try { updateFiltersActiveChip(); } catch (_) {}
@@ -21978,7 +22090,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const prev = await getPreviousContestSlice(contestType, Number(year));
       if (!prev || !prev.rows || !prev.rows.length) {
-        body.innerHTML = `No prior cycle found for ${formatContestName(contestType, year)} ${year}.`;
+        body.innerHTML = `No prior cycle found for ${formatContestLabel(contestType, year)}.`;
         return;
       }
       const prevByNorm = new Map();
@@ -22273,7 +22385,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const repCandidate = row[`${contestType}_rep_candidate`] || getCandidateName(year, formatContestName(contestType, year), 'Republican');
       setVoteCounterHoverState(
         `Hover: ${countyDisplay} County`,
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         demVotes,
         repVotes,
         otherVotes,
@@ -22284,7 +22396,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
-      const subtitle = `${formatContestName(contestType, year)} ${year}`;
+      const subtitle = `${formatContestLabel(contestType, year)}`;
 
       let demoLine = '';
       try {
@@ -22546,7 +22658,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherVotes = Number(row[`${contestType}_other`] || 0);
       const demCandidate = row[`${contestType}_dem_candidate`] || '';
       const repCandidate = row[`${contestType}_rep_candidate`] || '';
-      const subtitle = `${formatContestName(contestType, year)} ${year}`;
+      const subtitle = `${formatContestLabel(contestType, year)}`;
 
       const signedMarginPct = Number(row[`${contestType}_margin_pct`]);
       const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, demVotes + repVotes + otherVotes) : signedMarginPct;
@@ -22881,7 +22993,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (!demCandidate) demCandidate = getCandidateName(year, formatContestName(contestType, year), 'Democrat');
       if (!repCandidate) repCandidate = getCandidateName(year, formatContestName(contestType, year), 'Republican');
-      const subtitle = `${formatContestName(contestType, year)} ${year}`;
+      const subtitle = `${formatContestLabel(contestType, year)}`;
       setVoteCounterHoverState(
         `Hover: ${districtLabel} ${districtNum}`,
         subtitle,
@@ -23823,7 +23935,7 @@ document.addEventListener('DOMContentLoaded', function() {
   repCandidate = stripRunningMateName(repCandidate);
       pinVoteCounterState(
         `Selected: ${countyDisplay} County`,
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         demVotes,
         repVotes,
         otherVotes,
@@ -23842,7 +23954,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (countyNameElement) setFocusNameWithTierBadge(countyNameElement, `${countyDisplay} County`, tierMeta);
       try {
         const headerTitle = document.querySelector('#sidebar-header h3');
-        if (headerTitle) headerTitle.textContent = `${countyDisplay} • ${formatContestName(contestType, year)} ${year}`;
+        if (headerTitle) headerTitle.textContent = `${countyDisplay} • ${formatContestLabel(contestType, year)}`;
       } catch (_) {}
       // Accessibility palette for winner color
       function cbColorForMargin(marginPct, winner) {
@@ -25667,7 +25779,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   const otherVotes = Number(row.other_votes || 0);
                   pinVoteCounterState(
                     `Selected: Congressional District ${districtNum}`,
-                    `${formatContestName(contestType, year)} ${year}`,
+                    `${formatContestLabel(contestType, year)}`,
                     demVotes,
                     repVotes,
                     otherVotes,
@@ -25785,7 +25897,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   const otherVotes = Number(row.other_votes || 0);
                   pinVoteCounterState(
                     `Selected: State House District ${districtNum}`,
-                    `${formatContestName(contestType, year)} ${year}`,
+                    `${formatContestLabel(contestType, year)}`,
                     demVotes,
                     repVotes,
                     otherVotes,
@@ -25902,7 +26014,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   const otherVotes = Number(row.other_votes || 0);
                   pinVoteCounterState(
                     `Selected: State Senate District ${districtNum}`,
-                    `${formatContestName(contestType, year)} ${year}`,
+                    `${formatContestLabel(contestType, year)}`,
                     demVotes,
                     repVotes,
                     otherVotes,
@@ -26436,7 +26548,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const otherVotes = Number(row[`${contestType}_other`] || 0);
         pinVoteCounterState(
           `Selected: ${displayTitle}`,
-          `${formatContestName(contestType, year)} ${year}`,
+          `${formatContestLabel(contestType, year)}`,
           demVotes,
           repVotes,
           otherVotes,
@@ -28781,7 +28893,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Baseline vote counter (statewide) for this contest/view.
       setVoteCounterBaselineState(
         'Statewide',
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         statewidedemVotes,
         statewidrepVotes,
         statewidotherVotes,
@@ -28873,7 +28985,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try { scheduleAnalyticsPanelsUpdate(contestType, year, contestData, 150); } catch (_) {}
         if (staleCheck()) return;
         setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})`);
-        setStatus(`Applied demographic mode: ${formatContestName(contestType, year)} ${year}`);
+        setStatus(`Applied demographic mode: ${formatContestLabel(contestType, year)}`);
         return;
       }
 
@@ -29131,7 +29243,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { scheduleAnalyticsPanelsUpdate(contestType, year, contestData, 150); } catch (_) {}
       if (staleCheck()) return;
       setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})`);
-      setStatus(`Applied contest: ${formatContestName(contestType, year)} ${year}`);
+      setStatus(`Applied contest: ${formatContestLabel(contestType, year)}`);
     }
 
     async function applyDistrictContest(contestType, year) {
@@ -29224,7 +29336,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       map.setPaintProperty('district-fill', 'fill-color', expr);
       applyLayerOpacityTuning();
-      setVoteCounterBaselineState('Statewide', `${formatContestName(contestType, year)} ${year}`, totals.dem, totals.rep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
+      setVoteCounterBaselineState('Statewide', `${formatContestLabel(contestType, year)}`, totals.dem, totals.rep, totalOther, { kind: 'statewide', contestType, year: Number(year) });
       if (mode === 'demographics') {
         setStatewideContestTitle(`US House (${year}) - Congressional demographic profile`);
         setStatus(`Applied demographic mode for Congressional districts.`);
@@ -29390,11 +29502,11 @@ document.addEventListener('DOMContentLoaded', function() {
             setStatus(`Applied demographic mode for ${getReadableViewLabel(currentView)} (${linesLabel}).`);
           } else {
             setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Reallocated to ${linesLabel}${coverageText}`);
-            setStatus(`Applied district crosswalk results: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
+            setStatus(`Applied district crosswalk results: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
           }
           setVoteCounterBaselineState(
             'Statewide',
-            `${formatContestName(contestType, year)} ${year} (${linesLabel})`,
+            `${formatContestLabel(contestType, year)} (${linesLabel})`,
             totalDem,
             totalRep,
             totalOther,
@@ -29475,7 +29587,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
         setVoteCounterBaselineState(
           'Statewide',
-          `${formatContestName(contestType, year)} ${year}`,
+          `${formatContestLabel(contestType, year)}`,
           totalDem,
           totalRep,
           totalOther,
@@ -29538,10 +29650,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
   setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Statewide Result`);
-      setStatus(`Applied statewide contest: ${formatContestName(contestType, year)} ${year} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
+      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
       setVoteCounterBaselineState(
         'Statewide',
-        `${formatContestName(contestType, year)} ${year}`,
+        `${formatContestLabel(contestType, year)}`,
         totalDem,
         totalRep,
         totalOther,
