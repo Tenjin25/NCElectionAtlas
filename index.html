@@ -10899,6 +10899,17 @@ document.addEventListener('DOMContentLoaded', function() {
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
+        // Optional county-cluster calibration (subtle by default): keep similar county archetypes
+        // behaving more consistently without changing any user-facing controls.
+        countyClusterCalibrationEnabled: true,
+        countyClusterCalibrationStrength: 0.65, // 0..1 (higher = stronger cluster-based adjustments)
+        // Federalization brake: very deep-partisan counties are less likely to sustain large crossover patterns.
+        federalizationBrakeMargin: 20,
+        federalizationDeepMargin: 34,
+        federalizationFloor: 0.62,
+        // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
+        senateDeviationOutlierBrakeEnabled: true,
+        senateDeviationHistoryYears: [2016, 2020, 2022],
         // Candidate effect: Cooper tends to run slightly stronger than a generic D (or 2022 Senate baseline)
         // in some county types; apply as a small additional D swing on top of the blended baseline.
         candidateBonusEnabled: true,
@@ -10911,6 +10922,11 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.15,
         candidateBonusConsistencyFloor: 0.60,
+        // Separate "durable crossover" vs "Cooper-personal" components so the bonus does not over-travel
+        // into highly federalized counties or one-cycle outliers.
+        candidateBonusDurableShare: 0.60,
+        candidateBonusPersonalShare: 0.40,
+        candidateBonusPersonalFederalizationFloor: 0.30,
         candidateBonusFederalizationBrakeMargin: 22,
         candidateBonusFederalizationDeepRedMargin: 34,
         candidateBonusFederalizationFloor: 0.15,
@@ -10937,6 +10953,9 @@ document.addEventListener('DOMContentLoaded', function() {
         displayName: 'NC Supreme Court Model',
         optionLabel: 'NC Associate Justice Seat 1 (2026) Model',
         groupLabel: 'NC Supreme Court',
+        // Judicial models are intentionally more cautious: more shrinkage, less trend chasing,
+        // and extra brakes for counties that behave noisily in downballot races.
+        judicialModel: true,
         baseContestType: 'nc_supreme_court_associate_justice_seat_05',
         baseYear: 2022,
         // Optional base blend: Seat 03 + Seat 05, then blend with the 2024 cycle.
@@ -10955,6 +10974,8 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityFloor: 0.42,
         stableCountyBrakeMin: 0.46,
         safeCountyBrakeMargin: 16,
+        judicialNoiseSeatSplitBrakeEnabled: true,
+        judicialNoiseShareBrakeEnabled: true,
         demCandidate: 'Anita Earls',
         repCandidate: 'Sarah Stevens',
         description: 'Blend of 2022 Seat 03 + Seat 05 with a 2024 climate adjustment'
@@ -14764,6 +14785,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
         const baseContestType = String(modeledDef?.baseContestType || '').trim();
         const climateContestType = String(modeledDef?.climateContestType || '').trim();
+        const modeledType = String(modeledDef?.contestType || '').trim();
+        const isSenateDeviationModel = modeledType === 'us_senate_model';
+        const isJudicialModel = !!modeledDef?.judicialModel || modeledType === 'nc_supreme_court_model';
+        const clamp01 = (v) => Math.max(0, Math.min(1, Number.isFinite(Number(v)) ? Number(v) : 0));
+        const lerp = (a, b, t) => (Number(a) + ((Number(b) - Number(a)) * clamp01(t)));
+        const getCountyCensusContextSafe = (countyNorm) => {
+          try { return getNcCensusContext(countyNorm); } catch (_) { return null; }
+        };
         const normalizeRowKey = (raw) => (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
         const countyFromRowKey = (key) => {
           const k = normalizeRowKey(key);
@@ -14813,15 +14842,47 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const classifyCountyBehaviorType = (county, totals = null) => {
-          const ctx = (() => {
-            try { return getNcCensusContext(county); } catch (_) { return null; }
-          })();
+          const ctx = getCountyCensusContextSafe(county);
           const pattern = String(ctx?.patternLabel || '').toLowerCase();
           const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
           if (/urban anchor|urban county/.test(pattern) || pop >= 550000) return 'urban';
           if (/metro spillover|outer-suburban|suburban/.test(pattern) || pop >= 180000) return 'suburban';
           if (/small-metro|transition|coastal growth/.test(pattern) || pop >= 90000) return 'exurban';
           return 'rural';
+        };
+
+        // County cluster classifier (used for optional calibration + diagnostics).
+        // These are intentionally coarse buckets (not an ontology), to keep model behavior stable and readable.
+        const COLLEGE_COUNTIES = new Set([
+          'ORANGE', 'DURHAM', 'WATAUGA', 'PITT', 'NEW HANOVER',
+          'BUNCOMBE', 'FORSYTH', 'WAKE', 'GUILFORD', 'MECKLENBURG'
+        ]);
+        const APPALACHIAN_COUNTIES = new Set([
+          'ASHE', 'AVERY', 'BURKE', 'CALDWELL', 'CHEROKEE', 'CLAY', 'GRAHAM',
+          'HAYWOOD', 'HENDERSON', 'JACKSON', 'MCDOWELL', 'MITCHELL', 'POLK',
+          'RUTHERFORD', 'SWAIN', 'TRANSYLVANIA', 'WATAUGA', 'YANCEY', 'WILKES'
+        ]);
+
+        const inferCountyCluster = (county, totals = null) => {
+          const ctx = getCountyCensusContextSafe(county);
+          const patternRaw = String(ctx?.patternLabel || '').trim();
+          const pattern = patternRaw.toLowerCase();
+          const note = String(ctx?.noteLabel || '').toLowerCase();
+          const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
+          const countyType = classifyCountyBehaviorType(county, totals);
+
+          if (COLLEGE_COUNTIES.has(county) && countyType !== 'urban') return 'college';
+          if (/military|institutional hubs/i.test(note)) return 'military_institutional';
+          if (/coastal/i.test(pattern)) return 'coastal';
+          if (/black belt/i.test(pattern)) return 'black_belt';
+          if (/urban anchor/i.test(pattern) || pop >= 850000) return 'urban_core';
+          if (/metro spillover|outer-suburban/.test(pattern)) return 'outer_suburb_exurb';
+          if (/small-metro|transition/.test(pattern) && pop >= 110000) return 'small_city_industrial';
+          if (APPALACHIAN_COUNTIES.has(county) && (countyType === 'rural' || countyType === 'exurban')) return 'appalachian_rural_white';
+          if (countyType === 'suburban' && pop >= 220000) return 'inner_suburb';
+          if (countyType === 'exurban') return 'outer_suburb_exurb';
+          if (countyType === 'urban') return 'urban_core';
+          return 'rural_white';
         };
 
         const pickComparableYears = (contestType, recentYear) => {
@@ -14843,6 +14904,68 @@ document.addEventListener('DOMContentLoaded', function() {
         const baseCountySignedRawByCounty = getCountySignedFromTotalsMap(baseCountyTotals);
         const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
         const climateSignedByCounty = getCountySignedFromTotalsMap(climateCountyTotals);
+        const baseStateTotalVotes = Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+        const climateStateTotalVotes = Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+
+        const countyClusterByCounty = new Map();
+        baseCountyTotals.forEach((totals, county) => {
+          if (!county) return;
+          countyClusterByCounty.set(county, inferCountyCluster(county, totals));
+        });
+
+        const clusterCalibrationEnabled = !!modeledDef?.countyClusterCalibrationEnabled;
+        const clusterCalibrationStrength = clusterCalibrationEnabled
+          ? Math.max(0, Math.min(1, Number(modeledDef?.countyClusterCalibrationStrength ?? 0.65)))
+          : 0;
+
+        const getClusterCalibration = (cluster, modelKind = 'generic') => {
+          const key = String(cluster || '').trim().toLowerCase();
+          const isJudicial = modelKind === 'judicial';
+          const base = {
+            elasticityMul: 1,
+            turnoutBiasDelta: 0,
+            candidateBonusMul: 1,
+            personalBonusMul: 1
+          };
+          // Senate: allow a bit more structured differentiation (still subtle).
+          // Judicial: keep cluster effects very small (mostly shrinkage/noise handling).
+          const table = isJudicial ? {
+            urban_core: { elasticityMul: 0.88, turnoutBiasDelta: -0.01 },
+            inner_suburb: { elasticityMul: 0.90, turnoutBiasDelta: -0.005 },
+            outer_suburb_exurb: { elasticityMul: 0.92, turnoutBiasDelta: 0.0 },
+            black_belt: { elasticityMul: 0.92, turnoutBiasDelta: -0.005 },
+            college: { elasticityMul: 0.90, turnoutBiasDelta: -0.005 },
+            appalachian_rural_white: { elasticityMul: 0.94, turnoutBiasDelta: 0.005 },
+            small_city_industrial: { elasticityMul: 0.93, turnoutBiasDelta: 0.0 },
+            coastal: { elasticityMul: 0.93, turnoutBiasDelta: 0.0 },
+            military_institutional: { elasticityMul: 0.95, turnoutBiasDelta: 0.0 },
+            rural_white: { elasticityMul: 0.95, turnoutBiasDelta: 0.005 }
+          } : {
+            urban_core: { elasticityMul: 0.92, turnoutBiasDelta: -0.04, candidateBonusMul: 0.92, personalBonusMul: 0.90 },
+            inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.00, personalBonusMul: 1.05 },
+            outer_suburb_exurb: { elasticityMul: 1.04, turnoutBiasDelta: 0.01, candidateBonusMul: 1.05, personalBonusMul: 1.02 },
+            black_belt: { elasticityMul: 0.98, turnoutBiasDelta: -0.01, candidateBonusMul: 1.06, personalBonusMul: 0.95 },
+            college: { elasticityMul: 0.95, turnoutBiasDelta: -0.03, candidateBonusMul: 1.03, personalBonusMul: 0.96 },
+            appalachian_rural_white: { elasticityMul: 1.01, turnoutBiasDelta: 0.03, candidateBonusMul: 0.88, personalBonusMul: 0.86 },
+            small_city_industrial: { elasticityMul: 1.02, turnoutBiasDelta: 0.02, candidateBonusMul: 1.00, personalBonusMul: 1.05 },
+            coastal: { elasticityMul: 0.99, turnoutBiasDelta: -0.005, candidateBonusMul: 0.95, personalBonusMul: 0.95 },
+            military_institutional: { elasticityMul: 1.02, turnoutBiasDelta: 0.005, candidateBonusMul: 0.92, personalBonusMul: 0.90 },
+            rural_white: { elasticityMul: 1.05, turnoutBiasDelta: 0.04, candidateBonusMul: 0.92, personalBonusMul: 0.90 }
+          };
+          const hit = table[key] || null;
+          return { ...base, ...(hit || {}) };
+        };
+
+        const computeFederalizationBrake = (absMargin, brakeMargin, deepMargin, floor) => {
+          const abs = Math.abs(Number(absMargin || 0));
+          const b0 = Number(brakeMargin);
+          const b1 = Number(deepMargin);
+          const f = Number(floor);
+          if (!Number.isFinite(abs) || !Number.isFinite(b0) || !Number.isFinite(b1) || !(b1 > b0) || !Number.isFinite(f)) return 1;
+          if (abs <= b0) return 1;
+          const t = clamp01((abs - b0) / Math.max(1e-6, (b1 - b0)));
+          return 1 - ((1 - Math.max(0, Math.min(1, f))) * t);
+        };
 
         const comparableYears = pickComparableYears(climateContestType, modeledDef?.climateYear);
         const recentWeightRaw = Number(modeledDef?.baselineRecentWeight);
@@ -14947,7 +15070,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // then apply that deviation on top of the model's presidential baseline year.
         let presBaselineByCountyForDeviation = null;
         try {
-          if (String(modeledDef?.contestType || '') === 'us_senate_model') {
+          if (isSenateDeviationModel) {
             const devYear = pickClosestPresidentialYear(modeledDef?.baseYear);
             const presRows = await loadContestSlice('president', devYear);
             const presTotals = buildCountyTotals(presRows, 'president');
@@ -14964,6 +15087,101 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         } catch (_) {
           presBaselineByCountyForDeviation = null;
+        }
+
+        // Senate diagnostics (durability + outlier brakes):
+        // - Durable crossover elasticity: consistent multi-cycle Senate-vs-Pres deviations are treated as more reusable.
+        // - One-cycle outliers (notably 2022) are shrunk harder toward the blended baseline.
+        // This intentionally differs from the judicial model, which treats deviations as lower-information/noisier.
+        let senateDeviationDiagnosticsByCounty = null; // Map county -> { durableScore, outlierBrake, federalBrake, medianDev, outlierGap }
+        if (isSenateDeviationModel && !!modeledDef?.senateDeviationOutlierBrakeEnabled) {
+          const years = (Array.isArray(modeledDef?.senateDeviationHistoryYears) ? modeledDef.senateDeviationHistoryYears : [])
+            .map(v => Number(v))
+            .filter(v => Number.isFinite(v) && v <= Number(modeledDef?.baseYear));
+          const uniqueYears = Array.from(new Set(years)).sort((a, b) => a - b);
+          const entriesByCounty = new Map(); // county -> [{ y, dev }]
+
+          const getPresSignedForYear = async (y, county) => {
+            const py = pickClosestPresidentialYear(y);
+            const cached = historicalCountySignedByYear.get(Number(py));
+            if (cached && cached.has(county)) return Number(cached.get(county));
+            try {
+              const presRows = await loadContestSlice('president', py);
+              const totals = buildCountyTotals(presRows, 'president');
+              const map = getCountySignedFromTotalsMap(totals);
+              historicalCountySignedByYear.set(Number(py), map);
+              return Number(map.get(county));
+            } catch (_) {
+              return NaN;
+            }
+          };
+
+          for (const y of uniqueYears) {
+            let senateRows = null;
+            try {
+              senateRows = (Number(y) === Number(modeledDef?.baseYear) && baseContestType === 'us_senate') ? baseRows : await loadContestSlice('us_senate', y);
+            } catch (_) {
+              senateRows = null;
+            }
+            if (!senateRows) continue;
+            const totals = buildCountyTotals(senateRows, 'us_senate');
+            for (const [county, t] of totals.entries()) {
+              const senateSigned = signedMarginPctFromVotes(Number(t?.dem || 0), Number(t?.rep || 0), Number(t?.total || 0));
+              if (!Number.isFinite(senateSigned)) continue;
+              const presSigned = await getPresSignedForYear(y, county);
+              if (!Number.isFinite(presSigned)) continue;
+              const dev = senateSigned - presSigned;
+              const arr = entriesByCounty.get(county) || [];
+              arr.push({ y, dev });
+              entriesByCounty.set(county, arr);
+            }
+          }
+
+          const median = (vals) => {
+            const v = (Array.isArray(vals) ? vals : []).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+            if (!v.length) return NaN;
+            const mid = Math.floor(v.length / 2);
+            return v.length % 2 ? v[mid] : ((v[mid - 1] + v[mid]) / 2);
+          };
+
+          const out = new Map();
+          entriesByCounty.forEach((arr, county) => {
+            const devs = (arr || []).map(r => Number(r?.dev)).filter(Number.isFinite);
+            if (!devs.length) return;
+            const med = median(devs);
+            const mad = median(devs.map(v => Math.abs(v - med)));
+            const spread = devs.length ? (Math.max(...devs) - Math.min(...devs)) : 0;
+            const consistentSign = devs.length < 2 ? 0 : (devs.every(v => v >= -0.15) || devs.every(v => v <= 0.15) ? 1 : 0.7);
+            const stability = devs.length < 2
+              ? 0.35
+              : clamp01(1 - ((Number.isFinite(mad) ? mad : (spread / 2)) / (Math.abs(med) + 2.5)));
+            const durableScore = clamp01(0.15 + (0.85 * stability * consistentSign));
+
+            // Outlier gap: compare the base year deviation to the median of prior-cycle deviations.
+            const baseY = Number(modeledDef?.baseYear);
+            const baseDev = (arr || []).find(r => Number(r?.y) === baseY)?.dev;
+            const priorDevs = (arr || []).filter(r => Number(r?.y) !== baseY).map(r => Number(r?.dev)).filter(Number.isFinite);
+            const priorMed = priorDevs.length ? median(priorDevs) : med;
+            const gap = Number.isFinite(Number(baseDev)) && Number.isFinite(Number(priorMed)) ? Math.abs(Number(baseDev) - Number(priorMed)) : 0;
+            let outlierBrake = 1;
+            if (gap >= 2.8) outlierBrake = 1 - (0.45 * clamp01((gap - 2.8) / 8.5));
+            outlierBrake = Math.max(0.55, Math.min(1, outlierBrake));
+
+            const absPresNow = Math.abs(Number(climateSignedByCounty.get(county)));
+            const fedBrakeMargin = Number(modeledDef?.federalizationBrakeMargin ?? 20);
+            const fedDeepMargin = Number(modeledDef?.federalizationDeepMargin ?? 34);
+            const fedFloor = Number(modeledDef?.federalizationFloor ?? 0.62);
+            const federalBrake = computeFederalizationBrake(absPresNow, fedBrakeMargin, fedDeepMargin, fedFloor);
+
+            out.set(county, {
+              durableScore,
+              outlierBrake,
+              federalBrake,
+              medianDev: med,
+              outlierGap: gap
+            });
+          });
+          senateDeviationDiagnosticsByCounty = out.size ? out : null;
         }
 
         const clampSenateDeviationForCounty = (deviation, totals) => {
@@ -15162,16 +15380,59 @@ document.addEventListener('DOMContentLoaded', function() {
               else countyRoleScale = 0.92;
 
               const baseSigned = Number(baseCountySignedRawByCounty?.get(county));
+              const cluster = String(countyClusterByCounty.get(county) || 'rural_white');
+              const clusterCal = getClusterCalibration(cluster, 'senate');
+              const senateDiag = senateDeviationDiagnosticsByCounty && senateDeviationDiagnosticsByCounty.has(county)
+                ? senateDeviationDiagnosticsByCounty.get(county)
+                : null;
+
+              // Prefer a presidential margin when available (federalization signal) rather than a one-cycle Senate margin.
+              const presNowSigned = Number(climateSignedByCounty?.get(county));
+              const absPresNow = Number.isFinite(presNowSigned) ? Math.abs(presNowSigned) : Math.abs(Number.isFinite(baseSigned) ? baseSigned : 0);
               let federalScale = 1;
-              if (Number.isFinite(baseSigned) && baseSigned >= fedBrakeMargin) {
+              if (Number.isFinite(absPresNow) && absPresNow >= fedBrakeMargin) {
                 const span = Math.max(1, deepRedMargin - fedBrakeMargin);
-                const t = Math.max(0, Math.min(1, (baseSigned - fedBrakeMargin) / span));
+                const t = Math.max(0, Math.min(1, (absPresNow - fedBrakeMargin) / span));
                 federalScale = 1 - ((1 - fedFloor) * t);
               }
 
               const damp = 0.70 + (0.30 * Math.max(0.12, Math.min(1, wSum / Math.max(1, entries.length))));
-              let pts = Math.max(0, meanDelta * weight) * damp * consistencyScale * countyRoleScale * federalScale;
-              if (Number.isFinite(baseSigned) && baseSigned >= deepRedMargin) pts = Math.min(pts, deepRedCap);
+
+              // Variability brake: if the county's Cooper-vs-Pres delta is highly uneven across years,
+              // treat more of it as personal/one-cycle and keep the transferable component smaller.
+              const deltaVals = entries.map(r => Number(r?.delta)).filter(Number.isFinite);
+              const spread = deltaVals.length ? (Math.max(...deltaVals) - Math.min(...deltaVals)) : 0;
+              const varianceBrake = deltaVals.length > 1 ? (1 - (0.35 * clamp01((spread - 2.0) / 7.5))) : 0.88;
+
+              const rawPts = Math.max(0, meanDelta * weight) * damp * consistencyScale * countyRoleScale * federalScale * varianceBrake;
+              const durableShare = Number.isFinite(Number(modeledDef?.candidateBonusDurableShare))
+                ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableShare)))
+                : 0.60;
+              const personalShare = Number.isFinite(Number(modeledDef?.candidateBonusPersonalShare))
+                ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalShare)))
+                : (1 - durableShare);
+
+              const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+              const medianDev = Number(senateDiag?.medianDev);
+              const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
+              const reusableScore = clamp01(0.20 + (0.80 * durableScore * (0.55 + (0.45 * crossoverScore))));
+              const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+
+              const personalFedFloor = Number.isFinite(Number(modeledDef?.candidateBonusPersonalFederalizationFloor))
+                ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalFederalizationFloor)))
+                : 0.30;
+              const personalFederalScale = computeFederalizationBrake(absPresNow, fedBrakeMargin, deepRedMargin, personalFedFloor);
+
+              // Durable component (reusable crossover) + personal component (Cooper-specific). Keep both capped.
+              let durablePts = rawPts * durableShare * (0.55 + (0.45 * reusableScore));
+              let personalPts = rawPts * personalShare * (0.35 + (0.65 * (1 - reusableScore)));
+              durablePts *= outlierBrake;
+              personalPts *= lerp(1, outlierBrake, 0.45);
+              durablePts *= Number(clusterCal?.candidateBonusMul ?? 1);
+              personalPts *= Number(clusterCal?.personalBonusMul ?? 1) * personalFederalScale;
+
+              let pts = Math.max(0, durablePts + personalPts);
+              if (Number.isFinite(absPresNow) && absPresNow >= deepRedMargin) pts = Math.min(pts, deepRedCap);
               pts = Math.max(0, Math.min(maxPts, pts));
               if (pts > 0.005) out.set(county, pts);
             });
@@ -15261,7 +15522,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const countyModelByCounty = (() => {
           const map = new Map();
-          const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
           const countyBehaviorMode = String(modeledDef?.countyBehaviorMode || 'balanced').trim().toLowerCase();
           const trendNudgeMaxPts = Number.isFinite(Number(modeledDef?.trendNudgeMaxPts))
             ? Number(modeledDef.trendNudgeMaxPts)
@@ -15298,7 +15558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return 'stable';
           };
 
-          const getBehaviorMultipliers = (countyType, trendTag, volatility) => {
+          const getBehaviorMultipliers = (countyType, cluster, trendTag, volatility) => {
             let elasticity = 1;
             let turnoutBias = 0;
             if (countyType === 'urban') {
@@ -15334,6 +15594,26 @@ document.addEventListener('DOMContentLoaded', function() {
               elasticity += 0.12;
             }
 
+            // Judicial models are lower-information and noisier: reduce elasticity and mute turnout effects.
+            // Senate models remain more turnout- and candidate-aware.
+            if (isJudicialModel) {
+              elasticity *= 0.84;
+              turnoutBias *= 0.28;
+            }
+
+            // Optional county-cluster calibration: small structured adjustments so similar county archetypes
+            // behave more consistently by default (without changing any visible controls).
+            const clusterStrength = clusterCalibrationStrength > 0
+              ? clusterCalibrationStrength
+              : (isJudicialModel ? 0.35 : 0);
+            if (clusterStrength > 0) {
+              const clusterCal = getClusterCalibration(cluster, isJudicialModel ? 'judicial' : 'senate');
+              const eMul = Number(clusterCal?.elasticityMul ?? 1);
+              const tDelta = Number(clusterCal?.turnoutBiasDelta ?? 0);
+              if (Number.isFinite(eMul)) elasticity *= lerp(1, eMul, clusterStrength);
+              if (Number.isFinite(tDelta)) turnoutBias += tDelta * clusterStrength;
+            }
+
             return {
               elasticity: Math.max(0.62, Math.min(1.35, elasticity)),
               turnoutBias: Math.max(-0.16, Math.min(0.16, turnoutBias))
@@ -15359,11 +15639,38 @@ document.addEventListener('DOMContentLoaded', function() {
             const volatility = Math.max(Math.abs(recentShift), Math.abs(longShift), Math.abs(countyRecent - countyLong));
             const trendTag = classifyTrendTag(countyRecent, countySecond, countyLong);
             const countyType = classifyCountyBehaviorType(county, totals);
-            const behavior = getBehaviorMultipliers(countyType, trendTag, volatility);
+            const cluster = String(countyClusterByCounty.get(county) || inferCountyCluster(county, totals) || 'rural_white');
+            const behavior = getBehaviorMultipliers(countyType, cluster, trendTag, volatility);
             const countyTotalVotes = Math.max(0, Number(totals?.total || 0));
             const reliabilitySpan = Math.max(1, reliabilityMaxVotes - reliabilityMinVotes);
             const reliabilityT = Math.max(0, Math.min(1, (countyTotalVotes - reliabilityMinVotes) / reliabilitySpan));
             const reliabilityScale = Math.max(0.25, Math.min(1, reliabilityFloor + ((1 - reliabilityFloor) * reliabilityT)));
+
+            // Judicial noise brake: downballot court races can be inconsistent even within the same cycle.
+            // Use (a) Seat03 vs Seat05 divergence and (b) county vote-share drift across cycles as a proxy for roll-off / noise.
+            let judicialNoise = 0;
+            let judicialSeatSplitAbs = 0;
+            let judicialShareNoise = 0;
+            if (isJudicialModel) {
+              const mixSigned = (useBaseMix && baseMixSignedByCounty && baseMixSignedByCounty.has(county))
+                ? Number(baseMixSignedByCounty.get(county))
+                : NaN;
+              if (Number.isFinite(mixSigned)) judicialSeatSplitAbs = Math.abs(baseCountySignedRaw - mixSigned);
+
+              if (!!modeledDef?.judicialNoiseShareBrakeEnabled && baseStateTotalVotes > 0 && climateStateTotalVotes > 0) {
+                const baseShare = countyTotalVotes > 0 ? (countyTotalVotes / baseStateTotalVotes) : 0;
+                const climateTotal = Math.max(0, Number(climateCountyTotals.get(county)?.total || 0));
+                const climateShare = climateTotal > 0 ? (climateTotal / climateStateTotalVotes) : 0;
+                const rel = climateShare > 0 ? Math.abs((baseShare - climateShare) / climateShare) : 0;
+                judicialShareNoise = clamp01((rel - 0.07) / 0.35);
+              }
+
+              const cycleSigned = Number(climateSignedByCounty?.get(county));
+              const cycleShiftAbs = Number.isFinite(cycleSigned) ? Math.abs(cycleSigned - baseCountySignedRaw) : 0;
+              const seatSplitScore = clamp01(judicialSeatSplitAbs / 8.0);
+              const cycleShiftScore = clamp01(cycleShiftAbs / 10.0);
+              judicialNoise = clamp01((0.52 * seatSplitScore) + (0.28 * cycleShiftScore) + (0.20 * judicialShareNoise));
+            }
             // If a model doesn't define turnout scaling, keep turnout neutral (0 shift).
             const TURNOUT_BASELINE = 0.575;
             const turnoutShift = ((Number.isFinite(turnoutFactor) ? turnoutFactor : TURNOUT_BASELINE) - TURNOUT_BASELINE) * 100;
@@ -15372,11 +15679,24 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (trendTag === 'left') trendNudge = -Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
             else if (trendTag === 'volatile') trendNudge = (recentShift >= 0 ? 0.16 : -0.16);
             trendNudge *= reliabilityScale;
+            if (isJudicialModel) trendNudge *= (1 - (0.70 * judicialNoise));
 
             const weightedCountyBaseline = getPresidentialBaselineMargin(county);
             const weightedCountyBase = Number.isFinite(Number(weightedCountyBaseline))
               ? Number(weightedCountyBaseline)
               : (Number.isFinite(Number(climateSigned)) ? Number(climateSigned) : 0);
+
+            const senateDiag = (isSenateDeviationModel && senateDeviationDiagnosticsByCounty && senateDeviationDiagnosticsByCounty.has(county))
+              ? senateDeviationDiagnosticsByCounty.get(county)
+              : null;
+            const absFed = Math.abs(Number.isFinite(Number(weightedCountyBase)) ? Number(weightedCountyBase) : 0);
+            const fedBrakeMargin = Number(modeledDef?.federalizationBrakeMargin ?? 20);
+            const fedDeepMargin = Number(modeledDef?.federalizationDeepMargin ?? 34);
+            const fedFloor = Number(modeledDef?.federalizationFloor ?? 0.62);
+            const federalizationBrake = isSenateDeviationModel
+              ? (Number(senateDiag?.federalBrake) || computeFederalizationBrake(absFed, fedBrakeMargin, fedDeepMargin, fedFloor))
+              : 1;
+            if (isSenateDeviationModel) trendNudge *= (0.82 + (0.18 * federalizationBrake));
 
             let targetSigned = baseCountySignedRaw;
             if (useBlend) {
@@ -15392,7 +15712,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
                 const devReliability = 0.70 + (0.30 * reliabilityScale);
                 const devVolatilityBrake = volatility >= 6 ? 0.82 : (volatility <= 2.5 ? 1 : 0.92);
-                targetSigned = baseline + (blendWeight * senateDeviation * devReliability * devVolatilityBrake);
+                const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+                const durabilityFactor = 0.70 + (0.30 * durableScore);
+                const deviationBrake = durabilityFactor * outlierBrake * federalizationBrake;
+                targetSigned = baseline + (blendWeight * senateDeviation * devReliability * devVolatilityBrake * deviationBrake);
               } else {
                 const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * weightedCountyBase);
                 targetSigned = desiredSigned;
@@ -15400,12 +15724,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             targetSigned += trendNudge;
-            targetSigned += turnoutShift * behavior.turnoutBias;
+            const turnoutBrake = isSenateDeviationModel ? (0.70 + (0.30 * federalizationBrake)) : 1;
+            targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake;
 
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
             let elasticPull = pullFromBase * behavior.elasticity;
             elasticPull *= (0.70 + (0.30 * reliabilityScale));
+            if (isJudicialModel) elasticPull *= (0.88 - (0.40 * judicialNoise));
 
             // Stability brake: safe + low-volatility counties should resist dramatic movement.
             const safeMargin = Math.abs(baseCountySignedRaw);
@@ -15438,9 +15764,19 @@ document.addEventListener('DOMContentLoaded', function() {
               desiredSigned: desiredSignedFinal,
               baseSigned: baseCountySignedRaw,
               countyType,
+              cluster,
               trendTag,
               volatility,
-              reliabilityScale
+              reliabilityScale,
+              diagnostics: {
+                senateDurableScore: Number(senateDiag?.durableScore),
+                senateOutlierGap: Number(senateDiag?.outlierGap),
+                senateOutlierBrake: Number(senateDiag?.outlierBrake),
+                federalizationBrake: Number(federalizationBrake),
+                judicialNoise,
+                judicialSeatSplitAbs,
+                judicialShareNoise
+              }
             });
           });
 
@@ -15485,6 +15821,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
 
+          // Internal-only diagnostics: `diagnostics`, `cluster`, and the Senate/judicial brakes can be used later
+          // for lightweight backtesting scaffolding (e.g., MAE/median error by county cluster, and outlier misses)
+          // without changing any visible UI.
           return map;
         })();
 
