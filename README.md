@@ -81,7 +81,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
 	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Modeled 2026 Statewide Races:** Synthetic `US Senate Model (2026)` and `NC Supreme Court Model (2026)` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer (measured as `2022 Senate margin - closest prior presidential margin`) on top of the presidential baseline with light guardrails, so counties can realistically ticket-split instead of behaving like a presidential clone. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target. When a modeled contest is selected, the **What-if & overlays** panel exposes light model-tuning sliders (blend/deviation, turnout, bonus) and `Copy Link` includes any non-default tuning.
+- **Modeled 2026 Statewide Races:** Synthetic `US Senate (2026) model` and `NC Associate Justice Seat 1 (2026) Model` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer (measured as `2022 Senate margin - closest prior presidential margin`) on top of the presidential baseline with light guardrails, so counties can realistically ticket-split instead of behaving like a presidential clone. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target. When a modeled contest is selected, the **What-if & overlays** panel exposes light model-tuning sliders (blend/deviation, turnout, bonus) and `Copy Link` includes any non-default tuning.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -104,6 +104,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–April 2026)
 
 **Last updated:** April 16, 2026
+
+### Modeled Baseline + Naming Refresh (April 16, 2026)
+
+- Updated user-facing modeled contest labels to clearer names in picker and context surfaces:
+  - `US Senate (2026) model`
+  - `NC Associate Justice Seat 1 (2026) Model`
+- Added modeled-slice cache invalidation when model tuning overrides change, so blend/turnout/bonus control updates recalculate county and district modeled slices immediately instead of showing stale cached values.
+- Verified modeled continuity, share URL restore (`contest`, `swing`, `mblend`, `mturnout`, `mbonus`), and full Playwright regression coverage.
 
 ### UI/UX Refinement + Mobile Overlap Verification (April 16, 2026)
 
