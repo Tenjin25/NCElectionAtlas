@@ -240,6 +240,7 @@
     const SIDEBAR_ENABLED = false;
     // Gate sidebar rendering/styles without a flash-of-sidebar on load.
     document.documentElement.classList.toggle('sidebar-enabled', SIDEBAR_ENABLED);
+    document.documentElement.classList.toggle('sidebar-disabled', !SIDEBAR_ENABLED);
 
     // Mobile viewport height fallback for browsers that don't support dvh/svh well (older Android Chrome/WebView).
     // Keeps fixed panels from "jumping" when the URL bar collapses/expands.
@@ -1272,27 +1273,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 .controls-content {
   position: relative;
-}
-.analysis-mode {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.mode-toggle {
-  flex: 1;
-  padding: 8px;
-  text-align: center;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 12px;
-  font-weight: 500;
-}
-.mode-toggle.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
 }
 .analysis-mode {
   display: flex;
@@ -8530,6 +8510,84 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     line-height: 1.35;
   }
 
+  .scenario-help {
+    grid-column: 2 / 4;
+    margin-top: -3px;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .model-summary-card {
+    margin-top: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.36);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.94);
+    padding: 8px 9px;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.4;
+  }
+
+  .model-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .modeled-flag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: #1e3a8a;
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(59, 130, 246, 0.24);
+    text-transform: uppercase;
+  }
+
+  .model-summary-list {
+    margin-top: 6px;
+    display: grid;
+    gap: 2px;
+  }
+
+  .model-summary-list span {
+    display: block;
+  }
+
+  .modeled-context-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #0f172a;
+    background: rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+  }
+
+  .control-summary-pill-scenario {
+    color: #1e3a8a;
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(59, 130, 246, 0.28);
+  }
+
+  html.sidebar-disabled #sidebar-float-toggle {
+    display: none !important;
+  }
+
   .model-inputs-inline {
     margin-top: 8px;
     border: 1px solid rgba(148, 163, 184, 0.35);
@@ -8563,6 +8621,54 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     line-height: 1.4;
   }
 
+  /* Final UI hierarchy pass: keep focus panel primary and controls/legend secondary. */
+  @media (min-width: 769px) {
+    .main-controls {
+      padding: 12px 12px 11px;
+    }
+
+    .controls-content {
+      gap: 10px;
+    }
+
+    .main-controls .control-group {
+      padding: 10px 11px;
+      margin-bottom: 8px;
+    }
+
+    .legend {
+      box-shadow: 0 12px 30px rgba(17, 32, 50, 0.14) !important;
+    }
+
+    .main-controls {
+      box-shadow: 0 12px 30px rgba(17, 32, 50, 0.14) !important;
+    }
+
+    .vote-counter {
+      box-shadow: 0 20px 48px rgba(17, 32, 50, 0.26) !important;
+      border-color: rgba(37, 99, 235, 0.22) !important;
+    }
+
+    .focus-card {
+      gap: 10px;
+    }
+  }
+
+  /* Tooltip spacing consistency only (no structure/logic changes). */
+  .hover-tooltip {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .hover-tooltip .tooltip-head {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .hover-tooltip .tooltip-title {
+    line-height: 1.25;
+  }
+
   @media (max-width: 768px) {
     .scenario-row {
       grid-template-columns: 70px 1fr auto;
@@ -8582,6 +8688,24 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       background-position:
         calc(100% - 16px) 15px,
         calc(100% - 10px) 15px;
+    }
+
+    .main-controls.mobile-sheet-panel .controls-content {
+      gap: 8px !important;
+    }
+
+    .main-controls.mobile-sheet-panel .control-group {
+      padding: 9px 10px !important;
+      margin-bottom: 6px !important;
+    }
+
+    .vote-counter {
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 18px) !important;
+    }
+
+    #hover-tooltip {
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 18px + var(--vote-counter-h, 0px) + 6px) !important;
+      max-width: min(92vw, 360px) !important;
     }
   }
 
@@ -9215,6 +9339,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const bs = Number(patchIn.bonusScale);
         if (Number.isFinite(bs) && bs >= 0) patch.bonusScale = bs;
       }
+      if (Object.prototype.hasOwnProperty.call(patchIn, 'countyBehaviorMode')) {
+        const mode = String(patchIn.countyBehaviorMode || '').trim().toLowerCase();
+        if (mode) patch.countyBehaviorMode = mode;
+      }
+      if (Object.prototype.hasOwnProperty.call(patchIn, 'uncertaintyBoost')) {
+        const ub = Number(patchIn.uncertaintyBoost);
+        if (Number.isFinite(ub) && ub > 0) patch.uncertaintyBoost = ub;
+      }
       if (!Object.keys(patch).length) return;
       setModeledContestOverrides(contestType, patch);
       syncModelTuningControls();
@@ -9472,6 +9604,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="control-summary-meta">
                   <span class="control-summary-pill" id="control-summary-view">Counties</span>
                   <span class="control-summary-pill control-summary-pill-muted" id="control-summary-year">No contest selected</span>
+                  <span class="control-summary-pill control-summary-pill-scenario" id="control-summary-scenario" hidden>Scenario</span>
                 </div>
             </div>
             <div class="desktop-statewide-panel" id="desktop-statewide-panel">
@@ -9536,8 +9669,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <details class="control-group control-group-scenario controls-disclosure" id="scenario-disclosure">
               <summary class="controls-disclosure-summary">
-                <span class="section-kicker">What-if & overlays</span>
-                <span class="controls-disclosure-hint">Scenario swing, turnout intensity, and contrast controls</span>
+                <span class="section-kicker">What-if, model, overlays</span>
+                <span class="controls-disclosure-hint">Simple swing, baseline modeling controls, and map overlays</span>
               </summary>
               <div class="scenario-row">
                 <label for="scenario-scope">Scope</label>
@@ -9547,9 +9680,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
               </div>
               <div class="scenario-row">
-                <label for="scenario-swing">Dem swing</label>
+                <label for="scenario-swing">What-if swing</label>
                 <input id="scenario-swing" type="range" min="-15" max="15" step="0.5" value="0" data-testid="scenario-swing" aria-label="Democratic swing percentage" />
                 <span class="scenario-value" id="scenario-swing-value">0.0%</span>
+                <div class="scenario-help">Direct shift for quick what-if testing. Positive is more Democratic, negative is more Republican.</div>
               </div>
               <div class="scenario-row scenario-row-actions">
                 <span></span>
@@ -9557,24 +9691,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span></span>
               </div>
               <div class="scenario-row" id="model-preset-row" style="display:none;">
-                <label for="model-preset">Preset</label>
+                <label for="model-preset">Model preset</label>
                 <select id="model-preset" data-testid="model-preset" aria-label="Model tuning preset"></select>
                 <span class="scenario-value" aria-hidden="true"></span>
+                <div class="scenario-help">Preset bundles for baseline assumptions and county behavior.</div>
               </div>
               <div class="scenario-row" id="model-blend-row" style="display:none;">
-                <label for="model-blend" id="model-blend-label">Blend</label>
+                <label for="model-blend" id="model-blend-label">History vs fundamentals</label>
                 <input id="model-blend" type="range" min="0" max="1" step="0.05" value="0.5" data-testid="model-blend" aria-label="Model blend weight" />
                 <span class="scenario-value" id="model-blend-value">50%</span>
+                <div class="scenario-help">Higher values lean on county historical behavior; lower values lean on statewide environment anchoring.</div>
               </div>
               <div class="scenario-row" id="model-turnout-row" style="display:none;">
-                <label for="model-turnout">Turnout</label>
+                <label for="model-turnout">Expected turnout</label>
                 <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.575" data-testid="model-turnout" aria-label="Model turnout factor" />
                 <span class="scenario-value" id="model-turnout-value">57.5%</span>
+                <div class="scenario-help">Scales the turnout baseline before county redistribution.</div>
               </div>
               <div class="scenario-row" id="model-bonus-row" style="display:none;">
-                <label for="model-bonus">Bonus</label>
+                <label for="model-bonus">Candidate overperformance</label>
                 <input id="model-bonus" type="range" min="0" max="1.5" step="0.1" value="1" data-testid="model-bonus" aria-label="Model candidate bonus scale" />
                 <span class="scenario-value" id="model-bonus-value">1.0x</span>
+                <div class="scenario-help">Scales county-level overperformance effects (for example, Cooper crossover strength) with guardrails.</div>
               </div>
               <div class="scenario-row scenario-row-actions" id="model-reset-row" style="display:none;">
                 <span></span>
@@ -9584,6 +9722,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="model-tuning-note" id="model-tuning-note" style="display:none;">
                 Model tuning only affects the synthetic 2026 modeled contests.
               </div>
+              <div class="model-summary-card" id="model-summary-card" style="display:none;" aria-live="polite"></div>
               <div class="scenario-row">
                 <label for="overlay-opacity-preset">Overlay</label>
                 <select id="overlay-opacity-preset" data-testid="overlay-preset" aria-label="Overlay opacity preset">
@@ -9602,6 +9741,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </label>
               <div class="controls-panel-note">
                 Positive swing shifts margins toward Democrats. Negative values shift toward Republicans. Modeled 2026 Senate and Court entries inherit this swing.
+                <span id="modeled-context-badge" class="modeled-context-badge" style="display:none;">Modeled Scenario</span>
               </div>
             </details>
             <details class="control-group control-group-analytics controls-disclosure" id="analytics-disclosure">
@@ -10744,6 +10884,13 @@ document.addEventListener('DOMContentLoaded', function() {
         climateContestType: 'president',
         climateYear: 2024,
         blendWeight: 0.5, // 0 => pure climate (2024 Pres), 1 => pure base (2022 Senate)
+        baselineRecentWeight: 0.60,
+        baselineSecondWeight: 0.25,
+        baselineLongRunWeight: 0.15,
+        countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
+        trendNudgeMaxPts: 0.75,
+        stableCountyBrakeMin: 0.52,
+        safeCountyBrakeMargin: 18,
         // Candidate effect: Cooper tends to run slightly stronger than a generic D (or 2022 Senate baseline)
         // in some county types; apply as a small additional D swing on top of the blended baseline.
         candidateBonusEnabled: true,
@@ -10754,6 +10901,12 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusWeight: 0.22, // scale the raw Gov-vs-Pres delta down for a Senate model
         candidateBonusMinTwoPartyVotes: 15000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
+        candidateBonusConsistencyBoost: 1.25,
+        candidateBonusConsistencyFloor: 0.55,
+        candidateBonusFederalizationBrakeMargin: 22,
+        candidateBonusFederalizationDeepRedMargin: 34,
+        candidateBonusFederalizationFloor: 0.15,
+        candidateBonusDeepRedCapPts: 0.45,
         candidateBonusMaxPts: 0.85,
         candidateBonusBasePts: 0.25,
         candidateBonusUrbanPts: 0.15,
@@ -10813,9 +10966,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const MODELED_CONTEST_PRESETS_BY_TYPE = {
       us_senate_model: [
         { id: 'default', label: 'Default', kind: 'reset' },
-        { id: 'presidential', label: 'Presidential-like', patch: { blendWeight: 0.0, bonusScale: 0.6 } },
-        { id: 'strong_dev', label: 'Strong deviation', patch: { blendWeight: 1.0, bonusScale: 1.0 } },
-        { id: 'high_turnout', label: 'High turnout', patch: { turnoutFactor: 0.68 } }
+        {
+          id: 'neutral_baseline',
+          label: 'Neutral',
+          patch: { blendWeight: 0.50, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
+        },
+        {
+          id: 'dem_high_turnout',
+          label: 'High turnout D',
+          patch: { blendWeight: 0.44, turnoutFactor: 0.66, bonusScale: 1.15, countyBehaviorMode: 'suburban_rebound' }
+        },
+        {
+          id: 'rep_high_turnout',
+          label: 'High turnout R',
+          patch: { blendWeight: 0.60, turnoutFactor: 0.69, bonusScale: 0.82, countyBehaviorMode: 'rural_surge' }
+        },
+        {
+          id: 'suburban_rebound',
+          label: 'Suburban rebound',
+          patch: { blendWeight: 0.46, turnoutFactor: 0.60, bonusScale: 1.12, countyBehaviorMode: 'suburban_rebound' }
+        },
+        {
+          id: 'rural_surge',
+          label: 'Rural surge',
+          patch: { blendWeight: 0.64, turnoutFactor: 0.63, bonusScale: 0.88, countyBehaviorMode: 'rural_surge' }
+        },
+        {
+          id: 'incumbent_friendly',
+          label: 'Incumbent-friendly',
+          patch: { blendWeight: 0.56, turnoutFactor: 0.585, bonusScale: 1.22, countyBehaviorMode: 'incumbent_friendly' }
+        },
+        {
+          id: 'volatile_low_confidence',
+          label: 'Volatile / low-confidence',
+          patch: { blendWeight: 0.38, turnoutFactor: 0.57, bonusScale: 1.05, countyBehaviorMode: 'volatile', uncertaintyBoost: 1.2 }
+        }
       ],
       nc_supreme_court_model: [
         { id: 'default', label: 'Default', kind: 'reset' },
@@ -11193,6 +11378,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!base) return null;
       const out = { ...base };
       if (!Number.isFinite(Number(out.candidateBonusScale))) out.candidateBonusScale = 1;
+      if (!String(out.countyBehaviorMode || '').trim()) out.countyBehaviorMode = 'balanced';
+      if (!Number.isFinite(Number(out.uncertaintyBoost))) out.uncertaintyBoost = 1;
       const override = MODELED_CONTEST_OVERRIDES_BY_TYPE.get(String(base.contestType || '').trim()) || null;
       if (override) {
         const blendWeight = Number(override?.blendWeight);
@@ -11201,6 +11388,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (Number.isFinite(turnoutFactor) && turnoutFactor > 0) out.turnoutFactor = turnoutFactor;
         const bonusScale = Number(override?.bonusScale);
         if (Number.isFinite(bonusScale) && bonusScale >= 0) out.candidateBonusScale = Math.max(0, Math.min(2, bonusScale));
+        const countyBehaviorMode = String(override?.countyBehaviorMode || '').trim().toLowerCase();
+        if (countyBehaviorMode) out.countyBehaviorMode = countyBehaviorMode;
+        const uncertaintyBoost = Number(override?.uncertaintyBoost);
+        if (Number.isFinite(uncertaintyBoost) && uncertaintyBoost > 0) out.uncertaintyBoost = Math.max(0.6, Math.min(2, uncertaintyBoost));
       }
       return out;
     }
@@ -11217,6 +11408,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!base) return null;
       const out = { ...base };
       if (!Number.isFinite(Number(out.candidateBonusScale))) out.candidateBonusScale = 1;
+      if (!String(out.countyBehaviorMode || '').trim()) out.countyBehaviorMode = 'balanced';
+      if (!Number.isFinite(Number(out.uncertaintyBoost))) out.uncertaintyBoost = 1;
       return out;
     }
 
@@ -11273,15 +11466,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
       const bw = Number(modeledDef?.blendWeight);
       if (Number.isFinite(bw) && bw >= 0 && bw <= 1) {
-        bits.push(`${isSenateDeviationModel ? 'Deviation' : 'Blend'}: ${Math.round(bw * 100)}%`);
+        bits.push(`History vs fundamentals: ${Math.round(bw * 100)}%`);
       }
 
       const tf = Number(modeledDef?.turnoutFactor);
       if (Number.isFinite(tf) && tf > 0 && modeledDef?.turnoutContestType && Number.isFinite(Number(modeledDef?.turnoutYear))) {
         try {
-          bits.push(`Turnout: ${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
+          bits.push(`Expected turnout: ${formatContestName(modeledDef.turnoutContestType, modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
         } catch (_) {
-          bits.push(`Turnout: ${String(modeledDef.turnoutContestType)} ${String(modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
+          bits.push(`Expected turnout: ${String(modeledDef.turnoutContestType)} ${String(modeledDef.turnoutYear)}×${tf.toFixed(3)}`);
         }
       }
 
@@ -11299,11 +11492,109 @@ document.addEventListener('DOMContentLoaded', function() {
           if (srcLabel) bits.push(`Bonus src: ${srcLabel}`);
           if (Number.isFinite(w) && w > 0 && w < 1.5) bits.push(`Bonus wt: ${w.toFixed(2)}`);
         }
-        bits.push(`Bonus: ${bs.toFixed(1)}x`);
+        bits.push(`Candidate overperformance: ${bs.toFixed(1)}x`);
       }
+
+      const behaviorMode = String(modeledDef?.countyBehaviorMode || 'balanced').trim().toLowerCase();
+      const behaviorLabelMap = {
+        balanced: 'Balanced counties',
+        suburban_rebound: 'Suburban rebound',
+        rural_surge: 'Rural surge',
+        incumbent_friendly: 'Incumbent-friendly',
+        volatile: 'Volatile'
+      };
+      bits.push(`County mode: ${behaviorLabelMap[behaviorMode] || 'Balanced counties'}`);
 
       el.textContent = `Model inputs: ${bits.join(' • ')}`;
       el.hidden = false;
+    }
+
+    function getModelCountyBehaviorLabel(mode) {
+      const key = String(mode || 'balanced').trim().toLowerCase();
+      const labels = {
+        balanced: 'Balanced counties',
+        suburban_rebound: 'Suburban rebound',
+        rural_surge: 'Rural surge',
+        incumbent_friendly: 'Incumbent-friendly',
+        volatile: 'Volatile / low-confidence'
+      };
+      return labels[key] || labels.balanced;
+    }
+
+    function inferModelConfidence(modeled, baseModeled = null) {
+      if (!modeled) return { label: 'Low', range: '\u00b12.0 pts' };
+      const blend = Number(modeled?.blendWeight);
+      const bonus = Number(modeled?.candidateBonusScale);
+      const turnout = Number(modeled?.turnoutFactor);
+      const behavior = String(modeled?.countyBehaviorMode || 'balanced').trim().toLowerCase();
+      const uncertaintyBoost = Number(modeled?.uncertaintyBoost);
+      const blendDelta = (baseModeled && Number.isFinite(blend) && Number.isFinite(Number(baseModeled?.blendWeight)))
+        ? Math.abs(blend - Number(baseModeled.blendWeight))
+        : 0;
+      const turnoutDelta = (baseModeled && Number.isFinite(turnout) && Number.isFinite(Number(baseModeled?.turnoutFactor)))
+        ? Math.abs(turnout - Number(baseModeled.turnoutFactor))
+        : 0;
+      const bonusDelta = (baseModeled && Number.isFinite(bonus) && Number.isFinite(Number(baseModeled?.candidateBonusScale)))
+        ? Math.abs(bonus - Number(baseModeled.candidateBonusScale))
+        : 0;
+
+      let score = 0;
+      score += Math.max(0, 0.30 - (blendDelta * 0.65));
+      score += Math.max(0, 0.30 - (turnoutDelta * 0.80));
+      score += Math.max(0, 0.22 - (bonusDelta * 0.22));
+      if (behavior === 'balanced' || behavior === 'incumbent_friendly') score += 0.14;
+      if (behavior === 'suburban_rebound' || behavior === 'rural_surge') score += 0.05;
+      if (behavior === 'volatile') score -= 0.22;
+      if (Number.isFinite(uncertaintyBoost) && uncertaintyBoost > 1) score -= Math.min(0.18, (uncertaintyBoost - 1) * 0.28);
+
+      let label = 'Medium';
+      if (score >= 0.60) label = 'High';
+      else if (score < 0.36) label = 'Low';
+      const range = label === 'High' ? '\u00b11.4 pts' : (label === 'Medium' ? '\u00b12.0 pts' : '\u00b13.0 pts');
+      return { label, range };
+    }
+
+    function updateModelScenarioSummary(modeled, baseModeled = null) {
+      const summaryEl = document.getElementById('model-summary-card');
+      const modeledBadgeEl = document.getElementById('modeled-context-badge');
+      if (!summaryEl || !modeledBadgeEl) return;
+
+      if (!modeled) {
+        summaryEl.style.display = 'none';
+        summaryEl.innerHTML = '';
+        modeledBadgeEl.style.display = 'none';
+        return;
+      }
+
+      const recentW = Number(modeled?.baselineRecentWeight);
+      const secondW = Number(modeled?.baselineSecondWeight);
+      const longW = Number(modeled?.baselineLongRunWeight);
+      const bw = Number(modeled?.blendWeight);
+      const turnout = Number(modeled?.turnoutFactor);
+      const bonus = Number(modeled?.candidateBonusScale);
+      const behavior = getModelCountyBehaviorLabel(modeled?.countyBehaviorMode);
+      const confidence = inferModelConfidence(modeled, baseModeled);
+      const weightLabel = (Number.isFinite(recentW) && Number.isFinite(secondW) && Number.isFinite(longW))
+        ? `${Math.round(recentW * 100)}/${Math.round(secondW * 100)}/${Math.round(longW * 100)}`
+        : '60/25/15';
+
+      summaryEl.innerHTML = `
+        <div class="model-summary-head">
+          <span>Model summary</span>
+          <span class="modeled-flag">Modeled</span>
+        </div>
+        <div class="model-summary-list">
+          <span><strong>Baseline:</strong> Weighted county baseline anchored to statewide environment</span>
+          <span><strong>Weighting:</strong> Recent/second/long-run = ${escapeHtml(weightLabel)}</span>
+          <span><strong>History vs fundamentals:</strong> ${Number.isFinite(bw) ? `${Math.round(bw * 100)}%` : 'n/a'}</span>
+          <span><strong>Expected turnout:</strong> ${Number.isFinite(turnout) ? `${(turnout * 100).toFixed(1)}%` : 'n/a'}</span>
+          <span><strong>Candidate overperformance:</strong> ${Number.isFinite(bonus) ? `${bonus.toFixed(1)}x` : 'n/a'}</span>
+          <span><strong>County behavior mode:</strong> ${escapeHtml(behavior)}</span>
+          <span><strong>Confidence:</strong> ${escapeHtml(confidence.label)} (${escapeHtml(confidence.range)})</span>
+        </div>
+      `;
+      summaryEl.style.display = 'block';
+      modeledBadgeEl.style.display = 'inline-flex';
     }
 
     function syncModelTuningControls() {
@@ -11339,6 +11630,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bonusRow.style.display = 'none';
         resetRow.style.display = 'none';
         note.style.display = 'none';
+        try { updateModelScenarioSummary(null, null); } catch (_) {}
         try { updateModeledInputsInline(); } catch (_) {}
         return;
       }
@@ -11369,6 +11661,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (Object.prototype.hasOwnProperty.call(patch, 'blendWeight')) ok = ok && same(bw, Number(patch.blendWeight), 0.0006);
             if (Object.prototype.hasOwnProperty.call(patch, 'turnoutFactor')) ok = ok && same(tf, Number(patch.turnoutFactor), 0.0006);
             if (Object.prototype.hasOwnProperty.call(patch, 'bonusScale')) ok = ok && same(bs, Number(patch.bonusScale), 0.011);
+            if (Object.prototype.hasOwnProperty.call(patch, 'countyBehaviorMode')) {
+              ok = ok && (String(modeled?.countyBehaviorMode || '').trim().toLowerCase() === String(patch.countyBehaviorMode || '').trim().toLowerCase());
+            }
+            if (Object.prototype.hasOwnProperty.call(patch, 'uncertaintyBoost')) {
+              ok = ok && same(Number(modeled?.uncertaintyBoost), Number(patch.uncertaintyBoost), 0.011);
+            }
             if (ok) { activePreset = String(p.id); break; }
           }
         }
@@ -11382,8 +11680,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       presetRow.style.display = 'grid';
 
-      const isSenateDeviationModel = String(modeled?.contestType || '') === 'us_senate_model';
-      if (blendLabel) blendLabel.textContent = isSenateDeviationModel ? 'Deviation' : 'Blend';
+      if (blendLabel) blendLabel.textContent = 'History vs fundamentals';
 
       const bw = Number(modeled?.blendWeight);
       const showBlend = Number.isFinite(bw) && bw >= 0 && bw <= 1;
@@ -11407,6 +11704,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const anyShown = showBlend || showTurnout || showBonus;
       resetRow.style.display = anyShown ? 'grid' : 'none';
       note.style.display = anyShown ? 'block' : 'none';
+      try { updateModelScenarioSummary(modeled, baseModeled); } catch (_) {}
       try { updateModeledInputsInline(); } catch (_) {}
     }
 
@@ -14442,27 +14740,131 @@ document.addEventListener('DOMContentLoaded', function() {
           return out;
         };
 
-        // County-first modeling:
-        // - Blend margins at the county level so we don't accidentally drop contest-only buckets like
-        //   "BOE"/absentee groupings present in one slice but not the other.
-        // - Then apply a uniform per-county swing to each base row to preserve the map/precinct architecture.
-        const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
-        const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
-        const climateSignedByCounty = (() => {
-          if (!useBlend) return null;
+        const getCountySignedFromTotalsMap = (totalsMap) => {
           const map = new Map();
-          climateCountyTotals.forEach((totals, county) => {
+          (totalsMap || new Map()).forEach((totals, county) => {
             const signed = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
-            map.set(county, signed);
+            if (Number.isFinite(signed)) map.set(county, signed);
           });
-          return map.size ? map : null;
-        })();
+          return map;
+        };
+
+        const getStateSignedFromTotalsMap = (totalsMap) => {
+          const acc = { dem: 0, rep: 0, total: 0 };
+          (totalsMap || new Map()).forEach((totals) => {
+            acc.dem += Number(totals?.dem || 0);
+            acc.rep += Number(totals?.rep || 0);
+            acc.total += Number(totals?.total || 0);
+          });
+          return signedMarginPctFromVotes(acc.dem, acc.rep, acc.total);
+        };
+
+        const classifyCountyBehaviorType = (county, totals = null) => {
+          const ctx = (() => {
+            try { return getNcCensusContext(county); } catch (_) { return null; }
+          })();
+          const pattern = String(ctx?.patternLabel || '').toLowerCase();
+          const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
+          if (/urban anchor|urban county/.test(pattern) || pop >= 550000) return 'urban';
+          if (/metro spillover|outer-suburban|suburban/.test(pattern) || pop >= 180000) return 'suburban';
+          if (/small-metro|transition|coastal growth/.test(pattern) || pop >= 90000) return 'exurban';
+          return 'rural';
+        };
+
+        const pickComparableYears = (contestType, recentYear) => {
+          const ct = String(contestType || '').trim();
+          const y = Number(recentYear);
+          const all = getAvailableContestYearsForType(ct).filter(v => Number.isFinite(v) && v <= y).sort((a, b) => b - a);
+          if (!all.length) return { recent: y, second: NaN, longRunYears: [] };
+          const recent = all[0];
+          const second = all.length > 1 ? all[1] : NaN;
+          const longRunYears = all.slice(2, 6).sort((a, b) => a - b);
+          return { recent, second, longRunYears };
+        };
+
+        // County-first modeling:
+        // - Build a statewide-anchored county baseline (weighted recent + second + long-run history).
+        // - Localize via county offsets, trend and volatility-aware elasticity, and a stability brake.
+        // - Then apply a uniform per-county swing to each base row to preserve map/precinct architecture.
+        const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
+        const baseCountySignedRawByCounty = getCountySignedFromTotalsMap(baseCountyTotals);
+        const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
+        const climateSignedByCounty = getCountySignedFromTotalsMap(climateCountyTotals);
+
+        const comparableYears = pickComparableYears(climateContestType, modeledDef?.climateYear);
+        const recentWeightRaw = Number(modeledDef?.baselineRecentWeight);
+        const secondWeightRaw = Number(modeledDef?.baselineSecondWeight);
+        const longWeightRaw = Number(modeledDef?.baselineLongRunWeight);
+        let wRecent = Number.isFinite(recentWeightRaw) ? recentWeightRaw : 0.60;
+        let wSecond = Number.isFinite(secondWeightRaw) ? secondWeightRaw : 0.25;
+        let wLong = Number.isFinite(longWeightRaw) ? longWeightRaw : 0.15;
+        const wSum = wRecent + wSecond + wLong;
+        if (wSum > 0) {
+          wRecent /= wSum;
+          wSecond /= wSum;
+          wLong /= wSum;
+        }
+
+        const historicalCountySignedByYear = new Map();
+        const historicalStateSignedByYear = new Map();
+        const yearsToLoad = [comparableYears.recent, comparableYears.second, ...(comparableYears.longRunYears || [])]
+          .filter(v => Number.isFinite(v));
+        for (const y of yearsToLoad) {
+          try {
+            const rows = (Number(y) === Number(modeledDef?.climateYear) && climateContestType === String(modeledDef?.climateContestType || '').trim())
+              ? climateRows
+              : await loadContestSlice(climateContestType, y);
+            const totals = buildCountyTotals(rows, climateContestType);
+            historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
+            historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+          } catch (_) {}
+        }
+
+        const getCountySeriesSigned = (county) => {
+          const recent = Number(historicalCountySignedByYear.get(Number(comparableYears.recent))?.get(county));
+          const second = Number(historicalCountySignedByYear.get(Number(comparableYears.second))?.get(county));
+          const longVals = (comparableYears.longRunYears || [])
+            .map(y => Number(historicalCountySignedByYear.get(Number(y))?.get(county)))
+            .filter(v => Number.isFinite(v));
+          const long = longVals.length ? (longVals.reduce((acc, v) => acc + v, 0) / longVals.length) : NaN;
+          return { recent, second, long };
+        };
+
+        const getStateSeriesSigned = () => {
+          const recent = Number(historicalStateSignedByYear.get(Number(comparableYears.recent)));
+          const second = Number(historicalStateSignedByYear.get(Number(comparableYears.second)));
+          const longVals = (comparableYears.longRunYears || [])
+            .map(y => Number(historicalStateSignedByYear.get(Number(y))))
+            .filter(v => Number.isFinite(v));
+          const long = longVals.length ? (longVals.reduce((acc, v) => acc + v, 0) / longVals.length) : NaN;
+          return { recent, second, long };
+        };
+
+        const blendSeries = (series, fallbackValue) => {
+          const parts = [];
+          if (Number.isFinite(series?.recent)) parts.push({ v: Number(series.recent), w: wRecent });
+          if (Number.isFinite(series?.second)) parts.push({ v: Number(series.second), w: wSecond });
+          if (Number.isFinite(series?.long)) parts.push({ v: Number(series.long), w: wLong });
+          if (!parts.length) return Number.isFinite(fallbackValue) ? Number(fallbackValue) : 0;
+          const w = parts.reduce((acc, p) => acc + p.w, 0);
+          if (!(w > 0)) return Number.isFinite(fallbackValue) ? Number(fallbackValue) : 0;
+          const sum = parts.reduce((acc, p) => acc + (p.v * p.w), 0);
+          return sum / w;
+        };
+
+        const stateSeries = getStateSeriesSigned();
+        const statewideWeightedBaselineSigned = blendSeries(stateSeries, climateSigned);
 
         const getPresidentialBaselineMargin = (county) => {
-          if (climateSignedByCounty && climateSignedByCounty.has(county)) {
-            const value = Number(climateSignedByCounty.get(county));
-            if (Number.isFinite(value)) return value;
+          const series = getCountySeriesSigned(county);
+          const weightedCountySigned = blendSeries(series, climateSignedByCounty.get(county));
+          if (Number.isFinite(weightedCountySigned) && Number.isFinite(stateSeries.recent)) {
+            const countyRecent = Number.isFinite(series.recent) ? series.recent : weightedCountySigned;
+            const countyOffset = countyRecent - Number(stateSeries.recent);
+            return statewideWeightedBaselineSigned + countyOffset;
           }
+          if (Number.isFinite(weightedCountySigned)) return weightedCountySigned;
+          if (climateSignedByCounty.has(county)) return Number(climateSignedByCounty.get(county));
           return Number.isFinite(climateSigned) ? climateSigned : null;
         };
 
@@ -14600,8 +15002,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!Number.isFinite(weight) || weight <= 0) return null;
             const minTp = Number.isFinite(minTwoParty) && minTwoParty > 0 ? minTwoParty : 15000;
 
-            const sumByCounty = new Map();
-            const wByCounty = new Map();
+            const consistencyBoost = Number.isFinite(Number(modeledDef?.candidateBonusConsistencyBoost))
+              ? Number(modeledDef.candidateBonusConsistencyBoost)
+              : 1.25;
+            const consistencyFloor = Number.isFinite(Number(modeledDef?.candidateBonusConsistencyFloor))
+              ? Number(modeledDef.candidateBonusConsistencyFloor)
+              : 0.55;
+            const fedBrakeMargin = Number.isFinite(Number(modeledDef?.candidateBonusFederalizationBrakeMargin))
+              ? Number(modeledDef.candidateBonusFederalizationBrakeMargin)
+              : 22;
+            const deepRedMargin = Number.isFinite(Number(modeledDef?.candidateBonusFederalizationDeepRedMargin))
+              ? Number(modeledDef.candidateBonusFederalizationDeepRedMargin)
+              : 34;
+            const fedFloor = Number.isFinite(Number(modeledDef?.candidateBonusFederalizationFloor))
+              ? Number(modeledDef.candidateBonusFederalizationFloor)
+              : 0.15;
+            const deepRedCap = Number.isFinite(Number(modeledDef?.candidateBonusDeepRedCapPts))
+              ? Number(modeledDef.candidateBonusDeepRedCapPts)
+              : 0.45;
+
+            const deltasByCounty = new Map();
             for (const yRaw of years) {
               const y = Number(yRaw);
               if (!Number.isFinite(y)) continue;
@@ -14633,28 +15053,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 );
                 if (!Number.isFinite(govSigned) || !Number.isFinite(presSigned)) return;
 
-                // Positive means the candidate runs more Democratic than President in that county.
-                const rawBonusPts = presSigned - govSigned;
-                if (!Number.isFinite(rawBonusPts) || rawBonusPts <= 0.05) return;
+                // Positive means Cooper ran more Democratic than President in that county.
+                const delta = presSigned - govSigned;
+                if (!Number.isFinite(delta) || delta <= 0.05) return;
 
                 const twoParty = Math.max(0, Number(bonusTotals.dem || 0) + Number(bonusTotals.rep || 0));
-                const countyWeight = Math.max(0.12, Math.min(1, twoParty / minTp));
-                const damp = 0.70 + (0.30 * countyWeight);
-                const scaled = Math.max(0, rawBonusPts * weight) * damp;
-                const pts = Math.max(0, Math.min(maxPts, scaled));
-
-                sumByCounty.set(county, Number(sumByCounty.get(county) || 0) + (pts * countyWeight));
-                wByCounty.set(county, Number(wByCounty.get(county) || 0) + countyWeight);
+                const turnoutWeight = Math.max(0.12, Math.min(1, twoParty / minTp));
+                const entryList = deltasByCounty.get(county) || [];
+                entryList.push({ delta, turnoutWeight, y });
+                deltasByCounty.set(county, entryList);
               });
             }
 
             const out = new Map();
-            sumByCounty.forEach((sum, county) => {
-              const w = Number(wByCounty.get(county) || 0);
-              if (!(w > 0)) return;
-              const v = sum / w;
-              if (Number.isFinite(v) && v > 0) out.set(county, Math.max(0, Math.min(maxPts, v)));
+            deltasByCounty.forEach((entries, county) => {
+              if (!Array.isArray(entries) || !entries.length) return;
+              const weightedSum = entries.reduce((acc, row) => acc + (Number(row.delta || 0) * Number(row.turnoutWeight || 0)), 0);
+              const wSum = entries.reduce((acc, row) => acc + Number(row.turnoutWeight || 0), 0);
+              if (!(wSum > 0)) return;
+              const meanDelta = weightedSum / wSum;
+              if (!(meanDelta > 0.05)) return;
+
+              const signs = entries.map(row => Number(row.delta || 0) > 0.05 ? 1 : 0);
+              const consistent = signs.length > 1 && signs.every(v => v === 1);
+              const consistencyScale = consistent ? Math.max(1, consistencyBoost) : Math.max(0.25, Math.min(1, consistencyFloor));
+
+              const countyType = classifyCountyBehaviorType(county, baseCountyTotals.get(county));
+              let countyRoleScale = 1;
+              if (countyType === 'rural') countyRoleScale = 1.18;
+              else if (countyType === 'exurban') countyRoleScale = 1.10;
+              else if (countyType === 'suburban') countyRoleScale = 1.04;
+              else countyRoleScale = 0.92;
+
+              const baseSigned = Number(baseCountySignedRawByCounty?.get(county));
+              let federalScale = 1;
+              if (Number.isFinite(baseSigned) && baseSigned >= fedBrakeMargin) {
+                const span = Math.max(1, deepRedMargin - fedBrakeMargin);
+                const t = Math.max(0, Math.min(1, (baseSigned - fedBrakeMargin) / span));
+                federalScale = 1 - ((1 - fedFloor) * t);
+              }
+
+              const damp = 0.70 + (0.30 * Math.max(0.12, Math.min(1, wSum / Math.max(1, entries.length))));
+              let pts = Math.max(0, meanDelta * weight) * damp * consistencyScale * countyRoleScale * federalScale;
+              if (Number.isFinite(baseSigned) && baseSigned >= deepRedMargin) pts = Math.min(pts, deepRedCap);
+              pts = Math.max(0, Math.min(maxPts, pts));
+              if (pts > 0.005) out.set(county, pts);
             });
+
             if (!out.size) return null;
 
             const yearsLabel = years.map(v => String(v)).join('/');
@@ -14741,6 +15186,72 @@ document.addEventListener('DOMContentLoaded', function() {
         const countyModelByCounty = (() => {
           const map = new Map();
           const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
+          const countyBehaviorMode = String(modeledDef?.countyBehaviorMode || 'balanced').trim().toLowerCase();
+          const trendNudgeMaxPts = Number.isFinite(Number(modeledDef?.trendNudgeMaxPts))
+            ? Number(modeledDef.trendNudgeMaxPts)
+            : 0.75;
+          const stableBrakeMin = Number.isFinite(Number(modeledDef?.stableCountyBrakeMin))
+            ? Number(modeledDef.stableCountyBrakeMin)
+            : 0.52;
+          const safeBrakeMargin = Number.isFinite(Number(modeledDef?.safeCountyBrakeMargin))
+            ? Number(modeledDef.safeCountyBrakeMargin)
+            : 18;
+
+          const classifyTrendTag = (recent, second, long) => {
+            const recentShift = (Number.isFinite(recent) && Number.isFinite(second)) ? (recent - second) : NaN;
+            const longShift = (Number.isFinite(second) && Number.isFinite(long)) ? (second - long) : NaN;
+            const spread = [recent, second, long].filter(Number.isFinite);
+            const span = spread.length ? (Math.max(...spread) - Math.min(...spread)) : 0;
+            if (span >= 9) return 'volatile';
+            if (Number.isFinite(recentShift) && recentShift >= 1.25) return 'right';
+            if (Number.isFinite(recentShift) && recentShift <= -1.25) return 'left';
+            if (Number.isFinite(longShift) && longShift >= 1.9) return 'right';
+            if (Number.isFinite(longShift) && longShift <= -1.9) return 'left';
+            return 'stable';
+          };
+
+          const getBehaviorMultipliers = (countyType, trendTag, volatility) => {
+            let elasticity = 1;
+            let turnoutBias = 0;
+            if (countyType === 'urban') {
+              elasticity = 0.88;
+              turnoutBias = -0.08;
+            } else if (countyType === 'suburban') {
+              elasticity = 1.02;
+              turnoutBias = -0.02;
+            } else if (countyType === 'exurban') {
+              elasticity = 1.05;
+              turnoutBias = 0.04;
+            } else {
+              elasticity = 1.08;
+              turnoutBias = 0.08;
+            }
+
+            if (volatility >= 6.5) elasticity += 0.14;
+            else if (volatility <= 2.5) elasticity -= 0.15;
+
+            if (trendTag === 'volatile') elasticity += 0.08;
+            if (trendTag === 'stable') elasticity -= 0.08;
+
+            if (countyBehaviorMode === 'suburban_rebound') {
+              if (countyType === 'suburban') turnoutBias -= 0.08;
+              if (countyType === 'rural') turnoutBias += 0.04;
+            } else if (countyBehaviorMode === 'rural_surge') {
+              if (countyType === 'rural' || countyType === 'exurban') turnoutBias += 0.10;
+              if (countyType === 'urban') turnoutBias -= 0.04;
+            } else if (countyBehaviorMode === 'incumbent_friendly') {
+              elasticity *= 0.90;
+              turnoutBias *= 0.65;
+            } else if (countyBehaviorMode === 'volatile') {
+              elasticity += 0.12;
+            }
+
+            return {
+              elasticity: Math.max(0.62, Math.min(1.35, elasticity)),
+              turnoutBias: Math.max(-0.16, Math.min(0.16, turnoutBias))
+            };
+          };
+
           baseCountyTotals.forEach((totals, county) => {
             const baseCountySignedRaw = signedMarginPctFromVotes(Number(totals.dem || 0), Number(totals.rep || 0), Number(totals.total || 0));
             let baseCountySigned = baseCountySignedRaw;
@@ -14751,29 +15262,69 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
 
-            let swingPct = climateSwingPct;
+            const countySeries = getCountySeriesSigned(county);
+            const countyRecent = Number.isFinite(countySeries.recent) ? countySeries.recent : baseCountySignedRaw;
+            const countySecond = Number.isFinite(countySeries.second) ? countySeries.second : countyRecent;
+            const countyLong = Number.isFinite(countySeries.long) ? countySeries.long : countySecond;
+            const recentShift = countyRecent - countySecond;
+            const longShift = countySecond - countyLong;
+            const volatility = Math.max(Math.abs(recentShift), Math.abs(longShift), Math.abs(countyRecent - countyLong));
+            const trendTag = classifyTrendTag(countyRecent, countySecond, countyLong);
+            const countyType = classifyCountyBehaviorType(county, totals);
+            const behavior = getBehaviorMultipliers(countyType, trendTag, volatility);
+            const turnoutShift = (Number(turnoutFactor || 0) - 0.575) * 100;
+            let trendNudge = 0;
+            if (trendTag === 'right') trendNudge = Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
+            else if (trendTag === 'left') trendNudge = -Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
+            else if (trendTag === 'volatile') trendNudge = (recentShift >= 0 ? 0.16 : -0.16);
+
+            const weightedCountyBaseline = getPresidentialBaselineMargin(county);
+            const weightedCountyBase = Number.isFinite(Number(weightedCountyBaseline))
+              ? Number(weightedCountyBaseline)
+              : (Number.isFinite(Number(climateSigned)) ? Number(climateSigned) : 0);
+
+            let targetSigned = baseCountySignedRaw;
             if (useBlend) {
               if (isSenateDeviationModel) {
                 // Senate calibration: anchor each county to the presidential baseline, then apply a
                 // county-specific deviation measured from the Senate baseline (with light guardrails).
-                const presBaseline = getPresidentialBaselineMargin(county);
-                const baseline = Number.isFinite(Number(presBaseline)) ? Number(presBaseline) : (Number.isFinite(Number(climateSigned)) ? Number(climateSigned) : 0);
+                const baseline = weightedCountyBase;
 
                 const deviationBaseline = (presBaselineByCountyForDeviation && presBaselineByCountyForDeviation.has(county))
                   ? Number(presBaselineByCountyForDeviation.get(county))
                   : baseline;
                 const senateDeviationRaw = baseCountySignedRaw - deviationBaseline;
                 const senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
-                const adjustedSenateMargin = baseline + (blendWeight * senateDeviation);
-                swingPct = baseCountySignedRaw - adjustedSenateMargin;
+                targetSigned = baseline + (blendWeight * senateDeviation);
               } else {
-                const climateCountySigned = (climateSignedByCounty && climateSignedByCounty.has(county))
-                  ? Number(climateSignedByCounty.get(county))
-                  : climateSigned;
-                const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * climateCountySigned);
-                swingPct = baseCountySignedRaw - desiredSigned;
+                const desiredSigned = (blendWeight * baseCountySigned) + ((1 - blendWeight) * weightedCountyBase);
+                targetSigned = desiredSigned;
               }
             }
+
+            targetSigned += trendNudge;
+            targetSigned += turnoutShift * behavior.turnoutBias;
+
+            // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
+            const pullFromBase = targetSigned - baseCountySignedRaw;
+            let elasticPull = pullFromBase * behavior.elasticity;
+
+            // Stability brake: safe + low-volatility counties should resist dramatic movement.
+            const safeMargin = Math.abs(baseCountySignedRaw);
+            if (safeMargin >= safeBrakeMargin && volatility <= 2.25) {
+              const safeScale = Math.max(stableBrakeMin, 1 - ((safeMargin - safeBrakeMargin) / 34));
+              elasticPull *= safeScale;
+            }
+
+            // Realignment brake: when county moved recently against long-run sign, reduce snap-back behavior.
+            const recentlyRealigned = Number.isFinite(countyLong) && Number.isFinite(countyRecent)
+              && Math.sign(countyLong) !== Math.sign(countyRecent)
+              && Math.abs(countyRecent - countyLong) >= 3.5;
+            if (recentlyRealigned && Math.sign(elasticPull) !== Math.sign(recentShift)) {
+              elasticPull *= 0.62;
+            }
+
+            let swingPct = baseCountySignedRaw - (baseCountySignedRaw + elasticPull);
 
             if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
               const bonus = Number(candidateBonusByCounty.get(county) || 0);
@@ -14786,7 +15337,10 @@ document.addEventListener('DOMContentLoaded', function() {
             map.set(county, {
               swingPct,
               desiredSigned: desiredSignedFinal,
-              baseSigned: baseCountySignedRaw
+              baseSigned: baseCountySignedRaw,
+              countyType,
+              trendTag,
+              volatility
             });
           });
           return map;
@@ -16063,10 +16617,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	          const opt = document.createElement('option');
 	          opt.value = `${item.contestType}_${item.year}`;
             const modeledDef = getModeledContestDefinition(item.contestType, item.year);
+            const modeledSuffix = modeledDef ? ' [Modeled]' : '';
 	          if (isJudicial || modeledDef) {
-	            opt.textContent = `${formatContestName(item.contestType, item.year)} (${item.year})`;
+              opt.textContent = `${formatContestName(item.contestType, item.year)} (${item.year})${modeledSuffix}`;
 	          } else {
-	            opt.textContent = `${label} (${item.year})`;
+              opt.textContent = `${label} (${item.year})${modeledSuffix}`;
 	          }
 	          if (q) {
 	            const hay = `${label} ${item.year} ${item.contestType} ${formatContestName(item.contestType, item.year)}`.toUpperCase();
@@ -19959,12 +20514,28 @@ document.addEventListener('DOMContentLoaded', function() {
       const viewEl = document.getElementById('control-summary-view');
       const yearEl = document.getElementById('control-summary-year');
       const modeEl = document.getElementById('control-summary-mode');
+      const scenarioEl = document.getElementById('control-summary-scenario');
       if (!titleEl || !viewEl || !yearEl || !modeEl) return;
 
       const key = String(contestKey || '').trim();
       const [contestType, year] = parseContestValue(key);
       viewEl.textContent = getReadableViewLabel(currentView);
       modeEl.textContent = getReadableModeLabel(currentVizMode);
+
+      const swingActive = Math.abs(Number(scenarioSwingPct || 0)) >= 0.05;
+      const modeledActive = !!(contestType && Number.isFinite(Number(year)) && getModeledContestDefinition(contestType, Number(year)));
+      const modeledOverride = modeledActive && MODELED_CONTEST_OVERRIDES_BY_TYPE.has(String(contestType || '').trim());
+      if (scenarioEl) {
+        if (swingActive || modeledOverride) {
+          scenarioEl.textContent = 'Scenario';
+          scenarioEl.hidden = false;
+        } else if (modeledActive) {
+          scenarioEl.textContent = 'Modeled';
+          scenarioEl.hidden = false;
+        } else {
+          scenarioEl.hidden = true;
+        }
+      }
 
       if (!contestType || !year) {
         titleEl.textContent = 'Choose a contest';

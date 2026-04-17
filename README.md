@@ -103,7 +103,15 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 15, 2026
+**Last updated:** April 16, 2026
+
+### UI/UX Refinement + Mobile Overlap Verification (April 16, 2026)
+
+- Refined the atlas control hierarchy in `index.html` to reduce control-rail visual weight while preserving map interactions, contest loading, listener wiring, and existing tooltip behavior.
+- Clarified modeling controls and summary language (what-if/model/overlay grouping, updated preset labels, compact modeled/scenario status signaling in control summaries).
+- Cleaned conflicting/duplicate style paths and added safer sidebar-disabled hooks without changing feature behavior.
+- Ran functional smoke checks for contest loading and map interaction flow using `US President (2024)` as a validation baseline.
+- Ran true Playwright mobile viewport overlap checks at **390x844** and **430x932** in baseline and legend-open states; overlap checks for vote card, legend, and mobile dock all passed.
 
 ### District/County Badge Polish (April 15, 2026)
 
