@@ -480,8 +480,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       };
     });
 
-    expect(modeledSnapshot.senateOptionText).toBe('US Senate Model (2026)');
-    expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Model (2026)');
+    expect(modeledSnapshot.senateOptionText).toBe('US Senate (2026) model');
+    expect(modeledSnapshot.courtOptionText).toBe('NC Associate Justice Seat 1 (2026) Model');
     expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
@@ -496,7 +496,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       (v) => document.getElementById('contestSelect')?.value === v,
       'us_senate_model_2026'
     );
-    await expect(page.locator('#context-contest')).toContainText('US Senate Model 2026');
+    await expect(page.locator('#context-contest')).toContainText('US Senate (2026) model');
   });
 
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
