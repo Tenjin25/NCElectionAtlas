@@ -103,7 +103,19 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 16, 2026
+**Last updated:** April 17, 2026
+
+### Modeled Contest Calibration + Conservative Trend Narratives (April 17, 2026)
+
+- Calibrated modeled statewide contests so they behave more conservatively and predictably in both county and district views (no UI interaction changes).
+- Fixed a modeled-contest turnout-default bug: models that do **not** specify `turnoutFactor` now default to a neutral baseline (prevents accidental large swings from an implicit `0` turnout factor).
+- Refined the `US Senate (2026) model`:
+  - Slightly more shrinkage toward the `2024 President` climate baseline.
+  - Tighter caps + stronger damping on county ticket-splitting deviations (especially in low-vote and deep-partisan counties).
+  - Reduced “trend nudge” noise and strengthened statewide recentering so statewide totals stay anchored.
+  - Toned down candidate bonus magnitude (kept the feature, made it less aggressive).
+- Refined the `NC Associate Justice Seat 1 (2026) Model` blend defaults and reliability/brake settings to reduce overreaction in noisier judicial baselines.
+- Tightened trend/trajectory narrative thresholds so “moving/accelerating” language triggers less often on small shifts; Census context is presented as contextual confirmation only when the political signal is strong.
 
 ### Modeled Baseline + Naming Refresh (April 16, 2026)
 
