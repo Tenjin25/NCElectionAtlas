@@ -10881,13 +10881,18 @@ document.addEventListener('DOMContentLoaded', function() {
         displayName: 'US Senate Model',
         optionLabel: 'US Senate (2026) model',
         groupLabel: 'US Senate',
-        baseContestType: 'us_senate',
-        baseYear: 2022,
-        climateContestType: 'president',
-        climateYear: 2024,
-        // Calibration refinement (2026-04): slightly more shrinkage toward the 2024 climate,
-        // with tighter caps on county-specific ticket-splitting and "trend nudge" noise.
-        blendWeight: 0.45, // 0 => pure climate (2024 Pres), 1 => pure base (2022 Senate)
+       baseContestType: 'us_senate',
+       baseYear: 2022,
+       // Secondary Senate anchor: presidential-year Senate is a better same-environment reference than a pure midterm-only anchor.
+       // The weights below are applied inside the Senate anchor, before the (separate) climate blend.
+       secondaryBaseContestType: 'us_senate',
+       secondaryBaseYear: 2020,
+       senateAnchorSecondWeight: 0.30, // 0..1 share for 2020 inside the Senate anchor (rest is 2022)
+       climateContestType: 'president',
+       climateYear: 2024,
+        // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
+        // and tighter caps on county-specific ticket-splitting and "trend nudge" noise.
+        blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
         baselineRecentWeight: 0.60,
         baselineSecondWeight: 0.25,
         baselineLongRunWeight: 0.15,
@@ -10907,6 +10912,18 @@ document.addEventListener('DOMContentLoaded', function() {
         federalizationBrakeMargin: 20,
         federalizationDeepMargin: 34,
         federalizationFloor: 0.62,
+        // Realignment adjustment: subtle rightward nudge in counties with unusually strong federal movement
+        // across 2016/2020/2024 and Senate 2020->2022 (capped + reliability-scaled).
+        realignmentAdjustmentEnabled: true,
+        realignmentAdjustmentMinTrendPts: 1.25,
+        realignmentAdjustmentMaxTrendPts: 9.0,
+        realignmentAdjustmentSlope: 0.085, // pts of adjustment per 1 pt of rightward trend
+        realignmentAdjustmentMaxPts: 0.85,
+        // Turnout sensitivity: in edge-case realigning counties, coalition mix makes turnout matter more.
+        realignmentTurnoutEnabled: true,
+        realignmentTurnoutMinTrendPts: 1.0,
+        realignmentTurnoutMaxTrendPts: 9.0,
+        realignmentTurnoutSensitivityMaxMul: 0.35, // up to +35% on turnout bias in high-trend counties
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
         senateDeviationOutlierBrakeEnabled: true,
         senateDeviationHistoryYears: [2016, 2020, 2022],
@@ -10927,6 +10944,12 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDurableShare: 0.60,
         candidateBonusPersonalShare: 0.40,
         candidateBonusPersonalFederalizationFloor: 0.30,
+        // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
+        // moving right at the federal level (e.g., Robeson, Bladen).
+        candidateBonusPersonalRealignmentEnabled: true,
+        candidateBonusPersonalRealignmentFloor: 0.22, // strongest fade keeps ~20–25% of the personal component
+        candidateBonusPersonalRealignmentMinTrendPts: 1.0,
+        candidateBonusPersonalRealignmentMaxTrendPts: 8.5,
         candidateBonusFederalizationBrakeMargin: 22,
         candidateBonusFederalizationDeepRedMargin: 34,
         candidateBonusFederalizationFloor: 0.15,
@@ -10945,7 +10968,7 @@ document.addEventListener('DOMContentLoaded', function() {
         turnoutFactor: 0.575,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
-        description: 'Blended 2022 Senate + 2024 President baseline with calibrated 55–60% turnout'
+        description: 'Blended 2022 + 2020 Senate anchors with a 2024 President climate and calibrated 55–60% turnout'
       },
       'nc_supreme_court_model_2026': {
         contestType: 'nc_supreme_court_model',
@@ -10976,6 +10999,14 @@ document.addEventListener('DOMContentLoaded', function() {
         safeCountyBrakeMargin: 16,
         judicialNoiseSeatSplitBrakeEnabled: true,
         judicialNoiseShareBrakeEnabled: true,
+        // Partisan anchor floor (minority share): prevents one noisy judicial cycle from overdriving crossover behavior.
+        partisanAnchorEnabled: true,
+        partisanAnchorWeight: 0.20, // 0.15..0.25 recommended; judicial blend should still dominate
+        partisanAnchorContestType: 'president',
+        partisanAnchorYear: 2024,
+        partisanAnchorSecondContestType: 'us_senate',
+        partisanAnchorSecondYear: 2022,
+        partisanAnchorSecondWeight: 0.40, // 0..1 share for the second anchor inside the partisan floor
         demCandidate: 'Anita Earls',
         repCandidate: 'Sarah Stevens',
         description: 'Blend of 2022 Seat 03 + Seat 05 with a 2024 climate adjustment'
@@ -11009,37 +11040,37 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'neutral_baseline',
           label: 'Neutral',
           // Keep in sync with the calibrated default.
-          patch: { blendWeight: 0.45, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
+          patch: { blendWeight: 0.72, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
         },
         {
           id: 'dem_high_turnout',
           label: 'High turnout D',
-          patch: { blendWeight: 0.44, turnoutFactor: 0.66, bonusScale: 1.15, countyBehaviorMode: 'suburban_rebound' }
+          patch: { blendWeight: 0.70, turnoutFactor: 0.66, bonusScale: 1.15, countyBehaviorMode: 'suburban_rebound' }
         },
         {
           id: 'rep_high_turnout',
           label: 'High turnout R',
-          patch: { blendWeight: 0.60, turnoutFactor: 0.69, bonusScale: 0.82, countyBehaviorMode: 'rural_surge' }
+          patch: { blendWeight: 0.82, turnoutFactor: 0.69, bonusScale: 0.82, countyBehaviorMode: 'rural_surge' }
         },
         {
           id: 'suburban_rebound',
           label: 'Suburban rebound',
-          patch: { blendWeight: 0.46, turnoutFactor: 0.60, bonusScale: 1.12, countyBehaviorMode: 'suburban_rebound' }
+          patch: { blendWeight: 0.72, turnoutFactor: 0.60, bonusScale: 1.12, countyBehaviorMode: 'suburban_rebound' }
         },
         {
           id: 'rural_surge',
           label: 'Rural surge',
-          patch: { blendWeight: 0.64, turnoutFactor: 0.63, bonusScale: 0.88, countyBehaviorMode: 'rural_surge' }
+          patch: { blendWeight: 0.86, turnoutFactor: 0.63, bonusScale: 0.88, countyBehaviorMode: 'rural_surge' }
         },
         {
           id: 'incumbent_friendly',
           label: 'Incumbent-friendly',
-          patch: { blendWeight: 0.56, turnoutFactor: 0.585, bonusScale: 1.22, countyBehaviorMode: 'incumbent_friendly' }
+          patch: { blendWeight: 0.78, turnoutFactor: 0.585, bonusScale: 1.22, countyBehaviorMode: 'incumbent_friendly' }
         },
         {
           id: 'volatile_low_confidence',
           label: 'Volatile / low-confidence',
-          patch: { blendWeight: 0.38, turnoutFactor: 0.57, bonusScale: 1.05, countyBehaviorMode: 'volatile', uncertaintyBoost: 1.2 }
+          patch: { blendWeight: 0.62, turnoutFactor: 0.57, bonusScale: 1.05, countyBehaviorMode: 'volatile', uncertaintyBoost: 1.2 }
         }
       ],
       nc_supreme_court_model: [
@@ -11538,6 +11569,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const isSenateDeviationModel = String(modeledDef?.contestType || '') === 'us_senate_model';
+      if (isSenateDeviationModel && modeledDef?.secondaryBaseContestType && Number.isFinite(Number(modeledDef?.secondaryBaseYear))) {
+        bits.push(`Senate anchors: ${String(modeledDef.baseYear || '')}/${String(modeledDef.secondaryBaseYear || '')}`);
+      }
       const bw = Number(modeledDef?.blendWeight);
       if (Number.isFinite(bw) && bw >= 0 && bw <= 1) {
         bits.push(`History vs fundamentals: ${Math.round(bw * 100)}%`);
@@ -11659,6 +11693,11 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="model-summary-list">
           <span><strong>Baseline:</strong> Weighted county baseline anchored to statewide environment</span>
+          ${
+            (String(modeled?.contestType || '').trim() === 'us_senate_model' && modeled?.secondaryBaseContestType && Number.isFinite(Number(modeled?.secondaryBaseYear)))
+              ? `<span><strong>Anchors:</strong> Senate ${escapeHtml(String(modeled?.baseYear))}/${escapeHtml(String(modeled?.secondaryBaseYear))} • Climate ${escapeHtml(String(modeled?.climateYear))}</span>`
+              : ''
+          }
           <span><strong>Weighting:</strong> Recent/second/long-run = ${escapeHtml(weightLabel)}</span>
           <span><strong>History vs fundamentals:</strong> ${Number.isFinite(bw) ? `${Math.round(bw * 100)}%` : 'n/a'}</span>
           <span><strong>Expected turnout:</strong> ${Number.isFinite(turnout) ? `${(turnout * 100).toFixed(1)}%` : 'n/a'}</span>
@@ -14777,9 +14816,9 @@ document.addEventListener('DOMContentLoaded', function() {
       async function buildModeledContestSliceRows(modeledDef) {
         const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
         const climateRows = await loadContestSlice(modeledDef.climateContestType, modeledDef.climateYear);
-        const baseSigned = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
+        const baseSignedRaw = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
         const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
-        const climateSwingPct = baseSigned - climateSigned; // fallback when blendWeight isn't enabled
+        const climateSwingPct = baseSignedRaw - climateSigned; // fallback when blendWeight isn't enabled
 
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
@@ -14788,6 +14827,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const modeledType = String(modeledDef?.contestType || '').trim();
         const isSenateDeviationModel = modeledType === 'us_senate_model';
         const isJudicialModel = !!modeledDef?.judicialModel || modeledType === 'nc_supreme_court_model';
+
+        // Optional secondary baseline (used by the US Senate model): add a presidential-year Senate anchor (2020)
+        // without changing any core UI controls or slice-loading architecture.
+        const secondaryBaseContestType = String(modeledDef?.secondaryBaseContestType || '').trim();
+        const secondaryBaseYear = Number(modeledDef?.secondaryBaseYear);
+        const senateAnchorSecondWeightRaw = Number(modeledDef?.senateAnchorSecondWeight);
+        const senateAnchorSecondWeight = Number.isFinite(senateAnchorSecondWeightRaw)
+          ? Math.max(0, Math.min(1, senateAnchorSecondWeightRaw))
+          : 0;
+        let secondaryBaseRows = null;
+        if (isSenateDeviationModel && secondaryBaseContestType && Number.isFinite(secondaryBaseYear) && secondaryBaseYear > 0) {
+          try {
+            secondaryBaseRows = await loadContestSlice(secondaryBaseContestType, secondaryBaseYear);
+          } catch (_) {
+            secondaryBaseRows = null;
+          }
+        }
         const clamp01 = (v) => Math.max(0, Math.min(1, Number.isFinite(Number(v)) ? Number(v) : 0));
         const lerp = (a, b, t) => (Number(a) + ((Number(b) - Number(a)) * clamp01(t)));
         const getCountyCensusContextSafe = (countyNorm) => {
@@ -14902,10 +14958,95 @@ document.addEventListener('DOMContentLoaded', function() {
         // - Then apply a uniform per-county swing to each base row to preserve map/precinct architecture.
         const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
         const baseCountySignedRawByCounty = getCountySignedFromTotalsMap(baseCountyTotals);
+
+        // US Senate model: build a Senate-anchor map that blends 2022 + 2020 before climate blending.
+        // This is used for deviation measurement (Senate-vs-Pres) and statewide anchoring.
+        let senateAnchorSignedByCounty = null; // Map county -> signed margin (REP - DEM) in pts
+        let senateAnchorStateSigned = baseSignedRaw;
+        let secondaryBaseSignedByCounty = null; // Map county -> signed margin for the secondary Senate anchor
+        if (isSenateDeviationModel && secondaryBaseRows && secondaryBaseContestType) {
+          try {
+            const secondaryCountyTotals = buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
+            secondaryBaseSignedByCounty = getCountySignedFromTotalsMap(secondaryCountyTotals);
+            const w2 = clamp01(senateAnchorSecondWeight);
+            const w1 = 1 - w2;
+            const allCounties = new Set([
+              ...Array.from(baseCountySignedRawByCounty.keys()),
+              ...Array.from(secondaryBaseSignedByCounty.keys())
+            ]);
+            const map = new Map();
+            allCounties.forEach((county) => {
+              const a = Number(baseCountySignedRawByCounty.get(county));
+              const b = Number(secondaryBaseSignedByCounty.get(county));
+              const hasA = Number.isFinite(a);
+              const hasB = Number.isFinite(b);
+              if (!hasA && !hasB) return;
+              if (hasA && !hasB) { map.set(county, a); return; }
+              if (!hasA && hasB) { map.set(county, b); return; }
+              map.set(county, (w1 * a) + (w2 * b));
+            });
+            senateAnchorSignedByCounty = map.size ? map : null;
+
+            const secondaryStateSigned = getStateSignedFromTotalsMap(secondaryCountyTotals);
+            if (Number.isFinite(secondaryStateSigned) && Number.isFinite(baseSignedRaw)) {
+              senateAnchorStateSigned = ((1 - w2) * baseSignedRaw) + (w2 * secondaryStateSigned);
+            }
+          } catch (_) {
+            senateAnchorSignedByCounty = null;
+            senateAnchorStateSigned = baseSignedRaw;
+            secondaryBaseSignedByCounty = null;
+          }
+        }
+
         const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
         const climateSignedByCounty = getCountySignedFromTotalsMap(climateCountyTotals);
         const baseStateTotalVotes = Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
         const climateStateTotalVotes = Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+
+        // Judicial partisan anchor floor: blend a small share of a stable partisan baseline (federal/downballot)
+        // into the judicial baseline to avoid one noisy judicial cycle overdriving county crossover behavior.
+        let partisanAnchorSignedByCounty = null; // Map county -> signed margin (REP - DEM) in pts
+        if (isJudicialModel && !!modeledDef?.partisanAnchorEnabled) {
+          const aType = String(modeledDef?.partisanAnchorContestType || '').trim();
+          const aYear = Number(modeledDef?.partisanAnchorYear);
+          const bType = String(modeledDef?.partisanAnchorSecondContestType || '').trim();
+          const bYear = Number(modeledDef?.partisanAnchorSecondYear);
+          const w2raw = Number(modeledDef?.partisanAnchorSecondWeight);
+          const w2 = Number.isFinite(w2raw) ? clamp01(w2raw) : 0.40;
+          const w1 = 1 - w2;
+          try {
+            const out = new Map();
+            let mapA = null;
+            let mapB = null;
+            if (aType && Number.isFinite(aYear)) {
+              const rowsA = await loadContestSlice(aType, aYear);
+              mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
+            }
+            if (bType && Number.isFinite(bYear)) {
+              const rowsB = await loadContestSlice(bType, bYear);
+              mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
+            }
+            if (mapA || mapB) {
+              const all = new Set([
+                ...(mapA ? Array.from(mapA.keys()) : []),
+                ...(mapB ? Array.from(mapB.keys()) : [])
+              ]);
+              all.forEach((county) => {
+                const a = mapA ? Number(mapA.get(county)) : NaN;
+                const b = mapB ? Number(mapB.get(county)) : NaN;
+                const hasA = Number.isFinite(a);
+                const hasB = Number.isFinite(b);
+                if (!hasA && !hasB) return;
+                if (hasA && !hasB) { out.set(county, a); return; }
+                if (!hasA && hasB) { out.set(county, b); return; }
+                out.set(county, (w1 * a) + (w2 * b));
+              });
+              partisanAnchorSignedByCounty = out.size ? out : null;
+            }
+          } catch (_) {
+            partisanAnchorSignedByCounty = null;
+          }
+        }
 
         const countyClusterByCounty = new Map();
         baseCountyTotals.forEach((totals, county) => {
@@ -15038,7 +15179,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const statewideTargetSigned = (() => {
           if (useBlend) {
             // Keep the county model anchored to a deterministic statewide target.
-            return clampSignedMargin((blendWeight * baseSigned) + ((1 - blendWeight) * statewideWeightedBaselineSigned));
+            const baseAnchor = isSenateDeviationModel ? senateAnchorStateSigned : baseSignedRaw;
+            return clampSignedMargin((blendWeight * baseAnchor) + ((1 - blendWeight) * statewideWeightedBaselineSigned));
           }
           return clampSignedMargin(climateSigned);
         })();
@@ -15426,6 +15568,48 @@ document.addEventListener('DOMContentLoaded', function() {
               // Durable component (reusable crossover) + personal component (Cooper-specific). Keep both capped.
               let durablePts = rawPts * durableShare * (0.55 + (0.45 * reusableScore));
               let personalPts = rawPts * personalShare * (0.35 + (0.65 * (1 - reusableScore)));
+
+              // Realignment-aware fade: in counties with strong Trump-era federal movement, treat more of the
+              // remaining bonus as personal / non-portable so it doesn't over-travel into a Senate environment.
+              if (!!modeledDef?.candidateBonusPersonalRealignmentEnabled) {
+                const minTrend = Number(modeledDef?.candidateBonusPersonalRealignmentMinTrendPts);
+                const maxTrend = Number(modeledDef?.candidateBonusPersonalRealignmentMaxTrendPts);
+                const floorRaw = Number(modeledDef?.candidateBonusPersonalRealignmentFloor);
+                const personalFloor = Number.isFinite(floorRaw) ? Math.max(0, Math.min(1, floorRaw)) : 0.22;
+
+                // Build a federal trend signal from available history:
+                // - pres: 2016 -> 2024 and 2020 -> 2024
+                // - senate: 2020 -> 2022 (when available)
+                const presSeries = getCountySeriesSigned(county);
+                const pres24 = Number.isFinite(Number(presSeries?.recent)) ? Number(presSeries.recent) : Number(presNowSigned);
+                const pres20 = Number.isFinite(Number(presSeries?.second)) ? Number(presSeries.second) : pres24;
+                const pres16 = Number.isFinite(Number(presSeries?.long)) ? Number(presSeries.long) : pres20;
+                const shift20to24 = (Number.isFinite(pres24) && Number.isFinite(pres20)) ? (pres24 - pres20) : 0;
+                const shift16to24 = (Number.isFinite(pres24) && Number.isFinite(pres16)) ? (pres24 - pres16) : 0;
+
+                const senate22 = Number(baseSigned);
+                const senate20 = secondaryBaseSignedByCounty && secondaryBaseSignedByCounty.has(county)
+                  ? Number(secondaryBaseSignedByCounty.get(county))
+                  : NaN;
+                const senateShift = (Number.isFinite(senate22) && Number.isFinite(senate20)) ? (senate22 - senate20) : 0;
+
+                // Positive => rightward federal movement; only fade more aggressively in that direction.
+                const federalTrend = Math.max(0, (0.55 * shift20to24) + (0.25 * shift16to24) + (0.20 * senateShift));
+                const lo = Number.isFinite(minTrend) ? minTrend : 1.0;
+                const hi = Number.isFinite(maxTrend) ? Math.max(lo + 0.25, maxTrend) : 8.5;
+                let score = clamp01((federalTrend - lo) / Math.max(1e-6, (hi - lo)));
+
+                // Edge-case calibration: counties known to have more structural realignment get a bit more fade.
+                if (county === 'ROBESON') score = clamp01(score * 1.25);
+                else if (county === 'BLADEN') score = clamp01(score * 1.10);
+
+                // If the county historically had large D-overperformance vs the federal baseline but is realigning,
+                // treat a bit more of that as personal (i.e., fade the personal component slightly further).
+                const crossoverBoost = clamp01((crossoverScore - 0.60) / 0.40);
+                score = clamp01(score + (0.10 * score * crossoverBoost));
+
+                personalPts *= lerp(1, personalFloor, score);
+              }
               durablePts *= outlierBrake;
               personalPts *= lerp(1, outlierBrake, 0.45);
               durablePts *= Number(clusterCal?.candidateBonusMul ?? 1);
@@ -15708,7 +15892,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const deviationBaseline = (presBaselineByCountyForDeviation && presBaselineByCountyForDeviation.has(county))
                   ? Number(presBaselineByCountyForDeviation.get(county))
                   : baseline;
-                const senateDeviationRaw = baseCountySignedRaw - deviationBaseline;
+
+                // Senate anchor: prefer the blended 2022+2020 Senate margin (when available) rather than the
+                // one-cycle 2022 margin when measuring crossover capacity in a presidential-year environment.
+                const senateAnchorSigned = (senateAnchorSignedByCounty && senateAnchorSignedByCounty.has(county))
+                  ? Number(senateAnchorSignedByCounty.get(county))
+                  : baseCountySignedRaw;
+                const senateDeviationRaw = senateAnchorSigned - deviationBaseline;
                 const senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
                 const devReliability = 0.70 + (0.30 * reliabilityScale);
                 const devVolatilityBrake = volatility >= 6 ? 0.82 : (volatility <= 2.5 ? 1 : 0.92);
@@ -15723,9 +15913,62 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
 
+            // Judicial partisan floor: blend a small share of a stable partisan anchor into the judicial baseline.
+            // Keep it minority-share + reliability-scaled so the judicial blend still dominates.
+            if (isJudicialModel && partisanAnchorSignedByCounty && partisanAnchorSignedByCounty.has(county)) {
+              const wRaw = Number(modeledDef?.partisanAnchorWeight);
+              const w = Number.isFinite(wRaw) ? clamp01(wRaw) : 0;
+              const anchorSigned = Number(partisanAnchorSignedByCounty.get(county));
+              if (w > 0 && Number.isFinite(anchorSigned) && Number.isFinite(targetSigned)) {
+                const effective = w * (0.60 + (0.40 * reliabilityScale)) * (1 - (0.65 * judicialNoise));
+                targetSigned = ((1 - effective) * targetSigned) + (effective * anchorSigned);
+              }
+            }
+
+            // County realignment adjustment (Senate model only): modest rightward nudge in counties that have
+            // continued moving right at the federal level since 2016/2020, plus Senate 2020->2022 movement.
+            // This is intentionally capped + reliability-scaled to avoid adding noise.
+            let federalRealignmentScore = 0;
+            if (isSenateDeviationModel) {
+              const senate20 = secondaryBaseSignedByCounty && secondaryBaseSignedByCounty.has(county)
+                ? Number(secondaryBaseSignedByCounty.get(county))
+                : NaN;
+              const senateShift = (Number.isFinite(senate20) && Number.isFinite(baseCountySignedRaw)) ? (baseCountySignedRaw - senate20) : 0;
+              const shift16to24 = (Number.isFinite(countyRecent) && Number.isFinite(countyLong)) ? (countyRecent - countyLong) : 0;
+              const federalTrend = Math.max(0, (0.55 * recentShift) + (0.25 * shift16to24) + (0.20 * senateShift));
+
+              const lo = Number(modeledDef?.realignmentAdjustmentMinTrendPts);
+              const hi = Number(modeledDef?.realignmentAdjustmentMaxTrendPts);
+              const minTrend = Number.isFinite(lo) ? lo : 1.25;
+              const maxTrend = Number.isFinite(hi) ? Math.max(minTrend + 0.25, hi) : 9.0;
+              federalRealignmentScore = clamp01((federalTrend - minTrend) / Math.max(1e-6, (maxTrend - minTrend)));
+
+              if (!!modeledDef?.realignmentAdjustmentEnabled && federalRealignmentScore > 0) {
+                const slope = Number(modeledDef?.realignmentAdjustmentSlope);
+                const maxPts = Number(modeledDef?.realignmentAdjustmentMaxPts);
+                const s = Number.isFinite(slope) ? Math.max(0, slope) : 0.085;
+                const cap = Number.isFinite(maxPts) ? Math.max(0, maxPts) : 0.85;
+
+                let adj = Math.max(0, (federalTrend - minTrend) * s);
+                adj = Math.min(cap, adj);
+                // Keep it subtle in low-information counties and in deep-federalized counties.
+                adj *= (0.35 + (0.65 * reliabilityScale));
+                adj *= (0.60 + (0.40 * federalizationBrake));
+                if (county === 'ROBESON') adj *= 1.20;
+                else if (county === 'BLADEN') adj *= 1.08;
+                targetSigned += Math.min(cap, Math.max(0, adj));
+              }
+            }
+
             targetSigned += trendNudge;
             const turnoutBrake = isSenateDeviationModel ? (0.70 + (0.30 * federalizationBrake)) : 1;
-            targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake;
+            let turnoutSensitivityMul = 1;
+            if (isSenateDeviationModel && !!modeledDef?.realignmentTurnoutEnabled && federalRealignmentScore > 0) {
+              const maxMul = Number(modeledDef?.realignmentTurnoutSensitivityMaxMul);
+              const m = Number.isFinite(maxMul) ? Math.max(0, Math.min(1, maxMul)) : 0.35;
+              turnoutSensitivityMul = 1 + (m * federalRealignmentScore);
+            }
+            targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake * turnoutSensitivityMul;
 
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
