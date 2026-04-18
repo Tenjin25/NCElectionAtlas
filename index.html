@@ -15580,10 +15580,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Build a federal trend signal from available history:
                 // - pres: 2016 -> 2024 and 2020 -> 2024
                 // - senate: 2020 -> 2022 (when available)
-                const presSeries = getCountySeriesSigned(county);
-                const pres24 = Number.isFinite(Number(presSeries?.recent)) ? Number(presSeries.recent) : Number(presNowSigned);
-                const pres20 = Number.isFinite(Number(presSeries?.second)) ? Number(presSeries.second) : pres24;
-                const pres16 = Number.isFinite(Number(presSeries?.long)) ? Number(presSeries.long) : pres20;
+                const pres24 = Number.isFinite(presNowSigned)
+                  ? Number(presNowSigned)
+                  : Number(climateSignedByCounty?.get(county));
+                const pres20 = Number(historicalCountySignedByYear.get(2020)?.get(county));
+                const pres16 = Number(historicalCountySignedByYear.get(2016)?.get(county));
                 const shift20to24 = (Number.isFinite(pres24) && Number.isFinite(pres20)) ? (pres24 - pres20) : 0;
                 const shift16to24 = (Number.isFinite(pres24) && Number.isFinite(pres16)) ? (pres24 - pres16) : 0;
 
@@ -15599,14 +15600,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const hi = Number.isFinite(maxTrend) ? Math.max(lo + 0.25, maxTrend) : 8.5;
                 let score = clamp01((federalTrend - lo) / Math.max(1e-6, (hi - lo)));
 
-                // Edge-case calibration: counties known to have more structural realignment get a bit more fade.
-                if (county === 'ROBESON') score = clamp01(score * 1.25);
-                else if (county === 'BLADEN') score = clamp01(score * 1.10);
+                // Edge-case calibration: keep a bit more fade in well-known realignment counties, but avoid
+                // wiping out crossover capacity entirely (they're not "ordinary" crossover, but not 0 either).
+                if (county === 'ROBESON') score = clamp01(score * 1.12);
+                else if (county === 'BLADEN') score = clamp01(score * 1.05);
 
                 // If the county historically had large D-overperformance vs the federal baseline but is realigning,
                 // treat a bit more of that as personal (i.e., fade the personal component slightly further).
                 const crossoverBoost = clamp01((crossoverScore - 0.60) / 0.40);
                 score = clamp01(score + (0.10 * score * crossoverBoost));
+
+                // Durable crossover: if the county has consistent Senate-vs-Pres crossover, avoid fading the
+                // personal component quite as aggressively (keeps Robeson/Bladen from going unrealistically red).
+                const durableDamp = 1 - (0.45 * durableScore * crossoverScore);
+                score *= Math.max(0.55, Math.min(1, durableDamp));
 
                 personalPts *= lerp(1, personalFloor, score);
               }
@@ -15934,8 +15941,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? Number(secondaryBaseSignedByCounty.get(county))
                 : NaN;
               const senateShift = (Number.isFinite(senate20) && Number.isFinite(baseCountySignedRaw)) ? (baseCountySignedRaw - senate20) : 0;
-              const shift16to24 = (Number.isFinite(countyRecent) && Number.isFinite(countyLong)) ? (countyRecent - countyLong) : 0;
-              const federalTrend = Math.max(0, (0.55 * recentShift) + (0.25 * shift16to24) + (0.20 * senateShift));
+
+              // Prefer explicit 2016/2020/2024 presidential endpoints (avoid using long-run averages here,
+              // which can overstate trend in crossover-heavy counties).
+              const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county))) ? Number(climateSignedByCounty.get(county)) : NaN;
+              const pres20 = Number(historicalCountySignedByYear.get(2020)?.get(county));
+              const pres16 = Number(historicalCountySignedByYear.get(2016)?.get(county));
+              const shift20to24 = (Number.isFinite(pres24) && Number.isFinite(pres20)) ? (pres24 - pres20) : recentShift;
+              const shift16to24 = (Number.isFinite(pres24) && Number.isFinite(pres16)) ? (pres24 - pres16) : 0;
+
+              const federalTrend = Math.max(0, (0.55 * shift20to24) + (0.25 * shift16to24) + (0.20 * senateShift));
 
               const lo = Number(modeledDef?.realignmentAdjustmentMinTrendPts);
               const hi = Number(modeledDef?.realignmentAdjustmentMaxTrendPts);
@@ -15954,8 +15969,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Keep it subtle in low-information counties and in deep-federalized counties.
                 adj *= (0.35 + (0.65 * reliabilityScale));
                 adj *= (0.60 + (0.40 * federalizationBrake));
-                if (county === 'ROBESON') adj *= 1.20;
-                else if (county === 'BLADEN') adj *= 1.08;
+
+                // If the county still shows durable crossover capacity, avoid pushing it too far red.
+                const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                const medianDev = Number(senateDiag?.medianDev);
+                const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
+                const crossoverDamp = 1 - (0.55 * durableScore * crossoverScore);
+                adj *= Math.max(0.45, Math.min(1, crossoverDamp));
                 targetSigned += Math.min(cap, Math.max(0, adj));
               }
             }
@@ -15966,7 +15986,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isSenateDeviationModel && !!modeledDef?.realignmentTurnoutEnabled && federalRealignmentScore > 0) {
               const maxMul = Number(modeledDef?.realignmentTurnoutSensitivityMaxMul);
               const m = Number.isFinite(maxMul) ? Math.max(0, Math.min(1, maxMul)) : 0.35;
-              turnoutSensitivityMul = 1 + (m * federalRealignmentScore);
+              const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+              const medianDev = Number(senateDiag?.medianDev);
+              const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
+              const crossoverDamp = 1 - (0.60 * durableScore * crossoverScore);
+              turnoutSensitivityMul = 1 + (m * federalRealignmentScore * Math.max(0.50, Math.min(1, crossoverDamp)));
             }
             targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake * turnoutSensitivityMul;
 
