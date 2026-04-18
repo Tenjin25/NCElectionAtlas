@@ -10924,6 +10924,19 @@ document.addEventListener('DOMContentLoaded', function() {
         realignmentTurnoutMinTrendPts: 1.0,
         realignmentTurnoutMaxTrendPts: 9.0,
         realignmentTurnoutSensitivityMaxMul: 0.35, // up to +35% on turnout bias in high-trend counties
+        // Positive deviation brake: avoid modeling a generic R Senate candidate as outrunning the presidential
+        // baseline in counties that are still strongly realigning at the federal level.
+        positiveDeviationRealignmentBrakeEnabled: true,
+        positiveDeviationRealignmentFloor: 0.55, // strongest brake keeps ~55% of positive (R>Pres) deviation
+        positiveDeviationRealignmentMinTrendPts: 1.0,
+        positiveDeviationRealignmentMaxTrendPts: 9.0,
+        // Guardrail: in strongly realigning counties, a generic R Senate candidate usually shouldn't outrun
+        // the top-of-ticket presidential baseline (Trump) by much. Apply as an upper-bound (more R) cap.
+        senateMaxOverPresEnabled: true,
+        senateMaxOverPresCapPts: 0.75, // allow at most ~0.5–0.8 pts more R than Pres in high-trend counties
+        senateMaxOverPresMinRealignmentScore: 0.35,
+        senateMaxOverPresRobesonCapPts: 0.25,
+        senateMaxOverPresBladenCapPts: 0.45,
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
         senateDeviationOutlierBrakeEnabled: true,
         senateDeviationHistoryYears: [2016, 2020, 2022],
@@ -10934,15 +10947,15 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.18, // scale the raw Gov-vs-Pres delta down for a Senate model
+        candidateBonusWeight: 0.22, // scale the raw Gov-vs-Pres delta down for a Senate model
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.15,
         candidateBonusConsistencyFloor: 0.60,
         // Separate "durable crossover" vs "Cooper-personal" components so the bonus does not over-travel
         // into highly federalized counties or one-cycle outliers.
-        candidateBonusDurableShare: 0.60,
-        candidateBonusPersonalShare: 0.40,
+        candidateBonusDurableShare: 0.65,
+        candidateBonusPersonalShare: 0.35,
         candidateBonusPersonalFederalizationFloor: 0.30,
         // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
         // moving right at the federal level (e.g., Robeson, Bladen).
@@ -15516,10 +15529,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
               const countyType = classifyCountyBehaviorType(county, baseCountyTotals.get(county));
               let countyRoleScale = 1;
-              if (countyType === 'rural') countyRoleScale = 1.18;
-              else if (countyType === 'exurban') countyRoleScale = 1.10;
-              else if (countyType === 'suburban') countyRoleScale = 1.04;
-              else countyRoleScale = 0.92;
+              // Cooper rural overperformance signal (2016/2020) tends to be more relevant to a Senate model
+              // than the urban-core signal; weight it a bit more without changing the overall bonus framework.
+              if (countyType === 'rural') countyRoleScale = 1.28;
+              else if (countyType === 'exurban') countyRoleScale = 1.14;
+              else if (countyType === 'suburban') countyRoleScale = 1.06;
+              else countyRoleScale = 0.90;
 
               const baseSigned = Number(baseCountySignedRawByCounty?.get(county));
               const cluster = String(countyClusterByCounty.get(county) || 'rural_white');
@@ -15906,7 +15921,35 @@ document.addEventListener('DOMContentLoaded', function() {
                   ? Number(senateAnchorSignedByCounty.get(county))
                   : baseCountySignedRaw;
                 const senateDeviationRaw = senateAnchorSigned - deviationBaseline;
-                const senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
+                let senateDeviation = clampSenateDeviationForCounty(senateDeviationRaw, totals);
+
+                // Reduce positive (R>Pres) deviation in strongly realigning counties. This protects against
+                // accidentally implying a generic R Senate candidate outruns Trump in places like Robeson/Bladen.
+                if (senateDeviation > 0 && !!modeledDef?.positiveDeviationRealignmentBrakeEnabled) {
+                  const loRaw = Number(modeledDef?.positiveDeviationRealignmentMinTrendPts);
+                  const hiRaw = Number(modeledDef?.positiveDeviationRealignmentMaxTrendPts);
+                  const floorRaw = Number(modeledDef?.positiveDeviationRealignmentFloor);
+                  const minTrend = Number.isFinite(loRaw) ? loRaw : 1.0;
+                  const maxTrend = Number.isFinite(hiRaw) ? Math.max(minTrend + 0.25, hiRaw) : 9.0;
+                  const floor = Number.isFinite(floorRaw) ? Math.max(0, Math.min(1, floorRaw)) : 0.55;
+
+                  const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county))) ? Number(climateSignedByCounty.get(county)) : NaN;
+                  const pres20 = Number(historicalCountySignedByYear.get(2020)?.get(county));
+                  const pres16 = Number(historicalCountySignedByYear.get(2016)?.get(county));
+                  const shift20to24 = (Number.isFinite(pres24) && Number.isFinite(pres20)) ? (pres24 - pres20) : 0;
+                  const shift16to24 = (Number.isFinite(pres24) && Number.isFinite(pres16)) ? (pres24 - pres16) : 0;
+
+                  const senate20 = secondaryBaseSignedByCounty && secondaryBaseSignedByCounty.has(county)
+                    ? Number(secondaryBaseSignedByCounty.get(county))
+                    : NaN;
+                  const senateShift = (Number.isFinite(senate20) && Number.isFinite(senateAnchorSigned)) ? (senateAnchorSigned - senate20) : 0;
+
+                  const federalTrend = Math.max(0, (0.60 * shift20to24) + (0.25 * shift16to24) + (0.15 * senateShift));
+                  let score = clamp01((federalTrend - minTrend) / Math.max(1e-6, (maxTrend - minTrend)));
+                  if (county === 'ROBESON') score = clamp01(score * 1.10);
+                  else if (county === 'BLADEN') score = clamp01(score * 1.05);
+                  senateDeviation *= lerp(1, floor, score);
+                }
                 const devReliability = 0.70 + (0.30 * reliabilityScale);
                 const devVolatilityBrake = volatility >= 6 ? 0.82 : (volatility <= 2.5 ? 1 : 0.92);
                 const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
@@ -15993,6 +16036,27 @@ document.addEventListener('DOMContentLoaded', function() {
               turnoutSensitivityMul = 1 + (m * federalRealignmentScore * Math.max(0.50, Math.min(1, crossoverDamp)));
             }
             targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake * turnoutSensitivityMul;
+
+            // Guardrail: in high-trend counties, prevent the generic R Senate baseline from outrunning
+            // the presidential baseline by much (helps Robeson/Bladen-like cases).
+            if (isSenateDeviationModel && !!modeledDef?.senateMaxOverPresEnabled) {
+              const minScoreRaw = Number(modeledDef?.senateMaxOverPresMinRealignmentScore);
+              const minScore = Number.isFinite(minScoreRaw) ? Math.max(0, Math.min(1, minScoreRaw)) : 0.35;
+              const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county))) ? Number(climateSignedByCounty.get(county)) : NaN;
+              if (Number.isFinite(pres24) && federalRealignmentScore >= minScore && Number.isFinite(targetSigned)) {
+                const capRaw = Number(modeledDef?.senateMaxOverPresCapPts);
+                let capPts = Number.isFinite(capRaw) ? Math.max(0, capRaw) : 0.75;
+                if (county === 'ROBESON' && Number.isFinite(Number(modeledDef?.senateMaxOverPresRobesonCapPts))) {
+                  capPts = Math.max(0, Number(modeledDef.senateMaxOverPresRobesonCapPts));
+                } else if (county === 'BLADEN' && Number.isFinite(Number(modeledDef?.senateMaxOverPresBladenCapPts))) {
+                  capPts = Math.max(0, Number(modeledDef.senateMaxOverPresBladenCapPts));
+                }
+
+                const capScale = (0.45 + (0.55 * reliabilityScale)) * (0.70 + (0.30 * federalizationBrake));
+                const cap = pres24 + (capPts * capScale);
+                targetSigned = Math.min(targetSigned, cap);
+              }
+            }
 
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
