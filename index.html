@@ -10582,7 +10582,7 @@ document.addEventListener('DOMContentLoaded', function() {
        climateYear: 2024,
         // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
         // and tighter caps on county-specific ticket-splitting and "trend nudge" noise.
-        blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
+        blendWeight: 0.70, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
         presidentialBaselineWeight: 0.60,
         senateBaselineWeight: 0.40,
         baselineRecentWeight: 0.60,
@@ -10593,8 +10593,8 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityFloor: 0.42,
         statewideRecenterStrength: 0.96,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        ruralGopOverperformanceWeight: 0.32,
-        urbanDemElasticityWeight: 0.28,
+        ruralGopOverperformanceWeight: 0.29,
+        urbanDemElasticityWeight: 0.31,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'HOKE'],
         trendCarryoverWeight: 0.40,
@@ -10647,7 +10647,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.24, // slight lift; stronger in counties where crossover is repeatable
+        candidateBonusWeight: 0.27, // modest statewide Cooper nudge while preserving guardrails
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.20,
@@ -10675,7 +10675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusFederalizationDeepRedMargin: 34,
         candidateBonusFederalizationFloor: 0.15,
         candidateBonusDeepRedCapPts: 0.35,
-        candidateBonusMaxPts: 0.70,
+        candidateBonusMaxPts: 0.78,
         candidateBonusBasePts: 0.25,
         candidateBonusUrbanPts: 0.15,
         candidateBonusMetroPts: 0.30,
@@ -10692,9 +10692,9 @@ document.addEventListener('DOMContentLoaded', function() {
         districtDeviationBrakeCongressional: 0.95,
         districtDeviationBrakeStateHouse: 0.95,
         districtDeviationBrakeStateSenate: 0.95,
-        candidateBonusDistrictPtsCongressional: 0.20,
-        candidateBonusDistrictPtsStateHouse: 0.20,
-        candidateBonusDistrictPtsStateSenate: 0.20,
+        candidateBonusDistrictPtsCongressional: 0.24,
+        candidateBonusDistrictPtsStateHouse: 0.24,
+        candidateBonusDistrictPtsStateSenate: 0.24,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
