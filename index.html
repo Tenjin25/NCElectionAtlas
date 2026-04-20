@@ -10596,7 +10596,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ruralGopOverperformanceWeight: 0.29,
         urbanDemElasticityWeight: 0.31,
         anomalySwingClampPts: 12,
-        anomalyClampCounties: ['ROBESON', 'BLADEN', 'HOKE'],
+        anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.40,
         incumbentParty: 'DEM',
         incumbentBoostPts: 2.0,
@@ -10616,27 +10616,27 @@ document.addEventListener('DOMContentLoaded', function() {
         realignmentAdjustmentEnabled: true,
         realignmentAdjustmentMinTrendPts: 1.25,
         realignmentAdjustmentMaxTrendPts: 9.0,
-        realignmentAdjustmentSlope: 0.08, // pts of adjustment per 1 pt of rightward trend
-        realignmentAdjustmentMaxPts: 0.70,
+        realignmentAdjustmentSlope: 0.07, // pts of adjustment per 1 pt of rightward trend
+        realignmentAdjustmentMaxPts: 0.62,
         // Turnout sensitivity: in edge-case realigning counties, coalition mix makes turnout matter more.
         realignmentTurnoutEnabled: true,
         realignmentTurnoutMinTrendPts: 1.0,
         realignmentTurnoutMaxTrendPts: 9.0,
-        realignmentTurnoutSensitivityMaxMul: 0.35, // up to +35% on turnout bias in high-trend counties
+        realignmentTurnoutSensitivityMaxMul: 0.16, // keep turnout as coalition sensitivity, not a second realignment engine
         // Positive deviation brake: avoid modeling a generic R Senate candidate as outrunning the presidential
         // baseline in counties that are still strongly realigning at the federal level.
         positiveDeviationRealignmentBrakeEnabled: true,
-        positiveDeviationRealignmentFloor: 0.46, // strongest brake keeps ~45-50% of positive (R>Pres) deviation
+        positiveDeviationRealignmentFloor: 0.50, // strongest brake keeps ~50% of positive (R>Pres) deviation
         positiveDeviationRealignmentMinTrendPts: 1.0,
         positiveDeviationRealignmentMaxTrendPts: 9.0,
         // Guardrail: in strongly realigning counties, a generic R Senate candidate usually shouldn't outrun
         // the top-of-ticket presidential baseline (Trump) by much. Apply as an upper-bound (more R) cap.
         senateMaxOverPresEnabled: true,
-        senateMaxOverPresCapPts: 0.60, // tighter generic cap: less room to outrun Pres in realigning counties
+        senateMaxOverPresCapPts: 0.60, // generic Senate-over-Pres ceiling
         senateMaxOverPresMinRealignmentScore: 0.30,
         senateMaxOverPresRobesonCapPts: 0.15,
         senateMaxOverPresBladenCapPts: 0.30,
-        senateMaxOverPresHokeCapPts: 0.35,
+        senateMaxOverPresScotlandCapPts: 0.35,
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
         senateDeviationOutlierBrakeEnabled: true,
         senateDeviationHistoryYears: [2016, 2020, 2022],
@@ -10660,15 +10660,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
         // moving right at the federal level (e.g., Robeson, Bladen).
         candidateBonusPersonalRealignmentEnabled: true,
-        candidateBonusPersonalRealignmentFloor: 0.22, // strongest fade keeps ~20-25% of the personal component
+        candidateBonusPersonalRealignmentFloor: 0.24, // strongest fade keeps ~20-25% of the personal component
         candidateBonusPersonalRealignmentMinTrendPts: 0.9,
         candidateBonusPersonalRealignmentMaxTrendPts: 8.5,
         // Distinct class: former-D federal counties that realigned hard in the Trump era.
         // Keep crossover reduced but not eliminated; treat as durable+personal blend, not a hard anomaly override.
-        candidateBonusRealignedFormerDemFederalCounties: ['ROBESON', 'BLADEN', 'HOKE'],
+        // Scotland replaces Hoke in this residual ancestral-D/federalized class.
+        candidateBonusRealignedFormerDemFederalCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         candidateBonusRealignedFormerDemFederalDurableFloor: 0.42,
         candidateBonusRealignedFormerDemFederalPersonalFloor: 0.12,
-        candidateBonusRealignedFormerDemFederalResidualFloor: 0.26,
+        candidateBonusRealignedFormerDemFederalResidualFloor: 0.28,
         candidateBonusRepeatableCrossoverBoost: 1.10,
         candidateBonusSuburbanDurableBoost: 1.08,
         candidateBonusFederalizationBrakeMargin: 22,
@@ -10698,18 +10699,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
-        // Dedicated blend for realigned former-D federal counties (RBH class).
+        // Dedicated blend for realigned former-D federal counties (RBS class).
         realignedFormerDemFederalClimateWeight: 0.52,
         realignedFormerDemFederalSenate2022Weight: 0.28,
         realignedFormerDemFederalSenate2020Weight: 0.20,
         realignedFormerDemFederalBlendWeight: 0.38,
         // Turnout responsiveness by county class.
-        turnoutUrbanCoreMul: 1.08,
-        turnoutBlackBeltMul: 1.10,
-        turnoutSuburbanMul: 1.07,
-        turnoutGrowthExurbMul: 1.04,
-        turnoutRealigningRuralMul: 1.15,
-        turnoutRuralWhiteMul: 0.92,
+        turnoutUrbanCoreMul: 1.09,
+        turnoutBlackBeltMul: 1.07,
+        turnoutSuburbanMul: 1.03,
+        turnoutGrowthExurbMul: 1.01,
+        turnoutRealigningRuralMul: 1.04,
+        turnoutRuralWhiteMul: 0.96,
         turnoutContestType: 'president',
         turnoutYear: 2024,
         turnoutFactor: 0.575,
@@ -14645,6 +14646,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const classifyCountyBehaviorType = (county, totals = null) => {
+          // Senate calibration: force Wake into metro-core routing even if a context label is missing/noisy.
+          if (isSenateDeviationModel && county === 'WAKE') return 'urban';
           const ctx = getCountyCensusContextSafe(county);
           const pattern = String(ctx?.patternLabel || '').toLowerCase();
           const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
@@ -14674,6 +14677,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
           const countyType = classifyCountyBehaviorType(county, totals);
 
+          // Senate calibration: Wake should route with Mecklenburg/Durham-style urban-core handling.
+          if (isSenateDeviationModel && county === 'WAKE') return 'urban_core';
+
           if (COLLEGE_COUNTIES.has(county) && countyType !== 'urban') return 'college';
           if (/military|institutional hubs/i.test(note)) return 'military_institutional';
           if (/coastal/i.test(pattern)) return 'coastal';
@@ -14686,6 +14692,20 @@ document.addEventListener('DOMContentLoaded', function() {
           if (countyType === 'exurban') return 'outer_suburb_exurb';
           if (countyType === 'urban') return 'urban_core';
           return 'rural_white';
+        };
+
+        // Senate-only archetype labeling used for internal calibration/diagnostics.
+        // This keeps county-family evaluation explicit without adding any new UI surfaces.
+        const classifySenateCountyFamily = (county, countyType, cluster, isRealignedFormerDemFederalCounty) => {
+          if (county === 'WAKE' || cluster === 'urban_core') return 'urban_core';
+          if (cluster === 'inner_suburb') return 'metro_suburban';
+          if (cluster === 'outer_suburb_exurb' || countyType === 'exurban') return 'growth_exurban';
+          if (isRealignedFormerDemFederalCounty) return 'realigned_former_d_federal';
+          if (cluster === 'black_belt') return 'black_belt_residual_crossover';
+          if (cluster === 'rural_white' || cluster === 'appalachian_rural_white' || countyType === 'rural') {
+            return 'rural_white_appalachian';
+          }
+          return 'metro_suburban';
         };
 
         const pickComparableYears = (contestType, recentYear) => {
@@ -14808,7 +14828,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const realignedFormerDemFederalCountySet = new Set(
           (Array.isArray(modeledDef?.candidateBonusRealignedFormerDemFederalCounties)
             ? modeledDef.candidateBonusRealignedFormerDemFederalCounties
-            : ['ROBESON', 'BLADEN', 'HOKE'])
+            : ['ROBESON', 'BLADEN', 'SCOTLAND'])
             .map(v => normalizeCountyToken(v))
             .filter(Boolean)
         );
@@ -14836,9 +14856,9 @@ document.addEventListener('DOMContentLoaded', function() {
             military_institutional: { elasticityMul: 0.95, turnoutBiasDelta: 0.0 },
             rural_white: { elasticityMul: 0.95, turnoutBiasDelta: 0.005 }
           } : {
-            urban_core: { elasticityMul: 0.92, turnoutBiasDelta: -0.04, candidateBonusMul: 0.92, personalBonusMul: 0.90 },
-            inner_suburb: { elasticityMul: 0.97, turnoutBiasDelta: -0.04, candidateBonusMul: 1.05, personalBonusMul: 1.10 },
-            outer_suburb_exurb: { elasticityMul: 1.02, turnoutBiasDelta: -0.015, candidateBonusMul: 1.07, personalBonusMul: 1.06 },
+            urban_core: { elasticityMul: 0.90, turnoutBiasDelta: -0.045, candidateBonusMul: 0.90, personalBonusMul: 0.88 },
+            inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.06, personalBonusMul: 1.12 },
+            outer_suburb_exurb: { elasticityMul: 1.03, turnoutBiasDelta: -0.005, candidateBonusMul: 1.02, personalBonusMul: 0.99 },
             black_belt: { elasticityMul: 0.98, turnoutBiasDelta: -0.01, candidateBonusMul: 1.06, personalBonusMul: 0.95 },
             college: { elasticityMul: 0.95, turnoutBiasDelta: -0.03, candidateBonusMul: 1.03, personalBonusMul: 0.96 },
             appalachian_rural_white: { elasticityMul: 1.01, turnoutBiasDelta: 0.03, candidateBonusMul: 0.88, personalBonusMul: 0.86 },
@@ -15277,7 +15297,7 @@ document.addEventListener('DOMContentLoaded', function() {
               else if (countyType === 'exurban') countyRoleScale = 1.15;
               else if (countyType === 'suburban') countyRoleScale = 1.06;
               else countyRoleScale = 0.90;
-              if (isRealignedFormerDemFederalCounty) countyRoleScale *= 0.86;
+              if (isRealignedFormerDemFederalCounty) countyRoleScale *= 0.94;
 
               const baseSigned = Number(baseCountySignedRawByCounty?.get(county));
               const cluster = String(countyClusterByCounty.get(county) || 'rural_white');
@@ -15295,6 +15315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const t = Math.max(0, Math.min(1, (absPresNow - fedBrakeMargin) / span));
                 federalScale = 1 - ((1 - fedFloor) * t);
               }
+              const federalRoleScale = 0.82 + (0.18 * federalScale);
 
               const damp = 0.70 + (0.30 * Math.max(0.12, Math.min(1, wSum / Math.max(1, entries.length))));
 
@@ -15304,7 +15325,7 @@ document.addEventListener('DOMContentLoaded', function() {
               const spread = deltaVals.length ? (Math.max(...deltaVals) - Math.min(...deltaVals)) : 0;
               const varianceBrake = deltaVals.length > 1 ? (1 - (0.35 * clamp01((spread - 2.0) / 7.5))) : 0.88;
 
-              const rawPts = Math.max(0, meanDelta * weight) * damp * consistencyScale * countyRoleScale * federalScale * varianceBrake;
+              const rawPts = Math.max(0, meanDelta * weight) * damp * consistencyScale * countyRoleScale * federalRoleScale * varianceBrake;
               const durableShare = Number.isFinite(Number(modeledDef?.candidateBonusDurableShare))
                 ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableShare)))
                 : 0.60;
@@ -15379,7 +15400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // wiping out crossover capacity entirely (they're not "ordinary" crossover, but not 0 either).
                 if (county === 'ROBESON') score = clamp01(score * 1.14);
                 else if (county === 'BLADEN') score = clamp01(score * 1.08);
-                else if (county === 'HOKE') score = clamp01(score * 1.06);
+                else if (county === 'SCOTLAND') score = clamp01(score * 1.06);
 
                 // If the county historically had large D-overperformance vs the federal baseline but is realigning,
                 // treat a bit more of that as personal (i.e., fade the personal component slightly further).
@@ -15527,7 +15548,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateIncumbentBoostRaw = Number(modeledDef?.incumbentBoostPts);
           const senateIncumbentParty = String(modeledDef?.incumbentParty || '').trim().toUpperCase();
           const senateAnomalyCountySet = new Set(
-            (Array.isArray(modeledDef?.anomalyClampCounties) ? modeledDef.anomalyClampCounties : ['ROBESON', 'BLADEN', 'HOKE'])
+            (Array.isArray(modeledDef?.anomalyClampCounties) ? modeledDef.anomalyClampCounties : ['ROBESON', 'BLADEN', 'SCOTLAND'])
               .map(v => normalizeCountyToken(v))
               .filter(Boolean)
           );
@@ -15585,6 +15606,20 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
               elasticity = 1.08;
               turnoutBias = 0.08;
+            }
+
+            // Keep metro-suburban and outer growth-exurban behavior distinct in Senate calibration.
+            if (isSenateDeviationModel) {
+              if (cluster === 'urban_core') {
+                elasticity = Math.min(elasticity, 0.90);
+                turnoutBias = Math.min(turnoutBias, -0.08);
+              } else if (cluster === 'inner_suburb') {
+                elasticity = Math.min(elasticity, 1.00);
+                turnoutBias -= 0.015;
+              } else if (cluster === 'outer_suburb_exurb') {
+                elasticity = Math.max(elasticity, 1.04);
+                turnoutBias += 0.015;
+              }
             }
 
             if (volatility >= 6.5) elasticity += 0.14;
@@ -15653,6 +15688,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const countyType = classifyCountyBehaviorType(county, totals);
             const cluster = String(countyClusterByCounty.get(county) || inferCountyCluster(county, totals) || 'rural_white');
             const isRealignedFormerDemFederalCounty = realignedFormerDemFederalCountySet.has(county);
+            const senateFamily = classifySenateCountyFamily(county, countyType, cluster, isRealignedFormerDemFederalCounty);
             const unstableCounty = trendTag === 'volatile' || volatility >= 5.5;
             const unstableScore = clamp01((volatility - 3.5) / 5.5);
             const secondarySenateSigned = (secondaryBaseSignedByCounty && secondaryBaseSignedByCounty.has(county))
@@ -15716,6 +15752,21 @@ document.addEventListener('DOMContentLoaded', function() {
               : 1;
             if (isSenateDeviationModel) trendNudge *= (0.82 + (0.18 * federalizationBrake));
 
+            const stableCountyScore = (Math.abs(baseCountySignedRaw) >= safeBrakeMargin && volatility <= 2.25)
+              ? 1
+              : clamp01(1 - Math.max(0, (volatility - 2.0) / 6.5));
+            const senateOutlierBrakeScore = isSenateDeviationModel
+              ? clamp01(Number(senateDiag?.outlierBrake ?? 1))
+              : 1;
+            const volatilityConfidence = clamp01(1 - Math.max(0, (volatility - 2.5) / 6.0));
+            const countyConfidence = clamp01(
+              (0.40 * reliabilityScale)
+              + (0.20 * stableCountyScore)
+              + (0.25 * senateOutlierBrakeScore)
+              + (0.15 * volatilityConfidence)
+            );
+            const countyShrinkScale = 0.55 + (0.45 * countyConfidence);
+
             let targetSigned = baseCountySignedRaw;
             let senateBaselineSigned = NaN;
             let senateAdjustedSigned = NaN;
@@ -15724,6 +15775,11 @@ document.addEventListener('DOMContentLoaded', function() {
             let countyAnchorWeightUsed = senateAnchorW;
             let effectiveBlendWeightUsed = blendWeight;
             let specialBlendApplied = 0;
+            let baselineBlendSigned = NaN;
+            let realignmentAdjustmentApplied = 0;
+            let turnoutSignedShift = 0;
+            let overPresCapApplied = 0;
+            let candidateBonusApplied = 0;
             if (useBlend) {
               if (isSenateDeviationModel) {
                 // Senate calibration: anchor each county to the presidential baseline, then apply a
@@ -15796,12 +15852,12 @@ document.addEventListener('DOMContentLoaded', function() {
                   else if (county === 'BLADEN') score = clamp01(score * 1.05);
                   senateDeviation *= lerp(1, floor, score);
                 }
-                const devReliability = 0.70 + (0.30 * reliabilityScale);
+                const devReliability = (0.55 + (0.45 * reliabilityScale)) * countyShrinkScale;
                 const devVolatilityBrake = volatility >= 6 ? 0.82 : (volatility <= 2.5 ? 1 : 0.92);
                 const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
                 const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
                 const durabilityFactor = 0.70 + (0.30 * durableScore);
-                const deviationBrake = durabilityFactor * outlierBrake * federalizationBrake;
+                const deviationBrake = durabilityFactor * outlierBrake * (0.88 + (0.12 * federalizationBrake));
                 const unstableBlendDamp = 1 - (unstableBlendShiftMax * unstableScore);
                 const specialCountyDamp = isRealignedFormerDemFederalCounty ? 0.90 : 1;
                 const effectiveBlendWeight = Math.max(0, Math.min(1, blendWeight * unstableBlendDamp * specialCountyDamp));
@@ -15840,6 +15896,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetSigned = desiredSigned;
               }
             }
+            baselineBlendSigned = targetSigned;
 
             // Judicial partisan floor: blend a small share of a stable partisan anchor into the judicial baseline.
             // Keep it minority-share + reliability-scaled so the judicial blend still dominates.
@@ -15853,9 +15910,8 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
 
-            // County realignment adjustment (Senate model only): modest rightward nudge in counties that have
-            // continued moving right at the federal level since 2016/2020, plus Senate 2020->2022 movement.
-            // This is intentionally capped + reliability-scaled to avoid adding noise.
+            // Correction role 1: realignment adjustment handles long-run federal movement only.
+            // Keep it capped/reliability-aware so it nudges trend counties without becoming a generic cap.
             let federalRealignmentScore = 0;
             let federalTrendPts = 0;
             if (isSenateDeviationModel) {
@@ -15899,7 +15955,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
                 const crossoverDamp = 1 - (0.55 * durableScore * crossoverScore);
                 adj *= Math.max(0.45, Math.min(1, crossoverDamp));
-                targetSigned += Math.min(cap, Math.max(0, adj));
+                const appliedAdj = Math.min(cap, Math.max(0, adj));
+                targetSigned += appliedAdj;
+                realignmentAdjustmentApplied += appliedAdj;
               }
 
               const senateAnchorSignedForAdjustments = (senateAnchorSignedByCounty && senateAnchorSignedByCounty.has(county))
@@ -15932,17 +15990,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             targetSigned += trendNudge;
+            // Correction role 2: turnout multipliers capture coalition sensitivity by county family.
             const turnoutBrake = isSenateDeviationModel ? (0.70 + (0.30 * federalizationBrake)) : 1;
             let turnoutSensitivityMul = 1;
             let turnoutClassMul = 1;
             if (isSenateDeviationModel && !!modeledDef?.realignmentTurnoutEnabled && federalRealignmentScore > 0) {
               const maxMul = Number(modeledDef?.realignmentTurnoutSensitivityMaxMul);
-              const m = Number.isFinite(maxMul) ? Math.max(0, Math.min(1, maxMul)) : 0.35;
-              const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
-              const medianDev = Number(senateDiag?.medianDev);
-              const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
-              const crossoverDamp = 1 - (0.60 * durableScore * crossoverScore);
-              turnoutSensitivityMul = 1 + (m * federalRealignmentScore * Math.max(0.50, Math.min(1, crossoverDamp)));
+              const m = Number.isFinite(maxMul) ? Math.max(0, Math.min(1, maxMul)) : 0.18;
+              turnoutSensitivityMul = 1 + (m * federalRealignmentScore * (0.65 + (0.35 * countyConfidence)));
+              turnoutSensitivityMul = Math.max(0.90, Math.min(1.25, turnoutSensitivityMul));
+              if (isRealignedFormerDemFederalCounty) turnoutSensitivityMul = lerp(1, turnoutSensitivityMul, 0.50);
             }
             if (isSenateDeviationModel) {
               const turnoutUrbanCoreMul = Number.isFinite(Number(modeledDef?.turnoutUrbanCoreMul)) ? Math.max(0.5, Math.min(1.5, Number(modeledDef.turnoutUrbanCoreMul))) : 1.08;
@@ -15951,17 +16008,22 @@ document.addEventListener('DOMContentLoaded', function() {
               const turnoutGrowthExurbMul = Number.isFinite(Number(modeledDef?.turnoutGrowthExurbMul)) ? Math.max(0.5, Math.min(1.5, Number(modeledDef.turnoutGrowthExurbMul))) : 1.04;
               const turnoutRealigningRuralMul = Number.isFinite(Number(modeledDef?.turnoutRealigningRuralMul)) ? Math.max(0.5, Math.min(1.6, Number(modeledDef.turnoutRealigningRuralMul))) : 1.15;
               const turnoutRuralWhiteMul = Number.isFinite(Number(modeledDef?.turnoutRuralWhiteMul)) ? Math.max(0.5, Math.min(1.5, Number(modeledDef.turnoutRuralWhiteMul))) : 0.92;
-              if (cluster === 'urban_core') turnoutClassMul = turnoutUrbanCoreMul;
-              else if (cluster === 'black_belt') turnoutClassMul = turnoutBlackBeltMul;
-              else if (cluster === 'inner_suburb') turnoutClassMul = turnoutSuburbanMul;
-              else if (cluster === 'outer_suburb_exurb') turnoutClassMul = turnoutGrowthExurbMul;
-              else if (isRealignedFormerDemFederalCounty) turnoutClassMul = turnoutRealigningRuralMul;
-              else if (cluster === 'rural_white' || cluster === 'appalachian_rural_white') turnoutClassMul = turnoutRuralWhiteMul;
+              if (senateFamily === 'urban_core') turnoutClassMul = turnoutUrbanCoreMul;
+              else if (senateFamily === 'black_belt_residual_crossover') turnoutClassMul = turnoutBlackBeltMul;
+              else if (senateFamily === 'metro_suburban') turnoutClassMul = turnoutSuburbanMul;
+              else if (senateFamily === 'growth_exurban') turnoutClassMul = turnoutGrowthExurbMul;
+              else if (senateFamily === 'realigned_former_d_federal') turnoutClassMul = turnoutRealigningRuralMul;
+              else if (senateFamily === 'rural_white_appalachian') turnoutClassMul = turnoutRuralWhiteMul;
             }
-            targetSigned += turnoutShift * behavior.turnoutBias * turnoutBrake * turnoutSensitivityMul * turnoutClassMul;
+            turnoutSignedShift = turnoutShift
+              * behavior.turnoutBias
+              * turnoutBrake
+              * turnoutSensitivityMul
+              * turnoutClassMul
+              * (0.72 + (0.28 * countyConfidence));
+            targetSigned += turnoutSignedShift;
 
-            // Guardrail: in high-trend counties, prevent the generic R Senate baseline from outrunning
-            // the presidential baseline by much (helps Robeson/Bladen-like cases).
+            // Correction role 3: generic over-performance ceiling (Senate over Pres) in high-realignment counties.
             if (isSenateDeviationModel && !!modeledDef?.senateMaxOverPresEnabled) {
               const minScoreRaw = Number(modeledDef?.senateMaxOverPresMinRealignmentScore);
               const minScore = Number.isFinite(minScoreRaw) ? Math.max(0, Math.min(1, minScoreRaw)) : 0.35;
@@ -15973,8 +16035,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   capPts = Math.max(0, Number(modeledDef.senateMaxOverPresRobesonCapPts));
                 } else if (county === 'BLADEN' && Number.isFinite(Number(modeledDef?.senateMaxOverPresBladenCapPts))) {
                   capPts = Math.max(0, Number(modeledDef.senateMaxOverPresBladenCapPts));
-                } else if (county === 'HOKE' && Number.isFinite(Number(modeledDef?.senateMaxOverPresHokeCapPts))) {
-                  capPts = Math.max(0, Number(modeledDef.senateMaxOverPresHokeCapPts));
+                } else if (county === 'SCOTLAND' && Number.isFinite(Number(modeledDef?.senateMaxOverPresScotlandCapPts))) {
+                  capPts = Math.max(0, Number(modeledDef.senateMaxOverPresScotlandCapPts));
                 }
 
                 const capScale = (0.45 + (0.55 * reliabilityScale)) * (0.70 + (0.30 * federalizationBrake));
@@ -15983,14 +16045,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (countyType === 'rural' || countyType === 'exurban') capTighten *= 0.94;
                 if (isRealignedFormerDemFederalCounty) capTighten *= 0.82;
                 const cap = pres24 + (capPts * capScale * capTighten);
+                const beforeCap = targetSigned;
                 targetSigned = Math.min(targetSigned, cap);
+                overPresCapApplied = Math.max(0, beforeCap - targetSigned);
               }
             }
 
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
             let elasticPull = pullFromBase * behavior.elasticity;
-            elasticPull *= (0.70 + (0.30 * reliabilityScale));
+            elasticPull *= (0.58 + (0.42 * countyConfidence));
             if (isJudicialModel) elasticPull *= (0.88 - (0.40 * judicialNoise));
 
             // Stability brake: safe + low-volatility counties should resist dramatic movement.
@@ -16010,11 +16074,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let swingPct = baseCountySignedRaw - (baseCountySignedRaw + elasticPull);
 
+            // Correction role 4: candidate bonus applies Cooper portability after federal/realignment brakes.
             if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
               const bonus = Number(candidateBonusByCounty.get(county) || 0);
               const scale = Number(modeledDef?.candidateBonusScale);
               const mult = Number.isFinite(scale) ? Math.max(0, Math.min(2, scale)) : 1;
-              if (Number.isFinite(bonus) && bonus > 0 && mult > 0) swingPct += bonus * mult * reliabilityScale;
+              if (Number.isFinite(bonus) && bonus > 0 && mult > 0) {
+                candidateBonusApplied = bonus * mult * (0.60 + (0.40 * countyConfidence));
+                swingPct += candidateBonusApplied;
+              }
             }
 
             const desiredSignedFinal = clampSignedMargin(baseCountySignedRaw - swingPct);
@@ -16029,7 +16097,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('[senate-model-debug]', county, {
                   baseline: Number.isFinite(senateBaselineSigned) ? Number(senateBaselineSigned.toFixed(3)) : null,
                   adjustedMargin: Number.isFinite(senateAdjustedSigned) ? Number(senateAdjustedSigned.toFixed(3)) : null,
-                  finalModeledMargin: Number.isFinite(desiredSignedFinal) ? Number(desiredSignedFinal.toFixed(3)) : null
+                  finalModeledMargin: Number.isFinite(desiredSignedFinal) ? Number(desiredSignedFinal.toFixed(3)) : null,
+                  confidence: Number.isFinite(countyConfidence) ? Number(countyConfidence.toFixed(3)) : null,
+                  baselineBlendSigned: Number.isFinite(baselineBlendSigned) ? Number(baselineBlendSigned.toFixed(3)) : null,
+                  turnoutSignedShift: Number.isFinite(turnoutSignedShift) ? Number(turnoutSignedShift.toFixed(3)) : null,
+                  realignmentAdjustmentApplied: Number.isFinite(realignmentAdjustmentApplied) ? Number(realignmentAdjustmentApplied.toFixed(3)) : null,
+                  overPresCapApplied: Number.isFinite(overPresCapApplied) ? Number(overPresCapApplied.toFixed(3)) : null,
+                  candidateBonusApplied: Number.isFinite(candidateBonusApplied) ? Number(candidateBonusApplied.toFixed(3)) : null
                 });
               } catch (_) {}
             }
@@ -16042,7 +16116,9 @@ document.addEventListener('DOMContentLoaded', function() {
               trendTag,
               volatility,
               reliabilityScale,
+              countyConfidence,
               diagnostics: {
+                senateFamily,
                 senateDurableScore: Number(senateDiag?.durableScore),
                 senateOutlierGap: Number(senateDiag?.outlierGap),
                 senateOutlierBrake: Number(senateDiag?.outlierBrake),
@@ -16052,9 +16128,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 countyPresWeightUsed: Number(countyPresWeightUsed),
                 countyAnchorWeightUsed: Number(countyAnchorWeightUsed),
                 countySenateAnchorSignedUsed: Number(countySenateAnchorSignedUsed),
+                baselineBlendSigned: Number(baselineBlendSigned),
                 effectiveBlendWeightUsed: Number(effectiveBlendWeightUsed),
                 specialBlendApplied: Number(specialBlendApplied),
                 turnoutClassMul: Number(turnoutClassMul),
+                turnoutSignedShift: Number(turnoutSignedShift),
+                realignmentAdjustmentApplied: Number(realignmentAdjustmentApplied),
+                overPresCapApplied: Number(overPresCapApplied),
+                candidateBonusApplied: Number(candidateBonusApplied),
+                countyConfidence: Number(countyConfidence),
+                countyShrinkScale: Number(countyShrinkScale),
                 isRealignedFormerDemFederalCounty: isRealignedFormerDemFederalCounty ? 1 : 0,
                 judicialNoise,
                 judicialSeatSplitAbs,
@@ -16063,6 +16146,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
           });
 
+          // Correction role 5: statewide recentering is a final stabilizer, not a county-level mechanism.
           if (map.size && Number.isFinite(statewideTargetSigned) && statewideRecenterStrength > 0) {
             let weightedSigned = 0;
             let weightedTotal = 0;
