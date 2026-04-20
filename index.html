@@ -10590,17 +10590,17 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineLongRunWeight: 0.15,
         baselineReliabilityMinVotes: 15000,
         baselineReliabilityMaxVotes: 110000,
-        baselineReliabilityFloor: 0.40,
+        baselineReliabilityFloor: 0.41,
         statewideRecenterStrength: 0.96,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         ruralGopOverperformanceWeight: 0.15,
-        urbanDemElasticityWeight: 0.20,
+        urbanDemElasticityWeight: 0.27,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
-        trendCarryoverWeight: 0.20,
+        trendCarryoverWeight: 0.32,
         senateResidualElasticityEnabled: false,
         incumbentParty: 'DEM',
-        incumbentBoostPts: 1.15,
+        incumbentBoostPts: 1.6,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -10766,6 +10766,17 @@ document.addEventListener('DOMContentLoaded', function() {
         description: 'Blend of 2022 Seat 03 + Seat 05 with a 2024 climate adjustment'
       }
     };
+    const MODELED_SENATE_UX_FEATURES = {
+      historicalAnalogEnabled: true,
+      baselineVsCandidateEnabled: true
+    };
+    const MODELED_SENATE_ANALOG_YEARS = [2014, 2020, 2022];
+    const MODELED_SENATE_ANALOG_METRO_COUNTIES = new Set([
+      'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'BUNCOMBE', 'NEW HANOVER'
+    ]);
+    let modeledSenateAnalogHistoryCache = null;
+    let modeledSenateAnalogHistoryInflight = null;
+    let modeledSenateLatestInsights = null;
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
     let splitTicketCountyOverlayMargins = {};
@@ -14533,7 +14544,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return { dem, rep, other, total: desired };
       }
 
-      function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct, turnoutMeta = null) {
+      function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct, options = null) {
         const baseContestType = modeledDef.baseContestType;
         const contestType = modeledDef.contestType;
         const shifted = shiftVotesBySwingPct(
@@ -14543,15 +14554,15 @@ document.addEventListener('DOMContentLoaded', function() {
           Number(baseRow?.[`${baseContestType}_total`] || 0),
           climateSwingPct
         );
-        const targetTotal = turnoutMeta && Number.isFinite(Number(turnoutMeta.targetTotal))
-          ? Number(turnoutMeta.targetTotal)
+        const targetTotal = options && Number.isFinite(Number(options.targetTotal))
+          ? Number(options.targetTotal)
           : null;
         const scaled = targetTotal ? rescaleVoteSetToTargetTotal(shifted, targetTotal) : shifted;
         const signed = signedMarginPctFromVotes(scaled.dem, scaled.rep, scaled.total);
         const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
         const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
         const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
-        return {
+        const row = {
           year: Number(modeledDef.year),
           county: baseRow?.county || '',
           [`${contestType}_dem`]: scaled.dem,
@@ -14565,6 +14576,23 @@ document.addEventListener('DOMContentLoaded', function() {
           [`${contestType}_winner`]: winner,
           [`${contestType}_color`]: color
         };
+        const modelMeta = options?.modelMeta || null;
+        if (modelMeta && Number.isFinite(Number(modelMeta.baselineNoCandidateSigned))) {
+          row.__model_baseline_margin_pct = Number(modelMeta.baselineNoCandidateSigned);
+          row.__model_with_candidates_margin_pct = Number.isFinite(Number(modelMeta.desiredSigned))
+            ? Number(modelMeta.desiredSigned)
+            : Number(signed);
+          row.__model_candidate_effect_d_pts = Number.isFinite(Number(modelMeta.candidateEffectDemPts))
+            ? Number(modelMeta.candidateEffectDemPts)
+            : 0;
+          row.__model_candidate_effect_durable_pts = Number.isFinite(Number(modelMeta.candidateEffectDurableDemPts))
+            ? Number(modelMeta.candidateEffectDurableDemPts)
+            : 0;
+          row.__model_candidate_effect_personal_pts = Number.isFinite(Number(modelMeta.candidateEffectPersonalDemPts))
+            ? Number(modelMeta.candidateEffectPersonalDemPts)
+            : 0;
+        }
+        return row;
       }
 
       async function buildModeledContestSliceRows(modeledDef) {
@@ -15861,6 +15889,8 @@ document.addEventListener('DOMContentLoaded', function() {
             let turnoutSignedShift = 0;
             let overPresCapApplied = 0;
             let candidateBonusApplied = 0;
+            let candidateBonusDurableApplied = 0;
+            let candidateBonusPersonalApplied = 0;
             if (useBlend) {
               if (isSenateDeviationModel) {
                 // Senate calibration: anchor each county to the presidential baseline, then apply a
@@ -16221,7 +16251,9 @@ document.addEventListener('DOMContentLoaded', function() {
                   personalApplied = Math.min(personalApplied, personalCap);
                 }
 
-                candidateBonusApplied = Math.max(0, durableApplied + personalApplied);
+                candidateBonusDurableApplied = Math.max(0, durableApplied);
+                candidateBonusPersonalApplied = Math.max(0, personalApplied);
+                candidateBonusApplied = Math.max(0, candidateBonusDurableApplied + candidateBonusPersonalApplied);
                 swingPct += candidateBonusApplied;
               }
             }
@@ -16244,13 +16276,20 @@ document.addEventListener('DOMContentLoaded', function() {
                   turnoutSignedShift: Number.isFinite(turnoutSignedShift) ? Number(turnoutSignedShift.toFixed(3)) : null,
                   realignmentAdjustmentApplied: Number.isFinite(realignmentAdjustmentApplied) ? Number(realignmentAdjustmentApplied.toFixed(3)) : null,
                   overPresCapApplied: Number.isFinite(overPresCapApplied) ? Number(overPresCapApplied.toFixed(3)) : null,
-                  candidateBonusApplied: Number.isFinite(candidateBonusApplied) ? Number(candidateBonusApplied.toFixed(3)) : null
+                  candidateBonusApplied: Number.isFinite(candidateBonusApplied) ? Number(candidateBonusApplied.toFixed(3)) : null,
+                  candidateBonusDurableApplied: Number.isFinite(candidateBonusDurableApplied) ? Number(candidateBonusDurableApplied.toFixed(3)) : null,
+                  candidateBonusPersonalApplied: Number.isFinite(candidateBonusPersonalApplied) ? Number(candidateBonusPersonalApplied.toFixed(3)) : null
                 });
               } catch (_) {}
             }
+            const baselineNoCandidateSigned = clampSignedMargin(desiredSignedFinal + candidateBonusApplied);
             map.set(county, {
               swingPct,
               desiredSigned: desiredSignedFinal,
+              baselineNoCandidateSigned,
+              candidateEffectDemPts: Number(candidateBonusApplied),
+              candidateEffectDurableDemPts: Number(candidateBonusDurableApplied),
+              candidateEffectPersonalDemPts: Number(candidateBonusPersonalApplied),
               baseSigned: baseCountySignedRaw,
               countyType,
               cluster,
@@ -16277,6 +16316,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 realignmentAdjustmentApplied: Number(realignmentAdjustmentApplied),
                 overPresCapApplied: Number(overPresCapApplied),
                 candidateBonusApplied: Number(candidateBonusApplied),
+                candidateBonusDurableApplied: Number(candidateBonusDurableApplied),
+                candidateBonusPersonalApplied: Number(candidateBonusPersonalApplied),
                 countyConfidence: Number(countyConfidence),
                 countyShrinkScale: Number(countyShrinkScale),
                 isRealignedFormerDemFederalCounty: isRealignedFormerDemFederalCounty ? 1 : 0,
@@ -16587,7 +16628,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetTotal = rowTargets && Number.isFinite(Number(rowTargets[idx])) && Number(rowTargets[idx]) > 0
               ? Number(rowTargets[idx])
               : null;
-            modeledOut.push(buildModeledContestRowFromBaseRow(it.row, modeledDef, swing, targetTotal ? { targetTotal } : null));
+            modeledOut.push(buildModeledContestRowFromBaseRow(
+              it.row,
+              modeledDef,
+              swing,
+              {
+                targetTotal,
+                modelMeta
+              }
+            ));
           });
         });
 

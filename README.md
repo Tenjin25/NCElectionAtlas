@@ -105,6 +105,17 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 20, 2026
 
+### US Senate Model Balanced Recalibration (April 20, 2026)
+
+- Applied a balanced follow-up calibration pass to the `US Senate (2026) model` after the redward overcorrection fix, using midpoint values for the four core statewide-balance levers.
+- Updated calibration values to:
+  - `baselineReliabilityFloor: 0.41`
+  - `urbanDemElasticityWeight: 0.27`
+  - `trendCarryoverWeight: 0.32`
+  - `incumbentBoostPts: 1.6`
+- Kept the newer structural refinements intact, including the **Robeson / Bladen / Scotland** special bucket, the Scotland-specific Senate-over-President cap, and restrained turnout-family multipliers.
+- Kept the newer explanatory modeled-contest features intact (historical analog framing and baseline-vs-candidate comparison controls), with no UI layout or interaction changes.
+
 ### US Senate Model Refinement Pass (April 20, 2026)
 
 - Refined the `US Senate (2026) model` to split candidate portability into two distinct channels: a **durable crossover baseline** and a **personal candidate bonus**, each with separate county-level handling.
