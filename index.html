@@ -10772,7 +10772,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     const MODELED_SENATE_ANALOG_YEARS = [2014, 2020, 2022];
     const MODELED_SENATE_ANALOG_METRO_COUNTIES = new Set([
-      'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'BUNCOMBE', 'NEW HANOVER'
+      'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'BUNCOMBE', 'NEW HANOVER', 'FORSYTH'
     ]);
     let modeledSenateAnalogHistoryCache = null;
     let modeledSenateAnalogHistoryInflight = null;
@@ -19509,7 +19509,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function similarityLabelFromScore(score) {
       const s = Number(score);
       if (!Number.isFinite(s)) return 'Low';
-      if (s <= 1.35) return 'High';
+      if (s <= 1.1) return 'High';
       if (s <= 3.0) return 'Medium';
       return 'Low';
     }
@@ -19584,7 +19584,7 @@ document.addEventListener('DOMContentLoaded', function() {
           (countySigned - statewideSigned) - (histCountySigned - histStateSigned)
         );
         const stateDiff = Math.abs(statewideSigned - histStateSigned);
-        const score = (0.62 * countyDiff) + (0.26 * countyPatternDiff) + (0.12 * stateDiff);
+        const score = (0.58 * countyDiff) + (0.30 * countyPatternDiff) + (0.12 * stateDiff);
         scores.push({ year: Number(year), score, histCountySigned, histStateSigned });
       });
       if (!scores.length) return null;
@@ -19634,7 +19634,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         const patternRms = sumW > 0 ? Math.sqrt(sumSq / sumW) : 99;
         const stateDiff = Math.abs(statewideSigned - histStateSigned);
-        const score = (0.72 * stateDiff) + (0.28 * patternRms);
+        const score = (0.68 * stateDiff) + (0.32 * patternRms);
         const metroDelta = metroW > 0 ? (metroDeltaSum / metroW) : 0;
         scores.push({ year: Number(year), score, stateDiff, patternRms, metroDelta });
       });
