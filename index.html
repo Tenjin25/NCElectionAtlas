@@ -10590,16 +10590,17 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineLongRunWeight: 0.15,
         baselineReliabilityMinVotes: 15000,
         baselineReliabilityMaxVotes: 110000,
-        baselineReliabilityFloor: 0.42,
+        baselineReliabilityFloor: 0.40,
         statewideRecenterStrength: 0.96,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        ruralGopOverperformanceWeight: 0.29,
-        urbanDemElasticityWeight: 0.31,
+        ruralGopOverperformanceWeight: 0.18,
+        urbanDemElasticityWeight: 0.20,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
-        trendCarryoverWeight: 0.40,
+        trendCarryoverWeight: 0.20,
+        senateResidualElasticityEnabled: false,
         incumbentParty: 'DEM',
-        incumbentBoostPts: 2.0,
+        incumbentBoostPts: 0.0,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -10656,6 +10657,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // into highly federalized counties or one-cycle outliers.
         candidateBonusDurableShare: 0.70,
         candidateBonusPersonalShare: 0.30,
+        candidateBonusDurableRealignmentFloor: 0.62,
+        candidateBonusDurableAdjustmentFadeMax: 0.22,
+        candidateBonusDurableGeneralFloor: 0.28,
+        candidateBonusDurablePriorityFloor: 0.42,
         candidateBonusPersonalFederalizationFloor: 0.28,
         // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
         // moving right at the federal level (e.g., Robeson, Bladen).
@@ -10669,6 +10674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusRealignedFormerDemFederalCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         candidateBonusRealignedFormerDemFederalDurableFloor: 0.42,
         candidateBonusRealignedFormerDemFederalPersonalFloor: 0.12,
+        candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.16,
         candidateBonusRealignedFormerDemFederalResidualFloor: 0.28,
         candidateBonusRepeatableCrossoverBoost: 1.10,
         candidateBonusSuburbanDurableBoost: 1.08,
@@ -10707,9 +10713,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Turnout responsiveness by county class.
         turnoutUrbanCoreMul: 1.09,
         turnoutBlackBeltMul: 1.07,
-        turnoutSuburbanMul: 1.03,
-        turnoutGrowthExurbMul: 1.01,
-        turnoutRealigningRuralMul: 1.04,
+        turnoutSuburbanMul: 1.035,
+        turnoutGrowthExurbMul: 1.005,
+        turnoutRealigningRuralMul: 1.02,
         turnoutRuralWhiteMul: 0.96,
         turnoutContestType: 'president',
         turnoutYear: 2024,
@@ -14668,6 +14674,14 @@ document.addEventListener('DOMContentLoaded', function() {
           'HAYWOOD', 'HENDERSON', 'JACKSON', 'MCDOWELL', 'MITCHELL', 'POLK',
           'RUTHERFORD', 'SWAIN', 'TRANSYLVANIA', 'WATAUGA', 'YANCEY', 'WILKES'
         ]);
+        const EASTERN_NC_COUNTIES = new Set([
+          'BEAUFORT', 'BERTIE', 'BLADEN', 'BRUNSWICK', 'CAMDEN', 'CARTERET', 'CHOWAN',
+          'CRAVEN', 'CURRITUCK', 'DARE', 'DUPLIN', 'EDGECOMBE', 'GATES', 'GREENE',
+          'HALIFAX', 'HERTFORD', 'HYDE', 'JONES', 'LENOIR', 'MARTIN', 'NASH',
+          'NEW HANOVER', 'NORTHAMPTON', 'ONSLOW', 'PAMLICO', 'PASQUOTANK', 'PENDER',
+          'PERQUIMANS', 'PITT', 'ROBESON', 'SAMPSON', 'SCOTLAND', 'TYRRELL',
+          'WASHINGTON', 'WAYNE', 'WILSON'
+        ]);
 
         const inferCountyCluster = (county, totals = null) => {
           const ctx = getCountyCensusContextSafe(county);
@@ -15276,6 +15290,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const out = new Map();
+            const outDurable = new Map();
+            const outPersonal = new Map();
             deltasByCounty.forEach((entries, county) => {
               if (!Array.isArray(entries) || !entries.length) return;
               const isRealignedFormerDemFederalCounty = realignedFormerDemFederalCountySet.has(county);
@@ -15290,6 +15306,9 @@ document.addEventListener('DOMContentLoaded', function() {
               const consistencyScale = consistent ? Math.max(1, consistencyBoost) : Math.max(0.25, Math.min(1, consistencyFloor));
 
               const countyType = classifyCountyBehaviorType(county, baseCountyTotals.get(county));
+              const cluster = String(countyClusterByCounty.get(county) || 'rural_white');
+              const senateFamily = classifySenateCountyFamily(county, countyType, cluster, isRealignedFormerDemFederalCounty);
+              const isEasternNcCounty = EASTERN_NC_COUNTIES.has(county);
               let countyRoleScale = 1;
               // Cooper rural overperformance signal (2016/2020) tends to be more relevant to a Senate model
               // than the urban-core signal; weight it a bit more without changing the overall bonus framework.
@@ -15300,7 +15319,6 @@ document.addEventListener('DOMContentLoaded', function() {
               if (isRealignedFormerDemFederalCounty) countyRoleScale *= 0.94;
 
               const baseSigned = Number(baseCountySignedRawByCounty?.get(county));
-              const cluster = String(countyClusterByCounty.get(county) || 'rural_white');
               const clusterCal = getClusterCalibration(cluster, 'senate');
               const senateDiag = senateDeviationDiagnosticsByCounty && senateDeviationDiagnosticsByCounty.has(county)
                 ? senateDeviationDiagnosticsByCounty.get(county)
@@ -15361,6 +15379,14 @@ document.addEventListener('DOMContentLoaded', function() {
               // Durable component (reusable crossover) + personal component (Cooper-specific). Keep both capped.
               let durablePts = rawPts * durableShare * (0.55 + (0.45 * reusableScore));
               let personalPts = rawPts * personalShare * (0.35 + (0.65 * (1 - reusableScore)));
+
+              // Durable crossover signal should be strongest in rural / Black Belt / eastern counties.
+              let durableRegionalBoost = 1;
+              if (countyType === 'rural') durableRegionalBoost *= 1.08;
+              if (senateFamily === 'black_belt_residual_crossover') durableRegionalBoost *= 1.10;
+              if (senateFamily === 'realigned_former_d_federal') durableRegionalBoost *= 1.07;
+              if (isEasternNcCounty) durableRegionalBoost *= 1.06;
+              durablePts *= durableRegionalBoost;
 
               // Realignment-aware fade: in counties with strong Trump-era federal movement, treat more of the
               // remaining bonus as personal / non-portable so it doesn't over-travel into a Senate environment.
@@ -15425,10 +15451,21 @@ document.addEventListener('DOMContentLoaded', function() {
                   ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusRealignedFormerDemFederalResidualFloor)))
                   : 0.26;
                 const floorPts = Math.max(0, Math.min(maxPts, rawPts * residualFloor * (0.65 + (0.35 * outlierBrake))));
-                pts = Math.max(pts, floorPts);
+                durablePts = Math.max(durablePts, floorPts);
+
+                const personalCap = Number.isFinite(Number(modeledDef?.candidateBonusRealignedFormerDemFederalPersonalCapPts))
+                  ? Math.max(0, Number(modeledDef.candidateBonusRealignedFormerDemFederalPersonalCapPts))
+                  : 0.16;
+                personalPts = Math.min(personalPts, personalCap);
+                pts = Math.max(0, durablePts + personalPts);
               }
               if (Number.isFinite(absPresNow) && absPresNow >= deepRedMargin) pts = Math.min(pts, deepRedCap);
+              durablePts = Math.max(0, Math.min(maxPts, durablePts));
+              personalPts = Math.max(0, Math.min(maxPts, personalPts));
+              pts = Math.max(0, Math.min(maxPts, durablePts + personalPts));
               pts = Math.max(0, Math.min(maxPts, pts));
+              if (durablePts > 0.005) outDurable.set(county, durablePts);
+              if (personalPts > 0.005) outPersonal.set(county, personalPts);
               if (pts > 0.005) out.set(county, pts);
             });
 
@@ -15437,6 +15474,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const yearsLabel = years.map(v => String(v)).join('/');
             return {
               map: out,
+              durableMap: outDurable,
+              personalMap: outPersonal,
               source: `${bonusContestType} vs ${baselineContestType} ${yearsLabel}`
             };
           };
@@ -15446,16 +15485,58 @@ document.addEventListener('DOMContentLoaded', function() {
           if (historical && historical.map && historical.map.size) {
             const fallback = !!modeledDef?.candidateBonusFallbackToHeuristic;
             const merged = new Map();
+            const mergedDurable = new Map();
+            const mergedPersonal = new Map();
+            const durableShare = Number.isFinite(Number(modeledDef?.candidateBonusDurableShare))
+              ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableShare)))
+              : 0.70;
+            const personalShare = Number.isFinite(Number(modeledDef?.candidateBonusPersonalShare))
+              ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalShare)))
+              : (1 - durableShare);
             if (fallback && heuristic && heuristic.size) {
-              heuristic.forEach((v, k) => merged.set(k, v));
+              heuristic.forEach((v, k) => {
+                merged.set(k, v);
+                mergedDurable.set(k, Math.max(0, Number(v || 0) * durableShare));
+                mergedPersonal.set(k, Math.max(0, Number(v || 0) * personalShare));
+              });
             }
             historical.map.forEach((v, k) => merged.set(k, v));
-            return { map: merged.size ? merged : null, source: `historical (${historical.source})` };
+            if (historical.durableMap && historical.durableMap.size) {
+              historical.durableMap.forEach((v, k) => mergedDurable.set(k, Math.max(0, Number(v || 0))));
+            }
+            if (historical.personalMap && historical.personalMap.size) {
+              historical.personalMap.forEach((v, k) => mergedPersonal.set(k, Math.max(0, Number(v || 0))));
+            }
+            return {
+              map: merged.size ? merged : null,
+              durableMap: mergedDurable.size ? mergedDurable : null,
+              personalMap: mergedPersonal.size ? mergedPersonal : null,
+              source: `historical (${historical.source})`
+            };
           }
 
-          return { map: heuristic, source: 'heuristic' };
+          const durableShare = Number.isFinite(Number(modeledDef?.candidateBonusDurableShare))
+            ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableShare)))
+            : 0.70;
+          const personalShare = Number.isFinite(Number(modeledDef?.candidateBonusPersonalShare))
+            ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalShare)))
+            : (1 - durableShare);
+          const heuristicDurable = heuristic && heuristic.size
+            ? new Map(Array.from(heuristic.entries()).map(([k, v]) => [k, Math.max(0, Number(v || 0) * durableShare)]))
+            : null;
+          const heuristicPersonal = heuristic && heuristic.size
+            ? new Map(Array.from(heuristic.entries()).map(([k, v]) => [k, Math.max(0, Number(v || 0) * personalShare)]))
+            : null;
+          return {
+            map: heuristic,
+            durableMap: heuristicDurable,
+            personalMap: heuristicPersonal,
+            source: 'heuristic'
+          };
         })();
         const candidateBonusByCounty = candidateBonusNode?.map || null;
+        const candidateBonusDurableByCounty = candidateBonusNode?.durableMap || null;
+        const candidateBonusPersonalByCounty = candidateBonusNode?.personalMap || null;
         const candidateBonusSource = String(candidateBonusNode?.source || '').trim();
 
         const baseMixWeight = Number(modeledDef?.baseMixWeight);
@@ -15765,7 +15846,7 @@ document.addEventListener('DOMContentLoaded', function() {
               + (0.25 * senateOutlierBrakeScore)
               + (0.15 * volatilityConfidence)
             );
-            const countyShrinkScale = 0.55 + (0.45 * countyConfidence);
+            const countyShrinkScale = 0.50 + (0.50 * countyConfidence);
 
             let targetSigned = baseCountySignedRaw;
             let senateBaselineSigned = NaN;
@@ -15864,7 +15945,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 effectiveBlendWeightUsed = effectiveBlendWeight;
                 targetSigned = baseline + (effectiveBlendWeight * senateDeviation * devReliability * devVolatilityBrake * deviationBrake);
 
-                // Dedicated RBH-class blend: use a deliberate mix of 2022 Senate, 2020 Senate, and 2024 Pres,
+                // Dedicated RBS-class blend: use a deliberate mix of 2022 Senate, 2020 Senate, and 2024 Pres,
                 // then softly pull toward it so these counties aren't driven by a single-cycle artifact.
                 if (isRealignedFormerDemFederalCounty) {
                   const wClimateRaw = Number(modeledDef?.realignedFormerDemFederalClimateWeight);
@@ -15960,26 +16041,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 realignmentAdjustmentApplied += appliedAdj;
               }
 
-              const senateAnchorSignedForAdjustments = (senateAnchorSignedByCounty && senateAnchorSignedByCounty.has(county))
-                ? Number(senateAnchorSignedByCounty.get(county))
-                : baseCountySignedRaw;
-              const senateVsPresOverperf = senateAnchorSignedForAdjustments - weightedCountyBase;
-              if (countyType === 'rural' || countyType === 'exurban') {
-                const gopOver = Math.max(0, senateVsPresOverperf);
-                targetSigned += gopOver * senateRuralGopWeight * (0.65 + (0.35 * reliabilityScale));
-              } else if (countyType === 'urban' || countyType === 'suburban') {
-                const demElastic = Math.max(0, -senateVsPresOverperf);
-                targetSigned -= demElastic * senateUrbanDemWeight * (0.65 + (0.35 * reliabilityScale));
-              }
+              const residualElasticityEnabled = !!modeledDef?.senateResidualElasticityEnabled;
+              if (residualElasticityEnabled) {
+                const senateAnchorSignedForAdjustments = (senateAnchorSignedByCounty && senateAnchorSignedByCounty.has(county))
+                  ? Number(senateAnchorSignedByCounty.get(county))
+                  : baseCountySignedRaw;
+                const senateVsPresOverperf = senateAnchorSignedForAdjustments - weightedCountyBase;
+                if (countyType === 'rural' || countyType === 'exurban') {
+                  const gopOver = Math.max(0, senateVsPresOverperf);
+                  targetSigned += gopOver * senateRuralGopWeight * (0.65 + (0.35 * reliabilityScale));
+                } else if (countyType === 'urban' || countyType === 'suburban') {
+                  const demElastic = Math.max(0, -senateVsPresOverperf);
+                  targetSigned -= demElastic * senateUrbanDemWeight * (0.65 + (0.35 * reliabilityScale));
+                }
 
-              if (senateTrendCarryWeight > 0 && Number.isFinite(recentShift)) {
-                targetSigned += recentShift * senateTrendCarryWeight * 0.5 * reliabilityScale;
-              }
+                if (senateTrendCarryWeight > 0 && Number.isFinite(recentShift)) {
+                  targetSigned += recentShift * senateTrendCarryWeight * 0.5 * reliabilityScale;
+                }
 
-              if (senateIncumbentBoostPts > 0 && (senateIncumbentParty === 'DEM' || senateIncumbentParty === 'REP')) {
-                const sign = senateIncumbentParty === 'REP' ? 1 : -1;
-                const polarizedScale = 0.45 + (0.55 * computeFederalizationBrake(Math.abs(weightedCountyBase), 18, 36, 0.45));
-                targetSigned += sign * senateIncumbentBoostPts * polarizedScale;
+                if (senateIncumbentBoostPts > 0 && (senateIncumbentParty === 'DEM' || senateIncumbentParty === 'REP')) {
+                  const sign = senateIncumbentParty === 'REP' ? 1 : -1;
+                  const polarizedScale = 0.45 + (0.55 * computeFederalizationBrake(Math.abs(weightedCountyBase), 18, 36, 0.45));
+                  targetSigned += sign * senateIncumbentBoostPts * polarizedScale;
+                }
               }
 
               if (senateAnomalyCountySet.has(county)) {
@@ -16054,7 +16138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
             let elasticPull = pullFromBase * behavior.elasticity;
-            elasticPull *= (0.58 + (0.42 * countyConfidence));
+            elasticPull *= (0.54 + (0.46 * countyConfidence));
             if (isJudicialModel) elasticPull *= (0.88 - (0.40 * judicialNoise));
 
             // Stability brake: safe + low-volatility counties should resist dramatic movement.
@@ -16077,10 +16161,67 @@ document.addEventListener('DOMContentLoaded', function() {
             // Correction role 4: candidate bonus applies Cooper portability after federal/realignment brakes.
             if (modeledDef?.candidateBonusEnabled && candidateBonusByCounty) {
               const bonus = Number(candidateBonusByCounty.get(county) || 0);
+              const durableBonusRaw = Number(candidateBonusDurableByCounty?.get(county));
+              const personalBonusRaw = Number(candidateBonusPersonalByCounty?.get(county));
               const scale = Number(modeledDef?.candidateBonusScale);
               const mult = Number.isFinite(scale) ? Math.max(0, Math.min(2, scale)) : 1;
               if (Number.isFinite(bonus) && bonus > 0 && mult > 0) {
-                candidateBonusApplied = bonus * mult * (0.60 + (0.40 * countyConfidence));
+                const durableShare = Number.isFinite(Number(modeledDef?.candidateBonusDurableShare))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableShare)))
+                  : 0.70;
+                const personalShare = Number.isFinite(Number(modeledDef?.candidateBonusPersonalShare))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalShare)))
+                  : (1 - durableShare);
+                const durableRaw = Number.isFinite(durableBonusRaw) ? Math.max(0, durableBonusRaw) : Math.max(0, bonus * durableShare);
+                const personalRaw = Number.isFinite(personalBonusRaw) ? Math.max(0, personalBonusRaw) : Math.max(0, bonus * personalShare);
+
+                const confScale = (0.60 + (0.40 * countyConfidence));
+                const durableRealignmentFloor = Number.isFinite(Number(modeledDef?.candidateBonusDurableRealignmentFloor))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableRealignmentFloor)))
+                  : 0.62;
+                const durableAdjFadeMax = Number.isFinite(Number(modeledDef?.candidateBonusDurableAdjustmentFadeMax))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableAdjustmentFadeMax)))
+                  : 0.22;
+                const durableGeneralFloor = Number.isFinite(Number(modeledDef?.candidateBonusDurableGeneralFloor))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurableGeneralFloor)))
+                  : 0.28;
+                const durablePriorityFloor = Number.isFinite(Number(modeledDef?.candidateBonusDurablePriorityFloor))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusDurablePriorityFloor)))
+                  : 0.42;
+                const realignmentAdjCap = Number.isFinite(Number(modeledDef?.realignmentAdjustmentMaxPts))
+                  ? Math.max(0.001, Number(modeledDef.realignmentAdjustmentMaxPts))
+                  : 0.62;
+                const adjNorm = clamp01(realignmentAdjustmentApplied / realignmentAdjCap);
+
+                const durableRealignmentScale = lerp(1, durableRealignmentFloor, federalRealignmentScore);
+                const durableAdjustmentScale = 1 - (durableAdjFadeMax * adjNorm);
+                let durableApplied = durableRaw * mult * confScale * durableRealignmentScale * durableAdjustmentScale;
+
+                const durablePriorityCounty =
+                  senateFamily === 'realigned_former_d_federal'
+                  || senateFamily === 'black_belt_residual_crossover'
+                  || countyType === 'rural'
+                  || EASTERN_NC_COUNTIES.has(county);
+                const durableFloorScale = durablePriorityCounty ? durablePriorityFloor : durableGeneralFloor;
+                const durableFloorApplied = durableRaw * mult * durableFloorScale * (0.55 + (0.45 * countyConfidence));
+                durableApplied = Math.max(durableApplied, durableFloorApplied);
+
+                const personalFloorBase = Number.isFinite(Number(modeledDef?.candidateBonusPersonalRealignmentFloor))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusPersonalRealignmentFloor)))
+                  : 0.24;
+                const personalFloor = isRealignedFormerDemFederalCounty && Number.isFinite(Number(modeledDef?.candidateBonusRealignedFormerDemFederalPersonalFloor))
+                  ? Math.max(0, Math.min(1, Number(modeledDef.candidateBonusRealignedFormerDemFederalPersonalFloor)))
+                  : personalFloorBase;
+                let personalApplied = personalRaw * mult * confScale * lerp(1, personalFloor, federalRealignmentScore);
+                if (isRealignedFormerDemFederalCounty) {
+                  personalApplied *= 0.90;
+                  const personalCap = Number.isFinite(Number(modeledDef?.candidateBonusRealignedFormerDemFederalPersonalCapPts))
+                    ? Math.max(0, Number(modeledDef.candidateBonusRealignedFormerDemFederalPersonalCapPts))
+                    : 0.16;
+                  personalApplied = Math.min(personalApplied, personalCap);
+                }
+
+                candidateBonusApplied = Math.max(0, durableApplied + personalApplied);
                 swingPct += candidateBonusApplied;
               }
             }
