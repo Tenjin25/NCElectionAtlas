@@ -113,6 +113,10 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `urbanDemElasticityWeight: 0.27`
   - `trendCarryoverWeight: 0.32`
   - `incumbentBoostPts: 1.6`
+- Extended the same balanced pass to modeled district scopes (Congressional, State House, State Senate) so district layers track the statewide recalibration more consistently:
+  - `districtBlendMul* : 0.94`
+  - `districtDeviationBrake* : 0.92`
+  - `candidateBonusDistrictPts* : 0.27`
 - Kept the newer structural refinements intact, including the **Robeson / Bladen / Scotland** special bucket, the Scotland-specific Senate-over-President cap, and restrained turnout-family multipliers.
 - Kept the newer explanatory modeled-contest features intact (historical analog framing and baseline-vs-candidate comparison controls), with no UI layout or interaction changes.
 

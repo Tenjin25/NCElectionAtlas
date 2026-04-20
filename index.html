@@ -10690,18 +10690,18 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusTransitionPts: 0.32,
         candidateBonusSlowPts: 0.30,
         candidateBonusInstitutionalExtraPts: 0.15,
-        candidateBonusDistrictPts: 0.25,
+        candidateBonusDistrictPts: 0.27,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
         // but allow chamber-specific damping so legislative layers do not overreact.
-        districtBlendMulCongressional: 1.00,
-        districtBlendMulStateHouse: 1.00,
-        districtBlendMulStateSenate: 1.00,
-        districtDeviationBrakeCongressional: 0.95,
-        districtDeviationBrakeStateHouse: 0.95,
-        districtDeviationBrakeStateSenate: 0.95,
-        candidateBonusDistrictPtsCongressional: 0.24,
-        candidateBonusDistrictPtsStateHouse: 0.24,
-        candidateBonusDistrictPtsStateSenate: 0.24,
+        districtBlendMulCongressional: 0.94,
+        districtBlendMulStateHouse: 0.94,
+        districtBlendMulStateSenate: 0.94,
+        districtDeviationBrakeCongressional: 0.92,
+        districtDeviationBrakeStateHouse: 0.92,
+        districtDeviationBrakeStateSenate: 0.92,
+        candidateBonusDistrictPtsCongressional: 0.27,
+        candidateBonusDistrictPtsStateHouse: 0.27,
+        candidateBonusDistrictPtsStateSenate: 0.27,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -11447,6 +11447,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const bonus = Number(modeled?.candidateBonusScale);
       const behavior = getModelCountyBehaviorLabel(modeled?.countyBehaviorMode);
       const confidence = inferModelConfidence(modeled, baseModeled);
+      const modeledStatewideInsights = (String(modeled?.contestType || '').trim() === 'us_senate_model')
+        ? (modeledSenateLatestInsights || null)
+        : null;
+      const baselineSummary = modeledStatewideInsights?.baselineComparison || null;
+      const analogSummary = modeledStatewideInsights?.historicalAnalog || null;
       const weightLabel = (Number.isFinite(recentW) && Number.isFinite(secondW) && Number.isFinite(longW))
         ? `${Math.round(recentW * 100)}/${Math.round(secondW * 100)}/${Math.round(longW * 100)}`
         : '60/25/15';
@@ -11467,6 +11472,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <span><strong>History vs fundamentals:</strong> ${Number.isFinite(bw) ? `${Math.round(bw * 100)}%` : 'n/a'}</span>
           <span><strong>Expected turnout:</strong> ${Number.isFinite(turnout) ? `${(turnout * 100).toFixed(1)}%` : 'n/a'}</span>
           <span><strong>Candidate overperformance:</strong> ${Number.isFinite(bonus) ? `${bonus.toFixed(1)}x` : 'n/a'}</span>
+          ${baselineSummary ? `<span><strong>Baseline vs candidate:</strong> ${escapeHtml(baselineSummary.baselineLabel)} → ${escapeHtml(baselineSummary.withCandidatesLabel)} (${escapeHtml(baselineSummary.effectLabel)})</span>` : ''}
+          ${analogSummary ? `<span><strong>Historical analog:</strong> ${escapeHtml(analogSummary.label)} (${escapeHtml(analogSummary.confidence)})</span>` : ''}
           <span><strong>County behavior mode:</strong> ${escapeHtml(behavior)}</span>
           <span><strong>Confidence:</strong> ${escapeHtml(confidence.label)} (${escapeHtml(confidence.range)})</span>
         </div>
@@ -19482,6 +19489,246 @@ document.addEventListener('DOMContentLoaded', function() {
       if (repShareFill) repShareFill.style.width = `${repPct.toFixed(2)}%`;
       if (otherShareFill) otherShareFill.style.width = `${otherPct.toFixed(2)}%`;
     }
+    function isModeledSenateEnhancementContest(contestType, year) {
+      if (!MODELED_SENATE_UX_FEATURES.historicalAnalogEnabled && !MODELED_SENATE_UX_FEATURES.baselineVsCandidateEnabled) return false;
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      if (ct !== 'us_senate_model') return false;
+      return Number.isFinite(y) ? y >= 2026 : true;
+    }
+    function formatSignedMarginCompact(signedPct, digits = 1) {
+      const n = Number(signedPct);
+      if (!Number.isFinite(n) || Math.abs(n) < 0.05) return 'Even';
+      return `${n > 0 ? 'R' : 'D'}+${Math.abs(n).toFixed(Math.max(0, Number(digits) || 0))}`;
+    }
+    function formatCandidateEffectCompact(demPts, digits = 1) {
+      const n = Number(demPts);
+      if (!Number.isFinite(n) || Math.abs(n) < 0.05) return 'Even';
+      return `${n > 0 ? 'D' : 'R'}+${Math.abs(n).toFixed(Math.max(0, Number(digits) || 0))}`;
+    }
+    function similarityLabelFromScore(score) {
+      const s = Number(score);
+      if (!Number.isFinite(s)) return 'Low';
+      if (s <= 1.35) return 'High';
+      if (s <= 3.0) return 'Medium';
+      return 'Low';
+    }
+    function normalizeCountySignedMarginFromRow(row, contestType) {
+      if (!row || !contestType) return NaN;
+      const signedFromField = Number(row?.[`${contestType}_margin_pct`]);
+      if (Number.isFinite(signedFromField)) return signedFromField;
+      return signedMarginPctFromVotes(
+        Number(row?.[`${contestType}_dem`] || 0),
+        Number(row?.[`${contestType}_rep`] || 0),
+        Number(row?.[`${contestType}_total`] || 0)
+      );
+    }
+    async function ensureModeledSenateAnalogHistoryCache() {
+      if (modeledSenateAnalogHistoryCache) return modeledSenateAnalogHistoryCache;
+      if (modeledSenateAnalogHistoryInflight) return modeledSenateAnalogHistoryInflight;
+      modeledSenateAnalogHistoryInflight = (async () => {
+        const byYear = new Map();
+        for (const year of MODELED_SENATE_ANALOG_YEARS) {
+          try {
+            const rows = await loadContestSlice('us_senate', year);
+            const countyTotals = new Map();
+            (rows || []).forEach(r => {
+              const rowName = (r?.county || '').toString();
+              const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+              const countyNorm = normalizeCountyToken(countyOnly);
+              if (!countyNorm) return;
+              const node = countyTotals.get(countyNorm) || { dem: 0, rep: 0, total: 0 };
+              node.dem += Number(r?.us_senate_dem || 0);
+              node.rep += Number(r?.us_senate_rep || 0);
+              node.total += Number(r?.us_senate_total || 0);
+              countyTotals.set(countyNorm, node);
+            });
+            const countySignedByNorm = new Map();
+            let stateDem = 0;
+            let stateRep = 0;
+            let stateTotal = 0;
+            countyTotals.forEach((totals, countyNorm) => {
+              const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+              if (Number.isFinite(signed)) countySignedByNorm.set(countyNorm, signed);
+              stateDem += Number(totals.dem || 0);
+              stateRep += Number(totals.rep || 0);
+              stateTotal += Number(totals.total || 0);
+            });
+            byYear.set(Number(year), {
+              statewideSigned: signedMarginPctFromVotes(stateDem, stateRep, stateTotal),
+              countySignedByNorm
+            });
+          } catch (_) {}
+        }
+        modeledSenateAnalogHistoryCache = { byYear };
+        return modeledSenateAnalogHistoryCache;
+      })();
+      try {
+        return await modeledSenateAnalogHistoryInflight;
+      } finally {
+        modeledSenateAnalogHistoryInflight = null;
+      }
+    }
+    function computeCountyHistoricalAnalog(modelData, countyNorm, modeledCountySigned, modeledStateSigned) {
+      const norm = normalizeCountyToken(countyNorm);
+      const countySigned = Number(modeledCountySigned);
+      const statewideSigned = Number(modeledStateSigned);
+      if (!modelData || !norm || !Number.isFinite(countySigned) || !Number.isFinite(statewideSigned)) return null;
+      const scores = [];
+      modelData.byYear.forEach((snapshot, year) => {
+        const histCountySigned = Number(snapshot?.countySignedByNorm?.get(norm));
+        const histStateSigned = Number(snapshot?.statewideSigned);
+        if (!Number.isFinite(histCountySigned) || !Number.isFinite(histStateSigned)) return;
+        const countyDiff = Math.abs(countySigned - histCountySigned);
+        const countyPatternDiff = Math.abs(
+          (countySigned - statewideSigned) - (histCountySigned - histStateSigned)
+        );
+        const stateDiff = Math.abs(statewideSigned - histStateSigned);
+        const score = (0.62 * countyDiff) + (0.26 * countyPatternDiff) + (0.12 * stateDiff);
+        scores.push({ year: Number(year), score, histCountySigned, histStateSigned });
+      });
+      if (!scores.length) return null;
+      scores.sort((a, b) => a.score - b.score);
+      const best = scores[0];
+      const demLeanDelta = best.histCountySigned - countySigned;
+      let differenceText = `About even with ${best.year} Senate`;
+      if (Math.abs(demLeanDelta) >= 0.1) {
+        differenceText = `${Math.abs(demLeanDelta).toFixed(1)} pts ${demLeanDelta > 0 ? 'more Democratic' : 'more Republican'} than ${best.year}`;
+      }
+      return {
+        label: `${best.year} Senate`,
+        year: best.year,
+        confidence: similarityLabelFromScore(best.score),
+        score: best.score,
+        differenceText
+      };
+    }
+    function computeStatewideHistoricalAnalog(modelData, countyAgg, contestType, modeledStateSigned) {
+      if (!modelData || !countyAgg || !contestType || !Number.isFinite(Number(modeledStateSigned))) return null;
+      const statewideSigned = Number(modeledStateSigned);
+      const scores = [];
+      modelData.byYear.forEach((snapshot, year) => {
+        const histStateSigned = Number(snapshot?.statewideSigned);
+        if (!Number.isFinite(histStateSigned)) return;
+        let sumW = 0;
+        let sumSq = 0;
+        let metroW = 0;
+        let metroDeltaSum = 0;
+        Object.keys(countyAgg || {}).forEach(countyKey => {
+          const countyNorm = normalizeCountyToken(countyKey);
+          const row = countyAgg[countyKey] || null;
+          if (!row || !countyNorm) return;
+          const histCountySigned = Number(snapshot?.countySignedByNorm?.get(countyNorm));
+          if (!Number.isFinite(histCountySigned)) return;
+          const modeledCountySigned = normalizeCountySignedMarginFromRow(row, contestType);
+          if (!Number.isFinite(modeledCountySigned)) return;
+          const weight = Math.max(0, Number(row?.[`${contestType}_total`] || 0));
+          if (!(weight > 0)) return;
+          const relativeDiff = (modeledCountySigned - statewideSigned) - (histCountySigned - histStateSigned);
+          sumSq += weight * relativeDiff * relativeDiff;
+          sumW += weight;
+          if (MODELED_SENATE_ANALOG_METRO_COUNTIES.has(countyNorm)) {
+            metroDeltaSum += weight * (modeledCountySigned - histCountySigned);
+            metroW += weight;
+          }
+        });
+        const patternRms = sumW > 0 ? Math.sqrt(sumSq / sumW) : 99;
+        const stateDiff = Math.abs(statewideSigned - histStateSigned);
+        const score = (0.72 * stateDiff) + (0.28 * patternRms);
+        const metroDelta = metroW > 0 ? (metroDeltaSum / metroW) : 0;
+        scores.push({ year: Number(year), score, stateDiff, patternRms, metroDelta });
+      });
+      if (!scores.length) return null;
+      scores.sort((a, b) => a.score - b.score);
+      const best = scores[0];
+      const second = scores[1] || null;
+      let explanation = 'Similar in margin scale';
+      if (best.year === 2014 && best.metroDelta <= -0.9) {
+        explanation = 'More metro-driven than 2014';
+      } else if (second && Math.abs(second.score - best.score) >= 0.25) {
+        explanation = `Closer to ${best.year} than ${second.year}`;
+      }
+      return {
+        label: `${best.year} Senate`,
+        year: best.year,
+        confidence: similarityLabelFromScore(best.score),
+        score: best.score,
+        explanation
+      };
+    }
+    function computeModeledSenateStatewideBaselineComparison(contestType, countyAgg, modeledStateSigned) {
+      if (!contestType || !countyAgg || !Number.isFinite(Number(modeledStateSigned))) return null;
+      let weightedBaseline = 0;
+      let weightedTotal = 0;
+      Object.keys(countyAgg || {}).forEach(countyNorm => {
+        const row = countyAgg[countyNorm] || null;
+        if (!row) return;
+        const baselineSigned = Number(row.__model_baseline_margin_pct);
+        const total = Math.max(0, Number(row?.[`${contestType}_total`] || 0));
+        if (!Number.isFinite(baselineSigned) || !(total > 0)) return;
+        weightedBaseline += baselineSigned * total;
+        weightedTotal += total;
+      });
+      if (!(weightedTotal > 0)) return null;
+      const baselineSigned = weightedBaseline / weightedTotal;
+      const withCandidatesSigned = Number(modeledStateSigned);
+      const candidateEffectDemPts = baselineSigned - withCandidatesSigned;
+      return {
+        baselineSigned,
+        withCandidatesSigned,
+        candidateEffectDemPts,
+        baselineLabel: formatSignedMarginCompact(baselineSigned, 1),
+        withCandidatesLabel: formatSignedMarginCompact(withCandidatesSigned, 1),
+        effectLabel: formatCandidateEffectCompact(candidateEffectDemPts, 1)
+      };
+    }
+    async function buildModeledSenateStatewideInsights(contestType, year, countyAgg, stateDem, stateRep, stateTotal) {
+      if (!isModeledSenateEnhancementContest(contestType, year)) return null;
+      const withCandidatesSigned = signedMarginPctFromVotes(Number(stateDem || 0), Number(stateRep || 0), Number(stateTotal || 0));
+      const baselineComparison = MODELED_SENATE_UX_FEATURES.baselineVsCandidateEnabled
+        ? computeModeledSenateStatewideBaselineComparison(contestType, countyAgg, withCandidatesSigned)
+        : null;
+      let historicalAnalog = null;
+      if (MODELED_SENATE_UX_FEATURES.historicalAnalogEnabled) {
+        try {
+          const history = await ensureModeledSenateAnalogHistoryCache();
+          historicalAnalog = computeStatewideHistoricalAnalog(history, countyAgg, contestType, withCandidatesSigned);
+        } catch (_) {
+          historicalAnalog = null;
+        }
+      }
+      return {
+        baselineComparison,
+        historicalAnalog,
+        withCandidatesSigned
+      };
+    }
+    function buildModeledSenateStatewideExtrasHTML(insights) {
+      const baseline = insights?.baselineComparison || null;
+      const analog = insights?.historicalAnalog || null;
+      if (!baseline && !analog) return '';
+      const baselineHtml = baseline
+        ? (
+          `<div class="statewide-stat">` +
+            `<span>Baseline</span>` +
+            `<strong>${escapeHtml(baseline.baselineLabel)}</strong>` +
+            `<span>With candidates: ${escapeHtml(baseline.withCandidatesLabel)}</span>` +
+            `<span>Candidate effect: ${escapeHtml(baseline.effectLabel)}</span>` +
+          `</div>`
+        )
+        : '';
+      const analogHtml = analog
+        ? (
+          `<div class="statewide-stat">` +
+            `<span>Historical analog</span>` +
+            `<strong>${escapeHtml(analog.label)}</strong>` +
+            `<span>Confidence: ${escapeHtml(analog.confidence)}</span>` +
+            `<span>${escapeHtml(analog.explanation || 'Similar in margin scale')}</span>` +
+          `</div>`
+        )
+        : '';
+      return `<div class="statewide-footer-row">${baselineHtml}${analogHtml}</div>`;
+    }
 
     function updateStatewideResults(contestType, year, demVotes, repVotes, totalVotes, opts = {}) {
       const statewideTargets = getStatewideContentNodes();
@@ -19585,6 +19832,9 @@ document.addEventListener('DOMContentLoaded', function() {
           ? 'Even race'
           : `${winnerCall.winnerName} (${winnerCall.party === 'rep' ? 'R' : 'D'})`;
         const closeRaceAlertHtml = buildStatewideCloseRaceAlertHTML(contestType, year, marginPct);
+        const modeledSenateExtrasHtml = isModeledSenateEnhancementContest(contestType, year)
+          ? buildModeledSenateStatewideExtrasHTML(opts?.modeledSenateInsights || null)
+          : '';
 
         setStatewideResultsMarkup(`
           <div class="statewide-card" data-party="${winnerCall.party}">
@@ -19610,6 +19860,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <strong>${marginLabel} pts</strong>
               </div>
             </div>
+            ${modeledSenateExtrasHtml}
           </div>
         `);
       } catch (err) {
@@ -24974,6 +25225,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerCandidate = margin > 0 ? demCandidate : repCandidate;
       const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
+      const shouldShowModeledCountyEnhancements = isModeledSenateEnhancementContest(contestType, year);
+      const modeledCountyBaselineSignedRaw = Number(countyData.__model_baseline_margin_pct);
+      const modeledCountyWithCandidatesSignedRaw = Number(countyData.__model_with_candidates_margin_pct);
+      const modeledCountyWithCandidatesSigned = Number.isFinite(modeledCountyWithCandidatesSignedRaw)
+        ? modeledCountyWithCandidatesSignedRaw
+        : Number(signedMarginPct);
+      const modeledCountyBaselineSigned = Number.isFinite(modeledCountyBaselineSignedRaw)
+        ? modeledCountyBaselineSignedRaw
+        : NaN;
+      const modeledCountyCandidateEffectDemPtsRaw = Number(countyData.__model_candidate_effect_d_pts);
+      const modeledCountyCandidateEffectDemPts = Number.isFinite(modeledCountyCandidateEffectDemPtsRaw)
+        ? modeledCountyCandidateEffectDemPtsRaw
+        : (Number.isFinite(modeledCountyBaselineSigned) ? (modeledCountyBaselineSigned - modeledCountyWithCandidatesSigned) : NaN);
       if (countyNameElement) setFocusNameWithTierBadge(countyNameElement, `${countyDisplay} County`, tierMeta);
       // Accessibility palette for winner color
       function cbColorForMargin(marginPct, winner) {
@@ -25180,6 +25444,33 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="focus-firsttime-hint" id="county-firsttime-hint" role="note" hidden>Tip: open “History” for the long-run pattern behind today’s margin.</div>
       `;
 
+      if (shouldShowModeledCountyEnhancements) {
+        const baselineLabel = Number.isFinite(modeledCountyBaselineSigned)
+          ? formatSignedMarginCompact(modeledCountyBaselineSigned, 1)
+          : 'n/a';
+        const withCandidatesLabel = formatSignedMarginCompact(modeledCountyWithCandidatesSigned, 1);
+        const effectLabel = Number.isFinite(modeledCountyCandidateEffectDemPts)
+          ? formatCandidateEffectCompact(modeledCountyCandidateEffectDemPts, 1)
+          : 'n/a';
+
+        focusContent += `
+          <div class="focus-mini-grid" id="county-modeled-insights" aria-label="Modeled Senate context">
+            <div class="focus-mini-card">
+              <span class="k">Baseline vs Candidate</span>
+              <span class="v"><strong>Baseline:</strong> ${escapeHtml(baselineLabel)}</span>
+              <span class="v"><strong>With candidates:</strong> ${escapeHtml(withCandidatesLabel)}</span>
+              <span class="v"><strong>Candidate effect:</strong> ${escapeHtml(effectLabel)}</span>
+            </div>
+            <div class="focus-mini-card" id="county-historical-analog-card">
+              <span class="k">Historical Analog</span>
+              <span class="v" id="county-historical-analog-match">Loading…</span>
+              <span class="v" id="county-historical-analog-confidence"></span>
+              <span class="v" id="county-historical-analog-diff"></span>
+            </div>
+          </div>
+        `;
+      }
+
       // Split-ticket (Pres-Gov lens) and vote breakdown go into progressive disclosure.
       const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
 
@@ -25361,6 +25652,53 @@ document.addEventListener('DOMContentLoaded', function() {
       hint.hidden = hasSeen;
     }
   } catch (_) {}
+  // Populate trends asynchronously from manifest slices (does not block UI).
+  (async () => {
+    if (!shouldShowModeledCountyEnhancements || !MODELED_SENATE_UX_FEATURES.historicalAnalogEnabled) return;
+    try {
+      const history = await ensureModeledSenateAnalogHistoryCache();
+      try {
+        if ((contentEl?.dataset?.focusKey || '') !== focusKey) return;
+      } catch (_) {}
+
+      const statewideSigned = Number.isFinite(Number(modeledSenateLatestInsights?.withCandidatesSigned))
+        ? Number(modeledSenateLatestInsights.withCandidatesSigned)
+        : (() => {
+          let d = 0;
+          let r = 0;
+          let t = 0;
+          Object.keys(currentElectionResults || {}).forEach(key => {
+            const row = currentElectionResults[key] || null;
+            if (!row) return;
+            d += Number(row?.[`${contestType}_dem`] || 0);
+            r += Number(row?.[`${contestType}_rep`] || 0);
+            t += Number(row?.[`${contestType}_total`] || 0);
+          });
+          return signedMarginPctFromVotes(d, r, t);
+        })();
+      const analog = computeCountyHistoricalAnalog(history, norm, modeledCountyWithCandidatesSigned, statewideSigned);
+
+      const matchEl = document.getElementById('county-historical-analog-match');
+      const confEl = document.getElementById('county-historical-analog-confidence');
+      const diffEl = document.getElementById('county-historical-analog-diff');
+      if (!matchEl || !confEl || !diffEl) return;
+
+      if (!analog) {
+        matchEl.textContent = 'Not available';
+        confEl.textContent = '';
+        diffEl.textContent = '';
+        return;
+      }
+
+      matchEl.innerHTML = `<strong>Closest match:</strong> ${escapeHtml(analog.label)}`;
+      confEl.innerHTML = `<strong>Similarity:</strong> ${escapeHtml(analog.confidence)}`;
+      diffEl.innerHTML = `<strong>Difference:</strong> ${escapeHtml(analog.differenceText)}`;
+    } catch (_) {
+      const matchEl = document.getElementById('county-historical-analog-match');
+      if (matchEl) matchEl.textContent = 'Not available';
+    }
+  })();
+
   // Populate trends asynchronously from manifest slices (does not block UI).
   (async () => {
     try {
@@ -29811,12 +30149,32 @@ document.addEventListener('DOMContentLoaded', function() {
             [`${contestType}_other`]: 0,
             [`${contestType}_total`]: 0,
             [`${contestType}_dem_candidate`]: demCand,
-            [`${contestType}_rep_candidate`]: repCand
+            [`${contestType}_rep_candidate`]: repCand,
+            __model_baseline_margin_pct: Number.isFinite(Number(row.__model_baseline_margin_pct)) ? Number(row.__model_baseline_margin_pct) : NaN,
+            __model_with_candidates_margin_pct: Number.isFinite(Number(row.__model_with_candidates_margin_pct)) ? Number(row.__model_with_candidates_margin_pct) : NaN,
+            __model_candidate_effect_d_pts: Number.isFinite(Number(row.__model_candidate_effect_d_pts)) ? Number(row.__model_candidate_effect_d_pts) : NaN,
+            __model_candidate_effect_durable_pts: Number.isFinite(Number(row.__model_candidate_effect_durable_pts)) ? Number(row.__model_candidate_effect_durable_pts) : NaN,
+            __model_candidate_effect_personal_pts: Number.isFinite(Number(row.__model_candidate_effect_personal_pts)) ? Number(row.__model_candidate_effect_personal_pts) : NaN
           };
         }
         // Keep candidate labels at county level for sidebar/hover margin readability.
         if (!countyAgg[countyNorm][`${contestType}_dem_candidate`] && demCand) countyAgg[countyNorm][`${contestType}_dem_candidate`] = demCand;
         if (!countyAgg[countyNorm][`${contestType}_rep_candidate`] && repCand) countyAgg[countyNorm][`${contestType}_rep_candidate`] = repCand;
+        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_baseline_margin_pct)) && Number.isFinite(Number(row.__model_baseline_margin_pct))) {
+          countyAgg[countyNorm].__model_baseline_margin_pct = Number(row.__model_baseline_margin_pct);
+        }
+        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_with_candidates_margin_pct)) && Number.isFinite(Number(row.__model_with_candidates_margin_pct))) {
+          countyAgg[countyNorm].__model_with_candidates_margin_pct = Number(row.__model_with_candidates_margin_pct);
+        }
+        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_d_pts)) && Number.isFinite(Number(row.__model_candidate_effect_d_pts))) {
+          countyAgg[countyNorm].__model_candidate_effect_d_pts = Number(row.__model_candidate_effect_d_pts);
+        }
+        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_durable_pts)) && Number.isFinite(Number(row.__model_candidate_effect_durable_pts))) {
+          countyAgg[countyNorm].__model_candidate_effect_durable_pts = Number(row.__model_candidate_effect_durable_pts);
+        }
+        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_personal_pts)) && Number.isFinite(Number(row.__model_candidate_effect_personal_pts))) {
+          countyAgg[countyNorm].__model_candidate_effect_personal_pts = Number(row.__model_candidate_effect_personal_pts);
+        }
         countyAgg[countyNorm][`${contestType}_dem`] += demVotes;
         countyAgg[countyNorm][`${contestType}_rep`] += repVotes;
         countyAgg[countyNorm][`${contestType}_other`] += otherVotes;
@@ -29874,12 +30232,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!statewideRepCandidate && repCand) statewideRepCandidate = repCand;
       }
       if (staleCheck()) return;
+
+      let modeledSenateInsights = null;
+      if (isModeledSenateEnhancementContest(contestType, year)) {
+        try {
+          modeledSenateInsights = await buildModeledSenateStatewideInsights(
+            contestType,
+            Number(year),
+            countyAgg,
+            statewidedemVotes,
+            statewidrepVotes,
+            statewidTotalVotes
+          );
+        } catch (_) {
+          modeledSenateInsights = null;
+        }
+      }
+      modeledSenateLatestInsights = modeledSenateInsights;
       
       // Update statewide results display
       updateStatewideResults(contestType, year, statewidedemVotes, statewidrepVotes, statewidTotalVotes, {
         otherVotes: statewidotherVotes,
         demCandidate: statewideDemCandidate,
-        repCandidate: statewideRepCandidate
+        repCandidate: statewideRepCandidate,
+        modeledSenateInsights
       });
       if (staleCheck()) return;
 
