@@ -10593,14 +10593,14 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityFloor: 0.40,
         statewideRecenterStrength: 0.96,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        ruralGopOverperformanceWeight: 0.18,
+        ruralGopOverperformanceWeight: 0.15,
         urbanDemElasticityWeight: 0.20,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.20,
         senateResidualElasticityEnabled: false,
         incumbentParty: 'DEM',
-        incumbentBoostPts: 0.0,
+        incumbentBoostPts: 1.15,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -10617,8 +10617,8 @@ document.addEventListener('DOMContentLoaded', function() {
         realignmentAdjustmentEnabled: true,
         realignmentAdjustmentMinTrendPts: 1.25,
         realignmentAdjustmentMaxTrendPts: 9.0,
-        realignmentAdjustmentSlope: 0.07, // pts of adjustment per 1 pt of rightward trend
-        realignmentAdjustmentMaxPts: 0.62,
+        realignmentAdjustmentSlope: 0.055, // pts of adjustment per 1 pt of rightward trend
+        realignmentAdjustmentMaxPts: 0.45,
         // Turnout sensitivity: in edge-case realigning counties, coalition mix makes turnout matter more.
         realignmentTurnoutEnabled: true,
         realignmentTurnoutMinTrendPts: 1.0,
@@ -10648,16 +10648,16 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.27, // modest statewide Cooper nudge while preserving guardrails
+        candidateBonusWeight: 0.32, // restore moderate Cooper portability after April 20 over-fade
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.20,
         candidateBonusConsistencyFloor: 0.60,
         // Separate "durable crossover" vs "Cooper-personal" components so the bonus does not over-travel
         // into highly federalized counties or one-cycle outliers.
-        candidateBonusDurableShare: 0.70,
-        candidateBonusPersonalShare: 0.30,
-        candidateBonusDurableRealignmentFloor: 0.62,
+        candidateBonusDurableShare: 0.62,
+        candidateBonusPersonalShare: 0.38,
+        candidateBonusDurableRealignmentFloor: 0.68,
         candidateBonusDurableAdjustmentFadeMax: 0.22,
         candidateBonusDurableGeneralFloor: 0.28,
         candidateBonusDurablePriorityFloor: 0.42,
@@ -10665,7 +10665,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
         // moving right at the federal level (e.g., Robeson, Bladen).
         candidateBonusPersonalRealignmentEnabled: true,
-        candidateBonusPersonalRealignmentFloor: 0.24, // strongest fade keeps ~20-25% of the personal component
+        candidateBonusPersonalRealignmentFloor: 0.34, // strongest fade keeps more personal portability than prior over-fade
         candidateBonusPersonalRealignmentMinTrendPts: 0.9,
         candidateBonusPersonalRealignmentMaxTrendPts: 8.5,
         // Distinct class: former-D federal counties that realigned hard in the Trump era.
@@ -10673,8 +10673,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Scotland replaces Hoke in this residual ancestral-D/federalized class.
         candidateBonusRealignedFormerDemFederalCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         candidateBonusRealignedFormerDemFederalDurableFloor: 0.42,
-        candidateBonusRealignedFormerDemFederalPersonalFloor: 0.12,
-        candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.16,
+        candidateBonusRealignedFormerDemFederalPersonalFloor: 0.22,
+        candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.30,
         candidateBonusRealignedFormerDemFederalResidualFloor: 0.28,
         candidateBonusRepeatableCrossoverBoost: 1.10,
         candidateBonusSuburbanDurableBoost: 1.08,
