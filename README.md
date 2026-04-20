@@ -105,6 +105,20 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 20, 2026
 
+### US Senate Model Robeson Micro-Adjustment (April 20, 2026)
+
+- Applied a narrowly scoped `US Senate (2026) model` calibration tweak to reduce **Robeson** over-suppression without broad statewide reweighting.
+- Softened Robeson-specific personal realignment fade in both model paths: `score * 1.14 -> 1.10 -> 1.08`.
+- Kept the global candidate bonus split and strength fixed at the current settings:
+  - `candidateBonusWeight: 0.27`
+  - `candidateBonusDurableShare: 0.70`
+  - `candidateBonusPersonalShare: 0.30`
+- Made only subtle companion guardrail changes for the special residual-crossover class:
+  - `candidateBonusRealignedFormerDemFederalResidualFloor: 0.28 -> 0.30`
+  - `senateMaxOverPresRobesonCapPts: 0.15 -> 0.20`
+- Left **Scotland** and **Bladen** county-specific handling mostly unchanged while preserving the same overall statewide Lean-R result band.
+- No UI, map interaction, tooltip, legend, control, mobile, Mapbox, or unrelated contest logic changes.
+
 ### Modeled Senate UX — Analog Scoring Tuning (April 20, 2026)
 
 - Tightened the **Historical Analog** "High" confidence threshold from `≤1.35` to `≤1.1` to reduce false high-confidence labels when the closest historical year is only a moderate structural match.

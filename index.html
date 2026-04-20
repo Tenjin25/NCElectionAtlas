@@ -10635,7 +10635,7 @@ document.addEventListener('DOMContentLoaded', function() {
         senateMaxOverPresEnabled: true,
         senateMaxOverPresCapPts: 0.60, // generic Senate-over-Pres ceiling
         senateMaxOverPresMinRealignmentScore: 0.30,
-        senateMaxOverPresRobesonCapPts: 0.15,
+        senateMaxOverPresRobesonCapPts: 0.20,
         senateMaxOverPresBladenCapPts: 0.30,
         senateMaxOverPresScotlandCapPts: 0.35,
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
@@ -10648,15 +10648,15 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.32, // restore moderate Cooper portability after April 20 over-fade
+        candidateBonusWeight: 0.27,
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.20,
         candidateBonusConsistencyFloor: 0.60,
         // Separate "durable crossover" vs "Cooper-personal" components so the bonus does not over-travel
         // into highly federalized counties or one-cycle outliers.
-        candidateBonusDurableShare: 0.62,
-        candidateBonusPersonalShare: 0.38,
+        candidateBonusDurableShare: 0.70,
+        candidateBonusPersonalShare: 0.30,
         candidateBonusDurableRealignmentFloor: 0.68,
         candidateBonusDurableAdjustmentFadeMax: 0.22,
         candidateBonusDurableGeneralFloor: 0.28,
@@ -10675,7 +10675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusRealignedFormerDemFederalDurableFloor: 0.42,
         candidateBonusRealignedFormerDemFederalPersonalFloor: 0.22,
         candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.30,
-        candidateBonusRealignedFormerDemFederalResidualFloor: 0.28,
+        candidateBonusRealignedFormerDemFederalResidualFloor: 0.30,
         candidateBonusRepeatableCrossoverBoost: 1.10,
         candidateBonusSuburbanDurableBoost: 1.08,
         candidateBonusFederalizationBrakeMargin: 22,
@@ -15459,7 +15459,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Edge-case calibration: keep a bit more fade in well-known realignment counties, but avoid
                 // wiping out crossover capacity entirely (they're not "ordinary" crossover, but not 0 either).
-                if (county === 'ROBESON') score = clamp01(score * 1.14);
+                if (county === 'ROBESON') score = clamp01(score * 1.08);
                 else if (county === 'BLADEN') score = clamp01(score * 1.08);
                 else if (county === 'SCOTLAND') score = clamp01(score * 1.06);
 
@@ -15966,7 +15966,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                   const federalTrend = Math.max(0, (0.60 * shift20to24) + (0.25 * shift16to24) + (0.15 * senateShift));
                   let score = clamp01((federalTrend - minTrend) / Math.max(1e-6, (maxTrend - minTrend)));
-                  if (county === 'ROBESON') score = clamp01(score * 1.10);
+                  if (county === 'ROBESON') score = clamp01(score * 1.08);
                   else if (county === 'BLADEN') score = clamp01(score * 1.05);
                   senateDeviation *= lerp(1, floor, score);
                 }
