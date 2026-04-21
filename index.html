@@ -21749,7 +21749,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .map(s => {
           const win = (s.winner || '').toString().toUpperCase();
           const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
-          const label = winnerMarginLabelShort(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          const label = winnerMarginCall(
+            Number(s.rep_votes || 0),
+            Number(s.dem_votes || 0),
+            Number(s.total_votes || 0),
+            s.rep_candidate,
+            s.dem_candidate,
+            Number(s.margin_pct)
+          ).text;
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#cbd5e1;">${s.year}</span><span style="color:${color};font-weight:700;">${label}</span></div>`;
         })
         .join('');
@@ -21760,7 +21767,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
       if (abs < 0.01) return 'No change';
-      return `${s > 0 ? 'R' : 'D'}+${abs.toFixed(2)}%`;
+      return `${s > 0 ? 'R' : 'D'}+${toFixedForDisplay(abs, 2)}%`;
     }
 
     function shiftChipHTML(shiftPct, prevYear, year, options = {}) {
@@ -28075,7 +28082,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${marginAbs.toFixed(2)}`,
+                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}`,
                 margin: margin,
                 type: 'house'
               });
@@ -28114,7 +28121,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${candidateInfo}+${marginAbs.toFixed(2)}`,
+                display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
                 margin: margin,
                 type: 'president'
               });
@@ -28151,7 +28158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             candidateInfo = margin > 0 ? getCandidateName(year, 'Governor', 'Democrat') : getCandidateName(year, 'Governor', 'Republican');
             trends.push({
               year: year,
-              display: `${year}: ${candidateInfo}+${marginAbs.toFixed(2)}`,
+              display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
               margin: margin,
               type: 'governor'
             });
@@ -28176,7 +28183,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${marginAbs.toFixed(2)} (House)`,
+                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)} (House)`,
                 margin: margin,
                 type: 'state_house'
               });
@@ -28645,8 +28652,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes) * 100.0;
       const repPct = (repVotes / totalVotes) * 100.0;
       const othPct = (otherVotes / totalVotes) * 100.0;
-      const marginPct = Math.abs(repPct - demPct);
-      const winnerParty = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'TIE');
+      const signedRaw = Number(row.margin_pct);
+      const signedMarginPct = Number.isFinite(signedRaw)
+        ? signedRaw
+        : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const marginPct = Math.abs(signedMarginPct);
+      const winnerParty = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'TIE');
+      const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
 
       let compLabel = '';
       let compColor = '#6b7280';
@@ -28686,12 +28698,12 @@ document.addEventListener('DOMContentLoaded', function() {
           <h5 style="margin:0 0 6px 0;">${year} ${formatContestName(contestType, year)}</h5>
           <div style="font-size:15px;font-weight:800;color:${winColor};">Winner: ${winName} (${winnerParty})</div>
           <div style="margin-top:4px;font-size:15px;font-weight:800;color:${winColor};">
-            Margin: ${winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate)} <span style="color:#64748b;font-weight:600;">(${Math.abs(repVotes - demVotes).toLocaleString()} votes)</span>
+            Margin: ${winnerCall.text} <span style="color:#64748b;font-weight:600;">(${Math.abs(repVotes - demVotes).toLocaleString()} votes)</span>
           </div>
           <div style="margin-top:8px;font-size:14px;">
-            <div><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: ${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</div>
-            <div><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: ${repPct.toFixed(2)}% (${repVotes.toLocaleString()})</div>
-            ${otherVotes > 0 ? `<div><span style="color:#6b7280;font-weight:800;">Other</span>: ${othPct.toFixed(2)}% (${otherVotes.toLocaleString()})</div>` : ''}
+            <div><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: ${toFixedForDisplay(demPct, 2)}% (${demVotes.toLocaleString()})</div>
+            <div><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: ${toFixedForDisplay(repPct, 2)}% (${repVotes.toLocaleString()})</div>
+            ${otherVotes > 0 ? `<div><span style="color:#6b7280;font-weight:800;">Other</span>: ${toFixedForDisplay(othPct, 2)}% (${otherVotes.toLocaleString()})</div>` : ''}
             <div style="margin-top:6px;color:#374151;font-weight:700;">Total Votes: ${totalVotes.toLocaleString()}</div>
           </div>
           <div style="margin-top:8px;font-size:14px;font-weight:800;color:${compColor};">Competitiveness: ${compLabel}</div>
@@ -28707,7 +28719,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .map(s => {
           const win = (s.winner || '').toString().toUpperCase();
           const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
-          const label = winnerMarginLabelShort(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          const label = winnerMarginCall(
+            Number(s.rep_votes || 0),
+            Number(s.dem_votes || 0),
+            Number(s.total_votes || 0),
+            s.rep_candidate,
+            s.dem_candidate,
+            Number(s.margin_pct)
+          ).text;
           return `<div style="margin-top:4px;color:${color};font-weight:800;">${s.year}: ${label}</div>`;
         })
         .join('');
@@ -28940,7 +28959,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `<div class="quick-tooltip">
           <strong>${countyName} County</strong><br>
-          ${recent.year}: ${winner}+${marginAbs.toFixed(2)}%<br>
+          ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
           <em>Click for full trends</em>
         </div>`;
       }
@@ -29021,16 +29040,17 @@ document.addEventListener('DOMContentLoaded', function() {
           .sort((a, b) => b.year - a.year)[0];
           
         if (recent) {
-          const demPct = (recent.us_house_dem / recent.us_house_total) * 100;
-          const repPct = (recent.us_house_rep / recent.us_house_total) * 100;
-          const margin = demPct - repPct;
-          const winner = margin > 0 ? 'D' : 'R';
-          const marginAbs = Math.abs(margin);
+          const demVotes = Number(recent.us_house_dem || 0);
+          const repVotes = Number(recent.us_house_rep || 0);
+          const totalVotes = Number(recent.us_house_total || 0);
+          const signed = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+          const winner = signed > 0 ? 'R' : (signed < 0 ? 'D' : 'T');
+          const marginAbs = Math.abs(signed);
           
           return `<div class="quick-tooltip">
             <strong>${displayName}</strong><br>
             ${desc ? `<span style="color:#64748b;font-weight:700;">${desc}</span><br>` : ''}
-            ${recent.year}: ${winner}+${marginAbs.toFixed(2)}%<br>
+            ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
             <em>Click for full trends</em>
           </div>`;
         }
