@@ -105,6 +105,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 21, 2026
 
+### 2024 Lines Margin Rounding Stability Fix (April 21, 2026)
+
+- Fixed a floating-point display drift in district margin labels so edge values now round consistently at two decimals in 2024 district-line views (for example, `Trump +6.665` now displays as `Trump +6.67` instead of occasionally rendering as `Trump +6.66`).
+- Added centralized display-rounding helpers in `index.html` and routed shared close-race percent/margin formatting through that path to keep winner-margin pills, hover labels, and sidebar margin text aligned.
+- Kept the change scoped to formatting only (no vote totals, modeled outputs, map styling, or interaction behavior changed).
+
 ### District Boundary Readability Refresh (April 21, 2026)
 
 - Refined centralized district stroke styling in `index.html` (`DISTRICT_LINE_STYLE` + `applyDistrictStrokeStyle` usage) so all district types remain readable at default statewide zooms and over dark partisan fills.
