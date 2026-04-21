@@ -105,6 +105,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 20, 2026
 
+### Modeled SD-43/44 Harmonization For 2022 Lines (April 20, 2026)
+
+- Added a targeted harmonization step for **State Senate Districts 43 and 44** in **2022-lines mode** so modeled district outputs stay aligned with the 2024-line modeled equivalents where those districts are expected to track together.
+- Applied to both modeled statewide contest paths:
+  - `NC Associate Justice Seat 1 (2026) Model` (`nc_supreme_court_model`)
+  - `US Senate (2026) model` (`us_senate_model`)
+- Scope is intentionally narrow (only SD-43/44 in the modeled state senate district builder for 2022-lines mode) to avoid altering unrelated districts or non-modeled contests.
+
 ### US Senate Model Robeson Micro-Adjustment (April 20, 2026)
 
 - Applied a narrowly scoped `US Senate (2026) model` calibration tweak to reduce **Robeson** over-suppression without broad statewide reweighting.
