@@ -105,10 +105,18 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 21, 2026
 
+### Vote Counter Layout + Mobile Positioning Fixes (April 21, 2026)
+
+- Fixed context-title overlap with `Clear` / `Reset` controls in the vote counter by updating the shared header layout so long labels (for example, county and district names) keep readable space instead of being covered.
+- Added a desktop two-line clamp for the vote-counter context title so longer labels such as `Selected: Mecklenburg County` and longer district names remain legible.
+- Raised vote-counter placement on mobile in both expanded and minimized states so it sits higher above the dock and covers less of the map when open or collapsed.
+- Kept these changes scoped to layout/positioning only (no election calculations, contest data, or map interaction logic changes).
+
 ### 2024 Lines Margin Rounding Stability Fix (April 21, 2026)
 
 - Fixed a floating-point display drift in district margin labels so edge values now round consistently at two decimals in 2024 district-line views (for example, `Trump +6.665` now displays as `Trump +6.67` instead of occasionally rendering as `Trump +6.66`).
 - Added centralized display-rounding helpers in `index.html` and routed shared close-race percent/margin formatting through that path to keep winner-margin pills, hover labels, and sidebar margin text aligned.
+- Added a follow-up consistency pass so hover quicklines and selected county summary chips use the same signed-margin display path (including canonical margin fields when available) instead of recomputing independent `toFixed(2)` values.
 - Kept the change scoped to formatting only (no vote totals, modeled outputs, map styling, or interaction behavior changed).
 
 ### District Boundary Readability Refresh (April 21, 2026)

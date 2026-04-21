@@ -2167,6 +2167,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 10px;
   padding-bottom: 10px;
@@ -2174,6 +2175,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 
 .vote-counter-context .context-left {
+  flex: 1 1 280px;
   min-width: 0;
 }
 
@@ -2220,6 +2222,16 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   text-overflow: ellipsis;
 }
 
+@media (min-width: 769px) {
+  .vote-counter-context .context-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
 .vote-counter-context .context-sub {
   margin-top: 2px;
   font-size: 12px;
@@ -2233,8 +2245,21 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 .vote-counter-context .context-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .vote-counter-context .context-left {
+    flex-basis: 100%;
+  }
+
+  .vote-counter-context .context-actions {
+    width: 100%;
+  }
 }
 
 .vote-counter-context .context-clear {
@@ -7344,6 +7369,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     .vote-counter.minimized {
       max-height: 64px !important;
       overflow: hidden !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 44px) !important;
     }
 
     .focus-trend-head {
@@ -19109,10 +19135,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return { flipped, from, to };
     }
 
-    function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      const marginPct = totalVotes > 0 ? Math.abs((repVotes - demVotes) / totalVotes * 100) : 0;
-      const marginLabel = formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
-      if (repVotes > demVotes) {
+    function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN) {
+      const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
+      const marginPct = Math.abs(signed);
+      const marginLabel = formatMarginPctForDisplay(marginPct);
+      if (signed > 0) {
         return {
           party: 'rep',
           winnerName: fullCandidateLabel(repCandidate, 'Republican'),
@@ -19121,7 +19149,7 @@ document.addEventListener('DOMContentLoaded', function() {
           text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginLabel}%`
         };
       }
-      if (demVotes > repVotes) {
+      if (signed < 0) {
         return {
           party: 'dem',
           winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
@@ -22183,7 +22211,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const signed = Number(signedPct || 0);
       if (!Number.isFinite(signed) || Math.abs(signed) < 0.005) return 'Tied';
       const winner = signed > 0 ? 'R' : 'D';
-      return `${winner}+${Math.abs(signed).toFixed(2)}%`;
+      return `${winner}+${toFixedForDisplay(Math.abs(signed), 2)}%`;
     }
 
     function getSplitTicketCountyInsight(countyNorm, contestType, demVotes, repVotes, totalVotes) {
@@ -22197,7 +22225,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const deltaSigned = govSigned - presSigned;
       const deltaLabel = Math.abs(deltaSigned) < 0.005
         ? 'No split shift'
-        : `${deltaSigned > 0 ? 'R' : 'D'}+${Math.abs(deltaSigned).toFixed(2)} vs President`;
+        : `${deltaSigned > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(deltaSigned), 2)} vs President`;
 
       return {
         presidentSigned: presSigned,
@@ -23781,7 +23809,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);"><div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Pres-Gov Lens</div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Split Shift:</span><strong>${splitInsight.deltaLabel}</strong></div></div>`
         : '';
 
-      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
       const tierLong = tierMeta?.label || '';
       const flipLine = (prevSignedForFlip !== null)
@@ -24035,7 +24063,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!showDemoLine) demoLine = '';
 
       const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
-      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, curSigned);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
       const flipLine = (prevSignedForFlip !== null)
         ? flipLineHTML(prevSignedForFlip, curSigned, trendPrevYear, Number(year))
@@ -24373,7 +24401,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const desc = getDistrictDescription(scope, districtNum);
-      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
       const flipLine = (prevSignedForFlip !== null)
         ? flipLineHTML(prevSignedForFlip, signedMarginPct, prevYearForFlip, Number(year))
@@ -25257,8 +25285,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!sidebarReady) return;
       // Margin
       const margin = demVotes - repVotes;
-      const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-      const marginPct = Math.abs(signedMarginPct).toFixed(2);
+      const signedMarginPctRaw = Number(countyData[`${contestType}_margin_pct`]);
+      const signedMarginPct = Number.isFinite(signedMarginPctRaw)
+        ? signedMarginPctRaw
+        : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const marginPct = Math.abs(signedMarginPct);
+      const marginPctLabel = formatCountyMarginPctForDisplay(marginPct);
       const winner = margin > 0 ? 'Democratic' : (margin < 0 ? 'Republican' : 'Tie');
       const winnerCandidate = margin > 0 ? demCandidate : repCandidate;
       const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
@@ -25302,17 +25334,17 @@ document.addEventListener('DOMContentLoaded', function() {
       let winnerColor = '#dc2626';
       if (winner === 'Republican') {
         if (isColorblind) {
-          if (parseFloat(marginPct) >= 40) winnerColor = '#cc5500';
-          else if (parseFloat(marginPct) >= 30) winnerColor = '#ff6600';
-          else if (parseFloat(marginPct) >= 20) winnerColor = '#ff8833';
-          else if (parseFloat(marginPct) >= 10) winnerColor = '#ffaa55';
-          else if (parseFloat(marginPct) >= 5.5) winnerColor = '#ffcc77';
-          else if (parseFloat(marginPct) >= 1) winnerColor = '#ffdd99';
-          else if (parseFloat(marginPct) >= 0.5) winnerColor = '#ffeecc';
+          if (marginPct >= 40) winnerColor = '#cc5500';
+          else if (marginPct >= 30) winnerColor = '#ff6600';
+          else if (marginPct >= 20) winnerColor = '#ff8833';
+          else if (marginPct >= 10) winnerColor = '#ffaa55';
+          else if (marginPct >= 5.5) winnerColor = '#ffcc77';
+          else if (marginPct >= 1) winnerColor = '#ffdd99';
+          else if (marginPct >= 0.5) winnerColor = '#ffeecc';
           else winnerColor = '#cccccc';
         }
       } else {
-        winnerColor = isColorblind ? cbColorForMargin(parseFloat(marginPct), 'D') : '#2563eb';
+        winnerColor = isColorblind ? cbColorForMargin(marginPct, 'D') : '#2563eb';
       }
       // Precincts (if available)
       let precincts = '';
@@ -25337,7 +25369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : `${fullCandidateLabel(winnerCandidate, winner === 'Republican' ? 'Republican' : 'Democratic')} (${winner === 'Republican' ? 'R' : 'D'})`;
       const marginShort = winner === 'Tie'
         ? 'Even'
-        : `${winner === 'Republican' ? 'R' : 'D'}+${marginPct}%`;
+        : `${winner === 'Republican' ? 'R' : 'D'}+${marginPctLabel}%`;
       const splitShort = `${demPctLabel}% D • ${repPctLabel}% R${otherVotes > 0 ? ` • ${otherPctLabel}% Other` : ''}`;
 
       // Subhead (result first, then context)
@@ -28478,13 +28510,13 @@ document.addEventListener('DOMContentLoaded', function() {
               <div style="margin-bottom: 16px;">
                 <h5>Margin</h5>
                 <p style="color: ${winner === 'Republican' ? '#dc2626' : '#2563eb'}; font-weight: bold; font-size: 18px;">
-                  ${winner} +${marginPct.toFixed(2)}%
+                  ${winner} +${toFixedForDisplay(marginPct, 2)}%
                 </p>
               </div>
               <div style="margin-bottom: 16px;">
                 <h5>Vote Breakdown</h5>
-                <p><span style="color: #2563eb; font-weight: bold;">Democratic: </span>${demPct.toFixed(2)}% (${demVotes.toLocaleString()})</p>
-                <p><span style="color: #dc2626; font-weight: bold;">Republican: </span>${repPct.toFixed(2)}% (${repVotes.toLocaleString()})</p>
+                <p><span style="color: #2563eb; font-weight: bold;">Democratic: </span>${toFixedForDisplay(demPct, 2)}% (${demVotes.toLocaleString()})</p>
+                <p><span style="color: #dc2626; font-weight: bold;">Republican: </span>${toFixedForDisplay(repPct, 2)}% (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
             `;
