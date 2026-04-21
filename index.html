@@ -18942,7 +18942,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function roundPct2(value) {
-      return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+      return roundForDisplay(value, 2);
+    }
+
+    function roundForDisplay(value, digits = 2) {
+      const n = Number(value || 0);
+      if (!Number.isFinite(n)) return 0;
+      const d = Math.max(0, Math.floor(Number(digits) || 0));
+      const factor = Math.pow(10, d);
+      const epsilonNudge = (Math.sign(n) || 1) * Number.EPSILON * 8;
+      return Math.round((n + epsilonNudge) * factor) / factor;
+    }
+
+    function toFixedForDisplay(value, digits = 2) {
+      const d = Math.max(0, Math.floor(Number(digits) || 0));
+      return roundForDisplay(value, d).toFixed(d);
     }
 
     function partyPctValue(votes, totalVotes) {
@@ -18959,7 +18973,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function preservesTwoDecimalMargin(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return Number(pct.toFixed(2)) >= 0.02;
+      return roundForDisplay(pct, 2) >= 0.02;
     }
 
     function closeRaceDisplayDigits(marginPct) {
@@ -18969,13 +18983,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatPctForCloseRace(value, marginPct) {
       const numeric = Number(value || 0);
       const digits = closeRaceDisplayDigits(marginPct);
-      return numeric.toFixed(digits);
+      return toFixedForDisplay(numeric, digits);
     }
 
     function formatPctForCountyCloseRace(value, marginPct) {
       const numeric = Number(value || 0);
       const digits = countyMarginDisplayDigits(marginPct);
-      return numeric.toFixed(digits);
+      return toFixedForDisplay(numeric, digits);
     }
 
     function marginDisplayDigits(marginPct) {
@@ -18984,7 +18998,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatMarginPctForDisplay(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return pct.toFixed(marginDisplayDigits(pct));
+      return toFixedForDisplay(pct, marginDisplayDigits(pct));
     }
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
@@ -19018,7 +19032,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatCountyMarginPctForDisplay(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return pct.toFixed(countyMarginDisplayDigits(pct));
+      return toFixedForDisplay(pct, countyMarginDisplayDigits(pct));
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
