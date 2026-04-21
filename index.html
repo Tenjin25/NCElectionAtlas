@@ -16887,12 +16887,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // SD-43/44 remain effectively stable across the current 2022/2024 senate plans.
-        // For the Supreme Court model, keep these districts harmonized so switching line mode
+        // Keep these districts harmonized for modeled statewide contests so switching line mode
         // does not produce mismatched modeled rows.
         if (
           scopeKey === 'state_senate' &&
           normalizeDistrictLinesYear(linesYear) === 2022 &&
-          String(modeledDef?.contestType || '') === 'nc_supreme_court_model'
+          (
+            String(modeledDef?.contestType || '') === 'nc_supreme_court_model' ||
+            String(modeledDef?.contestType || '') === 'us_senate_model'
+          )
         ) {
           try {
             const modeled2024 = await buildModeledDistrictSliceNode(scope, modeledDef, 2024);
