@@ -67,7 +67,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - **Multiple Views:** Counties, Precincts (zoomed in), Congressional Districts, State House, State Senate
 - **District Lines Toggle (2022 vs 2024):** District views can switch between the 2022 MQP baseline and a 2024 line option; the first 2024 load can take longer while boundary GeoJSON downloads/parses
-- **Progressive District Linework (SCMap-style):** Congressional/State House/State Senate boundaries reveal progressively across zoom (faint + slightly blurred statewide, readable mid-zoom, crisp locally) with a clear hierarchy (Congress strongest, State House most delicate)
+- **Progressive District Linework (DRA-style):** Congressional/State House/State Senate boundaries use a bright halo + crisp charcoal inner stroke with smooth zoom interpolation, stronger statewide readability, and a close hierarchy (Congress strongest, Senate very close, House only slightly thinner)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
@@ -103,7 +103,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 20, 2026
+**Last updated:** April 21, 2026
+
+### District Boundary Readability Refresh (April 21, 2026)
+
+- Refined centralized district stroke styling in `index.html` (`DISTRICT_LINE_STYLE` + `applyDistrictStrokeStyle` usage) so all district types remain readable at default statewide zooms and over dark partisan fills.
+- Increased low-zoom (`z4`/`z6`) halo and inner-stroke opacity/width values for congressional, state senate, and state house boundaries while preserving smooth `interpolate` zoom expressions.
+- Removed legislative dashed styling from district boundaries so all three district families render as solid lines in the same visual system.
+- Kept hierarchy intentionally tight: congressional remains strongest, state senate is very close, and state house is only slightly thinner rather than substantially fainter.
 
 ### Modeled SD-43/44 Harmonization For 2022 Lines (April 20, 2026)
 
