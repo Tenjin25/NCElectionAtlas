@@ -8329,6 +8329,28 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     border: 1px solid rgba(148, 163, 184, 0.35);
   }
 
+  .modeled-context-badge.modeled-senate {
+    color: #1e3a8a;
+    background: rgba(59, 130, 246, 0.10);
+    border-color: rgba(59, 130, 246, 0.22);
+  }
+
+  .statewide-modeled-method,
+  .statewide-modeled-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #64748b;
+  }
+
+  .statewide-modeled-hint {
+    color: #475569;
+  }
+
+  .statewide-card[data-modeled-senate="1"] {
+    border-color: rgba(59, 130, 246, 0.20);
+  }
+
   .control-summary-pill-scenario {
     color: #1e3a8a;
     background: rgba(59, 130, 246, 0.14);
@@ -10608,7 +10630,7 @@ document.addEventListener('DOMContentLoaded', function() {
        climateYear: 2024,
         // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
         // and tighter caps on county-specific ticket-splitting and "trend nudge" noise.
-        blendWeight: 0.70, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
+        blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
         presidentialBaselineWeight: 0.60,
         senateBaselineWeight: 0.40,
         baselineRecentWeight: 0.60,
@@ -10638,6 +10660,9 @@ document.addEventListener('DOMContentLoaded', function() {
         federalizationBrakeMargin: 20,
         federalizationDeepMargin: 34,
         federalizationFloor: 0.62,
+        // Senate-first blend brake: in counties with durable Senate-vs-Pres divergence, reduce the share
+        // coming from the presidential climate baseline (capped).
+        distinctSenateBehaviorPresWeightBrakeMax: 0.10,
         // Realignment adjustment: subtle rightward nudge in counties with unusually strong federal movement
         // across 2016/2020/2024 and Senate 2020->2022 (capped + reliability-scaled).
         realignmentAdjustmentEnabled: true,
@@ -10687,7 +10712,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDurableAdjustmentFadeMax: 0.22,
         candidateBonusDurableGeneralFloor: 0.28,
         candidateBonusDurablePriorityFloor: 0.42,
-        candidateBonusPersonalFederalizationFloor: 0.28,
+        candidateBonusPersonalFederalizationFloor: 0.24,
         // Realignment-aware fade: treat more of the bonus as non-portable in counties that have continued
         // moving right at the federal level (e.g., Robeson, Bladen).
         candidateBonusPersonalRealignmentEnabled: true,
@@ -10698,16 +10723,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Keep crossover reduced but not eliminated; treat as durable+personal blend, not a hard anomaly override.
         // Scotland replaces Hoke in this residual ancestral-D/federalized class.
         candidateBonusRealignedFormerDemFederalCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
-        candidateBonusRealignedFormerDemFederalDurableFloor: 0.42,
-        candidateBonusRealignedFormerDemFederalPersonalFloor: 0.22,
-        candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.30,
+        candidateBonusRealignedFormerDemFederalDurableFloor: 0.44,
+        candidateBonusRealignedFormerDemFederalPersonalFloor: 0.18,
+        candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.26,
         candidateBonusRealignedFormerDemFederalResidualFloor: 0.30,
         candidateBonusRepeatableCrossoverBoost: 1.10,
         candidateBonusSuburbanDurableBoost: 1.08,
         candidateBonusFederalizationBrakeMargin: 22,
         candidateBonusFederalizationDeepRedMargin: 34,
         candidateBonusFederalizationFloor: 0.15,
-        candidateBonusDeepRedCapPts: 0.35,
+        candidateBonusDeepRedCapPts: 0.32,
         candidateBonusMaxPts: 0.78,
         candidateBonusBasePts: 0.25,
         candidateBonusUrbanPts: 0.15,
@@ -13356,7 +13381,23 @@ document.addEventListener('DOMContentLoaded', function() {
       // Use the separate badge row for the compact context tag + tier badge.
       if (t) t.textContent = rawTitle || '';
       if (s) s.textContent = sub || '';
-      if (c) c.style.display = showClear ? 'inline-flex' : 'none';
+      if (c) {
+        c.style.display = showClear ? 'inline-flex' : 'none';
+        try {
+          const contestValue = (document.getElementById('contestSelect')?.value || '').toString().trim();
+          const [ct, y] = typeof parseContestValue === 'function' ? parseContestValue(contestValue) : ['', NaN];
+          const isModeledSenate = showClear && typeof isModeledSenateEnhancementContest === 'function' && isModeledSenateEnhancementContest(ct, y);
+          if (isModeledSenate) {
+            c.textContent = 'Statewide';
+            c.title = 'Return to statewide view';
+            c.setAttribute('aria-label', 'Return to statewide view');
+          } else {
+            c.textContent = 'Clear';
+            c.title = 'Clear selection';
+            c.setAttribute('aria-label', 'Clear selection');
+          }
+        } catch (_) {}
+      }
       if (b) b.dataset.contextTag = tag ? tag[0].toUpperCase() + tag.slice(1).toLowerCase() : '';
     }
 
@@ -14911,6 +14952,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const getClusterCalibration = (cluster, modelKind = 'generic') => {
           const key = String(cluster || '').trim().toLowerCase();
           const isJudicial = modelKind === 'judicial';
+          const isSenate = modelKind === 'senate';
           const base = {
             elasticityMul: 1,
             turnoutBiasDelta: 0,
@@ -14919,7 +14961,7 @@ document.addEventListener('DOMContentLoaded', function() {
           };
           // Senate: allow a bit more structured differentiation (still subtle).
           // Judicial: keep cluster effects very small (mostly shrinkage/noise handling).
-          const table = isJudicial ? {
+          const judicialTable = {
             urban_core: { elasticityMul: 0.88, turnoutBiasDelta: -0.01 },
             inner_suburb: { elasticityMul: 0.90, turnoutBiasDelta: -0.005 },
             outer_suburb_exurb: { elasticityMul: 0.92, turnoutBiasDelta: 0.0 },
@@ -14930,7 +14972,8 @@ document.addEventListener('DOMContentLoaded', function() {
             coastal: { elasticityMul: 0.93, turnoutBiasDelta: 0.0 },
             military_institutional: { elasticityMul: 0.95, turnoutBiasDelta: 0.0 },
             rural_white: { elasticityMul: 0.95, turnoutBiasDelta: 0.005 }
-          } : {
+          };
+          const genericTable = {
             urban_core: { elasticityMul: 0.90, turnoutBiasDelta: -0.045, candidateBonusMul: 0.90, personalBonusMul: 0.88 },
             inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.06, personalBonusMul: 1.12 },
             outer_suburb_exurb: { elasticityMul: 1.03, turnoutBiasDelta: -0.005, candidateBonusMul: 1.02, personalBonusMul: 0.99 },
@@ -14942,6 +14985,13 @@ document.addEventListener('DOMContentLoaded', function() {
             military_institutional: { elasticityMul: 1.02, turnoutBiasDelta: 0.005, candidateBonusMul: 0.92, personalBonusMul: 0.90 },
             rural_white: { elasticityMul: 1.05, turnoutBiasDelta: 0.04, candidateBonusMul: 0.92, personalBonusMul: 0.90 }
           };
+          const senateTable = {
+            ...genericTable,
+            inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.05, personalBonusMul: 1.08 },
+            appalachian_rural_white: { elasticityMul: 1.00, turnoutBiasDelta: 0.032, candidateBonusMul: 0.85, personalBonusMul: 0.82 },
+            rural_white: { elasticityMul: 1.04, turnoutBiasDelta: 0.045, candidateBonusMul: 0.90, personalBonusMul: 0.86 }
+          };
+          const table = isJudicial ? judicialTable : (isSenate ? senateTable : genericTable);
           const hit = table[key] || null;
           return { ...base, ...(hit || {}) };
         };
@@ -15501,6 +15551,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 personalPts *= lerp(1, personalFloor, score);
               }
+
+              // Extra portability skepticism in very federalized counties: keep personal carryover from
+              // traveling too far into a generic Senate environment unless strongly supported.
+              if (Number.isFinite(absPresNow) && absPresNow >= deepRedMargin) {
+                personalPts *= 0.88;
+                durablePts *= 0.94;
+              }
+              if (isRealignedFormerDemFederalCounty) {
+                personalPts *= 0.90;
+              }
               durablePts *= outlierBrake;
               personalPts *= lerp(1, outlierBrake, 0.45);
               durablePts *= Number(clusterCal?.candidateBonusMul ?? 1);
@@ -15948,9 +16008,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     : baseCountySignedRaw);
                 countySenateAnchorSignedUsed = senateAnchorSignedForBaseline;
 
+                // Senate-first brake: if a county has durable Senate-vs-Pres divergence, avoid letting the
+                // presidential climate baseline dominate the county blend.
+                const senateMedianDev = Number(senateDiag?.medianDev);
+                const senateDurableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                const senateDevMag = Number.isFinite(senateMedianDev) ? clamp01((Math.abs(senateMedianDev) - 0.8) / 6.5) : 0;
+                const distinctSenateBehaviorScore = clamp01(senateDevMag * senateDurableScore);
+                const distinctBrakeMaxRaw = Number(modeledDef?.distinctSenateBehaviorPresWeightBrakeMax);
+                const distinctBrakeMax = Number.isFinite(distinctBrakeMaxRaw)
+                  ? Math.max(0, Math.min(0.16, distinctBrakeMaxRaw))
+                  : 0.10;
+                const distinctPresWeightBrake = distinctSenateBehaviorScore * distinctBrakeMax * (0.80 + (0.20 * federalizationBrake));
+
                 const countyPresWRaw = senatePresW
                   + (unstableBlendShiftMax * unstableScore)
-                  + (isRealignedFormerDemFederalCounty ? 0.04 : 0);
+                  + (isRealignedFormerDemFederalCounty ? 0.02 : 0)
+                  - distinctPresWeightBrake;
                 const countyPresW = clamp01(Math.max(senatePresW, Math.min(0.84, countyPresWRaw)));
                 const countyAnchorW = 1 - countyPresW;
                 countyPresWeightUsed = countyPresW;
@@ -16119,13 +16192,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (senateTrendCarryWeight > 0 && Number.isFinite(recentShift)) {
-                  targetSigned += recentShift * senateTrendCarryWeight * 0.5 * reliabilityScale;
+                  const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                  const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+                  const volatilityScore = clamp01((volatility - 3.5) / 5.5);
+                  const stabilityScale = (0.60 + (0.40 * countyConfidence)) * (0.78 + (0.22 * (1 - volatilityScore)));
+                  targetSigned += recentShift
+                    * senateTrendCarryWeight
+                    * 0.5
+                    * reliabilityScale
+                    * stabilityScale
+                    * (0.75 + (0.25 * durableScore))
+                    * (0.80 + (0.20 * outlierBrake));
                 }
 
                 if (senateIncumbentBoostPts > 0 && (senateIncumbentParty === 'DEM' || senateIncumbentParty === 'REP')) {
                   const sign = senateIncumbentParty === 'REP' ? 1 : -1;
                   const polarizedScale = 0.45 + (0.55 * computeFederalizationBrake(Math.abs(weightedCountyBase), 18, 36, 0.45));
-                  targetSigned += sign * senateIncumbentBoostPts * polarizedScale;
+                  const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                  const medianDev = Number(senateDiag?.medianDev);
+                  const crossoverScore = Number.isFinite(medianDev) ? clamp01((-medianDev) / 6.0) : 0.35;
+                  const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+                  let portability = clamp01(0.35 + (0.65 * ((0.55 * durableScore) + (0.45 * crossoverScore))));
+                  portability *= (0.72 + (0.28 * federalizationBrake));
+                  portability *= (0.70 + (0.30 * reliabilityScale));
+                  portability *= (0.75 + (0.25 * outlierBrake));
+                  if (isRealignedFormerDemFederalCounty) portability *= 0.82;
+                  targetSigned += sign * senateIncumbentBoostPts * polarizedScale * portability;
                 }
               }
 
@@ -16133,6 +16225,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 const lo = weightedCountyBase - senateAnomalyClampPts;
                 const hi = weightedCountyBase + senateAnomalyClampPts;
                 targetSigned = Math.max(lo, Math.min(hi, targetSigned));
+              } else if (isSenateDeviationModel && senateDiag) {
+                // Pattern-based anomaly clamp: if the base-cycle Senate-vs-Pres deviation looks like an outlier
+                // relative to recent history, keep the county closer to the presidential baseline unless durable.
+                const outlierGap = Number(senateDiag?.outlierGap);
+                const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+                const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                const gapScore = Number.isFinite(outlierGap) ? clamp01((outlierGap - 3.0) / 8.0) : 0;
+                const senatePresDelta = Math.abs(Number(countySenateAnchorSignedUsed) - Number(weightedCountyBase));
+                const senatePresScore = Number.isFinite(senatePresDelta) ? clamp01((senatePresDelta - 2.5) / 8.5) : 0;
+                const volatilityScore = clamp01((volatility - 3.5) / 5.5);
+                const isPatternOutlier = (gapScore >= 0.35 && senatePresScore >= 0.20 && durableScore <= 0.78);
+                if (isPatternOutlier) {
+                  let clampPts = senateAnomalyClampPts;
+                  clampPts *= (0.92 - (0.30 * gapScore));
+                  clampPts *= (0.88 + (0.12 * reliabilityScale));
+                  clampPts *= (0.90 + (0.10 * volatilityScore));
+                  clampPts *= (0.78 + (0.22 * outlierBrake));
+                  clampPts *= (0.70 + (0.30 * federalizationBrake));
+                  clampPts = Math.max(6, Math.min(senateAnomalyClampPts, clampPts));
+                  const lo = weightedCountyBase - clampPts;
+                  const hi = weightedCountyBase + clampPts;
+                  targetSigned = Math.max(lo, Math.min(hi, targetSigned));
+                }
               }
             }
 
@@ -19897,18 +20012,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const winnerSummary = winnerCall.party === 'tie'
           ? 'Even race'
           : `${winnerCall.winnerName} (${winnerCall.party === 'rep' ? 'R' : 'D'})`;
-        const closeRaceAlertHtml = buildStatewideCloseRaceAlertHTML(contestType, year, marginPct);
-        const modeledSenateExtrasHtml = isModeledSenateEnhancementContest(contestType, year)
+        const isModeledSenate = isModeledSenateEnhancementContest(contestType, year);
+        const modeledBadgeHtml = isModeledSenate ? `<span class="modeled-context-badge modeled-senate">Modeled race</span>` : '';
+        const kickerHtml = isModeledSenate ? `Modeled baseline ${modeledBadgeHtml}` : 'Statewide leader';
+        const sublineHtml = isModeledSenate
+          ? `${escapeHtml(winnerSummary)} | projected edge ${escapeHtml(marginLabel)} pts`
+          : `${escapeHtml(winnerSummary)} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin`;
+        const methodologyHtml = isModeledSenate
+          ? `<div class="statewide-modeled-method">Built from 2022 Senate, 2020 Senate, and 2024 presidential environment.</div>`
+          : '';
+        const hintHtml = (() => {
+          if (!isModeledSenate) return '';
+          const pinnedKind = String(voteCounterPinned?.meta?.kind || '').toLowerCase();
+          if (pinnedKind && pinnedKind !== 'statewide') return '';
+          return `<div class="statewide-modeled-hint">Click a county to inspect the modeled baseline.</div>`;
+        })();
+        const closeRaceAlertHtml = isModeledSenate ? '' : buildStatewideCloseRaceAlertHTML(contestType, year, marginPct);
+        const totalLabel = isModeledSenate ? 'Synthetic total' : 'Total votes';
+        const marginLabelLabel = isModeledSenate ? 'Modeled margin' : 'Margin';
+        const modeledSenateExtrasHtml = isModeledSenate
           ? buildModeledSenateStatewideExtrasHTML(opts?.modeledSenateInsights || null)
           : '';
 
         setStatewideResultsMarkup(`
-          <div class="statewide-card" data-party="${winnerCall.party}">
+          <div class="statewide-card" data-party="${winnerCall.party}" data-modeled-senate="${isModeledSenate ? '1' : '0'}">
             <div class="statewide-hero">
               <div>
-                <div class="statewide-kicker">Statewide leader</div>
+                <div class="statewide-kicker">${kickerHtml}</div>
                 <div class="statewide-call" data-party="${winnerCall.party}">${winnerCall.text}</div>
-                <div class="statewide-subline">${winnerSummary} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin</div>
+                <div class="statewide-subline">${sublineHtml}</div>
+                ${methodologyHtml}
+                ${hintHtml}
                 ${closeRaceAlertHtml}
               </div>
               <div class="statewide-competitive" style="color:${compColor};" title="${compLabel}">${compactCompetitivenessLabel(marginPct, winnerCall.party)}</div>
@@ -19918,11 +20052,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="statewide-breakdown">${breakdownGrid}</div>
             <div class="statewide-footer-row">
               <div class="statewide-stat">
-                <span>Total votes</span>
+                <span>${escapeHtml(totalLabel)}</span>
                 <strong>${totalVotes.toLocaleString()}</strong>
               </div>
               <div class="statewide-stat">
-                <span>Margin</span>
+                <span>${escapeHtml(marginLabelLabel)}</span>
                 <strong>${marginLabel} pts</strong>
               </div>
             </div>
