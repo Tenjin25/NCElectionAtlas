@@ -522,6 +522,14 @@
     }
   </script>
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+  <script>
+    // Reduce noisy console errors when ad blockers block Mapbox telemetry (events.mapbox.com).
+    try {
+      if (window.mapboxgl && typeof window.mapboxgl.setTelemetryEnabled === 'function') {
+        window.mapboxgl.setTelemetryEnabled(false);
+      }
+    } catch (_) {}
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <meta charset='utf-8'>
@@ -10288,6 +10296,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let electionDataJSON = null; // New JSON structure from nc_elections_aggregated.json
     let districtElectionDataJSON = null; // Legacy district-results fallback when slices are unavailable
+    let districtElectionDataLoadInflight = null;
+    let districtElectionDataLoadFailed = false;
     let electionData = null; // Flattened array for compatibility
     let contestManifest = [];
     let districtManifest = [];
@@ -10298,6 +10308,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
     let districtSliceCache = new Map();
+    // In-flight request dedupe (promise reuse) for atlas-wide loads.
+    const jsonInflightByPath = new Map(); // requestPath -> Promise<any>
+    const csvInflightByPath = new Map(); // requestPath -> Promise<string>
+    const contestSliceInflight = new Map(); // `${contestType}_${year}` -> Promise<rows[]>
+    const districtSliceInflight = new Map(); // `${linesYear}|${scope}_${contestType}_${year}` -> Promise<payload>
     let countyTrendSeriesCache = new Map(); // Map<string key, Array<seriesRow>> (in-session cache)
     const districtCarryCrosswalkCache = new Map();
     let districtsInfo = null;
@@ -10314,6 +10329,104 @@ document.addEventListener('DOMContentLoaded', function() {
     const countyVoteDeltaInflightByPair = new Map(); // Map<string key, Promise<void>>
     const countyVoteDeltaHoverRefreshScheduledByPair = new Set(); // Set<string key>
     const contestYearsByTypeCache = new Map(); // Map<string contestType, number[]>
+
+    // --- Derived caches (county aggregates, statewide totals) ---
+    // Key includes modeled signature + scenario inputs so we never reuse stale tuned outputs.
+    const countyAggregateBundleCache = new Map(); // key -> { countyAgg, countyTurnoutTotals, statewide, candidates }
+    const precinctAdjustedRowCache = new Map(); // key -> Map<precinctNorm, adjustedRow> (only built when precinct detail is enabled)
+    const countyColorExprCache = new Map(); // key -> { expr, countyFillColorByNorm }
+    const precinctColorExprCache = new Map(); // key -> { expr, turnoutTotals }
+
+    function getContestSliceSourceSignature(contestType, year) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      if (!ct || !Number.isFinite(y)) return 'raw';
+      const modeledDef = getModeledContestDefinition(ct, y);
+      if (!modeledDef) return 'raw';
+      const sig = getModeledDefSignature(modeledDef);
+      return sig ? `modeled:${sig}` : 'modeled';
+    }
+
+    // --- Optional atlas-wide perf instrumentation (disabled by default) ---
+    // Enable at runtime via `localStorage.setItem('atlasPerfDebug','1')`.
+    const ATLAS_PERF_DEBUG = false;
+    function atlasPerfNow() {
+      try { return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') ? performance.now() : Date.now(); } catch (_) {}
+      return Date.now();
+    }
+    function atlasPerfEnabled() {
+      if (ATLAS_PERF_DEBUG) return true;
+      try { return typeof localStorage !== 'undefined' && localStorage && localStorage.getItem('atlasPerfDebug') === '1'; } catch (_) {}
+      return false;
+    }
+    async function atlasPerf(label, fn) {
+      if (!atlasPerfEnabled() || typeof fn !== 'function') return fn();
+      const t0 = atlasPerfNow();
+      try {
+        const out = await fn();
+        const dt = atlasPerfNow() - t0;
+        console.log(`[atlas] ${label}: ${dt.toFixed(1)}ms`);
+        return out;
+      } catch (err) {
+        const dt = atlasPerfNow() - t0;
+        console.log(`[atlas] ${label}: ${dt.toFixed(1)}ms (error)`);
+        throw err;
+      }
+    }
+
+    // --- Modeled contest perf + memoization ---
+    // Goals:
+    // - Keep raw source slices fetched once per session.
+    // - Split "load raw slice" from "build modeled result" and cache both.
+    // - Keep multiple modeled variants (per tuning inputs) so returning is instant.
+    const MODELED_PERF_DEBUG = false; // Flip to true for lightweight console timings.
+    function modeledPerfNow() {
+      try { return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') ? performance.now() : Date.now(); } catch (_) {}
+      return Date.now();
+    }
+    async function modeledPerf(label, fn) {
+      if (!MODELED_PERF_DEBUG || typeof fn !== 'function') return fn();
+      const t0 = modeledPerfNow();
+      try {
+        const out = await fn();
+        const dt = modeledPerfNow() - t0;
+        console.log(`[modeled] ${label}: ${dt.toFixed(1)}ms`);
+        return out;
+      } catch (err) {
+        const dt = modeledPerfNow() - t0;
+        console.log(`[modeled] ${label}: ${dt.toFixed(1)}ms (error)`);
+        throw err;
+      }
+    }
+
+    // Dedicated modeled ingredient caches (raw slices -> derived county totals/signed maps).
+    // Keys are `${contestType}_${year}`.
+    const modeledBaseCountySliceCache = new Map();
+    const modeledBaseCountySliceInflight = new Map();
+    const modeledClimateCountySliceCache = new Map();
+    const modeledClimateCountySliceInflight = new Map();
+    const modeledSenateAnchorCountySliceCache = new Map();
+    const modeledSenateAnchorCountySliceInflight = new Map();
+    const modeledAuxCountySliceCache = new Map(); // other helper years/anchors used by models
+    const modeledAuxCountySliceInflight = new Map();
+
+    // Modeled outputs (county + district) cached by full modeled input signature.
+    const modeledCountyOutputCache = new Map(); // key: modeledDefSignature -> rows[]
+    const modeledCountyOutputInflight = new Map(); // key -> Promise<rows[]>
+    const modeledDistrictOutputCache = new Map(); // key: `${linesYear}|${scope}|${modeledDefSignature}` -> node
+    const modeledDistrictOutputInflight = new Map(); // key -> Promise<node>
+    const modeledBaselineCountyOutputCache = new Map(); // key: `${baseContestType}_${baseYear}|${modeledDefSignature}` -> rows[]
+    const modeledBaselineCountyOutputInflight = new Map(); // key -> Promise<rows[]>
+
+    // Modeled Senate helper caches (statewide insights built during apply/render).
+    const modeledSenateInsightsCache = new Map(); // key: `${modeledDefSignature}|scenario:${...}` -> insights|null
+
+    // Helper memoization to avoid rebuilding lookup maps repeatedly.
+    const modeledCountyFromRowKeyMemo = new Map(); // rawRowCounty -> countyNorm
+    const modeledCensusContextMemo = new Map(); // countyNorm -> census ctx|null
+    const modeledCountyClusterCache = new Map(); // key: `${modelKind}|${baseContestType}_${baseYear}` -> Map countyNorm -> cluster
+
+    let modeledSenateCorePreloadScheduled = false;
 
     function countyVoteDeltaPairKey(contestType, fromYear, toYear) {
       const ct = String(contestType || '').trim();
@@ -10559,6 +10672,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctGeometryMode = null; // 'precinct' or 'vtd20' based on contest year
     let lastPrecinctFillExpr = null; // Cached fill-color expression for precinct overlay.
     let lastPrecinctDotExpr = null; // Cached circle-color expression for precinct dots (statewide zoom).
+    let lastCountyFillExpr = null; // Cached fill-color expression for county layer.
+    let lastAppliedPrecinctPaintExpr = null; // Tracks last expression applied to precinct fill/dots.
     let precinctPolygonNormSet = null; // Set<string precinct_norm> from polygon source (used to show centroid fallback for missing polygons).
     let precinctCentroidsData = null; // Cached centroids GeoJSON so we can annotate with has_polygon after polygons load.
     let precinctCentroidsLoaded = false;
@@ -11302,6 +11417,176 @@ document.addEventListener('DOMContentLoaded', function() {
       return out;
     }
 
+    // --- Modeled contest signature + derived slice helpers ---
+    // Signature is used to cache modeled results across contest switches and tuning changes.
+    function modeledStableStringify(value) {
+      const seen = new WeakSet();
+      const recur = (v) => {
+        if (v === null || v === undefined) return v;
+        const t = typeof v;
+        if (t === 'number') return Number.isFinite(v) ? v : String(v);
+        if (t === 'string' || t === 'boolean') return v;
+        if (t !== 'object') return String(v);
+        if (seen.has(v)) return '[Circular]';
+        seen.add(v);
+        if (Array.isArray(v)) return v.map(recur);
+        const out = {};
+        Object.keys(v).sort().forEach(k => { out[k] = recur(v[k]); });
+        return out;
+      };
+      try { return JSON.stringify(recur(value)); } catch (_) { return String(value); }
+    }
+
+    function getModeledDefSignature(modeledDef) {
+      if (!modeledDef) return '';
+      const ct = String(modeledDef?.contestType || '').trim();
+      const y = Number(modeledDef?.year);
+      if (!ct || !Number.isFinite(y)) return '';
+      // Include the full definition (sorted keys) so any tuning input change yields a new cache key.
+      return `${ct}_${y}|${modeledStableStringify(modeledDef)}`;
+    }
+
+    function modeledNormalizeRowKey(raw) {
+      return (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    function modeledCountyFromRowKey(rawKey) {
+      const key = modeledNormalizeRowKey(rawKey);
+      if (!key) return '';
+      if (modeledCountyFromRowKeyMemo.has(key)) return modeledCountyFromRowKeyMemo.get(key) || '';
+      const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
+      const county = normalizeCountyToken(countyOnly);
+      try { modeledCountyFromRowKeyMemo.set(key, county); } catch (_) {}
+      return county || '';
+    }
+
+    function modeledGetNcCensusContextCached(countyNorm) {
+      const c = normalizeCountyToken(countyNorm);
+      if (!c) return null;
+      if (modeledCensusContextMemo.has(c)) return modeledCensusContextMemo.get(c) || null;
+      let ctx = null;
+      try { ctx = getNcCensusContext(c); } catch (_) { ctx = null; }
+      try { modeledCensusContextMemo.set(c, ctx); } catch (_) {}
+      return ctx;
+    }
+
+    function buildModeledCountyTotalsFromSliceRows(rows, contestType) {
+      const ct = String(contestType || '').trim();
+      const out = new Map();
+      (rows || []).forEach(r => {
+        const rowKey = modeledNormalizeRowKey(r?.county || '');
+        if (!rowKey) return;
+        const county = modeledCountyFromRowKey(rowKey);
+        if (!county) return;
+        const node = out.get(county) || { dem: 0, rep: 0, other: 0, total: 0 };
+        const dem = Number(r?.[`${ct}_dem`] || 0);
+        const rep = Number(r?.[`${ct}_rep`] || 0);
+        const other = Number(r?.[`${ct}_other`] || 0);
+        const fallbackTotal = dem + rep + other;
+        const total = Math.max(0, Number(r?.[`${ct}_total`] || fallbackTotal));
+        node.dem += dem;
+        node.rep += rep;
+        node.other += other;
+        node.total += total;
+        out.set(county, node);
+      });
+      return out;
+    }
+
+    function modeledCountySignedFromTotalsMap(totalsMap) {
+      const map = new Map();
+      (totalsMap || new Map()).forEach((totals, county) => {
+        const signed = signedMarginPctFromVotes(Number(totals?.dem || 0), Number(totals?.rep || 0), Number(totals?.total || 0));
+        if (Number.isFinite(signed)) map.set(county, signed);
+      });
+      return map;
+    }
+
+    function modeledStateSignedFromTotalsMap(totalsMap) {
+      const acc = { dem: 0, rep: 0, total: 0 };
+      (totalsMap || new Map()).forEach((totals) => {
+        acc.dem += Number(totals?.dem || 0);
+        acc.rep += Number(totals?.rep || 0);
+        acc.total += Number(totals?.total || 0);
+      });
+      return signedMarginPctFromVotes(acc.dem, acc.rep, acc.total);
+    }
+
+    function modeledStateTotalVotesFromTotalsMap(totalsMap) {
+      let acc = 0;
+      (totalsMap || new Map()).forEach((totals) => { acc += Math.max(0, Number(totals?.total || 0)); });
+      return acc;
+    }
+
+    async function getModeledDerivedCountySlice(cache, inflight, contestType, year, label) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      if (!ct || !Number.isFinite(y)) return null;
+      const key = `${ct}_${y}`;
+      if (cache.has(key)) return cache.get(key);
+      if (inflight.has(key)) return inflight.get(key);
+      const p = modeledPerf(label || `modeled.slice.${key}`, async () => {
+        const rows = await loadContestSlice(ct, y);
+        const totalsByCounty = buildModeledCountyTotalsFromSliceRows(rows, ct);
+        const signedByCounty = modeledCountySignedFromTotalsMap(totalsByCounty);
+        const stateSignedFromRows = computeStatewideMarginPctFromSliceRows(rows, ct);
+        const stateSignedFromTotals = modeledStateSignedFromTotalsMap(totalsByCounty);
+        const stateTotalVotes = modeledStateTotalVotesFromTotalsMap(totalsByCounty);
+        return {
+          key,
+          contestType: ct,
+          year: y,
+          rows,
+          totalsByCounty,
+          signedByCounty,
+          stateSignedFromRows,
+          stateSignedFromTotals,
+          stateTotalVotes
+        };
+      });
+      inflight.set(key, p);
+      try {
+        const out = await p;
+        cache.set(key, out);
+        return out;
+      } finally {
+        inflight.delete(key);
+      }
+    }
+
+    function scheduleModeledSenateCorePreload() {
+      if (modeledSenateCorePreloadScheduled) return;
+      modeledSenateCorePreloadScheduled = true;
+      const run = async () => {
+        try {
+          const modeledDef = getModeledContestDefinition('us_senate_model', 2026);
+          if (!modeledDef) return;
+          const baseType = String(modeledDef?.baseContestType || '').trim();
+          const baseYear = Number(modeledDef?.baseYear);
+          const climateType = String(modeledDef?.climateContestType || '').trim();
+          const climateYear = Number(modeledDef?.climateYear);
+          const anchorType = String(modeledDef?.secondaryBaseContestType || '').trim();
+          const anchorYear = Number(modeledDef?.secondaryBaseYear);
+          // Preload only county-mode ingredients; do not compute district-mode modeled slices here.
+          if (baseType && Number.isFinite(baseYear)) {
+            await getModeledDerivedCountySlice(modeledBaseCountySliceCache, modeledBaseCountySliceInflight, baseType, baseYear, 'modeled.preload.base');
+          }
+          if (climateType && Number.isFinite(climateYear)) {
+            await getModeledDerivedCountySlice(modeledClimateCountySliceCache, modeledClimateCountySliceInflight, climateType, climateYear, 'modeled.preload.climate');
+          }
+          if (anchorType && Number.isFinite(anchorYear)) {
+            await getModeledDerivedCountySlice(modeledSenateAnchorCountySliceCache, modeledSenateAnchorCountySliceInflight, anchorType, anchorYear, 'modeled.preload.anchor');
+          }
+        } catch (_) {}
+      };
+      const kickoff = () => run().catch(() => {});
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => kickoff(), { timeout: 6000 });
+      } else {
+        setTimeout(kickoff, 1200);
+      }
+    }
+
     function invalidateModeledContestCaches(contestType) {
       const key = String(contestType || '').trim();
       if (!key) return;
@@ -11316,22 +11601,29 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       if (!modeledYears.size) return;
 
+      // Performance change: modeled results are cached by full modeled input signature (not just contestType+year),
+      // so changing a tuning control should not destroy prior variants. This makes returning to an earlier setting
+      // nearly instant and avoids full cache resets from minor UI tweaks.
+      //
+      // We keep the legacy cache deletes as a safety valve in case older code paths ever wrote modeled outputs
+      // into the generic slice caches.
       modeledYears.forEach(year => {
         const contestKey = `${key}_${year}`;
-        contestSliceCache.delete(contestKey);
+        try { contestSliceCache.delete(contestKey); } catch (_) {}
       });
-
-      const districtKeysToDelete = [];
-      districtSliceCache.forEach((_, cacheKey) => {
-        const rawKey = String(cacheKey || '');
-        for (const year of modeledYears) {
-          if (rawKey.endsWith(`_${key}_${year}`)) {
-            districtKeysToDelete.push(rawKey);
-            break;
+      try {
+        const districtKeysToDelete = [];
+        districtSliceCache.forEach((_, cacheKey) => {
+          const rawKey = String(cacheKey || '');
+          for (const year of modeledYears) {
+            if (rawKey.endsWith(`_${key}_${year}`)) {
+              districtKeysToDelete.push(rawKey);
+              break;
+            }
           }
-        }
-      });
-      districtKeysToDelete.forEach(k => districtSliceCache.delete(k));
+        });
+        districtKeysToDelete.forEach(k => districtSliceCache.delete(k));
+      } catch (_) {}
     }
 
     function setModeledContestOverrides(contestType, patch) {
@@ -11810,7 +12102,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       currentDistrictLinesYear = nextYear;
       districtManifest = getActiveDistrictManifest();
-      districtSliceCache = new Map();
+      // Keep `districtSliceCache` warm across line switches: cache keys include the lines year.
       districtCarryCrosswalkCache.clear();
       vizPrevDistrictCache.clear();
       clearDistrictSearchGeoJSONCache();
@@ -14467,16 +14759,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadJSON(path) {
       const requestPath = withCacheBuster(path);
-      const r = await fetch(requestPath, { cache: 'force-cache' });
-      if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-      return r.json();
+      if (jsonInflightByPath.has(requestPath)) return jsonInflightByPath.get(requestPath);
+      const p = atlasPerf(`json:${requestPath}`, async () => {
+        const r = await fetch(requestPath, { cache: 'force-cache' });
+        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
+        return r.json();
+      });
+      jsonInflightByPath.set(requestPath, p);
+      try {
+        return await p;
+      } finally {
+        jsonInflightByPath.delete(requestPath);
+      }
     }
 
 	    async function loadCSV(path) {
 	      const requestPath = withCacheBuster(path);
-	      const r = await fetch(requestPath, { cache: 'force-cache' });
-	      if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-	      return r.text();
+	      if (csvInflightByPath.has(requestPath)) return csvInflightByPath.get(requestPath);
+	      const p = atlasPerf(`csv:${requestPath}`, async () => {
+	        const r = await fetch(requestPath, { cache: 'force-cache' });
+	        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
+	        return r.text();
+	      });
+	      csvInflightByPath.set(requestPath, p);
+	      try {
+	        return await p;
+	      } finally {
+	        csvInflightByPath.delete(requestPath);
+	      }
 	    }
 
 	    const PRESIDENT_OPEN_ELECTIONS_CSV = {
@@ -14672,16 +14982,35 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function buildModeledContestSliceRows(modeledDef) {
-        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
-        const climateRows = await loadContestSlice(modeledDef.climateContestType, modeledDef.climateYear);
-        const baseSignedRaw = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
-        const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
+        const baseContestType = String(modeledDef?.baseContestType || '').trim();
+        const climateContestType = String(modeledDef?.climateContestType || '').trim();
+        const baseYear = Number(modeledDef?.baseYear);
+        const climateYear = Number(modeledDef?.climateYear);
+
+        // Performance change: split raw slice load from modeled build.
+        // Derived county totals/signed maps are cached once per session per contest/year, and reused across rebuilds.
+        const baseSlice = await getModeledDerivedCountySlice(
+          modeledBaseCountySliceCache,
+          modeledBaseCountySliceInflight,
+          baseContestType,
+          baseYear,
+          'modeled.slice.base'
+        );
+        const climateSlice = await getModeledDerivedCountySlice(
+          modeledClimateCountySliceCache,
+          modeledClimateCountySliceInflight,
+          climateContestType,
+          climateYear,
+          'modeled.slice.climate'
+        );
+        const baseRows = baseSlice?.rows || [];
+        const climateRows = climateSlice?.rows || [];
+        const baseSignedRaw = Number(baseSlice?.stateSignedFromRows);
+        const climateSigned = Number(climateSlice?.stateSignedFromRows);
         const climateSwingPct = baseSignedRaw - climateSigned; // fallback when blendWeight isn't enabled
 
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
-        const baseContestType = String(modeledDef?.baseContestType || '').trim();
-        const climateContestType = String(modeledDef?.climateContestType || '').trim();
         const modeledType = String(modeledDef?.contestType || '').trim();
         const isSenateDeviationModel = modeledType === 'us_senate_model';
         const isJudicialModel = !!modeledDef?.judicialModel || modeledType === 'nc_supreme_court_model';
@@ -14697,7 +15026,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let secondaryBaseRows = null;
         if (isSenateDeviationModel && secondaryBaseContestType && Number.isFinite(secondaryBaseYear) && secondaryBaseYear > 0) {
           try {
-            secondaryBaseRows = await loadContestSlice(secondaryBaseContestType, secondaryBaseYear);
+            const secondarySlice = await getModeledDerivedCountySlice(
+              modeledSenateAnchorCountySliceCache,
+              modeledSenateAnchorCountySliceInflight,
+              secondaryBaseContestType,
+              secondaryBaseYear,
+              'modeled.slice.senate_anchor'
+            );
+            secondaryBaseRows = secondarySlice?.rows || null;
           } catch (_) {
             secondaryBaseRows = null;
           }
@@ -14705,7 +15041,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const clamp01 = (v) => Math.max(0, Math.min(1, Number.isFinite(Number(v)) ? Number(v) : 0));
         const lerp = (a, b, t) => (Number(a) + ((Number(b) - Number(a)) * clamp01(t)));
         const getCountyCensusContextSafe = (countyNorm) => {
-          try { return getNcCensusContext(countyNorm); } catch (_) { return null; }
+          return modeledGetNcCensusContextCached(countyNorm);
         };
         const normalizeRowKey = (raw) => (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
         const countyFromRowKey = (key) => {
@@ -14841,8 +15177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // - Build a statewide-anchored county baseline (weighted recent + second + long-run history).
         // - Localize via county offsets, trend and volatility-aware elasticity, and a stability brake.
         // - Then apply a uniform per-county swing to each base row to preserve map/precinct architecture.
-        const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
-        const baseCountySignedRawByCounty = getCountySignedFromTotalsMap(baseCountyTotals);
+        const baseCountyTotals = baseSlice?.totalsByCounty || buildCountyTotals(baseRows, baseContestType);
+        const baseCountySignedRawByCounty = baseSlice?.signedByCounty || getCountySignedFromTotalsMap(baseCountyTotals);
 
         // US Senate model: build a Senate-anchor map that blends 2022 + 2020 before climate blending.
         // This is used for deviation measurement (Senate-vs-Pres) and statewide anchoring.
@@ -14851,8 +15187,15 @@ document.addEventListener('DOMContentLoaded', function() {
         let secondaryBaseSignedByCounty = null; // Map county -> signed margin for the secondary Senate anchor
         if (isSenateDeviationModel && secondaryBaseRows && secondaryBaseContestType) {
           try {
-            const secondaryCountyTotals = buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
-            secondaryBaseSignedByCounty = getCountySignedFromTotalsMap(secondaryCountyTotals);
+            const secondarySlice = await getModeledDerivedCountySlice(
+              modeledSenateAnchorCountySliceCache,
+              modeledSenateAnchorCountySliceInflight,
+              secondaryBaseContestType,
+              secondaryBaseYear,
+              'modeled.slice.senate_anchor'
+            );
+            const secondaryCountyTotals = secondarySlice?.totalsByCounty || buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
+            secondaryBaseSignedByCounty = secondarySlice?.signedByCounty || getCountySignedFromTotalsMap(secondaryCountyTotals);
             const w2 = clamp01(senateAnchorSecondWeight);
             const w1 = 1 - w2;
             const allCounties = new Set([
@@ -14872,7 +15215,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             senateAnchorSignedByCounty = map.size ? map : null;
 
-            const secondaryStateSigned = getStateSignedFromTotalsMap(secondaryCountyTotals);
+            const secondaryStateSigned = Number.isFinite(Number(secondarySlice?.stateSignedFromTotals))
+              ? Number(secondarySlice.stateSignedFromTotals)
+              : getStateSignedFromTotalsMap(secondaryCountyTotals);
             if (Number.isFinite(secondaryStateSigned) && Number.isFinite(baseSignedRaw)) {
               senateAnchorStateSigned = ((1 - w2) * baseSignedRaw) + (w2 * secondaryStateSigned);
             }
@@ -14883,10 +15228,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
-        const climateSignedByCounty = getCountySignedFromTotalsMap(climateCountyTotals);
-        const baseStateTotalVotes = Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
-        const climateStateTotalVotes = Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+        const climateCountyTotals = climateSlice?.totalsByCounty || buildCountyTotals(climateRows, climateContestType);
+        const climateSignedByCounty = climateSlice?.signedByCounty || getCountySignedFromTotalsMap(climateCountyTotals);
+        const baseStateTotalVotes = Number.isFinite(Number(baseSlice?.stateTotalVotes))
+          ? Number(baseSlice.stateTotalVotes)
+          : Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+        const climateStateTotalVotes = Number.isFinite(Number(climateSlice?.stateTotalVotes))
+          ? Number(climateSlice.stateTotalVotes)
+          : Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
 
         // Judicial partisan anchor floor: blend a small share of a stable partisan baseline (federal/downballot)
         // into the judicial baseline to avoid one noisy judicial cycle overdriving county crossover behavior.
@@ -14904,12 +15253,32 @@ document.addEventListener('DOMContentLoaded', function() {
             let mapA = null;
             let mapB = null;
             if (aType && Number.isFinite(aYear)) {
-              const rowsA = await loadContestSlice(aType, aYear);
-              mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
+              const sliceA = await getModeledDerivedCountySlice(
+                modeledAuxCountySliceCache,
+                modeledAuxCountySliceInflight,
+                aType,
+                aYear,
+                'modeled.slice.partisan_a'
+              );
+              mapA = sliceA?.signedByCounty || null;
+              if (!mapA) {
+                const rowsA = await loadContestSlice(aType, aYear);
+                mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
+              }
             }
             if (bType && Number.isFinite(bYear)) {
-              const rowsB = await loadContestSlice(bType, bYear);
-              mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
+              const sliceB = await getModeledDerivedCountySlice(
+                modeledAuxCountySliceCache,
+                modeledAuxCountySliceInflight,
+                bType,
+                bYear,
+                'modeled.slice.partisan_b'
+              );
+              mapB = sliceB?.signedByCounty || null;
+              if (!mapB) {
+                const rowsB = await loadContestSlice(bType, bYear);
+                mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
+              }
             }
             if (mapA || mapB) {
               const all = new Set([
@@ -14933,11 +15302,19 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        const countyClusterByCounty = new Map();
-        baseCountyTotals.forEach((totals, county) => {
-          if (!county) return;
-          countyClusterByCounty.set(county, inferCountyCluster(county, totals));
-        });
+        // Performance change: cluster classification is stable for a given model kind + base contest slice.
+        // Cache it so tuning changes don't repeatedly rebuild the same per-county lookup.
+        const modelKind = isJudicialModel ? 'judicial' : (isSenateDeviationModel ? 'senate' : 'generic');
+        const clusterCacheKey = `${modelKind}|${baseContestType}_${baseYear}`;
+        let countyClusterByCounty = modeledCountyClusterCache.get(clusterCacheKey) || null;
+        if (!countyClusterByCounty) {
+          countyClusterByCounty = new Map();
+          baseCountyTotals.forEach((totals, county) => {
+            if (!county) return;
+            countyClusterByCounty.set(county, inferCountyCluster(county, totals));
+          });
+          try { modeledCountyClusterCache.set(clusterCacheKey, countyClusterByCounty); } catch (_) {}
+        }
 
         const clusterCalibrationEnabled = !!modeledDef?.countyClusterCalibrationEnabled;
         const clusterCalibrationStrength = clusterCalibrationEnabled
@@ -15029,12 +15406,28 @@ document.addEventListener('DOMContentLoaded', function() {
           .filter(v => Number.isFinite(v));
         for (const y of yearsToLoad) {
           try {
-            const rows = (Number(y) === Number(modeledDef?.climateYear) && climateContestType === String(modeledDef?.climateContestType || '').trim())
-              ? climateRows
-              : await loadContestSlice(climateContestType, y);
-            const totals = buildCountyTotals(rows, climateContestType);
-            historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
-            historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+            const useClimateDirect = (Number(y) === Number(climateYear));
+            const slice = useClimateDirect
+              ? climateSlice
+              : await getModeledDerivedCountySlice(
+                  modeledAuxCountySliceCache,
+                  modeledAuxCountySliceInflight,
+                  climateContestType,
+                  y,
+                  'modeled.slice.history'
+                );
+            if (slice?.signedByCounty) {
+              historicalCountySignedByYear.set(Number(y), slice.signedByCounty);
+              historicalStateSignedByYear.set(
+                Number(y),
+                Number.isFinite(Number(slice?.stateSignedFromTotals)) ? Number(slice.stateSignedFromTotals) : 0
+              );
+            } else {
+              const rows = useClimateDirect ? climateRows : await loadContestSlice(climateContestType, y);
+              const totals = buildCountyTotals(rows, climateContestType);
+              historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
+              historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+            }
           } catch (_) {}
         }
 
@@ -16900,8 +17293,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function buildModeledBaselineContestSliceRows(modeledDef) {
-        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
-        return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
+        const baseContestType = String(modeledDef?.baseContestType || '').trim();
+        const baseYear = Number(modeledDef?.baseYear);
+        const sig = getModeledDefSignature(modeledDef);
+        const key = `${baseContestType}_${baseYear}|${sig}`;
+        if (sig && modeledBaselineCountyOutputCache.has(key)) return modeledBaselineCountyOutputCache.get(key);
+        if (sig && modeledBaselineCountyOutputInflight.has(key)) return modeledBaselineCountyOutputInflight.get(key);
+        const p = modeledPerf(`modeled.county.baseline:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}`, async () => {
+          const baseRows = await loadContestSlice(baseContestType, baseYear);
+          return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
+        });
+        if (sig) modeledBaselineCountyOutputInflight.set(key, p);
+        try {
+          const rows = await p;
+          if (sig) modeledBaselineCountyOutputCache.set(key, rows);
+          return rows;
+        } finally {
+          if (sig) modeledBaselineCountyOutputInflight.delete(key);
+        }
       }
 
       function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct, targetTotalOverride = null) {
@@ -17285,66 +17694,88 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
 	    async function loadContestSlice(contestType, year) {
-	      const key = `${contestType}_${year}`;
-	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
-
         const modeledDef = getModeledContestDefinition(contestType, year);
         if (modeledDef) {
-          const modeledRows = await buildModeledContestSliceRows(modeledDef);
-          contestSliceCache.set(key, modeledRows);
-          return modeledRows;
-        }
-
-        const manifestHasEntries = Array.isArray(contestManifest) && contestManifest.length > 0;
-        const manifestEntry = manifestHasEntries
-          ? (contestManifest.find(e => e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope) || null)
-          : null;
-        const manifestFile = (manifestEntry?.file || '').toString().trim();
-
-        // Prefer OpenElections CSV for older presidential cycles to avoid a known-missing JSON fetch (and console 404 noise).
-        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+          const sig = getModeledDefSignature(modeledDef);
+          if (sig && modeledCountyOutputCache.has(sig)) return modeledCountyOutputCache.get(sig);
+          if (sig && modeledCountyOutputInflight.has(sig)) return modeledCountyOutputInflight.get(sig);
+          const p = modeledPerf(`modeled.county.build:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}`, async () => {
+            return await buildModeledContestSliceRows(modeledDef);
+          });
+          if (sig) modeledCountyOutputInflight.set(sig, p);
           try {
-            const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
-            contestSliceCache.set(key, rows);
+            const rows = await p;
+            if (sig) modeledCountyOutputCache.set(sig, rows);
             return rows;
-          } catch (err) {
-            console.warn('Failed to load OpenElections presidential CSV for', year, err?.message || err);
+          } finally {
+            if (sig) modeledCountyOutputInflight.delete(sig);
           }
         }
 
-	      try {
-          if (manifestHasEntries && !manifestEntry) {
-            // Manifest is present but this contest/year isn't indexed: don't guess a JSON filename that will 404.
-            const fallback = (electionData || []).filter(row => row.year == year);
-            contestSliceCache.set(key, fallback);
-            return fallback;
+	      const key = `${contestType}_${year}`;
+	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
+        if (contestSliceInflight.has(key)) return contestSliceInflight.get(key);
+
+        const p = atlasPerf(`slice.contest:${key}`, async () => {
+
+          const manifestHasEntries = Array.isArray(contestManifest) && contestManifest.length > 0;
+          const manifestEntry = manifestHasEntries
+            ? (contestManifest.find(e => e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope) || null)
+            : null;
+          const manifestFile = (manifestEntry?.file || '').toString().trim();
+
+          // Prefer OpenElections CSV for older presidential cycles to avoid a known-missing JSON fetch (and console 404 noise).
+          if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+            try {
+              const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+              contestSliceCache.set(key, rows);
+              return rows;
+            } catch (err) {
+              console.warn('Failed to load OpenElections presidential CSV for', year, err?.message || err);
+            }
           }
 
-          const payloadPath = manifestFile
-            ? `${CONFIG.paths.contests_dir}/${manifestFile}`
-            : `${CONFIG.paths.contests_dir}/${key}.json`;
-	        const payload = await loadJSON(payloadPath);
-	        const rows = (payload.rows || []).map(r => ({
-	          year: Number(year),
-	          county: r.county,
-          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-          [`${contestType}_other`]: Number(r.other_votes) || 0,
-          [`${contestType}_total`]: Number(r.total_votes) || 0,
-          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-          [`${contestType}_margin`]: Number(r.margin) || 0,
-          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-          [`${contestType}_winner`]: r.winner || '',
-          [`${contestType}_color`]: r.color || ''
-        }));
-	        contestSliceCache.set(key, rows);
-	        return rows;
-	      } catch (_) {
-	        const fallback = (electionData || []).filter(row => row.year == year);
-	        contestSliceCache.set(key, fallback);
-	        return fallback;
-	      }
+	        try {
+            if (manifestHasEntries && !manifestEntry) {
+              // Manifest is present but this contest/year isn't indexed: don't guess a JSON filename that will 404.
+              const fallback = (electionData || []).filter(row => row.year == year);
+              contestSliceCache.set(key, fallback);
+              return fallback;
+            }
+
+            const payloadPath = manifestFile
+              ? `${CONFIG.paths.contests_dir}/${manifestFile}`
+              : `${CONFIG.paths.contests_dir}/${key}.json`;
+	          const payload = await loadJSON(payloadPath);
+	          const rows = (payload.rows || []).map(r => ({
+	            year: Number(year),
+	            county: r.county,
+              [`${contestType}_dem`]: Number(r.dem_votes) || 0,
+              [`${contestType}_rep`]: Number(r.rep_votes) || 0,
+              [`${contestType}_other`]: Number(r.other_votes) || 0,
+              [`${contestType}_total`]: Number(r.total_votes) || 0,
+              [`${contestType}_dem_candidate`]: r.dem_candidate || '',
+              [`${contestType}_rep_candidate`]: r.rep_candidate || '',
+              [`${contestType}_margin`]: Number(r.margin) || 0,
+              [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
+              [`${contestType}_winner`]: r.winner || '',
+              [`${contestType}_color`]: r.color || ''
+            }));
+	          contestSliceCache.set(key, rows);
+	          return rows;
+	        } catch (_) {
+	          const fallback = (electionData || []).filter(row => row.year == year);
+	          contestSliceCache.set(key, fallback);
+	          return fallback;
+	        }
+        });
+
+        contestSliceInflight.set(key, p);
+        try {
+          return await p;
+        } finally {
+          contestSliceInflight.delete(key);
+        }
 	    }
 
       // Candidate labels are sometimes blank in older district contest slices (notably US Senate pre-2008).
@@ -17383,33 +17814,84 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
+      async function ensureDistrictElectionDataLoaded() {
+        if (districtElectionDataJSON) return districtElectionDataJSON;
+        if (districtElectionDataLoadFailed) return null;
+        if (districtElectionDataLoadInflight) return districtElectionDataLoadInflight;
+        const path = CONFIG?.paths?.district_election;
+        if (!path) {
+          districtElectionDataLoadFailed = true;
+          return null;
+        }
+        districtElectionDataLoadInflight = (async () => {
+          try {
+            districtElectionDataJSON = await loadJSON(path);
+            return districtElectionDataJSON;
+          } catch (err) {
+            districtElectionDataLoadFailed = true;
+            console.warn('District election data lazy-load failed:', err?.message || err);
+            districtElectionDataJSON = null;
+            return null;
+          } finally {
+            districtElectionDataLoadInflight = null;
+          }
+        })();
+        return districtElectionDataLoadInflight;
+      }
+
     async function loadDistrictSlice(scope, contestType, year, linesYearOverride = currentDistrictLinesYear) {
       const key = `${scope}_${contestType}_${year}`;
       const linesYear = normalizeDistrictLinesYear(linesYearOverride);
       const cacheKey = `${linesYear}|${key}`;
-      if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
-
       const modeledDef = getModeledContestDefinition(contestType, year);
       if (modeledDef) {
-        const modeledNode = await buildModeledDistrictSliceNode(scope, modeledDef, linesYear);
-        districtSliceCache.set(cacheKey, modeledNode);
-        return modeledNode;
-      }
-
-      const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
-      for (const path of candidatePaths) {
+        const sig = getModeledDefSignature(modeledDef);
+        const modeledKey = `${linesYear}|${String(scope || '').trim()}|${sig}`;
+        if (sig && modeledDistrictOutputCache.has(modeledKey)) return modeledDistrictOutputCache.get(modeledKey);
+        if (sig && modeledDistrictOutputInflight.has(modeledKey)) return modeledDistrictOutputInflight.get(modeledKey);
+        const p = modeledPerf(`modeled.district.build:${String(scope || '').trim()}:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}:${linesYear}`, async () => {
+          return await buildModeledDistrictSliceNode(scope, modeledDef, linesYear);
+        });
+        if (sig) modeledDistrictOutputInflight.set(modeledKey, p);
         try {
-          const payload = await loadJSON(path);
-          districtSliceCache.set(cacheKey, payload);
-          return payload;
-        } catch (_) {}
+          const node = await p;
+          if (sig) modeledDistrictOutputCache.set(modeledKey, node);
+          return node;
+        } finally {
+          if (sig) modeledDistrictOutputInflight.delete(modeledKey);
+        }
       }
 
-      const fallback = linesYear === 2022
-        ? (districtElectionDataJSON?.results_by_year?.[year]?.[scope]?.[contestType] || null)
-        : null;
-      districtSliceCache.set(cacheKey, fallback);
-      return fallback;
+      if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
+      if (districtSliceInflight.has(cacheKey)) return districtSliceInflight.get(cacheKey);
+
+      const p = atlasPerf(`slice.district:${cacheKey}`, async () => {
+
+        const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
+        for (const path of candidatePaths) {
+          try {
+            const payload = await loadJSON(path);
+            districtSliceCache.set(cacheKey, payload);
+            return payload;
+          } catch (_) {}
+        }
+
+        if (linesYear === 2022 && !districtElectionDataJSON) {
+          try { await ensureDistrictElectionDataLoaded(); } catch (_) {}
+        }
+        const fallback = linesYear === 2022
+          ? (districtElectionDataJSON?.results_by_year?.[year]?.[scope]?.[contestType] || null)
+          : null;
+        districtSliceCache.set(cacheKey, fallback);
+        return fallback;
+      });
+
+      districtSliceInflight.set(cacheKey, p);
+      try {
+        return await p;
+      } finally {
+        districtSliceInflight.delete(cacheKey);
+      }
     }
 
     function parseCSV(csvText) {
@@ -17769,7 +18251,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let queuedContestSelection = null;
     let contestSelectionSeq = 0;
     let lastCompletedContestSelection = '';
+    let lastContestApplySig = '';
     const contestSelectNavKeys = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+
+    function scenarioSignature() {
+      const swing = Number(scenarioSwingPct || 0);
+      const scope = String(scenarioScope || '').trim().toLowerCase();
+      return `scope:${scope}|swing:${Number.isFinite(swing) ? swing : 0}`;
+    }
+
+    function buildContestApplySignature(contestKey, contestType, year) {
+      const key = String(contestKey || '').trim();
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      const view = String(currentView || '').trim().toLowerCase();
+      const mode = String(currentVizMode || 'margins').trim().toLowerCase();
+      const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
+      const precinctGeom = (typeof getDesiredPrecinctGeometryMode === 'function') ? String(getDesiredPrecinctGeometryMode() || '') : '';
+      const overlays = `split:${splitTicketOverlayEnabled ? 1 : 0}|baro:${barometerOverlayEnabled ? 1 : 0}|turnout:${turnoutBivariateEnabled ? 1 : 0}|opacity:${String(overlayOpacityPreset || '')}`;
+      const precinct = `precincts:${precinctsEnabled ? 1 : 0}|geom:${precinctGeom}`;
+      return `k:${key}|ct:${ct}|y:${Number.isFinite(y) ? y : ''}|v:${view}|m:${mode}|lines:${linesYear}|${precinct}|${overlays}|scenario:${scenarioSignature()}`;
+    }
 
     function wireContestSelectHandlers(sel) {
       if (!sel) return;
@@ -17855,6 +18357,28 @@ document.addEventListener('DOMContentLoaded', function() {
           label = `Loading ${display}…`;
         }
         indicator.textContent = label;
+        let modeledLoading = false;
+        try {
+          const parsed = typeof parseContestValue === 'function' ? parseContestValue(key) : null;
+          const contestType = parsed && parsed[0] ? String(parsed[0] || '').trim() : '';
+          const year = parsed && parsed[1] ? Number(parsed[1]) : NaN;
+          modeledLoading = !!(contestType && Number.isFinite(year) && typeof getModeledContestDefinition === 'function' && getModeledContestDefinition(contestType, year));
+        } catch (_) {
+          modeledLoading = false;
+        }
+
+        // Modeled contests can do CPU-heavy synthesis; show the spinner immediately so the UI
+        // doesn't feel "stuck" while the main thread is busy.
+        if (modeledLoading) {
+          if (contestLoadingTimer) clearTimeout(contestLoadingTimer);
+          contestLoadingTimer = null;
+          if (contestLoadingSpinnerTimer) clearTimeout(contestLoadingSpinnerTimer);
+          contestLoadingSpinnerTimer = null;
+          indicator.hidden = false;
+          try { indicator.dataset.variant = 'spin'; } catch (_) {}
+          return;
+        }
+
         try { indicator.dataset.variant = 'quiet'; } catch (_) {}
         if (!contestLoadingTimer) {
           contestLoadingTimer = setTimeout(() => {
@@ -17889,6 +18413,13 @@ document.addEventListener('DOMContentLoaded', function() {
           queuedContestSelection = null;
           if (!next) break;
           setContestLoadingUI(true, next.key);
+          // Yield so the loading UI can render before any CPU-heavy work (notably modeled contests).
+          await new Promise((resolve) => {
+            try {
+              if (typeof window.requestAnimationFrame === 'function') return window.requestAnimationFrame(() => resolve());
+            } catch (_) {}
+            setTimeout(resolve, 0);
+          });
           await applyContest(next.key, { selectionSeq: next.seq });
 
           // If users switched again while we were loading, apply the newest selection next.
@@ -23223,8 +23754,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (requiredCycles < 2) return new Set();
 
       const scores = new Map();
-      for (const cycleYear of cycleYears) {
+      const loadedCycles = await Promise.all(cycleYears.map(async (cycleYear) => {
         const rows = await loadContestSlice(contestType, cycleYear);
+        return { cycleYear, rows };
+      }));
+      for (const bundle of loadedCycles) {
+        const cycleYear = Number(bundle?.cycleYear);
+        const rows = bundle?.rows || [];
         const countyTotals = new Map();
         let statewideDem = 0;
         let statewideRep = 0;
@@ -23305,8 +23841,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (requiredCycles < 2) return new Set();
 
       const scores = new Map();
-      for (const cycleYear of cycleYears) {
+      const loadedCycles = await Promise.all(cycleYears.map(async (cycleYear) => {
         const rows = await loadContestSlice(contestType, cycleYear);
+        return { cycleYear, rows };
+      }));
+      for (const bundle of loadedCycles) {
+        const cycleYear = Number(bundle?.cycleYear);
+        const rows = bundle?.rows || [];
         let statewideDem = 0;
         let statewideRep = 0;
         rows.forEach(row => {
@@ -29393,8 +29934,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function hydrateAtlasDataAndDistrictSources() {
       setStatus('Loading election index...');
-      candidateNameCache = new Map();
-      contestSliceCache = new Map();
       try {
         const manifest = await loadJSON(`${CONFIG.paths.contests_dir}/manifest.json`);
         contestManifest = manifest?.files || [];
@@ -29450,24 +29989,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         districtManifest = getActiveDistrictManifest();
         districtElectionDataJSON = null;
-        districtSliceCache = new Map();
         updateDistrictLinesToggleUI();
         if (contestManifest.length > 0 || districtManifest.length > 0) {
           updateContestSelectForCurrentView();
         }
         setStatus('District index loaded');
       } catch (manifestErr) {
-        try {
-          districtElectionDataJSON = await loadJSON(CONFIG.paths.district_election);
-          debugLog('District election data loaded:', districtElectionDataJSON);
-          districtSliceCache = new Map();
-          districtManifestByLines = { '2022': [], '2024': [] };
-          districtManifest = [];
-          updateDistrictLinesToggleUI();
-        } catch (err) {
-          console.warn('District election data not loaded:', err.message);
-          districtElectionDataJSON = null;
-        }
+        // Performance change: defer the large legacy district results payload until users enter a district view.
+        // District slice payloads are lazy-loaded via `loadDistrictSlice()` when needed.
+        districtElectionDataJSON = null;
+        districtElectionDataLoadInflight = null;
+        districtElectionDataLoadFailed = false;
+        districtManifestByLines = { '2022': [], '2024': [] };
+        districtManifest = [];
+        updateDistrictLinesToggleUI();
       }
 
       // Optional district resources: do not fail app initialization if absent
@@ -29610,6 +30145,47 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
+    let atlasPrefetchScheduled = false;
+    function scheduleAtlasWidePrefetch() {
+      if (atlasPrefetchScheduled) return;
+      atlasPrefetchScheduled = true;
+
+      const kickoff = () => {
+        // Non-blocking slice warmup: keeps common contest switches near-instant after the first load.
+        const common = ['president', 'governor', 'us_senate', 'us_house'];
+        const seen = new Set();
+
+        const meta = (currentContestMeta && currentContestMeta.contestType)
+          ? { contestType: String(currentContestMeta.contestType || ''), year: Number(currentContestMeta.year) }
+          : getSelectedContestTypeYear();
+
+        const enqueue = (ct, y) => {
+          const contestType = String(ct || '').trim();
+          const year = Number(y);
+          if (!contestType || !Number.isFinite(year) || year <= 0) return;
+          const key = `${contestType}_${year}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          loadContestSlice(contestType, year).catch(() => {});
+          // Candidate label fallback lookups are cheap, but caching them here helps trend/hover panels later.
+          try { getContestCandidates(contestType, year).catch(() => {}); } catch (_) {}
+        };
+
+        enqueue(meta?.contestType, meta?.year);
+        common.forEach(ct => {
+          const years = getAvailableContestYearsForType(ct);
+          if (!Array.isArray(years) || !years.length) return;
+          enqueue(ct, years[years.length - 1]);
+        });
+      };
+
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => kickoff(), { timeout: 5200 });
+      } else {
+        setTimeout(kickoff, 700);
+      }
+    }
+
     async function finalizeAppPostHydration() {
       try { await restoreUIState(); } catch (_) {}
       try { applyLayerOpacityTuning(); } catch (_) {}
@@ -29618,6 +30194,11 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateBellwetherLayerVisibility(); } catch (_) {}
       try { setSplitTicketOverlayVisibility(); } catch (_) {}
       try { scheduleAnalyticsPanelsUpdate('', '', [], 0); } catch (_) {}
+      // Performance change: quietly warm the heaviest modeled Senate source slices after initial load.
+      // This runs only once and never blocks first paint / map interactivity.
+      try { scheduleModeledSenateCorePreload(); } catch (_) {}
+      // Performance change: atlas-wide warmup (non-blocking) so normal contest switches feel snappy too.
+      try { scheduleAtlasWidePrefetch(); } catch (_) {}
     }
 
     async function init() {
@@ -30154,6 +30735,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function applyContest(contestKey, opts = {}) {
       const selectionSeq = Number(opts?.selectionSeq || 0);
+      const force = !!opts?.force;
       const isStaleSelection = () => (
         Number.isFinite(selectionSeq) &&
         selectionSeq > 0 &&
@@ -30174,6 +30756,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (_) {}
         setRecountRadarBadgeVisible(false);
         lastCompletedContestSelection = '';
+        lastContestApplySig = '';
         updateContextBanner();
         try { updateSmartInsightsOverlay(); } catch (_) {}
         return setStatus('Select a contest');
@@ -30196,9 +30779,28 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestType = contestKey.substring(0, lastUnderscoreIndex);
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
+      const nextApplySig = buildContestApplySignature(contestKey, contestType, year);
       try { syncModelTuningControls(); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
       try { scheduleCountyVoteDeltaCachesForTooltip(contestType, Number(year), 2); } catch (_) {}
+
+      // Fast path: if the exact same contest/view/mode/toggles are already applied, avoid rebuilding expressions,
+      // county totals, and other expensive work. Preserve UI/hover behavior by running only lightweight refreshes.
+      if (!force && nextApplySig && nextApplySig === lastContestApplySig && String(contestKey) === String(lastCompletedContestSelection)) {
+        try { applyLayerOpacityTuning(); } catch (_) {}
+        try { setSplitTicketOverlayVisibility(); } catch (_) {}
+        try { updateContextBanner(); } catch (_) {}
+        try { updateRecountRadarBadge(); } catch (_) {}
+        try { refreshHoverAtPointer().catch(() => {}); } catch (_) {}
+        try { updateSmartInsightsOverlay(); } catch (_) {}
+        saveUIState();
+        return;
+      }
+
+      // Optional (disabled by default) instrumentation for modeled contests.
+      const yearNum = Number(year);
+      const modeledDefForTiming = getModeledContestDefinition(contestType, yearNum);
+      const modeledSigForTiming = modeledDefForTiming ? getModeledDefSignature(modeledDefForTiming) : '';
 
       // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
       try {
@@ -30208,13 +30810,31 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       
       if (currentView === 'counties') {
-        await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.counties:${modeledSigForTiming}`, async () => {
+            await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+          });
+        } else {
+          await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+        }
       } else if (currentView === 'districts' && contestType === 'us_house') {
         // US House races use district-specific data
-        await applyDistrictContest(contestType, year);
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.districts:${modeledSigForTiming}`, async () => {
+            await applyDistrictContest(contestType, year);
+          });
+        } else {
+          await applyDistrictContest(contestType, year);
+        }
       } else {
         // All other contests (statewide) aggregate county data by district
-        await applyStatewideContestToDistricts(contestType, year);
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.statewide_to_districts:${modeledSigForTiming}`, async () => {
+            await applyStatewideContestToDistricts(contestType, year);
+          });
+        } else {
+          await applyStatewideContestToDistricts(contestType, year);
+        }
       }
       if (isStaleSelection()) return;
       try { await refreshPinnedDistrictForContest(contestType, year); } catch (_) {}
@@ -30255,6 +30875,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isStaleSelection()) return;
       updateRecountRadarBadge();
       lastCompletedContestSelection = contestKey;
+      lastContestApplySig = nextApplySig;
       updateContextBanner();
       refreshHoverAtPointer().catch(() => {});
       try { updateSmartInsightsOverlay(); } catch (_) {}
@@ -30484,90 +31105,165 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return Array.from(out);
 	      }
 
-      // Build county aggregates from precinct-level rows.
-      const countyAgg = {};
+      const sliceSourceSig = getContestSliceSourceSignature(contestType, Number(year));
+      const aggCacheKey = `${contestType}_${Number(year)}|src:${sliceSourceSig}|scenario:${scenarioSignature()}`;
+      const cachedAggBundle = countyAggregateBundleCache.get(aggCacheKey) || null;
+
+      let countyAgg = cachedAggBundle ? (cachedAggBundle.countyAgg || {}) : {};
+      let countyTurnoutTotals = cachedAggBundle ? (cachedAggBundle.countyTurnoutTotals || {}) : {};
+      let statewidedemVotes = cachedAggBundle ? Number(cachedAggBundle?.statewide?.dem || 0) : 0;
+      let statewidrepVotes = cachedAggBundle ? Number(cachedAggBundle?.statewide?.rep || 0) : 0;
+      let statewidotherVotes = cachedAggBundle ? Number(cachedAggBundle?.statewide?.other || 0) : 0;
+      let statewidTotalVotes = cachedAggBundle ? Number(cachedAggBundle?.statewide?.total || 0) : 0;
+      let statewideDemCandidate = cachedAggBundle ? String(cachedAggBundle?.candidates?.dem || '') : '';
+      let statewideRepCandidate = cachedAggBundle ? String(cachedAggBundle?.candidates?.rep || '') : '';
+
+      // Only compute precinct matching rows when the overlay is enabled.
+      // If we already have cached county aggregates, reusing them keeps normal contest switches fast.
+      let precinctCacheKey = '';
+      let skipPrecinctRowBuild = false;
       currentPrecinctResults = needsPrecinctDetail ? new Map() : null;
-      for (const row of contestData) {
-        if (staleCheck()) return;
-        const rowName = (row.county || '').toString();
-        const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-        const countyNorm = normalizeCountyName(countyOnly);
-        if (!countyNorm) continue;
-
-        const rawDemVotes = Number(row[`${contestType}_dem`] || 0);
-        const rawRepVotes = Number(row[`${contestType}_rep`] || 0);
-        const rawOtherVotes = Number(row[`${contestType}_other`] || 0);
-        const rawTotalVotes = Number(row[`${contestType}_total`] || 0);
-        const adjusted = applyScenarioShiftToVotes(countyNorm, rawDemVotes, rawRepVotes, rawOtherVotes, rawTotalVotes);
-        const demVotes = Number(adjusted.dem || 0);
-        const repVotes = Number(adjusted.rep || 0);
-        const otherVotes = Number(adjusted.other || 0);
-        const totalVotes = Number(adjusted.total || 0);
-        const demCand = (row[`${contestType}_dem_candidate`] || '').toString();
-        const repCand = (row[`${contestType}_rep_candidate`] || '').toString();
-
-        if (needsPrecinctDetail) {
-          const norms = precinctNormVariants(rowName);
-          const adjustedSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-          const adjustedWinner = adjustedSigned > 0 ? 'REPUBLICAN' : (adjustedSigned < 0 ? 'DEMOCRAT' : 'TIE');
-          const adjustedRow = {
-            ...row,
-            [`${contestType}_dem`]: demVotes,
-            [`${contestType}_rep`]: repVotes,
-            [`${contestType}_other`]: otherVotes,
-            [`${contestType}_total`]: totalVotes,
-            [`${contestType}_margin_pct`]: adjustedSigned,
-            [`${contestType}_winner`]: adjustedWinner
-          };
-          norms.forEach(n => {
-            currentPrecinctResults.set(n, adjustedRow);
-          });
+      if (needsPrecinctDetail) {
+        const matchSig = `code:${precinctIdx ? 1 : 0}|alias:${precinctAliasIdx ? 1 : 0}|var:${precinctVariantOverridesByCounty ? 1 : 0}`;
+        precinctCacheKey = `${aggCacheKey}|precinctMatch:${matchSig}`;
+        if (precinctAdjustedRowCache.has(precinctCacheKey)) {
+          currentPrecinctResults = precinctAdjustedRowCache.get(precinctCacheKey) || new Map();
+          skipPrecinctRowBuild = true;
         }
-        if (!countyAgg[countyNorm]) {
-          countyAgg[countyNorm] = {
-            year: Number(year),
-            county: countyOnly,
-            [`${contestType}_dem`]: 0,
-            [`${contestType}_rep`]: 0,
-            [`${contestType}_other`]: 0,
-            [`${contestType}_total`]: 0,
-            [`${contestType}_dem_candidate`]: demCand,
-            [`${contestType}_rep_candidate`]: repCand,
-            __model_baseline_margin_pct: Number.isFinite(Number(row.__model_baseline_margin_pct)) ? Number(row.__model_baseline_margin_pct) : NaN,
-            __model_with_candidates_margin_pct: Number.isFinite(Number(row.__model_with_candidates_margin_pct)) ? Number(row.__model_with_candidates_margin_pct) : NaN,
-            __model_candidate_effect_d_pts: Number.isFinite(Number(row.__model_candidate_effect_d_pts)) ? Number(row.__model_candidate_effect_d_pts) : NaN,
-            __model_candidate_effect_durable_pts: Number.isFinite(Number(row.__model_candidate_effect_durable_pts)) ? Number(row.__model_candidate_effect_durable_pts) : NaN,
-            __model_candidate_effect_personal_pts: Number.isFinite(Number(row.__model_candidate_effect_personal_pts)) ? Number(row.__model_candidate_effect_personal_pts) : NaN
-          };
-        }
-        // Keep candidate labels at county level for sidebar/hover margin readability.
-        if (!countyAgg[countyNorm][`${contestType}_dem_candidate`] && demCand) countyAgg[countyNorm][`${contestType}_dem_candidate`] = demCand;
-        if (!countyAgg[countyNorm][`${contestType}_rep_candidate`] && repCand) countyAgg[countyNorm][`${contestType}_rep_candidate`] = repCand;
-        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_baseline_margin_pct)) && Number.isFinite(Number(row.__model_baseline_margin_pct))) {
-          countyAgg[countyNorm].__model_baseline_margin_pct = Number(row.__model_baseline_margin_pct);
-        }
-        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_with_candidates_margin_pct)) && Number.isFinite(Number(row.__model_with_candidates_margin_pct))) {
-          countyAgg[countyNorm].__model_with_candidates_margin_pct = Number(row.__model_with_candidates_margin_pct);
-        }
-        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_d_pts)) && Number.isFinite(Number(row.__model_candidate_effect_d_pts))) {
-          countyAgg[countyNorm].__model_candidate_effect_d_pts = Number(row.__model_candidate_effect_d_pts);
-        }
-        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_durable_pts)) && Number.isFinite(Number(row.__model_candidate_effect_durable_pts))) {
-          countyAgg[countyNorm].__model_candidate_effect_durable_pts = Number(row.__model_candidate_effect_durable_pts);
-        }
-        if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_personal_pts)) && Number.isFinite(Number(row.__model_candidate_effect_personal_pts))) {
-          countyAgg[countyNorm].__model_candidate_effect_personal_pts = Number(row.__model_candidate_effect_personal_pts);
-        }
-        countyAgg[countyNorm][`${contestType}_dem`] += demVotes;
-        countyAgg[countyNorm][`${contestType}_rep`] += repVotes;
-        countyAgg[countyNorm][`${contestType}_other`] += otherVotes;
-        countyAgg[countyNorm][`${contestType}_total`] += totalVotes;
       }
+
+      if (!cachedAggBundle || needsPrecinctDetail) {
+        // Build county aggregates (and optionally precinct result map) from precinct-level rows.
+        // Also compute statewide totals in the same pass to avoid re-looping contest rows.
+        if (!cachedAggBundle) {
+          countyAgg = {};
+          countyTurnoutTotals = {};
+          statewidedemVotes = 0;
+          statewidrepVotes = 0;
+          statewidotherVotes = 0;
+          statewidTotalVotes = 0;
+          statewideDemCandidate = '';
+          statewideRepCandidate = '';
+        }
+
+        const perfOn = atlasPerfEnabled();
+        const perfLabel = !cachedAggBundle
+          ? `countyAgg.build:${aggCacheKey}`
+          : (needsPrecinctDetail && !skipPrecinctRowBuild ? `precinct.match.build:${precinctCacheKey}` : '');
+        const perfT0 = (perfOn && perfLabel) ? atlasPerfNow() : 0;
+
+        for (const row of contestData) {
+          if (staleCheck()) return;
+          const rowName = (row.county || '').toString();
+          const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+          const countyNorm = normalizeCountyName(countyOnly);
+          if (!countyNorm) continue;
+
+          const rawDemVotes = Number(row[`${contestType}_dem`] || 0);
+          const rawRepVotes = Number(row[`${contestType}_rep`] || 0);
+          const rawOtherVotes = Number(row[`${contestType}_other`] || 0);
+          const rawTotalVotes = Number(row[`${contestType}_total`] || 0);
+          const adjusted = applyScenarioShiftToVotes(countyNorm, rawDemVotes, rawRepVotes, rawOtherVotes, rawTotalVotes);
+          const demVotes = Number(adjusted.dem || 0);
+          const repVotes = Number(adjusted.rep || 0);
+          const otherVotes = Number(adjusted.other || 0);
+          const totalVotes = Number(adjusted.total || 0);
+          const demCand = (row[`${contestType}_dem_candidate`] || '').toString();
+          const repCand = (row[`${contestType}_rep_candidate`] || '').toString();
+
+          if (needsPrecinctDetail && !skipPrecinctRowBuild) {
+            const norms = precinctNormVariants(rowName);
+            const adjustedSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+            const adjustedWinner = adjustedSigned > 0 ? 'REPUBLICAN' : (adjustedSigned < 0 ? 'DEMOCRAT' : 'TIE');
+            const adjustedRow = {
+              ...row,
+              [`${contestType}_dem`]: demVotes,
+              [`${contestType}_rep`]: repVotes,
+              [`${contestType}_other`]: otherVotes,
+              [`${contestType}_total`]: totalVotes,
+              [`${contestType}_margin_pct`]: adjustedSigned,
+              [`${contestType}_winner`]: adjustedWinner
+            };
+            norms.forEach(n => {
+              currentPrecinctResults.set(n, adjustedRow);
+            });
+          }
+
+          if (!cachedAggBundle) {
+            statewidedemVotes += demVotes;
+            statewidrepVotes += repVotes;
+            statewidotherVotes += otherVotes;
+            statewidTotalVotes += totalVotes;
+            if (!statewideDemCandidate && demCand) statewideDemCandidate = demCand;
+            if (!statewideRepCandidate && repCand) statewideRepCandidate = repCand;
+
+            if (!countyAgg[countyNorm]) {
+              countyAgg[countyNorm] = {
+                year: Number(year),
+                county: countyOnly,
+                [`${contestType}_dem`]: 0,
+                [`${contestType}_rep`]: 0,
+                [`${contestType}_other`]: 0,
+                [`${contestType}_total`]: 0,
+                [`${contestType}_dem_candidate`]: demCand,
+                [`${contestType}_rep_candidate`]: repCand,
+                __model_baseline_margin_pct: Number.isFinite(Number(row.__model_baseline_margin_pct)) ? Number(row.__model_baseline_margin_pct) : NaN,
+                __model_with_candidates_margin_pct: Number.isFinite(Number(row.__model_with_candidates_margin_pct)) ? Number(row.__model_with_candidates_margin_pct) : NaN,
+                __model_candidate_effect_d_pts: Number.isFinite(Number(row.__model_candidate_effect_d_pts)) ? Number(row.__model_candidate_effect_d_pts) : NaN,
+                __model_candidate_effect_durable_pts: Number.isFinite(Number(row.__model_candidate_effect_durable_pts)) ? Number(row.__model_candidate_effect_durable_pts) : NaN,
+                __model_candidate_effect_personal_pts: Number.isFinite(Number(row.__model_candidate_effect_personal_pts)) ? Number(row.__model_candidate_effect_personal_pts) : NaN
+              };
+            }
+            // Keep candidate labels at county level for sidebar/hover margin readability.
+            if (!countyAgg[countyNorm][`${contestType}_dem_candidate`] && demCand) countyAgg[countyNorm][`${contestType}_dem_candidate`] = demCand;
+            if (!countyAgg[countyNorm][`${contestType}_rep_candidate`] && repCand) countyAgg[countyNorm][`${contestType}_rep_candidate`] = repCand;
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_baseline_margin_pct)) && Number.isFinite(Number(row.__model_baseline_margin_pct))) {
+              countyAgg[countyNorm].__model_baseline_margin_pct = Number(row.__model_baseline_margin_pct);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_with_candidates_margin_pct)) && Number.isFinite(Number(row.__model_with_candidates_margin_pct))) {
+              countyAgg[countyNorm].__model_with_candidates_margin_pct = Number(row.__model_with_candidates_margin_pct);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_d_pts)) && Number.isFinite(Number(row.__model_candidate_effect_d_pts))) {
+              countyAgg[countyNorm].__model_candidate_effect_d_pts = Number(row.__model_candidate_effect_d_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_durable_pts)) && Number.isFinite(Number(row.__model_candidate_effect_durable_pts))) {
+              countyAgg[countyNorm].__model_candidate_effect_durable_pts = Number(row.__model_candidate_effect_durable_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_personal_pts)) && Number.isFinite(Number(row.__model_candidate_effect_personal_pts))) {
+              countyAgg[countyNorm].__model_candidate_effect_personal_pts = Number(row.__model_candidate_effect_personal_pts);
+            }
+            countyAgg[countyNorm][`${contestType}_dem`] += demVotes;
+            countyAgg[countyNorm][`${contestType}_rep`] += repVotes;
+            countyAgg[countyNorm][`${contestType}_other`] += otherVotes;
+            countyAgg[countyNorm][`${contestType}_total`] += totalVotes;
+          }
+        }
+
+        if (perfOn && perfLabel) {
+          const dt = atlasPerfNow() - perfT0;
+          console.log(`[atlas] ${perfLabel}: ${dt.toFixed(1)}ms`);
+        }
+
+        if (!cachedAggBundle) {
+          Object.keys(countyAgg).forEach(countyNorm => {
+            countyTurnoutTotals[countyNorm] = Number(countyAgg[countyNorm]?.[`${contestType}_total`] || 0);
+          });
+          try {
+            countyAggregateBundleCache.set(aggCacheKey, {
+              countyAgg,
+              countyTurnoutTotals,
+              statewide: { dem: statewidedemVotes, rep: statewidrepVotes, other: statewidotherVotes, total: statewidTotalVotes },
+              candidates: { dem: statewideDemCandidate, rep: statewideRepCandidate }
+            });
+          } catch (_) {}
+        }
+        if (needsPrecinctDetail && !skipPrecinctRowBuild && precinctCacheKey && currentPrecinctResults) {
+          try { precinctAdjustedRowCache.set(precinctCacheKey, currentPrecinctResults); } catch (_) {}
+        }
+      }
+
       currentElectionResults = countyAgg;
-      currentCountyTurnoutTotals = {};
-      Object.keys(countyAgg).forEach(countyNorm => {
-        currentCountyTurnoutTotals[countyNorm] = Number(countyAgg[countyNorm]?.[`${contestType}_total`] || 0);
-      });
+      currentCountyTurnoutTotals = countyTurnoutTotals;
       currentDistrictTurnoutTotals = {};
       currentPrecinctTurnoutTotals = new Map();
       if (staleCheck()) return;
@@ -30581,54 +31277,32 @@ document.addEventListener('DOMContentLoaded', function() {
       try { refreshPinnedCountyForContest(contestType, year); } catch (_) {}
       if (staleCheck()) return;
 
-      // Calculate statewide totals
-      let statewidedemVotes = 0;
-      let statewidrepVotes = 0;
-      let statewidotherVotes = 0;
-      let statewidTotalVotes = 0;
-      let statewideDemCandidate = '';
-      let statewideRepCandidate = '';
-      
-      for (const row of contestData) {
-        if (staleCheck()) return;
-        const rowName = (row.county || '').toString();
-        const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-        const countyNorm = normalizeCountyName(countyOnly);
-        const adjusted = applyScenarioShiftToVotes(
-          countyNorm,
-          row[`${contestType}_dem`] || 0,
-          row[`${contestType}_rep`] || 0,
-          row[`${contestType}_other`] || 0,
-          row[`${contestType}_total`] || 0
-        );
-        const demVotes = Number(adjusted.dem || 0);
-        const repVotes = Number(adjusted.rep || 0);
-        const otherVotes = Number(adjusted.other || 0);
-        const totalVotes = Number(adjusted.total || 0);
-        const demCand = row[`${contestType}_dem_candidate`] || '';
-        const repCand = row[`${contestType}_rep_candidate`] || '';
-        statewidedemVotes += demVotes;
-        statewidrepVotes += repVotes;
-        statewidotherVotes += otherVotes;
-        statewidTotalVotes += totalVotes; // Use total which includes other parties
-        if (!statewideDemCandidate && demCand) statewideDemCandidate = demCand;
-        if (!statewideRepCandidate && repCand) statewideRepCandidate = repCand;
-      }
       if (staleCheck()) return;
 
       let modeledSenateInsights = null;
       if (isModeledSenateEnhancementContest(contestType, year)) {
-        try {
-          modeledSenateInsights = await buildModeledSenateStatewideInsights(
-            contestType,
-            Number(year),
-            countyAgg,
-            statewidedemVotes,
-            statewidrepVotes,
-            statewidTotalVotes
-          );
-        } catch (_) {
-          modeledSenateInsights = null;
+        const yNum = Number(year);
+        const modeledDef = getModeledContestDefinition(contestType, yNum);
+        const sig = modeledDef ? getModeledDefSignature(modeledDef) : `${String(contestType || '').trim()}_${yNum}`;
+        const scenarioKey = `${sig}|scenarioSwing:${Number(scenarioSwingPct || 0).toFixed(3)}|scenarioScope:${String(scenarioScope || '')}|scenarioCounty:${String(getScenarioCountyNorm() || '')}`;
+        if (modeledSenateInsightsCache.has(scenarioKey)) {
+          modeledSenateInsights = modeledSenateInsightsCache.get(scenarioKey) || null;
+        } else {
+          try {
+            modeledSenateInsights = await modeledPerf(`modeled.senate.insights:${String(contestType || '').trim()}_${String(year)}`, async () => {
+              return await buildModeledSenateStatewideInsights(
+                contestType,
+                yNum,
+                countyAgg,
+                statewidedemVotes,
+                statewidrepVotes,
+                statewidTotalVotes
+              );
+            });
+          } catch (_) {
+            modeledSenateInsights = null;
+          }
+          try { modeledSenateInsightsCache.set(scenarioKey, modeledSenateInsights); } catch (_) {}
         }
       }
       modeledSenateLatestInsights = modeledSenateInsights;
@@ -30800,73 +31474,87 @@ document.addEventListener('DOMContentLoaded', function() {
         vizShiftCache = null;
       }
 
-      const expr = ['case'];
-      const countyFillColorByNorm = new Map();
-      let countiesProcessed = 0;
-      
-      for (const countyName of Object.keys(countyAgg)) {
-        if (staleCheck()) return;
-        const row = countyAgg[countyName];
-        const demVotes = row[`${contestType}_dem`] || 0;
-        const repVotes = row[`${contestType}_rep`] || 0;
-        const totalVotes = row[`${contestType}_total`] || 0;
-        if (totalVotes === 0) continue;
-        const demPct = (demVotes / totalVotes) * 100;
-        const repPct = (repVotes / totalVotes) * 100;
-        const winner = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'T');
-        const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-        const marginPctAbs = Math.abs(signedMarginPct);
-        let color = '#e0e0e0';
+      const prevYearKey = Number(vizPrevCache?.prevYear || 0) || 0;
+      const countyExprKey = `${aggCacheKey}|countyExpr|mode:${mode}|prev:${prevYearKey}`;
+      const cachedCountyExpr = countyColorExprCache.get(countyExprKey) || null;
+      let countyFillColorByNorm = cachedCountyExpr?.countyFillColorByNorm || new Map();
+      const expr = cachedCountyExpr?.expr || (() => {
+        const out = [
+          'match',
+          ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
+        ];
+        const fillMap = new Map();
+        let countiesProcessed = 0;
 
-        if (mode === 'flips') {
-          const prev = vizPrevCache?.prevCountyTotals?.[countyName] || null;
-          const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
-          const f = flipInfo(prevSigned, signedMarginPct);
-          color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
-        } else if (mode === 'winners') {
-          color = colorForWinnerMode(winner);
-        } else if (mode === 'shift' && prevCountyTotals) {
-          const prev = prevCountyTotals[countyName];
-          const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
-          const shift = signedMarginPct - prevSigned;
-          color = colorForShiftMode(shift);
-        } else {
-          color = colorForMarginMode(marginPctAbs, winner === 'T' ? 'R' : winner);
+        for (const countyName of Object.keys(countyAgg)) {
+          if (staleCheck()) return null;
+          const row = countyAgg[countyName];
+          const demVotes = row[`${contestType}_dem`] || 0;
+          const repVotes = row[`${contestType}_rep`] || 0;
+          const totalVotes = row[`${contestType}_total`] || 0;
+          if (totalVotes === 0) continue;
+          const demPct = (demVotes / totalVotes) * 100;
+          const repPct = (repVotes / totalVotes) * 100;
+          const winner = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'T');
+          const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+          const marginPctAbs = Math.abs(signedMarginPct);
+          let color = '#e0e0e0';
+
+          if (mode === 'flips') {
+            const prev = vizPrevCache?.prevCountyTotals?.[countyName] || null;
+            const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            const f = flipInfo(prevSigned, signedMarginPct);
+            color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
+          } else if (mode === 'winners') {
+            color = colorForWinnerMode(winner);
+          } else if (mode === 'shift' && prevCountyTotals) {
+            const prev = prevCountyTotals[countyName];
+            const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            const shift = signedMarginPct - prevSigned;
+            color = colorForShiftMode(shift);
+          } else {
+            color = colorForMarginMode(marginPctAbs, winner === 'T' ? 'R' : winner);
+          }
+
+          if (countiesProcessed < 5) {
+            debugLog('Debug precinct color:', {
+              precinct: row.county,
+              normalizedCountyName: countyName,
+              contestType,
+              vizMode: mode,
+              colorFromData: color,
+              demVotes,
+              repVotes,
+              winner,
+              marginPctAbs
+            });
+          }
+
+          out.push(countyName, color);
+          fillMap.set(countyName, color);
+          countiesProcessed++;
         }
-        
-        // Debug logging for first few entries
-        if (countiesProcessed < 5) {
-          debugLog('Debug precinct color:', {
-            precinct: row.county,
-            normalizedCountyName: countyName,
-            contestType,
-            vizMode: mode,
-            colorFromData: color,
-            demVotes,
-            repVotes,
-            winner,
-            marginPctAbs
-          });
-        }
-        // Match county key across county tileset and local precinct fallback
-        expr.push([
-          '==',
-          ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
-          countyName
-        ]);
-        expr.push(color);
-        countyFillColorByNorm.set(countyName, color);
-        countiesProcessed++;
+        out.push('#e0e0e0');
+        try { countyColorExprCache.set(countyExprKey, { expr: out, countyFillColorByNorm: fillMap }); } catch (_) {}
+        return out;
+      })();
+      if (!expr) return;
+      if (!cachedCountyExpr) {
+        try {
+          const updated = countyColorExprCache.get(countyExprKey) || null;
+          if (updated?.countyFillColorByNorm) countyFillColorByNorm = updated.countyFillColorByNorm;
+        } catch (_) {}
       }
-      expr.push('#e0e0e0'); // default color
       
-      debugLog(`Color expression built for ${countiesProcessed} counties`);
       if (staleCheck()) return;
       
       // Paint counties by default; when precinct overlay is enabled, reduce county opacity
       // so precinct fills/dots remain visually primary.
       if (map.getLayer('county-fill')) {
-        map.setPaintProperty('county-fill', 'fill-color', expr);
+        if (lastCountyFillExpr !== expr) {
+          map.setPaintProperty('county-fill', 'fill-color', expr);
+          lastCountyFillExpr = expr;
+        }
       }
 
       // Flip mode: outline flipped counties in red/blue (to-winner), leave others subtle.
@@ -30922,77 +31610,100 @@ document.addEventListener('DOMContentLoaded', function() {
           // so the underlying county fill remains visible, instead of showing a “missing” gray block.
           if (!useVtdCountyBackfill) return 'rgba(0,0,0,0)';
           if (!countyFillColorByNorm.size) return '#d1d5db';
-          const fb = ['case'];
+          const fb = ['match', ['get', 'county_norm']];
           countyFillColorByNorm.forEach((color, countyNorm) => {
-            fb.push(['==', ['get', 'county_norm'], countyNorm]);
-            fb.push(color);
+            fb.push(countyNorm, color);
           });
           fb.push('#d1d5db');
           return fb;
         })();
-        const exprPrecinct = ['case'];
-        for (const row of contestData) {
-          if (staleCheck()) return;
-          const precinctNames = precinctNormVariants(row.county);
-          const rowName = (row.county || '').toString();
-          const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-          const countyNorm = normalizeCountyName(countyOnly);
-          const adjusted = applyScenarioShiftToVotes(
-            countyNorm,
-            Number(row[`${contestType}_dem`] || 0),
-            Number(row[`${contestType}_rep`] || 0),
-            Number(row[`${contestType}_other`] || 0),
-            Number(row[`${contestType}_total`] || 0)
-          );
-          const demVotes = Number(adjusted.dem || 0);
-          const repVotes = Number(adjusted.rep || 0);
-          const totalVotes = Number(adjusted.total || 0);
-          if (totalVotes === 0) continue;
-          const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-          const winnerRaw = (row[`${contestType}_winner`] || '').toString().toUpperCase();
-          const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (repVotes === demVotes ? 'T' : (repVotes > demVotes ? 'R' : 'D')));
-          let color = '#d1d5db';
 
-          if (mode === 'flips') {
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
-            let prevSigned = 0;
-            // Use first matching norm (variants exist for precinct naming quirks).
-            for (const n of precinctNames) {
-              if (vizPrevCache?.prevPrecinctMarginByNorm?.has(n)) { prevSigned = vizPrevCache.prevPrecinctMarginByNorm.get(n); break; }
+        const geomMode = String(getDesiredPrecinctGeometryMode() || '');
+        const precinctExprKey = `${aggCacheKey}|precinctExpr|countyExpr:${countyExprKey}|mode:${mode}|prev:${prevYearKey}|geom:${geomMode}|useVtd:${useVtdCountyBackfill ? 1 : 0}`;
+        const cachedPrecinctExpr = precinctColorExprCache.get(precinctExprKey) || null;
+        const exprPrecinct = cachedPrecinctExpr?.expr || (() => {
+          const out = ['match', ['get', 'precinct_norm']];
+          const turnout = new Map();
+
+          // Group by row object so all naming variants for the same precinct row share the same color,
+          // preserving prior behavior while avoiding re-running `precinctNormVariants()` here.
+          const normsByRow = new Map(); // adjustedRow -> string[] norms
+          try {
+            (currentPrecinctResults || new Map()).forEach((rowObj, norm) => {
+              if (!rowObj || !norm) return;
+              const arr = normsByRow.get(rowObj) || [];
+              arr.push(norm);
+              normsByRow.set(rowObj, arr);
+            });
+          } catch (_) {}
+
+          normsByRow.forEach((precinctNames, row) => {
+            if (!row || !Array.isArray(precinctNames) || !precinctNames.length) return;
+            const demVotes = Number(row[`${contestType}_dem`] || 0);
+            const repVotes = Number(row[`${contestType}_rep`] || 0);
+            const totalVotes = Number(row[`${contestType}_total`] || 0);
+            if (totalVotes === 0) return;
+            const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+            const winnerRaw = (row[`${contestType}_winner`] || '').toString().toUpperCase();
+            const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (repVotes === demVotes ? 'T' : (repVotes > demVotes ? 'R' : 'D')));
+            let color = '#d1d5db';
+
+            if (mode === 'flips') {
+              const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+              let prevSigned = 0;
+              for (const n of precinctNames) {
+                if (vizPrevCache?.prevPrecinctMarginByNorm?.has(n)) { prevSigned = vizPrevCache.prevPrecinctMarginByNorm.get(n); break; }
+              }
+              const f = flipInfo(prevSigned, curSigned);
+              color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
+            } else if (mode === 'winners') {
+              color = colorForWinnerMode(winner);
+            } else if (mode === 'shift' && prevPrecinctMarginByNorm) {
+              const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+              let prevSigned = 0;
+              for (const n of precinctNames) {
+                if (prevPrecinctMarginByNorm.has(n)) { prevSigned = prevPrecinctMarginByNorm.get(n); break; }
+              }
+              color = colorForShiftMode(curSigned - prevSigned);
+            } else {
+              const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
+              color = colorForMarginMode(Math.abs(curSigned), winner === 'T' ? 'R' : winner);
             }
-            const f = flipInfo(prevSigned, curSigned);
-            color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
-          } else if (mode === 'winners') {
-            color = colorForWinnerMode(winner);
-          } else if (mode === 'shift' && prevPrecinctMarginByNorm) {
-            // Signed margin pct: positive => R, negative => D.
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
-            let prevSigned = 0;
-            // Use first matching norm (variants exist for precinct naming quirks).
-            for (const n of precinctNames) {
-              if (prevPrecinctMarginByNorm.has(n)) { prevSigned = prevPrecinctMarginByNorm.get(n); break; }
-            }
-            color = colorForShiftMode(curSigned - prevSigned);
-          } else {
-            const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes) : signedMarginPct;
-            color = colorForMarginMode(Math.abs(curSigned), winner === 'T' ? 'R' : winner);
-          }
-          precinctNames.forEach(precinctName => {
-            exprPrecinct.push(['==', ['get', 'precinct_norm'], precinctName]);
-            exprPrecinct.push(color);
-            currentPrecinctTurnoutTotals.set(precinctName, totalVotes);
+
+            precinctNames.forEach(precinctName => {
+              out.push(precinctName, color);
+              turnout.set(precinctName, totalVotes);
+            });
           });
+
+          out.push(countyFallbackExpr);
+          try { precinctColorExprCache.set(precinctExprKey, { expr: out, turnoutTotals: turnout }); } catch (_) {}
+          return out;
+        })();
+
+        if (cachedPrecinctExpr?.turnoutTotals) {
+          currentPrecinctTurnoutTotals = cachedPrecinctExpr.turnoutTotals;
         }
-        exprPrecinct.push(countyFallbackExpr);
+        if (!cachedPrecinctExpr?.turnoutTotals) {
+          // Build turnout totals map for opacity expressions even when expression is newly built.
+          try {
+            const totals = precinctColorExprCache.get(precinctExprKey)?.turnoutTotals;
+            if (totals) currentPrecinctTurnoutTotals = totals;
+          } catch (_) {}
+        }
+
         if (staleCheck()) return;
         // Cache for later, in case precinct overlay loads after the contest is applied.
         lastPrecinctFillExpr = exprPrecinct;
         lastPrecinctDotExpr = exprPrecinct;
-        if (map.getLayer('precinct-fill')) {
-          map.setPaintProperty('precinct-fill', 'fill-color', exprPrecinct);
-        }
-        if (map.getLayer('precinct-dot')) {
-          map.setPaintProperty('precinct-dot', 'circle-color', exprPrecinct);
+        if (lastAppliedPrecinctPaintExpr !== exprPrecinct) {
+          if (map.getLayer('precinct-fill')) {
+            map.setPaintProperty('precinct-fill', 'fill-color', exprPrecinct);
+          }
+          if (map.getLayer('precinct-dot')) {
+            map.setPaintProperty('precinct-dot', 'circle-color', exprPrecinct);
+          }
+          lastAppliedPrecinctPaintExpr = exprPrecinct;
         }
       }
       applyLayerOpacityTuning();
