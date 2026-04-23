@@ -481,7 +481,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     });
 
     expect(modeledSnapshot.senateOptionText).toBe('US Senate (2026) model');
-    expect(modeledSnapshot.courtOptionText).toBe('NC Associate Justice Seat 1 (2026) Model');
+    expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Associate Justice Seat 1 (2026) Model');
     expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
