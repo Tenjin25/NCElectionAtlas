@@ -10102,7 +10102,8 @@ document.addEventListener('DOMContentLoaded', function() {
       style: 'mapbox://styles/mapbox/light-v11',
       center: CONFIG.center,
       zoom: CONFIG.zoom,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
+      performanceMetricsCollection: false
     });
 
     const IS_COARSE_POINTER = (() => {
@@ -10442,9 +10443,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           // Avoid manufacturing deltas for modeled contests.
           try {
+            const modeledAny = getModeledContestDefinitionByType(ct);
             const modeledTo = getModeledContestDefinition(ct, ty);
             const modeledFrom = getModeledContestDefinition(ct, fy);
-            if (modeledTo || modeledFrom) {
+            if (modeledAny || modeledTo || modeledFrom) {
               countyVoteDeltaCacheByPair.set(key, cache);
               return;
             }
@@ -10625,7 +10627,7 @@ document.addEventListener('DOMContentLoaded', function() {
        // The weights below are applied inside the Senate anchor, before the (separate) climate blend.
        secondaryBaseContestType: 'us_senate',
        secondaryBaseYear: 2020,
-       senateAnchorSecondWeight: 0.30, // 0..1 share for 2020 inside the Senate anchor (rest is 2022)
+       senateAnchorSecondWeight: 0.34, // 0..1 share for 2020 inside the Senate anchor (rest is 2022)
        climateContestType: 'president',
        climateYear: 2024,
         // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
@@ -10648,14 +10650,14 @@ document.addEventListener('DOMContentLoaded', function() {
         trendCarryoverWeight: 0.32,
         senateResidualElasticityEnabled: false,
         incumbentParty: 'DEM',
-        incumbentBoostPts: 1.6,
+        incumbentBoostPts: 1.4,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
         // Optional county-cluster calibration (subtle by default): keep similar county archetypes
         // behaving more consistently without changing any user-facing controls.
         countyClusterCalibrationEnabled: true,
-        countyClusterCalibrationStrength: 0.65, // 0..1 (higher = stronger cluster-based adjustments)
+        countyClusterCalibrationStrength: 0.58, // 0..1 (higher = stronger cluster-based adjustments)
         // Federalization brake: very deep-partisan counties are less likely to sustain large crossover patterns.
         federalizationBrakeMargin: 20,
         federalizationDeepMargin: 34,
@@ -10744,15 +10746,15 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
         // but allow chamber-specific damping so legislative layers do not overreact.
-        districtBlendMulCongressional: 0.94,
-        districtBlendMulStateHouse: 0.94,
-        districtBlendMulStateSenate: 0.94,
-        districtDeviationBrakeCongressional: 0.92,
-        districtDeviationBrakeStateHouse: 0.92,
-        districtDeviationBrakeStateSenate: 0.92,
-        candidateBonusDistrictPtsCongressional: 0.28,
-        candidateBonusDistrictPtsStateHouse: 0.28,
-        candidateBonusDistrictPtsStateSenate: 0.28,
+        districtBlendMulCongressional: 0.93,
+        districtBlendMulStateHouse: 0.91,
+        districtBlendMulStateSenate: 0.92,
+        districtDeviationBrakeCongressional: 0.90,
+        districtDeviationBrakeStateHouse: 0.88,
+        districtDeviationBrakeStateSenate: 0.89,
+        candidateBonusDistrictPtsCongressional: 0.26,
+        candidateBonusDistrictPtsStateHouse: 0.24,
+        candidateBonusDistrictPtsStateSenate: 0.25,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -15930,11 +15932,21 @@ document.addEventListener('DOMContentLoaded', function() {
             // If a model doesn't define turnout scaling, keep turnout neutral (0 shift).
             const TURNOUT_BASELINE = 0.575;
             const turnoutShift = ((Number.isFinite(turnoutFactor) ? turnoutFactor : TURNOUT_BASELINE) - TURNOUT_BASELINE) * 100;
+            // Trend nudges are intentionally small; require (a) meaningful vote volume and
+            // (b) at least some repeatability across the recent/second/long series.
+            const trendVolumeScore = Math.min(1, countyTotalVotes / 35000);
+            const trendSameSign = (Math.sign(recentShift) !== 0 && Math.sign(longShift) !== 0 && Math.sign(recentShift) === Math.sign(longShift));
+            const trendRepeatabilityScore = trendSameSign
+              ? clamp01((Math.min(Math.abs(recentShift), Math.abs(longShift)) - 0.6) / 2.6)
+              : clamp01((Math.abs(recentShift) - 1.8) / 3.2) * 0.55;
             let trendNudge = 0;
-            if (trendTag === 'right') trendNudge = Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
-            else if (trendTag === 'left') trendNudge = -Math.min(trendNudgeMaxPts, Math.max(0.1, Math.abs(recentShift) * 0.16));
-            else if (trendTag === 'volatile') trendNudge = (recentShift >= 0 ? 0.16 : -0.16);
-            trendNudge *= reliabilityScale;
+            if (trendTag === 'right') trendNudge = Math.min(trendNudgeMaxPts, Math.max(0.08, Math.abs(recentShift) * 0.14));
+            else if (trendTag === 'left') trendNudge = -Math.min(trendNudgeMaxPts, Math.max(0.08, Math.abs(recentShift) * 0.14));
+            else if (trendTag === 'volatile') trendNudge = (recentShift >= 0 ? 0.12 : -0.12);
+            trendNudge *= reliabilityScale
+              * (0.70 + (0.30 * (1 - unstableScore)))
+              * (0.55 + (0.45 * trendVolumeScore))
+              * (0.60 + (0.40 * trendRepeatabilityScore));
             if (isJudicialModel) trendNudge *= (1 - (0.70 * judicialNoise));
 
             const weightedCountyBaseline = getPresidentialBaselineMargin(county);
@@ -15949,9 +15961,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const fedBrakeMargin = Number(modeledDef?.federalizationBrakeMargin ?? 20);
             const fedDeepMargin = Number(modeledDef?.federalizationDeepMargin ?? 34);
             const fedFloor = Number(modeledDef?.federalizationFloor ?? 0.62);
-            const federalizationBrake = isSenateDeviationModel
+            let federalizationBrake = isSenateDeviationModel
               ? (Number(senateDiag?.federalBrake) || computeFederalizationBrake(absFed, fedBrakeMargin, fedDeepMargin, fedFloor))
               : 1;
+            // Family-specific brake shaping: keep the same brake structure, but make portability skepticism
+            // more asymmetric by county family (without changing contest architecture).
+            if (isSenateDeviationModel) {
+              if (senateFamily === 'metro_suburban') {
+                federalizationBrake = clamp01(lerp(federalizationBrake, 1, 0.18));
+              } else if (senateFamily === 'growth_exurban') {
+                federalizationBrake = clamp01(lerp(federalizationBrake, 1, 0.10));
+              } else if (senateFamily === 'black_belt_residual_crossover') {
+                federalizationBrake = clamp01(federalizationBrake * 0.96);
+              } else if (senateFamily === 'realigned_former_d_federal') {
+                federalizationBrake = clamp01(federalizationBrake * 0.92);
+              } else if (senateFamily === 'rural_white_appalachian') {
+                federalizationBrake = clamp01(federalizationBrake * 0.88);
+              }
+            }
             if (isSenateDeviationModel) trendNudge *= (0.82 + (0.18 * federalizationBrake));
 
             const stableCountyScore = (Math.abs(baseCountySignedRaw) >= safeBrakeMargin && volatility <= 2.25)
@@ -15967,6 +15994,37 @@ document.addEventListener('DOMContentLoaded', function() {
               + (0.25 * senateOutlierBrakeScore)
               + (0.15 * volatilityConfidence)
             );
+
+            // Anomaly score (0..1): a light, general-purpose outlier detector used to damp portability/trend,
+            // while keeping named county clamps as a backstop.
+            let anomalyScore = 0;
+            if (isSenateDeviationModel) {
+              const senateAnchorSignedForAnomaly = (senateAnchorSignedByCounty && senateAnchorSignedByCounty.has(county))
+                ? Number(senateAnchorSignedByCounty.get(county))
+                : NaN;
+              const senatePresDeltaAbs = Number.isFinite(senateAnchorSignedForAnomaly)
+                ? Math.abs(senateAnchorSignedForAnomaly - weightedCountyBase)
+                : 0;
+              const senatePresDeltaScore = clamp01((senatePresDeltaAbs - 2.0) / 10.0);
+              const gap = Number(senateDiag?.outlierGap);
+              const gapScore = Number.isFinite(gap) ? clamp01((gap - 3.0) / 8.0) : 0;
+              const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+              const volumePenalty = clamp01(1 - reliabilityScale);
+              anomalyScore = clamp01(
+                (0.42 * gapScore)
+                + (0.33 * senatePresDeltaScore)
+                + (0.17 * volumePenalty)
+                + (0.08 * unstableScore)
+              );
+              anomalyScore *= (0.70 + (0.30 * (1 - durableScore)));
+              if (senateFamily === 'realigned_former_d_federal') anomalyScore = clamp01(anomalyScore * 1.12);
+              else if (senateFamily === 'rural_white_appalachian') anomalyScore = clamp01(anomalyScore * 1.05);
+              else if (senateFamily === 'metro_suburban') anomalyScore = clamp01(anomalyScore * 0.92);
+              if (senateAnomalyCountySet.has(county)) anomalyScore = Math.max(anomalyScore, 0.65);
+
+              // Keep "trend nudges" especially skeptical when the county looks anomalous.
+              trendNudge *= (1 - (0.30 * anomalyScore));
+            }
             const countyShrinkScale = 0.50 + (0.50 * countyConfidence);
 
             let targetSigned = baseCountySignedRaw;
@@ -16013,7 +16071,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const senateMedianDev = Number(senateDiag?.medianDev);
                 const senateDurableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
                 const senateDevMag = Number.isFinite(senateMedianDev) ? clamp01((Math.abs(senateMedianDev) - 0.8) / 6.5) : 0;
-                const distinctSenateBehaviorScore = clamp01(senateDevMag * senateDurableScore);
+                const senateGap = Number(senateDiag?.outlierGap);
+                const senateGapScore = Number.isFinite(senateGap) ? clamp01((senateGap - 3.0) / 8.0) : 0;
+                const senateRepeatability = clamp01(senateDurableScore * (1 - senateGapScore));
+                const distinctSenateBehaviorScore = clamp01(senateDevMag * senateRepeatability) * (1 - (0.35 * anomalyScore));
                 const distinctBrakeMaxRaw = Number(modeledDef?.distinctSenateBehaviorPresWeightBrakeMax);
                 const distinctBrakeMax = Number.isFinite(distinctBrakeMaxRaw)
                   ? Math.max(0, Math.min(0.16, distinctBrakeMaxRaw))
@@ -16194,13 +16255,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (senateTrendCarryWeight > 0 && Number.isFinite(recentShift)) {
                   const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
                   const outlierBrake = clamp01(Number(senateDiag?.outlierBrake ?? 1));
+                  const outlierGap = Number(senateDiag?.outlierGap);
+                  const gapScore = Number.isFinite(outlierGap) ? clamp01((outlierGap - 2.6) / 7.4) : 0;
                   const volatilityScore = clamp01((volatility - 3.5) / 5.5);
                   const stabilityScale = (0.60 + (0.40 * countyConfidence)) * (0.78 + (0.22 * (1 - volatilityScore)));
+                  const repeatSameSign = (Math.sign(recentShift) !== 0 && Math.sign(longShift) !== 0 && Math.sign(recentShift) === Math.sign(longShift));
+                  const repeatScore = repeatSameSign ? clamp01((Math.min(Math.abs(recentShift), Math.abs(longShift)) - 0.7) / 2.4) : 0;
+                  const volumeScore = Math.min(1, countyTotalVotes / 45000);
+                  let repeatabilityScale = (0.55 + (0.45 * repeatScore)) * (0.70 + (0.30 * volumeScore)) * (1 - (0.45 * gapScore));
+                  if (unstableCounty) repeatabilityScale *= 0.72;
+                  if (senateAnomalyCountySet.has(county)) repeatabilityScale *= 0.60;
                   targetSigned += recentShift
                     * senateTrendCarryWeight
                     * 0.5
                     * reliabilityScale
                     * stabilityScale
+                    * repeatabilityScale
                     * (0.75 + (0.25 * durableScore))
                     * (0.80 + (0.20 * outlierBrake));
                 }
@@ -16216,6 +16286,10 @@ document.addEventListener('DOMContentLoaded', function() {
                   portability *= (0.72 + (0.28 * federalizationBrake));
                   portability *= (0.70 + (0.30 * reliabilityScale));
                   portability *= (0.75 + (0.25 * outlierBrake));
+                  portability *= (1 - (0.35 * anomalyScore));
+                  if (senateFamily === 'rural_white_appalachian') portability *= 0.88;
+                  else if (senateFamily === 'realigned_former_d_federal') portability *= 0.90;
+                  else if (senateFamily === 'metro_suburban') portability *= 1.04;
                   if (isRealignedFormerDemFederalCounty) portability *= 0.82;
                   targetSigned += sign * senateIncumbentBoostPts * polarizedScale * portability;
                 }
@@ -16224,6 +16298,19 @@ document.addEventListener('DOMContentLoaded', function() {
               if (senateAnomalyCountySet.has(county)) {
                 const lo = weightedCountyBase - senateAnomalyClampPts;
                 const hi = weightedCountyBase + senateAnomalyClampPts;
+                targetSigned = Math.max(lo, Math.min(hi, targetSigned));
+              } else if (isSenateDeviationModel && anomalyScore >= 0.58) {
+                // General anomaly dampener: shrink high-outlier counties toward the presidential baseline
+                // using a score (volume + repeatability + deviation), not only hardcoded county names.
+                const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                let clampPts = senateAnomalyClampPts;
+                clampPts *= (0.94 - (0.28 * anomalyScore));
+                clampPts *= (0.88 + (0.12 * reliabilityScale));
+                clampPts *= (0.76 + (0.24 * federalizationBrake));
+                clampPts *= (0.85 + (0.15 * (1 - durableScore)));
+                clampPts = Math.max(6, Math.min(senateAnomalyClampPts, clampPts));
+                const lo = weightedCountyBase - clampPts;
+                const hi = weightedCountyBase + clampPts;
                 targetSigned = Math.max(lo, Math.min(hi, targetSigned));
               } else if (isSenateDeviationModel && senateDiag) {
                 // Pattern-based anomaly clamp: if the base-cycle Senate-vs-Pres deviation looks like an outlier
@@ -16397,6 +16484,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     ? Math.max(0, Number(modeledDef.candidateBonusRealignedFormerDemFederalPersonalCapPts))
                     : 0.16;
                   personalApplied = Math.min(personalApplied, personalCap);
+                }
+
+                // Anomaly/repeatability dampening: preserve genuine crossover, but avoid exporting one-cycle quirks.
+                const bonusDurableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
+                const bonusGap = Number(senateDiag?.outlierGap);
+                const bonusGapScore = Number.isFinite(bonusGap) ? clamp01((bonusGap - 3.0) / 8.0) : 0;
+                const bonusRepeatability = clamp01(bonusDurableScore * (1 - bonusGapScore));
+                durableApplied *= (1 - (0.22 * anomalyScore));
+                personalApplied *= (1 - (0.40 * anomalyScore));
+                if (senateFamily === 'black_belt_residual_crossover') {
+                  durableApplied *= (0.88 + (0.12 * bonusRepeatability));
+                  personalApplied *= (0.72 + (0.28 * bonusRepeatability));
+                } else if (senateFamily === 'realigned_former_d_federal') {
+                  durableApplied *= 0.92;
+                  personalApplied *= 0.84;
+                } else if (senateFamily === 'rural_white_appalachian') {
+                  durableApplied *= 0.90;
+                  personalApplied *= 0.78;
+                } else if (senateFamily === 'metro_suburban') {
+                  durableApplied *= 1.03;
+                  personalApplied *= 1.05;
                 }
 
                 candidateBonusDurableApplied = Math.max(0, durableApplied);
@@ -16899,6 +17007,23 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
+        let secondaryResults = null;
+        let senateAnchorSecondWeight = 0;
+        if (useBlend && isSenateDeviationModel) {
+          const secondaryContestType = String(modeledDef?.secondaryBaseContestType || '').trim();
+          const secondaryYear = Number(modeledDef?.secondaryBaseYear);
+          const secondaryWeightRaw = Number(modeledDef?.senateAnchorSecondWeight);
+          senateAnchorSecondWeight = Number.isFinite(secondaryWeightRaw) ? Math.max(0, Math.min(1, secondaryWeightRaw)) : 0;
+          if (secondaryContestType && Number.isFinite(secondaryYear) && senateAnchorSecondWeight > 0) {
+            try {
+              const secondaryNode = await loadDistrictSlice(scope, secondaryContestType, secondaryYear, linesYear);
+              secondaryResults = secondaryNode?.general?.results || null;
+            } catch (_) {
+              secondaryResults = null;
+            }
+          }
+        }
+
         let turnoutResults = null;
         let turnoutFallbackRatio = null;
         const turnoutContestType = String(modeledDef?.turnoutContestType || '').trim();
@@ -16987,6 +17112,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (isSenateDeviationModel) {
               const baseline = Number.isFinite(climateRowSigned) ? climateRowSigned : (Number.isFinite(climateSigned) ? climateSigned : 0);
+              const secondaryRow = secondaryResults ? (secondaryResults[districtId] || null) : null;
+              const secondaryRowSigned = secondaryRow
+                ? signedMarginPctFromVotes(
+                  Number(secondaryRow?.dem_votes || 0),
+                  Number(secondaryRow?.rep_votes || 0),
+                  Number(secondaryRow?.total_votes || 0)
+                )
+                : NaN;
+              const senateAnchorSigned = Number.isFinite(secondaryRowSigned)
+                ? ((baseRowSigned * (1 - senateAnchorSecondWeight)) + (secondaryRowSigned * senateAnchorSecondWeight))
+                : baseRowSigned;
               let devBase = baseline;
               try {
                 const presRow = presDeviationResults ? (presDeviationResults[districtId] || null) : null;
@@ -16999,10 +17135,37 @@ document.addEventListener('DOMContentLoaded', function() {
                   if (Number.isFinite(presSigned)) devBase = presSigned;
                 }
               } catch (_) {}
-              const senateDeviationRaw = baseRowSigned - devBase;
+              const senateDeviationRaw = senateAnchorSigned - devBase;
               const senateDeviation = clampSenateDeviationForDistrictRow(senateDeviationRaw, baseRow);
-              const adjustedSenateMargin = baseline + (blendWeight * districtBlendMul * senateDeviation * districtDeviationBrake);
+              const districtTwoParty = Math.max(0, Number(baseRow?.dem_votes || 0) + Number(baseRow?.rep_votes || 0));
+              const districtReliability = 0.58 + (0.42 * Math.min(1, districtTwoParty / 22000));
+              const secondaryDeviationRaw = Number.isFinite(secondaryRowSigned) ? (secondaryRowSigned - devBase) : senateDeviationRaw;
+              const sameDirection = Math.sign(senateDeviationRaw) !== 0
+                && Math.sign(secondaryDeviationRaw) !== 0
+                && Math.sign(senateDeviationRaw) === Math.sign(secondaryDeviationRaw);
+              const repeatabilityGap = Number.isFinite(secondaryRowSigned) ? Math.abs(baseRowSigned - secondaryRowSigned) : 0;
+              const repeatabilityScore = Number.isFinite(secondaryRowSigned)
+                ? Math.max(0, Math.min(1, (1 - (repeatabilityGap / 10)) * (sameDirection ? 1 : 0.72)))
+                : 0.60;
+              const anchorVsClimateAbs = Math.abs(senateAnchorSigned - baseline);
+              const anomalyScore = Math.max(0, Math.min(1,
+                (0.48 * Math.max(0, Math.min(1, (repeatabilityGap - 2.0) / 8.0)))
+                + (0.32 * Math.max(0, Math.min(1, (anchorVsClimateAbs - 2.5) / 8.5)))
+                + (0.20 * (1 - districtReliability))
+              ));
+              const scopedDeviationBrake = districtDeviationBrake
+                * districtReliability
+                * (0.72 + (0.28 * repeatabilityScore))
+                * (1 - (0.22 * anomalyScore));
+              const adjustedSenateMargin = baseline + (blendWeight * districtBlendMul * senateDeviation * scopedDeviationBrake);
               rowSwingPct = baseRowSigned - adjustedSenateMargin;
+              if (Number.isFinite(districtBonus) && districtBonus > 0) {
+                const scopedDistrictBonus = districtBonus
+                  * districtReliability
+                  * (0.84 + (0.16 * repeatabilityScore))
+                  * (1 - (0.28 * anomalyScore));
+                rowSwingPct += scopedDistrictBonus;
+              }
             } else {
               let blendedBaseSigned = baseRowSigned;
               if (useBaseMix && baseMixResults && baseMixResults[districtId]) {
@@ -17022,7 +17185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
 
-          if (Number.isFinite(districtBonus) && districtBonus > 0) rowSwingPct += districtBonus;
+          if (!isSenateDeviationModel && Number.isFinite(districtBonus) && districtBonus > 0) rowSwingPct += districtBonus;
 
           modeledResults[districtId] = buildModeledDistrictResultRow(baseResults[districtId], modeledDef, rowSwingPct, targetTotal);
         });
