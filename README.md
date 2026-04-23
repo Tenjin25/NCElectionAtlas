@@ -148,6 +148,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Left **Scotland** and **Bladen** county-specific handling mostly unchanged while preserving the same overall statewide Lean-R result band.
 - No UI, map interaction, tooltip, legend, control, mobile, Mapbox, or unrelated contest logic changes.
 
+### Modeled Tooltip Cache + Mapbox Telemetry Cleanup (April 22, 2026)
+
+- Stopped county tooltip vote-delta prefetch from requesting nonexistent historical JSON files for synthetic contest types such as `us_senate_model`, eliminating noisy `404` console errors during modeled-contest selection.
+- Kept modeled tooltip delta behavior intentionally disabled for synthetic contest histories instead of trying to infer fake prior-cycle deltas from non-existent files.
+- Disabled Mapbox `performanceMetricsCollection` at map creation in addition to the existing telemetry toggle, reducing ad-blocker-driven `events.mapbox.com` console noise without changing map rendering behavior.
+
 ### US Senate District-Layer Calibration Parity (April 22, 2026)
 
 - Updated modeled Senate district layers so **Congressional**, **State House**, and **State Senate** slices use the same `2022 + 2020 US Senate` anchor structure as the county model instead of relying on a pure `2022` Senate district baseline.
