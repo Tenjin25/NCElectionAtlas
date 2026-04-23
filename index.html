@@ -10102,7 +10102,8 @@ document.addEventListener('DOMContentLoaded', function() {
       style: 'mapbox://styles/mapbox/light-v11',
       center: CONFIG.center,
       zoom: CONFIG.zoom,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
+      performanceMetricsCollection: false
     });
 
     const IS_COARSE_POINTER = (() => {
@@ -10442,9 +10443,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           // Avoid manufacturing deltas for modeled contests.
           try {
+            const modeledAny = getModeledContestDefinitionByType(ct);
             const modeledTo = getModeledContestDefinition(ct, ty);
             const modeledFrom = getModeledContestDefinition(ct, fy);
-            if (modeledTo || modeledFrom) {
+            if (modeledAny || modeledTo || modeledFrom) {
               countyVoteDeltaCacheByPair.set(key, cache);
               return;
             }
