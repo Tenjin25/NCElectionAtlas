@@ -10323,6 +10323,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const countyVoteDeltaHoverRefreshScheduledByPair = new Set(); // Set<string key>
     const contestYearsByTypeCache = new Map(); // Map<string contestType, number[]>
 
+    // --- Modeled contest perf + memoization ---
+    // Goals:
+    // - Keep raw source slices fetched once per session.
+    // - Split "load raw slice" from "build modeled result" and cache both.
+    // - Keep multiple modeled variants (per tuning inputs) so returning is instant.
+    const MODELED_PERF_DEBUG = false; // Flip to true for lightweight console timings.
+    function modeledPerfNow() {
+      try { return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function') ? performance.now() : Date.now(); } catch (_) {}
+      return Date.now();
+    }
+    async function modeledPerf(label, fn) {
+      if (!MODELED_PERF_DEBUG || typeof fn !== 'function') return fn();
+      const t0 = modeledPerfNow();
+      try {
+        const out = await fn();
+        const dt = modeledPerfNow() - t0;
+        console.log(`[modeled] ${label}: ${dt.toFixed(1)}ms`);
+        return out;
+      } catch (err) {
+        const dt = modeledPerfNow() - t0;
+        console.log(`[modeled] ${label}: ${dt.toFixed(1)}ms (error)`);
+        throw err;
+      }
+    }
+
+    // Dedicated modeled ingredient caches (raw slices -> derived county totals/signed maps).
+    // Keys are `${contestType}_${year}`.
+    const modeledBaseCountySliceCache = new Map();
+    const modeledBaseCountySliceInflight = new Map();
+    const modeledClimateCountySliceCache = new Map();
+    const modeledClimateCountySliceInflight = new Map();
+    const modeledSenateAnchorCountySliceCache = new Map();
+    const modeledSenateAnchorCountySliceInflight = new Map();
+    const modeledAuxCountySliceCache = new Map(); // other helper years/anchors used by models
+    const modeledAuxCountySliceInflight = new Map();
+
+    // Modeled outputs (county + district) cached by full modeled input signature.
+    const modeledCountyOutputCache = new Map(); // key: modeledDefSignature -> rows[]
+    const modeledCountyOutputInflight = new Map(); // key -> Promise<rows[]>
+    const modeledDistrictOutputCache = new Map(); // key: `${linesYear}|${scope}|${modeledDefSignature}` -> node
+    const modeledDistrictOutputInflight = new Map(); // key -> Promise<node>
+    const modeledBaselineCountyOutputCache = new Map(); // key: `${baseContestType}_${baseYear}|${modeledDefSignature}` -> rows[]
+    const modeledBaselineCountyOutputInflight = new Map(); // key -> Promise<rows[]>
+
+    // Modeled Senate helper caches (statewide insights built during apply/render).
+    const modeledSenateInsightsCache = new Map(); // key: `${modeledDefSignature}|scenario:${...}` -> insights|null
+
+    // Helper memoization to avoid rebuilding lookup maps repeatedly.
+    const modeledCountyFromRowKeyMemo = new Map(); // rawRowCounty -> countyNorm
+    const modeledCensusContextMemo = new Map(); // countyNorm -> census ctx|null
+    const modeledCountyClusterCache = new Map(); // key: `${modelKind}|${baseContestType}_${baseYear}` -> Map countyNorm -> cluster
+
+    let modeledSenateCorePreloadScheduled = false;
+
     function countyVoteDeltaPairKey(contestType, fromYear, toYear) {
       const ct = String(contestType || '').trim();
       const fy = Number(fromYear);
@@ -11310,6 +11364,176 @@ document.addEventListener('DOMContentLoaded', function() {
       return out;
     }
 
+    // --- Modeled contest signature + derived slice helpers ---
+    // Signature is used to cache modeled results across contest switches and tuning changes.
+    function modeledStableStringify(value) {
+      const seen = new WeakSet();
+      const recur = (v) => {
+        if (v === null || v === undefined) return v;
+        const t = typeof v;
+        if (t === 'number') return Number.isFinite(v) ? v : String(v);
+        if (t === 'string' || t === 'boolean') return v;
+        if (t !== 'object') return String(v);
+        if (seen.has(v)) return '[Circular]';
+        seen.add(v);
+        if (Array.isArray(v)) return v.map(recur);
+        const out = {};
+        Object.keys(v).sort().forEach(k => { out[k] = recur(v[k]); });
+        return out;
+      };
+      try { return JSON.stringify(recur(value)); } catch (_) { return String(value); }
+    }
+
+    function getModeledDefSignature(modeledDef) {
+      if (!modeledDef) return '';
+      const ct = String(modeledDef?.contestType || '').trim();
+      const y = Number(modeledDef?.year);
+      if (!ct || !Number.isFinite(y)) return '';
+      // Include the full definition (sorted keys) so any tuning input change yields a new cache key.
+      return `${ct}_${y}|${modeledStableStringify(modeledDef)}`;
+    }
+
+    function modeledNormalizeRowKey(raw) {
+      return (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    function modeledCountyFromRowKey(rawKey) {
+      const key = modeledNormalizeRowKey(rawKey);
+      if (!key) return '';
+      if (modeledCountyFromRowKeyMemo.has(key)) return modeledCountyFromRowKeyMemo.get(key) || '';
+      const countyOnly = key.includes(' - ') ? key.split(' - ', 1)[0] : key;
+      const county = normalizeCountyToken(countyOnly);
+      try { modeledCountyFromRowKeyMemo.set(key, county); } catch (_) {}
+      return county || '';
+    }
+
+    function modeledGetNcCensusContextCached(countyNorm) {
+      const c = normalizeCountyToken(countyNorm);
+      if (!c) return null;
+      if (modeledCensusContextMemo.has(c)) return modeledCensusContextMemo.get(c) || null;
+      let ctx = null;
+      try { ctx = getNcCensusContext(c); } catch (_) { ctx = null; }
+      try { modeledCensusContextMemo.set(c, ctx); } catch (_) {}
+      return ctx;
+    }
+
+    function buildModeledCountyTotalsFromSliceRows(rows, contestType) {
+      const ct = String(contestType || '').trim();
+      const out = new Map();
+      (rows || []).forEach(r => {
+        const rowKey = modeledNormalizeRowKey(r?.county || '');
+        if (!rowKey) return;
+        const county = modeledCountyFromRowKey(rowKey);
+        if (!county) return;
+        const node = out.get(county) || { dem: 0, rep: 0, other: 0, total: 0 };
+        const dem = Number(r?.[`${ct}_dem`] || 0);
+        const rep = Number(r?.[`${ct}_rep`] || 0);
+        const other = Number(r?.[`${ct}_other`] || 0);
+        const fallbackTotal = dem + rep + other;
+        const total = Math.max(0, Number(r?.[`${ct}_total`] || fallbackTotal));
+        node.dem += dem;
+        node.rep += rep;
+        node.other += other;
+        node.total += total;
+        out.set(county, node);
+      });
+      return out;
+    }
+
+    function modeledCountySignedFromTotalsMap(totalsMap) {
+      const map = new Map();
+      (totalsMap || new Map()).forEach((totals, county) => {
+        const signed = signedMarginPctFromVotes(Number(totals?.dem || 0), Number(totals?.rep || 0), Number(totals?.total || 0));
+        if (Number.isFinite(signed)) map.set(county, signed);
+      });
+      return map;
+    }
+
+    function modeledStateSignedFromTotalsMap(totalsMap) {
+      const acc = { dem: 0, rep: 0, total: 0 };
+      (totalsMap || new Map()).forEach((totals) => {
+        acc.dem += Number(totals?.dem || 0);
+        acc.rep += Number(totals?.rep || 0);
+        acc.total += Number(totals?.total || 0);
+      });
+      return signedMarginPctFromVotes(acc.dem, acc.rep, acc.total);
+    }
+
+    function modeledStateTotalVotesFromTotalsMap(totalsMap) {
+      let acc = 0;
+      (totalsMap || new Map()).forEach((totals) => { acc += Math.max(0, Number(totals?.total || 0)); });
+      return acc;
+    }
+
+    async function getModeledDerivedCountySlice(cache, inflight, contestType, year, label) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      if (!ct || !Number.isFinite(y)) return null;
+      const key = `${ct}_${y}`;
+      if (cache.has(key)) return cache.get(key);
+      if (inflight.has(key)) return inflight.get(key);
+      const p = modeledPerf(label || `modeled.slice.${key}`, async () => {
+        const rows = await loadContestSlice(ct, y);
+        const totalsByCounty = buildModeledCountyTotalsFromSliceRows(rows, ct);
+        const signedByCounty = modeledCountySignedFromTotalsMap(totalsByCounty);
+        const stateSignedFromRows = computeStatewideMarginPctFromSliceRows(rows, ct);
+        const stateSignedFromTotals = modeledStateSignedFromTotalsMap(totalsByCounty);
+        const stateTotalVotes = modeledStateTotalVotesFromTotalsMap(totalsByCounty);
+        return {
+          key,
+          contestType: ct,
+          year: y,
+          rows,
+          totalsByCounty,
+          signedByCounty,
+          stateSignedFromRows,
+          stateSignedFromTotals,
+          stateTotalVotes
+        };
+      });
+      inflight.set(key, p);
+      try {
+        const out = await p;
+        cache.set(key, out);
+        return out;
+      } finally {
+        inflight.delete(key);
+      }
+    }
+
+    function scheduleModeledSenateCorePreload() {
+      if (modeledSenateCorePreloadScheduled) return;
+      modeledSenateCorePreloadScheduled = true;
+      const run = async () => {
+        try {
+          const modeledDef = getModeledContestDefinition('us_senate_model', 2026);
+          if (!modeledDef) return;
+          const baseType = String(modeledDef?.baseContestType || '').trim();
+          const baseYear = Number(modeledDef?.baseYear);
+          const climateType = String(modeledDef?.climateContestType || '').trim();
+          const climateYear = Number(modeledDef?.climateYear);
+          const anchorType = String(modeledDef?.secondaryBaseContestType || '').trim();
+          const anchorYear = Number(modeledDef?.secondaryBaseYear);
+          // Preload only county-mode ingredients; do not compute district-mode modeled slices here.
+          if (baseType && Number.isFinite(baseYear)) {
+            await getModeledDerivedCountySlice(modeledBaseCountySliceCache, modeledBaseCountySliceInflight, baseType, baseYear, 'modeled.preload.base');
+          }
+          if (climateType && Number.isFinite(climateYear)) {
+            await getModeledDerivedCountySlice(modeledClimateCountySliceCache, modeledClimateCountySliceInflight, climateType, climateYear, 'modeled.preload.climate');
+          }
+          if (anchorType && Number.isFinite(anchorYear)) {
+            await getModeledDerivedCountySlice(modeledSenateAnchorCountySliceCache, modeledSenateAnchorCountySliceInflight, anchorType, anchorYear, 'modeled.preload.anchor');
+          }
+        } catch (_) {}
+      };
+      const kickoff = () => run().catch(() => {});
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => kickoff(), { timeout: 6000 });
+      } else {
+        setTimeout(kickoff, 1200);
+      }
+    }
+
     function invalidateModeledContestCaches(contestType) {
       const key = String(contestType || '').trim();
       if (!key) return;
@@ -11324,22 +11548,29 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       if (!modeledYears.size) return;
 
+      // Performance change: modeled results are cached by full modeled input signature (not just contestType+year),
+      // so changing a tuning control should not destroy prior variants. This makes returning to an earlier setting
+      // nearly instant and avoids full cache resets from minor UI tweaks.
+      //
+      // We keep the legacy cache deletes as a safety valve in case older code paths ever wrote modeled outputs
+      // into the generic slice caches.
       modeledYears.forEach(year => {
         const contestKey = `${key}_${year}`;
-        contestSliceCache.delete(contestKey);
+        try { contestSliceCache.delete(contestKey); } catch (_) {}
       });
-
-      const districtKeysToDelete = [];
-      districtSliceCache.forEach((_, cacheKey) => {
-        const rawKey = String(cacheKey || '');
-        for (const year of modeledYears) {
-          if (rawKey.endsWith(`_${key}_${year}`)) {
-            districtKeysToDelete.push(rawKey);
-            break;
+      try {
+        const districtKeysToDelete = [];
+        districtSliceCache.forEach((_, cacheKey) => {
+          const rawKey = String(cacheKey || '');
+          for (const year of modeledYears) {
+            if (rawKey.endsWith(`_${key}_${year}`)) {
+              districtKeysToDelete.push(rawKey);
+              break;
+            }
           }
-        }
-      });
-      districtKeysToDelete.forEach(k => districtSliceCache.delete(k));
+        });
+        districtKeysToDelete.forEach(k => districtSliceCache.delete(k));
+      } catch (_) {}
     }
 
     function setModeledContestOverrides(contestType, patch) {
@@ -14680,16 +14911,35 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function buildModeledContestSliceRows(modeledDef) {
-        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
-        const climateRows = await loadContestSlice(modeledDef.climateContestType, modeledDef.climateYear);
-        const baseSignedRaw = computeStatewideMarginPctFromSliceRows(baseRows, modeledDef.baseContestType);
-        const climateSigned = computeStatewideMarginPctFromSliceRows(climateRows, modeledDef.climateContestType);
+        const baseContestType = String(modeledDef?.baseContestType || '').trim();
+        const climateContestType = String(modeledDef?.climateContestType || '').trim();
+        const baseYear = Number(modeledDef?.baseYear);
+        const climateYear = Number(modeledDef?.climateYear);
+
+        // Performance change: split raw slice load from modeled build.
+        // Derived county totals/signed maps are cached once per session per contest/year, and reused across rebuilds.
+        const baseSlice = await getModeledDerivedCountySlice(
+          modeledBaseCountySliceCache,
+          modeledBaseCountySliceInflight,
+          baseContestType,
+          baseYear,
+          'modeled.slice.base'
+        );
+        const climateSlice = await getModeledDerivedCountySlice(
+          modeledClimateCountySliceCache,
+          modeledClimateCountySliceInflight,
+          climateContestType,
+          climateYear,
+          'modeled.slice.climate'
+        );
+        const baseRows = baseSlice?.rows || [];
+        const climateRows = climateSlice?.rows || [];
+        const baseSignedRaw = Number(baseSlice?.stateSignedFromRows);
+        const climateSigned = Number(climateSlice?.stateSignedFromRows);
         const climateSwingPct = baseSignedRaw - climateSigned; // fallback when blendWeight isn't enabled
 
         const blendWeight = Number(modeledDef?.blendWeight);
         const useBlend = Number.isFinite(blendWeight) && blendWeight >= 0 && blendWeight <= 1;
-        const baseContestType = String(modeledDef?.baseContestType || '').trim();
-        const climateContestType = String(modeledDef?.climateContestType || '').trim();
         const modeledType = String(modeledDef?.contestType || '').trim();
         const isSenateDeviationModel = modeledType === 'us_senate_model';
         const isJudicialModel = !!modeledDef?.judicialModel || modeledType === 'nc_supreme_court_model';
@@ -14705,7 +14955,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let secondaryBaseRows = null;
         if (isSenateDeviationModel && secondaryBaseContestType && Number.isFinite(secondaryBaseYear) && secondaryBaseYear > 0) {
           try {
-            secondaryBaseRows = await loadContestSlice(secondaryBaseContestType, secondaryBaseYear);
+            const secondarySlice = await getModeledDerivedCountySlice(
+              modeledSenateAnchorCountySliceCache,
+              modeledSenateAnchorCountySliceInflight,
+              secondaryBaseContestType,
+              secondaryBaseYear,
+              'modeled.slice.senate_anchor'
+            );
+            secondaryBaseRows = secondarySlice?.rows || null;
           } catch (_) {
             secondaryBaseRows = null;
           }
@@ -14713,7 +14970,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const clamp01 = (v) => Math.max(0, Math.min(1, Number.isFinite(Number(v)) ? Number(v) : 0));
         const lerp = (a, b, t) => (Number(a) + ((Number(b) - Number(a)) * clamp01(t)));
         const getCountyCensusContextSafe = (countyNorm) => {
-          try { return getNcCensusContext(countyNorm); } catch (_) { return null; }
+          return modeledGetNcCensusContextCached(countyNorm);
         };
         const normalizeRowKey = (raw) => (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
         const countyFromRowKey = (key) => {
@@ -14849,8 +15106,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // - Build a statewide-anchored county baseline (weighted recent + second + long-run history).
         // - Localize via county offsets, trend and volatility-aware elasticity, and a stability brake.
         // - Then apply a uniform per-county swing to each base row to preserve map/precinct architecture.
-        const baseCountyTotals = buildCountyTotals(baseRows, baseContestType);
-        const baseCountySignedRawByCounty = getCountySignedFromTotalsMap(baseCountyTotals);
+        const baseCountyTotals = baseSlice?.totalsByCounty || buildCountyTotals(baseRows, baseContestType);
+        const baseCountySignedRawByCounty = baseSlice?.signedByCounty || getCountySignedFromTotalsMap(baseCountyTotals);
 
         // US Senate model: build a Senate-anchor map that blends 2022 + 2020 before climate blending.
         // This is used for deviation measurement (Senate-vs-Pres) and statewide anchoring.
@@ -14859,8 +15116,15 @@ document.addEventListener('DOMContentLoaded', function() {
         let secondaryBaseSignedByCounty = null; // Map county -> signed margin for the secondary Senate anchor
         if (isSenateDeviationModel && secondaryBaseRows && secondaryBaseContestType) {
           try {
-            const secondaryCountyTotals = buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
-            secondaryBaseSignedByCounty = getCountySignedFromTotalsMap(secondaryCountyTotals);
+            const secondarySlice = await getModeledDerivedCountySlice(
+              modeledSenateAnchorCountySliceCache,
+              modeledSenateAnchorCountySliceInflight,
+              secondaryBaseContestType,
+              secondaryBaseYear,
+              'modeled.slice.senate_anchor'
+            );
+            const secondaryCountyTotals = secondarySlice?.totalsByCounty || buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
+            secondaryBaseSignedByCounty = secondarySlice?.signedByCounty || getCountySignedFromTotalsMap(secondaryCountyTotals);
             const w2 = clamp01(senateAnchorSecondWeight);
             const w1 = 1 - w2;
             const allCounties = new Set([
@@ -14880,7 +15144,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             senateAnchorSignedByCounty = map.size ? map : null;
 
-            const secondaryStateSigned = getStateSignedFromTotalsMap(secondaryCountyTotals);
+            const secondaryStateSigned = Number.isFinite(Number(secondarySlice?.stateSignedFromTotals))
+              ? Number(secondarySlice.stateSignedFromTotals)
+              : getStateSignedFromTotalsMap(secondaryCountyTotals);
             if (Number.isFinite(secondaryStateSigned) && Number.isFinite(baseSignedRaw)) {
               senateAnchorStateSigned = ((1 - w2) * baseSignedRaw) + (w2 * secondaryStateSigned);
             }
@@ -14891,10 +15157,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        const climateCountyTotals = buildCountyTotals(climateRows, climateContestType);
-        const climateSignedByCounty = getCountySignedFromTotalsMap(climateCountyTotals);
-        const baseStateTotalVotes = Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
-        const climateStateTotalVotes = Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+        const climateCountyTotals = climateSlice?.totalsByCounty || buildCountyTotals(climateRows, climateContestType);
+        const climateSignedByCounty = climateSlice?.signedByCounty || getCountySignedFromTotalsMap(climateCountyTotals);
+        const baseStateTotalVotes = Number.isFinite(Number(baseSlice?.stateTotalVotes))
+          ? Number(baseSlice.stateTotalVotes)
+          : Array.from(baseCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
+        const climateStateTotalVotes = Number.isFinite(Number(climateSlice?.stateTotalVotes))
+          ? Number(climateSlice.stateTotalVotes)
+          : Array.from(climateCountyTotals.values()).reduce((acc, t) => acc + Math.max(0, Number(t?.total || 0)), 0);
 
         // Judicial partisan anchor floor: blend a small share of a stable partisan baseline (federal/downballot)
         // into the judicial baseline to avoid one noisy judicial cycle overdriving county crossover behavior.
@@ -14912,12 +15182,32 @@ document.addEventListener('DOMContentLoaded', function() {
             let mapA = null;
             let mapB = null;
             if (aType && Number.isFinite(aYear)) {
-              const rowsA = await loadContestSlice(aType, aYear);
-              mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
+              const sliceA = await getModeledDerivedCountySlice(
+                modeledAuxCountySliceCache,
+                modeledAuxCountySliceInflight,
+                aType,
+                aYear,
+                'modeled.slice.partisan_a'
+              );
+              mapA = sliceA?.signedByCounty || null;
+              if (!mapA) {
+                const rowsA = await loadContestSlice(aType, aYear);
+                mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
+              }
             }
             if (bType && Number.isFinite(bYear)) {
-              const rowsB = await loadContestSlice(bType, bYear);
-              mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
+              const sliceB = await getModeledDerivedCountySlice(
+                modeledAuxCountySliceCache,
+                modeledAuxCountySliceInflight,
+                bType,
+                bYear,
+                'modeled.slice.partisan_b'
+              );
+              mapB = sliceB?.signedByCounty || null;
+              if (!mapB) {
+                const rowsB = await loadContestSlice(bType, bYear);
+                mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
+              }
             }
             if (mapA || mapB) {
               const all = new Set([
@@ -14941,11 +15231,19 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 
-        const countyClusterByCounty = new Map();
-        baseCountyTotals.forEach((totals, county) => {
-          if (!county) return;
-          countyClusterByCounty.set(county, inferCountyCluster(county, totals));
-        });
+        // Performance change: cluster classification is stable for a given model kind + base contest slice.
+        // Cache it so tuning changes don't repeatedly rebuild the same per-county lookup.
+        const modelKind = isJudicialModel ? 'judicial' : (isSenateDeviationModel ? 'senate' : 'generic');
+        const clusterCacheKey = `${modelKind}|${baseContestType}_${baseYear}`;
+        let countyClusterByCounty = modeledCountyClusterCache.get(clusterCacheKey) || null;
+        if (!countyClusterByCounty) {
+          countyClusterByCounty = new Map();
+          baseCountyTotals.forEach((totals, county) => {
+            if (!county) return;
+            countyClusterByCounty.set(county, inferCountyCluster(county, totals));
+          });
+          try { modeledCountyClusterCache.set(clusterCacheKey, countyClusterByCounty); } catch (_) {}
+        }
 
         const clusterCalibrationEnabled = !!modeledDef?.countyClusterCalibrationEnabled;
         const clusterCalibrationStrength = clusterCalibrationEnabled
@@ -15037,12 +15335,28 @@ document.addEventListener('DOMContentLoaded', function() {
           .filter(v => Number.isFinite(v));
         for (const y of yearsToLoad) {
           try {
-            const rows = (Number(y) === Number(modeledDef?.climateYear) && climateContestType === String(modeledDef?.climateContestType || '').trim())
-              ? climateRows
-              : await loadContestSlice(climateContestType, y);
-            const totals = buildCountyTotals(rows, climateContestType);
-            historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
-            historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+            const useClimateDirect = (Number(y) === Number(climateYear));
+            const slice = useClimateDirect
+              ? climateSlice
+              : await getModeledDerivedCountySlice(
+                  modeledAuxCountySliceCache,
+                  modeledAuxCountySliceInflight,
+                  climateContestType,
+                  y,
+                  'modeled.slice.history'
+                );
+            if (slice?.signedByCounty) {
+              historicalCountySignedByYear.set(Number(y), slice.signedByCounty);
+              historicalStateSignedByYear.set(
+                Number(y),
+                Number.isFinite(Number(slice?.stateSignedFromTotals)) ? Number(slice.stateSignedFromTotals) : 0
+              );
+            } else {
+              const rows = useClimateDirect ? climateRows : await loadContestSlice(climateContestType, y);
+              const totals = buildCountyTotals(rows, climateContestType);
+              historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
+              historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+            }
           } catch (_) {}
         }
 
@@ -16908,8 +17222,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function buildModeledBaselineContestSliceRows(modeledDef) {
-        const baseRows = await loadContestSlice(modeledDef.baseContestType, modeledDef.baseYear);
-        return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
+        const baseContestType = String(modeledDef?.baseContestType || '').trim();
+        const baseYear = Number(modeledDef?.baseYear);
+        const sig = getModeledDefSignature(modeledDef);
+        const key = `${baseContestType}_${baseYear}|${sig}`;
+        if (sig && modeledBaselineCountyOutputCache.has(key)) return modeledBaselineCountyOutputCache.get(key);
+        if (sig && modeledBaselineCountyOutputInflight.has(key)) return modeledBaselineCountyOutputInflight.get(key);
+        const p = modeledPerf(`modeled.county.baseline:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}`, async () => {
+          const baseRows = await loadContestSlice(baseContestType, baseYear);
+          return (baseRows || []).map(row => buildModeledContestRowFromBaseRow(row, modeledDef, 0));
+        });
+        if (sig) modeledBaselineCountyOutputInflight.set(key, p);
+        try {
+          const rows = await p;
+          if (sig) modeledBaselineCountyOutputCache.set(key, rows);
+          return rows;
+        } finally {
+          if (sig) modeledBaselineCountyOutputInflight.delete(key);
+        }
       }
 
       function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct, targetTotalOverride = null) {
@@ -17293,15 +17623,26 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
 	    async function loadContestSlice(contestType, year) {
-	      const key = `${contestType}_${year}`;
-	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
-
         const modeledDef = getModeledContestDefinition(contestType, year);
         if (modeledDef) {
-          const modeledRows = await buildModeledContestSliceRows(modeledDef);
-          contestSliceCache.set(key, modeledRows);
-          return modeledRows;
+          const sig = getModeledDefSignature(modeledDef);
+          if (sig && modeledCountyOutputCache.has(sig)) return modeledCountyOutputCache.get(sig);
+          if (sig && modeledCountyOutputInflight.has(sig)) return modeledCountyOutputInflight.get(sig);
+          const p = modeledPerf(`modeled.county.build:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}`, async () => {
+            return await buildModeledContestSliceRows(modeledDef);
+          });
+          if (sig) modeledCountyOutputInflight.set(sig, p);
+          try {
+            const rows = await p;
+            if (sig) modeledCountyOutputCache.set(sig, rows);
+            return rows;
+          } finally {
+            if (sig) modeledCountyOutputInflight.delete(sig);
+          }
         }
+
+	      const key = `${contestType}_${year}`;
+	      if (contestSliceCache.has(key)) return contestSliceCache.get(key);
 
         const manifestHasEntries = Array.isArray(contestManifest) && contestManifest.length > 0;
         const manifestEntry = manifestHasEntries
@@ -17395,14 +17736,26 @@ document.addEventListener('DOMContentLoaded', function() {
       const key = `${scope}_${contestType}_${year}`;
       const linesYear = normalizeDistrictLinesYear(linesYearOverride);
       const cacheKey = `${linesYear}|${key}`;
-      if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
-
       const modeledDef = getModeledContestDefinition(contestType, year);
       if (modeledDef) {
-        const modeledNode = await buildModeledDistrictSliceNode(scope, modeledDef, linesYear);
-        districtSliceCache.set(cacheKey, modeledNode);
-        return modeledNode;
+        const sig = getModeledDefSignature(modeledDef);
+        const modeledKey = `${linesYear}|${String(scope || '').trim()}|${sig}`;
+        if (sig && modeledDistrictOutputCache.has(modeledKey)) return modeledDistrictOutputCache.get(modeledKey);
+        if (sig && modeledDistrictOutputInflight.has(modeledKey)) return modeledDistrictOutputInflight.get(modeledKey);
+        const p = modeledPerf(`modeled.district.build:${String(scope || '').trim()}:${String(modeledDef?.contestType || '')}_${String(modeledDef?.year || '')}:${linesYear}`, async () => {
+          return await buildModeledDistrictSliceNode(scope, modeledDef, linesYear);
+        });
+        if (sig) modeledDistrictOutputInflight.set(modeledKey, p);
+        try {
+          const node = await p;
+          if (sig) modeledDistrictOutputCache.set(modeledKey, node);
+          return node;
+        } finally {
+          if (sig) modeledDistrictOutputInflight.delete(modeledKey);
+        }
       }
+
+      if (districtSliceCache.has(cacheKey)) return districtSliceCache.get(cacheKey);
 
       const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
       for (const path of candidatePaths) {
@@ -29655,6 +30008,9 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateBellwetherLayerVisibility(); } catch (_) {}
       try { setSplitTicketOverlayVisibility(); } catch (_) {}
       try { scheduleAnalyticsPanelsUpdate('', '', [], 0); } catch (_) {}
+      // Performance change: quietly warm the heaviest modeled Senate source slices after initial load.
+      // This runs only once and never blocks first paint / map interactivity.
+      try { scheduleModeledSenateCorePreload(); } catch (_) {}
     }
 
     async function init() {
@@ -30237,6 +30593,11 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateContextBanner(); } catch (_) {}
       try { scheduleCountyVoteDeltaCachesForTooltip(contestType, Number(year), 2); } catch (_) {}
 
+      // Optional (disabled by default) instrumentation for modeled contests.
+      const yearNum = Number(year);
+      const modeledDefForTiming = getModeledContestDefinition(contestType, yearNum);
+      const modeledSigForTiming = modeledDefForTiming ? getModeledDefSignature(modeledDefForTiming) : '';
+
       // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
       try {
         if (precinctsEnabled && map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5)) {
@@ -30245,13 +30606,31 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
       
       if (currentView === 'counties') {
-        await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.counties:${modeledSigForTiming}`, async () => {
+            await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+          });
+        } else {
+          await applyCountyContest(contestType, year, { selectionSeq, isStaleSelection });
+        }
       } else if (currentView === 'districts' && contestType === 'us_house') {
         // US House races use district-specific data
-        await applyDistrictContest(contestType, year);
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.districts:${modeledSigForTiming}`, async () => {
+            await applyDistrictContest(contestType, year);
+          });
+        } else {
+          await applyDistrictContest(contestType, year);
+        }
       } else {
         // All other contests (statewide) aggregate county data by district
-        await applyStatewideContestToDistricts(contestType, year);
+        if (modeledDefForTiming) {
+          await modeledPerf(`modeled.apply.statewide_to_districts:${modeledSigForTiming}`, async () => {
+            await applyStatewideContestToDistricts(contestType, year);
+          });
+        } else {
+          await applyStatewideContestToDistricts(contestType, year);
+        }
       }
       if (isStaleSelection()) return;
       try { await refreshPinnedDistrictForContest(contestType, year); } catch (_) {}
@@ -30655,17 +31034,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let modeledSenateInsights = null;
       if (isModeledSenateEnhancementContest(contestType, year)) {
-        try {
-          modeledSenateInsights = await buildModeledSenateStatewideInsights(
-            contestType,
-            Number(year),
-            countyAgg,
-            statewidedemVotes,
-            statewidrepVotes,
-            statewidTotalVotes
-          );
-        } catch (_) {
-          modeledSenateInsights = null;
+        const yNum = Number(year);
+        const modeledDef = getModeledContestDefinition(contestType, yNum);
+        const sig = modeledDef ? getModeledDefSignature(modeledDef) : `${String(contestType || '').trim()}_${yNum}`;
+        const scenarioKey = `${sig}|scenarioSwing:${Number(scenarioSwingPct || 0).toFixed(3)}|scenarioScope:${String(scenarioScope || '')}|scenarioCounty:${String(getScenarioCountyNorm() || '')}`;
+        if (modeledSenateInsightsCache.has(scenarioKey)) {
+          modeledSenateInsights = modeledSenateInsightsCache.get(scenarioKey) || null;
+        } else {
+          try {
+            modeledSenateInsights = await modeledPerf(`modeled.senate.insights:${String(contestType || '').trim()}_${String(year)}`, async () => {
+              return await buildModeledSenateStatewideInsights(
+                contestType,
+                yNum,
+                countyAgg,
+                statewidedemVotes,
+                statewidrepVotes,
+                statewidTotalVotes
+              );
+            });
+          } catch (_) {
+            modeledSenateInsights = null;
+          }
+          try { modeledSenateInsightsCache.set(scenarioKey, modeledSenateInsights); } catch (_) {}
         }
       }
       modeledSenateLatestInsights = modeledSenateInsights;
