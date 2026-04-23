@@ -81,7 +81,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
 	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Modeled 2026 Statewide Races:** Synthetic `US Senate (2026) model` and `NC Supreme Court Associate Justice Seat 1 (2026) Model` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses `2022 US Senate` baseline, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer (measured as `2022 Senate margin - closest prior presidential margin`) on top of the presidential baseline with light guardrails, so counties can realistically ticket-split instead of behaving like a presidential clone. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target. In `US Senate (2026) model` mode, the statewide summary uses a small modeled context indicator (and a compact methodology hint) so the projection is less likely to be mistaken for an official result. When a modeled contest is selected, the **What-if & overlays** panel exposes light model-tuning sliders (blend/deviation, turnout, bonus) and `Copy Link` includes any non-default tuning.
+- **Modeled 2026 Statewide Races:** Synthetic `US Senate (2026) model` and `NC Supreme Court Associate Justice Seat 1 (2026) Model` entries use recent statewide baselines and respond to the same swing controls as real contests (Senate model uses a `2022 + 2020 US Senate` anchor, `2024 President` climate, and a `0.575` turnout calibration). The Senate model applies a **county-level Senate deviation** layer with reliability, repeatability, and anomaly brakes, so counties can realistically ticket-split without turning into a presidential clone or over-porting one-cycle crossover. The model blends at the **county** level first so non-geographic buckets (for example, `BOE` / early vote groupings) don’t get dropped, and redistributes turnout while keeping the county-wide modeled margin consistent with the blended target. Modeled district layers for **Congressional / State House / State Senate** use the same Senate anchor structure, then apply scope-specific district damping so legislative views stay slightly more restrained than congressional. In `US Senate (2026) model` mode, the statewide summary uses a small modeled context indicator (and a compact methodology hint) so the projection is less likely to be mistaken for an official result. When a modeled contest is selected, the **What-if & overlays** panel exposes light model-tuning sliders (blend/deviation, turnout, bonus) and `Copy Link` includes any non-default tuning.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -147,6 +147,22 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `senateMaxOverPresRobesonCapPts: 0.15 -> 0.20`
 - Left **Scotland** and **Bladen** county-specific handling mostly unchanged while preserving the same overall statewide Lean-R result band.
 - No UI, map interaction, tooltip, legend, control, mobile, Mapbox, or unrelated contest logic changes.
+
+### US Senate District-Layer Calibration Parity (April 22, 2026)
+
+- Updated modeled Senate district layers so **Congressional**, **State House**, and **State Senate** slices use the same `2022 + 2020 US Senate` anchor structure as the county model instead of relying on a pure `2022` Senate district baseline.
+- Added light district-level repeatability and anomaly damping so one unusual cycle is less likely to overdrive modeled district crossover, while keeping the district contest architecture unchanged.
+- Retuned district-only restraint knobs to keep scopes differentiated but aligned with the new county calibration:
+  - `districtBlendMulCongressional: 0.93`
+  - `districtBlendMulStateHouse: 0.91`
+  - `districtBlendMulStateSenate: 0.92`
+  - `districtDeviationBrakeCongressional: 0.90`
+  - `districtDeviationBrakeStateHouse: 0.88`
+  - `districtDeviationBrakeStateSenate: 0.89`
+  - `candidateBonusDistrictPtsCongressional: 0.26`
+  - `candidateBonusDistrictPtsStateHouse: 0.24`
+  - `candidateBonusDistrictPtsStateSenate: 0.25`
+- Kept the current Senate-first model, district UI, and contest architecture intact; this pass only tightens how the existing modeled district layers inherit statewide Senate calibration.
 
 ### Modeled Senate UX — Analog Scoring Tuning (April 20, 2026)
 
