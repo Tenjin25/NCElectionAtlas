@@ -522,6 +522,14 @@
     }
   </script>
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+  <script>
+    // Reduce noisy console errors when ad blockers block Mapbox telemetry (events.mapbox.com).
+    try {
+      if (window.mapboxgl && typeof window.mapboxgl.setTelemetryEnabled === 'function') {
+        window.mapboxgl.setTelemetryEnabled(false);
+      }
+    } catch (_) {}
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <meta charset='utf-8'>
@@ -17855,6 +17863,28 @@ document.addEventListener('DOMContentLoaded', function() {
           label = `Loading ${display}…`;
         }
         indicator.textContent = label;
+        let modeledLoading = false;
+        try {
+          const parsed = typeof parseContestValue === 'function' ? parseContestValue(key) : null;
+          const contestType = parsed && parsed[0] ? String(parsed[0] || '').trim() : '';
+          const year = parsed && parsed[1] ? Number(parsed[1]) : NaN;
+          modeledLoading = !!(contestType && Number.isFinite(year) && typeof getModeledContestDefinition === 'function' && getModeledContestDefinition(contestType, year));
+        } catch (_) {
+          modeledLoading = false;
+        }
+
+        // Modeled contests can do CPU-heavy synthesis; show the spinner immediately so the UI
+        // doesn't feel "stuck" while the main thread is busy.
+        if (modeledLoading) {
+          if (contestLoadingTimer) clearTimeout(contestLoadingTimer);
+          contestLoadingTimer = null;
+          if (contestLoadingSpinnerTimer) clearTimeout(contestLoadingSpinnerTimer);
+          contestLoadingSpinnerTimer = null;
+          indicator.hidden = false;
+          try { indicator.dataset.variant = 'spin'; } catch (_) {}
+          return;
+        }
+
         try { indicator.dataset.variant = 'quiet'; } catch (_) {}
         if (!contestLoadingTimer) {
           contestLoadingTimer = setTimeout(() => {
@@ -17889,6 +17919,13 @@ document.addEventListener('DOMContentLoaded', function() {
           queuedContestSelection = null;
           if (!next) break;
           setContestLoadingUI(true, next.key);
+          // Yield so the loading UI can render before any CPU-heavy work (notably modeled contests).
+          await new Promise((resolve) => {
+            try {
+              if (typeof window.requestAnimationFrame === 'function') return window.requestAnimationFrame(() => resolve());
+            } catch (_) {}
+            setTimeout(resolve, 0);
+          });
           await applyContest(next.key, { selectionSeq: next.seq });
 
           // If users switched again while we were loading, apply the newest selection next.
