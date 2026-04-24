@@ -103,7 +103,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 21, 2026
+**Last updated:** April 24, 2026
 
 ### Vote Counter Layout + Mobile Positioning Fixes (April 21, 2026)
 
@@ -169,6 +169,18 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - `candidateBonusDistrictPtsStateHouse: 0.24`
   - `candidateBonusDistrictPtsStateSenate: 0.25`
 - Kept the current Senate-first model, district UI, and contest architecture intact; this pass only tightens how the existing modeled district layers inherit statewide Senate calibration.
+
+### Atlas Performance + Senate Guardrails + Explainability (April 24, 2026)
+
+- Added a fast per-`${contestType}_${year}` county aggregate cache (totals + signed margin) with in-flight promise reuse, so trend panels and cross-year comparisons don’t repeatedly rescan full precinct-row arrays.
+- Parallelized and deduped the heaviest historical/analog loaders (modeled Senate analog history + county vote-delta caches) using `Promise.all`, while preserving chronological ordering in rendered series.
+- Implemented Senate-model calibration guardrails that apply **only to extra modeled movement** (not the baseline blend):
+  - Anchor disagreement spread across `2022 Senate`, `2024 President`, and `2020 Senate` with `low/medium/high` flags.
+  - Disagreement dampener: `medium → 0.85`, `high → 0.70` (extra movement only).
+  - Rural crossover brake: if all federal anchors are Republican, cap Dem crossover effect to roughly `D+1.0…D+1.8` unless real Senate Dem strength exists.
+  - Metro/suburb elasticity caps (Wake/Meck/Durham/Orange; Cabarrus/Union/Johnston) plus a soft sanity clamp on extreme swings unless multiple anchors support the direction.
+- Added lightweight explainability metadata (spread, confidence label/band, influence components, explanation tags) stored on modeled rows and surfaced as text in the existing **Historical Analog** area (no layout/behavior changes).
+- No new datasets, no additional network fetches, and modeled outputs remain numerically very close; these changes focus on speed + stability for edge-case counties (e.g., Robeson/Bladen/Columbus, Hoke/Scotland, Wake/Mecklenburg, Cabarrus/Union/Johnston).
 
 ### Modeled Senate UX — Analog Scoring Tuning (April 20, 2026)
 

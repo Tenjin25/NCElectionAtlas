@@ -10330,6 +10330,102 @@ document.addEventListener('DOMContentLoaded', function() {
     const countyVoteDeltaHoverRefreshScheduledByPair = new Set(); // Set<string key>
     const contestYearsByTypeCache = new Map(); // Map<string contestType, number[]>
 
+    // --- County aggregates (per contest/year) ---
+    // Cache by `${contestType}_${year}` and reuse for statewide totals, history/trend panels, and comparisons.
+    // Modeled contests are intentionally excluded (modeled outputs vary by model signature).
+    const countyAggregateByContestYearCache = new Map(); // key -> { totalsByCounty, signedByCounty, statewide, statewideSigned }
+    const countyAggregateByContestYearInflight = new Map(); // key -> Promise<bundle|null>
+
+    function buildCountyAggregateBundleFromSliceRows(rows, contestType) {
+      const ct = String(contestType || '').trim();
+      if (!ct) return null;
+      const totalsByCounty = new Map(); // Map<countyNorm, { dem, rep, other, total }>
+      let stateDem = 0;
+      let stateRep = 0;
+      let stateOther = 0;
+      let stateTotal = 0;
+
+      (rows || []).forEach(r => {
+        const rowName = (r?.county || '').toString();
+        const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+        const countyNorm = normalizeCountyToken(countyOnly);
+        if (!countyNorm) return;
+        const dem = Number(r?.[`${ct}_dem`] || 0);
+        const rep = Number(r?.[`${ct}_rep`] || 0);
+        const other = Number(r?.[`${ct}_other`] || 0);
+        const fallbackTotal = dem + rep + other;
+        const total = Math.max(0, Number(r?.[`${ct}_total`] || fallbackTotal));
+
+        const node = totalsByCounty.get(countyNorm) || { dem: 0, rep: 0, other: 0, total: 0 };
+        node.dem += dem;
+        node.rep += rep;
+        node.other += other;
+        node.total += total;
+        totalsByCounty.set(countyNorm, node);
+
+        stateDem += dem;
+        stateRep += rep;
+        stateOther += other;
+        stateTotal += total;
+      });
+
+      const signedByCounty = new Map();
+      totalsByCounty.forEach((totals, countyNorm) => {
+        const signed = signedMarginPctFromVotes(
+          Number(totals?.dem || 0),
+          Number(totals?.rep || 0),
+          Number(totals?.total || 0)
+        );
+        if (Number.isFinite(signed)) signedByCounty.set(countyNorm, signed);
+      });
+
+      return {
+        totalsByCounty,
+        signedByCounty,
+        statewide: { dem: stateDem, rep: stateRep, other: stateOther, total: stateTotal },
+        statewideSigned: signedMarginPctFromVotes(stateDem, stateRep, stateTotal)
+      };
+    }
+
+    async function ensureCountyAggregateBundle(contestType, year, opts = null) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      const strict = !!(opts && opts.strict);
+      if (!ct || !Number.isFinite(y) || y <= 0) return null;
+
+      // Avoid caching modeled contest aggregates under contestType+year; modeled results vary by signature.
+      try {
+        if (getModeledContestDefinition(ct, y)) return null;
+      } catch (_) {}
+
+      const key = `${ct}_${y}`;
+      if (countyAggregateByContestYearCache.has(key)) return countyAggregateByContestYearCache.get(key);
+      if (countyAggregateByContestYearInflight.has(key)) return countyAggregateByContestYearInflight.get(key);
+
+      const p = (async () => {
+        try {
+          const rows = strict ? await tryLoadContestSliceStrict(ct, y) : await loadContestSlice(ct, y);
+          if (!rows || !rows.length) {
+            countyAggregateByContestYearCache.set(key, null);
+            return null;
+          }
+          const bundle = buildCountyAggregateBundleFromSliceRows(rows, ct);
+          countyAggregateByContestYearCache.set(key, bundle);
+          return bundle;
+        } catch (_) {
+          countyAggregateByContestYearCache.set(key, null);
+          return null;
+        }
+      })();
+
+      countyAggregateByContestYearInflight.set(key, p);
+      try {
+        return await p;
+      } finally {
+        countyAggregateByContestYearInflight.delete(key);
+      }
+    }
+
     // --- Derived caches (county aggregates, statewide totals) ---
     // Key includes modeled signature + scenario inputs so we never reuse stale tuned outputs.
     const countyAggregateBundleCache = new Map(); // key -> { countyAgg, countyTurnoutTotals, statewide, candidates }
@@ -10425,6 +10521,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const modeledCountyFromRowKeyMemo = new Map(); // rawRowCounty -> countyNorm
     const modeledCensusContextMemo = new Map(); // countyNorm -> census ctx|null
     const modeledCountyClusterCache = new Map(); // key: `${modelKind}|${baseContestType}_${baseYear}` -> Map countyNorm -> cluster
+
+    // Memoized Senate guardrail + explainability metadata (keyed by `${county}_${modelSignature}`).
+    const modeledSenateGuardrailMemo = new Map(); // key -> { spreadPts, disagreement, aligned, dampener, confidenceLabel, confidenceBand }
 
     let modeledSenateCorePreloadScheduled = false;
 
@@ -10565,34 +10664,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           } catch (_) {}
 
-          const rowsFrom = await tryLoadContestSliceStrict(ct, fy);
-          const rowsTo = await tryLoadContestSliceStrict(ct, ty);
-          if (!(rowsFrom && rowsFrom.length && rowsTo && rowsTo.length)) {
+          const [fromBundle, toBundle] = await Promise.all([
+            ensureCountyAggregateBundle(ct, fy, { strict: true }),
+            ensureCountyAggregateBundle(ct, ty, { strict: true })
+          ]);
+          if (!(fromBundle && toBundle)) {
             countyVoteDeltaCacheByPair.set(key, cache);
             return;
           }
 
-          const totalsByCounty = (rows) => {
-            const out = new Map(); // Map<countyNorm, {dem, rep, total}>
-            (rows || []).forEach(r => {
-              const rowName = (r?.county || '').toString();
-              const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-              const countyNorm = normalizeCountyToken(countyOnly);
-              if (!countyNorm) return;
-              const dem = Number(r?.[`${ct}_dem`] || 0);
-              const rep = Number(r?.[`${ct}_rep`] || 0);
-              const total = Number(r?.[`${ct}_total`] || 0);
-              if (!out.has(countyNorm)) out.set(countyNorm, { dem: 0, rep: 0, total: 0 });
-              const cur = out.get(countyNorm);
-              cur.dem += dem;
-              cur.rep += rep;
-              cur.total += total;
-            });
-            return out;
-          };
-
-          const tFrom = totalsByCounty(rowsFrom);
-          const tTo = totalsByCounty(rowsTo);
+          const tFrom = fromBundle.totalsByCounty || new Map();
+          const tTo = toBundle.totalsByCounty || new Map();
           tTo.forEach((vTo, countyNorm) => {
             const vFrom = tFrom.get(countyNorm);
             if (!vFrom) return;
@@ -10942,6 +11024,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const MODELED_SENATE_ANALOG_METRO_COUNTIES = new Set([
       'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'BUNCOMBE', 'NEW HANOVER', 'FORSYTH'
     ]);
+    // Senate guardrails: metro/outer-suburb elasticity caps.
+    const SENATE_MAJOR_METROS = new Set(['WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE']);
+    const SENATE_OUTER_SUBURBS = new Set(['CABARRUS', 'UNION', 'JOHNSTON']);
     let modeledSenateAnalogHistoryCache = null;
     let modeledSenateAnalogHistoryInflight = null;
     let modeledSenateLatestInsights = null;
@@ -14977,6 +15062,18 @@ document.addEventListener('DOMContentLoaded', function() {
           row.__model_candidate_effect_personal_pts = Number.isFinite(Number(modelMeta.candidateEffectPersonalDemPts))
             ? Number(modelMeta.candidateEffectPersonalDemPts)
             : 0;
+          row.__model_anchor_spread_pts = Number.isFinite(Number(modelMeta.anchorSpreadPts)) ? Number(modelMeta.anchorSpreadPts) : NaN;
+          row.__model_input_disagreement = (modelMeta.inputDisagreement || '').toString();
+          row.__model_anchors_aligned = Number(modelMeta.anchorsAligned || 0);
+          row.__model_confidence_label = (modelMeta.modelConfidenceLabel || '').toString();
+          row.__model_confidence_band = (modelMeta.modelConfidenceBand || '').toString();
+          row.__model_influence_presidential_climate_pts = Number.isFinite(Number(modelMeta.influencePresidentialClimatePts)) ? Number(modelMeta.influencePresidentialClimatePts) : NaN;
+          row.__model_influence_senate_baseline_pts = Number.isFinite(Number(modelMeta.influenceSenateBaselinePts)) ? Number(modelMeta.influenceSenateBaselinePts) : NaN;
+          row.__model_influence_extra_movement_pts = Number.isFinite(Number(modelMeta.influenceExtraModeledMovementPts)) ? Number(modelMeta.influenceExtraModeledMovementPts) : NaN;
+          row.__model_influence_crossover_dem_pts = Number.isFinite(Number(modelMeta.influenceCrossoverDemPts)) ? Number(modelMeta.influenceCrossoverDemPts) : NaN;
+          row.__model_explain_tags = Array.isArray(modelMeta.explanationTags)
+            ? modelMeta.explanationTags.map(v => String(v || '').trim()).filter(Boolean).join(' • ')
+            : '';
         }
         return row;
       }
@@ -15014,6 +15111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const modeledType = String(modeledDef?.contestType || '').trim();
         const isSenateDeviationModel = modeledType === 'us_senate_model';
         const isJudicialModel = !!modeledDef?.judicialModel || modeledType === 'nc_supreme_court_model';
+        const modeledDefSignature = getModeledDefSignature(modeledDef) || '';
 
         // Optional secondary baseline (used by the US Senate model): add a presidential-year Senate anchor (2020)
         // without changing any core UI controls or slice-loading architecture.
@@ -15537,41 +15635,59 @@ document.addEventListener('DOMContentLoaded', function() {
           const uniqueYears = Array.from(new Set(years)).sort((a, b) => a - b);
           const entriesByCounty = new Map(); // county -> [{ y, dev }]
 
-          const getPresSignedForYear = async (y, county) => {
-            const py = pickClosestPresidentialYear(y);
-            const cached = historicalCountySignedByYear.get(Number(py));
-            if (cached && cached.has(county)) return Number(cached.get(county));
+          const ensurePresSignedMap = async (py) => {
+            const y = Number(py);
+            if (!Number.isFinite(y)) return null;
+            const cached = historicalCountySignedByYear.get(y);
+            if (cached && cached.size) return cached;
             try {
-              const presRows = await loadContestSlice('president', py);
+              const presRows = await loadContestSlice('president', y);
               const totals = buildCountyTotals(presRows, 'president');
               const map = getCountySignedFromTotalsMap(totals);
-              historicalCountySignedByYear.set(Number(py), map);
-              return Number(map.get(county));
+              historicalCountySignedByYear.set(y, map);
+              return map;
             } catch (_) {
-              return NaN;
+              return null;
             }
           };
 
-          for (const y of uniqueYears) {
+          const presYearsNeeded = Array.from(new Set(uniqueYears.map(y => pickClosestPresidentialYear(y))))
+            .map(Number)
+            .filter(Number.isFinite);
+          await Promise.all(presYearsNeeded.map(py => ensurePresSignedMap(py)));
+
+          const yearBundles = await Promise.all(uniqueYears.map(async (y) => {
+            const year = Number(y);
+            if (!Number.isFinite(year)) return null;
             let senateRows = null;
             try {
-              senateRows = (Number(y) === Number(modeledDef?.baseYear) && baseContestType === 'us_senate') ? baseRows : await loadContestSlice('us_senate', y);
+              senateRows = (Number(year) === Number(modeledDef?.baseYear) && baseContestType === 'us_senate') ? baseRows : await loadContestSlice('us_senate', year);
             } catch (_) {
               senateRows = null;
             }
-            if (!senateRows) continue;
+            if (!senateRows) return null;
             const totals = buildCountyTotals(senateRows, 'us_senate');
+            const py = Number(pickClosestPresidentialYear(year));
+            const presMap = historicalCountySignedByYear.get(py) || null;
+            return { year, totals, presMap };
+          }));
+
+          (yearBundles || []).forEach(bundle => {
+            if (!bundle || !bundle.totals || !bundle.presMap) return;
+            const y = Number(bundle.year);
+            const totals = bundle.totals;
+            const presMap = bundle.presMap;
             for (const [county, t] of totals.entries()) {
               const senateSigned = signedMarginPctFromVotes(Number(t?.dem || 0), Number(t?.rep || 0), Number(t?.total || 0));
               if (!Number.isFinite(senateSigned)) continue;
-              const presSigned = await getPresSignedForYear(y, county);
+              const presSigned = Number(presMap.get(county));
               if (!Number.isFinite(presSigned)) continue;
               const dev = senateSigned - presSigned;
               const arr = entriesByCounty.get(county) || [];
               arr.push({ y, dev });
               entriesByCounty.set(county, arr);
             }
-          }
+          });
 
           const median = (vals) => {
             const v = (Array.isArray(vals) ? vals : []).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
@@ -16429,6 +16545,17 @@ document.addEventListener('DOMContentLoaded', function() {
             let effectiveBlendWeightUsed = blendWeight;
             let specialBlendApplied = 0;
             let baselineBlendSigned = NaN;
+            let anchorSpreadPts = NaN;
+            let anchorDisagreement = 'low';
+            let anchorAligned = true;
+            let inputDisagreementFlag = 'low';
+            let disagreementDampener = 1;
+            let modelConfidenceLabel = 'Medium';
+            let modelConfidenceBand = '\u00b13.5 pts';
+            let metroElasticCapApplied = 0;
+            let sanityClampApplied = 0;
+            let extraShiftDampApplied = 0;
+            let ruralCrossoverCapApplied = 0;
             let realignmentAdjustmentApplied = 0;
             let turnoutSignedShift = 0;
             let overPresCapApplied = 0;
@@ -16568,6 +16695,76 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
             baselineBlendSigned = targetSigned;
+
+            // Senate model: disagreement spread + confidence (display-only) + dampener inputs.
+            if (isSenateDeviationModel) {
+              const memoKey = `${county}|${modeledDefSignature}`;
+              const cached = modeledDefSignature ? modeledSenateGuardrailMemo.get(memoKey) : null;
+              if (cached) {
+                anchorSpreadPts = Number(cached.spreadPts);
+                anchorAligned = !!cached.aligned;
+                inputDisagreementFlag = String(cached.disagreement || 'low');
+                anchorDisagreement = inputDisagreementFlag;
+                disagreementDampener = Number.isFinite(Number(cached.dampener)) ? Number(cached.dampener) : 1;
+                modelConfidenceLabel = String(cached.confidenceLabel || 'Medium');
+                modelConfidenceBand = String(cached.confidenceBand || '\u00b13.5 pts');
+              } else {
+                const senate22 = Number(baseCountySignedRaw);
+                const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county)))
+                  ? Number(climateSignedByCounty.get(county))
+                  : Number(weightedCountyBase);
+                const senate20 = Number.isFinite(Number(secondarySenateSigned)) ? Number(secondarySenateSigned) : NaN;
+                const anchors = [senate22, pres24, senate20].map(Number).filter(Number.isFinite);
+                const spread = anchors.length >= 2 ? (Math.max(...anchors) - Math.min(...anchors)) : 0;
+                anchorSpreadPts = spread;
+                anchorDisagreement = spread >= 14 ? 'high' : (spread >= 7 ? 'medium' : 'low');
+
+                const dirFrom = (v) => {
+                  const n = Number(v);
+                  if (!Number.isFinite(n)) return 0;
+                  if (n > 0.5) return 1;
+                  if (n < -0.5) return -1;
+                  return 0;
+                };
+                const dirs = [dirFrom(senate22), dirFrom(pres24), dirFrom(senate20)].filter(d => d !== 0);
+                const dirSet = new Set(dirs);
+                anchorAligned = dirSet.size <= 1;
+
+                // Input disagreement flag: combine spread + directional conflict.
+                if (!anchorAligned && spread >= 14) inputDisagreementFlag = 'high';
+                else if (!anchorAligned && spread >= 7) inputDisagreementFlag = 'high';
+                else if (!anchorAligned) inputDisagreementFlag = 'medium';
+                else inputDisagreementFlag = anchorDisagreement;
+
+                disagreementDampener = inputDisagreementFlag === 'medium'
+                  ? 0.85
+                  : (inputDisagreementFlag === 'high' ? 0.70 : 1);
+
+                if (spread < 7 && anchorAligned) {
+                  modelConfidenceLabel = 'High';
+                  modelConfidenceBand = '\u00b11.8 pts';
+                } else if (spread >= 14 || !anchorAligned) {
+                  modelConfidenceLabel = 'Low';
+                  modelConfidenceBand = '\u00b15.5 pts';
+                } else {
+                  modelConfidenceLabel = 'Medium';
+                  modelConfidenceBand = '\u00b13.3 pts';
+                }
+
+                if (modeledDefSignature) {
+                  try {
+                    modeledSenateGuardrailMemo.set(memoKey, {
+                      spreadPts: anchorSpreadPts,
+                      disagreement: inputDisagreementFlag,
+                      aligned: anchorAligned,
+                      dampener: disagreementDampener,
+                      confidenceLabel: modelConfidenceLabel,
+                      confidenceBand: modelConfidenceBand
+                    });
+                  } catch (_) {}
+                }
+              }
+            }
 
             // Judicial partisan floor: blend a small share of a stable partisan anchor into the judicial baseline.
             // Keep it minority-share + reliability-scaled so the judicial blend still dominates.
@@ -16793,6 +16990,57 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
 
+            // Guardrails (Senate-only): apply only to extra modeled movement beyond the baseline blend.
+            if (isSenateDeviationModel && Number.isFinite(targetSigned) && Number.isFinite(baselineBlendSigned)) {
+              // (11) Urban/suburban elasticity caps (extra Dem pull only; avoids double-counting).
+              const extraDelta0 = targetSigned - baselineBlendSigned; // + => more R, - => more D
+              if (extraDelta0 < 0 && (SENATE_MAJOR_METROS.has(county) || SENATE_OUTER_SUBURBS.has(county))) {
+                const isMetro = SENATE_MAJOR_METROS.has(county);
+                const minCap = isMetro ? 0.8 : 0.5;
+                const maxCap = isMetro ? 1.5 : 1.2;
+                const cap = lerp(minCap, maxCap, countyConfidence);
+                const clampedDelta = Math.max(extraDelta0, -cap);
+                if (clampedDelta !== extraDelta0) {
+                  metroElasticCapApplied = Math.abs(extraDelta0 - clampedDelta);
+                  targetSigned = clampSignedMargin(baselineBlendSigned + clampedDelta);
+                }
+              }
+
+              // (12) Margin sanity bounds: soften extreme extra swings unless both non-base anchors agree.
+              const extraDelta1 = targetSigned - baselineBlendSigned;
+              const absExtra = Math.abs(extraDelta1);
+              if (absExtra > 4.5) {
+                const senate22 = Number(baseCountySignedRaw);
+                const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county)))
+                  ? Number(climateSignedByCounty.get(county))
+                  : Number(weightedCountyBase);
+                const senate20 = Number.isFinite(Number(secondarySenateSigned)) ? Number(secondarySenateSigned) : NaN;
+                const demDirSupported = Number.isFinite(pres24) && Number.isFinite(senate20)
+                  && pres24 < senate22
+                  && senate20 < senate22;
+                const repDirSupported = Number.isFinite(pres24) && Number.isFinite(senate20)
+                  && pres24 > senate22
+                  && senate20 > senate22;
+                const supported = extraDelta1 < 0 ? demDirSupported : (extraDelta1 > 0 ? repDirSupported : true);
+                if (!supported) {
+                  const excess = absExtra - 4.5;
+                  const t = clamp01(excess / 9.5);
+                  const shrink = lerp(1, 0.65, t);
+                  const nextDelta = extraDelta1 * shrink;
+                  sanityClampApplied = Math.abs(extraDelta1) - Math.abs(nextDelta);
+                  targetSigned = clampSignedMargin(baselineBlendSigned + nextDelta);
+                }
+              }
+
+              // (8) Volatility dampener (spread-based): shrink extra movement only (not baseline blend).
+              if (Number.isFinite(disagreementDampener) && disagreementDampener < 0.999) {
+                const before = targetSigned;
+                const extraDelta = targetSigned - baselineBlendSigned;
+                targetSigned = clampSignedMargin(baselineBlendSigned + (extraDelta * disagreementDampener));
+                extraShiftDampApplied = Math.abs(before - targetSigned);
+              }
+            }
+
             // Elasticity: counties with volatile/recently shifting behavior move more; stable counties move less.
             const pullFromBase = targetSigned - baseCountySignedRaw;
             let elasticPull = pullFromBase * behavior.elasticity;
@@ -16903,6 +17151,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 candidateBonusDurableApplied = Math.max(0, durableApplied);
                 candidateBonusPersonalApplied = Math.max(0, personalApplied);
                 candidateBonusApplied = Math.max(0, candidateBonusDurableApplied + candidateBonusPersonalApplied);
+
+                // (8) Volatility dampener applies to extra modeled movement only; candidate bonus is "extra".
+                if (Number.isFinite(disagreementDampener) && disagreementDampener < 0.999 && candidateBonusApplied > 0) {
+                  candidateBonusDurableApplied *= disagreementDampener;
+                  candidateBonusPersonalApplied *= disagreementDampener;
+                  candidateBonusApplied = Math.max(0, candidateBonusDurableApplied + candidateBonusPersonalApplied);
+                }
+
+                // (10) Rural crossover brake: when all federal anchors are R, cap Dem crossover effect.
+                if (isSenateDeviationModel && candidateBonusApplied > 0) {
+                  const senate22 = Number(baseCountySignedRaw);
+                  const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county)))
+                    ? Number(climateSignedByCounty.get(county))
+                    : Number(weightedCountyBase);
+                  const senate20 = Number.isFinite(Number(secondarySenateSigned)) ? Number(secondarySenateSigned) : NaN;
+                  const allAnchorsGop = Number.isFinite(senate22) && Number.isFinite(pres24) && Number.isFinite(senate20)
+                    && senate22 > 0.2
+                    && pres24 > 0.2
+                    && senate20 > 0.2;
+                  if (allAnchorsGop) {
+                    const cap = lerp(1.0, 1.8, countyConfidence);
+                    if (candidateBonusApplied > cap) {
+                      ruralCrossoverCapApplied = candidateBonusApplied - cap;
+                      const ratio = cap / Math.max(1e-6, candidateBonusApplied);
+                      candidateBonusDurableApplied *= ratio;
+                      candidateBonusPersonalApplied *= ratio;
+                      candidateBonusApplied = cap;
+                    }
+                  }
+                }
                 swingPct += candidateBonusApplied;
               }
             }
@@ -16932,6 +17210,44 @@ document.addEventListener('DOMContentLoaded', function() {
               } catch (_) {}
             }
             const baselineNoCandidateSigned = clampSignedMargin(desiredSignedFinal + candidateBonusApplied);
+
+            // Lightweight explainability metadata (display-only; does not affect results).
+            let influencePresidentialClimatePts = NaN;
+            let influenceSenateBaselinePts = NaN;
+            let influenceExtraModeledMovementPts = NaN;
+            let influenceCrossoverDemPts = NaN;
+            let explanationTags = [];
+            if (isSenateDeviationModel) {
+              const senate22 = Number(baseCountySignedRaw);
+              const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county)))
+                ? Number(climateSignedByCounty.get(county))
+                : Number(weightedCountyBase);
+              influencePresidentialClimatePts = Number.isFinite(pres24) && Number.isFinite(senate22) ? (pres24 - senate22) : NaN;
+              influenceSenateBaselinePts = senate22;
+              influenceExtraModeledMovementPts = Number.isFinite(senateAdjustedSigned) && Number.isFinite(baselineBlendSigned)
+                ? (Number(senateAdjustedSigned) - Number(baselineBlendSigned))
+                : NaN;
+              influenceCrossoverDemPts = Number(candidateBonusApplied);
+
+              const tags = [];
+              if (Number.isFinite(anchorSpreadPts) && anchorSpreadPts >= 14) tags.push('High-volatility county');
+              else if (Number.isFinite(volatility) && volatility >= 6.5) tags.push('High-volatility county');
+              if (Number.isFinite(candidateBonusApplied) && candidateBonusApplied >= 1.6) tags.push('Crossover-heavy county');
+              if (Number.isFinite(influencePresidentialClimatePts) && Math.abs(influencePresidentialClimatePts) >= 5 && candidateBonusApplied < 0.6) {
+                tags.push('Presidential-driven shift');
+              }
+              if (
+                (anchorDisagreement === 'low' || inputDisagreementFlag === 'low')
+                && anchorAligned
+                && Number.isFinite(senate22)
+                && Math.abs(senate22) >= 10
+                && Number.isFinite(volatility)
+                && volatility <= 3.2
+              ) {
+                tags.push('Stable partisan county');
+              }
+              explanationTags = tags;
+            }
             map.set(county, {
               swingPct,
               desiredSigned: desiredSignedFinal,
@@ -16939,6 +17255,16 @@ document.addEventListener('DOMContentLoaded', function() {
               candidateEffectDemPts: Number(candidateBonusApplied),
               candidateEffectDurableDemPts: Number(candidateBonusDurableApplied),
               candidateEffectPersonalDemPts: Number(candidateBonusPersonalApplied),
+              anchorSpreadPts: Number(anchorSpreadPts),
+              inputDisagreement: String(inputDisagreementFlag || anchorDisagreement || 'low'),
+              anchorsAligned: anchorAligned ? 1 : 0,
+              modelConfidenceLabel: String(modelConfidenceLabel || 'Medium'),
+              modelConfidenceBand: String(modelConfidenceBand || '\u00b13.5 pts'),
+              influencePresidentialClimatePts: Number(influencePresidentialClimatePts),
+              influenceSenateBaselinePts: Number(influenceSenateBaselinePts),
+              influenceExtraModeledMovementPts: Number(influenceExtraModeledMovementPts),
+              influenceCrossoverDemPts: Number(influenceCrossoverDemPts),
+              explanationTags,
               baseSigned: baseCountySignedRaw,
               countyType,
               cluster,
@@ -16967,6 +17293,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 candidateBonusApplied: Number(candidateBonusApplied),
                 candidateBonusDurableApplied: Number(candidateBonusDurableApplied),
                 candidateBonusPersonalApplied: Number(candidateBonusPersonalApplied),
+                anchorSpreadPts: Number(anchorSpreadPts),
+                inputDisagreementFlag: String(inputDisagreementFlag || anchorDisagreement || 'low'),
+                anchorsAligned: anchorAligned ? 1 : 0,
+                disagreementDampener: Number(disagreementDampener),
+                metroElasticCapApplied: Number(metroElasticCapApplied),
+                sanityClampApplied: Number(sanityClampApplied),
+                extraShiftDampApplied: Number(extraShiftDampApplied),
+                ruralCrossoverCapApplied: Number(ruralCrossoverCapApplied),
                 countyConfidence: Number(countyConfidence),
                 countyShrinkScale: Number(countyShrinkScale),
                 isRealignedFormerDemFederalCounty: isRealignedFormerDemFederalCounty ? 1 : 0,
@@ -20403,38 +20737,26 @@ document.addEventListener('DOMContentLoaded', function() {
       if (modeledSenateAnalogHistoryInflight) return modeledSenateAnalogHistoryInflight;
       modeledSenateAnalogHistoryInflight = (async () => {
         const byYear = new Map();
-        for (const year of MODELED_SENATE_ANALOG_YEARS) {
+        const bundles = await Promise.all(MODELED_SENATE_ANALOG_YEARS.map(async (year) => {
           try {
-            const rows = await loadContestSlice('us_senate', year);
-            const countyTotals = new Map();
-            (rows || []).forEach(r => {
-              const rowName = (r?.county || '').toString();
-              const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
-              const countyNorm = normalizeCountyToken(countyOnly);
-              if (!countyNorm) return;
-              const node = countyTotals.get(countyNorm) || { dem: 0, rep: 0, total: 0 };
-              node.dem += Number(r?.us_senate_dem || 0);
-              node.rep += Number(r?.us_senate_rep || 0);
-              node.total += Number(r?.us_senate_total || 0);
-              countyTotals.set(countyNorm, node);
-            });
-            const countySignedByNorm = new Map();
-            let stateDem = 0;
-            let stateRep = 0;
-            let stateTotal = 0;
-            countyTotals.forEach((totals, countyNorm) => {
-              const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
-              if (Number.isFinite(signed)) countySignedByNorm.set(countyNorm, signed);
-              stateDem += Number(totals.dem || 0);
-              stateRep += Number(totals.rep || 0);
-              stateTotal += Number(totals.total || 0);
-            });
-            byYear.set(Number(year), {
-              statewideSigned: signedMarginPctFromVotes(stateDem, stateRep, stateTotal),
-              countySignedByNorm
-            });
-          } catch (_) {}
-        }
+            const bundle = await ensureCountyAggregateBundle('us_senate', year);
+            if (!bundle || !bundle.signedByCounty) return null;
+            return {
+              year: Number(year),
+              statewideSigned: Number(bundle.statewideSigned),
+              countySignedByNorm: bundle.signedByCounty
+            };
+          } catch (_) {
+            return null;
+          }
+        }));
+        (bundles || []).forEach(snapshot => {
+          if (!snapshot || !Number.isFinite(Number(snapshot.year))) return;
+          byYear.set(Number(snapshot.year), {
+            statewideSigned: Number(snapshot.statewideSigned),
+            countySignedByNorm: snapshot.countySignedByNorm
+          });
+        });
         modeledSenateAnalogHistoryCache = { byYear };
         return modeledSenateAnalogHistoryCache;
       })();
@@ -20905,35 +21227,53 @@ document.addEventListener('DOMContentLoaded', function() {
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
 
-      const target = (countyName || '').toString().trim().toUpperCase();
+      const target = normalizeCountyToken(countyName);
+      if (!target) return [];
       const out = [];
       const loaded = await mapWithConcurrency(entries, 4, async (e) => {
         const year = Number(e?.year);
         if (!Number.isFinite(year)) return null;
-        const rows = await loadContestSlice(contestType, year);
-        return { year, rows };
+        const bundle = await ensureCountyAggregateBundle(contestType, year);
+        let totals = (bundle && bundle.totalsByCounty) ? bundle.totalsByCounty.get(target) : null;
+        if (!totals || !(Number(totals.total || 0) > 0)) {
+          // Fallback (modeled / missing bundles): aggregate just this county from rows.
+          try {
+            const rows = await loadContestSlice(contestType, year);
+            let dem = 0, rep = 0, other = 0, total = 0;
+            (rows || []).forEach(r => {
+              const rowName = (r?.county || '').toString();
+              const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
+              const countyNorm = normalizeCountyToken(countyOnly);
+              if (countyNorm !== target) return;
+              const d = Number(r?.[`${contestType}_dem`] || 0);
+              const rp = Number(r?.[`${contestType}_rep`] || 0);
+              const o = Number(r?.[`${contestType}_other`] || 0);
+              const fallbackTotal = d + rp + o;
+              const t = Math.max(0, Number(r?.[`${contestType}_total`] || fallbackTotal));
+              dem += d; rep += rp; other += o; total += t;
+            });
+            totals = total > 0 ? { dem, rep, other, total } : null;
+          } catch (_) {
+            totals = null;
+          }
+        }
+        if (!totals || !(Number(totals.total || 0) > 0)) return null;
+        let candidates = null;
+        try { candidates = await getContestCandidates(contestType, year); } catch (_) { candidates = null; }
+        return { year, totals, candidates };
       });
       for (const bundle of loaded) {
         if (!bundle) continue;
         const year = Number(bundle.year);
-        const rows = bundle.rows || [];
-        // Rows are precinct-level: "COUNTY - PREC". Aggregate to county.
-        let dem = 0, rep = 0, oth = 0, tot = 0;
-        let demCand = '', repCand = '';
-        rows.forEach(r => {
-          const rowName = (r.county || '').toString().trim().toUpperCase();
-          const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0].trim().toUpperCase() : rowName;
-          if (countyOnly !== target) return;
-          dem += Number(r[`${contestType}_dem`]) || 0;
-          rep += Number(r[`${contestType}_rep`]) || 0;
-          oth += Number(r[`${contestType}_other`]) || 0;
-          tot += Number(r[`${contestType}_total`]) || 0;
-          if (!demCand) demCand = r[`${contestType}_dem_candidate`] || '';
-          if (!repCand) repCand = r[`${contestType}_rep_candidate`] || '';
-        });
-        if (tot <= 0) continue;
-        const margin = rep - dem;
-        const marginPct = tot ? (margin / tot * 100.0) : 0.0;
+        const totals = bundle.totals || null;
+        if (!totals || !(Number(totals.total || 0) > 0)) continue;
+        const dem = Number(totals.dem || 0);
+        const rep = Number(totals.rep || 0);
+        const oth = Number(totals.other || 0);
+        const tot = Number(totals.total || 0);
+        const demCand = (bundle.candidates?.dem || '').toString();
+        const repCand = (bundle.candidates?.rep || '').toString();
+        const signed = signedMarginPctFromVotes(dem, rep, tot);
         out.push({
           year,
           dem_votes: dem,
@@ -20942,8 +21282,8 @@ document.addEventListener('DOMContentLoaded', function() {
           total_votes: tot,
           dem_candidate: demCand,
           rep_candidate: repCand,
-          winner: margin > 0 ? 'REP' : (margin < 0 ? 'DEM' : 'TIE'),
-          margin_pct: Number(marginPct.toFixed(2))
+          winner: signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE'),
+          margin_pct: Number(signed.toFixed(2))
         });
       }
       try { countyTrendSeriesCache.set(cacheKey, out.slice()); } catch (_) {}
@@ -26598,15 +26938,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const diffEl = document.getElementById('county-historical-analog-diff');
       if (!matchEl || !confEl || !diffEl) return;
 
+      const modelConfLabel = (countyData.__model_confidence_label || '').toString().trim();
+      const modelConfBand = (countyData.__model_confidence_band || '').toString().trim();
+      const modelConfSuffix = modelConfLabel
+        ? ` • <strong>Model confidence:</strong> ${escapeHtml(modelConfLabel)}${modelConfBand ? ` (${escapeHtml(modelConfBand)})` : ''}`
+        : '';
+
       if (!analog) {
         matchEl.textContent = 'Not available';
-        confEl.textContent = '';
+        confEl.innerHTML = modelConfLabel ? `<strong>Model confidence:</strong> ${escapeHtml(modelConfLabel)}${modelConfBand ? ` (${escapeHtml(modelConfBand)})` : ''}` : '';
         diffEl.textContent = '';
         return;
       }
 
       matchEl.innerHTML = `<strong>Closest match:</strong> ${escapeHtml(analog.label)}`;
-      confEl.innerHTML = `<strong>Similarity:</strong> ${escapeHtml(analog.confidence)}`;
+      confEl.innerHTML = `<strong>Similarity:</strong> ${escapeHtml(analog.confidence)}${modelConfSuffix}`;
       diffEl.innerHTML = `<strong>Difference:</strong> ${escapeHtml(analog.differenceText)}`;
     } catch (_) {
       const matchEl = document.getElementById('county-historical-analog-match');
@@ -31211,7 +31557,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 __model_with_candidates_margin_pct: Number.isFinite(Number(row.__model_with_candidates_margin_pct)) ? Number(row.__model_with_candidates_margin_pct) : NaN,
                 __model_candidate_effect_d_pts: Number.isFinite(Number(row.__model_candidate_effect_d_pts)) ? Number(row.__model_candidate_effect_d_pts) : NaN,
                 __model_candidate_effect_durable_pts: Number.isFinite(Number(row.__model_candidate_effect_durable_pts)) ? Number(row.__model_candidate_effect_durable_pts) : NaN,
-                __model_candidate_effect_personal_pts: Number.isFinite(Number(row.__model_candidate_effect_personal_pts)) ? Number(row.__model_candidate_effect_personal_pts) : NaN
+                __model_candidate_effect_personal_pts: Number.isFinite(Number(row.__model_candidate_effect_personal_pts)) ? Number(row.__model_candidate_effect_personal_pts) : NaN,
+                __model_anchor_spread_pts: Number.isFinite(Number(row.__model_anchor_spread_pts)) ? Number(row.__model_anchor_spread_pts) : NaN,
+                __model_input_disagreement: (row.__model_input_disagreement || '').toString(),
+                __model_anchors_aligned: Number(row.__model_anchors_aligned || 0),
+                __model_confidence_label: (row.__model_confidence_label || '').toString(),
+                __model_confidence_band: (row.__model_confidence_band || '').toString(),
+                __model_influence_presidential_climate_pts: Number.isFinite(Number(row.__model_influence_presidential_climate_pts)) ? Number(row.__model_influence_presidential_climate_pts) : NaN,
+                __model_influence_senate_baseline_pts: Number.isFinite(Number(row.__model_influence_senate_baseline_pts)) ? Number(row.__model_influence_senate_baseline_pts) : NaN,
+                __model_influence_extra_movement_pts: Number.isFinite(Number(row.__model_influence_extra_movement_pts)) ? Number(row.__model_influence_extra_movement_pts) : NaN,
+                __model_influence_crossover_dem_pts: Number.isFinite(Number(row.__model_influence_crossover_dem_pts)) ? Number(row.__model_influence_crossover_dem_pts) : NaN,
+                __model_explain_tags: (row.__model_explain_tags || '').toString()
               };
             }
             // Keep candidate labels at county level for sidebar/hover margin readability.
@@ -31231,6 +31587,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (!Number.isFinite(Number(countyAgg[countyNorm].__model_candidate_effect_personal_pts)) && Number.isFinite(Number(row.__model_candidate_effect_personal_pts))) {
               countyAgg[countyNorm].__model_candidate_effect_personal_pts = Number(row.__model_candidate_effect_personal_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_anchor_spread_pts)) && Number.isFinite(Number(row.__model_anchor_spread_pts))) {
+              countyAgg[countyNorm].__model_anchor_spread_pts = Number(row.__model_anchor_spread_pts);
+            }
+            if (!countyAgg[countyNorm].__model_input_disagreement && row.__model_input_disagreement) {
+              countyAgg[countyNorm].__model_input_disagreement = (row.__model_input_disagreement || '').toString();
+            }
+            if (!countyAgg[countyNorm].__model_anchors_aligned && Number(row.__model_anchors_aligned || 0)) {
+              countyAgg[countyNorm].__model_anchors_aligned = Number(row.__model_anchors_aligned || 0);
+            }
+            if (!countyAgg[countyNorm].__model_confidence_label && row.__model_confidence_label) {
+              countyAgg[countyNorm].__model_confidence_label = (row.__model_confidence_label || '').toString();
+            }
+            if (!countyAgg[countyNorm].__model_confidence_band && row.__model_confidence_band) {
+              countyAgg[countyNorm].__model_confidence_band = (row.__model_confidence_band || '').toString();
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_influence_presidential_climate_pts)) && Number.isFinite(Number(row.__model_influence_presidential_climate_pts))) {
+              countyAgg[countyNorm].__model_influence_presidential_climate_pts = Number(row.__model_influence_presidential_climate_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_influence_senate_baseline_pts)) && Number.isFinite(Number(row.__model_influence_senate_baseline_pts))) {
+              countyAgg[countyNorm].__model_influence_senate_baseline_pts = Number(row.__model_influence_senate_baseline_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_influence_extra_movement_pts)) && Number.isFinite(Number(row.__model_influence_extra_movement_pts))) {
+              countyAgg[countyNorm].__model_influence_extra_movement_pts = Number(row.__model_influence_extra_movement_pts);
+            }
+            if (!Number.isFinite(Number(countyAgg[countyNorm].__model_influence_crossover_dem_pts)) && Number.isFinite(Number(row.__model_influence_crossover_dem_pts))) {
+              countyAgg[countyNorm].__model_influence_crossover_dem_pts = Number(row.__model_influence_crossover_dem_pts);
+            }
+            if (!countyAgg[countyNorm].__model_explain_tags && row.__model_explain_tags) {
+              countyAgg[countyNorm].__model_explain_tags = (row.__model_explain_tags || '').toString();
             }
             countyAgg[countyNorm][`${contestType}_dem`] += demVotes;
             countyAgg[countyNorm][`${contestType}_rep`] += repVotes;
