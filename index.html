@@ -538,6 +538,7 @@
     <meta name="author" content="Shamar Davis">
     <meta name="copyright" content="© 2026 Shamar Does Elections. All Rights Reserved.">
     <!-- Watermark: SDE Creator Attribution | Created by Shamar Davis | Copyright 2026 Shamar Does Elections -->
+    <!-- Targeted margin rounding patch: backend margin_pct is display source of truth; vote math is fallback only; raw margins drive buckets/colors. -->
     <meta property="og:title" content="NC Election Atlas (2000-2024)">
     <meta property="og:description" content="Interactive visualization of North Carolina election trends from 2000 to 2024, with county, precinct, and district views.">
     <meta property="og:image" content="preview.png">
@@ -13602,8 +13603,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = marginPctValue(r, d, total);
-      const signedMarginPct = signedMarginPctFromVotes(d, r, total);
+      const signedMarginPct = signedMarginPctFromBackendOrVotes(meta, meta?.contestType, d, r, total);
+      const marginPct = Math.abs(signedMarginPct);
       const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
@@ -13616,8 +13617,8 @@ document.addEventListener('DOMContentLoaded', function() {
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
       const leadLabel = isCountyContext
-        ? leadCountyMarginPctLabel(r, d, total)
-        : focusLeadMarginLabel(r, d, total);
+        ? leadCountyMarginPctLabel(r, d, total, meta, meta?.contestType)
+        : focusLeadMarginLabel(r, d, total, meta, meta?.contestType);
 
       renderVoteContextTierBadge(meta, signedMarginPct);
 
@@ -13671,7 +13672,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (demVotes / totalVotes) * 100;
       const repPct = (repVotes / totalVotes) * 100;
       const otherPct = (otherVotes / totalVotes) * 100;
-      const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      const marginPct = displayMarginPctFromBackendOrVotes(meta, meta?.contestType, demVotes, repVotes, totalVotes);
       const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
       const pctFormatter = isCountyContext ? formatPctForCountyCloseRace : formatPctForCloseRace;
       
@@ -14082,7 +14083,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
         const signedPct = Number(item.margin_pct || 0);
         const winnerMeta = getTrendWinnerMeta(item);
-        const leadLabel = leadMarginLabelFn(repVotes, demVotes, totalVotes);
+        const leadLabel = leadMarginLabelFn(repVotes, demVotes, totalVotes, item, '');
         const shiftMeta = describeTrendShift(signedPct, prev ? prev.margin_pct : NaN, prev ? prev.year : '');
         const flip = prev ? flipInfo(prev.margin_pct, signedPct) : { flipped: false, from: 'T', to: 'T' };
         return {
@@ -19191,7 +19192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = canonicalMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const marginPct = rawMarginPctForLogic(marginPctDisplayValue(repVotes, demVotes, totalVotes));
         const marginLabel = formatMarginPctForDisplay(marginPct);
         const winner = demPct > repPct ? 'Democratic' : 'Republican';
         let officeName = formatContestName(contestType, year);
@@ -20198,6 +20199,26 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
+    // Display margins use one source of truth: backend margin_pct first, raw vote math only as fallback.
+    // This prevents drift caused by subtracting already-rounded party shares.
+    function signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes) {
+      const values = [];
+      if (source && typeof source === 'object') {
+        const ct = String(contestType || source.contestType || '').trim();
+        if (ct) values.push(source[`${ct}_margin_pct`]);
+        values.push(source.signedMarginPct, source.margin_pct, source.marginPct);
+      }
+      for (const value of values) {
+        const n = Number(value);
+        if (Number.isFinite(n)) return n;
+      }
+      return signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+    }
+
+    function displayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes) {
+      return Math.abs(signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes));
+    }
+
     function preservesTwoDecimalMargin(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
       return roundForDisplay(pct, 2) >= 0.02;
@@ -20228,32 +20249,37 @@ document.addEventListener('DOMContentLoaded', function() {
       return toFixedForDisplay(pct, marginDisplayDigits(pct));
     }
 
-    // Canonical numeric value used for UI bucket/color decisions.
-    // This keeps displayed labels and buckets in sync at boundaries (ex: 5.495 -> 5.50 -> Likely).
+    // Raw numeric margin used for UI bucket/color decisions.
+    // Display labels round at the final render step, but buckets/colors stay on the unrounded source value.
+    function rawMarginPctForLogic(marginPct) {
+      const pct = Math.abs(Number(marginPct));
+      return Number.isFinite(pct) ? pct : 0;
+    }
+
+    // Kept for compatibility with older call sites; do not use for bucket/color decisions.
     function canonicalMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return Number(formatMarginPctForDisplay(pct));
+      return Number(formatMarginPctForDisplay(rawMarginPctForLogic(marginPct)));
     }
 
     function formatPtsForDisplay(value, digits = 1) {
       return toFixedForDisplay(Math.abs(Number(value) || 0), digits);
     }
 
-    function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      return marginPctValue(repVotes, demVotes, totalVotes);
+    function marginPctDisplayValue(repVotes, demVotes, totalVotes, source = null, contestType = '') {
+      return displayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
     }
 
-    function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      if (!margin) return 'Tie';
-      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
+    function leadMarginPctLabel(repVotes, demVotes, totalVotes, source = null, contestType = '') {
+      const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+      if (!Number.isFinite(signed) || Math.abs(signed) < 0.0000001) return 'Tie';
+      return `${formatMarginPctForDisplay(Math.abs(signed))}%`;
     }
 
     // Lead pill uses numeric margin only; party context comes from winner color/label.
-    function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      if (!margin) return 'Tie';
-      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
+    function focusLeadMarginLabel(repVotes, demVotes, totalVotes, source = null, contestType = '') {
+      const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+      if (!Number.isFinite(signed) || Math.abs(signed) < 0.0000001) return 'Tie';
+      return `${formatMarginPctForDisplay(Math.abs(signed))}%`;
     }
 
     function countyMarginDisplayDigits(marginPct) {
@@ -20265,42 +20291,42 @@ document.addEventListener('DOMContentLoaded', function() {
       return toFixedForDisplay(pct, countyMarginDisplayDigits(pct));
     }
 
-    function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      return marginPctValue(repVotes, demVotes, totalVotes);
+    function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes, source = null, contestType = '') {
+      return displayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
     }
 
-    function leadCountyMarginPctLabel(repVotes, demVotes, totalVotes) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      if (!margin) return 'Tie';
-      return `${formatCountyMarginPctForDisplay(countyMarginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
+    function leadCountyMarginPctLabel(repVotes, demVotes, totalVotes, source = null, contestType = '') {
+      const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+      if (!Number.isFinite(signed) || Math.abs(signed) < 0.0000001) return 'Tie';
+      return `${formatCountyMarginPctForDisplay(Math.abs(signed))}%`;
     }
 
-    function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      const pctLabel = `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
-      if (margin > 0) {
+    function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
+      const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+      const pctLabel = `${formatMarginPctForDisplay(Math.abs(signed))}%`;
+      if (signed > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
-      if (margin < 0) {
+      if (signed < 0) {
         return `${shortCandidateLabel(demCandidate, 'D')} +${pctLabel}`;
       }
       return 'Tie';
     }
 
-    function compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      const pctLabel = `${formatCountyMarginPctForDisplay(countyMarginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
-      if (margin > 0) {
+    function compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
+      const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+      const pctLabel = `${formatCountyMarginPctForDisplay(Math.abs(signed))}%`;
+      if (signed > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
-      if (margin < 0) {
+      if (signed < 0) {
         return `${shortCandidateLabel(demCandidate, 'D')} +${pctLabel}`;
       }
       return 'Tie';
     }
 
-    function winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      return compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+    function winnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
+      return compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source, contestType);
     }
 
     function parseContestValue(contestValue) {
@@ -20310,12 +20336,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return [raw.substring(0, idx), raw.substring(idx + 1)];
     }
 
-    function winnerMarginLabelShort(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      return compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+    function winnerMarginLabelShort(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
+      return compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source, contestType);
     }
 
-    function winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
-      return compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+    function winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
+      return compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source, contestType);
     }
 
     function winnerFromSignedMarginPct(signedPct) {
@@ -20365,7 +20391,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function compactCompetitivenessLabel(marginPct, party) {
-      marginPct = canonicalMarginPctForDisplay(marginPct);
+      marginPct = rawMarginPctForLogic(marginPct);
       const side = party === 'rep' ? 'R' : (party === 'dem' ? 'D' : '');
       if (marginPct >= 40) return side ? `Annihilation ${side}` : 'Annihilation';
       if (marginPct >= 30) return side ? `Dominant ${side}` : 'Dominant';
@@ -20378,7 +20404,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function competitivenessTierMeta(marginPct, party) {
-      const pct = canonicalMarginPctForDisplay(marginPct);
+      const pct = rawMarginPctForLogic(marginPct);
       const normalizedParty = party === 'rep' || party === 'R'
         ? 'rep'
         : (party === 'dem' || party === 'D' ? 'dem' : 'tie');
@@ -20720,8 +20746,8 @@ document.addEventListener('DOMContentLoaded', function() {
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
       const leadLabel = isCountyContext
-        ? leadCountyMarginPctLabel(r, d, total)
-        : focusLeadMarginLabel(r, d, total);
+        ? leadCountyMarginPctLabel(r, d, total, meta, meta?.contestType)
+        : focusLeadMarginLabel(r, d, total, meta, meta?.contestType);
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
@@ -20745,8 +20771,8 @@ document.addEventListener('DOMContentLoaded', function() {
         leadMetaEl.textContent = winnerParty === 'tie'
           ? 'Even race'
           : (isCountyContext
-            ? compactCountyWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)
-            : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate));
+            ? compactCountyWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate, meta, meta?.contestType)
+            : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate, meta, meta?.contestType));
         leadMetaEl.dataset.party = winnerParty;
       }
       if (demShareFill) demShareFill.style.width = formatCssPct(demPct, 2);
@@ -20995,7 +21021,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = canonicalMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const marginPct = rawMarginPctForLogic(marginPctDisplayValue(repVotes, demVotes, totalVotes));
         const marginLabel = formatMarginPctForDisplay(marginPct);
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
@@ -21180,9 +21206,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100.0;
       const shareParts = displayShareParts(d, r, o, 2);
 
+      const marginSource = options?.source || options?.row || options?.meta || null;
+      const marginContestType = options?.contestType || marginSource?.contestType || '';
       const marginLabel = useCountyPrecision
-        ? compactCountyWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '')
-        : winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
+        ? compactCountyWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '', marginSource, marginContestType)
+        : winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '', marginSource, marginContestType);
       const demFull = fullCandidateLabel(demCandidate, 'Democratic');
       const repFull = fullCandidateLabel(repCandidate, 'Republican');
 
@@ -25609,7 +25637,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'district', scope, districtNum: Number(districtNum), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = signedMarginPctFromBackendOrVotes(row, contestType, demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winnerRaw = (row.winner || '').toString().toUpperCase();
       const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : (signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T')));
@@ -25623,7 +25651,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevResults = prevCached?.prevNode?.general?.results || null;
         if (prevResults) {
           const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
-          if (prevRow) prevSignedForFlip = Number(prevRow.margin_pct || 0);
+          if (prevRow) prevSignedForFlip = signedMarginPctFromBackendOrVotes(prevRow, contestType, prevRow.dem_votes, prevRow.rep_votes, prevRow.total_votes);
         }
       } catch (_) {}
 
@@ -26534,7 +26562,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginPctLabel = formatCountyMarginPctForDisplay(marginPct);
       const winner = margin > 0 ? 'Democratic' : (margin < 0 ? 'Republican' : 'Tie');
       const winnerCandidate = margin > 0 ? demCandidate : repCandidate;
-      const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate, { margin_pct: signedMarginPct }, contestType);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const shouldShowModeledCountyEnhancements = isModeledSenateEnhancementContest(contestType, year);
       const modeledCountyBaselineSignedRaw = Number(countyData.__model_baseline_margin_pct);
@@ -27246,7 +27274,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .map(s => {
           const win = (s.winner || '').toString().toUpperCase();
           const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
-          const label = winnerMarginLabelShortCounty(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          const label = winnerMarginLabelShortCounty(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate, s, '');
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#64748b;">${escapeHtml(s.year)}</span><span style="color:${escapeHtml(color)};font-weight:800;">${escapeHtml(label)}</span></div>`;
         })
         .join('');
@@ -30707,6 +30735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function categoryColorForMargin(marginPct, winner) {
+      marginPct = rawMarginPctForLogic(marginPct);
       if (marginPct >= 40) {
         return winner === 'R' ? '#67000d' : '#08306b';
       } else if (marginPct >= 30) {
@@ -30731,6 +30760,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function accessibilityMarginColor(marginPct, winner) {
+      marginPct = rawMarginPctForLogic(marginPct);
       // Colorblind-friendly: blue/orange ramp.
       if (marginPct >= 40) return winner === 'R' ? '#cc5500' : '#004d99';
       if (marginPct >= 30) return winner === 'R' ? '#ff6600' : '#0066cc';
@@ -30743,6 +30773,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function colorForMarginMode(marginPctAbs, winner) {
+      marginPctAbs = rawMarginPctForLogic(marginPctAbs);
       return isColorblindModeActive()
         ? accessibilityMarginColor(marginPctAbs, winner)
         : categoryColorForMargin(marginPctAbs, winner);
@@ -32330,7 +32361,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalVotes += rowTotalVotes;
             currentDistrictTurnoutTotals[String(Number(districtId))] = rowTotalVotes;
 
-            const signed = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, rowTotalVotes);
+            const signed = signedMarginPctFromBackendOrVotes(row, contestType, demVotes, repVotes, rowTotalVotes);
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
@@ -32348,14 +32379,14 @@ document.addEventListener('DOMContentLoaded', function() {
               );
             } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedMarginPctFromBackendOrVotes(prevRow, contestType, prevRow.dem_votes, prevRow.rep_votes, prevRow.total_votes) : 0;
               const f = flipInfo(prevSigned, signed);
               color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
             } else if (mode === 'winners') {
               color = colorForWinnerMode(winner);
             } else if (mode === 'shift' && prevResults && prevYear) {
               const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedMarginPctFromBackendOrVotes(prevRow, contestType, prevRow.dem_votes, prevRow.rep_votes, prevRow.total_votes) : 0;
               color = colorForShiftMode(signed - prevSigned);
             } else {
               color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
