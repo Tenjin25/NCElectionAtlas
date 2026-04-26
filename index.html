@@ -23599,35 +23599,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const precinctNorm = normalizeContestPrecinctNorm(rowNameRaw);
         if (!precinctNorm) return;
-        const signed = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-        const winner = winnerFromSignedMarginPct(signed);
-        const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
-        precinctColorByNorm.set(precinctNorm, color);
-      });
-
-      const countyExpr = [
-        'match',
-        ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
-      ];
-      Object.entries(countyTotals).forEach(([countyNorm, totals]) => {
-        const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
-        countySignedMargins[countyNorm] = signed;
-        const winner = winnerFromSignedMarginPct(signed);
-        const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
-        countyExpr.push(countyNorm, color);
-      });
-      countyExpr.push('#cbd5e1');
-
-      const precinctExpr = ['case'];
-      precinctColorByNorm.forEach((color, precinctNorm) => {
-        precinctExpr.push(['==', ['get', 'precinct_norm'], precinctNorm]);
-        precinctExpr.push(color);
-      });
-      precinctExpr.push('#94a3b8');
-
-      const payload = { countyExpr, precinctExpr, countySignedMargins };
-      splitTicketOverlayCache.set(cacheKey, payload);
-      return payload;
+        const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
+        // Always force two decimals for statewide margin pill
+        const marginPct = Math.abs(signed);
+        const marginLabel = Number(marginPct).toFixed(2);
+        if (signed > 0) {
+          return {
+            party: 'rep',
+            winnerName: fullCandidateLabel(repCandidate, 'Republican'),
+            shortLabel: shortCandidateLabel(repCandidate, 'Republican'),
+            marginPct,
+            text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginLabel}%`
+          };
+        }
+        if (signed < 0) {
+          return {
+            party: 'dem',
+            winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
+            shortLabel: shortCandidateLabel(demCandidate, 'Democratic'),
+            marginPct,
+            text: `${shortCandidateLabel(demCandidate, 'Democratic')} +${marginLabel}%`
+          };
+        }
+        return {
+          party: 'tie',
+          winnerName: 'Even race',
+          shortLabel: 'Tie',
+          marginPct: 0,
+          text: 'Tie'
+        };
     }
 
     async function refreshSplitTicketOverlayForSelection(contestType, year) {
