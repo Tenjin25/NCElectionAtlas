@@ -23599,36 +23599,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const precinctNorm = normalizeContestPrecinctNorm(rowNameRaw);
         if (!precinctNorm) return;
-        const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-        const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
-        // Always force two decimals for statewide margin pill
-        const marginPct = Math.abs(signed);
-        const marginLabel = Number(marginPct).toFixed(2);
-        if (signed > 0) {
-          return {
-            party: 'rep',
-            winnerName: fullCandidateLabel(repCandidate, 'Republican'),
-            shortLabel: shortCandidateLabel(repCandidate, 'Republican'),
-            marginPct,
-            text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginLabel}%`
-          };
-        }
-        if (signed < 0) {
-          return {
-            party: 'dem',
-            winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
-            shortLabel: shortCandidateLabel(demCandidate, 'Democratic'),
-            marginPct,
-            text: `${shortCandidateLabel(demCandidate, 'Democratic')} +${marginLabel}%`
-          };
-        }
-        return {
-          party: 'tie',
-          winnerName: 'Even race',
-          shortLabel: 'Tie',
-          marginPct: 0,
-          text: 'Tie'
-        };
+        const signedMargin = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        countySignedMargins[countyNorm] = signedMargin;
+        precinctColorByNorm.set(precinctNorm, signedMargin);
+      });
+
+      // Build Mapbox expressions for county and precinct coloring
+      const countyExpr = ["match", ["get", "county_norm"]];
+      Object.entries(countySignedMargins).forEach(([norm, signed]) => {
+        countyExpr.push(norm, signed);
+      });
+      countyExpr.push(0);
+
+      const precinctExpr = ["match", ["get", "precinct_norm"]];
+      precinctColorByNorm.forEach((signed, norm) => {
+        precinctExpr.push(norm, signed);
+      });
+      precinctExpr.push(0);
+
+      const result = {
+        countyTotals,
+        countySignedMargins,
+        countyExpr,
+        precinctExpr,
+        precinctColorByNorm
+      };
+      splitTicketOverlayCache.set(cacheKey, result);
+      return result;
     }
 
     async function refreshSplitTicketOverlayForSelection(contestType, year) {
@@ -32494,7 +32491,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Apply uniform color to all districts (showing statewide result)
       const layerName = currentView === 'districts' ? 'district-fill' : 
-                       currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill';
+      currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill';
 
       if (map.getLayer(layerName)) {
         map.setPaintProperty(layerName, 'fill-color', color);
