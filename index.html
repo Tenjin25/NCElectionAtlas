@@ -20185,18 +20185,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      // Always use two decimals for statewide display
-      const pct = Math.abs(marginPctValue(repVotes, demVotes, totalVotes));
-      return `${toFixedForDisplay(pct, 2)}%`;
+      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
     }
 
     // Lead pill uses numeric margin only; party context comes from winner color/label.
     function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
-      // Always use two decimals for statewide display
-      const pct = Math.abs(marginPctValue(repVotes, demVotes, totalVotes));
-      return `${toFixedForDisplay(pct, 2)}%`;
+      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
     }
 
     function countyMarginDisplayDigits(marginPct) {
@@ -20286,8 +20282,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
       const marginPct = Math.abs(signed);
-      // Always use two decimals for statewide leader label
-      const marginLabel = toFixedForDisplay(marginPct, 2);
+      const marginLabel = formatMarginPctForDisplay(marginPct);
       if (signed > 0) {
         return {
           party: 'rep',
@@ -21038,7 +21033,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const kickerHtml = isModeledSenate ? `Modeled baseline ${modeledBadgeHtml}` : 'Statewide leader';
         const sublineHtml = isModeledSenate
           ? `${escapeHtml(winnerSummary)} | projected edge ${escapeHtml(marginLabel)} pts`
-          : `${escapeHtml(winnerSummary)} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin`;
+          : `${escapeHtml(winnerSummary)} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin (${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%)`;
         const methodologyHtml = isModeledSenate
           ? `<div class="statewide-modeled-method">Built from 2022 Senate, 2020 Senate, and 2024 presidential environment.</div>`
           : '';
