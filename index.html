@@ -20282,6 +20282,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
       const marginPct = Math.abs(signed);
+      // Use the same formatting as the subline/stat, preserving three decimals for close races
       const marginLabel = formatMarginPctForDisplay(marginPct);
       if (signed > 0) {
         return {
