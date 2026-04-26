@@ -13616,7 +13616,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ? formatVoteCounterCandidateLabel(resolvedCandidates.demCandidate, 'D', 'Democratic')
           : 'Tie');
       const leadLabel = isCountyContext
-        ? leadCountyMarginPctLabel(r, d, total)
+        ? leadMarginPctLabel(r, d, total)
         : focusLeadMarginLabel(r, d, total);
 
       renderVoteContextTierBadge(meta, signedMarginPct);
@@ -14059,8 +14059,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const selectedYearRaw = Number(options?.selectedYear);
       const selectedYear = Number.isFinite(selectedYearRaw) ? selectedYearRaw : null;
       const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
-      const leadMarginLabelFn = useCountyMarginPrecision ? leadCountyMarginPctLabel : leadMarginPctLabel;
-      const winnerMarginLabelFn = useCountyMarginPrecision ? winnerMarginLabelShortCounty : winnerMarginLabelShort;
+      const leadMarginLabelFn = leadMarginPctLabel;
+      const winnerMarginLabelFn = winnerMarginLabelShort;
       if (!chartEl) return;
       if (captionEl) captionEl.textContent = caption;
       if (!series || !series.length) {
@@ -20157,47 +20157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatPctForCountyCloseRace(value, marginPct) {
       const numeric = Number(value || 0);
-      const digits = countyMarginDisplayDigits(marginPct);
-      return toFixedForDisplay(numeric, digits);
-    }
 
-    function marginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
-    }
+      // All margin/lead/shift formatting now uses marginPctDisplayValue for consistency.
+      // Remove county-specific formatting and use the same logic everywhere.
 
-    function formatMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, marginDisplayDigits(pct));
-    }
+      // Remove: countyMarginDisplayDigits, formatCountyMarginPctForDisplay, countyMarginPctDisplayValue, leadCountyMarginPctLabel, compactCountyWinnerMarginLabel, winnerMarginLabelShortCounty
 
-    function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      // Keep raw precision for extremely close races so 0.000-style display remains intact.
-      if (marginDisplayDigits(rawMarginPct) >= 3) return rawMarginPct;
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      return Math.abs(repPctDisplay - demPctDisplay);
-    }
-
-    function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      if (!margin) return 'Tie';
-      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
-    }
-
-    // Lead pill uses numeric margin only; party context comes from winner color/label.
-    function focusLeadMarginLabel(repVotes, demVotes, totalVotes) {
-      const margin = Number(repVotes || 0) - Number(demVotes || 0);
-      if (!margin) return 'Tie';
-      return `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
-    }
-
-    function countyMarginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
-    }
+      // Update any usages of the above to use marginPctDisplayValue and formatMarginPctForDisplay instead.
 
     function formatCountyMarginPctForDisplay(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
@@ -20691,7 +20657,7 @@ document.addEventListener('DOMContentLoaded', function() {
         leadMetaEl.textContent = winnerParty === 'tie'
           ? 'Even race'
           : (isCountyContext
-            ? compactCountyWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)
+            ? compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)
             : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate));
         leadMetaEl.dataset.party = winnerParty;
       }
@@ -21126,7 +21092,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100.0;
 
       const marginLabel = useCountyPrecision
-        ? compactCountyWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '')
+        ? compactWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '')
         : winnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '');
       const demFull = fullCandidateLabel(demCandidate, 'Democratic');
       const repFull = fullCandidateLabel(repCandidate, 'Republican');
@@ -26476,10 +26442,10 @@ document.addEventListener('DOMContentLoaded', function() {
         ? signedMarginPctRaw
         : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const marginPct = Math.abs(signedMarginPct);
-      const marginPctLabel = formatCountyMarginPctForDisplay(marginPct);
+      const marginPctLabel = formatMarginPctForDisplay(marginPct);
       const winner = margin > 0 ? 'Democratic' : (margin < 0 ? 'Republican' : 'Tie');
       const winnerCandidate = margin > 0 ? demCandidate : repCandidate;
-      const marginText = winnerMarginLabelShortCounty(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+      const marginText = winnerMarginLabelShort(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const shouldShowModeledCountyEnhancements = isModeledSenateEnhancementContest(contestType, year);
       const modeledCountyBaselineSignedRaw = Number(countyData.__model_baseline_margin_pct);
@@ -27191,7 +27157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .map(s => {
           const win = (s.winner || '').toString().toUpperCase();
           const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
-          const label = winnerMarginLabelShortCounty(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          const label = winnerMarginLabelShort(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#64748b;">${escapeHtml(s.year)}</span><span style="color:${escapeHtml(color)};font-weight:800;">${escapeHtml(label)}</span></div>`;
         })
         .join('');
@@ -32503,7 +32469,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setStatus('District layer not found!', 5000, true);
       }
 
-  setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Statewide Result`);
+      setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Statewide Result`);
       setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
       setVoteCounterBaselineState(
         'Statewide',
@@ -32517,6 +32483,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.onload = init;
+// Add missing closing braces for any open functions or blocks
+}
 </script>
 </body>
 </html>
