@@ -20281,15 +20281,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN) {
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
-      const marginPct = Math.abs(signed);
-      // Use the same formatting as the subline/stat, preserving three decimals for close races
-      const marginLabel = formatMarginPctForDisplay(marginPct);
+      // Use the same display value as the stat/subline for the pill
+      const marginPctDisplay = marginPctDisplayValue(repVotes, demVotes, totalVotes);
+      const marginLabel = formatMarginPctForDisplay(marginPctDisplay);
       if (signed > 0) {
         return {
           party: 'rep',
           winnerName: fullCandidateLabel(repCandidate, 'Republican'),
           shortLabel: shortCandidateLabel(repCandidate, 'Republican'),
-          marginPct,
+          marginPct: marginPctDisplay,
           text: `${shortCandidateLabel(repCandidate, 'Republican')} +${marginLabel}%`
         };
       }
@@ -20298,7 +20298,7 @@ document.addEventListener('DOMContentLoaded', function() {
           party: 'dem',
           winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
           shortLabel: shortCandidateLabel(demCandidate, 'Democratic'),
-          marginPct,
+          marginPct: marginPctDisplay,
           text: `${shortCandidateLabel(demCandidate, 'Democratic')} +${marginLabel}%`
         };
       }
@@ -20306,7 +20306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         party: 'tie',
         winnerName: 'Tie',
         shortLabel: 'Even',
-        marginPct,
+        marginPct: marginPctDisplay,
         text: `Even ${marginLabel}`
       };
     }
