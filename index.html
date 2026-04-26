@@ -318,8 +318,10 @@
     }
 
     async function refreshHoverAtPointer({ forceTooltip = false } = {}) {
-      if (typeof map === 'undefined' || !map || typeof map.getLayer !== 'function' || typeof map.queryRenderedFeatures !== 'function') return;
-      try { if (typeof map.loaded === 'function' && !map.loaded()) return; } catch (_) {}
+      let activeMap = null;
+      try { activeMap = map; } catch (_) { return; }
+      if (!activeMap || typeof activeMap.getLayer !== 'function' || typeof activeMap.queryRenderedFeatures !== 'function') return;
+      try { if (typeof activeMap.loaded === 'function' && !activeMap.loaded()) return; } catch (_) {}
       if (typeof lastPointerPoint === 'undefined' || !lastPointerPoint) return;
       if (typeof tooltipPinned !== 'undefined' && tooltipPinned && !forceTooltip) return;
       if (typeof isHoverRefreshSuppressed === 'function' && isHoverRefreshSuppressed()) return;
@@ -327,11 +329,11 @@
       // If precinct overlay is enabled, prefer hovering precincts (dots or polygons) when present.
       if (typeof precinctsEnabled !== 'undefined' && precinctsEnabled) {
         const layers = [];
-        if (map.getLayer('precinct-dot')) layers.push('precinct-dot');
-        if (map.getLayer('precinct-fill')) layers.push('precinct-fill');
-        if (map.getLayer('precinct-dot-missing')) layers.push('precinct-dot-missing');
+        if (activeMap.getLayer('precinct-dot')) layers.push('precinct-dot');
+        if (activeMap.getLayer('precinct-fill')) layers.push('precinct-fill');
+        if (activeMap.getLayer('precinct-dot-missing')) layers.push('precinct-dot-missing');
         if (layers.length) {
-          const pf = map.queryRenderedFeatures(lastPointerPoint, { layers });
+          const pf = activeMap.queryRenderedFeatures(lastPointerPoint, { layers });
           if (pf && pf.length) {
             if (typeof renderPrecinctHoverAtPoint === 'function') renderPrecinctHoverAtPoint(lastPointerPoint, pf[0], { forceTooltip });
             return;
@@ -346,13 +348,13 @@
         : (viewForHover === 'districts'
           ? 'district-fill'
           : (viewForHover === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
-      if (!map.getLayer(layerName)) {
+      if (!activeMap.getLayer(layerName)) {
         if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
         if (typeof clearHoverOutline === 'function') clearHoverOutline();
         return;
       }
 
-      const features = map.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
+      const features = activeMap.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
       if (!features || !features.length) {
         if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
         if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
@@ -391,7 +393,7 @@
         hoverRefreshRaf = null;
         try {
           const precinctOverlayOn = (typeof precinctsEnabled !== 'undefined') ? precinctsEnabled : false;
-          if (precinctOverlayOn && typeof map !== 'undefined' && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+          if (precinctOverlayOn && (() => { try { return map && typeof map.isMoving === 'function' && map.isMoving(); } catch (_) { return false; } })()) return;
         } catch (_) {}
         if (typeof refreshHoverAtPointer === 'function') await refreshHoverAtPointer({ forceTooltip });
       });
@@ -604,8 +606,10 @@
       }
 // Zoom to county by name using turf.js
 function zoomToCounty(countyName) {
-  if (typeof map === 'undefined' || !map || typeof map.getSource !== 'function' || typeof map.fitBounds !== 'function') return;
-  const countiesSource = map.getSource('counties');
+  let activeMap = null;
+  try { activeMap = map; } catch (_) { activeMap = null; }
+  if (!activeMap || typeof activeMap.getSource !== 'function' || typeof activeMap.fitBounds !== 'function') return;
+  const countiesSource = activeMap.getSource('counties');
   if (!countiesSource || !countiesSource._data || !countiesSource._data.features) return;
   const counties = countiesSource._data.features;
   // Normalize county names for matching
@@ -627,7 +631,7 @@ function zoomToCounty(countyName) {
   const pad = (window && typeof window.computeMapViewportPadding === 'function')
     ? window.computeMapViewportPadding(40)
         : 40;
-      map.fitBounds(bbox, { padding: pad, maxZoom: 10 });
+      activeMap.fitBounds(bbox, { padding: pad, maxZoom: 10 });
     }
   </script>
   <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
@@ -10222,6 +10226,7 @@ document.addEventListener('DOMContentLoaded', function() {
       preserveDrawingBuffer: true,
       performanceMetricsCollection: false
     });
+    try { window.__atlasMap = map; } catch (_) {}
 
     const IS_COARSE_POINTER = (() => {
       try { return window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch (_) { return false; }
@@ -25482,7 +25487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hoverRefreshRaf = null;
         try {
           const precinctOverlayOn = (typeof precinctsEnabled !== 'undefined') ? precinctsEnabled : false;
-          if (precinctOverlayOn && typeof map !== 'undefined' && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+          if (precinctOverlayOn && (() => { try { return map && typeof map.isMoving === 'function' && map.isMoving(); } catch (_) { return false; } })()) return;
         } catch (_) {}
         if (typeof refreshHoverAtPointer === 'function') await refreshHoverAtPointer({ forceTooltip });
       });
