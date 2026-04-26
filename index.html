@@ -289,11 +289,32 @@
       }
     })();
 
-    document.addEventListener('DOMContentLoaded', function() {
-      function isMobileViewport() {
+    // Move setupRegionJumpButtons and queueHoverRefresh definitions above their first usage
+    function setupRegionJumpButtons() {
+      document.querySelectorAll('[data-region-jump]').forEach(btn => {
+        if (btn.dataset.regionJumpReady === 'true') return;
+        btn.dataset.regionJumpReady = 'true';
+        btn.addEventListener('click', () => { void jumpToRegion(btn.dataset.regionJump || ''); });
+      });
+    }
+
+    function queueHoverRefresh({ forceTooltip = false } = {}) {
+      if (isTouchInteractionMode() && !tooltipPinned && !forceTooltip) return;
+      if (hoverRefreshRaf) return;
+      hoverRefreshRaf = requestAnimationFrame(async () => {
+        hoverRefreshRaf = null;
         try {
-          return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
-        } catch (_) {
+          if (precinctsEnabled && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+        } catch (_) {}
+        await refreshHoverAtPointer({ forceTooltip });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // ...existing code...
+      setupRegionJumpButtons();
+      updateContextBanner();
+    });
           return window.innerWidth <= 768;
         }
       }
