@@ -103,8 +103,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–April 2026)
 
-**Last updated:** April 24, 2026
 
+**Last updated:** April 26, 2026
+
+### Statewide Margin Precision Consistency (April 26, 2026)
+
+- Fixed a rounding/formatting drift in the “Statewide leader” label so it always matches the main margin display and authoritative sources (e.g., Wikipedia).
+- The statewide leader label (e.g., “Trump +1.34%”) now always uses two decimal places, matching the “Margin” line and ensuring consistency throughout the app.
+- This resolves the previous issue where the label could show “1.35%” while the margin line showed “1.34%” for the same result.
 ### Vote Counter Layout + Mobile Positioning Fixes (April 21, 2026)
 
 - Fixed context-title overlap with `Clear` / `Reset` controls in the vote counter by updating the shared header layout so long labels (for example, county and district names) keep readable space instead of being covered.
