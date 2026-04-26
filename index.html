@@ -10793,7 +10793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let scenarioScope = 'statewide'; // statewide | wake
     let turnoutBivariateEnabled = false;
     let demographicsHighContrastEnabled = false;
-    let overlayOpacityPreset = 'reveal'; // reveal | balanced | focus
+    let overlayOpacityPreset = 'balanced'; // reveal | balanced | focus
     let smartInsightsEnabled = false; // session-only toggle; default off
     let smartInsightsLastOverlayKey = '';
     let smartInsightsActiveCountySet = null; // Set<string countyNorm> (UPPERCASE) for the current contest
@@ -12642,7 +12642,7 @@ document.addEventListener('DOMContentLoaded', function() {
           district: 0.59,
           house: 0.65,
           senate: 0.64,
-          precinctFill: 0.61,
+          precinctFill: 0.62,
           precinctDot: 0.80
         },
         balanced: {
@@ -12651,7 +12651,7 @@ document.addEventListener('DOMContentLoaded', function() {
           district: 0.72,
           house: 0.72,
           senate: 0.73,
-          precinctFill: 0.66,
+          precinctFill: 0.68,
           precinctDot: 0.84
         },
         focus: {
@@ -12660,7 +12660,7 @@ document.addEventListener('DOMContentLoaded', function() {
           district: 0.76,
           house: 0.77,
           senate: 0.77,
-          precinctFill: 0.72,
+          precinctFill: 0.76,
           precinctDot: 0.88
         }
       };
@@ -12845,8 +12845,8 @@ document.addEventListener('DOMContentLoaded', function() {
       let splitPrecinctDotOpacity = 0.0;
       if (splitActive) {
         if (overlayOpacityPreset === 'focus') {
-          splitCountyOpacity = precinctsEnabled ? 0.18 : 0.30;
-          splitPrecinctFillOpacity = 0.30;
+          splitCountyOpacity = precinctsEnabled ? 0.15 : 0.30;
+          splitPrecinctFillOpacity = 0.65;
           splitPrecinctDotOpacity = 0.76;
         } else if (overlayOpacityPreset === 'balanced') {
           splitCountyOpacity = precinctsEnabled ? 0.14 : 0.25;
