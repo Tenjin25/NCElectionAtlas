@@ -539,6 +539,8 @@
     <meta name="copyright" content="© 2026 Shamar Does Elections. All Rights Reserved.">
     <!-- Watermark: SDE Creator Attribution | Created by Shamar Davis | Copyright 2026 Shamar Does Elections -->
     <!-- Targeted margin rounding patch: backend margin_pct is display source of truth; vote math is fallback only; raw margins drive buckets/colors. -->
+    <!-- Final margin display lock: margin labels use backend-first integer basis-point rounding; raw vote math is fallback only. -->
+    <!-- Hover tooltip-specific margin patch: county hover quickline/details use backend-first margin_pct helper. -->
     <meta property="og:title" content="NC Election Atlas (2000-2024)">
     <meta property="og:description" content="Interactive visualization of North Carolina election trends from 2000 to 2024, with county, precinct, and district views.">
     <meta property="og:image" content="preview.png">
@@ -13605,7 +13607,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const otherPct = (o / total) * 100;
       const signedMarginPct = signedMarginPctFromBackendOrVotes(meta, meta?.contestType, d, r, total);
       const marginPct = Math.abs(signedMarginPct);
-      const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
+      const winnerParty = signedMarginPct > 0 ? 'rep' : (signedMarginPct < 0 ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
         : (winnerParty === 'dem'
@@ -19192,9 +19194,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = rawMarginPctForLogic(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const marginPct = rawMarginPctForLogic(signedMarginPct);
         const marginLabel = formatMarginPctForDisplay(marginPct);
-        const winner = demPct > repPct ? 'Democratic' : 'Republican';
+        const winner = signedMarginPct >= 0 ? 'Republican' : 'Democratic';
         let officeName = formatContestName(contestType, year);
         let demKey = `${year}|${officeName}|Democrat`;
         let repKey = `${year}|${officeName}|Republican`;
@@ -20120,16 +20123,40 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 0;
       const d = Math.max(0, Math.min(6, Math.floor(Number(digits) || 0)));
       const factor = Math.pow(10, d);
-      // Browser floats can land just below the expected decimal (ex: 2.1999999997).
-      // Scale first, then nudge in the signed direction so display rounding is stable everywhere.
-      const scaled = n * factor;
-      const nudge = (Math.sign(scaled) || 1) * Number.EPSILON * Math.max(1, Math.abs(scaled)) * 16;
-      return Math.round(scaled + nudge) / factor;
+      // Keep display rounding boring and symmetric. Do not add a large EPSILON nudge here:
+      // the old nudge could make already-correct backend/aggregate margins appear 0.01 high
+      // at exact two-decimal boundaries.
+      const sign = n < 0 ? -1 : 1;
+      return sign * (Math.round((Math.abs(n) + Number.EPSILON) * factor) / factor);
     }
 
     function toFixedForDisplay(value, digits = 2) {
       const d = Math.max(0, Math.min(6, Math.floor(Number(digits) || 0)));
       return roundForDisplay(value, d).toFixed(d);
+    }
+
+    // Margin labels must be deterministic and must not drift from displayed party shares.
+    // Use integer basis-point rounding for margin display: round the margin itself once,
+    // never subtract rounded party percentages. Keep raw margin values for logic/buckets/colors.
+    function marginBasisPointsFromPct(value) {
+      const n = Math.abs(Number(value));
+      if (!Number.isFinite(n)) return 0;
+      return Math.round(n * 100);
+    }
+
+    function marginBasisPointsFromVotes(demVotes, repVotes, totalVotes) {
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      return Math.round(Math.abs(Number(repVotes || 0) - Number(demVotes || 0)) * 10000 / t);
+    }
+
+    function toFixedMarginForDisplay(value, digits = 2) {
+      const d = Math.max(0, Math.min(6, Math.floor(Number(digits) || 0)));
+      if (d === 2) return (marginBasisPointsFromPct(value) / 100).toFixed(2);
+      const n = Math.abs(Number(value));
+      if (!Number.isFinite(n)) return (0).toFixed(d);
+      const factor = Math.pow(10, d);
+      return (Math.round(n * factor) / factor).toFixed(d);
     }
 
     function clampPct(value) {
@@ -20219,6 +20246,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs(signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes));
     }
 
+    function formatDisplayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes) {
+      const values = [];
+      if (source && typeof source === 'object') {
+        const ct = String(contestType || source.contestType || '').trim();
+        if (ct) values.push(source[`${ct}_margin_pct`]);
+        values.push(source.signedMarginPct, source.margin_pct, source.marginPct);
+      }
+      for (const value of values) {
+        const n = Number(value);
+        if (Number.isFinite(n)) return formatMarginPctForDisplay(Math.abs(n));
+      }
+      return formatAbsMarginPctFromVotes(demVotes, repVotes, totalVotes);
+    }
+
     function preservesTwoDecimalMargin(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
       return roundForDisplay(pct, 2) >= 0.02;
@@ -20246,7 +20287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatMarginPctForDisplay(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, marginDisplayDigits(pct));
+      return toFixedMarginForDisplay(pct, marginDisplayDigits(pct));
     }
 
     // Raw numeric margin used for UI bucket/color decisions.
@@ -20269,17 +20310,45 @@ document.addEventListener('DOMContentLoaded', function() {
       return displayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
     }
 
+
+    function signedDisplayMarginPctForRow(source, contestType, demVotes, repVotes, totalVotes) {
+      return signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
+    }
+
+    function absDisplayMarginPctForRow(source, contestType, demVotes, repVotes, totalVotes) {
+      return Math.abs(signedDisplayMarginPctForRow(source, contestType, demVotes, repVotes, totalVotes));
+    }
+
+    function normalizeContestMarginFields(row, contestType) {
+      if (!row || typeof row !== 'object') return row;
+      const ct = String(contestType || row.contestType || '').trim();
+      const demVotes = Number(ct ? row[`${ct}_dem`] : row.dem_votes) || Number(row.dem_votes) || 0;
+      const repVotes = Number(ct ? row[`${ct}_rep`] : row.rep_votes) || Number(row.rep_votes) || 0;
+      const totalVotes = Number(ct ? row[`${ct}_total`] : row.total_votes) || Number(row.total_votes) || (demVotes + repVotes);
+      const signed = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+      if (ct) {
+        row[`${ct}_margin`] = Math.round(repVotes - demVotes);
+        row[`${ct}_margin_pct`] = signed;
+        row[`${ct}_winner`] = winner;
+      }
+      row.margin = Math.round(repVotes - demVotes);
+      row.margin_pct = signed;
+      row.winner = winner;
+      return row;
+    }
+
     function leadMarginPctLabel(repVotes, demVotes, totalVotes, source = null, contestType = '') {
       const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
       if (!Number.isFinite(signed) || Math.abs(signed) < 0.0000001) return 'Tie';
-      return `${formatMarginPctForDisplay(Math.abs(signed))}%`;
+      return `${formatDisplayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes)}%`;
     }
 
     // Lead pill uses numeric margin only; party context comes from winner color/label.
     function focusLeadMarginLabel(repVotes, demVotes, totalVotes, source = null, contestType = '') {
       const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
       if (!Number.isFinite(signed) || Math.abs(signed) < 0.0000001) return 'Tie';
-      return `${formatMarginPctForDisplay(Math.abs(signed))}%`;
+      return `${formatDisplayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes)}%`;
     }
 
     function countyMarginDisplayDigits(marginPct) {
@@ -20303,7 +20372,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
       const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
-      const pctLabel = `${formatMarginPctForDisplay(Math.abs(signed))}%`;
+      const pctLabel = `${formatDisplayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes)}%`;
       if (signed > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
@@ -20315,7 +20384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate, source = null, contestType = '') {
       const signed = signedMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes);
-      const pctLabel = `${formatCountyMarginPctForDisplay(Math.abs(signed))}%`;
+      const pctLabel = `${formatDisplayMarginPctFromBackendOrVotes(source, contestType, demVotes, repVotes, totalVotes)}%`;
       if (signed > 0) {
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
@@ -20359,10 +20428,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN) {
+      const hasOverride = Number.isFinite(Number(signedPctOverride));
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-      const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
+      const signed = hasOverride ? Number(signedPctOverride) : signedFromVotes;
       const marginPct = Math.abs(signed);
-      const marginLabel = formatMarginPctForDisplay(marginPct);
+      const marginLabel = hasOverride ? formatMarginPctForDisplay(marginPct) : formatAbsMarginPctFromVotes(demVotes, repVotes, totalVotes);
       if (signed > 0) {
         return {
           party: 'rep',
@@ -20733,8 +20803,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100;
       const repPct = (r / total) * 100;
       const otherPct = (o / total) * 100;
-      const marginPct = marginPctValue(r, d, total);
-      const winnerParty = repPct > demPct ? 'rep' : (demPct > repPct ? 'dem' : 'tie');
+      const signedMarginPct = signedMarginPctFromVotes(d, r, total);
+      const marginPct = rawMarginPctForLogic(signedMarginPct);
+      const winnerParty = signedMarginPct > 0 ? 'rep' : (signedMarginPct < 0 ? 'dem' : 'tie');
       const winnerLabel = winnerParty === 'rep'
         ? formatVoteCounterWinnerLabel(resolvedCandidates.repCandidate, 'R', 'Republican')
         : (winnerParty === 'dem'
@@ -21021,7 +21092,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = rawMarginPctForLogic(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const marginPct = rawMarginPctForLogic(signedMarginPct);
         const marginLabel = formatMarginPctForDisplay(marginPct);
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
@@ -25026,7 +25098,9 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'county', county: countyDisplay.toUpperCase(), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      // County hover must use the exact same margin source as the selected panel/statewide summary.
+      // Prefer the backend/aggregate margin_pct fields on the row, and only fall back to raw vote math.
+      const signedMarginPct = signedMarginPctFromBackendOrVotes(row, contestType, demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
       const subtitle = `${formatContestLabel(contestType, year)}`;
@@ -25127,7 +25201,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const classicInner = `
         <div class="hover-meta">${chips.join('')}</div>
-        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
+        ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county', source: row, contestType })}
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${deltaBlock}
         ${splitInsightLine}
@@ -25158,7 +25232,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <summary>Details</summary>
           <div class="tooltip-more-body">
             <div class="hover-meta">${chips.join('')}</div>
-            ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county' })}
+            ${buildResultCardHTML('', subtitle, demVotes, repVotes, otherVotes, demCandidate, repCandidate, { precision: 'county', source: row, contestType })}
             ${splitInsightLine}
             ${demoLine}
           </div>
@@ -29342,15 +29416,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalVotes = data.us_house_total || 0;
             
             if (totalVotes > 0) {
-              const demPct = (demVotes / totalVotes) * 100;
-              const repPct = (repVotes / totalVotes) * 100;
-              const margin = demPct - repPct;
-              const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const signed = signedDisplayMarginPctForRow(data, 'us_house', demVotes, repVotes, totalVotes);
+              const margin = -signed;
+              const winner = signed >= 0 ? 'R' : 'D';
+              const marginAbs = rawMarginPctForLogic(signed);
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}`,
+                display: `${year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}`,
                 margin: margin,
                 type: 'house'
               });
@@ -29373,11 +29446,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalVotes = data.president_total || 0;
             
             if (totalVotes > 0) {
-              const demPct = (demVotes / totalVotes) * 100;
-              const repPct = (repVotes / totalVotes) * 100;
-              const margin = demPct - repPct;
-              const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const signed = signedDisplayMarginPctForRow(data, 'president', demVotes, repVotes, totalVotes);
+              const margin = -signed;
+              const winner = signed >= 0 ? 'R' : 'D';
+              const marginAbs = rawMarginPctForLogic(signed);
               
               // Get candidate names for recent years
               let candidateInfo = '';
@@ -29389,7 +29461,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
+                display: `${year}: ${candidateInfo}+${formatMarginPctForDisplay(marginAbs)}`,
                 margin: margin,
                 type: 'president'
               });
@@ -29417,16 +29489,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const demVotes = data.governor_dem || 0;
             const repVotes = data.governor_rep || 0;
             const totalVotes = data.governor_total || 0;
-            const demPct = (demVotes / totalVotes) * 100;
-            const repPct = (repVotes / totalVotes) * 100;
-            const margin = demPct - repPct;
-            const winner = margin > 0 ? 'D' : 'R';
-            const marginAbs = Math.abs(margin);
+            const signed = signedDisplayMarginPctForRow(data, 'governor', demVotes, repVotes, totalVotes);
+            const margin = -signed;
+            const winner = signed >= 0 ? 'R' : 'D';
+            const marginAbs = rawMarginPctForLogic(signed);
             let candidateInfo = '';
             candidateInfo = margin > 0 ? getCandidateName(year, 'Governor', 'Democrat') : getCandidateName(year, 'Governor', 'Republican');
             trends.push({
               year: year,
-              display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
+              display: `${year}: ${candidateInfo}+${formatMarginPctForDisplay(marginAbs)}`,
               margin: margin,
               type: 'governor'
             });
@@ -29443,15 +29514,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalVotes = data.state_house_total || 0;
             
             if (totalVotes > 0) {
-              const demPct = (demVotes / totalVotes) * 100;
-              const repPct = (repVotes / totalVotes) * 100;
-              const margin = demPct - repPct;
-              const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const signed = signedDisplayMarginPctForRow(data, 'state_house', demVotes, repVotes, totalVotes);
+              const margin = -signed;
+              const winner = signed >= 0 ? 'R' : 'D';
+              const marginAbs = rawMarginPctForLogic(signed);
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)} (House)`,
+                display: `${year}: ${winner}+${formatMarginPctForDisplay(marginAbs)} (House)`,
                 margin: margin,
                 type: 'state_house'
               });
@@ -29733,8 +29803,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
             const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
-            const marginPct = Math.abs(demPct - repPct);
-            const winner = demPct > repPct ? 'Democratic' : 'Republican';
+            const signedMarginPct = signedDisplayMarginPctForRow(result, 'us_house', demVotes, repVotes, totalVotes);
+            const marginPct = rawMarginPctForLogic(signedMarginPct);
+            const winner = signedMarginPct >= 0 ? 'Republican' : 'Democratic';
             
             // Determine competitiveness
             let competitiveness;
@@ -30219,15 +30290,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .sort((a, b) => b.year - a.year)[0];
       
       if (recent) {
-        const demPct = (recent.president_dem / recent.president_total) * 100;
-        const repPct = (recent.president_rep / recent.president_total) * 100;
-        const margin = demPct - repPct;
-        const winner = margin > 0 ? 'D' : 'R';
-        const marginAbs = Math.abs(margin);
+        const signed = signedDisplayMarginPctForRow(recent, 'president', recent.president_dem, recent.president_rep, recent.president_total);
+        const margin = -signed;
+        const winner = signed >= 0 ? 'R' : 'D';
+        const marginAbs = rawMarginPctForLogic(signed);
         
         return `<div class="quick-tooltip">
           <strong>${countyName} County</strong><br>
-          ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
+          ${recent.year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}%<br>
           <em>Click for full trends</em>
         </div>`;
       }
@@ -30318,7 +30388,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return `<div class="quick-tooltip">
             <strong>${displayName}</strong><br>
             ${desc ? `<span style="color:#64748b;font-weight:700;">${desc}</span><br>` : ''}
-            ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
+            ${recent.year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}%<br>
             <em>Click for full trends</em>
           </div>`;
         }
@@ -30797,7 +30867,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
-      return ((Number(repVotes) - Number(demVotes)) / t) * 100;
+      // One canonical raw formula: signed two-party/overall lead from vote margin.
+      // Never compute a margin by subtracting displayed party percentages.
+      return ((Number(repVotes) - Number(demVotes)) * 100) / t;
+    }
+
+    function absMarginBasisPointsFromVotes(demVotes, repVotes, totalVotes) {
+      // Compatibility wrapper: precise NYT-style rounding from raw vote margin.
+      return marginBasisPointsFromVotes(demVotes, repVotes, totalVotes);
+    }
+
+    function formatAbsMarginPctFromVotes(demVotes, repVotes, totalVotes) {
+      return (marginBasisPointsFromVotes(demVotes, repVotes, totalVotes) / 100).toFixed(2);
     }
 
     function colorForShiftMode(shiftPct) {
@@ -31968,9 +32049,9 @@ document.addEventListener('DOMContentLoaded', function() {
           if (totalVotes === 0) continue;
           const demPct = (demVotes / totalVotes) * 100;
           const repPct = (repVotes / totalVotes) * 100;
-          const winner = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'T');
           const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
-          const marginPctAbs = Math.abs(signedMarginPct);
+          const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
+          const marginPctAbs = rawMarginPctForLogic(signedMarginPct);
           let color = '#e0e0e0';
 
           if (mode === 'flips') {
@@ -32230,8 +32311,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
-        const winner = repPct > demPct ? 'R' : 'D';
-        const marginPct = Math.abs(repPct - demPct);
+        const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+        const winner = signedMarginPct >= 0 ? 'R' : 'D';
+        const marginPct = rawMarginPctForLogic(signedMarginPct);
         let color = colorForMarginMode(marginPct, winner);
         if (mode === 'demographics') {
           const demoRow = getDistrictDemographics('congressional', district);
@@ -32574,8 +32656,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (totalRep / totalVotes) * 100;
       const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
       const otherPct = ((totalVotes - totalDem - totalRep) / totalVotes) * 100;
-      const winner = repPct > demPct ? 'R' : 'D';
-      const marginPct = Math.abs(repPct - demPct);
+      const signedMarginPct = signedMarginPctFromVotes(totalDem, totalRep, totalVotes);
+      const winner = signedMarginPct >= 0 ? 'R' : 'D';
+      const marginPct = rawMarginPctForLogic(signedMarginPct);
       const color = colorForMarginMode(marginPct, winner);
 
       // Apply uniform color to all districts (showing statewide result)
