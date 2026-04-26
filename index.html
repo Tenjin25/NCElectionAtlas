@@ -233,7 +233,6 @@
     }
   }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     // Mobile viewport height fallback for browsers that don't support dvh/svh well (older Android Chrome/WebView).
     // Keeps fixed panels from "jumping" when the URL bar collapses/expands.
@@ -289,7 +288,91 @@
       }
     })();
 
-    // Move setupRegionJumpButtons and queueHoverRefresh definitions above their first usage
+
+    // Move updateContextBanner and refreshHoverAtPointer definitions above all usages
+    function updateContextBanner() {
+      try {
+        const viewEl = document.getElementById('context-view');
+        const modeEl = document.getElementById('context-mode');
+        const contestEl = document.getElementById('context-contest');
+        const focusEl = document.getElementById('context-focus');
+        const contestValue = document.getElementById('contestSelect')?.value || '';
+        const parsedContest = (typeof parseContestValue === 'function') ? parseContestValue(contestValue) : ['', ''];
+        const [contestType, year] = Array.isArray(parsedContest) ? parsedContest : ['', ''];
+
+        if (viewEl) viewEl.textContent = (typeof getReadableViewLabel === 'function') ? getReadableViewLabel((typeof currentView !== 'undefined') ? currentView : window.currentView) : 'View';
+        if (modeEl) modeEl.textContent = (typeof getReadableModeLabel === 'function') ? getReadableModeLabel((typeof currentVizMode !== 'undefined') ? currentVizMode : window.currentVizMode) : 'Mode';
+        if (contestEl) contestEl.textContent = contestValue && typeof formatContestLabel === 'function' ? `${formatContestLabel(contestType, year)}` : 'Select a contest';
+        if (focusEl) focusEl.textContent = (typeof getReadableFocusLabel === 'function') ? getReadableFocusLabel() : 'No focus';
+        if (typeof updateControlSummary === 'function') updateControlSummary(contestValue);
+        try { if (typeof updateFiltersActiveChip === 'function') updateFiltersActiveChip(); } catch (_) {}
+        try {
+          if (typeof window.syncInitialTopbarOffset === 'function') {
+            window.syncInitialTopbarOffset();
+          }
+        } catch (_) {}
+        if (typeof saveUIState === 'function') saveUIState();
+      } catch (err) {
+        console.warn('Skipped context banner update until UI dependencies are ready:', err?.message || err);
+      }
+    }
+
+    async function refreshHoverAtPointer({ forceTooltip = false } = {}) {
+      if (typeof map === 'undefined' || !map || typeof map.getLayer !== 'function' || typeof map.queryRenderedFeatures !== 'function') return;
+      try { if (typeof map.loaded === 'function' && !map.loaded()) return; } catch (_) {}
+      if (typeof lastPointerPoint === 'undefined' || !lastPointerPoint) return;
+      if (typeof tooltipPinned !== 'undefined' && tooltipPinned && !forceTooltip) return;
+      if (typeof isHoverRefreshSuppressed === 'function' && isHoverRefreshSuppressed()) return;
+
+      // If precinct overlay is enabled, prefer hovering precincts (dots or polygons) when present.
+      if (typeof precinctsEnabled !== 'undefined' && precinctsEnabled) {
+        const layers = [];
+        if (map.getLayer('precinct-dot')) layers.push('precinct-dot');
+        if (map.getLayer('precinct-fill')) layers.push('precinct-fill');
+        if (map.getLayer('precinct-dot-missing')) layers.push('precinct-dot-missing');
+        if (layers.length) {
+          const pf = map.queryRenderedFeatures(lastPointerPoint, { layers });
+          if (pf && pf.length) {
+            if (typeof renderPrecinctHoverAtPoint === 'function') renderPrecinctHoverAtPoint(lastPointerPoint, pf[0], { forceTooltip });
+            return;
+          }
+        }
+      }
+      if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
+
+      const viewForHover = (typeof currentView !== 'undefined') ? currentView : 'counties';
+      const layerName = viewForHover === 'counties'
+        ? 'county-fill'
+        : (viewForHover === 'districts'
+          ? 'district-fill'
+          : (viewForHover === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
+      if (!map.getLayer(layerName)) {
+        if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
+        if (typeof clearHoverOutline === 'function') clearHoverOutline();
+        return;
+      }
+
+      const features = map.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
+      if (!features || !features.length) {
+        if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
+        if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+        if (typeof clearHoverOutline === 'function') clearHoverOutline();
+        if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+        if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
+        return;
+      }
+      const evt = { point: lastPointerPoint, features };
+      if (layerName === 'county-fill') {
+        if (typeof renderCountyHoverAtPoint === 'function') renderCountyHoverAtPoint(evt, { forceTooltip });
+      } else if (layerName === 'district-fill') {
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+      } else if (layerName === 'state-house-fill') {
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+      } else if (layerName === 'state-senate-fill') {
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+      }
+    }
+
     function setupRegionJumpButtons() {
       document.querySelectorAll('[data-region-jump]').forEach(btn => {
         if (btn.dataset.regionJumpReady === 'true') return;
@@ -299,25 +382,21 @@
     }
 
     function queueHoverRefresh({ forceTooltip = false } = {}) {
-      if (isTouchInteractionMode() && !tooltipPinned && !forceTooltip) return;
-      if (hoverRefreshRaf) return;
-      hoverRefreshRaf = requestAnimationFrame(async () => {
+      const isTouchMode = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+      const isPinned = (typeof tooltipPinned !== 'undefined') ? tooltipPinned : false;
+      if (isTouchMode && !isPinned && !forceTooltip) return;
+      if (typeof hoverRefreshRaf !== 'undefined' && hoverRefreshRaf) return;
+      const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
+      hoverRefreshRaf = raf(async () => {
         hoverRefreshRaf = null;
         try {
-          if (precinctsEnabled && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+          const precinctOverlayOn = (typeof precinctsEnabled !== 'undefined') ? precinctsEnabled : false;
+          if (precinctOverlayOn && typeof map !== 'undefined' && map && typeof map.isMoving === 'function' && map.isMoving()) return;
         } catch (_) {}
-        await refreshHoverAtPointer({ forceTooltip });
+        if (typeof refreshHoverAtPointer === 'function') await refreshHoverAtPointer({ forceTooltip });
       });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      // ...existing code...
-      setupRegionJumpButtons();
-      updateContextBanner();
-    });
-          return window.innerWidth <= 768;
-        }
-      }
 
       function syncMobileTopbarToggle() {
         try {
@@ -406,10 +485,11 @@
         });
       }
 
-      prioritizeContestControl();
-      applyToolAccessibilityAndTestHooks();
+      function initializeStaticUiWiring() {
+        prioritizeContestControl();
+        applyToolAccessibilityAndTestHooks();
 
-      var detailsDiv = document.getElementById('county-details');
+        var detailsDiv = document.getElementById('county-details');
       var contentEl = document.getElementById('county-info-content');
       var statusExit = document.getElementById('status-exit');
       var mobileTopbarToggle = document.getElementById('mobile-topbar-toggle');
@@ -492,7 +572,8 @@
 
       syncMobileTopbarToggle();
       syncInitialTopbarOffset();
-      requestAnimationFrame(syncInitialTopbarOffset);
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(syncInitialTopbarOffset);
+      else setTimeout(syncInitialTopbarOffset, 0);
       setTimeout(syncInitialTopbarOffset, 180);
       window.addEventListener('resize', syncInitialTopbarOffset, { passive: true });
       if (document.fonts && document.fonts.ready) {
@@ -512,32 +593,39 @@
           window.__topbarResizeObserver.observe(topbar);
         }
       } catch (_) {}
-      setupRegionJumpButtons();
-      updateContextBanner();
-    });
-    // Zoom to county by name using turf.js
-    function zoomToCounty(countyName) {
-      const countiesSource = map.getSource('counties');
-      if (!countiesSource || !countiesSource._data || !countiesSource._data.features) return;
-      const counties = countiesSource._data.features;
-      // Normalize county names for matching
-      function normalizeCountyName(name) {
-        return (name || '')
-          .replace(/[^a-z0-9 .\-]/gi, '')  // Keep periods for St. names and hyphens for Miami-Dade
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toUpperCase();
+        setupRegionJumpButtons();
+        updateContextBanner();
       }
-      const normTarget = normalizeCountyName(countyName);
-      const countyFeature = counties.find(f => {
-        const props = f.properties || {};
-        const name = normalizeCountyName(props.NAME20 || props.County || props.COUNTYNAME || props.NAME || '');
-        return name === normTarget;
-      });
-      if (!countyFeature) return;
-      const bbox = turf.bbox(countyFeature);
-      const pad = (window && typeof window.computeMapViewportPadding === 'function')
-        ? window.computeMapViewportPadding(40)
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeStaticUiWiring, { once: true });
+      } else {
+        initializeStaticUiWiring();
+      }
+// Zoom to county by name using turf.js
+function zoomToCounty(countyName) {
+  if (typeof map === 'undefined' || !map || typeof map.getSource !== 'function' || typeof map.fitBounds !== 'function') return;
+  const countiesSource = map.getSource('counties');
+  if (!countiesSource || !countiesSource._data || !countiesSource._data.features) return;
+  const counties = countiesSource._data.features;
+  // Normalize county names for matching
+  function normalizeCountyName(name) {
+    return (name || '')
+      .replace(/[^a-z0-9 .\-]/gi, '')  // Keep periods for St. names and hyphens for Miami-Dade
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toUpperCase();
+  }
+  const normTarget = normalizeCountyName(countyName);
+  const countyFeature = counties.find(f => {
+    const props = f.properties || {};
+    const name = normalizeCountyName(props.NAME20 || props.County || props.COUNTYNAME || props.NAME || '');
+    return name === normTarget;
+  });
+  if (!countyFeature) return;
+  const bbox = turf.bbox(countyFeature);
+  const pad = (window && typeof window.computeMapViewportPadding === 'function')
+    ? window.computeMapViewportPadding(40)
         : 40;
       map.fitBounds(bbox, { padding: pad, maxZoom: 10 });
     }
@@ -10169,9 +10257,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       clearDesktopHoverExpandState();
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
-      clearHoverOutline();
-      clearPrecinctHoverFeature();
-      clearVoteCounterHoverState();
+      if (typeof clearHoverOutline === 'function') clearHoverOutline();
+      if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
+      if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
     }
 
     function suppressHoverRefresh(durationMs = 1200, { clearPointer = false } = {}) {
@@ -19585,7 +19673,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('county-label')) {
         map.removeLayer('county-label');
       }
-      clearHoverOutline();
+      if (typeof clearHoverOutline === 'function') clearHoverOutline();
       
       // Add appropriate layers
       if (view === 'counties') {
@@ -23013,7 +23101,7 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.addEventListener('click', (ev) => {
         try {
           if (!isDesktopTooltipMode()) return;
-          if (tooltipPinned) return;
+          if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
           if (!desktopHoverExpandState || desktopHoverExpandState.kind !== 'county') return;
           const targetId = String(ev?.target?.id || '');
           if (targetId === 'tooltip-close-btn' || targetId === 'tooltip-copy-btn') return;
@@ -23041,7 +23129,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (lastHoverOutlineKey === null) return;
       lastHoverOutlineKey = null;
       HOVER_OUTLINE_LAYER_IDS.forEach(id => setLayerVisibilityIfExists(id, 'none'));
-      clearPrecinctHoverFeature();
+      if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
     }
 
     function showHoverOutline(layerId, filter, key) {
@@ -23055,7 +23143,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setCountyHoverOutline(countyName) {
       const name = (countyName || '').toString().trim();
-      if (!name) return clearHoverOutline();
+      if (!name) { if (typeof clearHoverOutline === 'function') clearHoverOutline(); return; }
       showHoverOutline(
         'county-stroke-hover',
         ['==', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME'], ['get', 'name']], name],
@@ -23072,11 +23160,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setPrecinctHoverFeature(feature) {
       const src = feature?.layer?.source || feature?.source || '';
-      if (src !== 'precincts') return clearPrecinctHoverFeature();
+      if (src !== 'precincts') { if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature(); return; }
       const id = feature?.id;
       if (id === null || id === undefined) return;
       if (precinctHoverFeatureId === id) return;
-      clearPrecinctHoverFeature();
+      if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
       precinctHoverFeatureId = id;
       try { map.setFeatureState({ source: 'precincts', id }, { hover: true }); } catch (_) {}
     }
@@ -23099,7 +23187,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setDistrictHoverOutline(scope, districtNum) {
       const d = (districtNum || '').toString().trim();
-      if (!d) return clearHoverOutline();
+      if (!d) { if (typeof clearHoverOutline === 'function') clearHoverOutline(); return; }
 
       if (scope === 'congressional') {
         showHoverOutline(
@@ -25329,6 +25417,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function refreshHoverAtPointer({ forceTooltip = false } = {}) {
+      if (typeof map === 'undefined' || !map || typeof map.getLayer !== 'function' || typeof map.queryRenderedFeatures !== 'function') return;
+      try { if (typeof map.loaded === 'function' && !map.loaded()) return; } catch (_) {}
       if (!lastPointerPoint) return;
       if (tooltipPinned && !forceTooltip) return;
       if (isHoverRefreshSuppressed()) return;
@@ -25342,54 +25432,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (layers.length) {
           const pf = map.queryRenderedFeatures(lastPointerPoint, { layers });
           if (pf && pf.length) {
-            renderPrecinctHoverAtPoint(lastPointerPoint, pf[0], { forceTooltip });
+            if (typeof renderPrecinctHoverAtPoint === 'function') renderPrecinctHoverAtPoint(lastPointerPoint, pf[0], { forceTooltip });
             return;
           }
         }
       }
-      clearPrecinctHoverFeature();
+      if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
 
-      const layerName = currentView === 'counties'
+      const viewForHover = (typeof currentView !== 'undefined') ? currentView : 'counties';
+      const layerName = viewForHover === 'counties'
         ? 'county-fill'
-        : (currentView === 'districts'
+        : (viewForHover === 'districts'
           ? 'district-fill'
-          : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
+          : (viewForHover === 'state_house' ? 'state-house-fill' : 'state-senate-fill'));
       if (!map.getLayer(layerName)) {
-        if (tooltipPinned) return;
-        clearHoverOutline();
+        if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
+        if (typeof clearHoverOutline === 'function') clearHoverOutline();
         return;
       }
 
       const features = map.queryRenderedFeatures(lastPointerPoint, { layers: [layerName] });
       if (!features || !features.length) {
-        if (tooltipPinned) return;
-        hideHoverTooltip();
-        clearHoverOutline();
-        clearVoteCounterHoverState();
-        clearPrecinctHoverFeature();
+        if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
+        if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+        if (typeof clearHoverOutline === 'function') clearHoverOutline();
+        if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+        if (typeof clearPrecinctHoverFeature === 'function') clearPrecinctHoverFeature();
         return;
       }
       const evt = { point: lastPointerPoint, features };
       if (layerName === 'county-fill') {
-        renderCountyHoverAtPoint(evt, { forceTooltip });
+        if (typeof renderCountyHoverAtPoint === 'function') renderCountyHoverAtPoint(evt, { forceTooltip });
       } else if (layerName === 'district-fill') {
-        await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-house-fill') {
-        await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-senate-fill') {
-        await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+        if (typeof renderDistrictHover === 'function') await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       }
     }
 
     function queueHoverRefresh({ forceTooltip = false } = {}) {
-      if (isTouchInteractionMode() && !tooltipPinned && !forceTooltip) return;
-      if (hoverRefreshRaf) return;
-      hoverRefreshRaf = requestAnimationFrame(async () => {
+      const isTouchMode = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+      const isPinned = (typeof tooltipPinned !== 'undefined') ? tooltipPinned : false;
+      if (isTouchMode && !isPinned && !forceTooltip) return;
+      if (typeof hoverRefreshRaf !== 'undefined' && hoverRefreshRaf) return;
+      const raf = (typeof requestAnimationFrame === 'function') ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
+      hoverRefreshRaf = raf(async () => {
         hoverRefreshRaf = null;
         try {
-          if (precinctsEnabled && map && typeof map.isMoving === 'function' && map.isMoving()) return;
+          const precinctOverlayOn = (typeof precinctsEnabled !== 'undefined') ? precinctsEnabled : false;
+          if (precinctOverlayOn && typeof map !== 'undefined' && map && typeof map.isMoving === 'function' && map.isMoving()) return;
         } catch (_) {}
-        await refreshHoverAtPointer({ forceTooltip });
+        if (typeof refreshHoverAtPointer === 'function') await refreshHoverAtPointer({ forceTooltip });
       });
     }
 
@@ -27306,7 +27401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderCountyHoverAtPoint(e, { forceTooltip: true });
                 setTooltipPinned(true);
               } else {
-                hideHoverTooltip();
+                if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
               }
             }
           }
@@ -27330,9 +27425,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         map.on('mouseleave', 'county-fill', () => {
           map.getCanvas().style.cursor = '';
-          hideHoverTooltip();
-          clearVoteCounterHoverState();
-          clearHoverOutline();
+          if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
         });
       }
       ensureSplitTicketOverlayLayers();
@@ -28123,9 +28218,9 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelAnimationFrame(precinctDotHoverRaf);
             precinctDotHoverRaf = null;
           }
-          hideHoverTooltip();
-          clearVoteCounterHoverState();
-          clearHoverOutline();
+          if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
         });
       }
 
@@ -28200,7 +28295,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTooltipPinned(false);
         clearSelectedPrecinctNorm();
       }
-      clearHoverOutline();
+      if (typeof clearHoverOutline === 'function') clearHoverOutline();
       updatePrecinctVisibility();
       applyLayerOpacityTuning();
       const contestKey = document.getElementById('contestSelect')?.value;
@@ -28405,7 +28500,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   );
                   setTooltipPinned(true);
                 } else {
-                  hideHoverTooltip();
+                  if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
                 }
               } catch (_) {}
             }
@@ -28431,9 +28526,9 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('mouseleave', 'district-fill', () => {
           districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
-          hideHoverTooltip();
-          clearVoteCounterHoverState();
-          clearHoverOutline();
+          if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
         });
       }
     }
@@ -28522,7 +28617,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   );
                   setTooltipPinned(true);
                 } else {
-                  hideHoverTooltip();
+                  if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
                 }
               } catch (_) {}
             }
@@ -28548,9 +28643,9 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('mouseleave', 'state-house-fill', () => {
           districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
-          hideHoverTooltip();
-          clearVoteCounterHoverState();
-          clearHoverOutline();
+          if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
         });
       }
     }
@@ -28639,7 +28734,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   );
                   setTooltipPinned(true);
                 } else {
-                  hideHoverTooltip();
+                  if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
                 }
               } catch (_) {}
             }
@@ -28665,9 +28760,9 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('mouseleave', 'state-senate-fill', () => {
           districtHoverRequestId++;
           map.getCanvas().style.cursor = '';
-          hideHoverTooltip();
-          clearVoteCounterHoverState();
-          clearHoverOutline();
+          if (typeof hideHoverTooltip === 'function') hideHoverTooltip();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
         });
       }
     }
@@ -29180,7 +29275,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleCountySelection(countyName) {
       // Find and zoom to the county using countiesData and Turf.js
       // Prefer the authoritative source: window.countiesData if present, otherwise try map source
-      const src = (window.countiesData && window.countiesData.features) ? window.countiesData : (map.getSource && map.getSource('counties') && (map.getSource('counties')._data || map.getSource('counties').data)) || null;
+      const mapCountySource = (typeof map !== 'undefined' && map && typeof map.getSource === 'function') ? map.getSource('counties') : null;
+      const src = (window.countiesData && window.countiesData.features) ? window.countiesData : (mapCountySource && (mapCountySource._data || mapCountySource.data)) || null;
       if (countyName && src && src.features) {
         // Normalize input for matching
         function normalize(name) {
@@ -29457,7 +29553,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideHoverTooltip() {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
-      if (tooltipPinned) return;
+      if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
       tooltip.style.display = 'none';
       clearDesktopHoverExpandState();
       try { tooltip.dataset.context = ''; } catch (_) {}
@@ -29538,8 +29634,8 @@ document.addEventListener('DOMContentLoaded', function() {
           try { if (tooltip) tooltip.dataset.context = ''; } catch (_) {}
           try { if (tooltip) tooltip.dataset.copyText = ''; } catch (_) {}
           try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
-          clearHoverOutline();
-          clearVoteCounterHoverState();
+          if (typeof clearHoverOutline === 'function') clearHoverOutline();
+          if (typeof clearVoteCounterHoverState === 'function') clearVoteCounterHoverState();
           try { clearSelectedPrecinctNorm(); } catch (_) {}
         };
       }
@@ -29576,7 +29672,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateHoverTooltipPosition(x, y) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip || tooltip.style.display === 'none') return;
-      if (tooltipPinned) return;
+      if (typeof tooltipPinned !== 'undefined' && tooltipPinned) return;
       
       const tooltipRect = tooltip.getBoundingClientRect();
       const padding = 15;
