@@ -14071,6 +14071,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const sortedSeries = series
         .slice()
         .sort((a, b) => a.year - b.year);
+      const signedTrendDisplayMarginPct = (trendItem) => {
+        const total = Number(trendItem?.total_votes || 0);
+        const dem = Number(trendItem?.dem_votes || 0);
+        const rep = Number(trendItem?.rep_votes || 0);
+        const rawSigned = Number.isFinite(Number(trendItem?.margin_pct))
+          ? Number(trendItem.margin_pct)
+          : signedMarginPctFromVotes(dem, rep, total);
+        const absDisplay = useCountyMarginPrecision
+          ? countyMarginPctDisplayValue(rep, dem, total)
+          : marginPctDisplayValue(rep, dem, total);
+        if (rawSigned > 0) return Math.abs(absDisplay);
+        if (rawSigned < 0) return -Math.abs(absDisplay);
+        return 0;
+      };
       const annotated = sortedSeries.map((item, idx) => {
         const prev = idx > 0 ? sortedSeries[idx - 1] : null;
         const totalVotes = Number(item.total_votes || 0);
@@ -14080,11 +14094,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
         const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
-        const signedPct = Number(item.margin_pct || 0);
+        const signedPct = signedTrendDisplayMarginPct(item);
+        const prevSignedPct = prev ? signedTrendDisplayMarginPct(prev) : NaN;
         const winnerMeta = getTrendWinnerMeta(item);
         const leadLabel = leadMarginLabelFn(repVotes, demVotes, totalVotes);
-        const shiftMeta = describeTrendShift(signedPct, prev ? prev.margin_pct : NaN, prev ? prev.year : '');
-        const flip = prev ? flipInfo(prev.margin_pct, signedPct) : { flipped: false, from: 'T', to: 'T' };
+        const shiftMeta = describeTrendShift(signedPct, prevSignedPct, prev ? prev.year : '');
+        const flip = prev ? flipInfo(prevSignedPct, signedPct) : { flipped: false, from: 'T', to: 'T' };
         return {
           item,
           prev,
@@ -20215,6 +20230,16 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs(repPctDisplay - demPctDisplay);
     }
 
+
+    function signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes) {
+      const rawSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const displayAbs = countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
+      if (!Number.isFinite(Number(rawSigned))) return 0;
+      if (rawSigned > 0) return Math.abs(displayAbs);
+      if (rawSigned < 0) return -Math.abs(displayAbs);
+      return 0;
+    }
+
     function leadCountyMarginPctLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
@@ -24972,17 +24997,19 @@ document.addEventListener('DOMContentLoaded', function() {
         prevSignedForFlip = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
       }
 
+      const signedDisplayMarginPct = signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
       let shiftDeltaForTooltip = NaN;
       if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
-        let prevSignedForShift = prevSignedForFlip;
-        if (prevSignedForShift === null && vizShiftCache?.prevCountyTotals) {
-          const prevTotals = vizShiftCache.prevCountyTotals[norm] || null;
-          if (prevTotals) {
-            prevSignedForShift = signedMarginPctFromVotes(prevTotals.dem, prevTotals.rep, prevTotals.total);
-          }
+        let prevSignedForShift = null;
+        const prevTotalsForShift = vizShiftCache?.prevCountyTotals?.[norm] || null;
+        if (prevTotalsForShift) {
+          prevSignedForShift = signedCountyMarginPctDisplayValue(prevTotalsForShift.dem, prevTotalsForShift.rep, prevTotalsForShift.total);
+        } else if (prevSignedForFlip !== null) {
+          // Fallback only when previous vote totals are missing.
+          prevSignedForShift = Number(prevSignedForFlip);
         }
         if (Number.isFinite(Number(prevSignedForShift))) {
-          shiftDeltaForTooltip = signedMarginPct - Number(prevSignedForShift);
+          shiftDeltaForTooltip = signedDisplayMarginPct - Number(prevSignedForShift);
           chips.push(shiftChipHTML(shiftDeltaForTooltip, vizShiftCache.prevYear, vizShiftCache.year, { variant: 'county' }));
         }
       } else {
@@ -25013,7 +25040,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const shiftDelta = Number.isFinite(shiftDeltaForTooltip)
         ? shiftDeltaForTooltip
         : ((prevSignedForFlip !== null && Number.isFinite(Number(prevSignedForFlip)))
-          ? (signedMarginPct - Number(prevSignedForFlip))
+          ? (signedDisplayMarginPct - Number(prevSignedForFlip))
           : NaN);
       const shiftClass = Number.isFinite(shiftDelta)
         ? (Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem'))
@@ -29272,11 +29299,11 @@ document.addEventListener('DOMContentLoaded', function() {
               const repPct = (repVotes / totalVotes) * 100;
               const margin = demPct - repPct;
               const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const marginAbs = marginPctDisplayValue(repVotes, demVotes, totalVotes);
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}`,
+                display: `${year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}%`,
                 margin: margin,
                 type: 'house'
               });
@@ -29303,7 +29330,7 @@ document.addEventListener('DOMContentLoaded', function() {
               const repPct = (repVotes / totalVotes) * 100;
               const margin = demPct - repPct;
               const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const marginAbs = countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
               
               // Get candidate names for recent years
               let candidateInfo = '';
@@ -29315,7 +29342,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               trends.push({
                 year: year,
-                display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
+                display: `${year}: ${candidateInfo}+${formatCountyMarginPctForDisplay(marginAbs)}%`,
                 margin: margin,
                 type: 'president'
               });
@@ -29347,12 +29374,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const repPct = (repVotes / totalVotes) * 100;
             const margin = demPct - repPct;
             const winner = margin > 0 ? 'D' : 'R';
-            const marginAbs = Math.abs(margin);
+            const marginAbs = countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
             let candidateInfo = '';
             candidateInfo = margin > 0 ? getCandidateName(year, 'Governor', 'Democrat') : getCandidateName(year, 'Governor', 'Republican');
             trends.push({
               year: year,
-              display: `${year}: ${candidateInfo}+${toFixedForDisplay(marginAbs, 2)}`,
+              display: `${year}: ${candidateInfo}+${formatCountyMarginPctForDisplay(marginAbs)}%`,
               margin: margin,
               type: 'governor'
             });
@@ -29373,11 +29400,11 @@ document.addEventListener('DOMContentLoaded', function() {
               const repPct = (repVotes / totalVotes) * 100;
               const margin = demPct - repPct;
               const winner = margin > 0 ? 'D' : 'R';
-              const marginAbs = Math.abs(margin);
+              const marginAbs = countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
               
               trends.push({
                 year: year,
-                display: `${year}: ${winner}+${toFixedForDisplay(marginAbs, 2)} (House)`,
+                display: `${year}: ${winner}+${formatCountyMarginPctForDisplay(marginAbs)}% (House)`,
                 margin: margin,
                 type: 'state_house'
               });
