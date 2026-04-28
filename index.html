@@ -20150,16 +20150,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function marginPctValue(repVotes, demVotes, totalVotes) {
-      // Display margins as *two-party* margin by default:
-      //   |Rep - Dem| / (Rep + Dem) * 100
-      // This matches common reporting conventions and avoids small third-party totals
-      // slightly shrinking the printed margin (e.g. Scotland County 2020 President).
-      const rep = Number(repVotes || 0);
-      const dem = Number(demVotes || 0);
-      const twoParty = rep + dem;
-      const denom = twoParty > 0 ? twoParty : (Number(totalVotes) || 0);
-      if (denom <= 0) return 0;
-      return Math.abs((rep - dem) / denom * 100.0);
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
     function preservesTwoDecimalMargin(marginPct) {
@@ -30752,14 +30745,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
-      // Signed two-party margin (Rep - Dem) / (Rep + Dem) * 100.
-      // Falls back to totalVotes only when both major-party totals are zero.
-      const rep = Number(repVotes) || 0;
-      const dem = Number(demVotes) || 0;
-      const twoParty = rep + dem;
-      const denom = twoParty > 0 ? twoParty : (Number(totalVotes) || 0);
-      if (denom <= 0) return 0;
-      return ((rep - dem) / denom) * 100;
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      return ((Number(repVotes) - Number(demVotes)) / t) * 100;
     }
 
     function colorForShiftMode(shiftPct) {
