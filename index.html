@@ -11444,7 +11444,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const key = `${scope}_${contestType}_${year}`;
       const out = [];
       const calibrated2020Dir = (CONFIG.paths?.district_contests_2020_2024_dir || '').toString().trim();
-      const baseDir = (getActiveDistrictContestsDir(linesYear) || '').toString().trim();
+
+      // District results are stored in per-lines-year directories, but for legislative
+      // views we treat the 2024-lines toggle as a *geometry-only* comparison mode.
+      // Raw vote allocations to 2024 legislative districts can vary depending on
+      // crosswalk versions; users have validated the 2022-lines district totals as
+      // the authoritative baseline. So: always load legislative (House/Senate)
+      // district result slices from the 2022-lines directory, regardless of the
+      // active boundary linework toggle.
+      const forceLegislativeResultsTo2022 = (scope === 'state_house' || scope === 'state_senate');
+      const baseDir = (forceLegislativeResultsTo2022
+        ? getActiveDistrictContestsDir(2022)
+        : getActiveDistrictContestsDir(linesYear) || ''
+      ).toString().trim();
 
       // Prefer calibrated slices only for congressional scope on 2022 lines.
       // Legislative scopes continue to use the primary district_contests data.
