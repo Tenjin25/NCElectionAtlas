@@ -108,7 +108,6 @@ function main() {
 
   let updatedFiles = 0;
   let updatedRows = 0;
-  let updatedResultRows = 0;
 
   for (const filePath of files) {
     let doc;
@@ -119,52 +118,23 @@ function main() {
       continue;
     }
 
-    let changed = false;
-
     const rows = Array.isArray(doc?.rows) ? doc.rows : null;
-    if (rows) {
-      for (const row of rows) {
-        if (!row || typeof row !== 'object') continue;
-        const { d2, d3 } = computeMarginDisplayStrings(row);
-        let rowChanged = false;
-        if (row.margin_pct_display_2dp !== d2) {
-          row.margin_pct_display_2dp = d2;
-          rowChanged = true;
-        }
-        if (row.margin_pct_display_3dp !== d3) {
-          row.margin_pct_display_3dp = d3;
-          rowChanged = true;
-        }
-        if (rowChanged) {
-          changed = true;
-          updatedRows++;
-        }
+    if (!rows) continue;
+
+    let changed = false;
+    for (const row of rows) {
+      if (!row || typeof row !== 'object') continue;
+      const { d2, d3 } = computeMarginDisplayStrings(row);
+      if (row.margin_pct_display_2dp !== d2) {
+        row.margin_pct_display_2dp = d2;
+        changed = true;
       }
+      if (row.margin_pct_display_3dp !== d3) {
+        row.margin_pct_display_3dp = d3;
+        changed = true;
+      }
+      if (changed) updatedRows++;
     }
-
-    const results = doc?.general?.results && typeof doc.general.results === 'object' ? doc.general.results : null;
-    if (results) {
-      Object.keys(results).forEach(key => {
-        const row = results[key];
-        if (!row || typeof row !== 'object') return;
-        const { d2, d3 } = computeMarginDisplayStrings(row);
-        let rowChanged = false;
-        if (row.margin_pct_display_2dp !== d2) {
-          row.margin_pct_display_2dp = d2;
-          rowChanged = true;
-        }
-        if (row.margin_pct_display_3dp !== d3) {
-          row.margin_pct_display_3dp = d3;
-          rowChanged = true;
-        }
-        if (rowChanged) {
-          changed = true;
-          updatedResultRows++;
-        }
-      });
-    }
-
-    if (!rows && !results) continue;
 
     if (!changed) continue;
     fs.writeFileSync(filePath, JSON.stringify(doc, null, 2) + '\n', 'utf8');
@@ -173,7 +143,7 @@ function main() {
 
   console.log(`[margin-display] Updated files: ${updatedFiles}/${files.length}`);
   console.log(`[margin-display] Rows updated: ${updatedRows}`);
-  console.log(`[margin-display] Result rows updated: ${updatedResultRows}`);
 }
 
 main();
+
