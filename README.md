@@ -104,7 +104,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–April 2026)
 
 
-**Last updated:** April 26, 2026
+**Last updated:** April 28, 2026
+
+### Deterministic Margin + State House Linework Alignment (April 28, 2026)
+
+- Eliminated rare `0.01` margin label drift by computing displayed margins from integer votes with deterministic rounding (no IEEE-754 float edge cases).
+- For State House **2024 lines**, force-carried the **2022 geometry** for a small set of districts where you want exact visual continuity: `HD-005, 012, 024, 025, 027, 051, 052, 067, 070, 078`.
 
 ### Statewide Margin Precision Consistency (April 26, 2026)
 
