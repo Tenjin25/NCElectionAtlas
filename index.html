@@ -20129,55 +20129,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return roundForDisplay(value, 2);
     }
 
-    // ---- Deterministic percent rounding (prevents IEEE-754 drift) ----
-    // We display margins (and some derived percents) to 2–3 decimals. If we compute
-    // `diff/total*100` in floating point and then round, some counties will drift
-    // by 0.01 due to binary floating representation. To eliminate that universally,
-    // we do the rounding in integer space using BigInt, then format as a string.
-
-    function toBigIntSafeInt(value) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return 0n;
-      return BigInt(Math.trunc(n));
-    }
-
-    function pow10n(digits) {
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      let p = 1n;
-      for (let i = 0; i < d; i++) p *= 10n;
-      return p;
-    }
-
-    function divRoundHalfUpBigInt(numerator, denominator) {
-      const d = BigInt(denominator);
-      if (d <= 0n) return 0n;
-      const n = BigInt(numerator);
-      if (n <= 0n) return 0n;
-      return (n + (d / 2n)) / d;
-    }
-
-    function fixedStringFromScaledBigInt(scaled, digits) {
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      const s = BigInt(scaled);
-      if (d <= 0) return s.toString();
-      const scale = pow10n(d);
-      const intPart = (s / scale).toString();
-      const fracPart = (s % scale).toString().padStart(d, '0');
-      return `${intPart}.${fracPart}`;
-    }
-
-    function absPctFixedFromVotes(numeratorVotes, totalVotes, digits) {
-      // Returns an absolute percent as a fixed decimal string with `digits` decimals.
-      // percent = (numeratorVotes / totalVotes) * 100
-      const total = toBigIntSafeInt(totalVotes);
-      if (total <= 0n) return fixedStringFromScaledBigInt(0n, digits);
-      const numer = toBigIntSafeInt(numeratorVotes);
-      if (numer <= 0n) return fixedStringFromScaledBigInt(0n, digits);
-      const scale = pow10n(digits);
-      const scaled = divRoundHalfUpBigInt(numer * 100n * scale, total);
-      return fixedStringFromScaledBigInt(scaled, digits);
-    }
-
     function roundForDisplay(value, digits = 2) {
       const n = Number(value || 0);
       if (!Number.isFinite(n)) return 0;
@@ -20204,27 +20155,18 @@ document.addEventListener('DOMContentLoaded', function() {
       return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
     }
 
-    function preservesTwoDecimalMarginFromVotes(repVotes, demVotes, totalVotes) {
-      const total = toBigIntSafeInt(totalVotes);
-      if (total <= 0n) return true;
-      const rep = toBigIntSafeInt(repVotes);
-      const dem = toBigIntSafeInt(demVotes);
-      const diff = rep >= dem ? (rep - dem) : (dem - rep);
-      // Threshold: >= 0.02%  <=>  round(diff/total*100, 2) >= 0.02
-      // In hundredths-of-a-percent (scaled by 10^2), this is >= 2.
-      const scaled2 = divRoundHalfUpBigInt(diff * 100n * 100n, total);
-      return scaled2 >= 2n;
+    function preservesTwoDecimalMargin(marginPct) {
+      const pct = Math.abs(Number(marginPct) || 0);
+      return roundForDisplay(pct, 2) >= 0.02;
     }
 
-    function closeRaceDisplayDigitsFromVotes(repVotes, demVotes, totalVotes) {
-      return preservesTwoDecimalMarginFromVotes(repVotes, demVotes, totalVotes) ? 2 : 3;
+    function closeRaceDisplayDigits(marginPct) {
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatPctForCloseRace(value, marginPct) {
       const numeric = Number(value || 0);
-      // For vote-share labels (not margins) we keep the prior float-based logic;
-      // the margin pipeline is fixed separately via integer rounding.
-      const digits = (Math.abs(Number(marginPct) || 0) >= 0.02) ? 2 : 3;
+      const digits = closeRaceDisplayDigits(marginPct);
       return toFixedForDisplay(numeric, digits);
     }
 
@@ -20235,8 +20177,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function marginDisplayDigits(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct >= 0.02 ? 2 : 3;
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatMarginPctForDisplay(marginPct) {
@@ -20245,13 +20186,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      const total = toBigIntSafeInt(totalVotes);
-      if (total <= 0n) return 0;
-      const rep = toBigIntSafeInt(repVotes);
-      const dem = toBigIntSafeInt(demVotes);
-      const diff = rep >= dem ? (rep - dem) : (dem - rep);
-      const digits = closeRaceDisplayDigitsFromVotes(repVotes, demVotes, totalVotes);
-      return Number(absPctFixedFromVotes(diff, totalVotes, digits));
+      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      // Keep raw precision for extremely close races so 0.000-style display remains intact.
+      if (marginDisplayDigits(rawMarginPct) >= 3) return rawMarginPct;
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
+      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
+      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
+      return Math.abs(repPctDisplay - demPctDisplay);
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
@@ -20268,8 +20211,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginDisplayDigits(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return pct >= 0.02 ? 2 : 3;
+      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
     }
 
     function formatCountyMarginPctForDisplay(marginPct) {
@@ -20278,9 +20220,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      // Same as statewide display, but kept as a separate function since different
-      // UIs may choose different precision in the future.
-      return marginPctDisplayValue(repVotes, demVotes, totalVotes);
+      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      if (countyMarginDisplayDigits(rawMarginPct) >= 3) return rawMarginPct;
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
+      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
+      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
+      return Math.abs(repPctDisplay - demPctDisplay);
     }
 
 
