@@ -18219,36 +18219,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const candidatePaths = getPreferredDistrictSlicePaths(scope, contestType, year, linesYear);
         for (const path of candidatePaths) {
           try {
-            let payload = await loadJSON(path);
-
-            // For State House 2024-lines mode, selectively override a small set of
-            // districts with the 2022-lines allocations (user-validated as correct).
-            // This avoids wholesale switching the entire 2024-lines dataset.
-            const shouldOverrideHouse2024 = (linesYear === 2024)
-              && String(scope || '').trim() === 'state_house'
-              && Number(year) === 2024;
-            if (shouldOverrideHouse2024 && payload?.general?.results) {
-              const OVERRIDE_HOUSE_DISTRICTS_2024_LINES = new Set(['005', '012', '024', '025', '027', '051', '052', '067', '070', '078']);
-              try {
-                const baselinePaths = getPreferredDistrictSlicePaths('state_house', contestType, 2024, 2022);
-                let baseline = null;
-                for (const bPath of baselinePaths) {
-                  try { baseline = await loadJSON(bPath); break; } catch (_) {}
-                }
-                const baseResults = baseline?.general?.results || null;
-                const curResults = payload?.general?.results || null;
-                if (baseResults && curResults) {
-                  OVERRIDE_HOUSE_DISTRICTS_2024_LINES.forEach(d => {
-                    const keyN = String(Number(d));
-                    const baseRow = baseResults[keyN] || baseResults[d] || null;
-                    if (!baseRow) return;
-                    // Replace the entire row so votes + derived fields stay consistent.
-                    curResults[keyN] = { ...baseRow };
-                  });
-                }
-              } catch (_) {}
-            }
-
+            const payload = await loadJSON(path);
             districtSliceCache.set(cacheKey, payload);
             return payload;
           } catch (_) {}
