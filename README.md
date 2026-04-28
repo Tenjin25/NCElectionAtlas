@@ -110,6 +110,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 - Eliminated rare `0.01` margin label drift by computing displayed margins from integer votes with deterministic rounding (no IEEE-754 float edge cases).
 - For State House **2024 lines**, force-carried the **2022 geometry** for a small set of districts where you want exact visual continuity: `HD-005, 012, 024, 025, 027, 051, 052, 067, 070, 078`.
+- Added display-safe margin fields (`margin_pct_display_2dp`, `margin_pct_display_3dp`) across both county contest JSONs (`data/contests/`) and district layer JSONs (`data/district_contests/`, `data/district_contests_2024_lines/`), and updated the frontend to prefer these fields everywhere margins are shown (tooltips, cards, trend lines, statewide leader).
 
 ### Statewide Margin Precision Consistency (April 26, 2026)
 
