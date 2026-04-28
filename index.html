@@ -20178,6 +20178,33 @@ document.addEventListener('DOMContentLoaded', function() {
       return fixedStringFromScaledBigInt(scaled, digits);
     }
 
+    function absPctNumberFromVotes(numeratorVotes, totalVotes, digits) {
+      // Parse the fixed string, then immediately snap it to the same decimal grid.
+      // This prevents cases like Number("1.94") becoming 1.9399999999 and then
+      // later rounding down in other display paths.
+      const d = Math.max(0, Math.floor(Number(digits) || 0));
+      const str = absPctFixedFromVotes(numeratorVotes, totalVotes, d);
+      const n = Number(str);
+      return Number.isFinite(n) ? roundForDisplay(n, d) : 0;
+    }
+
+    function signedMarginPctDisplayValueFromVotes(demVotes, repVotes, totalVotes, options = {}) {
+      const total = toBigIntSafeInt(totalVotes);
+      if (total <= 0n) return 0;
+      const rep = toBigIntSafeInt(repVotes);
+      const dem = toBigIntSafeInt(demVotes);
+      const diff = rep - dem; // signed
+      if (diff === 0n) return 0;
+
+      const useCountyPrecision = String(options?.precision || '').toLowerCase() === 'county';
+      const digits = useCountyPrecision
+        ? closeRaceDisplayDigitsFromVotes(repVotes, demVotes, totalVotes)
+        : closeRaceDisplayDigitsFromVotes(repVotes, demVotes, totalVotes);
+
+      const absNum = absPctNumberFromVotes(diff < 0n ? -diff : diff, totalVotes, digits);
+      return diff > 0n ? absNum : -absNum;
+    }
+
     function roundForDisplay(value, digits = 2) {
       const n = Number(value || 0);
       if (!Number.isFinite(n)) return 0;
@@ -20251,7 +20278,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const dem = toBigIntSafeInt(demVotes);
       const diff = rep >= dem ? (rep - dem) : (dem - rep);
       const digits = closeRaceDisplayDigitsFromVotes(repVotes, demVotes, totalVotes);
-      return Number(absPctFixedFromVotes(diff, totalVotes, digits));
+      return absPctNumberFromVotes(diff, totalVotes, digits);
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
@@ -21036,7 +21063,8 @@ document.addEventListener('DOMContentLoaded', function() {
         demCandidate = stripRunningMateName(demCandidate);
         repCandidate = stripRunningMateName(repCandidate);
 
-        const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
+        const signedDisplay = signedMarginPctDisplayValueFromVotes(demVotes, repVotes, totalVotes);
+        const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedDisplay);
         let compLabel = '';
         let compColor = '#6b7280';
         if (marginPct >= 40) {
@@ -25030,7 +25058,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'county', county: countyDisplay.toUpperCase(), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = signedMarginPctDisplayValueFromVotes(demVotes, repVotes, totalVotes, { precision: 'county' });
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
       const subtitle = `${formatContestLabel(contestType, year)}`;
@@ -25047,7 +25075,9 @@ document.addEventListener('DOMContentLoaded', function() {
       let prevSignedForFlip = null;
       if (vizPrevCache?.prevYear && vizPrevCache?.prevCountyTotals) {
         const prev = vizPrevCache.prevCountyTotals[norm] || null;
-        prevSignedForFlip = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+        prevSignedForFlip = prev
+          ? signedMarginPctDisplayValueFromVotes(prev.dem, prev.rep, prev.total, { precision: 'county' })
+          : 0;
       }
 
       const signedDisplayMarginPct = signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
@@ -25299,8 +25329,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const repCandidate = row[`${contestType}_rep_candidate`] || '';
       const subtitle = `${formatContestLabel(contestType, year)}`;
 
-      const signedMarginPct = Number(row[`${contestType}_margin_pct`]);
-      const curSigned = isNaN(signedMarginPct) ? signedMarginPctFromVotes(demVotes, repVotes, demVotes + repVotes + otherVotes) : signedMarginPct;
+      // Use deterministic vote-based rounding for display so hover tooltips never drift by 0.01.
+      // The raw `${contestType}_margin_pct` field (when present) is still useful for sign/winner,
+      // but it can contain float-edge values like 1.934999... that render as 1.93.
+      const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
+      const curSigned = signedMarginPctDisplayValueFromVotes(demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(curSigned);
       const winner = curSigned > 0 ? 'R' : (curSigned < 0 ? 'D' : 'T');
       const chips = [];
@@ -25337,7 +25370,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || pinSelection || (forceTooltip && isTouchInteractionMode());
       if (!showDemoLine) demoLine = '';
 
-      const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, curSigned);
       const tierShort = tierMeta?.shortLabel || tierMeta?.label || '';
       const flipLine = (prevSignedForFlip !== null)
