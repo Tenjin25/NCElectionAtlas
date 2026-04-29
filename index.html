@@ -14093,9 +14093,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const rawSigned = Number.isFinite(Number(trendItem?.margin_pct))
           ? Number(trendItem.margin_pct)
           : signedMarginPctFromVotes(dem, rep, total);
+        // If a historical row doesn't carry vote totals (for example, some pre-aggregated trend bundles),
+        // fall back to the signed margin directly so "Since 2020 / 2008 / 2000" deltas don't collapse to 0.
+        if (!(Number.isFinite(total) && total > 0)) return rawSigned;
         const absDisplay = useCountyMarginPrecision
           ? countyMarginPctDisplayValue(rep, dem, total)
           : marginPctDisplayValue(rep, dem, total);
+        if (absDisplay === 0 && rawSigned !== 0) return rawSigned;
         if (rawSigned > 0) return Math.abs(absDisplay);
         if (rawSigned < 0) return -Math.abs(absDisplay);
         return 0;
@@ -22364,6 +22368,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (Number.isFinite(explicit) && explicit !== 0) {
           if (winnerNorm === 'REP') return Math.abs(explicit);
           if (winnerNorm === 'DEM') return -Math.abs(explicit);
+          // If the winner tag is missing/unknown but we have a signed margin, treat it as already
+          // encoded toward GOP (positive = R, negative = D). This avoids "0" fallbacks that can
+          // corrupt long-run shift deltas when vote totals aren't present on a precomputed row.
+          return explicit;
         }
         const repVotes = Number(row.rep_votes);
         const demVotes = Number(row.dem_votes);
@@ -22375,7 +22383,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < 0.005) return '↔ No clear shift';
+        if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return '↔ No clear shift';
         return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
       }
 
