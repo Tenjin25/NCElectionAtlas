@@ -22710,25 +22710,26 @@ document.addEventListener('DOMContentLoaded', function() {
 	        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
 	        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
 	        meaning,
-		        details: [
-		          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
-		          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
-		          // Avoid duplicate "Since 2020" rows when the previous cycle is also 2020 (e.g., 2024 vs 2020).
-		          ...(row2020 && Number(row2020.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2020)
-		            ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
-		            : []),
-		          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
-		            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
-		            : []),
-		          ...(row2008 && Number(row2008.year) !== Number(first.year) && !(previous && Number(previous.year) === 2008)
-		            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
-		            : []),
-		          ...(row2000 && Number(row2000.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2000)
-		            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
-		            : [])
-		        ]
-	      };
-	    }
+	        details: [
+	          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
+	          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
+	          ...(row2020 &&
+            Number(row2020.year) !== Number(latest.year) &&
+             !(previous && Number(previous.year) === 2020)
+             ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
+             : []),
+	          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
+	            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
+	            : []),
+	          ...(row2008 && Number(row2008.year) !== Number(first.year) && !(previous && Number(previous.year) === 2008)
+	            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
+	            : []),
+	          ...(row2000 && Number(row2000.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2000)
+	            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
+	            : [])
+	        ]
+      };
+    }
 
     function trajectoryToneClass(tone) {
       const normalized = String(tone || '').trim().toLowerCase();
