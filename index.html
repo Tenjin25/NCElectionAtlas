@@ -19717,7 +19717,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return s;
       };
       const partyNorm = normalizeParty(party);
-      const partyFallback = partyNorm === 'dem' ? 'Democrat' : (partyNorm === 'rep' ? 'Republican' : 'Candidate');
+      // Keep trend/timeline labels compact when candidate names are missing.
+      // (Showing "Republican"/"Democrat" reads like a bug in the county timeline.)
+      const partyFallback = partyNorm === 'dem' ? 'D' : (partyNorm === 'rep' ? 'R' : 'Candidate');
 
       const pickField = (obj, keys) => {
         for (const key of keys) {
@@ -19756,6 +19758,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (partyNorm === 'rep') {
           return pickField(meta, ['repCandidate', 'rep_candidate', 'rep', 'republican', 'rep_name']);
         }
+        return '';
+      })();
+
+      const catalogName = (() => {
+        const meta = contestMeta || null;
+        const year = Number(meta?.year ?? row?.year);
+        const officeName = (meta?.office || meta?.officeName || meta?.office_name || '').toString().trim();
+        if (!Number.isFinite(year) || !officeName) return '';
+        if (typeof getCandidateName !== 'function') return '';
+        if (partyNorm === 'dem') return (getCandidateName(year, officeName, 'Democrat') || '').toString().trim();
+        if (partyNorm === 'rep') return (getCandidateName(year, officeName, 'Republican') || '').toString().trim();
         return '';
       })();
 
@@ -19801,7 +19814,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
       })();
 
-      const best = rowName || metaName || guessedFromKnown || '';
+      const best = rowName || metaName || catalogName || guessedFromKnown || '';
       const last = shortCandidateLabel(best, partyFallback);
       return last || partyFallback;
     }
