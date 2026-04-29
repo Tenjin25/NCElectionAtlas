@@ -14076,6 +14076,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
       const leadMarginLabelFn = useCountyMarginPrecision ? leadCountyMarginPctLabel : leadMarginPctLabel;
       const winnerMarginLabelFn = useCountyMarginPrecision ? winnerMarginLabelShortCounty : winnerMarginLabelShort;
+      const contestTypeHint = (options?.contestType || '').toString().trim();
       if (!chartEl) return;
       if (captionEl) captionEl.textContent = caption;
       if (!series || !series.length) {
@@ -14146,13 +14147,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!best) return entry;
         return Math.abs(entry.signedPct) < Math.abs(best.signedPct) ? entry : best;
       }, null);
-      const summaryLine = winnerMarginLabelFn(
-        summaryEntry.repVotes,
-        summaryEntry.demVotes,
-        summaryEntry.totalVotes,
-        summaryEntry.item.rep_candidate,
-        summaryEntry.item.dem_candidate
-      );
+      const summaryLine = (() => {
+        if (summaryEntry.winnerMeta.partyClass === 'tie') return 'Tie';
+        const marginAbs = useCountyMarginPrecision
+          ? countyMarginPctDisplayValue(summaryEntry.repVotes, summaryEntry.demVotes, summaryEntry.totalVotes)
+          : marginPctDisplayValue(summaryEntry.repVotes, summaryEntry.demVotes, summaryEntry.totalVotes);
+        const marginLabel = useCountyMarginPrecision
+          ? formatCountyMarginPctForDisplay(marginAbs)
+          : formatMarginPctForDisplay(marginAbs);
+        const winnerLast = getWinnerLastName(summaryEntry.item, {
+          contestType: contestTypeHint,
+          year: Number(summaryEntry.item?.year),
+          office: contestTypeHint ? formatContestName(contestTypeHint, Number(summaryEntry.item?.year)) : ''
+        });
+        return `${winnerLast} +${marginLabel}%`;
+      })();
       const earliest = annotated[0];
       const historyShift = describeTrendShift(summaryEntry.signedPct, earliest ? earliest.signedPct : NaN, earliest ? earliest.item.year : '');
       let streakCount = 0;
@@ -14267,8 +14276,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span class="focus-trend-entry-margin">${escapeHtml(leadSummary)}</span>
                 </div>
                 <div class="focus-trend-entry-scale">
-                  <span class="dem">${escapeHtml(`${shortCandidateLabel(entry.item.dem_candidate, 'Dem')} ${entry.demPct.toFixed(2)}%`)}</span>
-                  <span class="rep">${escapeHtml(`${shortCandidateLabel(entry.item.rep_candidate, 'Rep')} ${entry.repPct.toFixed(2)}%`)}</span>
+                  <span class="dem">${escapeHtml(`${getCandidateLastName(entry.item, 'Democrat', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${entry.demPct.toFixed(2)}%`)}</span>
+                  <span class="rep">${escapeHtml(`${getCandidateLastName(entry.item, 'Republican', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${entry.repPct.toFixed(2)}%`)}</span>
                 </div>
                 <div class="focus-trend-entry-bar" aria-hidden="true">
                   <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
@@ -14424,6 +14433,7 @@ document.addEventListener('DOMContentLoaded', function() {
         trendOptions.selectedYear = Number(year);
         trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
         trendOptions.focusKind = meta.kind;
+        trendOptions.contestType = contestType;
         let censusContext = null;
         if (meta.kind === 'county' && meta.county) {
           series = await getCountyTrendSeries(contestType, meta.county);
@@ -19696,6 +19706,115 @@ document.addEventListener('DOMContentLoaded', function() {
       return parts[idx];
     }
 
+    // Shared candidate/last-name resolver for hover, selected results, county trend + timeline, and trajectory.
+    // Prefers explicit row fields, then contest meta candidates, then known fallbacks, and finally party label.
+    function getCandidateLastName(row, party, contestMeta = null) {
+      const normalizeParty = (value) => {
+        const s = (value || '').toString().trim().toLowerCase();
+        if (!s) return '';
+        if (s === 'd' || s === 'dem' || s === 'democrat' || s === 'democratic') return 'dem';
+        if (s === 'r' || s === 'rep' || s === 'republican' || s === 'gop') return 'rep';
+        return s;
+      };
+      const partyNorm = normalizeParty(party);
+      const partyFallback = partyNorm === 'dem' ? 'Democrat' : (partyNorm === 'rep' ? 'Republican' : 'Candidate');
+
+      const pickField = (obj, keys) => {
+        for (const key of keys) {
+          const v = obj?.[key];
+          if (v !== undefined && v !== null) {
+            const s = String(v).trim();
+            if (s) return s;
+          }
+        }
+        return '';
+      };
+
+      const rowName = (() => {
+        if (!row) return '';
+        if (partyNorm === 'dem') {
+          return pickField(row, [
+            'dem_candidate', 'dem_candidate_name', 'dem_name', 'candidate_dem', 'democrat', 'demCandidate', 'dem_candidate_full'
+          ]);
+        }
+        if (partyNorm === 'rep') {
+          return pickField(row, [
+            'rep_candidate', 'rep_candidate_name', 'rep_name', 'candidate_rep', 'republican', 'repCandidate', 'rep_candidate_full'
+          ]);
+        }
+        return pickField(row, [
+          'winner_candidate', 'candidate', 'name', 'winnerName', 'candidate_name'
+        ]);
+      })();
+
+      const metaName = (() => {
+        const meta = contestMeta || null;
+        if (!meta) return '';
+        if (partyNorm === 'dem') {
+          return pickField(meta, ['demCandidate', 'dem_candidate', 'dem', 'democrat', 'dem_name']);
+        }
+        if (partyNorm === 'rep') {
+          return pickField(meta, ['repCandidate', 'rep_candidate', 'rep', 'republican', 'rep_name']);
+        }
+        return '';
+      })();
+
+      const guessedFromKnown = (() => {
+        const meta = contestMeta || null;
+        const year = Number(meta?.year ?? row?.year);
+        const contestType = (meta?.contestType || meta?.contest_type || row?.contestType || row?.contest_type || '').toString().trim().toLowerCase();
+        const officeName = (meta?.office || meta?.officeName || meta?.office_name || '').toString().trim().toLowerCase();
+
+        if (!Number.isFinite(year)) return '';
+
+        const isPresident = contestType === 'president' || /president/.test(officeName) || officeName === 'president of the united states';
+        const isGovernor = contestType === 'governor' || /governor/.test(officeName);
+
+        if (isPresident) {
+          const map = {
+            2024: { dem: 'Kamala Harris', rep: 'Donald Trump' },
+            2020: { dem: 'Joe Biden', rep: 'Donald Trump' },
+            2016: { dem: 'Hillary Clinton', rep: 'Donald Trump' },
+            2012: { dem: 'Barack Obama', rep: 'Mitt Romney' },
+            2008: { dem: 'Barack Obama', rep: 'John McCain' },
+            2004: { dem: 'John Kerry', rep: 'George W. Bush' },
+            2000: { dem: 'Al Gore', rep: 'George W. Bush' }
+          };
+          const entry = map[year];
+          return entry ? (partyNorm === 'dem' ? entry.dem : (partyNorm === 'rep' ? entry.rep : '')) : '';
+        }
+
+        if (isGovernor) {
+          const map = {
+            2024: { dem: 'Josh Stein', rep: 'Mark Robinson' },
+            2020: { dem: 'Roy Cooper', rep: 'Dan Forest' },
+            2016: { dem: 'Roy Cooper', rep: 'Pat McCrory' },
+            2012: { dem: 'Walter Dalton', rep: 'Pat McCrory' },
+            2008: { dem: 'Bev Perdue', rep: 'Pat McCrory' },
+            2004: { dem: 'Mike Easley', rep: 'Patrick Ballantine' },
+            2000: { dem: 'Mike Easley', rep: 'Richard Vinson' }
+          };
+          const entry = map[year];
+          return entry ? (partyNorm === 'dem' ? entry.dem : (partyNorm === 'rep' ? entry.rep : '')) : '';
+        }
+
+        return '';
+      })();
+
+      const best = rowName || metaName || guessedFromKnown || '';
+      const last = shortCandidateLabel(best, partyFallback);
+      return last || partyFallback;
+    }
+
+    function getWinnerLastName(row, contestMeta = null) {
+      const signed = Number(row?.margin_pct ?? row?.marginPct ?? row?.margin);
+      const winner = (row?.winner || row?.Winner || '').toString().trim().toUpperCase();
+      const party = (winner === 'REP' || winner === 'R') ? 'Republican'
+        : (winner === 'DEM' || winner === 'D') ? 'Democrat'
+        : (Number.isFinite(signed) ? (signed > 0 ? 'Republican' : (signed < 0 ? 'Democrat' : '')) : '');
+      return getCandidateLastName(row, party || '', contestMeta);
+    }
+
     function fullCandidateLabel(name, fallback = '') {
       const raw = (name || '').toString().trim();
       if (!raw) return fallback;
@@ -22694,22 +22813,33 @@ document.addEventListener('DOMContentLoaded', function() {
 	        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
 	        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
 	        meaning,
-	        details: [
-	          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
-	          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
-	          ...(row2020 && Number(row2020.year) !== Number(latest.year)
-	            ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
-	            : []),
-	          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
-	            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
-	            : []),
-	          ...(row2008 && Number(row2008.year) !== Number(first.year)
-	            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
-	            : []),
-	          ...(row2000 && Number(row2000.year) !== Number(latest.year)
-	            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
-	            : [])
-	        ]
+	        details: (() => {
+            const out = [];
+            const seen = new Set(); // defensive de-dupe: `Label|Value`
+            const keyOf = (label, value) => `${String(label || '').trim().toLowerCase()}|${String(value || '').trim().toLowerCase()}`;
+            const add = (label, value, role) => {
+              const k = keyOf(label, value);
+              if (!label || !value || seen.has(k)) return;
+              seen.add(k);
+              out.push({ label, value, role });
+            };
+
+            add('Latest Result', formatWinnerLabel(latest, latestSigned), 'latest');
+            if (previous) add(cycleShiftLabel, formatShiftLabel(recentShiftTowardGop), 'shift');
+            if (row2020 && Number(row2020.year) !== Number(latest.year)) add('Since 2020', formatShiftLabel(shiftSince2020), 'shift');
+            // Avoid duplicating "Since 2020" when the first available row is also 2020 (common for midterm-only series).
+            if (
+              previous &&
+              Number(first.year) !== Number(previous.year) &&
+              Number(first.year) !== 2000 &&
+              !(Number(first.year) === 2020)
+            ) {
+              add(`Since ${first.year}`, formatShiftLabel(longShiftTowardGop), 'shift');
+            }
+            if (row2008 && Number(row2008.year) !== Number(first.year)) add('Since 2008', formatShiftLabel(shiftSince2008), 'shift');
+            if (row2000 && Number(row2000.year) !== Number(latest.year)) add('Since 2000', formatShiftLabel(shiftSince2000), 'shift');
+            return out;
+          })()
       };
     }
 
@@ -27280,7 +27410,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .map(s => {
           const win = (s.winner || '').toString().toUpperCase();
           const color = win === 'REP' ? '#ef4444' : (win === 'DEM' ? '#3b82f6' : '#a3a3a3');
-          const label = winnerMarginLabelShortCounty(s.rep_votes, s.dem_votes, s.total_votes, s.rep_candidate, s.dem_candidate);
+          const winnerLast = getWinnerLastName(s, {
+            contestType,
+            year: Number(s.year),
+            office: formatContestName(contestType, Number(s.year))
+          });
+          const marginAbs = countyMarginPctDisplayValue(s.rep_votes, s.dem_votes, s.total_votes);
+          const label = (win === 'REP' || win === 'DEM')
+            ? `${winnerLast} +${formatCountyMarginPctForDisplay(marginAbs)}%`
+            : 'Tie';
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#64748b;">${escapeHtml(s.year)}</span><span style="color:${escapeHtml(color)};font-weight:800;">${escapeHtml(label)}</span></div>`;
         })
         .join('');

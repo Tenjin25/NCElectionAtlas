@@ -122,6 +122,11 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Updated the Trends panel shift math to suppress tiny/noisy cycle-to-cycle moves so “Shift” and “No shift” labels behave consistently across county/precinct/history views.
 - Removed premature rounding of county trend `margin_pct` in the trend-series cache so the Trends panel always uses the current display-precision logic (instead of freezing margins at a legacy 2-decimal value).
 
+### Trend Labels + Trajectory De-dupe (April 29, 2026)
+
+- Fixed missing candidate surnames in some county trend/timeline outputs by routing all trend label rendering through a shared “candidate last name” resolver with safe fallbacks.
+- Fixed a long-term trend/trajectory UI bug where identical “Since 2020 → …” shift blocks could be appended twice; the trajectory details list now has a defensive de-duplication guard.
+
 ### Precinct Spotlight + County Opacity Fix (April 28, 2026)
 
 - Added a VoteHub-style **precinct spotlight** effect: selecting a precinct darkens all other precinct polygons while keeping the selected precinct fully visible/highlighted.
