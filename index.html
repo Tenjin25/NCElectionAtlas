@@ -14085,45 +14085,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
       const leadMarginLabelFn = useCountyMarginPrecision ? leadCountyMarginPctLabel : leadMarginPctLabel;
       const winnerMarginLabelFn = useCountyMarginPrecision ? winnerMarginLabelShortCounty : winnerMarginLabelShort;
-      const contestTypeForTrend = String(options?.contestType || options?.meta?.contestType || '').trim();
-      const cleanTrendCandidateName = (value) => {
-        let s = (value ?? '').toString().trim();
-        if (!s) return '';
-        if (typeof stripRunningMateName === 'function') s = stripRunningMateName(s);
-        s = s.replace(/\s+/g, ' ').trim();
-        return s;
-      };
-      const getTrendCandidateName = (item, party) => {
-        const isRep = String(party || '').toLowerCase().startsWith('r');
-        const prefix = isRep ? 'rep' : 'dem';
-        const longParty = isRep ? 'republican' : 'democratic';
-        const legacyParty = isRep ? 'Republican' : 'Democratic';
-        const fields = [
-          `${prefix}_candidate`, `${contestTypeForTrend}_${prefix}_candidate`,
-          `${longParty}_candidate`, `${prefix}_name`, `${contestTypeForTrend}_${prefix}_name`,
-          `${prefix}Candidate`, `${longParty}Candidate`,
-          `${prefix}_candidate_name`, `${contestTypeForTrend}_${prefix}_candidate_name`,
-          `candidate_${prefix}`, `${contestTypeForTrend}_candidate_${prefix}`,
-          isRep ? 'republican' : 'democrat',
-          isRep ? 'repCandidate' : 'demCandidate',
-          isRep ? 'repName' : 'demName'
-        ].filter(Boolean);
-        for (const field of fields) {
-          const found = cleanTrendCandidateName(item?.[field]);
-          if (found) return found;
-        }
-        try {
-          const year = Number(item?.year);
-          const officeName = contestTypeForTrend && Number.isFinite(year)
-            ? formatContestName(contestTypeForTrend, year)
-            : '';
-          const lookedUp = officeName && typeof getCandidateName === 'function'
-            ? cleanTrendCandidateName(getCandidateName(year, officeName, isRep ? 'Republican' : 'Democrat'))
-            : '';
-          if (lookedUp) return lookedUp;
-        } catch (_) {}
-        return legacyParty;
-      };
       if (!chartEl) return;
       if (captionEl) captionEl.textContent = caption;
       if (!series || !series.length) {
@@ -14163,10 +14124,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
         const signedPct = signedTrendDisplayMarginPct(item);
         const prevSignedPct = prev ? signedTrendDisplayMarginPct(prev) : NaN;
-        const demCandidate = getTrendCandidateName(item, 'dem');
-        const repCandidate = getTrendCandidateName(item, 'rep');
-        item.dem_candidate = demCandidate;
-        item.rep_candidate = repCandidate;
         const winnerMeta = getTrendWinnerMeta(item);
         const leadLabel = leadMarginLabelFn(repVotes, demVotes, totalVotes);
         const shiftMeta = describeTrendShift(signedPct, prevSignedPct, prev ? prev.year : '');
@@ -14350,8 +14307,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="focus-trend-summary-badges">${summaryBadges.join('')}</div>
             <div class="focus-trend-stats">
               <div class="focus-trend-stat">
+                <span class="focus-trend-stat-label">${escapeHtml(selectedEntry ? 'Selected' : 'Latest')}</span>
+                <span class="focus-trend-stat-value ${summaryEntry.winnerMeta.partyClass}">${escapeHtml(`${summaryEntry.item.year}: ${summaryLine}`)}</span>
+              </div>
+              <div class="focus-trend-stat">
                 <span class="focus-trend-stat-label">Closest</span>
                 <span class="focus-trend-stat-value ${closest.winnerMeta.partyClass}">${escapeHtml(`${closest.item.year}: ${winnerMarginLabelFn(closest.repVotes, closest.demVotes, closest.totalVotes, closest.item.rep_candidate, closest.item.dem_candidate)}`)}</span>
+              </div>
+              <div class="focus-trend-stat">
+                <span class="focus-trend-stat-label">History</span>
+                <span class="focus-trend-stat-value tie">${escapeHtml(`${earliest.item.year}\u2013${latest.item.year} (${annotated.length} elections)`)}</span>
               </div>
             </div>
           </div>
@@ -14473,7 +14438,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let series = [];
         const trendOptions = {};
         trendOptions.selectedYear = Number(year);
-        trendOptions.contestType = contestType;
         trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
         trendOptions.focusKind = meta.kind;
         let censusContext = null;
@@ -18220,26 +18184,9 @@ document.addEventListener('DOMContentLoaded', function() {
           const rows = payload?.rows || [];
           let dem = '';
           let rep = '';
-          const firstValue = (row, keys) => {
-            for (const keyName of keys) {
-              const val = (row?.[keyName] ?? '').toString().trim();
-              if (val) return val;
-            }
-            return '';
-          };
-          const demKeys = [
-            'dem_candidate', `${contestType}_dem_candidate`, 'democratic_candidate',
-            'dem_name', `${contestType}_dem_name`, 'demCandidate', 'democrat',
-            'candidate_dem', `${contestType}_candidate_dem`
-          ];
-          const repKeys = [
-            'rep_candidate', `${contestType}_rep_candidate`, 'republican_candidate',
-            'rep_name', `${contestType}_rep_name`, 'repCandidate', 'republican',
-            'candidate_rep', `${contestType}_candidate_rep`
-          ];
           for (const r of rows) {
-            if (!dem) dem = firstValue(r, demKeys);
-            if (!rep) rep = firstValue(r, repKeys);
+            if (!dem) dem = (r?.dem_candidate || '').toString().trim();
+            if (!rep) rep = (r?.rep_candidate || '').toString().trim();
             if (dem && rep) break;
           }
           const out = { dem, rep };
@@ -22763,25 +22710,26 @@ document.addEventListener('DOMContentLoaded', function() {
 	        recentShiftTowardGop: Number.isFinite(recentShiftTowardGop) ? recentShiftTowardGop : NaN,
 	        recentWindowShiftTowardGop: Number.isFinite(recentWindowShiftTowardGop) ? recentWindowShiftTowardGop : NaN,
 	        meaning,
-		        details: [
-		          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
-		          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
-		          // Avoid duplicate "Since 2020" rows when the previous cycle is also 2020 (e.g., 2024 vs 2020).
-		          ...(row2020 && Number(row2020.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2020)
-		            ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
-		            : []),
-		          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
-		            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
-		            : []),
-		          ...(row2008 && Number(row2008.year) !== Number(first.year) && !(previous && Number(previous.year) === 2008)
-		            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
-		            : []),
-		          ...(row2000 && Number(row2000.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2000)
-		            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
-		            : [])
-		        ]
-	      };
-	    }
+	        details: [
+	          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
+	          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
+	          ...(row2020 &&
+            Number(row2020.year) !== Number(latest.year) &&
+             !(previous && Number(previous.year) === 2020)
+             ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
+             : []),
+	          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
+	            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
+	            : []),
+	          ...(row2008 && Number(row2008.year) !== Number(first.year) && !(previous && Number(previous.year) === 2008)
+	            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
+	            : []),
+	          ...(row2000 && Number(row2000.year) !== Number(latest.year) && !(previous && Number(previous.year) === 2000)
+	            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
+	            : [])
+	        ]
+      };
+    }
 
     function trajectoryToneClass(tone) {
       const normalized = String(tone || '').trim().toLowerCase();
