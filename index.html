@@ -14051,12 +14051,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return results;
     }
 
+    const TREND_SHIFT_NOISE_PTS = 0.1; // percent points; suppress tiny/noisy per-cycle moves
+
     function describeTrendShift(currentSignedPct, prevSignedPct, prevYear) {
       if (!Number.isFinite(Number(prevSignedPct))) {
         return { cls: 'tie', text: 'First available result' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
-      if (Math.abs(shift) < 0.01) {
+      if (Math.abs(shift) < TREND_SHIFT_NOISE_PTS) {
         return { cls: 'tie', text: `No shift since ${prevYear}` };
       }
       return {
@@ -21341,7 +21343,7 @@ document.addEventListener('DOMContentLoaded', function() {
           dem_candidate: demCand,
           rep_candidate: repCand,
           winner: signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE'),
-          margin_pct: Number(signed.toFixed(2))
+          margin_pct: signed
         });
       }
       try { countyTrendSeriesCache.set(cacheKey, out.slice()); } catch (_) {}
@@ -22992,7 +22994,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatShiftLabel(shiftPct) {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
-      if (abs < 0.01) return 'No change';
+      if (abs < TREND_SHIFT_NOISE_PTS) return 'No change';
       return `${s > 0 ? 'R' : 'D'}+${toFixedForDisplay(abs, 2)}%`;
     }
 
@@ -23033,7 +23035,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let shiftColor = '#64748b';
       if (hasPrev && prevYear) {
         const delta = cur - prev;
-        if (Math.abs(delta) < 0.01) {
+        if (Math.abs(delta) < TREND_SHIFT_NOISE_PTS) {
           shiftLabel = `Shift: No shift since ${prevYear}`;
           shiftColor = '#64748b';
         } else {

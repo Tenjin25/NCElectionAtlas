@@ -86,7 +86,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
 - **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
-- **Precinct Click-Zoom + Selection:** Clicking a precinct now zooms to it and applies a yellow selected highlight so selection is distinct from hover/overlay styling
+- **Precinct Click Behavior (Precincts On):** Clicking a precinct is passive (no selection/highlight, no pinned tooltip, no zoom). Hover remains the primary interaction.
 - **CVAP Hover Totals (Optional):** When available, hover cards prefer RDH `CVAP_TOT24` (citizen voting-age population, 18+) for “total” metrics; otherwise they fall back to VAP/total population (this does not change election calculations)
 - **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
 - **Barometer Counties (Optional):** Click the `Barometer` legend chip to outline counties that mirror the statewide two-party margin most closely across the last 2–3 available cycles for the selected contest (purple outline; off by default)
@@ -106,16 +106,21 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 29, 2026
 
-### Precinct Tooltip Auto-Pin Removal (April 29, 2026)
+### Precinct Click Auto-Pin Disabled (April 29, 2026)
 
-- Removed the automatic pinned tooltip behavior from precinct selection so tapping/clicking a precinct still shows its details without leaving a sticky tooltip behind.
-- Precinct selection behavior remains intact: clicking a precinct still zooms to it, highlights it in yellow, and pins the vote counter context.
-- Updated the precinct tooltip guidance to reflect the lighter interaction: dismiss by tapping elsewhere on touch devices or moving away on desktop.
+- Disabled precinct click selection/pinning/zoom while `Precincts On` is enabled (VoteHub-style hover-only interaction).
+- Clicking a precinct now clears any existing pinned/selected precinct state and does not lock the tooltip.
+- Hover tooltip and county click behavior remain unchanged.
 
 ### Focus Mode Map Dimming Fix (April 29, 2026)
 
 - Disabled the `body.focus-active` brightness/saturation filter on `#map` so clicking/selecting a county no longer dims the base map.
 - Kept `focus-active` for the stronger panel/tooltip shadow behavior (no selection/hover/tooltip logic changes).
+
+### Trends Panel Calculation Refresh (April 29, 2026)
+
+- Updated the Trends panel shift math to suppress tiny/noisy cycle-to-cycle moves so “Shift” and “No shift” labels behave consistently across county/precinct/history views.
+- Removed premature rounding of county trend `margin_pct` in the trend-series cache so the Trends panel always uses the current display-precision logic (instead of freezing margins at a legacy 2-decimal value).
 
 ### Precinct Spotlight + County Opacity Fix (April 28, 2026)
 
@@ -621,7 +626,7 @@ The Atlas uses a split hover-tooltip system so the map stays fast on desktop whi
 - Added overlay opacity presets and tuned county/district/precinct fills so more basemap detail stays visible underneath.
 - Retuned overlay opacity presets again (slightly lower after live testing) to keep color fills readable while preserving roads and basemap context.
 - Added stronger settlement/town and county label halos so labels stay legible over high-intensity precinct coloring.
-- Added precinct click-to-zoom with persistent yellow highlight to reduce confusion between selected features and overlay styling.
+- Added precinct hover tooltips and a clear selected-vs-hover visual treatment (selection is now reserved for explicit actions like search/GPS, not precinct clicks in precinct mode).
 - Added `Find My Precinct` GPS control and `Story Snapshot` export for vertical social sharing.
 - Refined the `Story Snapshot` export layout (full-bleed map crop, clearer contest/focus labels, and stronger branding for social share readability).
 - Added snapshot layout variants (`Balanced`, `Instagram`, `TikTok`) so 9:16 exports can be tuned for each platform's safe zones.
@@ -694,7 +699,7 @@ The current `index.html` includes several speed-focused improvements that are al
 - **Statewide snapshot focus:** The right-side summary stays visible while browsing counties, districts, and prior-election trend history.
 - **Regional focus mode:** Quick-jump presets can pin multi-county regional summaries and use the same top-right module as statewide and county selections.
 - **Trend display:** The top-right trend area now uses a more readable history/timeline layout rather than leaning on a compact line graph alone.
-- **Selection clarity:** Selected precincts now keep a yellow highlight and zoomed focus so users can distinguish active selection from hover/other overlays.
+- **Selection clarity:** Selected precincts (via search/GPS/deep links) keep a yellow highlight and zoomed focus so selection is distinct from hover/overlay styling.
 - **Header language:** The control header and minimized state now use the full `North Carolina Election Atlas` title in pill form for stronger branding and consistency.
 - **Responsive winner labels:** The winner pill keeps full candidate names on wider desktop widths and shortens them only when space is tighter.
 
