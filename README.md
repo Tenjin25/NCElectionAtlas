@@ -106,6 +106,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 **Last updated:** April 29, 2026
 
+### Precinct Tooltip Auto-Pin Removal (April 29, 2026)
+
+- Removed the automatic pinned tooltip behavior from precinct selection so tapping/clicking a precinct still shows its details without leaving a sticky tooltip behind.
+- Precinct selection behavior remains intact: clicking a precinct still zooms to it, highlights it in yellow, and pins the vote counter context.
+- Updated the precinct tooltip guidance to reflect the lighter interaction: dismiss by tapping elsewhere on touch devices or moving away on desktop.
+
 ### Focus Mode Map Dimming Fix (April 29, 2026)
 
 - Disabled the `body.focus-active` brightness/saturation filter on `#map` so clicking/selecting a county no longer dims the base map.

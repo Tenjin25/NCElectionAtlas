@@ -25209,7 +25209,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const [contestType, year] = parseContestValue(contestValue);
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!tooltipPinned;
         const copyText = (precinctNorm || title || '').toString().trim();
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -25240,7 +25240,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = currentPrecinctResults ? currentPrecinctResults.get(precinctNorm) : null;
       if (!row) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!tooltipPinned;
         const copyText = (precinctNorm || title || '').toString().trim();
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -25304,7 +25304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demo = getPrecinctDemographicsRow(precinctNorm, countyName, precId);
         demoLine = buildPrecinctDemographicsHoverHTML(demo, precinctNorm);
       } catch (_) {}
-      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || pinSelection || (forceTooltip && isTouchInteractionMode());
+      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || pinSelection;
       if (!showDemoLine) demoLine = '';
 
       const totalVotes = Number(demVotes) + Number(repVotes) + Number(otherVotes);
@@ -25357,9 +25357,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </details>
       `.trim();
 
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()) || pinSelection);
+      const pinnedShell = !!tooltipPinned;
       const actionHint = useCompact
-        ? (pinnedShell ? 'Pinned • tap Close to dismiss' : (isTouchInteractionMode() ? 'Tap to pin details' : 'Click to pin details'))
+        ? (isTouchInteractionMode() ? 'Tap elsewhere to dismiss' : 'Move away to dismiss')
         : '';
       const inner = isDesktopTooltipMode()
         ? classicInner
@@ -25373,9 +25373,6 @@ document.addEventListener('DOMContentLoaded', function() {
         { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
       );
       wireTooltipButtons();
-      try {
-        if (pinSelection && !isTouchInteractionMode()) setTooltipPinned(true);
-      } catch (_) {}
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
       setVoteCounterHoverState(
@@ -27631,7 +27628,6 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
-            if (isTouchInteractionMode()) setTooltipPinned(true);
             const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
             const label = full || (props.prec_id || '').toString().trim();
             setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${label}`.trim());
@@ -28207,7 +28203,6 @@ document.addEventListener('DOMContentLoaded', function() {
               const label = full || (props.prec_id || '').toString().trim();
               setStatus(`Selected precinct highlighted in yellow: ${props.county_nam} ${label}`);
             }
-            if (isTouchInteractionMode()) setTooltipPinned(true);
           } catch (_) {}
         });
         map.on('mouseleave', layerId, () => {
@@ -29268,7 +29263,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
-            if (isTouchInteractionMode()) setTooltipPinned(true);
           }
         }
       } catch (_) {}
