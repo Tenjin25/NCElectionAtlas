@@ -20187,14 +20187,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
       const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      // Keep raw precision for extremely close races so 0.000-style display remains intact.
-      if (marginDisplayDigits(rawMarginPct) >= 3) return rawMarginPct;
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
       const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
       const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
       if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      return Math.abs(repPctDisplay - demPctDisplay);
+      const diff = Math.abs(repPctDisplay - demPctDisplay);
+      // If rounding causes both sides to display equal, fall back to the true margin so we don't
+      // incorrectly show a tie (or 0.000%) when there is a non-zero lead.
+      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
+      return diff;
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
@@ -20221,13 +20223,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
       const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      if (countyMarginDisplayDigits(rawMarginPct) >= 3) return rawMarginPct;
       const t = Number(totalVotes) || 0;
       if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
+      const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
+      const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
       if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      return Math.abs(repPctDisplay - demPctDisplay);
+      const diff = Math.abs(repPctDisplay - demPctDisplay);
+      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
+      return diff;
     }
 
 
