@@ -104,7 +104,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–April 2026)
 
 
-**Last updated:** April 28, 2026
+**Last updated:** April 29, 2026
+
+### Focus Mode Map Dimming Fix (April 29, 2026)
+
+- Disabled the `body.focus-active` brightness/saturation filter on `#map` so clicking/selecting a county no longer dims the base map.
+- Kept `focus-active` for the stronger panel/tooltip shadow behavior (no selection/hover/tooltip logic changes).
 
 ### Precinct Spotlight + County Opacity Fix (April 28, 2026)
 

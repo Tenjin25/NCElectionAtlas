@@ -573,13 +573,13 @@ body {
   width: 100vw !important;
   height: 100vh;
   background: #f0f4f8;
-  transition: left 0.3s cubic-bezier(.4,0,.2,1), width 0.3s cubic-bezier(.4,0,.2,1), filter 0.3s ease;
+  transition: left 0.3s cubic-bezier(.4,0,.2,1), width 0.3s cubic-bezier(.4,0,.2,1);
   z-index: 1;
   touch-action: pan-x pan-y pinch-zoom;
 }
 /* Focus mode: dim the base map slightly without changing data colors. */
 body.focus-active #map {
-  filter: brightness(0.92) saturate(0.94);
+  filter: none !important;
 }
 body.focus-active .main-controls,
 body.focus-active .vote-counter,
