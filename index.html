@@ -12673,12 +12673,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['==', ['get', 'precinct_norm'], norm];
     }
 
+    function precinctSelectionDimFilterExpr() {
+      const norm = String(selectedPrecinctNorm || '').trim().toUpperCase();
+      // Defensive: if there is no selection, ensure the dim layer would match nothing even if accidentally visible.
+      if (!norm) return ['==', ['get', 'precinct_norm'], '__NO_SELECTED_PRECINCT_DIM__'];
+      return ['!=', ['get', 'precinct_norm'], norm];
+    }
+
     function applySelectedPrecinctHighlightFilter() {
       const filter = selectedPrecinctFilterExpr();
       ['precinct-selected-fill', 'precinct-selected-outline', 'precinct-dot-selected'].forEach(layerId => {
         if (!map.getLayer(layerId)) return;
         try { map.setFilter(layerId, filter); } catch (_) {}
       });
+      if (map.getLayer('precinct-selection-dim')) {
+        try { map.setFilter('precinct-selection-dim', precinctSelectionDimFilterExpr()); } catch (_) {}
+      }
       try { updatePrecinctVisibility(); } catch (_) {}
     }
 
@@ -12760,7 +12770,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestIsActive = hasActiveContestSelection();
       const demographicsModeActive = currentVizMode === 'demographics';
       const useTurnoutOpacity = turnoutBivariateEnabled && !demographicsModeActive;
-      let countyBaseOpacity = precinctsEnabled ? preset.countyWithPrecinct : preset.countyActive;
+      const precinctsActuallyVisible =
+        precinctsEnabled &&
+        map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5);
+      let countyBaseOpacity = precinctsActuallyVisible ? preset.countyWithPrecinct : preset.countyActive;
       let districtBaseOpacity = preset.district;
       let houseBaseOpacity = preset.house;
       let senateBaseOpacity = preset.senate;
@@ -12768,7 +12781,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let precinctDotBaseOpacity = preset.precinctDot;
 
       if (!contestIsActive) {
-        countyBaseOpacity = precinctsEnabled ? 0.04 : 0.08;
+        countyBaseOpacity = precinctsActuallyVisible ? 0.04 : 0.08;
         districtBaseOpacity = 0.10;
         houseBaseOpacity = 0.10;
         senateBaseOpacity = 0.10;
@@ -12776,14 +12789,14 @@ document.addEventListener('DOMContentLoaded', function() {
         precinctDotBaseOpacity = 0.62;
       }
       if (contestIsActive && demographicsModeActive) {
-        countyBaseOpacity = precinctsEnabled ? Math.max(countyBaseOpacity, 0.16) : Math.max(countyBaseOpacity, 0.84);
+        countyBaseOpacity = precinctsActuallyVisible ? Math.max(countyBaseOpacity, 0.16) : Math.max(countyBaseOpacity, 0.84);
         districtBaseOpacity = Math.max(districtBaseOpacity, 0.78);
         houseBaseOpacity = Math.max(houseBaseOpacity, 0.76);
         senateBaseOpacity = Math.max(senateBaseOpacity, 0.77);
         precinctFillBaseOpacity = Math.max(precinctFillBaseOpacity, 0.80);
         precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.92);
         if (demographicsHighContrastEnabled) {
-          countyBaseOpacity = precinctsEnabled ? Math.max(countyBaseOpacity, 0.22) : Math.max(countyBaseOpacity, 0.92);
+          countyBaseOpacity = precinctsActuallyVisible ? Math.max(countyBaseOpacity, 0.22) : Math.max(countyBaseOpacity, 0.92);
           districtBaseOpacity = Math.max(districtBaseOpacity, 0.90);
           houseBaseOpacity = Math.max(houseBaseOpacity, 0.88);
           senateBaseOpacity = Math.max(senateBaseOpacity, 0.89);
@@ -12796,7 +12809,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!contestIsActive) {
           try { map.setPaintProperty('county-fill', 'fill-color', '#d9e3ef'); } catch (_) {}
         }
-        const countyOpacity = useTurnoutOpacity && !precinctsEnabled
+        const countyOpacity = useTurnoutOpacity && !precinctsActuallyVisible
           ? buildCountyTurnoutOpacityExpression(countyBaseOpacity)
           : countyBaseOpacity;
         try {
@@ -27550,6 +27563,18 @@ document.addEventListener('DOMContentLoaded', function() {
         paint: { 'fill-color': '#d1d5db', 'fill-opacity': 0.62 }
       }, (baseSymbolLayerId && map.getLayer(baseSymbolLayerId)) ? baseSymbolLayerId : undefined);
       map.addLayer({
+        id: 'precinct-selection-dim',
+        type: 'fill',
+        source: 'precincts',
+        minzoom: CONFIG.precincts?.minZoom || 8.5,
+        layout: { visibility: 'none' },
+        filter: ['==', ['get', 'precinct_norm'], '__NO_SELECTED_PRECINCT_DIM__'],
+        paint: {
+          'fill-color': '#020617',
+          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 8.5, 0.46, 11, 0.54, 14, 0.62]
+        }
+      }, (baseSymbolLayerId && map.getLayer(baseSymbolLayerId)) ? baseSymbolLayerId : undefined);
+      map.addLayer({
         id: 'precinct-stroke',
         type: 'line',
         source: 'precincts',
@@ -27588,7 +27613,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }, (baseSymbolLayerId && map.getLayer(baseSymbolLayerId)) ? baseSymbolLayerId : undefined);
       applySelectedPrecinctHighlightFilter();
 
-      map.on('click', 'precinct-fill', (e) => {
+      const handlePrecinctPolygonClick = (e) => {
+        try {
+          if (e?.originalEvent?.defaultPrevented) return;
+          try { e?.originalEvent?.preventDefault?.(); } catch (_) {}
+        } catch (_) {}
         const props = e.features?.[0]?.properties || {};
         const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
         const countyName = props.county_nam || '';
@@ -27608,7 +27637,13 @@ document.addEventListener('DOMContentLoaded', function() {
             setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${label}`.trim());
           }
         } catch (_) {}
-      });
+      };
+
+      // The dim overlay sits above the base fill; wire both so selection remains responsive.
+      map.on('click', 'precinct-fill', handlePrecinctPolygonClick);
+      if (map.getLayer('precinct-selection-dim')) {
+        map.on('click', 'precinct-selection-dim', handlePrecinctPolygonClick);
+      }
     }
 
 	    async function ensurePrecinctCentroidsLoaded() {
@@ -28225,6 +28260,10 @@ document.addEventListener('DOMContentLoaded', function() {
           map.setLayoutProperty(id, 'visibility', polyVisible ? 'visible' : 'none');
         }
       });
+      if (map.getLayer('precinct-selection-dim')) {
+        const dimVisible = polyVisible && !!selectedPrecinctNorm;
+        map.setLayoutProperty('precinct-selection-dim', 'visibility', dimVisible ? 'visible' : 'none');
+      }
       if (map.getLayer('precinct-selected-fill')) {
         map.setLayoutProperty('precinct-selected-fill', 'visibility', polyVisible ? 'visible' : 'none');
       }

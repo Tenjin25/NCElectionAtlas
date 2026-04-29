@@ -104,7 +104,13 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–April 2026)
 
 
-**Last updated:** April 26, 2026
+**Last updated:** April 28, 2026
+
+### Precinct Spotlight + County Opacity Fix (April 28, 2026)
+
+- Added a VoteHub-style **precinct spotlight** effect: selecting a precinct darkens all other precinct polygons while keeping the selected precinct fully visible/highlighted.
+- Ensured the spotlight dim overlay only appears when precinct polygons are actually visible (precincts enabled **and** zoom ≥ precinct minZoom), preventing stale dimming on mode switches/clears.
+- Fixed unintended **county dimming**: county fill opacity no longer drops just because precincts are toggled on; it now only reduces when precinct polygons are visible at the current zoom.
 
 ### Statewide Margin Precision Consistency (April 26, 2026)
 
