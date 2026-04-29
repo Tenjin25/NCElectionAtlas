@@ -22382,6 +22382,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return 0;
       }
 
+      function getSignedDisplayMarginTowardGop(row) {
+        if (!row) return 0;
+        const repVotes = Number(row.rep_votes);
+        const demVotes = Number(row.dem_votes);
+        const totalVotes = Number(row.total_votes);
+        const rawSigned = getSignedMarginTowardGop(row);
+        if (!(Number.isFinite(totalVotes) && totalVotes > 0)) return rawSigned;
+        const useCounty = unitLower === 'county';
+        const absDisplay = useCounty
+          ? countyMarginPctDisplayValue(repVotes, demVotes, totalVotes)
+          : marginPctDisplayValue(repVotes, demVotes, totalVotes);
+        if (absDisplay === 0 && rawSigned !== 0) return rawSigned;
+        if (rawSigned > 0) return Math.abs(absDisplay);
+        if (rawSigned < 0) return -Math.abs(absDisplay);
+        return 0;
+      }
+
       function formatShiftLabel(delta) {
         if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return '↔ No clear shift';
         return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)} pts`;
@@ -22411,21 +22428,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
 	      const latest = sorted[sorted.length - 1];
-	      const latestSigned = getSignedMarginTowardGop(latest);
+	      const latestSigned = getSignedDisplayMarginTowardGop(latest);
 	      const first = sorted[0];
-	      const firstSigned = getSignedMarginTowardGop(first);
+	      const firstSigned = getSignedDisplayMarginTowardGop(first);
       const electionCount = sorted.length;
       const yearSpan = Number(latest?.year) - Number(first?.year);
       const historySparse = electionCount < 4;
 	      const longShiftTowardGop = latestSigned - firstSigned;
 	      const row2008 = sorted.find(row => Number(row.year) === 2008);
-	      const shiftSince2008 = row2008 ? latestSigned - getSignedMarginTowardGop(row2008) : null;
+	      const shiftSince2008 = row2008 ? latestSigned - getSignedDisplayMarginTowardGop(row2008) : null;
 	      const row2020 = sorted.find(row => Number(row.year) === 2020);
-	      const shiftSince2020 = row2020 ? latestSigned - getSignedMarginTowardGop(row2020) : NaN;
+	      const shiftSince2020 = row2020 ? latestSigned - getSignedDisplayMarginTowardGop(row2020) : NaN;
 	      const row2000 = sorted.find(row => Number(row.year) === 2000);
-	      const shiftSince2000 = (row2000 || first) ? latestSigned - getSignedMarginTowardGop(row2000 || first) : NaN;
+	      const shiftSince2000 = (row2000 || first) ? latestSigned - getSignedDisplayMarginTowardGop(row2000 || first) : NaN;
 	      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-	      const previousSigned = previous ? getSignedMarginTowardGop(previous) : null;
+	      const previousSigned = previous ? getSignedDisplayMarginTowardGop(previous) : null;
 	      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
       const recentWindowStart = sorted.length >= 3 ? sorted[Math.max(0, sorted.length - 3)] : first;
       const recentWindowStartSigned = recentWindowStart ? getSignedMarginTowardGop(recentWindowStart) : null;
