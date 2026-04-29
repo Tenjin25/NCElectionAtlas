@@ -22697,11 +22697,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	        details: [
 	          { label: 'Latest Result', value: formatWinnerLabel(latest, latestSigned), role: 'latest' },
 	          ...(previous ? [{ label: cycleShiftLabel, value: formatShiftLabel(recentShiftTowardGop), role: 'shift' }] : []),
-	          ...(previous && Number(first.year) !== Number(previous.year)
+	          ...(row2020 && Number(row2020.year) !== Number(latest.year)
+	            ? [{ label: 'Since 2020', value: formatShiftLabel(shiftSince2020), role: 'shift' }]
+	            : []),
+	          ...(previous && Number(first.year) !== Number(previous.year) && Number(first.year) !== 2000
 	            ? [{ label: `Since ${first.year}`, value: formatShiftLabel(longShiftTowardGop), role: 'shift' }]
 	            : []),
 	          ...(row2008 && Number(row2008.year) !== Number(first.year)
 	            ? [{ label: 'Since 2008', value: formatShiftLabel(shiftSince2008), role: 'shift' }]
+	            : []),
+	          ...(row2000 && Number(row2000.year) !== Number(latest.year)
+	            ? [{ label: 'Since 2000', value: formatShiftLabel(shiftSince2000), role: 'shift' }]
 	            : [])
 	        ]
       };
