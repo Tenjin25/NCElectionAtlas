@@ -19565,6 +19565,10 @@ document.addEventListener('DOMContentLoaded', function() {
        layerTypes.forEach(type => {
          if (map.getLayer(`${type}-fill`)) {
            map.removeLayer(`${type}-fill`);
+           // Reset the county paint cache when removing county-fill. The new
+           // Mapbox layer comes back with base paint, even if the cached
+           // expression object is identical to the previous one.
+           if (type === "county") lastCountyFillExpr = null;
          }
          if (map.getLayer(`${type}-stroke-casing`)) {
            map.removeLayer(`${type}-stroke-casing`);
@@ -19579,6 +19583,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (map.getLayer('county-label')) {
         map.removeLayer('county-label');
       }
+      // County overlays are rebuilt separately; make sure returning to Counties
+      // cannot skip the repaint because lastCountyFillExpr points to an old layer.
+      lastCountyFillExpr = null;
       clearHoverOutline();
       
       // Add appropriate layers
@@ -31977,9 +31984,14 @@ document.addEventListener('DOMContentLoaded', function() {
       // Paint counties by default; when precinct overlay is enabled, reduce county opacity
       // so precinct fills/dots remain visually primary.
       if (map.getLayer('county-fill')) {
-        if (lastCountyFillExpr !== expr) {
+        // Always repaint after layer switches. Removed/re-added Mapbox layers do
+        // not retain paint from the old layer instance, while lastCountyFillExpr
+        // may still point at the same cached expression.
+        try {
           map.setPaintProperty('county-fill', 'fill-color', expr);
           lastCountyFillExpr = expr;
+        } catch (err) {
+          console.warn('Failed to repaint county-fill colors:', err?.message || err);
         }
       }
 
