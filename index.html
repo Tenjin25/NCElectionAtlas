@@ -13495,19 +13495,21 @@ document.addEventListener('DOMContentLoaded', function() {
       return n.toLocaleString();
     }
 
-    function getTrendWinnerMeta(item) {
+    function getTrendWinnerMeta(item, contestMeta = null) {
       const repVotes = Number(item?.rep_votes || 0);
       const demVotes = Number(item?.dem_votes || 0);
       if (repVotes > demVotes) {
+        const repShort = getCandidateLastName(item, 'Republican', contestMeta);
         return {
           partyClass: 'rep',
-          label: `${shortCandidateLabel(item?.rep_candidate, 'Republican')} (R)`
+          label: repShort === 'R' ? 'Republican (R)' : `${repShort} (R)`
         };
       }
       if (demVotes > repVotes) {
+        const demShort = getCandidateLastName(item, 'Democrat', contestMeta);
         return {
           partyClass: 'dem',
-          label: `${shortCandidateLabel(item?.dem_candidate, 'Democratic')} (D)`
+          label: demShort === 'D' ? 'Democratic (D)' : `${demShort} (D)`
         };
       }
       return {
@@ -14116,7 +14118,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const otherPct = totalVotes > 0 ? (otherVotes / totalVotes) * 100 : 0;
         const signedPct = signedTrendDisplayMarginPct(item);
         const prevSignedPct = prev ? signedTrendDisplayMarginPct(prev) : NaN;
-        const winnerMeta = getTrendWinnerMeta(item);
+        const winnerMeta = getTrendWinnerMeta(item, {
+          contestType: contestTypeHint,
+          year: Number(item?.year),
+          office: contestTypeHint ? formatContestName(contestTypeHint, Number(item?.year)) : ''
+        });
         const leadLabel = leadMarginLabelFn(repVotes, demVotes, totalVotes);
         const shiftMeta = describeTrendShift(signedPct, prevSignedPct, prev ? prev.year : '');
         const flip = prev ? flipInfo(prevSignedPct, signedPct) : { flipped: false, from: 'T', to: 'T' };
@@ -18174,13 +18180,16 @@ document.addEventListener('DOMContentLoaded', function() {
           return out;
         }
         try {
-          const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
-          const rows = payload?.rows || [];
+          // Use the same manifest-aware resolution as `loadContestSlice()` so we don't 404 on
+          // contests that are stored under a different filename.
+          const rows = await loadContestSlice(contestType, year);
           let dem = '';
           let rep = '';
-          for (const r of rows) {
-            if (!dem) dem = (r?.dem_candidate || '').toString().trim();
-            if (!rep) rep = (r?.rep_candidate || '').toString().trim();
+          const demKey = `${contestType}_dem_candidate`;
+          const repKey = `${contestType}_rep_candidate`;
+          for (const r of (rows || [])) {
+            if (!dem) dem = (r?.dem_candidate ?? r?.[demKey] ?? '').toString().trim();
+            if (!rep) rep = (r?.rep_candidate ?? r?.[repKey] ?? '').toString().trim();
             if (dem && rep) break;
           }
           const out = { dem, rep };

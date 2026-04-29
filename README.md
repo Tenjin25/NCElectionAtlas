@@ -124,7 +124,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ### Trend Labels + Trajectory De-dupe (April 29, 2026)
 
-- Fixed missing candidate surnames in some county trend/timeline outputs by routing all trend label rendering through a shared “candidate last name” resolver with safe fallbacks.
+- Fixed missing candidate surnames in some county trend/timeline outputs (most visible in pre-2016 county timelines) by making trend candidate resolution manifest-aware (`getContestCandidates()` now reuses the same contest-slice loader used elsewhere, instead of guessing `${contestType}_${year}.json`).
 - Fixed a long-term trend/trajectory UI bug where identical “Since 2020 → …” shift blocks could be appended twice; the trajectory details list now has a defensive de-duplication guard.
 
 ### Precinct Spotlight + County Opacity Fix (April 28, 2026)
