@@ -14057,15 +14057,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function describeTrendShift(currentSignedPct, prevSignedPct, prevYear) {
       if (!Number.isFinite(Number(prevSignedPct))) {
-        return { cls: 'tie', text: 'No prior comparison' };
+        return { cls: 'tie', text: 'No prior shift to compare' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
       if (Math.abs(shift) < TREND_SHIFT_NOISE_PTS) {
-        return { cls: 'tie', text: `No change vs ${prevYear}` };
+        return { cls: 'tie', text: `No shift vs ${prevYear}` };
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `${shift > 0 ? 'Toward Republicans' : 'Toward Democrats'} +${Math.abs(shift).toFixed(2)}% vs ${prevYear}`
+        text: `Shifted ${Math.abs(shift).toFixed(2)}% toward ${shift > 0 ? 'Republicans' : 'Democrats'} vs ${prevYear}`
       };
     }
 
@@ -20712,9 +20712,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-scale-shell">
           ${buildLegendSpectrum(colors, 'shift')}
           <div class="legend-scale-caption">
-            <span class="dem">Toward Democrats</span>
+            <span class="dem">Shift toward Democrats</span>
             <span>No change</span>
-            <span class="rep">Toward Republicans</span>
+            <span class="rep">Shift toward Republicans</span>
           </div>
           <div class="legend-axis shift">
             <span class="dem">D +15</span>
@@ -23178,7 +23178,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
       if (abs < TREND_SHIFT_NOISE_PTS) return 'No change';
-      return `${toFixedForDisplay(abs, 2)}% toward ${s > 0 ? 'Republicans' : 'Democrats'}`;
+      return `Shifted ${toFixedForDisplay(abs, 2)}% toward ${s > 0 ? 'Republicans' : 'Democrats'}`;
     }
 
     function shiftChipHTML(shiftPct, prevYear, year, options = {}) {
