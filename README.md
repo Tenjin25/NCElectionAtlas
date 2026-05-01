@@ -104,7 +104,15 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–April 2026)
 
 
-**Last updated:** April 29, 2026
+**Last updated:** April 30, 2026
+
+### Change/Shift Language + Timeline Label Cleanup (April 30, 2026)
+
+- Standardized user-facing `Shift` wording to clearer `Change` terminology in the main controls and help copy, while keeping the underlying `shift` mode key unchanged in code/URL params.
+- Reworded trend/timeline shift text into short first-time-user-friendly phrases that explicitly preserve percentages and direction (for example, `Shifted 2.50% toward Republicans vs 2020`).
+- Clarified legend-axis language so direction labels read as explicit movement (`Shift toward Democrats` / `Shift toward Republicans`).
+- Kept trajectory `Votes vs last cycle` in compact party-letter form (`R` / `D`) for scan speed, but updated `Latest Result` to show the winning candidate name with margin when available (for example, `2024: Trump +2.50%`).
+- Kept all changes scoped to presentation text/labels only; no vote math, map-color logic, contest datasets, or modeled calculation paths were changed.
 
 ### Precinct Click Auto-Pin Disabled (April 29, 2026)
 

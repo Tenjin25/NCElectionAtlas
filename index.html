@@ -22344,7 +22344,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `Margin: ${tier.shortLabel}`;
 	    }
 
-	    function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
+      function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
 	      const rep = Number(rep_votes);
 	      const dem = Number(dem_votes);
 	      const prevRep = Number(prev_rep_votes);
@@ -22548,7 +22548,10 @@ document.addEventListener('DOMContentLoaded', function() {
       function formatWinnerLabel(row, signedMargin) {
         const absMargin = Math.abs(signedMargin);
         if (absMargin < 0.005) return `${row.year}: Tie`;
-        return `${row.year}: ${signedMargin > 0 ? 'Republican' : 'Democratic'} +${absMargin.toFixed(2)}%`;
+          const winnerName = signedMargin > 0
+            ? shortCandidateLabel(row?.rep_candidate, 'Republican')
+            : shortCandidateLabel(row?.dem_candidate, 'Democratic');
+          return `${row.year}: ${winnerName} +${absMargin.toFixed(2)}%`;
       }
 
       const sorted = series
@@ -22810,7 +22813,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      });
 	      const subtype = String(structured?.subtype || '').trim();
 	      const transitionStage = getTransitionStage(latestSigned);
-	      const growthDynamic = getGrowthDynamic(latest?.rep_votes, latest?.dem_votes, previous?.rep_votes, previous?.dem_votes);
+        const growthDynamic = getGrowthDynamic(latest?.rep_votes, latest?.dem_votes, previous?.rep_votes, previous?.dem_votes);
 	      const structuredMomentum = String(structured?.momentum || '').trim();
 	      const trendStructured = structuredMomentum || trend;
 	
