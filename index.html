@@ -9408,7 +9408,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="viz-modes-inline" id="viz-modes-inline">
                 <button class="viz-mode-btn active" data-mode="margins" type="button"><span>Margins</span></button>
                 <button class="viz-mode-btn" data-mode="winners" type="button"><span>Winners</span></button>
-                <button class="viz-mode-btn" data-mode="shift" type="button"><span>Change</span></button>
+                <button class="viz-mode-btn" data-mode="shift" type="button"><span>Shift</span></button>
                 <button class="viz-mode-btn" data-mode="flips" type="button"><span>Flips</span></button>
                 <button class="viz-mode-btn" data-mode="demographics" type="button"><span>Demographics</span></button>
               </div>
@@ -9587,7 +9587,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <span>Winners</span>
     </button>
     <button class="viz-mode-btn" data-mode="shift" id="mode-shift">
-      <span>Change</span>
+      <span>Shift</span>
     </button>
     <button class="viz-mode-btn" data-mode="flips" id="mode-flips">
       <span>Flips</span>
@@ -9648,7 +9648,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="focus-insights" id="focus-insights" aria-label="At a glance"></div>
       <div class="focus-trend" id="focus-trend">
         <div class="focus-trend-head">
-          <span class="focus-trend-title">Trend over time</span>
+          <span class="focus-trend-title">Trend + shift</span>
           <span class="focus-trend-caption" id="focus-trend-caption">Statewide history</span>
         </div>
         <div class="focus-trend-chart" id="focus-trend-chart">
@@ -9715,7 +9715,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <h3>Modes</h3>
           <p><strong>Margins</strong>: colors show the <strong>two-party margin</strong> (Rep% − Dem%). Red shades = Republican lead; blue shades = Democratic lead. Darker = a larger lead (less competitive).</p>
           <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
-          <p><strong>Change</strong>: how much the margin moved compared with the previous election for that contest (for example, 2020 to 2024). If the number is positive, the area moved toward Republicans. If the number is negative, it moved toward Democrats.</p>
+          <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
 
           <h3>Margin Categories</h3>
           <p>Category names are just shorthand for <strong>absolute</strong> margin ranges (|Rep% − Dem%|):</p>
@@ -9747,7 +9747,7 @@ document.addEventListener('DOMContentLoaded', function() {
           </ul>
 
           <h3>Notes</h3>
-          <p class="meta-subtle">If Change mode can’t find a prior year for the selected contest, it falls back to Margins.</p>
+          <p class="meta-subtle">If Shift can’t find a prior year for the selected contest, it falls back to Margins.</p>
         </div>
       </div>
     </div>
@@ -14057,15 +14057,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function describeTrendShift(currentSignedPct, prevSignedPct, prevYear) {
       if (!Number.isFinite(Number(prevSignedPct))) {
-        return { cls: 'tie', text: 'No prior shift to compare' };
+        return { cls: 'tie', text: 'First available result' };
       }
       const shift = (Number(currentSignedPct) || 0) - (Number(prevSignedPct) || 0);
       if (Math.abs(shift) < TREND_SHIFT_NOISE_PTS) {
-        return { cls: 'tie', text: `No shift vs ${prevYear}` };
+        return { cls: 'tie', text: `No shift since ${prevYear}` };
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `Shifted ${Math.abs(shift).toFixed(2)}% toward ${shift > 0 ? 'Republicans' : 'Democrats'} vs ${prevYear}`
+        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${Math.abs(shift).toFixed(2)}% since ${prevYear}`
       };
     }
 
@@ -19213,8 +19213,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginLabel = formatMarginPctForDisplay(marginPct);
       const alertLabel = inRecountRange ? 'Recount Watch' : 'Litigation Watch';
       const detail = inRecountRange
-        ? `Margin ${marginLabel} pts is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
-        : `Margin ${marginLabel} pts is extremely close and could trigger post-election litigation.`;
+          ? `Margin ${marginLabel}% is inside the ${RECOUNT_MARGIN_THRESHOLD_PCT.toFixed(2)}-point recount range.`
+          : `Margin ${marginLabel}% is extremely close and could trigger post-election litigation.`;
       const contestLabel = `${formatContestLabel(contestType, year)}`;
       const className = inRecountRange ? 'recount' : 'litigation';
 
@@ -20712,9 +20712,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-scale-shell">
           ${buildLegendSpectrum(colors, 'shift')}
           <div class="legend-scale-caption">
-            <span class="dem">Shift toward Democrats</span>
+            <span class="dem">Toward Democrats</span>
             <span>No change</span>
-            <span class="rep">Shift toward Republicans</span>
+            <span class="rep">Toward Republicans</span>
           </div>
           <div class="legend-axis shift">
             <span class="dem">D +15</span>
@@ -20769,13 +20769,13 @@ document.addEventListener('DOMContentLoaded', function() {
         content.innerHTML = buildFlipsLegendHTML();
       } else if (mode === 'shift') {
         const shiftRange = meta?.fromYear ? `${meta.fromYear}-${meta.toYear || 'current'}` : 'Shift';
-        if (header) header.textContent = meta?.fromYear ? `Change (${shiftRange})` : 'Change';
+        if (header) header.textContent = meta?.fromYear ? `Shift (${shiftRange})` : 'Shift';
         if (subtitle) {
           subtitle.textContent = meta?.fromYear
             ? `Shows the change in two-party margin from ${meta.fromYear} to ${meta.toYear || 'the current contest'}.`
             : 'Shows the change in two-party margin relative to the prior comparable election.';
         }
-        if (badge) badge.textContent = meta?.fromYear ? shiftRange : 'Change';
+        if (badge) badge.textContent = meta?.fromYear ? shiftRange : 'Shift';
         if (footer) footer.textContent = 'Blue means movement toward Democrats; red means movement toward Republicans.';
         content.innerHTML = buildShiftLegendHTML();
       } else if (mode === 'demographics') {
@@ -21237,7 +21237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const modeledBadgeHtml = isModeledSenate ? `<span class="modeled-context-badge modeled-senate">Modeled race</span>` : '';
         const kickerHtml = isModeledSenate ? `Modeled baseline ${modeledBadgeHtml}` : 'Statewide leader';
         const sublineHtml = isModeledSenate
-          ? `${escapeHtml(winnerSummary)} | projected edge ${escapeHtml(marginLabel)} pts`
+          ? `${escapeHtml(winnerSummary)} | projected edge ${escapeHtml(marginLabel)}%`
           : `${escapeHtml(winnerSummary)} | ${Math.abs(repVotes - demVotes).toLocaleString()} vote margin`;
         const methodologyHtml = isModeledSenate
           ? `<div class="statewide-modeled-method">Built from 2022 Senate, 2020 Senate, and 2024 presidential environment.</div>`
@@ -21278,7 +21278,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div class="statewide-stat">
                 <span>${escapeHtml(marginLabelLabel)}</span>
-                <strong>${marginLabel} pts</strong>
+                <strong>${marginLabel}%</strong>
               </div>
             </div>
             ${modeledSenateExtrasHtml}
@@ -22344,7 +22344,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `Margin: ${tier.shortLabel}`;
 	    }
 
-      function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
+	    function getGrowthDynamic(rep_votes, dem_votes, prev_rep_votes, prev_dem_votes) {
 	      const rep = Number(rep_votes);
 	      const dem = Number(dem_votes);
 	      const prevRep = Number(prev_rep_votes);
@@ -22541,17 +22541,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return 'No clear change';
-        return `Moved ${Math.abs(delta).toFixed(2)}% toward ${delta > 0 ? 'Republicans' : 'Democrats'}`;
+        if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return '↔ No clear shift';
+        return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}%`;
       }
 
       function formatWinnerLabel(row, signedMargin) {
         const absMargin = Math.abs(signedMargin);
         if (absMargin < 0.005) return `${row.year}: Tie`;
-          const winnerName = signedMargin > 0
-            ? shortCandidateLabel(row?.rep_candidate, 'Republican')
-            : shortCandidateLabel(row?.dem_candidate, 'Democratic');
-          return `${row.year}: ${winnerName} +${absMargin.toFixed(2)}%`;
+        return `${row.year}: ${signedMargin > 0 ? 'R' : 'D'}+${absMargin.toFixed(2)}%`;
       }
 
       const sorted = series
@@ -22813,7 +22810,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      });
 	      const subtype = String(structured?.subtype || '').trim();
 	      const transitionStage = getTransitionStage(latestSigned);
-        const growthDynamic = getGrowthDynamic(latest?.rep_votes, latest?.dem_votes, previous?.rep_votes, previous?.dem_votes);
+	      const growthDynamic = getGrowthDynamic(latest?.rep_votes, latest?.dem_votes, previous?.rep_votes, previous?.dem_votes);
 	      const structuredMomentum = String(structured?.momentum || '').trim();
 	      const trendStructured = structuredMomentum || trend;
 	
@@ -22907,12 +22904,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const trendBody = trendArrow ? trendText.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : trendText;
       const detailTone = (label, value) => {
         const v = String(value || '');
-        if (v.includes('\u2192') || v.includes('\u2197') || /toward Republicans/i.test(v) || /Republican \+\d/.test(v) || /\bR\+\d/.test(v)) return 'rep';
-        if (v.includes('\u2190') || v.includes('\u2198') || /toward Democrats/i.test(v) || /Democratic \+\d/.test(v) || /\bD\+\d/.test(v)) return 'dem';
+        if (v.includes('\u2192') || v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
+        if (v.includes('\u2190') || v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
         if (v.includes('\u2194') || /Tie|Even/i.test(v)) return 'neutral';
         if (String(label || '').toLowerCase() === 'latest result') {
-          if (/\bR\+/.test(v) || /Republican \+/.test(v)) return 'rep';
-          if (/\bD\+/.test(v) || /Democratic \+/.test(v)) return 'dem';
+          if (/\bR\+/.test(v)) return 'rep';
+          if (/\bD\+/.test(v)) return 'dem';
         }
         return 'neutral';
       };
@@ -23181,7 +23178,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
       if (abs < TREND_SHIFT_NOISE_PTS) return 'No change';
-      return `Shifted ${toFixedForDisplay(abs, 2)}% toward ${s > 0 ? 'Republicans' : 'Democrats'}`;
+      return `${s > 0 ? 'R' : 'D'}+${toFixedForDisplay(abs, 2)}%`;
     }
 
     function shiftChipHTML(shiftPct, prevYear, year, options = {}) {
@@ -23191,7 +23188,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const dotColor = colorForShiftMode(s);
       const years = (prevYear && year) ? `${prevYear}→${year}` : '';
       const variantClass = options && options.variant === 'county' ? ' county-shift' : '';
-      return `<span class="meta-chip shift${variantClass}"><span class="dot" style="background:${dotColor};"></span>Change: <span class="shift-value ${partyClass}">${escapeHtml(label)}</span>${years ? ` <span class="shift-years">(${escapeHtml(years)})</span>` : ''}</span>`;
+      return `<span class="meta-chip shift${variantClass}"><span class="dot" style="background:${dotColor};"></span>Shift: <span class="shift-value ${partyClass}">${escapeHtml(label)}</span>${years ? ` <span class="shift-years">(${escapeHtml(years)})</span>` : ''}</span>`;
     }
 
     function winnerChipHTML(winner) {
@@ -23222,10 +23219,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (hasPrev && prevYear) {
         const delta = cur - prev;
         if (Math.abs(delta) < TREND_SHIFT_NOISE_PTS) {
-          shiftLabel = `No change since ${prevYear}`;
+          shiftLabel = `Shift: No shift since ${prevYear}`;
           shiftColor = '#64748b';
         } else {
-          shiftLabel = `Moved ${Math.abs(delta).toFixed(2)}% toward ${delta > 0 ? 'Republicans' : 'Democrats'} since ${prevYear}`;
+          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}% since ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
         }
       }
@@ -23399,7 +23396,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const labels = {
         margins: 'Margins',
         winners: 'Winners',
-        shift: 'Change',
+        shift: 'Shift',
         flips: 'Flips',
         demographics: 'Demographics'
       };
@@ -23645,8 +23642,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const presSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const deltaSigned = govSigned - presSigned;
       const deltaLabel = Math.abs(deltaSigned) < 0.005
-        ? 'No meaningful split change'
-        : `${toFixedForDisplay(Math.abs(deltaSigned), 2)}% ${deltaSigned > 0 ? 'more Republican' : 'more Democratic'} than President`;
+        ? 'No split shift'
+        : `${deltaSigned > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(deltaSigned), 2)} vs President`;
 
       return {
         presidentSigned: presSigned,
@@ -23974,7 +23971,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try { applyLayerOpacityTuning(); } catch (_) {}
       }
 
-      setStatus('Pres-Gov overlay active: President is the base map, Governor is the translucent overlay. Hover a county to see split-change details.');
+      setStatus('Pres-Gov overlay active: President is the base map, Governor is the translucent overlay. Hover a county to see split shift details.');
       saveUIState();
     }
 
@@ -25239,7 +25236,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const splitInsight = getSplitTicketCountyInsight(norm, contestType, demVotes, repVotes, totalVotes);
       const splitInsightLine = splitInsight
-        ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);"><div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Pres-Gov Lens</div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Split Change:</span><strong>${splitInsight.deltaLabel}</strong></div></div>`
+        ? `<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.38);"><div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Pres-Gov Lens</div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>President:</span><strong>${splitInsight.presidentLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Governor Overlay:</span><strong>${splitInsight.governorLabel}</strong></div><div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;"><span>Split Shift:</span><strong>${splitInsight.deltaLabel}</strong></div></div>`
         : '';
 
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct, { precision: 'county' });
@@ -25257,7 +25254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem'))
         : 'tie';
       const shiftLine = (currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear)
-        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Change (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
+        ? `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`
         : '';
       const tooltipInsight = (() => {
         // Keep “trend/shift” narration out of Margins/Winners views to reduce hover clutter.
