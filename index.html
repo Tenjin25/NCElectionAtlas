@@ -4444,7 +4444,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     --trajectory-accent-glow: rgba(100, 116, 139, 0.2);
     position: relative;
     display: grid;
-    gap: 10px;
+    gap: 8px;
     padding: 12px;
     border-radius: 16px;
     border: 1px solid var(--trajectory-accent-soft);
@@ -4771,6 +4771,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     color: #64748b;
   }
 
+  .focus-trajectory-item.tone-dem .focus-trajectory-label { color: rgba(29, 78, 216, 0.78); }
+  .focus-trajectory-item.tone-rep .focus-trajectory-label { color: rgba(185, 28, 28, 0.78); }
+
   .focus-trajectory-value {
     display: inline-flex;
     align-items: center;
@@ -4816,18 +4819,18 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   @keyframes trajectory-arrow-nudge-rep {
-    0%, 100% { transform: translateX(0); opacity: 1; }
-    50% { transform: translateX(1.5px); opacity: 0.86; }
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(1.5px); }
   }
 
   @keyframes trajectory-arrow-nudge-dem {
-    0%, 100% { transform: translateX(0); opacity: 1; }
-    50% { transform: translateX(-1.5px); opacity: 0.86; }
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-1.5px); }
   }
 
   @keyframes trajectory-arrow-breathe {
-    0%, 100% { transform: scale(1); opacity: 0.9; }
-    50% { transform: scale(1.08); opacity: 1; }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
   }
 
   .focus-trajectory-arrow.tone-rep {
@@ -4846,6 +4849,102 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     .focus-trajectory-arrow.tone-rep,
     .focus-trajectory-arrow.tone-dem,
     .focus-trajectory-arrow.tone-neutral {
+      animation: none !important;
+    }
+  }
+
+  .focus-trajectory-grid.focus-trajectory-story {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .focus-trajectory-grid.focus-trajectory-story .focus-trajectory-item + .focus-trajectory-item {
+    padding-top: 6px;
+    border-top: 1px dashed rgba(148, 163, 184, 0.22);
+  }
+
+  .focus-trajectory-grid.focus-trajectory-story .focus-trajectory-item.is-latest {
+    padding-left: 8px;
+    border-radius: 10px;
+    box-shadow: inset 3px 0 0 rgba(var(--trajectory-accent-rgb), 0.48);
+    background: linear-gradient(
+      180deg,
+      rgba(var(--trajectory-accent-rgb), 0.05) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .focus-trajectory-value.stack {
+    display: grid;
+    align-items: start;
+    gap: 3px;
+    color: #334155;
+  }
+
+  .trajectory-line {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .trajectory-line.tone-dem { color: #1d4ed8; }
+  .trajectory-line.tone-rep { color: #b91c1c; }
+  .trajectory-line.tone-neutral { color: #334155; }
+
+  .trajectory-line-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-weight: inherit;
+    color: inherit;
+  }
+
+  .trajectory-votes {
+    font-size: 11px;
+    font-weight: 800;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .trajectory-votes .vote-delta-rep { color: #b91c1c; }
+  .trajectory-votes .vote-delta-dem { color: #1d4ed8; }
+  .trajectory-votes .vote-delta-sep { color: #64748b; font-weight: 900; }
+
+  .trend-arrow {
+    display: inline-block;
+    flex: 0 0 auto;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    transform-origin: center;
+    --trend-arrow-dir: 1;
+    --trend-arrow-scale: 1.06;
+    --trend-arrow-translate: 1px;
+    animation: trend-arrow-pulse 1.5s ease-in-out infinite;
+  }
+
+  .trend-arrow-right { --trend-arrow-dir: 1; }
+  .trend-arrow-left { --trend-arrow-dir: -1; }
+  .trend-arrow-soft { --trend-arrow-scale: 1.06; --trend-arrow-translate: 1px; }
+  .trend-arrow-medium { --trend-arrow-scale: 1.10; --trend-arrow-translate: 2px; }
+  .trend-arrow-strong { --trend-arrow-scale: 1.16; --trend-arrow-translate: 3px; }
+  .trend-arrow.tone-dem { color: #1d4ed8; }
+  .trend-arrow.tone-rep { color: #b91c1c; }
+  .trend-arrow.tone-neutral { color: #64748b; }
+
+  @keyframes trend-arrow-pulse {
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% {
+      transform: translateX(calc(var(--trend-arrow-dir) * var(--trend-arrow-translate))) scale(var(--trend-arrow-scale));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .trend-arrow {
       animation: none !important;
     }
   }
@@ -22887,6 +22986,139 @@ document.addEventListener('DOMContentLoaded', function() {
 	      const subtypeText = String(meta.subtype || '').trim();
 	      const stageText = String(meta.transitionStage || '').trim();
 	      const growthDynamicText = String(meta.growthDynamic || '').trim();
+	      const shiftSince2020 = Number(meta.shiftSince2020);
+	      const shiftSince2008 = Number(meta.shiftSince2008);
+	      const shiftSince2000 = Number(meta.shiftSince2000);
+
+	      const trendArrowStrengthClass = (shiftPts) => {
+	        const s = Number(shiftPts);
+	        const abs = Number.isFinite(s) ? Math.abs(s) : 0;
+	        if (abs >= 7.5) return 'trend-arrow-strong';
+	        if (abs >= 2) return 'trend-arrow-medium';
+	        return 'trend-arrow-soft';
+	      };
+
+	      const trendToneClassForShift = (shiftPts) => {
+	        const s = Number(shiftPts);
+	        if (!Number.isFinite(s) || Math.abs(s) < 0.01) return 'tone-neutral';
+	        return s > 0 ? 'tone-rep' : 'tone-dem';
+	      };
+
+	      const trendArrowSpanHTML = (shiftPts) => {
+	        const s = Number(shiftPts);
+	        const dirClass = (Number.isFinite(s) && s < 0) ? 'trend-arrow-left' : 'trend-arrow-right';
+	        const toneClass = trendToneClassForShift(shiftPts);
+	        const strengthClass = trendArrowStrengthClass(shiftPts);
+	        const glyph = dirClass === 'trend-arrow-left' ? '\u2190' : '\u2192';
+	        return `<span class="trend-arrow ${dirClass} ${strengthClass} ${toneClass}" aria-hidden="true">${glyph}</span>`;
+	      };
+
+	      const renderShiftLineHTML = (shiftPts, sinceYear) => {
+	        if (!Number.isFinite(Number(shiftPts))) return '';
+	        const label = formatShiftLabel(shiftPts);
+	        if (!label || /^No change$/i.test(label)) return '';
+	        const toneClass = trendToneClassForShift(shiftPts);
+	        return `
+	          <div class="trajectory-line ${toneClass}">
+	            <span class="trajectory-line-text">${escapeHtml(`${label} since ${sinceYear}`)}&nbsp;${trendArrowSpanHTML(shiftPts)}</span>
+	          </div>
+	        `;
+	      };
+
+	      const formatVotesDeltaCompact = (raw) => {
+	        const text = String(raw || '').trim();
+	        if (!text) return null;
+	        // Example input: "Votes vs last cycle: R +10.5K, D +9.7K"
+	        const cleaned = text.replace(/^Votes\s+vs\s+last\s+cycle:\s*/i, '');
+	        const rep = cleaned.match(/\bR\s*([+-]\s*[\d,.]+(?:\.\d+)?[KM]?)\b/i);
+	        const dem = cleaned.match(/\bD\s*([+-]\s*[\d,.]+(?:\.\d+)?[KM]?)\b/i);
+	        const repPart = rep ? `R ${rep[1].replace(/\s+/g, ' ').trim()}` : '';
+	        const demPart = dem ? `D ${dem[1].replace(/\s+/g, ' ').trim()}` : '';
+	        if (repPart && demPart) {
+	          return {
+	            text: `${repPart} \u00b7 ${demPart}`,
+	            html: `<span class="vote-delta-rep">${escapeHtml(repPart)}</span><span class="vote-delta-sep"> \u00b7 </span><span class="vote-delta-dem">${escapeHtml(demPart)}</span>`
+	          };
+	        }
+	        if (repPart) return { text: repPart, html: `<span class="vote-delta-rep">${escapeHtml(repPart)}</span>` };
+	        if (demPart) return { text: demPart, html: `<span class="vote-delta-dem">${escapeHtml(demPart)}</span>` };
+	        const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+	        if (parts.length >= 2) {
+	          const t = parts.slice(0, 2).join(' \u00b7 ');
+	          return { text: t, html: escapeHtml(t) };
+	        }
+	        const fallback = cleaned.replace(/\s*,\s*/g, ' \u00b7 ');
+	        return { text: fallback, html: escapeHtml(fallback) };
+	      };
+
+	      const latestResultText = (() => {
+	        const latest = details.find(d => String(d?.label || '').trim().toLowerCase() === 'latest result');
+	        return latest ? String(latest.value || '').trim() : '';
+	      })();
+	      const latestToneClass = (() => {
+	        const v = String(latestResultText || '');
+	        if (/\bR\+\d/i.test(v)) return 'tone-rep';
+	        if (/\bD\+\d/i.test(v)) return 'tone-dem';
+	        if (/\bTie\b/i.test(v)) return 'tone-neutral';
+	        return 'tone-neutral';
+	      })();
+
+	      const recentShiftLineHTML = (() => {
+	        if (!Number.isFinite(shiftSince2020)) return '';
+	        const label = formatShiftLabel(shiftSince2020);
+	        if (!label || /^No change$/i.test(label)) return '';
+	        return renderShiftLineHTML(shiftSince2020, 2020);
+	      })();
+	      const recentShiftToneClass = trendToneClassForShift(shiftSince2020);
+
+	      const longTermToneClass = (() => {
+	        const a = Number.isFinite(shiftSince2008) ? shiftSince2008 : NaN;
+	        const b = Number.isFinite(shiftSince2000) ? shiftSince2000 : NaN;
+	        const pick = (Number.isFinite(a) && Number.isFinite(b))
+	          ? (Math.abs(a) >= Math.abs(b) ? a : b)
+	          : (Number.isFinite(a) ? a : (Number.isFinite(b) ? b : NaN));
+	        return trendToneClassForShift(pick);
+	      })();
+
+	      const voteDelta = formatVotesDeltaCompact(growthDynamicText);
+	      const voteDeltaLineHTML = voteDelta
+	        ? `<div class="trajectory-votes" title="${escapeHtml(voteDelta.text)}">${voteDelta.html}</div>`
+	        : '';
+
+	      const longShiftLinesHTML = [
+	        renderShiftLineHTML(shiftSince2008, 2008),
+	        renderShiftLineHTML(shiftSince2000, 2000)
+	      ].filter(Boolean).join('');
+
+	      const storyHTML = (latestResultText || recentShiftLineHTML || voteDeltaLineHTML || longShiftLinesHTML)
+	        ? `
+	          <div class="focus-trajectory-grid focus-trajectory-story" aria-label="Trend story">
+	            ${latestResultText ? `
+	              <div class="focus-trajectory-item ${latestToneClass} is-latest" aria-label="Latest Result">
+	                <span class="focus-trajectory-label">Latest Result</span>
+	                <span class="focus-trajectory-value ${latestToneClass}">${escapeHtml(latestResultText)}</span>
+	              </div>
+	            ` : ''}
+	            ${(recentShiftLineHTML || voteDeltaLineHTML) ? `
+	              <div class="focus-trajectory-item ${recentShiftToneClass} is-shift" aria-label="Recent Shift">
+	                <span class="focus-trajectory-label">Recent Shift</span>
+	                <div class="focus-trajectory-value stack">
+	                  ${recentShiftLineHTML}
+	                  ${voteDeltaLineHTML}
+	                </div>
+	              </div>
+	            ` : ''}
+	            ${longShiftLinesHTML ? `
+	              <div class="focus-trajectory-item ${longTermToneClass} is-shift" aria-label="Long-Term Trend">
+	                <span class="focus-trajectory-label">Long-Term Trend</span>
+	                <div class="focus-trajectory-value stack">
+	                  ${longShiftLinesHTML}
+	                </div>
+	              </div>
+	            ` : ''}
+	          </div>
+	        `
+	        : '';
 
       // Normalize legacy diagonal arrows to horizontal so trend direction is always shown left/right.
       const normalizeTrajectoryArrow = (arrow) => {
@@ -22902,17 +23134,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const trendArrowMatch = trendText.trim().match(/^([\u2190\u2192\u2194\u2197\u2198])\s*/);
       const trendArrow = trendArrowMatch ? normalizeTrajectoryArrow(trendArrowMatch[1]) : '';
       const trendBody = trendArrow ? trendText.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : trendText;
-      const detailTone = (label, value) => {
-        const v = String(value || '');
-        if (v.includes('\u2192') || v.includes('\u2197') || /\bR\+\d/.test(v)) return 'rep';
-        if (v.includes('\u2190') || v.includes('\u2198') || /\bD\+\d/.test(v)) return 'dem';
-        if (v.includes('\u2194') || /Tie|Even/i.test(v)) return 'neutral';
-        if (String(label || '').toLowerCase() === 'latest result') {
-          if (/\bR\+/.test(v)) return 'rep';
-          if (/\bD\+/.test(v)) return 'dem';
-        }
-        return 'neutral';
-      };
       return `
         <div class="focus-trajectory status-${statusClass}" role="group" aria-label="Trajectory summary">
 	          <div class="focus-trajectory-head">
@@ -22929,30 +23150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	            </span>
 	          </p>
           ${meaningText ? `<p class="focus-trajectory-meaning ${statusToneClass}"><strong>Meaning:</strong> ${escapeHtml(meaningText)}</p>` : ''}
-          ${details.length ? `
-            <div class="focus-trajectory-grid">
-              ${details.map(item => {
-                const tone = detailTone(item?.label, item?.value);
-                  const toneClass = trajectoryToneClass(tone);
-                  const label = String(item?.label || '');
-                  const valueRaw = String(item?.value || '');
-                  const arrowMatch = valueRaw.trim().match(/^([\u2190\u2192\u2194\u2197\u2198])\s*/);
-                  const arrow = arrowMatch ? normalizeTrajectoryArrow(arrowMatch[1]) : '';
-                  const valueBody = arrow ? valueRaw.trim().replace(/^([\u2190\u2192\u2194\u2197\u2198])\s*/, '') : valueRaw;
-                  const rowRole = String(item?.role || '').toLowerCase() === 'latest' ? 'is-latest' : 'is-shift';
-                  return `
-	                 <div class="focus-trajectory-item ${toneClass} ${rowRole}">
-	                   <span class="focus-trajectory-label">${escapeHtml(label)}</span>
-	                  <span class="focus-trajectory-value ${toneClass}">
-	                    ${arrow ? `<span class="focus-trajectory-arrow ${toneClass}">${escapeHtml(arrow)}</span>` : ''}
-	                    ${escapeHtml(valueBody)}
-	                  </span>
-	                  ${(rowRole === 'is-latest' && growthDynamicText) ? `<span class="focus-trajectory-growth">${escapeHtml(growthDynamicText)}</span>` : ''}
-	                </div>
-	              `;
-              }).join('')}
-            </div>
-          ` : ''}
+          ${storyHTML}
         </div>
       `;
     }
@@ -23216,6 +23414,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : 'No margin data';
       let shiftLabel = 'No prior precinct cycle loaded';
       let shiftColor = '#64748b';
+      let shiftArrowHtml = '';
       if (hasPrev && prevYear) {
         const delta = cur - prev;
         if (Math.abs(delta) < TREND_SHIFT_NOISE_PTS) {
@@ -23224,13 +23423,18 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}% since ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
+          const abs = Math.abs(delta);
+          const strengthClass = abs >= 7.5 ? 'trend-arrow-strong' : (abs >= 2 ? 'trend-arrow-medium' : 'trend-arrow-soft');
+          const toneClass = delta > 0 ? 'tone-rep' : 'tone-dem';
+          const dirClass = delta > 0 ? 'trend-arrow-right' : 'trend-arrow-left';
+          shiftArrowHtml = ` <span class="trend-arrow ${dirClass} ${strengthClass} ${toneClass}" aria-hidden="true">${delta > 0 ? '\u2192' : '\u2190'}</span>`;
         }
       }
       return `
         <div style="margin-top:8px;padding:8px 10px;border:1px solid rgba(148,163,184,0.36);border-radius:10px;background:rgba(248,250,252,0.92);">
           <div style="font-size:11px;font-weight:800;letter-spacing:0.01em;color:#334155;">Trend at a glance</div>
           <div style="margin-top:2px;font-size:12px;font-weight:700;color:#0f172a;">${escapeHtml(`${year}: ${currentLabel}`)}</div>
-          <div style="margin-top:1px;font-size:11px;font-weight:700;color:${shiftColor};">${escapeHtml(shiftLabel)}</div>
+          <div style="margin-top:1px;font-size:11px;font-weight:700;color:${shiftColor};">${escapeHtml(shiftLabel)}${shiftArrowHtml}</div>
         </div>
       `;
     }
