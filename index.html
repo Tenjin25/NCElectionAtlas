@@ -4855,13 +4855,44 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   .focus-trajectory-grid.focus-trajectory-story {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 
   .focus-trajectory-grid.focus-trajectory-story .focus-trajectory-item + .focus-trajectory-item {
-    padding-top: 6px;
+    padding-top: 5px;
     border-top: 1px dashed rgba(148, 163, 184, 0.22);
   }
+
+  .trend-section {
+    min-width: 0;
+  }
+
+  .trend-section-title {
+    margin: 0;
+  }
+
+  .latest-result-label {
+    font-size: 9px;
+    letter-spacing: 0.075em;
+  }
+
+  .latest-result-line {
+    font-size: 15px;
+    font-weight: 950;
+    letter-spacing: -0.012em;
+    line-height: 1.15;
+  }
+
+  .long-term-line { opacity: 0.85; }
+
+  .vote-change-line {
+    font-size: 10px;
+    font-weight: 800;
+    color: #475569;
+  }
+  .vote-change-line .vote-delta-rep { color: rgba(185, 28, 28, 0.85); }
+  .vote-change-line .vote-delta-dem { color: rgba(29, 78, 216, 0.85); }
+  .vote-change-line .vote-delta-sep { color: rgba(100, 116, 139, 0.85); }
 
   .focus-trajectory-grid.focus-trajectory-story .focus-trajectory-item.is-latest {
     padding-left: 8px;
@@ -4920,18 +4951,20 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-weight: 900;
     line-height: 1;
     white-space: nowrap;
+    vertical-align: -0.06em;
+    margin-left: 2px;
     transform-origin: center;
     --trend-arrow-dir: 1;
-    --trend-arrow-scale: 1.06;
+    --trend-arrow-scale: 1.05;
     --trend-arrow-translate: 1px;
     animation: trend-arrow-pulse 1.5s ease-in-out infinite;
   }
 
   .trend-arrow-right { --trend-arrow-dir: 1; }
   .trend-arrow-left { --trend-arrow-dir: -1; }
-  .trend-arrow-soft { --trend-arrow-scale: 1.06; --trend-arrow-translate: 1px; }
-  .trend-arrow-medium { --trend-arrow-scale: 1.10; --trend-arrow-translate: 2px; }
-  .trend-arrow-strong { --trend-arrow-scale: 1.16; --trend-arrow-translate: 3px; }
+  .trend-arrow-soft { --trend-arrow-scale: 1.05; --trend-arrow-translate: 1px; }
+  .trend-arrow-medium { --trend-arrow-scale: 1.09; --trend-arrow-translate: 2px; }
+  .trend-arrow-strong { --trend-arrow-scale: 1.13; --trend-arrow-translate: 2.5px; }
   .trend-arrow.tone-dem { color: #1d4ed8; }
   .trend-arrow.tone-rep { color: #b91c1c; }
   .trend-arrow.tone-neutral { color: #64748b; }
@@ -23013,13 +23046,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `<span class="trend-arrow ${dirClass} ${strengthClass} ${toneClass}" aria-hidden="true">${glyph}</span>`;
 	      };
 
-	      const renderShiftLineHTML = (shiftPts, sinceYear) => {
+	      const renderShiftLineHTML = (shiftPts, sinceYear, extraClass = '') => {
 	        if (!Number.isFinite(Number(shiftPts))) return '';
 	        const label = formatShiftLabel(shiftPts);
 	        if (!label || /^No change$/i.test(label)) return '';
 	        const toneClass = trendToneClassForShift(shiftPts);
+	        const extra = String(extraClass || '').trim();
+	        const extraAttr = extra ? ` ${extra}` : '';
 	        return `
-	          <div class="trajectory-line ${toneClass}">
+	          <div class="trajectory-line ${toneClass}${extraAttr}">
 	            <span class="trajectory-line-text">${escapeHtml(`${label} since ${sinceYear}`)}&nbsp;${trendArrowSpanHTML(shiftPts)}</span>
 	          </div>
 	        `;
@@ -23082,26 +23117,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	      const voteDelta = formatVotesDeltaCompact(growthDynamicText);
 	      const voteDeltaLineHTML = voteDelta
-	        ? `<div class="trajectory-votes" title="${escapeHtml(voteDelta.text)}">${voteDelta.html}</div>`
+	        ? `<div class="trajectory-votes vote-change-line" title="${escapeHtml(voteDelta.text)}">${voteDelta.html}</div>`
 	        : '';
 
 	      const longShiftLinesHTML = [
-	        renderShiftLineHTML(shiftSince2008, 2008),
-	        renderShiftLineHTML(shiftSince2000, 2000)
+	        renderShiftLineHTML(shiftSince2008, 2008, 'long-term-line'),
+	        renderShiftLineHTML(shiftSince2000, 2000, 'long-term-line')
 	      ].filter(Boolean).join('');
 
 	      const storyHTML = (latestResultText || recentShiftLineHTML || voteDeltaLineHTML || longShiftLinesHTML)
 	        ? `
 	          <div class="focus-trajectory-grid focus-trajectory-story" aria-label="Trend story">
 	            ${latestResultText ? `
-	              <div class="focus-trajectory-item ${latestToneClass} is-latest" aria-label="Latest Result">
-	                <span class="focus-trajectory-label">Latest Result</span>
-	                <span class="focus-trajectory-value ${latestToneClass}">${escapeHtml(latestResultText)}</span>
+	              <div class="focus-trajectory-item trend-section ${latestToneClass} is-latest" aria-label="Latest Result">
+	                <span class="focus-trajectory-label trend-section-title latest-result-label">Latest Result</span>
+	                <span class="focus-trajectory-value ${latestToneClass} latest-result-line">${escapeHtml(latestResultText)}</span>
 	              </div>
 	            ` : ''}
 	            ${(recentShiftLineHTML || voteDeltaLineHTML) ? `
-	              <div class="focus-trajectory-item ${recentShiftToneClass} is-shift" aria-label="Recent Shift">
-	                <span class="focus-trajectory-label">Recent Shift</span>
+	              <div class="focus-trajectory-item trend-section ${recentShiftToneClass} is-shift" aria-label="Recent Shift">
+	                <span class="focus-trajectory-label trend-section-title">Recent Shift</span>
 	                <div class="focus-trajectory-value stack">
 	                  ${recentShiftLineHTML}
 	                  ${voteDeltaLineHTML}
@@ -23109,8 +23144,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	              </div>
 	            ` : ''}
 	            ${longShiftLinesHTML ? `
-	              <div class="focus-trajectory-item ${longTermToneClass} is-shift" aria-label="Long-Term Trend">
-	                <span class="focus-trajectory-label">Long-Term Trend</span>
+	              <div class="focus-trajectory-item trend-section ${longTermToneClass} is-shift" aria-label="Long-Term Trend">
+	                <span class="focus-trajectory-label trend-section-title">Long-Term Trend</span>
 	                <div class="focus-trajectory-value stack">
 	                  ${longShiftLinesHTML}
 	                </div>
