@@ -20608,6 +20608,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN, options = {}) {
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
+      const repName = (repCandidate || '').toString().trim();
+      const demName = (demCandidate || '').toString().trim();
+      const repMissing = !repName || /no\s+republican\s+candidate/i.test(repName);
+      const demMissing = !demName || /no\s+democratic\s+candidate/i.test(demName);
 
       // Keep hover tooltip margins on the same display pipeline as the rest of the UI.
       // The sign can still come from the active/derived margin, but the printed number
@@ -20619,6 +20623,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginLabel = useCountyPrecision
         ? formatCountyMarginPctForDisplay(marginPct)
         : formatMarginPctForDisplay(marginPct);
+
+      if (signed > 0 && demMissing) {
+        return {
+          party: 'rep',
+          winnerName: fullCandidateLabel(repCandidate, 'Republican'),
+          shortLabel: 'Uncontested R',
+          marginPct,
+          uncontested: true,
+          text: 'Uncontested R'
+        };
+      }
+      if (signed < 0 && repMissing) {
+        return {
+          party: 'dem',
+          winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
+          shortLabel: 'Uncontested D',
+          marginPct,
+          uncontested: true,
+          text: 'Uncontested D'
+        };
+      }
 
       if (signed > 0) {
         return {

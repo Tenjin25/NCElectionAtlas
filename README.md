@@ -101,10 +101,17 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–April 2026)
+## Recent Updates (March–May 2026)
 
 
-**Last updated:** April 30, 2026
+**Last updated:** May 5, 2026
+
+### State House 2024-Line Data Fixes + Uncontested Labels (May 5, 2026)
+
+- Corrected selected unchanged State House districts in the `2024 lines` district-contest JSON slices by copying the matching non-legislative results onto the 2024-line files where those districts did not change.
+- Kept the actual `state_house_state_house_2024.json` legislative contest file out of that transfer so placeholder uncontested candidate labels remain intact.
+- Updated shared result-label formatting so races with a missing major-party nominee now render as `Uncontested D` or `Uncontested R` instead of a normal winner-margin string.
+- Kept the UI change scoped to presentation text; no vote totals, contest math, or map-color thresholds were altered by the uncontested-label update.
 
 ### Change/Shift Language + Timeline Label Cleanup (April 30, 2026)
 
