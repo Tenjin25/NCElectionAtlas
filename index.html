@@ -2172,11 +2172,13 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 
 .vote-counter-context {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  /* Use grid to prevent long context titles (e.g., "Mecklenburg County") from being
+     visually covered by the Clear/Reset actions while keeping actions on the same row. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 12px;
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(0,0,0,0.06);
@@ -2257,7 +2259,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   flex-wrap: wrap;
   gap: 8px;
   flex-shrink: 0;
-  margin-left: auto;
+  justify-self: end;
 }
 
 @media (max-width: 900px) {
@@ -2267,6 +2269,11 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   .vote-counter-context .context-actions {
     width: 100%;
+    justify-self: stretch;
+  }
+
+  .vote-counter-context {
+    grid-template-columns: 1fr;
   }
 }
 
