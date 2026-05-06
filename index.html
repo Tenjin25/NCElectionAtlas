@@ -2193,7 +2193,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
 .vote-counter-context .context-title-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
 }
@@ -2230,17 +2230,19 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: #111827;
-  line-height: 1.1;
-  /* Keep the title on one line (ellipsis) so names like "Mecklenburg County"
-     don't break awkwardly mid-label. The header uses a 2-column grid so it
-     won't be covered by the action buttons. */
-  white-space: nowrap;
+  line-height: 1.15;
+  /* Allow long names (e.g., "Mecklenburg County") to show without being overly
+     truncated while still preventing the header from growing unbounded. */
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-/* Previously we allowed 2-line clamping on desktop; keep it single-line now
-   that the header layout reserves action space explicitly. */
+/* 2-line clamping is intentional: it improves readability for long county / district
+   names without letting the vote counter header consume too much vertical space. */
 
 .vote-counter-context .context-sub {
   margin-top: 2px;
