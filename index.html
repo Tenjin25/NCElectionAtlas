@@ -20397,10 +20397,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function compactWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       const pctLabel = `${formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
+      const repName = (repCandidate || '').toString().trim();
+      const demName = (demCandidate || '').toString().trim();
+      const repMissing = !repName || /no\s+republican\s+candidate/i.test(repName);
+      const demMissing = !demName || /no\s+democratic\s+candidate/i.test(demName);
+      const repVoteNum = Number(repVotes) || 0;
+      const demVoteNum = Number(demVotes) || 0;
+      const totalVoteNum = Number(totalVotes) || 0;
+      const repMissingByVotes = totalVoteNum > 0 && repVoteNum <= 0 && demVoteNum > 0;
+      const demMissingByVotes = totalVoteNum > 0 && demVoteNum <= 0 && repVoteNum > 0;
       if (margin > 0) {
+        if (demMissing || demMissingByVotes) return 'Uncontested R';
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
       if (margin < 0) {
+        if (repMissing || repMissingByVotes) return 'Uncontested D';
         return `${shortCandidateLabel(demCandidate, 'D')} +${pctLabel}`;
       }
       return 'Tie';
@@ -20409,10 +20420,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function compactCountyWinnerMarginLabel(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       const pctLabel = `${formatCountyMarginPctForDisplay(countyMarginPctDisplayValue(repVotes, demVotes, totalVotes))}%`;
+      const repName = (repCandidate || '').toString().trim();
+      const demName = (demCandidate || '').toString().trim();
+      const repMissing = !repName || /no\s+republican\s+candidate/i.test(repName);
+      const demMissing = !demName || /no\s+democratic\s+candidate/i.test(demName);
+      const repVoteNum = Number(repVotes) || 0;
+      const demVoteNum = Number(demVotes) || 0;
+      const totalVoteNum = Number(totalVotes) || 0;
+      const repMissingByVotes = totalVoteNum > 0 && repVoteNum <= 0 && demVoteNum > 0;
+      const demMissingByVotes = totalVoteNum > 0 && demVoteNum <= 0 && repVoteNum > 0;
       if (margin > 0) {
+        if (demMissing || demMissingByVotes) return 'Uncontested R';
         return `${shortCandidateLabel(repCandidate, 'R')} +${pctLabel}`;
       }
       if (margin < 0) {
+        if (repMissing || repMissingByVotes) return 'Uncontested D';
         return `${shortCandidateLabel(demCandidate, 'D')} +${pctLabel}`;
       }
       return 'Tie';
@@ -20454,6 +20476,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN, options = {}) {
       const signedFromVotes = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const signed = Number.isFinite(Number(signedPctOverride)) ? Number(signedPctOverride) : signedFromVotes;
+      const repVoteNum = Number(repVotes) || 0;
+      const demVoteNum = Number(demVotes) || 0;
+      const totalVoteNum = Number(totalVotes) || 0;
+      const repName = (repCandidate || '').toString().trim();
+      const demName = (demCandidate || '').toString().trim();
+      const repMissing = !repName || /no\s+republican\s+candidate/i.test(repName);
+      const demMissing = !demName || /no\s+democratic\s+candidate/i.test(demName);
+      const repMissingByVotes = totalVoteNum > 0 && repVoteNum <= 0 && demVoteNum > 0;
+      const demMissingByVotes = totalVoteNum > 0 && demVoteNum <= 0 && repVoteNum > 0;
+      const repMissingAny = repMissing || repMissingByVotes;
+      const demMissingAny = demMissing || demMissingByVotes;
 
       // Keep hover tooltip margins on the same display pipeline as the rest of the UI.
       // The sign can still come from the active/derived margin, but the printed number
@@ -20465,6 +20498,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginLabel = useCountyPrecision
         ? formatCountyMarginPctForDisplay(marginPct)
         : formatMarginPctForDisplay(marginPct);
+
+      if (signed > 0 && demMissingAny) {
+        return {
+          party: 'rep',
+          winnerName: fullCandidateLabel(repCandidate, 'Republican'),
+          shortLabel: 'Uncontested R',
+          marginPct,
+          uncontested: true,
+          text: 'Uncontested R'
+        };
+      }
+      if (signed < 0 && repMissingAny) {
+        return {
+          party: 'dem',
+          winnerName: fullCandidateLabel(demCandidate, 'Democratic'),
+          shortLabel: 'Uncontested D',
+          marginPct,
+          uncontested: true,
+          text: 'Uncontested D'
+        };
+      }
 
       if (signed > 0) {
         return {
