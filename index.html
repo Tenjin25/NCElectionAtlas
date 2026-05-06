@@ -14529,6 +14529,8 @@ document.addEventListener('DOMContentLoaded', function() {
       voteCounterHover = null;
       voteCounterHoverActive = false;
       setFocusModeActive(false);
+      // Clear any pinned precinct highlight selection on the map as well.
+      try { clearSelectedPrecinctNorm(); } catch (_) {}
       if (voteCounterBaseline) {
         setVoteCounterContext(voteCounterBaseline.title, voteCounterBaseline.sub, { showClear: false });
         updateVoteCounter(

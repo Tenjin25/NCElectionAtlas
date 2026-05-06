@@ -148,6 +148,17 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Ensured the spotlight dim overlay only appears when precinct polygons are actually visible (precincts enabled **and** zoom ≥ precinct minZoom), preventing stale dimming on mode switches/clears.
 - Fixed unintended **county dimming**: county fill opacity no longer drops just because precincts are toggled on; it now only reduces when precinct polygons are visible at the current zoom.
 
+### 2022→2024 Lines HD Result Sync (May 6, 2026)
+
+- Added `scripts/transfer_hd_results_2022_to_2024_lines.py` to copy selected **State House district** (`HD-xx`) `general.results` entries from `data/district_contests/` (2022 lines) into the matching `data/district_contests_2024_lines/` `state_house_*.json` slices.
+- Used to force identical results for districts that are expected to be unchanged across the two line sets (for example, a targeted sync for **HD-23** where values should match).
+- Note: `data/nc_district_results_2024_lines.json` uses **zero-padded district keys** (e.g., `"012"`), while the per-contest slices in `data/district_contests_2024_lines/` use unpadded keys (e.g., `"12"`).
+
+### Precinct Clear + Uncontested Labels (May 6, 2026)
+
+- Fixed a regression where clicking **Clear** in the vote counter could leave the precinct spotlight/highlight visible on the map.
+- Updated winner/margin display labeling so **uncontested races show `Uncontested R` / `Uncontested D`** on the front end (even when the underlying data omits explicit “no candidate” text, by also detecting 0-vote major-party opponents).
+
 ### Statewide Margin Precision Consistency (April 26, 2026)
 
 - Fixed a rounding/formatting drift in the “Statewide leader” label so it always matches the main margin display and authoritative sources (e.g., Wikipedia).
