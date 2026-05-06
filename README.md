@@ -159,6 +159,10 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Fixed a regression where clicking **Clear** in the vote counter could leave the precinct spotlight/highlight visible on the map.
 - Updated winner/margin display labeling so **uncontested races show `Uncontested R` / `Uncontested D`** on the front end (even when the underlying data omits explicit “no candidate” text, by also detecting 0-vote major-party opponents).
 - Improved the vote-counter header layout so long context titles (for example, `Mecklenburg County`) don’t get covered by the `Clear` / `Reset` actions (actions stay on the same row on desktop; the layout now uses a 2-column grid).
+- For `State House` / `State Senate` contests, the statewide winner label now uses chamber leadership names:
+  - `2022 State House`: Speaker Tim Moore
+  - `2024 State House`: Speaker Destin Hall
+  - `2022/2024 State Senate`: Phil Berger
 
 ### Statewide Margin Precision Consistency (April 26, 2026)
 
