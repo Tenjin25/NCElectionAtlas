@@ -2185,6 +2185,8 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 }
 
 .vote-counter-context .context-left {
+  /* Grid item: force into the left column and allow shrinking. */
+  grid-column: 1;
   flex: 1 1 280px;
   min-width: 0;
 }
@@ -2257,6 +2259,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   flex-wrap: wrap;
   gap: 8px;
   flex-shrink: 0;
+  grid-column: 2;
   justify-self: end;
 }
 
@@ -2268,6 +2271,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .vote-counter-context .context-actions {
     width: 100%;
     justify-self: stretch;
+    grid-column: 1;
   }
 
   .vote-counter-context {
