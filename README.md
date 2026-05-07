@@ -104,7 +104,26 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 5, 2026
+**Last updated:** May 7, 2026
+
+### First-Time UX Polish Pass (May 7, 2026)
+
+- Improved the default county-focus empty state with a compact `Start exploring` onboarding card (clear first steps and plain-language guidance).
+- Updated contest onboarding hint copy to `New here? Start with President 2024, then click a county.` and wired it to hide after the first contest selection via existing localStorage onboarding memory.
+- Added lightweight analysis-mode helper text:
+  - `Margins`: `Winner's lead`
+  - `Winners`: `Party carried`
+  - `Shift`: `Change vs prior election`
+- Renamed disclosure labels for clarity:
+  - `History` -> `Trend history`
+  - Tooltip disclosure `Details` -> `Vote details`
+  - `Non-geographic votes` -> `Absentee / provisional votes`
+- Added legend microcopy: `Darker colors mean larger margins; lighter colors are more competitive.`
+- Reworded tooltip pin/action hints in plain language:
+  - Desktop: `Click to lock this result open`
+  - Mobile/touch: `Tap to lock this card open`
+  - Pinned: `Pinned · use Close to dismiss`
+- Kept scope limited to UX copy/hierarchy/hints and subtle card styling only. No election math, data loading paths, layer behavior, or mobile layout structure changes.
 
 ### State House 2024-Line Data Fixes + Uncontested Labels (May 5, 2026)
 
