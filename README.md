@@ -1,4 +1,6 @@
-﻿# NCPrecinctMap
+# NCPrecinctMap
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 
 **NCPrecinctMap** is an interactive web-based map for exploring North Carolina election results at the precinct and district level, covering general elections from **2000 through 2024**. It is designed for researchers, journalists, and citizens who want to understand how election results map onto changing precinct and district boundaries over time.
 
@@ -1206,6 +1208,10 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
 ## Contributing
 
 Contributions are welcome! Please open an issue or pull request for bug fixes, new features, or data improvements.
+
+## License
+
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## Notes / Disclaimer
 
