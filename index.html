@@ -28017,10 +28017,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (lastPrecinctFillExpr && map.getLayer('precinct-fill')) {
           map.setPaintProperty('precinct-fill', 'fill-color', lastPrecinctFillExpr);
         }
+        if (lastPrecinctDotExpr && map.getLayer('precinct-dot')) {
+          map.setPaintProperty('precinct-dot', 'circle-color', lastPrecinctDotExpr);
+          if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-color', lastPrecinctDotExpr);
+        }
       } catch (err) {
         console.warn('Failed to apply cached precinct colors:', err?.message || err);
       }
       applyLayerOpacityTuning();
+      // Critical sync: when precinct geometry loads asynchronously after a zoom threshold,
+      // immediately recompute layer visibility/opacity so users don't need to toggle off/on.
+      try { updatePrecinctVisibility(); } catch (_) {}
+      // If we don't yet have cached precinct paint expressions for the active contest, refresh once.
+      try {
+        const contestKey = (document.getElementById('contestSelect')?.value || '').toString().trim();
+        if (precinctsEnabled && contestKey && (!lastPrecinctFillExpr || !lastPrecinctDotExpr)) {
+          applyContest(contestKey).catch(() => {});
+        }
+      } catch (_) {}
       setStatus(usedVtdFallback ? 'Precinct geometry ready (VTD20)' : 'Precinct geometry ready');
       return true;
     }

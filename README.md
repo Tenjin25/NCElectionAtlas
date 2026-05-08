@@ -104,7 +104,15 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 7, 2026
+**Last updated:** May 8, 2026
+
+### Precinct Auto-Sync After Zoom-In (May 8, 2026)
+
+- Fixed a precinct-overlay sync issue where, after zooming into precinct range, users could still see centroid/full-county presentation until toggling `Precincts` off/on.
+- Added a post-load precinct sync pass so when precinct geometry finishes loading asynchronously, visibility/opacity state is recomputed immediately.
+- Applied cached precinct **dot** colors at geometry-load completion (not just polygon fill colors) to avoid stale mixed rendering.
+- Added a one-time active-contest refresh fallback when cached precinct paint expressions are missing, so precinct mode initializes correctly without manual retoggle.
+- Scope is strictly interaction/render sync behavior for precinct mode; no election math, datasets, or contest calculations changed.
 
 ### First-Time UX Polish Pass (May 7, 2026)
 
