@@ -11560,9 +11560,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${normalizeDistrictLinesYear(linesYear)} lines`;
     }
 
-    function getActiveDistrictContestsDir(linesYear = currentDistrictLinesYear) {
+    function getActiveDistrictContestsDir(linesYear = currentDistrictLinesYear, scope = null) {
       const y = normalizeDistrictLinesYear(linesYear);
       const dirs = CONFIG.paths?.district_contests_dirs || {};
+      const scopeKey = (scope || '').toString().trim();
+      if (y === 2026 && scopeKey && scopeKey !== 'congressional') {
+        return dirs['2024'] || dirs[String(y)] || CONFIG.paths.district_contests_dir;
+      }
       return dirs[String(y)] || CONFIG.paths.district_contests_dir;
     }
 
@@ -11572,7 +11576,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const key = `${scope}_${contestType}_${year}`;
       const out = [];
       const calibrated2020Dir = (CONFIG.paths?.district_contests_2020_2024_dir || '').toString().trim();
-      const baseDir = (getActiveDistrictContestsDir(linesYear) || '').toString().trim();
+      const baseDir = (getActiveDistrictContestsDir(linesYear, scope) || '').toString().trim();
 
       // Prefer calibrated slices only for congressional scope on 2022 lines.
       // Legislative scopes continue to use the primary district_contests data.
@@ -11586,6 +11590,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getActiveDistrictManifest(linesYear = currentDistrictLinesYear) {
       const y = normalizeDistrictLinesYear(linesYear);
+      if (y === 2026) {
+        const m2026 = Array.isArray(districtManifestByLines?.['2026']) ? districtManifestByLines['2026'] : [];
+        const m2024 = Array.isArray(districtManifestByLines?.['2024']) ? districtManifestByLines['2024'] : [];
+        const merged = [];
+        const seen = new Set();
+        const add = (entry) => {
+          const scope = (entry?.scope || '').toString().trim();
+          const contest = (entry?.contest_type || '').toString().trim();
+          const year = Number(entry?.year);
+          if (!scope || !contest || !Number.isFinite(year)) return;
+          const key = `${scope}|${contest}|${year}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          merged.push(entry);
+        };
+        m2026.filter(e => (e?.scope || '').toString().trim() === 'congressional').forEach(add);
+        m2024.filter(e => {
+          const s = (e?.scope || '').toString().trim();
+          return s === 'state_house' || s === 'state_senate';
+        }).forEach(add);
+        return merged;
+      }
       return districtManifestByLines?.[String(y)] || [];
     }
 
