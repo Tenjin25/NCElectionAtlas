@@ -1035,6 +1035,11 @@ py scripts/build_historical_district_contests_2024_lines.py `
 
 Use `scripts/reaggregate_cd2026_lines.py` to build a precinct-to-2026 congressional crosswalk from `SL 2025-95` geometry and patch only selected CDs (default: `1,3`) in copied congressional slice files.
 
+Current app wiring for `2026 Lines`:
+
+- `congressional` scope reads `data/district_contests_2026_lines/`
+- `state_house` and `state_senate` scopes intentionally reuse `2024` slices
+
 Recommended run (project venv):
 
 ```powershell
@@ -1050,8 +1055,10 @@ Optional district override:
 Outputs:
 
 - `data/crosswalks/precinct_to_cd2026_sl2025_95.csv`
-- `data/district_contests_2026_lines/*.json`
+- `data/district_contests_2026_lines/congressional_*.json`
 - `data/district_contests_2026_lines/manifest.json`
+
+Important: the 2026 congressional geometry file must be WGS84 (`EPSG:4326`) or the overlay will not render in Mapbox.
 
 ### Splitting Consolidated District Results JSON
 
