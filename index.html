@@ -12265,8 +12265,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (btn2026) {
         const congressView = currentView === 'districts';
-        btn2026.disabled = !congressView;
-        btn2026.title = congressView ? '' : '2026 lines are only available in congressional view';
+        btn2026.style.display = congressView ? '' : 'none';
         btn2026.classList.toggle('active', y === 2026);
         btn2026.setAttribute('aria-pressed', y === 2026 ? 'true' : 'false');
       }
