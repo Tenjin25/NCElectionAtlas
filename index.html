@@ -12225,11 +12225,17 @@ document.addEventListener('DOMContentLoaded', function() {
           : (CONFIG.paths.districts_2022 || CONFIG.paths.districts);
       }
       if (scope === 'state_house') {
+        if (y === 2026) {
+          return CONFIG.paths.state_house_2024 || CONFIG.paths.state_house;
+        }
         return y === 2024
           ? (CONFIG.paths.state_house_2024 || CONFIG.paths.state_house)
           : (CONFIG.paths.state_house_2022 || CONFIG.paths.state_house);
       }
       if (scope === 'state_senate') {
+        if (y === 2026) {
+          return CONFIG.paths.state_senate_2024 || CONFIG.paths.state_senate;
+        }
         return y === 2024
           ? (CONFIG.paths.state_senate_2024 || CONFIG.paths.state_senate)
           : (CONFIG.paths.state_senate_2022 || CONFIG.paths.state_senate);
@@ -12258,6 +12264,9 @@ document.addEventListener('DOMContentLoaded', function() {
         btn2024.setAttribute('aria-pressed', y === 2024 ? 'true' : 'false');
       }
       if (btn2026) {
+        const congressView = currentView === 'districts';
+        btn2026.disabled = !congressView;
+        btn2026.title = congressView ? '' : '2026 lines are only available in congressional view';
         btn2026.classList.toggle('active', y === 2026);
         btn2026.setAttribute('aria-pressed', y === 2026 ? 'true' : 'false');
       }
@@ -12341,6 +12350,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function setDistrictLinesMode(linesYear) {
       const nextYear = normalizeDistrictLinesYear(linesYear);
+      if (nextYear === 2026 && currentView !== 'districts') {
+        setStatus('2026 lines are only available for congressional view.');
+        updateDistrictLinesToggleUI();
+        return;
+      }
       if (nextYear === normalizeDistrictLinesYear(currentDistrictLinesYear)) {
         updateDistrictLinesToggleUI();
         return;
@@ -19744,6 +19758,9 @@ document.addEventListener('DOMContentLoaded', function() {
         candidates: voteCounterPinned.candidates ? { ...voteCounterPinned.candidates } : null
       } : null;
       currentView = view;
+      if (currentView !== 'districts' && normalizeDistrictLinesYear(currentDistrictLinesYear) === 2026) {
+        currentDistrictLinesYear = 2024;
+      }
       
       // Update button states
       const viewButtonStates = [
