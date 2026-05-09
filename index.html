@@ -8959,6 +8959,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
   }
+  const districtLines2026Btn = document.getElementById('district-lines-2026');
+  if (districtLines2026Btn) {
+    districtLines2026Btn.onclick = function() {
+      if (typeof setDistrictLinesMode === 'function') {
+        setDistrictLinesMode(2026).catch(() => {});
+      }
+    };
+  }
 
   const splitTicketBtn = document.getElementById('split-ticket-toggle');
   if (splitTicketBtn) {
@@ -9510,9 +9518,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="view-toggle-row" style="display:flex;gap:6px;flex-wrap:wrap;">
                   <button id="district-lines-2022" class="view-toggle-btn active" type="button" data-testid="lines-2022" aria-label="Use 2022 district lines" aria-pressed="true">2022 Lines</button>
                   <button id="district-lines-2024" class="view-toggle-btn" type="button" data-testid="lines-2024" aria-label="Use 2024 district lines" aria-pressed="false">2024 Lines</button>
+                  <button id="district-lines-2026" class="view-toggle-btn" type="button" data-testid="lines-2026" aria-label="Use 2026 district lines" aria-pressed="false">2026 Lines</button>
                 </div>
                 <div style="margin-top:4px;font-size:11px;color:#6b7280;">
-                  2022 keeps the longer history; 2024 uses the new legislative and congressional boundaries.
+                  2022 keeps the longer history; 2024 and 2026 use newer boundaries.
                 </div>
                 <div id="district-lines-loading-hint" class="district-lines-loading-hint" aria-live="polite" aria-atomic="true"></div>
             </div>
@@ -9955,6 +9964,7 @@ document.addEventListener('DOMContentLoaded', function() {
         districts: withBase('./data/tileset/nc_cd118_tileset.geojson'),
         districts_2022: withBase('./data/tileset/nc_cd118_tileset.geojson'),
         districts_2024: withBase('./data/tileset/nc_cd119_tileset.geojson'),
+        districts_2026: withBase('./data/tileset/nc_cd2026_sl2025_95_tileset.geojson'),
         state_house: withBase('./data/tileset/nc_state_house_2022_lines_tileset.geojson'),
         state_house_2022: withBase('./data/tileset/nc_state_house_2022_lines_tileset.geojson'),
         state_house_2024: withBase('./data/tileset/nc_state_house_2024_lines_tileset.geojson'),
@@ -9980,7 +9990,8 @@ document.addEventListener('DOMContentLoaded', function() {
         district_contests_2020_2024_dir: withBase('./data/district_contests_2020_2024'),
         district_contests_dirs: {
           '2022': withBase('./data/district_contests'),
-          '2024': withBase('./data/district_contests_2024_lines')
+          '2024': withBase('./data/district_contests_2024_lines'),
+          '2026': withBase('./data/district_contests_2026_lines')
         },
         districts_info: withBase('./data/nc_congressional_districts.csv'),
         state_house_info: withBase('./data/nc_state_house_districts.csv'),
@@ -9992,6 +10003,7 @@ document.addEventListener('DOMContentLoaded', function() {
         crosswalks: {
           congressional: withBase('./data/crosswalks/precinct_to_cd118.csv'),
           congressional_2022: withBase('./data/crosswalks/precinct_to_cd118.csv'),
+          congressional_2026: withBase('./data/crosswalks/precinct_to_cd2026_sl2025_95.csv'),
           state_house_2022: withBase('./data/crosswalks/precinct_to_2022_state_house.csv'),
           state_house_2024: withBase('./data/crosswalks/precinct_to_2024_state_house.csv'),
           state_senate_2022: withBase('./data/crosswalks/precinct_to_2022_state_senate.csv'),
@@ -10414,7 +10426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let electionData = null; // Flattened array for compatibility
     let contestManifest = [];
     let districtManifest = [];
-    let districtManifestByLines = { '2022': [], '2024': [] };
+    let districtManifestByLines = { '2022': [], '2024': [], '2026': [] };
     let currentDistrictLinesYear = 2022;
     const districtGeometryCache = new Map();
     let congressionalData = []; // Optional legacy district-level table
@@ -10848,9 +10860,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let cvapCountyTotalsByNorm = null; // Map<string countyNorm, number CVAP_TOT24>
     let cvapPrecinctTotalsByNorm = null; // Map<string precinct_norm, number CVAP_TOT24>
     const cvapDistrictTotalsByScopeYear = {
-      congressional: { '2022': null, '2024': null }, // Map<string districtNum, number>
-      state_house: { '2022': null, '2024': null },
-      state_senate: { '2022': null, '2024': null }
+      congressional: { '2022': null, '2024': null, '2026': null }, // Map<string districtNum, number>
+      state_house: { '2022': null, '2024': null, '2026': null },
+      state_senate: { '2022': null, '2024': null, '2026': null }
     };
     let cvapCountyTotalsLoadPromise = null;
     let cvapPrecinctTotalsLoadPromise = null;
@@ -11538,7 +11550,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function normalizeDistrictLinesYear(raw) {
-      return Number(raw) === 2024 ? 2024 : 2022;
+      const y = Number(raw);
+      if (y === 2026) return 2026;
+      if (y === 2024) return 2024;
+      return 2022;
     }
 
     function getDistrictLinesLabel(linesYear = currentDistrictLinesYear) {
@@ -12176,6 +12191,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function getDistrictGeometryPath(scope, linesYear = currentDistrictLinesYear) {
       const y = normalizeDistrictLinesYear(linesYear);
       if (scope === 'congressional') {
+        if (y === 2026) {
+          return CONFIG.paths.districts_2026 || CONFIG.paths.districts_2024 || CONFIG.paths.districts;
+        }
         return y === 2024
           ? (CONFIG.paths.districts_2024 || CONFIG.paths.districts)
           : (CONFIG.paths.districts_2022 || CONFIG.paths.districts);
@@ -12204,6 +12222,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const y = normalizeDistrictLinesYear(currentDistrictLinesYear);
       const btn2022 = document.getElementById('district-lines-2022');
       const btn2024 = document.getElementById('district-lines-2024');
+      const btn2026 = document.getElementById('district-lines-2026');
       if (btn2022) {
         btn2022.classList.toggle('active', y === 2022);
         btn2022.setAttribute('aria-pressed', y === 2022 ? 'true' : 'false');
@@ -12211,6 +12230,10 @@ document.addEventListener('DOMContentLoaded', function() {
       if (btn2024) {
         btn2024.classList.toggle('active', y === 2024);
         btn2024.setAttribute('aria-pressed', y === 2024 ? 'true' : 'false');
+      }
+      if (btn2026) {
+        btn2026.classList.toggle('active', y === 2026);
+        btn2026.setAttribute('aria-pressed', y === 2026 ? 'true' : 'false');
       }
     }
 
@@ -12261,12 +12284,13 @@ document.addEventListener('DOMContentLoaded', function() {
       wireDistrictLinesLoadingModal();
       const hint = document.getElementById('district-lines-loading-hint');
       if (!hint) return;
+      const y = normalizeDistrictLinesYear(currentDistrictLinesYear);
       hint.classList.add('is-visible');
       hint.innerHTML = `
         <span class="spinner" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;">
           <svg width="14" height="14" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-dasharray="31.4 31.4" transform="rotate(-90 25 25)"/></svg>
         </span>
-        <span>Loading 2024 lines (first-time load can take <b>10–30s</b>)…</span>
+        <span>Loading ${y} lines (first-time load can take <b>10–30s</b>)…</span>
       `;
     }
 
@@ -12279,7 +12303,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function shouldWarnDistrictLinesLoad(linesYear) {
       const y = normalizeDistrictLinesYear(linesYear);
-      if (y !== 2024) return false;
+      if (y !== 2024 && y !== 2026) return false;
       const scopes = ['congressional', 'state_house', 'state_senate'];
       return scopes.some(scope => {
         const path = getDistrictGeometryPath(scope, y);
@@ -12307,7 +12331,7 @@ document.addEventListener('DOMContentLoaded', function() {
       updateDistrictLinesToggleUI();
 
       if (appReady) {
-        const showLoading = nextYear === 2024 && shouldWarnDistrictLinesLoad(nextYear);
+        const showLoading = (nextYear === 2024 || nextYear === 2026) && shouldWarnDistrictLinesLoad(nextYear);
         try {
           if (showLoading) showDistrictLinesLoadingModal();
           await refreshDistrictGeometrySources(nextYear);
@@ -19504,6 +19528,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const crosswalks = CONFIG.paths?.crosswalks || {};
       const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
       if (scope === 'congressional') {
+        if (linesYear === 2026) {
+          return (crosswalks.congressional_2026 || crosswalks.congressional_2024 || crosswalks.congressional_2022 || crosswalks.congressional) || '';
+        }
         return (linesYear === 2024
           ? (crosswalks.congressional_2024 || crosswalks.congressional_2022 || crosswalks.congressional)
           : (crosswalks.congressional_2022 || crosswalks.congressional)) || '';
@@ -20115,9 +20142,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function cvapDistrictPathFor(scope, linesYear) {
       const y = normalizeDistrictLinesYear(linesYear);
       const paths = cvapAggPaths();
-      if (scope === 'congressional') return y === 2024 ? paths.cd119_2024 : paths.cd118_2022;
-      if (scope === 'state_house') return y === 2024 ? paths.state_house_2024 : paths.state_house_2022;
-      if (scope === 'state_senate') return y === 2024 ? paths.state_senate_2024 : paths.state_senate_2022;
+      if (scope === 'congressional') return y === 2026 ? (paths.cd119_2024 || paths.cd118_2022) : (y === 2024 ? paths.cd119_2024 : paths.cd118_2022);
+      if (scope === 'state_house') return y === 2026 ? (paths.state_house_2024 || paths.state_house_2022) : (y === 2024 ? paths.state_house_2024 : paths.state_house_2022);
+      if (scope === 'state_senate') return y === 2026 ? (paths.state_senate_2024 || paths.state_senate_2022) : (y === 2024 ? paths.state_senate_2024 : paths.state_senate_2022);
       return '';
     }
 
@@ -20190,7 +20217,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { void ensureCvapCountyTotalsLoaded(); } catch (_) {}
       try { void ensureCvapPrecinctTotalsLoaded(); } catch (_) {}
       try {
-        for (const y of [2022, 2024]) {
+        for (const y of [2022, 2024, 2026]) {
           void ensureCvapDistrictTotalsLoaded('congressional', y);
           void ensureCvapDistrictTotalsLoaded('state_house', y);
           void ensureCvapDistrictTotalsLoaded('state_senate', y);
@@ -30883,8 +30910,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       try {
         let loadedAnyDistrictManifest = false;
-        districtManifestByLines = { '2022': [], '2024': [] };
-        for (const linesYear of [2022, 2024]) {
+        districtManifestByLines = { '2022': [], '2024': [], '2026': [] };
+        for (const linesYear of [2022, 2024, 2026]) {
           const dir = getActiveDistrictContestsDir(linesYear);
           if (!dir) continue;
           try {
@@ -30917,7 +30944,7 @@ document.addEventListener('DOMContentLoaded', function() {
         districtElectionDataJSON = null;
         districtElectionDataLoadInflight = null;
         districtElectionDataLoadFailed = false;
-        districtManifestByLines = { '2022': [], '2024': [] };
+        districtManifestByLines = { '2022': [], '2024': [], '2026': [] };
         districtManifest = [];
         updateDistrictLinesToggleUI();
       }

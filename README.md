@@ -1031,6 +1031,28 @@ py scripts/build_historical_district_contests_2024_lines.py `
   --jobs 4
 ```
 
+### Reaggregating CD-01/CD-03 on 2026 Lines (SL 2025-95)
+
+Use `scripts/reaggregate_cd2026_lines.py` to build a precinct-to-2026 congressional crosswalk from `SL 2025-95` geometry and patch only selected CDs (default: `1,3`) in copied congressional slice files.
+
+Recommended run (project venv):
+
+```powershell
+.\.venv\Scripts\python.exe scripts/reaggregate_cd2026_lines.py --district-col DISTRICT
+```
+
+Optional district override:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/reaggregate_cd2026_lines.py --district-col DISTRICT --target-districts 1,3
+```
+
+Outputs:
+
+- `data/crosswalks/precinct_to_cd2026_sl2025_95.csv`
+- `data/district_contests_2026_lines/*.json`
+- `data/district_contests_2026_lines/manifest.json`
+
 ### Splitting Consolidated District Results JSON
 
 Use `scripts/split_district_results_by_contest_year.py` to split a consolidated district-results file into per-scope/per-contest/per-year JSON slices.
