@@ -21121,13 +21121,23 @@ document.addEventListener('DOMContentLoaded', function() {
       const leadLabel = isCountyContext
         ? leadCountyMarginPctLabel(r, d, total)
         : focusLeadMarginLabel(r, d, total);
+      const winnerCallMeta = winnerMarginCall(
+        r,
+        d,
+        total,
+        resolvedCandidates.repCandidate,
+        resolvedCandidates.demCandidate,
+        NaN,
+        { precision: isCountyContext ? 'county' : 'default' }
+      );
+      const leadDisplayLabel = winnerCallMeta?.uncontested ? winnerCallMeta.shortLabel : leadLabel;
 
       winnerEl.textContent = winnerLabel;
       winnerEl.className = `focus-pill-value ${winnerParty}`;
       winnerEl.title = winnerTitle;
-      marginEl.textContent = leadLabel;
+      marginEl.textContent = leadDisplayLabel;
       marginEl.className = `focus-pill-value ${winnerParty}`;
-      marginEl.title = leadLabel;
+      marginEl.title = leadDisplayLabel;
       totalEl.textContent = total.toLocaleString();
       barDem.style.width = `${demPct.toFixed(4)}%`;
       barOther.style.width = `${otherPct.toFixed(4)}%`;
@@ -21143,9 +21153,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (leadMetaEl) {
         leadMetaEl.textContent = winnerParty === 'tie'
           ? 'Even race'
-          : (isCountyContext
+          : (winnerCallMeta?.text || (isCountyContext
             ? compactCountyWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)
-            : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate));
+            : compactWinnerMarginLabel(r, d, total, resolvedCandidates.repCandidate, resolvedCandidates.demCandidate)));
         leadMetaEl.dataset.party = winnerParty;
       }
       if (demShareFill) demShareFill.style.width = `${demPct.toFixed(2)}%`;
@@ -27148,9 +27158,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerLabel = winner === 'Tie'
         ? 'Tie'
         : `${fullCandidateLabel(winnerCandidate, winner === 'Republican' ? 'Republican' : 'Democratic')} (${winner === 'Republican' ? 'R' : 'D'})`;
+      const countyWinnerCall = winnerMarginCall(
+        repVotes,
+        demVotes,
+        totalVotes,
+        repCandidate,
+        demCandidate,
+        signedMarginPct,
+        { precision: 'county' }
+      );
       const marginShort = winner === 'Tie'
         ? 'Even'
-        : `${winner === 'Republican' ? 'R' : 'D'}+${marginPctLabel}%`;
+        : (countyWinnerCall?.uncontested ? countyWinnerCall.shortLabel : `${winner === 'Republican' ? 'R' : 'D'}+${marginPctLabel}%`);
       const splitShort = `${demPctLabel}% D • ${repPctLabel}% R${otherVotes > 0 ? ` • ${otherPctLabel}% Other` : ''}`;
 
       // Subhead (result first, then context)
@@ -30517,13 +30536,16 @@ document.addEventListener('DOMContentLoaded', function() {
         ? fullCandidateLabel(repCandidate, 'Republican')
         : (winnerParty === 'D' ? fullCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winColor = winnerParty === 'R' ? '#dc2626' : (winnerParty === 'D' ? '#2563eb' : '#6b7280');
+      const marginLineText = winnerCall.uncontested
+        ? `Result: ${winnerCall.shortLabel}`
+        : `Margin: ${winnerCall.text} <span style="color:#64748b;font-weight:600;">(${Math.abs(repVotes - demVotes).toLocaleString()} votes)</span>`;
 
       return `
         <div style="margin-bottom: 12px;">
           <h5 style="margin:0 0 6px 0;">${year} ${formatContestName(contestType, year)}</h5>
           <div style="font-size:15px;font-weight:800;color:${winColor};">Winner: ${winName} (${winnerParty})</div>
           <div style="margin-top:4px;font-size:15px;font-weight:800;color:${winColor};">
-            Margin: ${winnerCall.text} <span style="color:#64748b;font-weight:600;">(${Math.abs(repVotes - demVotes).toLocaleString()} votes)</span>
+            ${marginLineText}
           </div>
           <div style="margin-top:8px;font-size:14px;">
             <div><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: ${toFixedForDisplay(demPct, 2)}% (${demVotes.toLocaleString()})</div>
