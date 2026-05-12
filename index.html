@@ -28186,10 +28186,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof formatMarginPctForDisplay === 'function') return formatMarginPctForDisplay(v);
         return formatVotehubPct(v, 2);
       };
+      const normalizeCandidateLabel = (value, fallback) => {
+        const raw = (value || '').toString().trim();
+        const cleaned = typeof stripRunningMateName === 'function'
+          ? stripRunningMateName(raw)
+          : raw;
+        return cleaned || fallback;
+      };
       const rows = [];
-      const demLabel = (demName || 'Democratic').toString().trim() || 'Democratic';
-      const repLabel = (repName || 'Republican').toString().trim() || 'Republican';
-      const otherLabel = (otherName || 'Other').toString().trim() || 'Other';
+      const demLabel = normalizeCandidateLabel(demName, 'Democratic');
+      const repLabel = normalizeCandidateLabel(repName, 'Republican');
+      const otherLabel = normalizeCandidateLabel(otherName, 'Other');
 
       const candidateRows = [
         { partyClass: 'rep', label: repLabel, votes: rVotes, pct: repPct },
@@ -28203,7 +28210,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const winnerPartyKey = String(winnerParty || '').toLowerCase();
       const winnerShort = winnerPartyKey === 'rep' ? 'Trump' : (winnerPartyKey === 'dem' ? 'Harris' : 'Tie');
-      const winnerText = (winnerName || winnerShort || '').toString().trim();
+      const winnerText = normalizeCandidateLabel(winnerName || winnerShort, winnerShort || 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
       const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
       const winnerLine = showWinnerLine
