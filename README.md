@@ -106,7 +106,18 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 8, 2026
+**Last updated:** May 12, 2026
+
+### VoteHub Hover Card Refresh + Precision Alignment (May 12, 2026)
+
+- Updated precinct and district hover cards to a compact VoteHub-style results layout, while keeping county hover on the richer atlas tooltip path.
+- Added winner-line + margin labels to compact precinct/district cards and added optional flip callouts (`Flipped R→D` / `Flipped D→R`) with party-color emphasis for quick scan readability.
+- Kept hover routing scoped: `Precinct`, `Congressional`, `State House`, and `State Senate` use the compact card; county hover behavior and county card structure are unchanged.
+- Added a centralized VoteHub tooltip renderer path and formatting helpers for cleaner reuse across hover contexts.
+- Re-aligned compact-card decimal behavior with the existing front-end display pipeline to reduce rounding drift:
+  - winner line uses the same stabilized winner/margin label path as the rest of the app
+  - row-share percentages follow the same two-decimal share presentation behavior used by the existing result-card output
+- Kept all map coloring logic, selected panel layout, trend/timeline structure, and mobile docking behavior unchanged.
 
 ### Precinct Auto-Sync After Zoom-In (May 8, 2026)
 
