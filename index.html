@@ -830,6 +830,46 @@ body.focus-active.hover-preview-active .vote-counter {
   color: #cbd5e1;
 }
 
+#hover-tooltip[data-context="votehub-results"] .vhr-shift {
+  margin: 6px 0 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(148,163,184,0.20);
+  background: rgba(15,23,42,0.28);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-shift-label {
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-shift-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-shift-value.rep {
+  color: #fca5a5;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-shift-value.dem {
+  color: #93c5fd;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-shift-value.tie {
+  color: #cbd5e1;
+}
+
 body.focus-active #hover-tooltip[data-context="preview"] {
   opacity: 0.82;
 }
@@ -25830,11 +25870,15 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
         districtType: 'County',
-        showWinnerLine: true
+        showWinnerLine: true,
+        shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
+        shiftToneClass: shiftClass,
+        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}→${vizShiftCache.year}` : '',
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
       const detailLines = `
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
-        ${shiftLine}
+        ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
         ${flipLine}
         ${deltaBlock}
         ${splitInsightLine}
@@ -25977,6 +26021,23 @@ document.addEventListener('DOMContentLoaded', function() {
         : (curSigned < 0 ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = curSigned > 0 ? 'rep' : (curSigned < 0 ? 'dem' : 'tie');
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, curSigned);
+      let shiftDelta = NaN;
+      let shiftClass = 'tie';
+      if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
+        const prevShiftMap = vizShiftCache?.prevPrecinctMarginByNorm;
+        let prevSignedForShift = null;
+        if (prevShiftMap?.has(precinctNorm)) {
+          const prevShiftSigned = Number(prevShiftMap.get(precinctNorm));
+          if (Number.isFinite(prevShiftSigned)) prevSignedForShift = prevShiftSigned;
+        } else if (Number.isFinite(Number(prevSignedForFlip))) {
+          // Fallback when shift cache misses this precinct but generic previous data exists.
+          prevSignedForShift = Number(prevSignedForFlip);
+        }
+        if (Number.isFinite(Number(prevSignedForShift))) {
+          shiftDelta = Number(curSigned) - Number(prevSignedForShift);
+          shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
+        }
+      }
       const inner = buildVotehubResultsTooltip({
         title,
         subtitle: 'Precinct',
@@ -25995,32 +26056,18 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: curSigned,
         flipYearLabel: vizPrevCache?.prevYear || null,
         districtType: 'Precinct',
-        showWinnerLine: true
+        showWinnerLine: true,
+        shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
+        shiftToneClass: shiftClass,
+        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}→${vizShiftCache.year}` : '',
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
-      let shiftLine = '';
-      if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
-        const prevShiftMap = vizShiftCache?.prevPrecinctMarginByNorm;
-        let prevSignedForShift = null;
-        if (prevShiftMap?.has(precinctNorm)) {
-          const prevShiftSigned = Number(prevShiftMap.get(precinctNorm));
-          if (Number.isFinite(prevShiftSigned)) prevSignedForShift = prevShiftSigned;
-        } else if (Number.isFinite(Number(prevSignedForFlip))) {
-          // Fallback when shift cache misses this precinct but generic previous data exists.
-          prevSignedForShift = Number(prevSignedForFlip);
-        }
-        if (Number.isFinite(Number(prevSignedForShift))) {
-          const shiftDelta = Number(curSigned) - Number(prevSignedForShift);
-          const shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
-          shiftLine = `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`;
-        }
-      }
-      const innerWithDetails = shiftLine ? `${inner}${shiftLine}` : inner;
       const pinnedShell = !!tooltipPinned;
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
         point.y,
-        buildTooltipShell('', innerWithDetails, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       wireTooltipButtons();
@@ -26290,6 +26337,12 @@ document.addEventListener('DOMContentLoaded', function() {
         : (signedMarginPct < 0 ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = signedMarginPct > 0 ? 'rep' : (signedMarginPct < 0 ? 'dem' : 'tie');
       const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
+      let shiftDelta = NaN;
+      let shiftClass = 'tie';
+      if (currentVizMode === 'shift' && Number.isFinite(Number(prevSignedForFlip)) && prevYearForFlip) {
+        shiftDelta = Number(signedMarginPct) - Number(prevSignedForFlip);
+        shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
+      }
       const inner = buildVotehubResultsTooltip({
         title: districtTitle,
         subtitle: subtitleByScope,
@@ -26308,20 +26361,17 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: prevYearForFlip,
         districtType: subtitleByScope,
-        showWinnerLine: true
+        showWinnerLine: true,
+        shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
+        shiftToneClass: shiftClass,
+        shiftYearLabel: (prevYearForFlip && year) ? `${prevYearForFlip}→${year}` : '',
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!prevYearForFlip
       });
-      let shiftLine = '';
-      if (currentVizMode === 'shift' && Number.isFinite(Number(prevSignedForFlip)) && prevYearForFlip) {
-        const shiftDelta = Number(signedMarginPct) - Number(prevSignedForFlip);
-        const shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
-        shiftLine = `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${prevYearForFlip}→${year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`;
-      }
-      const innerWithDetails = shiftLine ? `${inner}${shiftLine}` : inner;
       const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell('', innerWithDetails, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       wireTooltipButtons();
@@ -28214,7 +28264,11 @@ document.addEventListener('DOMContentLoaded', function() {
       currentSignedMarginPct,
       flipYearLabel,
       districtType,
-      showWinnerLine
+      showWinnerLine,
+      shiftLineText,
+      shiftToneClass,
+      shiftYearLabel,
+      showShiftLine
     } = {}) {
       const dVotes = Number(demVotes || 0);
       const rVotes = Number(repVotes || 0);
@@ -28277,6 +28331,13 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `Flipped ${flipMeta.from === 'R' ? 'R→D' : 'D→R'}${flipYearLabel ? ` since ${String(flipYearLabel)}` : ''}`
         : '';
       const flipLine = flipLabel ? `<div class="vhr-flip ${flipToneClass}">${escapeHtml(flipLabel)}</div>` : '';
+      const shiftTone = String(shiftToneClass || '').toLowerCase();
+      const shiftToneSafe = shiftTone === 'rep' ? 'rep' : (shiftTone === 'dem' ? 'dem' : 'tie');
+      const shiftText = String(shiftLineText || '').trim();
+      const shiftYears = String(shiftYearLabel || '').trim();
+      const shiftLine = (showShiftLine && shiftText)
+        ? `<div class="vhr-shift"><span class="vhr-shift-label">Shift${shiftYears ? ` (${escapeHtml(shiftYears)})` : ''}</span><span class="vhr-shift-value ${shiftToneSafe}">${escapeHtml(shiftText)}</span></div>`
+        : '';
 
       return `
         <div class="votehub-results-card">
@@ -28284,6 +28345,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ${(subtitle || districtType) ? `<div class="vhr-subtitle">${escapeHtml(String(subtitle || districtType || ''))}</div>` : ''}
           ${winnerLine}
           ${flipLine}
+          ${shiftLine}
           ${rows.join('')}
           <div class="vhr-total">Total votes: ${escapeHtml(formatVotehubVotes(safeTotal))}</div>
         </div>
