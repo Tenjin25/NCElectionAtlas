@@ -785,13 +785,22 @@ body.focus-active.hover-preview-active .vote-counter {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-votes,
 #hover-tooltip[data-context="votehub-results"] .vhr-pct {
   font-variant-numeric: tabular-nums;
-  color: #cbd5e1;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-votes {
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-pct {
+  font-weight: 500;
+  color: #94a3b8;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-total {
@@ -994,6 +1003,10 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid rgba(148, 163, 184, 0.22);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .hover-tooltip .tooltip-more summary {
@@ -1002,6 +1015,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   user-select: none;
   display: flex;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   min-height: 44px;
@@ -1014,6 +1030,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .hover-tooltip .tooltip-more summary::-webkit-details-marker {
