@@ -25997,12 +25997,30 @@ document.addEventListener('DOMContentLoaded', function() {
         districtType: 'Precinct',
         showWinnerLine: true
       });
+      let shiftLine = '';
+      if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
+        const prevShiftMap = vizShiftCache?.prevPrecinctMarginByNorm;
+        let prevSignedForShift = null;
+        if (prevShiftMap?.has(precinctNorm)) {
+          const prevShiftSigned = Number(prevShiftMap.get(precinctNorm));
+          if (Number.isFinite(prevShiftSigned)) prevSignedForShift = prevShiftSigned;
+        } else if (Number.isFinite(Number(prevSignedForFlip))) {
+          // Fallback when shift cache misses this precinct but generic previous data exists.
+          prevSignedForShift = Number(prevSignedForFlip);
+        }
+        if (Number.isFinite(Number(prevSignedForShift))) {
+          const shiftDelta = Number(curSigned) - Number(prevSignedForShift);
+          const shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
+          shiftLine = `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${vizShiftCache.prevYear}→${vizShiftCache.year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`;
+        }
+      }
+      const innerWithDetails = shiftLine ? `${inner}${shiftLine}` : inner;
       const pinnedShell = !!tooltipPinned;
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
         point.y,
-        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', innerWithDetails, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       wireTooltipButtons();
@@ -26292,11 +26310,18 @@ document.addEventListener('DOMContentLoaded', function() {
         districtType: subtitleByScope,
         showWinnerLine: true
       });
+      let shiftLine = '';
+      if (currentVizMode === 'shift' && Number.isFinite(Number(prevSignedForFlip)) && prevYearForFlip) {
+        const shiftDelta = Number(signedMarginPct) - Number(prevSignedForFlip);
+        const shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
+        shiftLine = `<div class="tooltip-delta"><div class="tooltip-delta-line">Shift (${escapeHtml(`${prevYearForFlip}→${year}`)}): <span class="tooltip-shift ${shiftClass}">${escapeHtml(formatShiftLabel(shiftDelta))}</span></div></div>`;
+      }
+      const innerWithDetails = shiftLine ? `${inner}${shiftLine}` : inner;
       const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', innerWithDetails, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       wireTooltipButtons();
