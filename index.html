@@ -141,16 +141,31 @@
         bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
       max-width: none !important;
       width: auto !important;
-      max-height: min(54vh, calc(100vh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
+      max-height: min(62vh, calc(100vh - 12px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
       overflow: auto;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
+      overscroll-behavior: contain;
       z-index: 10031 !important;
+      padding: 14px 16px !important;
+      border-radius: 14px !important;
+      font-size: 14px !important;
+      line-height: 1.58 !important;
     }
     @supports (height: 100svh) {
       #hover-tooltip {
-        max-height: min(54svh, calc(100svh - 16px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
+        max-height: min(62svh, calc(100svh - 12px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px)));
       }
+    }
+    #hover-tooltip .tooltip-trends {
+      font-size: 14px;
+    }
+    #hover-tooltip .tooltip-vote-line {
+      margin: 8px 0;
+    }
+    #hover-tooltip .tooltip-vote-pct {
+      padding: 2px 8px;
+      font-size: 0.96em;
     }
     #hover-tooltip .tooltip-btn {
       min-height: 44px;
@@ -663,6 +678,21 @@ a:focus-visible {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: opacity 0.15s ease;
+}
+
+.hover-tooltip .tooltip-vote-line {
+  margin: 6px 0;
+}
+
+.hover-tooltip .tooltip-vote-pct {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-left: 2px;
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  background: rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
 }
 
 /* UI hierarchy helpers: keep one dominant layer at a time. */
@@ -30590,8 +30620,8 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div style="margin-bottom: 16px;">
                 <h5>Vote Breakdown</h5>
-                <p><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span style="font-weight: 700;">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</p>
-                <p><span style="color: #dc2626; font-weight: bold;">Republican: </span><span style="font-weight: 700;">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span class="tooltip-vote-pct">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #dc2626; font-weight: bold;">Republican: </span><span class="tooltip-vote-pct">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
             `;
@@ -30772,9 +30802,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ${marginLineText}
           </div>
           <div style="margin-top:8px;font-size:14px;">
-            <div><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: <span style="font-weight:700;">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</div>
-            <div><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: <span style="font-weight:700;">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</div>
-            ${otherVotes > 0 ? `<div><span style="color:#6b7280;font-weight:800;">Other</span>: <span style="font-weight:700;">${toFixedForDisplay(othPct, 2)}%</span> (${otherVotes.toLocaleString()})</div>` : ''}
+            <div class="tooltip-vote-line"><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</div>
+            <div class="tooltip-vote-line"><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</div>
+            ${otherVotes > 0 ? `<div class="tooltip-vote-line"><span style="color:#6b7280;font-weight:800;">Other</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(othPct, 2)}%</span> (${otherVotes.toLocaleString()})</div>` : ''}
             <div style="margin-top:6px;color:#374151;font-weight:700;">Total Votes: ${totalVotes.toLocaleString()}</div>
           </div>
           <div style="margin-top:8px;font-size:14px;font-weight:800;color:${compColor};">Competitiveness: ${compLabel}</div>
