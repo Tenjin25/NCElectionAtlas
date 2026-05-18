@@ -106,7 +106,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 12, 2026
+**Last updated:** May 18, 2026
+
+### Mobile Tooltip "More details" Content Refresh (May 18, 2026)
+
+- Updated county mobile tooltip `More details` behavior so modern detail content remains visible in more data-availability cases, instead of collapsing into legacy-feeling fallback content.
+- Kept demographics chips in the expanded detail area, while ensuring vote-change lines can still render even when population-estimate fields are missing for a county.
+- Added a concise Census insight line to the county tooltip details path so the same growth-context framing is surfaced directly in mobile hover details.
+- Scope is tooltip detail rendering only; no election math, county totals, or map-color logic changed.
 
 ### VoteHub Hover Card Refresh + Precision Alignment (May 12, 2026)
 
