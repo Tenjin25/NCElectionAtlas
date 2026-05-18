@@ -1177,6 +1177,66 @@ If you still see obvious issues:
 2. Add targeted overrides in `data/mappings/precinct_key_overrides.csv`.
 3. Rebuild the affected year(s).
 
+### Precinct Match Workflow (Recommended)
+
+Use this loop to improve match rates safely:
+
+1. Run diagnostics:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\report_unmatched_precincts.py
+```
+
+2. Review year-level progress in:
+   - `data/reports/unmatched_precinct_summary.csv`
+   - `data/reports/precinct_match_health_summary_latest.csv`
+
+3. Generate suggestion candidates for a single year:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\suggest_precinct_overrides_2020.py --year 2016
+```
+
+4. Prefer county-guarded batches over global fuzzy applies:
+   - Use county packets in `data/reports/` (for example `county_source_backed_packet_2016_top10.csv`).
+   - Apply only counties that pass anti-collapse guardrails (avoid mapping most keys to one target).
+
+5. Re-run diagnostics after every batch and keep only batches that improve:
+   - `matched` increases
+   - `unmatched` and/or `ambiguous` decreases
+
+### New Scripts and Artifacts
+
+- `scripts/suggest_precinct_overrides_2020.py`  
+  Tiered suggestion builder (`AUTO_ACCEPT`, `AUTO_REVIEW`, `MANUAL_REQUIRED`) with county rule packs.
+- `scripts/check_precinct_override_gold_cases.py`  
+  Regression checks for known difficult keys.
+- `scripts/block_assisted_disambiguate_year.py`  
+  County profile-assisted disambiguation helper for ambiguous keys.
+- `data/mappings/precinct_county_rule_pack.json`  
+  County-specific tiering and guardrail policy.
+- `data/reports/precinct_match_health_summary_latest.csv`  
+  Consolidated before/after match-rate summary by year.
+
+### What You Should Do With These Files
+
+1. `data/mappings/precinct_key_overrides.csv`
+   - This is your durable fix ledger.
+   - Keep entries that repeatedly improve diagnostics.
+   - Add a short source note in commit messages (county board doc, precinct list, etc.).
+
+2. `data/reports/manual_review_pack_*.csv` and `data/reports/county_source_backed_packet_*.csv`
+   - Treat these as review queues, not truth.
+   - Fill approvals in batches (10-25), apply, then measure impact.
+
+3. `data/reports/qa_*_added_overrides_*.csv`
+   - Use these for spot audits after large rewrite passes.
+   - Prioritize checking non-self-maps first.
+
+4. `data/reports/unmatched_precinct_summary*.csv`
+   - Keep dated snapshots before/after major passes.
+   - This gives you an audit trail and rollback confidence.
+
 ### Adding Contests to the Counties Dropdown
 
 The Counties view only shows contests in `data/contests/manifest.json`. If a contest exists in `data/district_contests/*` but not in `data/contests/*`, it won't load in Counties.

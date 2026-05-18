@@ -256,6 +256,68 @@ def _extract_code_name_aliases(raw: str) -> list[str]:
     return [a for a in aliases if a]
 
 
+def _normalized_precinct_candidates_for_lookup(county: str, precinct: str) -> list[str]:
+    """
+    Conservative upstream normalization for resolver input keys.
+    Produces lookup candidates; resolver still requires unique county hit.
+    """
+    c = _norm(county)
+    p = _norm(precinct)
+    out: list[str] = []
+
+    def add(x: str) -> None:
+        x = _norm(x)
+        if x and x not in out:
+            out.append(x)
+
+    add(p)
+
+    # Common export pattern: "CODE_LOCATION NAME" -> keep CODE.
+    if "_" in p:
+        add(p.split("_", 1)[0])
+
+    compact = p.replace(" ", "")
+    add(compact)
+
+    # PR01 / PR1 style.
+    m = re.fullmatch(r"PR(\d{1,3})", compact)
+    if m:
+        n = int(m.group(1))
+        add(str(n))
+        add(f"{n:02d}")
+        add(f"{n:03d}")
+
+    # P01A / P1 style.
+    m = re.fullmatch(r"P(\d{1,3}[A-Z]?)", compact)
+    if m:
+        payload = m.group(1)
+        add(payload)
+        m2 = re.fullmatch(r"(\d{1,3})([A-Z]?)", payload)
+        if m2:
+            n = int(m2.group(1))
+            sfx = m2.group(2)
+            add(f"{n}{sfx}")
+            add(f"{n:02d}{sfx}")
+            add(f"{n:03d}{sfx}")
+
+    # Single trailing alpha often indicates split suffix (e.g., 07A).
+    m = re.fullmatch(r"(\d{1,3})([A-Z])", compact)
+    if m:
+        add(m.group(1))
+
+    # Remove leading zeros for pure numeric keys.
+    if re.fullmatch(r"0+\d+", compact):
+        add(str(int(compact)))
+
+    # Wake-specific occasional transposed code pairs in legacy exports.
+    if c == "WAKE":
+        m = re.fullmatch(r"(\d{2})-(\d{2})", compact)
+        if m:
+            add(f"{m.group(2)}-{m.group(1)}")
+
+    return out
+
+
 def load_precinct_overrides(path: Path) -> dict[str, dict[str, str]]:
     """
     Load manual key overrides from CSV with columns:
@@ -448,7 +510,11 @@ def resolve_precinct_key(
     if not county_aliases:
         return None, "no_county"
 
-    cands = _extract_code_name_aliases(precinct)
+    cands: list[str] = []
+    for candidate_precinct in _normalized_precinct_candidates_for_lookup(county, precinct):
+        for a in _extract_code_name_aliases(candidate_precinct):
+            if a not in cands:
+                cands.append(a)
     hits = set()
     for a in cands:
         vals = county_aliases.get(a)
@@ -494,6 +560,7 @@ def allocate_office_results(
     for precinct_key, row in office_results.items():
         stats["total"] += 1
         key = str(precinct_key).strip().upper()
+        overridden = False
 
         # Explicit operator overrides take precedence.
         if overrides_by_year:
@@ -503,8 +570,12 @@ def allocate_office_results(
             if hit:
                 key = hit
                 stats["manual_override"] += 1
+                overridden = True
 
-        resolved_key, status = resolve_precinct_key(key, alias_index)
+        if overridden:
+            resolved_key, status = key, "matched"
+        else:
+            resolved_key, status = resolve_precinct_key(key, alias_index)
         stats[status] += 1
         if resolved_key:
             key = resolved_key

@@ -4,6 +4,7 @@ to the precinct crosswalk keyspace.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from collections import Counter, defaultdict
@@ -12,11 +13,21 @@ from pathlib import Path
 from build_district_results_2024_lines import (
     build_precinct_alias_index,
     enrich_alias_index_from_vtd,
+    load_precinct_overrides,
     resolve_precinct_key,
 )
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Report unmatched precinct diagnostics.")
+    parser.add_argument(
+        "--overrides",
+        type=Path,
+        default=None,
+        help="Optional overrides CSV (year,raw_precinct_key,canonical_precinct_key).",
+    )
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parent.parent
     data_dir = root / "data"
     in_json = data_dir / "nc_elections_aggregated.json"
@@ -34,6 +45,8 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     src = json.load(open(in_json, "r", encoding="utf-8"))
+    overrides_path = args.overrides if args.overrides else (data_dir / "mappings" / "precinct_key_overrides.csv")
+    overrides_by_year = load_precinct_overrides(overrides_path)
     alias_index = build_precinct_alias_index(voting_geojson)
     enrich_alias_index_from_vtd(
         alias_index,
@@ -67,10 +80,19 @@ def main() -> None:
             results = office_data.get("general", {}).get("results", {})
             for precinct_key in results.keys():
                 year_total += 1
-                resolved, status = resolve_precinct_key(str(precinct_key), alias_index)
+                key = str(precinct_key).strip().upper()
+                hit = (
+                    overrides_by_year.get(str(year), {}).get(key)
+                    or overrides_by_year.get("*", {}).get(key)
+                )
+                if hit:
+                    key = hit
+                    resolved, status = key, "matched"
+                else:
+                    resolved, status = resolve_precinct_key(key, alias_index)
                 year_status[status] += 1
                 if not resolved:
-                    unresolved_counter[(year, status)][str(precinct_key).strip().upper()] += 1
+                    unresolved_counter[(year, status)][key] += 1
 
         matched = year_status.get("matched", 0)
         summary_rows.append(
