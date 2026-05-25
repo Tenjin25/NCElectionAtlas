@@ -17,9 +17,14 @@ def main() -> None:
     # For 2020 views, use stable proxy precincts so these geographies populate:
     #   0044 -> 020A (Millbridge carved from 020A)
     #   0045 -> 020B (0045 carved mostly from 020B + part of 019)
+    # Plus safe zero-padding aliases seen in current geometry.
     proxy_map = {
         "UNION - 044": "UNION - 020A",
         "UNION - 045": "UNION - 020B",
+        "UNION - 0005": "UNION - 005",
+        "UNION - 0019": "UNION - 019",
+        "UNION - 0020A": "UNION - 020A",
+        "UNION - 0030": "UNION - 030",
     }
 
     inserted = 0
