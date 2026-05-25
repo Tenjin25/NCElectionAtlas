@@ -10140,8 +10140,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-05-25-7';
-    const APP_BUILD_ID = '2026-05-25-7';
+    const DATA_CACHE_BUSTER = '2026-05-25-8';
+    const APP_BUILD_ID = '2026-05-25-8';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11315,7 +11315,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contestType: 'nc_supreme_court_model',
         year: 2026,
         displayName: 'NC Supreme Court Model',
-        optionLabel: 'NC Supreme Court Associate Justice Seat 1 (2026) Model',
+        optionLabel: 'NC Associate Justice Seat 1 (2026) Model',
         groupLabel: 'NC Supreme Court',
         // Judicial models are intentionally more cautious: more shrinkage, less trend chasing,
         // and extra brakes for counties that behave noisily in downballot races.
@@ -11353,20 +11353,6 @@ document.addEventListener('DOMContentLoaded', function() {
         description: 'Blend of 2022 Seat 03 + Seat 05 with a 2024 climate adjustment'
       }
     };
-    const MODELED_SENATE_UX_FEATURES = {
-      historicalAnalogEnabled: true,
-      baselineVsCandidateEnabled: true
-    };
-    const MODELED_SENATE_ANALOG_YEARS = [2014, 2020, 2022];
-    const MODELED_SENATE_ANALOG_METRO_COUNTIES = new Set([
-      'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'BUNCOMBE', 'NEW HANOVER', 'FORSYTH'
-    ]);
-    // Senate guardrails: metro/outer-suburb elasticity caps.
-    const SENATE_MAJOR_METROS = new Set(['WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE']);
-    const SENATE_OUTER_SUBURBS = new Set(['CABARRUS', 'UNION', 'JOHNSTON']);
-    let modeledSenateAnalogHistoryCache = null;
-    let modeledSenateAnalogHistoryInflight = null;
-    let modeledSenateLatestInsights = null;
     let splitTicketOverlayEnabled = false;
     let splitTicketOverlayCache = new Map();
     let splitTicketCountyOverlayMargins = {};
