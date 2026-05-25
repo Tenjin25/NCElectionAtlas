@@ -45,7 +45,7 @@ def main() -> None:
                 "rows": rows,
             }
             out_path = out_dir / f"{office}_{year}.json"
-            out_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+            out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             files_written += 1
             manifest.append(
                 {
