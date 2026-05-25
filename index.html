@@ -10140,8 +10140,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-05-25-2';
-    const APP_BUILD_ID = '2026-05-25-2';
+    const DATA_CACHE_BUSTER = '2026-05-25-3';
+    const APP_BUILD_ID = '2026-05-25-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11483,12 +11483,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const demoContrastHigh = demoContrastRaw
         ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
         : null;
-      const mBlendRaw = String(params.get('mblend') || '').trim();
-      const mTurnoutRaw = String(params.get('mturnout') || '').trim();
-      const mBonusRaw = String(params.get('mbonus') || '').trim();
-      const mBlend = mBlendRaw ? Number(mBlendRaw) : null;
-      const mTurnout = mTurnoutRaw ? Number(mTurnoutRaw) : null;
-      const mBonus = mBonusRaw ? Number(mBonusRaw) : null;
       const hasAny = !!(
         view ||
         contest ||
@@ -11498,12 +11492,9 @@ document.addEventListener('DOMContentLoaded', function() {
         swingRaw ||
         sscopeRaw ||
         barometerEnabled !== null ||
-        demoContrastHigh !== null ||
-        mBlendRaw ||
-        mTurnoutRaw ||
-        mBonusRaw
+        demoContrastHigh !== null
       );
-      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, mBlend, mTurnout, mBonus };
+      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh };
     }
 
     function getFocusURLTokenFromState() {
@@ -11728,26 +11719,6 @@ document.addEventListener('DOMContentLoaded', function() {
             Array.from(contestSelect.options || []).some(opt => String(opt?.value || '').trim() === contestValue)
           );
           if (hasContest && contestSelect) {
-            try {
-              const idx = contestValue.lastIndexOf('_');
-              const contestType = idx > 0 ? contestValue.substring(0, idx) : '';
-              const year = idx > 0 ? Number(contestValue.substring(idx + 1)) : NaN;
-              if (contestType && Number.isFinite(year)) {
-                const patch = {};
-                if (state.mBlend !== null && Number.isFinite(Number(state.mBlend)) && Number(state.mBlend) >= 0 && Number(state.mBlend) <= 1) {
-                  patch.blendWeight = Number(state.mBlend);
-                }
-                if (state.mTurnout !== null && Number.isFinite(Number(state.mTurnout)) && Number(state.mTurnout) > 0) {
-                  patch.turnoutFactor = Number(state.mTurnout);
-                }
-                if (state.mBonus !== null && Number.isFinite(Number(state.mBonus)) && Number(state.mBonus) >= 0) {
-                  patch.bonusScale = Number(state.mBonus);
-                }
-                if (Object.keys(patch).length) {
-                  setModeledContestOverrides(contestType, patch);
-                }
-              }
-            } catch (_) {}
             contestSelect.value = contestValue;
             await applyContest(contestValue);
           }
