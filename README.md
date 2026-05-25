@@ -106,7 +106,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 18, 2026
+**Last updated:** May 25, 2026
+
+### Contest JSON Formatting + Cache Refresh (May 25, 2026)
+
+- Restored `data/contests/*.json` output to human-readable multi-line formatting (no one-line minified rows).
+- Updated `scripts/split_elections_by_contest_year.py` to write pretty-printed JSON by default.
+- Bumped front-end cache-buster tokens in `index.html` so browsers fetch refreshed contest JSON after data pushes.
+- Scope is data-delivery/readability behavior only; no contest math or category threshold logic changed.
 
 ### Mobile Tooltip "More details" Content Refresh (May 18, 2026)
 
