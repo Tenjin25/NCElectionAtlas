@@ -47,6 +47,19 @@ PROXY_MAP: dict[str, str] = {
     "ORANGE - HN": "ORANGE - H",
     "WILKES - 120A": "WILKES - 120",
     "WILKES - 123A": "WILKES - 123",
+    # Wake (2020-on-current-geometry gaps; nearest predecessor approximation)
+    "WAKE - 03-01": "WAKE - 03-00",
+    "WAKE - 03-02": "WAKE - 03-00",
+    "WAKE - 06-11": "WAKE - 06-10",
+    "WAKE - 06-12": "WAKE - 06-10",
+    "WAKE - 10-05": "WAKE - 10-04",
+    "WAKE - 10-06": "WAKE - 10-04",
+    "WAKE - 12-10": "WAKE - 12-09",
+    "WAKE - 12-11": "WAKE - 12-09",
+    "WAKE - 17-14": "WAKE - 17-13",
+    "WAKE - 17-15": "WAKE - 17-13",
+    "WAKE - 19-22": "WAKE - 19-21",
+    "WAKE - 19-23": "WAKE - 19-21",
 }
 
 
