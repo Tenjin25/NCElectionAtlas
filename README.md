@@ -106,7 +106,12 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–May 2026)
 
 
-**Last updated:** May 25, 2026
+**Last updated:** May 31, 2026
+
+### Mobile Tooltip Action-Button Aesthetic Alignment (May 31, 2026)
+
+- Aligned the pinned tooltip `Copy` and `Close` button styling on mobile with the `SCprecinctmap-gh` visual treatment (dark glass surface, lighter text, and matching hover state).
+- Kept scope limited to tooltip action-button presentation only; no tooltip behavior, election math, contest data, map interactions, or mobile sheet mechanics changed.
 
 ### Contest JSON Formatting + Cache Refresh (May 25, 2026)
 
