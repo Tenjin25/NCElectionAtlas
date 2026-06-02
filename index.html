@@ -26010,6 +26010,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const signPct = pct > 0 ? '+' : '';
         return `<div class="tooltip-insight">Population 2020→2025: ${p2020.toLocaleString()} → ${p2025.toLocaleString()} (${signPct}${pct.toFixed(1)}%).</div>`;
       })();
+      const popChangeHeaderMeta = (() => {
+        if (currentVizMode !== 'population_change') return null;
+        const estimate = countyPopulationEstimatesByNorm?.get(norm) || null;
+        if (!estimate) return null;
+        const p2020 = Number(estimate.population2020 || 0);
+        const p2025 = Number(estimate.population2025 || 0);
+        const pct = Number(estimate.changePct2020To2025);
+        const abs = Number(estimate.change2020To2025);
+        if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct) || !Number.isFinite(abs)) return null;
+        const signAbs = abs > 0 ? '+' : '';
+        const signPct = pct > 0 ? '+' : '';
+        return {
+          line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${signPct}${pct.toFixed(1)}%)`,
+          raw: `${p2020.toLocaleString()}→${p2025.toLocaleString()}`
+        };
+      })();
+      const popChangeTopLineMobile = (() => {
+        if (!popChangeHeaderMeta) return '';
+        if (isDesktopTooltipMode()) return '';
+        return `
+          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
+            <strong>${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:#475569;">${escapeHtml(popChangeHeaderMeta.raw.replace('→', ' → '))}</span>
+          </div>
+        `.trim();
+      })();
       const winnerName = winner === 'R'
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (winner === 'D' ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
@@ -26027,7 +26053,8 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerName,
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
-        winnerLineText: marginCall?.text || '',
+        winnerLineText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.line : (marginCall?.text || ''),
+        winnerRawLeadText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.raw : '',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
@@ -26049,6 +26076,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${demoLine}
       `.trim();
       const inner = `
+        ${popChangeTopLineMobile}
         ${votehubCore}
         <details class="tooltip-more" aria-label="More details">
           <summary>More details</summary>
@@ -28424,6 +28452,7 @@ document.addEventListener('DOMContentLoaded', function() {
       winnerParty,
       marginPct,
       winnerLineText,
+      winnerRawLeadText,
       prevSignedMarginPct,
       currentSignedMarginPct,
       flipYearLabel,
@@ -28480,8 +28509,9 @@ document.addEventListener('DOMContentLoaded', function() {
         : (winnerToneClass === 'dem'
           ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
           : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;');
+      const winnerRawLeadDisplay = (winnerRawLeadText || '').toString().trim() || `${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`;
       const winnerLine = showWinnerLine
-        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(`${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`)}</span></div>`
+        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
         : '';
       const prevSigned = Number(prevSignedMarginPct);
       const curSigned = Number(currentSignedMarginPct);
