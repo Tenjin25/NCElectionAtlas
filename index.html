@@ -21299,9 +21299,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-scale-shell">
           ${buildLegendSpectrum(colors, 'shift')}
           <div class="legend-scale-caption">
-            <span class="dem">Population decline</span>
+            <span class="dem">Decline</span>
             <span>Near flat</span>
-            <span class="rep">Population growth</span>
+            <span class="rep">Growth</span>
           </div>
           <div class="legend-axis shift">
             ${useAbs
@@ -21366,9 +21366,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ? 'County resident population count change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).'
           : 'County resident population percent change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
         if (badge) badge.textContent = String(populationChangeMetric || 'pct') === 'abs' ? 'Pop Change (Abs)' : 'Pop Change (%)';
-        if (footer) footer.textContent = String(populationChangeMetric || 'pct') === 'abs'
-          ? 'Brown indicates decline, green indicates growth, light means near-flat change.'
-          : 'Brown indicates population loss, green indicates population gain, light means near-flat change.';
+        if (footer) footer.textContent = '';
         content.innerHTML = buildPopulationChangeLegendHTML();
       } else {
         if (header) header.textContent = 'Margin Categories';
@@ -26023,28 +26021,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const pct = Number(estimate.changePct2020To2025);
         const abs = Number(estimate.change2020To2025);
         if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct) || !Number.isFinite(abs)) return null;
+        const tone = abs > 0 ? 'gain' : (abs < 0 ? 'loss' : 'flat');
         const signAbs = abs > 0 ? '+' : '';
         const signPct = pct > 0 ? '+' : '';
         const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
         const pctLine = Number.isFinite(statePct)
           ? `${signPct}${pct.toFixed(1)}% (${statePct >= 0 ? '+' : ''}${statePct.toFixed(1)}% statewide)`
           : `${signPct}${pct.toFixed(1)}%`;
+        const toneLabel = tone === 'gain' ? 'Growth' : (tone === 'loss' ? 'Decline' : 'Flat');
         return {
           line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${pctLine})`,
           raw: `${p2020.toLocaleString()} → ${p2025.toLocaleString()}`,
-          key: String(populationChangeMetric || 'pct') === 'abs'
-            ? 'Brown = population loss, green = population gain.'
-            : 'Brown = population loss, green = population gain.'
+          tone,
+          label: toneLabel
         };
       })();
+      const popChangeToneColor = popChangeHeaderMeta?.tone === 'gain'
+        ? '#166534'
+        : (popChangeHeaderMeta?.tone === 'loss' ? '#7c2d12' : '#334155');
       const popChangeTopLineMobile = (() => {
         if (!popChangeHeaderMeta) return '';
         if (isDesktopTooltipMode()) return '';
         return `
           <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
-            <strong>${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
-            <span style="color:#475569;">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
-            <span style="color:#475569;font-size:11px;">${escapeHtml(popChangeHeaderMeta.key)}</span>
+            <strong style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
           </div>
         `.trim();
       })();
@@ -26068,7 +26070,9 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
         winnerLineText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.line : (marginCall?.text || ''),
-        winnerRawLeadText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? `${popChangeHeaderMeta.raw} • ${popChangeHeaderMeta.key}` : '',
+        winnerRawLeadText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? `${popChangeHeaderMeta.raw} • ${popChangeHeaderMeta.label}` : '',
+        winnerLineToneClass: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.tone : '',
+        winnerRawLeadToneClass: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.tone : '',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
@@ -26083,7 +26087,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${censusDetailLine}
         ${popChangeDetailLine}
-        ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.key) ? `<div class="tooltip-insight">${escapeHtml(popChangeHeaderMeta.key)}</div>` : ''}
+        ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight" style="color:${popChangeToneColor};font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
         ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
         ${flipLine}
         ${deltaBlock}
@@ -28476,7 +28480,9 @@ document.addEventListener('DOMContentLoaded', function() {
       shiftLineText,
       shiftToneClass,
       shiftYearLabel,
-      showShiftLine
+      showShiftLine,
+      winnerLineToneClass,
+      winnerRawLeadToneClass
     } = {}) {
       const dVotes = Number(demVotes || 0);
       const rVotes = Number(repVotes || 0);
@@ -28519,14 +28525,29 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerText = normalizeCandidateLabel(winnerName || winnerShort, winnerShort || 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
       const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
-      const voteLeadStyle = winnerToneClass === 'rep'
-        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
-        : (winnerToneClass === 'dem'
-          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
-          : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;');
+      const customTopTone = String(winnerLineToneClass || '').trim().toLowerCase();
+      const customRawTopTone = String(winnerRawLeadToneClass || '').trim().toLowerCase();
+      const topToneStyle = customTopTone === 'gain'
+        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#166534;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+        : (customTopTone === 'loss'
+          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#7c2d12;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+          : (winnerToneClass === 'rep'
+            ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+            : (winnerToneClass === 'dem'
+              ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+              : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;')));
+      const voteLeadStyle = customRawTopTone === 'gain'
+        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#166534;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+        : (customRawTopTone === 'loss'
+          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#7c2d12;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+          : (winnerToneClass === 'rep'
+          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
+          : (winnerToneClass === 'dem'
+            ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
+            : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;')));
       const winnerRawLeadDisplay = (winnerRawLeadText || '').toString().trim() || `${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`;
       const winnerLine = showWinnerLine
-        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
+        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span style="${topToneStyle}">${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
         : '';
       const prevSigned = Number(prevSignedMarginPct);
       const curSigned = Number(currentSignedMarginPct);
