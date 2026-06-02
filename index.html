@@ -21278,20 +21278,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const useAbs = String(populationChangeMetric || 'pct') === 'abs';
       const colors = useAbs
         ? [
-            colorForPopulationChangeAbsMode(-12000),
+            colorForPopulationChangeAbsMode(-30000),
+            colorForPopulationChangeAbsMode(-15000),
             colorForPopulationChangeAbsMode(-4000),
             colorForPopulationChangeAbsMode(0),
             colorForPopulationChangeAbsMode(4000),
             colorForPopulationChangeAbsMode(15000),
-            colorForPopulationChangeAbsMode(35000)
+            colorForPopulationChangeAbsMode(30000)
           ]
         : [
-            colorForPopulationChangeMode(-7),
+            colorForPopulationChangeMode(-5),
             colorForPopulationChangeMode(-3),
+            colorForPopulationChangeMode(-1.5),
             colorForPopulationChangeMode(0),
+            colorForPopulationChangeMode(1.5),
             colorForPopulationChangeMode(3),
-            colorForPopulationChangeMode(7),
-            colorForPopulationChangeMode(12)
+            colorForPopulationChangeMode(5)
           ];
       return `
         <div class="legend-scale-shell">
@@ -21303,8 +21305,8 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <div class="legend-axis shift">
             ${useAbs
-              ? '<span class="dem">-10k or less</span><span class="dem">-2.5k</span><span>0</span><span>+2.5k</span><span class="rep">+10k</span><span class="rep">+30k+</span>'
-              : '<span class="dem">-5% or less</span><span class="dem">-2%</span><span>-0%</span><span>+2%</span><span class="rep">+5%</span><span class="rep">+10%+</span>'
+              ? '<span class="dem">-25k+</span><span class="dem">-10k</span><span class="dem">-2.5k</span><span>0</span><span>+2.5k</span><span class="rep">+10k</span><span class="rep">+25k+</span>'
+              : '<span class="dem">-4 pts+</span><span class="dem">-2 pts</span><span class="dem">-1 pt</span><span>0</span><span>+1 pt</span><span class="rep">+2 pts</span><span class="rep">+4 pts+</span>'
             }
           </div>
         </div>
@@ -21362,9 +21364,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (header) header.textContent = 'Population Change (2020-2025)';
         if (subtitle) subtitle.textContent = String(populationChangeMetric || 'pct') === 'abs'
           ? 'County resident population count change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).'
-          : 'County resident population percent change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
+          : 'County population growth relative to statewide growth, April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
         if (badge) badge.textContent = String(populationChangeMetric || 'pct') === 'abs' ? 'Pop Change (Abs)' : 'Pop Change (%)';
-        if (footer) footer.textContent = 'Blue indicates decline, red indicates growth, light means near-flat change.';
+        if (footer) footer.textContent = String(populationChangeMetric || 'pct') === 'abs'
+          ? 'Brown indicates decline, green indicates growth, light means near-flat change.'
+          : 'Brown means slower-than-state growth; green means faster-than-state growth.';
         content.innerHTML = buildPopulationChangeLegendHTML();
       } else {
         if (header) header.textContent = 'Margin Categories';
@@ -26018,11 +26022,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const p2025 = Number(estimate.population2025 || 0);
         const pct = Number(estimate.changePct2020To2025);
         const abs = Number(estimate.change2020To2025);
+        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
+        const deltaVsState = (Number.isFinite(pct) && Number.isFinite(statePct)) ? (pct - statePct) : NaN;
         if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct) || !Number.isFinite(abs)) return null;
         const signAbs = abs > 0 ? '+' : '';
         const signPct = pct > 0 ? '+' : '';
+        const signDelta = Number.isFinite(deltaVsState) && deltaVsState > 0 ? '+' : '';
+        const pctLine = Number.isFinite(deltaVsState)
+          ? `${signPct}${pct.toFixed(1)}% (${signDelta}${deltaVsState.toFixed(1)} pts vs NC)`
+          : `${signPct}${pct.toFixed(1)}%`;
         return {
-          line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${signPct}${pct.toFixed(1)}%)`,
+          line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${pctLine})`,
           raw: `${p2020.toLocaleString()}→${p2025.toLocaleString()}`
         };
       })();
@@ -31813,26 +31823,28 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
     }
 
-    function colorForPopulationChangeMode(changePct) {
-      const v = Number(changePct);
+    function colorForPopulationChangeMode(changePctDeltaVsState) {
+      const v = Number(changePctDeltaVsState);
       if (!Number.isFinite(v)) return '#e2e8f0';
-      if (v <= -5) return '#08306b';
-      if (v <= -2) return '#2171b5';
-      if (v < 2) return '#f8fafc';
-      if (v < 5) return '#fcae91';
-      if (v < 10) return '#ef3b2c';
-      return '#99000d';
+      if (v <= -4) return '#5a3b1f';
+      if (v <= -2) return '#8c613c';
+      if (v <= -1) return '#b08968';
+      if (v < 1) return '#f8fafc';
+      if (v < 2) return '#a9d6a5';
+      if (v < 4) return '#52b788';
+      return '#1b7f4a';
     }
 
     function colorForPopulationChangeAbsMode(changeAbs) {
       const v = Number(changeAbs);
       if (!Number.isFinite(v)) return '#e2e8f0';
-      if (v <= -10000) return '#08306b';
-      if (v <= -2500) return '#2171b5';
+      if (v <= -25000) return '#5a3b1f';
+      if (v <= -10000) return '#8c613c';
+      if (v <= -2500) return '#b08968';
       if (v < 2500) return '#f8fafc';
-      if (v < 10000) return '#fcae91';
-      if (v < 30000) return '#ef3b2c';
-      return '#99000d';
+      if (v < 10000) return '#a9d6a5';
+      if (v < 25000) return '#52b788';
+      return '#1b7f4a';
     }
 
     function classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null, pacificPct = null, multiracialPct = null) {
@@ -32914,12 +32926,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (staleCheck()) return;
 
         const countyExpr = ['case'];
+        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
         if (countyPopulationEstimatesByNorm && typeof countyPopulationEstimatesByNorm.forEach === 'function') {
           countyPopulationEstimatesByNorm.forEach((estimate, countyNorm) => {
             const useAbs = String(populationChangeMetric || 'pct') === 'abs';
+            const countyPct = Number(estimate?.changePct2020To2025);
+            const pctDelta = (Number.isFinite(countyPct) && Number.isFinite(statePct)) ? (countyPct - statePct) : NaN;
             const color = useAbs
               ? colorForPopulationChangeAbsMode(estimate?.change2020To2025)
-              : colorForPopulationChangeMode(estimate?.changePct2020To2025);
+              : colorForPopulationChangeMode(pctDelta);
             countyExpr.push([
               '==',
               ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
