@@ -21287,13 +21287,13 @@ document.addEventListener('DOMContentLoaded', function() {
             colorForPopulationChangeAbsMode(30000)
           ]
         : [
-            colorForPopulationChangeMode(-5),
+            colorForPopulationChangeMode(-7),
             colorForPopulationChangeMode(-3),
-            colorForPopulationChangeMode(-1.5),
+            colorForPopulationChangeMode(-1),
             colorForPopulationChangeMode(0),
-            colorForPopulationChangeMode(1.5),
+            colorForPopulationChangeMode(1),
             colorForPopulationChangeMode(3),
-            colorForPopulationChangeMode(5)
+            colorForPopulationChangeMode(7)
           ];
       return `
         <div class="legend-scale-shell">
@@ -21306,7 +21306,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="legend-axis shift">
             ${useAbs
               ? '<span class="dem">-25k+</span><span class="dem">-10k</span><span class="dem">-2.5k</span><span>0</span><span>+2.5k</span><span class="rep">+10k</span><span class="rep">+25k+</span>'
-              : '<span class="dem">-4 pts+</span><span class="dem">-2 pts</span><span class="dem">-1 pt</span><span>0</span><span>+1 pt</span><span class="rep">+2 pts</span><span class="rep">+4 pts+</span>'
+              : '<span class="dem">-5%+</span><span class="dem">-2%</span><span class="dem">-1%</span><span>0</span><span>+1%</span><span class="rep">+3%</span><span class="rep">+5%+</span>'
             }
           </div>
         </div>
@@ -21364,11 +21364,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (header) header.textContent = 'Population Change (2020-2025)';
         if (subtitle) subtitle.textContent = String(populationChangeMetric || 'pct') === 'abs'
           ? 'County resident population count change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).'
-          : 'County population growth relative to statewide growth, April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
+          : 'County resident population percent change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
         if (badge) badge.textContent = String(populationChangeMetric || 'pct') === 'abs' ? 'Pop Change (Abs)' : 'Pop Change (%)';
         if (footer) footer.textContent = String(populationChangeMetric || 'pct') === 'abs'
           ? 'Brown indicates decline, green indicates growth, light means near-flat change.'
-          : 'Brown means slower-than-state growth; green means faster-than-state growth.';
+          : 'Brown indicates population loss, green indicates population gain, light means near-flat change.';
         content.innerHTML = buildPopulationChangeLegendHTML();
       } else {
         if (header) header.textContent = 'Margin Categories';
@@ -26022,18 +26022,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const p2025 = Number(estimate.population2025 || 0);
         const pct = Number(estimate.changePct2020To2025);
         const abs = Number(estimate.change2020To2025);
-        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
-        const deltaVsState = (Number.isFinite(pct) && Number.isFinite(statePct)) ? (pct - statePct) : NaN;
         if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct) || !Number.isFinite(abs)) return null;
         const signAbs = abs > 0 ? '+' : '';
         const signPct = pct > 0 ? '+' : '';
-        const signDelta = Number.isFinite(deltaVsState) && deltaVsState > 0 ? '+' : '';
-        const pctLine = Number.isFinite(deltaVsState)
-          ? `${signPct}${pct.toFixed(1)}% (${signDelta}${deltaVsState.toFixed(1)} pts vs NC)`
+        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
+        const pctLine = Number.isFinite(statePct)
+          ? `${signPct}${pct.toFixed(1)}% (${statePct >= 0 ? '+' : ''}${statePct.toFixed(1)}% statewide)`
           : `${signPct}${pct.toFixed(1)}%`;
         return {
           line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${pctLine})`,
-          raw: `${p2020.toLocaleString()}→${p2025.toLocaleString()}`
+          raw: `${p2020.toLocaleString()} → ${p2025.toLocaleString()}`,
+          key: String(populationChangeMetric || 'pct') === 'abs'
+            ? 'Brown = population loss, green = population gain.'
+            : 'Brown = population loss, green = population gain.'
         };
       })();
       const popChangeTopLineMobile = (() => {
@@ -26042,7 +26043,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return `
           <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
             <strong>${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
-            <span style="color:#475569;">${escapeHtml(popChangeHeaderMeta.raw.replace('→', ' → '))}</span>
+            <span style="color:#475569;">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:#475569;font-size:11px;">${escapeHtml(popChangeHeaderMeta.key)}</span>
           </div>
         `.trim();
       })();
@@ -26052,7 +26054,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerParty = winner === 'R' ? 'rep' : (winner === 'D' ? 'dem' : 'tie');
       const votehubCore = buildVotehubResultsTooltip({
         title: `${countyDisplay} County`,
-        subtitle: 'County',
+        subtitle: String(currentVizMode || '') === 'population_change'
+          ? 'Population change'
+          : 'County',
         demName: demCandidate,
         repName: repCandidate,
         otherName: 'Other',
@@ -26064,7 +26068,7 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
         winnerLineText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.line : (marginCall?.text || ''),
-        winnerRawLeadText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? popChangeHeaderMeta.raw : '',
+        winnerRawLeadText: (popChangeHeaderMeta && isDesktopTooltipMode()) ? `${popChangeHeaderMeta.raw} • ${popChangeHeaderMeta.key}` : '',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
@@ -26079,6 +26083,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${censusDetailLine}
         ${popChangeDetailLine}
+        ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.key) ? `<div class="tooltip-insight">${escapeHtml(popChangeHeaderMeta.key)}</div>` : ''}
         ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
         ${flipLine}
         ${deltaBlock}
@@ -31823,15 +31828,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
     }
 
-    function colorForPopulationChangeMode(changePctDeltaVsState) {
-      const v = Number(changePctDeltaVsState);
+    function colorForPopulationChangeMode(changePct) {
+      const v = Number(changePct);
       if (!Number.isFinite(v)) return '#e2e8f0';
-      if (v <= -4) return '#5a3b1f';
+      if (v <= -5) return '#5a3b1f';
       if (v <= -2) return '#8c613c';
-      if (v <= -1) return '#b08968';
+      if (v <= -0.5) return '#b08968';
       if (v < 1) return '#f8fafc';
       if (v < 2) return '#a9d6a5';
-      if (v < 4) return '#52b788';
+      if (v < 5) return '#52b788';
       return '#1b7f4a';
     }
 
@@ -32926,15 +32931,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (staleCheck()) return;
 
         const countyExpr = ['case'];
-        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
         if (countyPopulationEstimatesByNorm && typeof countyPopulationEstimatesByNorm.forEach === 'function') {
           countyPopulationEstimatesByNorm.forEach((estimate, countyNorm) => {
             const useAbs = String(populationChangeMetric || 'pct') === 'abs';
             const countyPct = Number(estimate?.changePct2020To2025);
-            const pctDelta = (Number.isFinite(countyPct) && Number.isFinite(statePct)) ? (countyPct - statePct) : NaN;
             const color = useAbs
               ? colorForPopulationChangeAbsMode(estimate?.change2020To2025)
-              : colorForPopulationChangeMode(pctDelta);
+              : colorForPopulationChangeMode(countyPct);
             countyExpr.push([
               '==',
               ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
