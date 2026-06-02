@@ -28525,15 +28525,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerText = normalizeCandidateLabel(winnerName || winnerShort, winnerShort || 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
       const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
-      const winnerLineStyle = winnerToneClass === 'rep'
-        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fca5a5;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+      const voteLeadStyle = winnerToneClass === 'rep'
+        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
         : (winnerToneClass === 'dem'
-          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#93c5fd;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
           : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;');
-      const voteLeadStyle = 'font-size:12px;font-weight:800;opacity:0.96;color:#f8fafc;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;';
       const winnerRawLeadDisplay = (winnerRawLeadText || '').toString().trim() || `${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`;
       const winnerLine = showWinnerLine
-        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span style="${winnerLineStyle}">${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
+        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
         : '';
       const prevSigned = Number(prevSignedMarginPct);
       const curSigned = Number(currentSignedMarginPct);
