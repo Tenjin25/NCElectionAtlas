@@ -98,15 +98,28 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
 - **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, keyboard focus rings (`:focus-visible`), reduced-motion support, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
+- **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–May 2026)
+## Recent Updates (March–June 2026)
 
 
-**Last updated:** May 31, 2026
+**Last updated:** June 3, 2026
+
+### VoteHub Tooltip Winner Layout + Contrast Polish (June 2, 2026)
+
+- Tuned the VoteHub-style tooltip winner row to better match the existing color/layout treatment after the recent contrast pass.
+- Kept the change limited to tooltip presentation details only; no election math, contest data, or interaction behavior changed.
+
+### County Population Change Mode + Legend Cleanup (June 1, 2026)
+
+- Added a county-only `Pop Change` visualization mode that uses Census Vintage 2025 population estimates for 2020-2025 change.
+- Added a percent vs absolute metric toggle, plus a dedicated legend badge/subtitle so the active metric is obvious at a glance.
+- Simplified the population-change legend copy in a follow-up pass so the labels read more cleanly in the UI.
+- Kept scope limited to population display and legend presentation; no election totals, contest math, or district logic changed.
 
 ### Mobile Tooltip Action-Button Aesthetic Alignment (May 31, 2026)
 
