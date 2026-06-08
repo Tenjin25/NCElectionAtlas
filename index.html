@@ -19250,7 +19250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (_) {}
             setTimeout(resolve, 0);
           });
-          await applyContest(next.key, { selectionSeq: next.seq });
+          await applyContest(next.key, { selectionSeq: next.seq, force: true });
 
           // If users switched again while we were loading, apply the newest selection next.
           if (queuedContestSelection && queuedContestSelection.seq !== next.seq) {
@@ -33490,7 +33490,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return { dem: districtDem, rep: districtRep, other: districtOther, total: districtTotal };
       }
 
-      const contestData = electionData.filter(row => row.year == year);
+      // Load the selected contest's county slice before rendering district-view statewide summaries.
+      // electionData may still contain the previous contest's rows when users switch contests from
+      // a district view, so relying on it can leave the statewide panel stale.
+      const contestData = await loadContestSlice(contestType, year);
 
       // Prefer district-level results reallocated to 2024 lines when available.
       // Prefer district-level results reallocated to 2024 lines when available.
