@@ -2823,17 +2823,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .hover-tooltip .tooltip-btn {
-    border: 1px solid rgba(15, 23, 42, 0.16);
-    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: rgba(30, 41, 59, 0.84);
     border-radius: 10px;
     padding: 6px 8px;
     font-size: 12px;
     cursor: pointer;
-    color: #0f172a;
+    color: #f1f5f9;
   }
 
   .hover-tooltip .tooltip-btn:hover {
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(51, 65, 85, 0.96);
   }
 
   /* Allow interacting with tooltip buttons only when pinned. */
@@ -9373,6 +9373,21 @@ document.addEventListener('DOMContentLoaded', function() {
       try { saveUIState(); } catch (_) {}
     });
   }
+  const popChangeMetricSelect = document.getElementById('pop-change-metric');
+  if (popChangeMetricSelect) {
+    popChangeMetricSelect.value = String(populationChangeMetric || 'pct') === 'abs' ? 'abs' : 'pct';
+    popChangeMetricSelect.addEventListener('change', function() {
+      populationChangeMetric = String(this.value || 'pct') === 'abs' ? 'abs' : 'pct';
+      const key = document.getElementById('contestSelect')?.value || '';
+      if (key && typeof applyContest === 'function' && currentVizMode === 'population_change') {
+        applyContest(key).catch(() => {});
+      } else if (typeof renderLegendForVizMode === 'function') {
+        renderLegendForVizMode(currentVizMode || 'margins');
+      }
+      try { updatePopulationMetricLegendChip(); } catch (_) {}
+      try { saveUIState(); } catch (_) {}
+    });
+  }
 
   // Modeled contest tuning (2026 synthetic entries).
   const modelPreset = document.getElementById('model-preset');
@@ -9755,6 +9770,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="viz-mode-btn" data-mode="shift" type="button"><span>Shift</span></button>
                 <button class="viz-mode-btn" data-mode="flips" type="button"><span>Flips</span></button>
                 <button class="viz-mode-btn" data-mode="demographics" type="button"><span>Demographics</span></button>
+                <button class="viz-mode-btn" data-mode="population_change" type="button"><span>Pop Change</span></button>
               </div>
             </div>
             <details class="control-group control-group-scenario controls-disclosure" id="scenario-disclosure">
@@ -9829,6 +9845,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input id="demographics-contrast-toggle" type="checkbox" data-testid="demographics-contrast-toggle" aria-label="Enable high contrast demographics colors" />
                 High contrast demographics
               </label>
+              <div class="scenario-row">
+                <label for="pop-change-metric">Pop change metric</label>
+                <select id="pop-change-metric" data-testid="pop-change-metric" aria-label="Population change metric">
+                  <option value="pct">Percent (2020→2025)</option>
+                  <option value="abs">Absolute count (2020→2025)</option>
+                </select>
+                <span class="scenario-value" aria-hidden="true"></span>
+                <div class="scenario-help">Used by Pop Change mode in county view.</div>
+              </div>
               <div class="controls-panel-note">
                 Positive swing shifts margins toward Democrats. Negative values shift toward Republicans. Modeled 2026 Senate and Court entries inherit this swing.
                 <span id="modeled-context-badge" class="modeled-context-badge" style="display:none;">Modeled Scenario</span>
@@ -9916,6 +9941,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-context-chips" id="legend-context-chips">
           <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Barometer counties are the best statewide-margin mirrors across the last 2–3 available cycles (closest to the statewide two-party margin).">Barometer</span>
           <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
+          <span class="legend-context-chip" id="legend-popmetric-chip" data-testid="legend-popmetric-chip" title="Active population metric for Pop Change mode." style="display:none;"></span>
           <span class="legend-context-chip" id="filters-active-chip" data-testid="filters-active-chip" title="Active toggles" style="display:none;"></span>
         </div>
     </div>
@@ -9938,6 +9964,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </button>
     <button class="viz-mode-btn" data-mode="demographics" id="mode-demographics">
       <span>Demographics</span>
+    </button>
+    <button class="viz-mode-btn" data-mode="population_change" id="mode-population-change">
+      <span>Pop Change</span>
     </button>
   </div>
 
@@ -10140,8 +10169,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-04-14-1';
-    const APP_BUILD_ID = '2026-04-14-1';
+    const DATA_CACHE_BUSTER = '2026-05-25-11';
+    const APP_BUILD_ID = '2026-05-25-11';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11093,7 +11122,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
     let currentPrecinctResults = null; // Current contest results keyed by precinct
-    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips', 'demographics'
+    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips', 'demographics', 'population_change'
+    let populationChangeMetric = 'pct'; // 'pct' | 'abs'
     let previousElectionData = null; // For shift mode
     let precinctsEnabled = false;
     let precinctSourceLoaded = false;
@@ -11451,7 +11481,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let analyticsPanelsTimer = null;
     let analyticsPanelsRequestId = 0;
     const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
-    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics']);
+    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics', 'population_change']);
 
     function normalizeURLViewToken(raw) {
       const token = String(raw || '').trim().toLowerCase();
@@ -11483,6 +11513,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const demoContrastHigh = demoContrastRaw
         ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
         : null;
+      const popMetricRaw = String(params.get('popmetric') || '').trim().toLowerCase();
+      const popMetric = (popMetricRaw === 'abs' || popMetricRaw === 'pct') ? popMetricRaw : null;
       const mBlendRaw = String(params.get('mblend') || '').trim();
       const mTurnoutRaw = String(params.get('mturnout') || '').trim();
       const mBonusRaw = String(params.get('mbonus') || '').trim();
@@ -11499,11 +11531,12 @@ document.addEventListener('DOMContentLoaded', function() {
         sscopeRaw ||
         barometerEnabled !== null ||
         demoContrastHigh !== null ||
+        popMetric !== null ||
         mBlendRaw ||
         mTurnoutRaw ||
         mBonusRaw
       );
-      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, mBlend, mTurnout, mBonus };
+      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, popMetric, mBlend, mTurnout, mBonus };
     }
 
     function getFocusURLTokenFromState() {
@@ -11558,6 +11591,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (barometerOverlayEnabled) params.set('barometer', '1');
       if (demographicsHighContrastEnabled) params.set('democontrast', 'high');
+      if (String(populationChangeMetric || 'pct') === 'abs') params.set('popmetric', 'abs');
 
       try {
         const idx = contestValue ? contestValue.lastIndexOf('_') : -1;
@@ -11687,6 +11721,11 @@ document.addEventListener('DOMContentLoaded', function() {
           demographicsHighContrastEnabled = !!state.demoContrastHigh;
           const demoContrastToggle = document.getElementById('demographics-contrast-toggle');
           if (demoContrastToggle) demoContrastToggle.checked = demographicsHighContrastEnabled;
+        }
+        if (state.popMetric !== null) {
+          populationChangeMetric = state.popMetric === 'abs' ? 'abs' : 'pct';
+          const popMetricSelect = document.getElementById('pop-change-metric');
+          if (popMetricSelect) popMetricSelect.value = populationChangeMetric;
         }
 
         if (state.barometerEnabled !== null) {
@@ -13792,6 +13831,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setVizModeUI(currentVizMode);
       // Ensure legend matches initial mode.
       renderLegendForVizMode(currentVizMode);
+      try { updatePopulationMetricLegendChip(); } catch (_) {}
     }
 
     function setVizModeUI(mode) {
@@ -13808,6 +13848,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update button states
       setVizModeUI(mode);
       renderLegendForVizMode(mode);
+      try { updatePopulationMetricLegendChip(); } catch (_) {}
       
       // Reapply current contest with new mode
       const contestSelect = document.getElementById('contestSelect');
@@ -21233,6 +21274,45 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
+    function buildPopulationChangeLegendHTML() {
+      const useAbs = String(populationChangeMetric || 'pct') === 'abs';
+      const colors = useAbs
+        ? [
+            colorForPopulationChangeAbsMode(-30000),
+            colorForPopulationChangeAbsMode(-15000),
+            colorForPopulationChangeAbsMode(-4000),
+            colorForPopulationChangeAbsMode(0),
+            colorForPopulationChangeAbsMode(4000),
+            colorForPopulationChangeAbsMode(15000),
+            colorForPopulationChangeAbsMode(30000)
+          ]
+        : [
+            colorForPopulationChangeMode(-7),
+            colorForPopulationChangeMode(-3),
+            colorForPopulationChangeMode(-1),
+            colorForPopulationChangeMode(0),
+            colorForPopulationChangeMode(1),
+            colorForPopulationChangeMode(3),
+            colorForPopulationChangeMode(7)
+          ];
+      return `
+        <div class="legend-scale-shell">
+          ${buildLegendSpectrum(colors, 'shift')}
+          <div class="legend-scale-caption">
+            <span class="dem">Decline</span>
+            <span>Near flat</span>
+            <span class="rep">Growth</span>
+          </div>
+          <div class="legend-axis shift">
+            ${useAbs
+              ? '<span class="dem">-25k+</span><span class="dem">-10k</span><span class="dem">-2.5k</span><span>0</span><span>+2.5k</span><span class="rep">+10k</span><span class="rep">+25k+</span>'
+              : '<span class="dem">-5%+</span><span class="dem">-2%</span><span class="dem">-1%</span><span>0</span><span>+1%</span><span class="rep">+3%</span><span class="rep">+5%+</span>'
+            }
+          </div>
+        </div>
+      `;
+    }
+
     function renderLegendForVizMode(mode, meta = {}) {
       const legend = document.getElementById('legend');
       const header = legend ? legend.querySelector('.legend-header h4') : null;
@@ -21280,6 +21360,14 @@ document.addEventListener('DOMContentLoaded', function() {
             : 'County shares use DP1 total population; district/precinct shares use available VAP race fields.';
         }
         content.innerHTML = buildDemographicsLegendHTML();
+      } else if (mode === 'population_change') {
+        if (header) header.textContent = 'Population Change (2020-2025)';
+        if (subtitle) subtitle.textContent = String(populationChangeMetric || 'pct') === 'abs'
+          ? 'County resident population count change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).'
+          : 'County resident population percent change from April 1, 2020 to July 1, 2025 (Census Vintage 2025 estimates).';
+        if (badge) badge.textContent = String(populationChangeMetric || 'pct') === 'abs' ? 'Pop Change (Abs)' : 'Pop Change (%)';
+        if (footer) footer.textContent = '';
+        content.innerHTML = buildPopulationChangeLegendHTML();
       } else {
         if (header) header.textContent = 'Margin Categories';
         if (subtitle) subtitle.textContent = 'Buckets by two-party margin (Rep% − Dem%). Red = Republican lead; blue = Democratic lead.';
@@ -24001,7 +24089,8 @@ document.addEventListener('DOMContentLoaded', function() {
         winners: 'Winners',
         shift: 'Shift',
         flips: 'Flips',
-        demographics: 'Demographics'
+        demographics: 'Demographics',
+        population_change: 'Pop Change'
       };
       return labels[mode] || 'Margins';
     }
@@ -24625,6 +24714,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateFiltersActiveChip() {
+      try { updatePopulationMetricLegendChip(); } catch (_) {}
       const chip = document.getElementById('filters-active-chip');
       if (!chip) return;
       const labels = [];
@@ -24642,6 +24732,17 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!active) return;
       chip.textContent = `Active: ${labels.length}`;
       chip.title = `Active toggles: ${labels.join(', ')}`;
+    }
+
+    function updatePopulationMetricLegendChip() {
+      const chip = document.getElementById('legend-popmetric-chip');
+      if (!chip) return;
+      const visible = currentView === 'counties' && currentVizMode === 'population_change';
+      chip.style.display = visible ? 'inline-flex' : 'none';
+      if (!visible) return;
+      const metric = String(populationChangeMetric || 'pct') === 'abs' ? 'Absolute count' : 'Percent';
+      chip.textContent = `Metric: ${metric}`;
+      chip.title = `Pop Change metric: ${metric} (2020→2025).`;
     }
 
     function updateBellwetherLayerVisibility() {
@@ -24664,6 +24765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (countyVisible) syncBellwetherCountyLayerFilter();
       }
       updateBellwetherLegendChipVisibility();
+      updatePopulationMetricLegendChip();
       updateFiltersActiveChip();
     }
 
@@ -25894,13 +25996,69 @@ document.addEventListener('DOMContentLoaded', function() {
           return '';
         }
       })();
+      const popChangeDetailLine = (() => {
+        if (currentVizMode !== 'population_change') return '';
+        const estimate = countyPopulationEstimatesByNorm?.get(norm) || null;
+        if (!estimate) return '';
+        const p2020 = Number(estimate.population2020 || 0);
+        const p2025 = Number(estimate.population2025 || 0);
+        const pct = Number(estimate.changePct2020To2025);
+        const abs = Number(estimate.change2020To2025);
+        if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct)) return '';
+        if (String(populationChangeMetric || 'pct') === 'abs' && Number.isFinite(abs)) {
+          const signAbs = abs > 0 ? '+' : '';
+          return `<div class="tooltip-insight">Population 2020→2025: ${p2020.toLocaleString()} → ${p2025.toLocaleString()} (${signAbs}${Math.round(abs).toLocaleString()}).</div>`;
+        }
+        const signPct = pct > 0 ? '+' : '';
+        return `<div class="tooltip-insight">Population 2020→2025: ${p2020.toLocaleString()} → ${p2025.toLocaleString()} (${signPct}${pct.toFixed(1)}%).</div>`;
+      })();
+      const popChangeHeaderMeta = (() => {
+        if (currentVizMode !== 'population_change') return null;
+        const estimate = countyPopulationEstimatesByNorm?.get(norm) || null;
+        if (!estimate) return null;
+        const p2020 = Number(estimate.population2020 || 0);
+        const p2025 = Number(estimate.population2025 || 0);
+        const pct = Number(estimate.changePct2020To2025);
+        const abs = Number(estimate.change2020To2025);
+        if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct) || !Number.isFinite(abs)) return null;
+        const tone = abs > 0 ? 'gain' : (abs < 0 ? 'loss' : 'flat');
+        const signAbs = abs > 0 ? '+' : '';
+        const signPct = pct > 0 ? '+' : '';
+        const statePct = Number(countyPopulationEstimateStatewide?.changePct2020To2025);
+        const pctLine = Number.isFinite(statePct)
+          ? `${signPct}${pct.toFixed(1)}% (${statePct >= 0 ? '+' : ''}${statePct.toFixed(1)}% statewide)`
+          : `${signPct}${pct.toFixed(1)}%`;
+        const toneLabel = tone === 'gain' ? 'Growth' : (tone === 'loss' ? 'Decline' : 'Flat');
+        return {
+          line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${pctLine})`,
+          raw: `${p2020.toLocaleString()} → ${p2025.toLocaleString()}`,
+          tone,
+          label: toneLabel
+        };
+      })();
+      const popChangeToneColor = popChangeHeaderMeta?.tone === 'gain'
+        ? '#166534'
+        : (popChangeHeaderMeta?.tone === 'loss' ? '#7c2d12' : '#334155');
+      const popChangeTopLineMobile = (() => {
+        if (!popChangeHeaderMeta) return '';
+        if (isDesktopTooltipMode()) return '';
+        return `
+          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
+            <strong style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
+          </div>
+        `.trim();
+      })();
       const winnerName = winner === 'R'
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (winner === 'D' ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = winner === 'R' ? 'rep' : (winner === 'D' ? 'dem' : 'tie');
       const votehubCore = buildVotehubResultsTooltip({
         title: `${countyDisplay} County`,
-        subtitle: 'County',
+        subtitle: String(currentVizMode || '') === 'population_change'
+          ? 'Population change'
+          : 'County',
         demName: demCandidate,
         repName: repCandidate,
         otherName: 'Other',
@@ -25911,7 +26069,10 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerName,
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
-        winnerLineText: marginCall?.text || '',
+        winnerLineText: (marginCall?.text || ''),
+        winnerRawLeadText: '',
+        winnerLineToneClass: '',
+        winnerRawLeadToneClass: '',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
@@ -25925,6 +26086,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const detailLines = `
         ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
         ${censusDetailLine}
+        ${popChangeDetailLine}
+        ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight" style="color:${popChangeToneColor};font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
         ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
         ${flipLine}
         ${deltaBlock}
@@ -25932,6 +26095,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${demoLine}
       `.trim();
       const inner = `
+        ${popChangeTopLineMobile}
         ${votehubCore}
         <details class="tooltip-more" aria-label="More details">
           <summary>More details</summary>
@@ -28307,6 +28471,7 @@ document.addEventListener('DOMContentLoaded', function() {
       winnerParty,
       marginPct,
       winnerLineText,
+      winnerRawLeadText,
       prevSignedMarginPct,
       currentSignedMarginPct,
       flipYearLabel,
@@ -28315,7 +28480,9 @@ document.addEventListener('DOMContentLoaded', function() {
       shiftLineText,
       shiftToneClass,
       shiftYearLabel,
-      showShiftLine
+      showShiftLine,
+      winnerLineToneClass,
+      winnerRawLeadToneClass
     } = {}) {
       const dVotes = Number(demVotes || 0);
       const rVotes = Number(repVotes || 0);
@@ -28359,12 +28526,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
       const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
       const voteLeadStyle = winnerToneClass === 'rep'
-        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
+        ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
         : (winnerToneClass === 'dem'
-          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;'
-          : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:\"JetBrains Mono\",\"Consolas\",\"SFMono-Regular\",monospace;');
+          ? 'font-size:12px;font-weight:800;opacity:0.96;color:#bfdbfe;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
+          : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;');
+      const winnerRawLeadDisplay = (winnerRawLeadText || '').toString().trim() || `${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`;
       const winnerLine = showWinnerLine
-        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(`${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`)}</span></div>`
+        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
         : '';
       const prevSigned = Number(prevSignedMarginPct);
       const curSigned = Number(currentSignedMarginPct);
@@ -31666,6 +31834,30 @@ document.addEventListener('DOMContentLoaded', function() {
       return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
     }
 
+    function colorForPopulationChangeMode(changePct) {
+      const v = Number(changePct);
+      if (!Number.isFinite(v)) return '#e2e8f0';
+      if (v <= -5) return '#5a3b1f';
+      if (v <= -2) return '#8c613c';
+      if (v <= -0.5) return '#b08968';
+      if (v < 1) return '#f8fafc';
+      if (v < 2) return '#a9d6a5';
+      if (v < 5) return '#52b788';
+      return '#1b7f4a';
+    }
+
+    function colorForPopulationChangeAbsMode(changeAbs) {
+      const v = Number(changeAbs);
+      if (!Number.isFinite(v)) return '#e2e8f0';
+      if (v <= -25000) return '#5a3b1f';
+      if (v <= -10000) return '#8c613c';
+      if (v <= -2500) return '#b08968';
+      if (v < 2500) return '#f8fafc';
+      if (v < 10000) return '#a9d6a5';
+      if (v < 25000) return '#52b788';
+      return '#1b7f4a';
+    }
+
     function classifyDemographicDominance(whitePct, blackPct, hispanicPct, nativePct = null, asianPct = null, pacificPct = null, multiracialPct = null) {
       const entries = [
         { key: 'white', value: numericOrNull(whitePct) },
@@ -32739,6 +32931,47 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      if (mode === 'population_change' && currentView === 'counties') {
+        renderLegendForVizMode('population_change');
+        vizShiftCache = null;
+        if (staleCheck()) return;
+
+        const countyExpr = ['case'];
+        if (countyPopulationEstimatesByNorm && typeof countyPopulationEstimatesByNorm.forEach === 'function') {
+          countyPopulationEstimatesByNorm.forEach((estimate, countyNorm) => {
+            const useAbs = String(populationChangeMetric || 'pct') === 'abs';
+            const countyPct = Number(estimate?.changePct2020To2025);
+            const color = useAbs
+              ? colorForPopulationChangeAbsMode(estimate?.change2020To2025)
+              : colorForPopulationChangeMode(countyPct);
+            countyExpr.push([
+              '==',
+              ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
+              countyNorm
+            ]);
+            countyExpr.push(color);
+          });
+        }
+        countyExpr.push('#e2e8f0');
+
+        if (map.getLayer('county-fill')) {
+          map.setPaintProperty('county-fill', 'fill-color', countyExpr);
+        }
+        if (map.getLayer('county-stroke')) {
+          try {
+            map.setPaintProperty('county-stroke', 'line-color', '#333');
+            map.setPaintProperty('county-stroke', 'line-width', 1);
+          } catch (_) {}
+        }
+        applyLayerOpacityTuning();
+        if (staleCheck()) return;
+        setStatewideContestTitle(String(populationChangeMetric || 'pct') === 'abs'
+          ? 'County Population Change (2020-2025, absolute)'
+          : 'County Population Change (2020-2025, percent)');
+        setStatus(`Applied county population-change mode (2020-2025, ${String(populationChangeMetric || 'pct') === 'abs' ? 'absolute' : 'percent'}).`);
+        return;
+      }
+
       // Keep prior county totals in county view so hover chips can show flips
       // even when the main map mode is not Shift/Flips.
       const needsPrevData = (mode === 'shift' || mode === 'flips' || currentView === 'counties');
@@ -33172,6 +33405,65 @@ document.addEventListener('DOMContentLoaded', function() {
         })()
       });
 
+      function computeStatewideTotalsFromRows(rows, ct) {
+        const contestKey = String(ct || '').trim();
+        return (rows || []).reduce((acc, row) => {
+          const countyNorm = normalizeCountyToken(row?.county || '');
+          const fallbackTotal = (Number(row?.[`${contestKey}_dem`]) || 0) + (Number(row?.[`${contestKey}_rep`]) || 0);
+          const adjusted = applyScenarioShiftToVotes(
+            countyNorm,
+            Number(row?.[`${contestKey}_dem`]) || 0,
+            Number(row?.[`${contestKey}_rep`]) || 0,
+            Number(row?.[`${contestKey}_other`]) || 0,
+            Number(row?.[`${contestKey}_total`]) || fallbackTotal
+          );
+          const demVotes = Number(adjusted.dem || 0);
+          const repVotes = Number(adjusted.rep || 0);
+          const otherVotes = Number(adjusted.other || 0);
+          const totalVotes = Number(adjusted.total || 0);
+          acc.dem += demVotes;
+          acc.rep += repVotes;
+          acc.other += otherVotes;
+          acc.total += totalVotes > 0 ? totalVotes : (demVotes + repVotes + otherVotes);
+          if (!acc.demCandidate) acc.demCandidate = stripRunningMateName((row?.[`${contestKey}_dem_candidate`] || '').toString().trim());
+          if (!acc.repCandidate) acc.repCandidate = stripRunningMateName((row?.[`${contestKey}_rep_candidate`] || '').toString().trim());
+          return acc;
+        }, { dem: 0, rep: 0, other: 0, total: 0, demCandidate: '', repCandidate: '' });
+      }
+
+      function refreshStatewideSummaryFromCountyRows(rows, titleSuffix = ' - Statewide Result') {
+        const statewideTotals = computeStatewideTotalsFromRows(rows, contestType);
+        const statewideDem = Number(statewideTotals.dem || 0);
+        const statewideRep = Number(statewideTotals.rep || 0);
+        const statewideOther = Math.max(0, Number(statewideTotals.other || 0));
+        const statewideTotal = Number(statewideTotals.total || 0);
+        if (statewideTotal <= 0) return null;
+
+        const candidateNames = {
+          demCandidate: statewideTotals.demCandidate || resolvedStatewideCandidates().demCandidate,
+          repCandidate: statewideTotals.repCandidate || resolvedStatewideCandidates().repCandidate
+        };
+
+        setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})${titleSuffix}`);
+        updateStatewideResults(contestType, year, statewideDem, statewideRep, statewideTotal, {
+          otherVotes: statewideOther,
+          ...candidateNames
+        });
+        setVoteCounterBaselineState(
+          'Statewide',
+          `${formatContestLabel(contestType, year)}`,
+          statewideDem,
+          statewideRep,
+          statewideOther,
+          { kind: 'statewide', contestType, year: Number(year) },
+          candidateNames
+        );
+        return { dem: statewideDem, rep: statewideRep, other: statewideOther, total: statewideTotal };
+      }
+
+      const contestData = electionData.filter(row => row.year == year);
+
+      // Prefer district-level results reallocated to 2024 lines when available.
       // Prefer district-level results reallocated to 2024 lines when available.
       if (currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate') {
         const districtScope = currentView === 'districts'
@@ -33310,28 +33602,36 @@ document.addEventListener('DOMContentLoaded', function() {
             ? ` | match coverage ${Number(coveragePct).toFixed(2)}%`
             : '';
           const linesLabel = getDistrictLinesLabel();
+          const contestTypeKey = String(contestType || '').trim().toLowerCase();
+          const preserveDistrictViewSummary = contestTypeKey === 'state_house' || contestTypeKey === 'state_senate';
           if (mode === 'demographics') {
             setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
             setStatus(`Applied demographic mode for ${getReadableViewLabel(currentView)} (${linesLabel}).`);
+            setVoteCounterBaselineState(
+              'Statewide',
+              `${formatContestLabel(contestType, year)} (${linesLabel})`,
+              totalDem,
+              totalRep,
+              totalOther,
+              { kind: 'statewide', contestType, year: Number(year) },
+              resolvedStatewideCandidates()
+            );
+            refreshStatewideSummaryFromCountyRows(contestData, ` - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
           } else {
-            setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Reallocated to ${linesLabel}${coverageText}`);
-            setStatus(`Applied district crosswalk results: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)${coverageText}`);
+            const statewideSummary = refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
+            const statewideDemPct = statewideSummary?.total ? (statewideSummary.dem / statewideSummary.total) * 100 : 0;
+            const statewideRepPct = statewideSummary?.total ? (statewideSummary.rep / statewideSummary.total) * 100 : 0;
+            if (preserveDistrictViewSummary) {
+              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
+            } else {
+              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
+            }
           }
-          setVoteCounterBaselineState(
-            'Statewide',
-            `${formatContestLabel(contestType, year)} (${linesLabel})`,
-            totalDem,
-            totalRep,
-            totalOther,
-            { kind: 'statewide', contestType, year: Number(year) },
-            resolvedStatewideCandidates()
-          );
           return;
         }
       }
 
       // For statewide contests in district views, we need to aggregate county data by district
-      const contestData = electionData.filter(row => row.year == year);
       currentDistrictTurnoutTotals = {};
       currentCountyTurnoutTotals = {};
       currentPrecinctTurnoutTotals = new Map();
@@ -33462,20 +33762,13 @@ document.addEventListener('DOMContentLoaded', function() {
         setStatus('District layer not found!', 5000, true);
       }
 
-  setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - Statewide Result`);
+      refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
       setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
-      setVoteCounterBaselineState(
-        'Statewide',
-        `${formatContestLabel(contestType, year)}`,
-        totalDem,
-        totalRep,
-        totalOther,
-        { kind: 'statewide', contestType, year: Number(year) },
-        resolvedStatewideCandidates()
-      );
     }
 
     window.onload = init;
 </script>
 </body>
 </html>
+
+
