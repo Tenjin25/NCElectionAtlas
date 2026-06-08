@@ -33372,6 +33372,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function applyStatewideContestToDistricts(contestType, year) {
+      const contestTypeKey = String(contestType || '').trim().toLowerCase();
+      const isLegislativeContest = contestTypeKey === 'state_house' || contestTypeKey === 'state_senate';
       let statewideDemCandidate = '';
       let statewideRepCandidate = '';
       try {
@@ -33459,6 +33461,33 @@ document.addEventListener('DOMContentLoaded', function() {
           candidateNames
         );
         return { dem: statewideDem, rep: statewideRep, other: statewideOther, total: statewideTotal };
+      }
+
+      function refreshStatewideSummaryFromDistrictTotals(demVotes, repVotes, otherVotes, totalVotes, titleSuffix = ' - District Result') {
+        const districtDem = Number(demVotes || 0);
+        const districtRep = Number(repVotes || 0);
+        const districtOther = Math.max(0, Number(otherVotes || 0));
+        const districtTotal = Number(totalVotes || 0) > 0
+          ? Number(totalVotes || 0)
+          : (districtDem + districtRep + districtOther);
+        if (districtTotal <= 0) return null;
+
+        const candidateNames = resolvedStatewideCandidates();
+        setStatewideContestTitle(`${formatContestName(contestType, year)} (${year})${titleSuffix}`);
+        updateStatewideResults(contestType, year, districtDem, districtRep, districtTotal, {
+          otherVotes: districtOther,
+          ...candidateNames
+        });
+        setVoteCounterBaselineState(
+          'Statewide',
+          `${formatContestLabel(contestType, year)}`,
+          districtDem,
+          districtRep,
+          districtOther,
+          { kind: 'statewide', contestType, year: Number(year) },
+          candidateNames
+        );
+        return { dem: districtDem, rep: districtRep, other: districtOther, total: districtTotal };
       }
 
       const contestData = electionData.filter(row => row.year == year);
@@ -33602,23 +33631,34 @@ document.addEventListener('DOMContentLoaded', function() {
             ? ` | match coverage ${Number(coveragePct).toFixed(2)}%`
             : '';
           const linesLabel = getDistrictLinesLabel();
-          const contestTypeKey = String(contestType || '').trim().toLowerCase();
-          const preserveDistrictViewSummary = contestTypeKey === 'state_house' || contestTypeKey === 'state_senate';
+          const preserveDistrictViewSummary = isLegislativeContest;
           if (mode === 'demographics') {
             setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
             setStatus(`Applied demographic mode for ${getReadableViewLabel(currentView)} (${linesLabel}).`);
-            setVoteCounterBaselineState(
-              'Statewide',
-              `${formatContestLabel(contestType, year)} (${linesLabel})`,
-              totalDem,
-              totalRep,
-              totalOther,
-              { kind: 'statewide', contestType, year: Number(year) },
-              resolvedStatewideCandidates()
-            );
-            refreshStatewideSummaryFromCountyRows(contestData, ` - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
+            if (isLegislativeContest) {
+              refreshStatewideSummaryFromDistrictTotals(
+                totalDem,
+                totalRep,
+                totalOther,
+                totalVotes,
+                ` - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`
+              );
+            } else {
+              setVoteCounterBaselineState(
+                'Statewide',
+                `${formatContestLabel(contestType, year)} (${linesLabel})`,
+                totalDem,
+                totalRep,
+                totalOther,
+                { kind: 'statewide', contestType, year: Number(year) },
+                resolvedStatewideCandidates()
+              );
+              refreshStatewideSummaryFromCountyRows(contestData, ` - ${getReadableViewLabel(currentView)} demographic profile (${linesLabel})`);
+            }
           } else {
-            const statewideSummary = refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
+            const statewideSummary = isLegislativeContest
+              ? refreshStatewideSummaryFromDistrictTotals(totalDem, totalRep, totalOther, totalVotes, ` - ${getReadableViewLabel(currentView)} Result (${linesLabel})`)
+              : refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
             const statewideDemPct = statewideSummary?.total ? (statewideSummary.dem / statewideSummary.total) * 100 : 0;
             const statewideRepPct = statewideSummary?.total ? (statewideSummary.rep / statewideSummary.total) * 100 : 0;
             if (preserveDistrictViewSummary) {
@@ -33698,16 +33738,20 @@ document.addEventListener('DOMContentLoaded', function() {
           totalRep += repVotes;
         });
         const totalOther = Math.max(0, totalVotes - totalDem - totalRep);
-        setVoteCounterBaselineState(
-          'Statewide',
-          `${formatContestLabel(contestType, year)}`,
-          totalDem,
-          totalRep,
-          totalOther,
-          { kind: 'statewide', contestType, year: Number(year) },
-          resolvedStatewideCandidates()
-        );
-        setStatewideContestTitle(`${formatContestName(contestType, year)} (${year}) - ${getReadableViewLabel(currentView)} demographic profile`);
+        if (isLegislativeContest) {
+          refreshStatewideSummaryFromDistrictTotals(totalDem, totalRep, totalOther, totalVotes, ` - ${getReadableViewLabel(currentView)} demographic profile`);
+        } else {
+          setVoteCounterBaselineState(
+            'Statewide',
+            `${formatContestLabel(contestType, year)}`,
+            totalDem,
+            totalRep,
+            totalOther,
+            { kind: 'statewide', contestType, year: Number(year) },
+            resolvedStatewideCandidates()
+          );
+          refreshStatewideSummaryFromCountyRows(contestData, ` - ${getReadableViewLabel(currentView)} demographic profile`);
+        }
         setStatus(mapped > 0
           ? `Applied demographic mode for ${getReadableViewLabel(currentView)}.`
           : `No district demographic rows found for ${getReadableViewLabel(currentView)}.`);
@@ -33762,7 +33806,11 @@ document.addEventListener('DOMContentLoaded', function() {
         setStatus('District layer not found!', 5000, true);
       }
 
-      refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
+      if (isLegislativeContest) {
+        refreshStatewideSummaryFromDistrictTotals(totalDem, totalRep, totalOther, totalVotes, ` - ${getReadableViewLabel(currentView)} Result`);
+      } else {
+        refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
+      }
       setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
     }
 
