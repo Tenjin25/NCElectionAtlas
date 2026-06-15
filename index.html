@@ -10413,7 +10413,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getRegionTrendSeries(contestType, regionKey) {
-      const entries = (contestManifest || [])
+      const entries = getVisibleManifestEntries(contestManifest)
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
@@ -10911,19 +10911,61 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${ct}__${fy}__${ty}`;
     }
 
+    const COUNCIL_OF_STATE_CONTEST_TYPES = new Set([
+      'governor',
+      'lieutenant_governor',
+      'attorney_general',
+      'auditor',
+      'secretary_of_state',
+      'treasurer',
+      'labor_commissioner',
+      'insurance_commissioner',
+      'agriculture_commissioner',
+      'superintendent'
+    ]);
+
+    function parseMajorPartyContested(entry) {
+      const raw = entry?.major_party_contested;
+      if (typeof raw === 'boolean') return raw;
+      if (typeof raw === 'number') return raw !== 0;
+      if (typeof raw === 'string') {
+        const s = raw.trim().toLowerCase();
+        if (s === 'false' || s === '0' || s === 'no') return false;
+        if (s === 'true' || s === '1' || s === 'yes') return true;
+      }
+      const demTotal = Number(entry?.dem_total || 0);
+      const repTotal = Number(entry?.rep_total || 0);
+      if (demTotal > 0 || repTotal > 0) return demTotal > 0 && repTotal > 0;
+      return true;
+    }
+
+    function shouldIncludeManifestEntry(entry) {
+      if (!entry) return false;
+      const contestType = String(entry.contest_type || '').trim();
+      const year = Number(entry.year);
+      const rows = Number(entry.rows || entry.districts || 0) || 0;
+      if (!contestType || rows <= 0) return false;
+      const isJudicial = contestType.startsWith('nc_supreme_court_') || contestType.startsWith('nc_court_of_appeals_');
+      if (isJudicial && Number.isFinite(year) && year < 2018) return false;
+      if (COUNCIL_OF_STATE_CONTEST_TYPES.has(contestType) && !parseMajorPartyContested(entry)) return false;
+      return true;
+    }
+
+    function getVisibleManifestEntries(entries) {
+      return (Array.isArray(entries) ? entries : []).filter(shouldIncludeManifestEntry);
+    }
+
     function getAvailableContestYearsForType(contestType) {
       const ct = String(contestType || '').trim();
       if (!ct) return [];
       if (contestYearsByTypeCache.has(ct)) return contestYearsByTypeCache.get(ct);
       const years = new Set();
       try {
-        (contestManifest || []).forEach(entry => {
+        getVisibleManifestEntries(contestManifest).forEach(entry => {
           if (!entry) return;
           if (String(entry.contest_type || '') !== ct) return;
           const y = Number(entry.year);
-          const rows = Number(entry.rows || 0) || 0;
           if (!Number.isFinite(y) || y <= 0) return;
-          if (rows <= 0) return;
           years.add(y);
         });
       } catch (_) {}
@@ -14778,7 +14820,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getStatewideTrendSeries(contestType) {
-      const entries = (contestManifest || [])
+      const entries = getVisibleManifestEntries(contestManifest)
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
@@ -19276,44 +19318,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	      sel.innerHTML = '<option value="">Select a contest...</option>';
 
 	      const contestYearPairs = {};
-        const councilOfStateTypes = new Set([
-          'governor',
-          'lieutenant_governor',
-          'attorney_general',
-          'auditor',
-          'secretary_of_state',
-          'treasurer',
-          'labor_commissioner',
-          'insurance_commissioner',
-          'agriculture_commissioner',
-          'superintendent'
-        ]);
-
-        function parseMajorPartyContested(entry) {
-          const raw = entry?.major_party_contested;
-          if (typeof raw === 'boolean') return raw;
-          if (typeof raw === 'number') return raw !== 0;
-          if (typeof raw === 'string') {
-            const s = raw.trim().toLowerCase();
-            if (s === 'false' || s === '0' || s === 'no') return false;
-            if (s === 'true' || s === '1' || s === 'yes') return true;
-          }
-          const demTotal = Number(entry?.dem_total || 0);
-          const repTotal = Number(entry?.rep_total || 0);
-          if (demTotal > 0 || repTotal > 0) return demTotal > 0 && repTotal > 0;
-          return true;
-        }
-	      (manifestEntries || []).forEach(entry => {
+	      getVisibleManifestEntries(manifestEntries).forEach(entry => {
 	        const contestType = entry.contest_type;
 	        const year = Number(entry.year);
-	        const rows = Number(entry.rows || entry.districts || 0) || 0;
-	        if (!contestType || rows <= 0) return;
-
-          // Hide older NC judicial contests until we have reliable D/R-alignment (endorsement) data.
-          // NC appellate judicial races are nonpartisan in older cycles; without endorsements they read as "OTHER".
-          const isJudicial = contestType.startsWith('nc_supreme_court_') || contestType.startsWith('nc_court_of_appeals_');
-          if (isJudicial && Number.isFinite(year) && year < 2018) return;
-          if (councilOfStateTypes.has(contestType) && !parseMajorPartyContested(entry)) return;
 
 	        if (!contestYearPairs[contestType]) contestYearPairs[contestType] = new Set();
 	        contestYearPairs[contestType].add(year);
@@ -22013,7 +22020,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (Array.isArray(cached)) return cached.slice();
       } catch (_) {}
 
-      const entries = (contestManifest || [])
+      const entries = getVisibleManifestEntries(contestManifest)
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
@@ -23643,7 +23650,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getPrecinctTrendSeries(contestType, precinctNormRaw, countyNameRaw = '') {
-      const entries = (contestManifest || [])
+      const entries = getVisibleManifestEntries(contestManifest)
         .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
         .slice()
         .sort((a, b) => Number(a.year) - Number(b.year));
@@ -25000,7 +25007,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const targetYear = Number(year);
       if (!contestType || !Number.isFinite(targetYear)) return [];
       const years = Array.from(new Set(
-        (contestManifest || [])
+        getVisibleManifestEntries(contestManifest)
           .filter(entry => entry && entry.contest_type === contestType && Number.isFinite(Number(entry.year)))
           .map(entry => Number(entry.year))
           .filter(y => y <= targetYear)
