@@ -10974,6 +10974,38 @@ document.addEventListener('DOMContentLoaded', function() {
       return out;
     }
 
+    function getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear = currentDistrictLinesYear) {
+      const targetScope = String(scope || '').trim();
+      const ct = String(contestType || '').trim();
+      if (!targetScope || !ct) return [];
+      const activeManifest = getActiveDistrictManifest(linesYear);
+      const years = new Set();
+      try {
+        getVisibleManifestEntries(activeManifest).forEach(entry => {
+          if (!entry) return;
+          if (String(entry.scope || '').trim() !== targetScope) return;
+          if (String(entry.contest_type || '').trim() !== ct) return;
+          const y = Number(entry.year);
+          if (!Number.isFinite(y) || y <= 0) return;
+          years.add(y);
+        });
+      } catch (_) {}
+      return Array.from(years).filter(Number.isFinite).sort((a, b) => a - b);
+    }
+
+    function getPriorContestYearsFromAvailableYears(contestType, year, availableYears) {
+      const ct = String(contestType || '').trim();
+      const y = Number(year);
+      const years = Array.isArray(availableYears)
+        ? availableYears.map(Number).filter(v => Number.isFinite(v) && v < y).sort((a, b) => a - b)
+        : [];
+      if (!years.length) return [];
+      if (ct !== 'us_senate') return years.slice().sort((a, b) => b - a);
+      const preferred = [y - 6, y - 12].filter(v => years.includes(v));
+      const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
+      return [...preferred, ...rest];
+    }
+
     function getVoteDeltaPairsForTooltip(contestType, toYear, maxPairs = 2) {
       const ct = String(contestType || '').trim();
       const y = Number(toYear);
@@ -31950,15 +31982,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (rows && rows.length) return { year: modeledDef.baseYear, rows };
         return null;
       }
-      const candidates = (() => {
-        const base = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
-        // US Senate: prefer the last time the *same seat* was up (typically y-6) when available.
-        // If that slice doesn't exist, fall back to the nearest earlier available year.
-        if (String(contestType || '').trim() !== 'us_senate') return base;
-        const preferred = [y - 6, y - 12].filter(v => v >= 2000);
-        const rest = base.filter(v => !preferred.includes(v));
-        return [...preferred, ...rest];
-      })();
+      const candidates = getPriorContestYearsFromAvailableYears(
+        contestType,
+        y,
+        getAvailableContestYearsForType(contestType)
+      );
       for (const cy of candidates) {
         const rows = await tryLoadContestSliceStrict(contestType, cy);
         if (rows && rows.length) return { year: cy, rows };
@@ -32186,13 +32214,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (results && Object.keys(results).length) return { year: modeledDef.baseYear, node };
         return null;
       }
-      const candidates = (() => {
-        const base = [y - 4, y - 6, y - 2, y - 8, y - 12].filter(v => v >= 2000);
-        if (String(contestType || '').trim() !== 'us_senate') return base;
-        const preferred = [y - 6, y - 12].filter(v => v >= 2000);
-        const rest = base.filter(v => !preferred.includes(v));
-        return [...preferred, ...rest];
-      })();
+      const candidates = getPriorContestYearsFromAvailableYears(
+        contestType,
+        y,
+        getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear)
+      );
       for (const cy of candidates) {
         const node = await tryLoadDistrictSliceStrict(scope, contestType, cy, linesYear);
         const results = node?.general?.results || null;
