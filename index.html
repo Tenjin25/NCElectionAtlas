@@ -26392,9 +26392,9 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (layerName === 'district-fill') {
         await renderDistrictHover(evt, 'congressional', 'Congressional District', ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-house-fill') {
-        await renderDistrictHover(evt, 'state_house', 'State House District', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+        await renderDistrictHover(evt, 'state_house', 'HD', ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       } else if (layerName === 'state-senate-fill') {
-        await renderDistrictHover(evt, 'state_senate', 'State Senate District', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
+        await renderDistrictHover(evt, 'state_senate', 'SD', ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'], { forceTooltip });
       }
     }
 
@@ -26418,18 +26418,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const requestId = ++districtHoverRequestId;
       setDistrictHoverOutline(scope, districtNum);
 
+      const formattedDistrictLabel = `${districtLabel}-${String(districtNum).padStart(2, '0')}`;
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const _demoRow = getDistrictDemographics(scope, districtNum);
       const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
       if (!contestValue) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
+        const copyText = `${formattedDistrictLabel} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
             e.point.x,
             e.point.y,
             buildTooltipShell(
-              `${districtLabel} ${districtNum}`,
+              formattedDistrictLabel,
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>',
               { pinned: pinnedShell, copyText }
             ),
@@ -26444,7 +26445,7 @@ document.addEventListener('DOMContentLoaded', function() {
           e.point.x,
           e.point.y,
           buildTooltipShell(
-            `${districtLabel} ${districtNum}`,
+            formattedDistrictLabel,
             `${_demoHTML}<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;margin-top:6px;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
@@ -26472,13 +26473,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!row) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
+        const copyText = `${formattedDistrictLabel} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
             e.point.x,
             e.point.y,
             buildTooltipShell(
-              `${districtLabel} ${districtNum}`,
+              formattedDistrictLabel,
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
               { pinned: pinnedShell, copyText }
             ),
@@ -26491,7 +26492,7 @@ document.addEventListener('DOMContentLoaded', function() {
           e.point.x,
           e.point.y,
           buildTooltipShell(
-            `${districtLabel} ${districtNum}`,
+            formattedDistrictLabel,
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
             { pinned: pinnedShell, copyText }
           ),
@@ -26578,10 +26579,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
       const subtitleByScope = scope === 'congressional'
         ? 'Congressional District'
-        : (scope === 'state_senate' ? 'State Senate' : 'State House');
+        : (scope === 'state_senate' ? 'SD' : 'HD');
       const districtTitle = scope === 'congressional'
         ? `NC-${String(districtNum).padStart(2, '0')}`
-        : `${districtLabel} ${districtNum}`;
+        : `${districtLabel}-${String(districtNum).padStart(2, '0')}`;
       const winnerName = signedMarginPct > 0
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (signedMarginPct < 0 ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
@@ -33854,5 +33855,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-
