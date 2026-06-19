@@ -26579,7 +26579,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
       const subtitleByScope = scope === 'congressional'
         ? 'Congressional District'
-        : (scope === 'state_senate' ? 'SD' : 'HD');
+        : (scope === 'state_senate' ? 'State Senate' : 'State House');
       const districtTitle = scope === 'congressional'
         ? `NC-${String(districtNum).padStart(2, '0')}`
         : `${districtLabel}-${String(districtNum).padStart(2, '0')}`;
@@ -29668,7 +29668,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   await renderDistrictHover(
                     e,
                     'state_house',
-                    'State House District',
+                    'HD',
                     ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
@@ -29785,7 +29785,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   await renderDistrictHover(
                     e,
                     'state_senate',
-                    'State Senate District',
+                    'SD',
                     ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
