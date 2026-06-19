@@ -26419,6 +26419,12 @@ document.addEventListener('DOMContentLoaded', function() {
       setDistrictHoverOutline(scope, districtNum);
 
       const formattedDistrictLabel = `${districtLabel}-${String(districtNum).padStart(2, '0')}`;
+      const panelDistrictLabel = scope === 'state_house'
+        ? 'State House District'
+        : scope === 'state_senate'
+          ? 'State Senate District'
+          : 'Congressional District';
+      const panelDistrictNum = String(districtNum).padStart(2, '0');
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const _demoRow = getDistrictDemographics(scope, districtNum);
       const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
@@ -26511,13 +26517,13 @@ document.addEventListener('DOMContentLoaded', function() {
         : (demVotes + repVotes + otherVotes);
       if (totalVotes <= 0) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
-        const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
+        const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
             e.point.x,
             e.point.y,
             buildTooltipShell(
-              `${districtLabel} ${districtNum}`,
+              formattedDistrictLabel,
               _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">No data for this contest</div>',
               { pinned: pinnedShell, copyText }
             ),
@@ -26530,7 +26536,7 @@ document.addEventListener('DOMContentLoaded', function() {
           e.point.x,
           e.point.y,
           buildTooltipShell(
-            `${districtLabel} ${districtNum}`,
+            formattedDistrictLabel,
             _demoHTML + '<div class="tooltip-kicker" style="margin-top:6px;">No data</div><div style="color:rgba(226,232,240,0.92);margin-top:6px;">No results for this contest.</div>',
             { pinned: pinnedShell, copyText }
           ),
@@ -26552,7 +26558,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!demCandidate) demCandidate = getCandidateName(year, formatContestName(contestType, year), 'Democrat');
       if (!repCandidate) repCandidate = getCandidateName(year, formatContestName(contestType, year), 'Republican');
       setVoteCounterHoverState(
-        `Hover: ${districtLabel} ${districtNum}`,
+        `Hover: ${panelDistrictLabel} ${panelDistrictNum}`,
         `${formatContestLabel(contestType, year)}`,
         demVotes,
         repVotes,
@@ -26618,7 +26624,7 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (prevYearForFlip && year) ? `${prevYearForFlip}→${year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!prevYearForFlip
       });
-      const copyText = `${districtLabel} ${districtNum} (Lines ${currentDistrictLinesYear})`;
+      const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
