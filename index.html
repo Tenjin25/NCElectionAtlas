@@ -10169,7 +10169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-20-1';
+    const DATA_CACHE_BUSTER = '2026-06-20-2';
     const APP_BUILD_ID = '2026-06-14-1';
 
     function withCacheBuster(path) {
@@ -14201,7 +14201,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (repVotes / totalVotes) * 100;
       const otherPct = (otherVotes / totalVotes) * 100;
       const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
+      const isLincolnCountyEquivalentHouse = String(meta?.kind || '').toLowerCase() === 'district' && String(meta?.scope || '').toLowerCase() === 'state_house' && Number(meta?.districtNum) === 97;
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county' || isLincolnCountyEquivalentHouse;
       const pctFormatter = isCountyContext ? formatPctForCountyCloseRace : formatPctForCloseRace;
       
       animateCounter('dem-count', demVotes);
@@ -14953,7 +14954,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let series = [];
         const trendOptions = {};
         trendOptions.selectedYear = Number(year);
-        trendOptions.marginPrecision = meta.kind === 'county' ? 'county' : 'default';
+        trendOptions.marginPrecision = (meta.kind === 'county' || (meta.kind === 'district' && meta.scope === 'state_house' && Number(meta.districtNum) === 97)) ? 'county' : 'default';
         trendOptions.focusKind = meta.kind;
         trendOptions.contestType = contestType;
         let censusContext = null;
@@ -26630,6 +26631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
         winnerLineText: marginCall?.text || '',
+        marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: prevYearForFlip,
@@ -28544,7 +28546,8 @@ document.addEventListener('DOMContentLoaded', function() {
       shiftYearLabel,
       showShiftLine,
       winnerLineToneClass,
-      winnerRawLeadToneClass
+      winnerRawLeadToneClass,
+      marginPrecision
     } = {}) {
       const dVotes = Number(demVotes || 0);
       const rVotes = Number(repVotes || 0);
@@ -28555,8 +28558,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = safeTotal > 0 ? (rVotes / safeTotal) * 100 : 0;
       const otherPct = safeTotal > 0 ? (oVotes / safeTotal) * 100 : 0;
       const marginAbs = Math.abs(Number(marginPct) || 0);
-      const pctFormatter = (v) => Number(v || 0).toFixed(2);
+      const useCountyMarginPrecision = String(marginPrecision || '').toLowerCase() === 'county';
+      const pctFormatter = (v) => useCountyMarginPrecision ? formatPctForCountyCloseRace(v, marginAbs) : formatPctForCloseRace(v, marginAbs);
       const marginFormatter = (v) => {
+        if (useCountyMarginPrecision && typeof formatCountyMarginPctForDisplay === 'function') return formatCountyMarginPctForDisplay(v);
         if (typeof formatMarginPctForDisplay === 'function') return formatMarginPctForDisplay(v);
         return formatVotehubPct(v, 2);
       };
@@ -30982,7 +30987,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return results[keyA] || results[keyB] || null;
     }
 
-    function renderDistrictElectionInfoHTML(contestType, year, row, fallbackCandidates) {
+    function renderDistrictElectionInfoHTML(contestType, year, row, fallbackCandidates, options = {}) {
       if (!row) return '<div style="color:#999;">No results for this district/contest.</div>';
       const demVotes = Number(row.dem_votes || 0);
       const repVotes = Number(row.rep_votes || 0);
@@ -31005,34 +31010,39 @@ document.addEventListener('DOMContentLoaded', function() {
         ? signedRaw
         : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
       const marginPct = Math.abs(signedMarginPct);
+      const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
+      const rawMarginPctForDisplay = marginPctValue(repVotes, demVotes, totalVotes);
+      const demPctLabel = useCountyMarginPrecision ? formatPctForCountyCloseRace(demPct, rawMarginPctForDisplay) : formatPctForCloseRace(demPct, rawMarginPctForDisplay);
+      const repPctLabel = useCountyMarginPrecision ? formatPctForCountyCloseRace(repPct, rawMarginPctForDisplay) : formatPctForCloseRace(repPct, rawMarginPctForDisplay);
+      const othPctLabel = useCountyMarginPrecision ? formatPctForCountyCloseRace(othPct, rawMarginPctForDisplay) : formatPctForCloseRace(othPct, rawMarginPctForDisplay);
       const winnerParty = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'TIE');
-      const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
+      const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct, { precision: useCountyMarginPrecision ? 'county' : 'default' });
 
       let compLabel = '';
       let compColor = '#6b7280';
       if (marginPct >= 40) {
-        compLabel = winnerParty === 'R' ? "Annihilation Republican" : "Annihilation Democratic";
+        compLabel = winnerParty === 'R' ? 'Annihilation Republican' : 'Annihilation Democratic';
         compColor = winnerParty === 'R' ? '#7f1d1d' : '#1e3a8a';
       } else if (marginPct >= 30) {
-        compLabel = winnerParty === 'R' ? "Dominant Republican" : "Dominant Democratic";
+        compLabel = winnerParty === 'R' ? 'Dominant Republican' : 'Dominant Democratic';
         compColor = winnerParty === 'R' ? '#7f1d1d' : '#1e3a8a';
       } else if (marginPct >= 20) {
-        compLabel = winnerParty === 'R' ? "Stronghold Republican" : "Stronghold Democratic";
+        compLabel = winnerParty === 'R' ? 'Stronghold Republican' : 'Stronghold Democratic';
         compColor = winnerParty === 'R' ? '#dc2626' : '#2563eb';
       } else if (marginPct >= 10) {
-        compLabel = winnerParty === 'R' ? "Safe Republican" : "Safe Democratic";
+        compLabel = winnerParty === 'R' ? 'Safe Republican' : 'Safe Democratic';
         compColor = winnerParty === 'R' ? '#dc2626' : '#3b82f6';
       } else if (marginPct >= 5.5) {
-        compLabel = winnerParty === 'R' ? "Likely Republican" : "Likely Democratic";
+        compLabel = winnerParty === 'R' ? 'Likely Republican' : 'Likely Democratic';
         compColor = winnerParty === 'R' ? '#ef4444' : '#60a5fa';
       } else if (marginPct >= 1) {
-        compLabel = winnerParty === 'R' ? "Lean Republican" : "Lean Democratic";
+        compLabel = winnerParty === 'R' ? 'Lean Republican' : 'Lean Democratic';
         compColor = winnerParty === 'R' ? '#f87171' : '#93c5fd';
       } else if (marginPct >= 0.5) {
-        compLabel = winnerParty === 'R' ? "Tilt Republican" : "Tilt Democratic";
+        compLabel = winnerParty === 'R' ? 'Tilt Republican' : 'Tilt Democratic';
         compColor = winnerParty === 'R' ? '#fff1f2' : '#dbeafe';
       } else {
-        compLabel = "Tossup";
+        compLabel = 'Tossup';
         compColor = '#6b7280';
       }
 
@@ -31052,9 +31062,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ${marginLineText}
           </div>
           <div style="margin-top:8px;font-size:14px;">
-            <div class="tooltip-vote-line"><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</div>
-            <div class="tooltip-vote-line"><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</div>
-            ${otherVotes > 0 ? `<div class="tooltip-vote-line"><span style="color:#6b7280;font-weight:800;">Other</span>: <span class="tooltip-vote-pct">${toFixedForDisplay(othPct, 2)}%</span> (${otherVotes.toLocaleString()})</div>` : ''}
+            <div class="tooltip-vote-line"><span style="color:#2563eb;font-weight:800;">${fullCandidateLabel(demCandidate, 'Democratic')} (D)</span>: <span class="tooltip-vote-pct">${demPctLabel}%</span> (${demVotes.toLocaleString()})</div>
+            <div class="tooltip-vote-line"><span style="color:#dc2626;font-weight:800;">${fullCandidateLabel(repCandidate, 'Republican')} (R)</span>: <span class="tooltip-vote-pct">${repPctLabel}%</span> (${repVotes.toLocaleString()})</div>
+            ${otherVotes > 0 ? `<div class="tooltip-vote-line"><span style="color:#6b7280;font-weight:800;">Other</span>: <span class="tooltip-vote-pct">${othPctLabel}%</span> (${otherVotes.toLocaleString()})</div>` : ''}
             <div style="margin-top:6px;color:#374151;font-weight:700;">Total Votes: ${totalVotes.toLocaleString()}</div>
           </div>
           <div style="margin-top:8px;font-size:14px;font-weight:800;color:${compColor};">Competitiveness: ${compLabel}</div>
@@ -31062,7 +31072,8 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
-    function renderDistrictTrendLinesHTML(series) {
+    function renderDistrictTrendLinesHTML(series, options = {}) {
+      const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
       if (!series || series.length === 0) return '<div style="color:#999;">No historical data</div>';
       return series
         .slice()
@@ -31076,7 +31087,8 @@ document.addEventListener('DOMContentLoaded', function() {
             Number(s.total_votes || 0),
             s.rep_candidate,
             s.dem_candidate,
-            Number(s.margin_pct)
+            Number(s.margin_pct),
+            { precision: useCountyMarginPrecision ? 'county' : 'default' }
           ).text;
           return `<div style="margin-top:4px;color:${color};font-weight:800;">${s.year}: ${label}</div>`;
         })
@@ -31184,7 +31196,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const repBlank = !((row.rep_candidate || '').toString().trim());
             if (demBlank || repBlank) cand = await getContestCandidates(contestType, year);
           }
-          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand);
+          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-election');
@@ -31196,7 +31208,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const series = await getDistrictTrendSeries('congressional', contestType, districtNum);
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
-          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series);
+          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series, { marginPrecision: 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
@@ -31272,7 +31284,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const repBlank = !((row.rep_candidate || '').toString().trim());
             if (demBlank || repBlank) cand = await getContestCandidates(contestType, year);
           }
-          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand);
+          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-election');
@@ -31284,7 +31296,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const series = await getDistrictTrendSeries(scope, contestType, districtNum);
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
-          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series);
+          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series, { marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
