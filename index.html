@@ -14095,7 +14095,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const total = d + r + o;
-      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
+      const isLincolnCountyEquivalentHouse = String(meta?.kind || '').toLowerCase() === 'district' && String(meta?.scope || '').toLowerCase() === 'state_house' && Number(meta?.districtNum) === 97;
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county' || isLincolnCountyEquivalentHouse;
 
       const winnerEl = document.getElementById('focus-winner');
       const marginEl = document.getElementById('focus-margin');
@@ -21422,7 +21423,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const total = d + r + o;
-      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
+      const isLincolnCountyEquivalentHouse = String(meta?.kind || '').toLowerCase() === 'district' && String(meta?.scope || '').toLowerCase() === 'state_house' && Number(meta?.districtNum) === 97;
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county' || isLincolnCountyEquivalentHouse;
 
       const winnerEl = document.getElementById('focus-winner');
       const marginEl = document.getElementById('focus-margin');
@@ -26607,7 +26609,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (signedMarginPct < 0 ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = signedMarginPct > 0 ? 'rep' : (signedMarginPct < 0 ? 'dem' : 'tie');
-      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct);
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct, { precision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
       let shiftDelta = NaN;
       let shiftClass = 'tie';
       if (currentVizMode === 'shift' && Number.isFinite(Number(prevSignedForFlip)) && prevYearForFlip) {
@@ -33878,3 +33880,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
