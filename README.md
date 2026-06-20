@@ -107,7 +107,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–June 2026)
 
 
-**Last updated:** June 3, 2026
+**Last updated:** June 19, 2026
+
+### Desktop Pop Change Hover Summary + District Label Cleanup (June 19, 2026)
+
+- Updated county hover behavior in `Pop Change` mode so desktop users now see the population-change summary in the main hover card instead of having to open `More details`.
+- Kept mobile behavior intentionally unchanged: population-change detail still lives under `More details` on smaller/touch layouts.
+- Pulled in the latest district hover/selection label cleanup from `main`, including more consistent zero-padded State House / State Senate labels and clearer congressional copy text.
+- Kept scope limited to hover/label presentation; no election totals, contest math, district allocation logic, or map-color calculations changed.
 
 ### VoteHub Tooltip Winner Layout + Contrast Polish (June 2, 2026)
 

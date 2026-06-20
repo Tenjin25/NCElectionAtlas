@@ -26078,6 +26078,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const popChangeToneColor = popChangeHeaderMeta?.tone === 'gain'
         ? '#166534'
         : (popChangeHeaderMeta?.tone === 'loss' ? '#7c2d12' : '#334155');
+      const popChangeTopLineDesktop = (() => {
+        if (!popChangeHeaderMeta) return '';
+        if (!isDesktopTooltipMode()) return '';
+        return `
+          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.28);border:1px solid rgba(148,163,184,0.32);">
+            <strong style="color:#f8fafc;">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:rgba(226,232,240,0.92);">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
+          </div>
+        `.trim();
+      })();
       const popChangeTopLineMobile = (() => {
         if (!popChangeHeaderMeta) return '';
         if (isDesktopTooltipMode()) return '';
@@ -26134,6 +26145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ${demoLine}
       `.trim();
       const inner = `
+        ${popChangeTopLineDesktop}
         ${popChangeTopLineMobile}
         ${votehubCore}
         <details class="tooltip-more" aria-label="More details">
