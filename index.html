@@ -10169,7 +10169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-20-2';
+    const DATA_CACHE_BUSTER = '2026-06-21-1';
     const APP_BUILD_ID = '2026-06-14-1';
 
     function withCacheBuster(path) {
@@ -26586,7 +26586,9 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'district', scope, districtNum: Number(districtNum), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = (scope === 'state_house' && Number(districtNum) === 97)
+        ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes)
+        : (('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes));
       let prevSignedForFlip = null;
       let prevYearForFlip = null;
       try {
@@ -31006,9 +31008,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const repPct = (repVotes / totalVotes) * 100.0;
       const othPct = (otherVotes / totalVotes) * 100.0;
       const signedRaw = Number(row.margin_pct);
-      const signedMarginPct = Number.isFinite(signedRaw)
-        ? signedRaw
-        : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = String(options?.marginPrecision || '').toLowerCase() === 'county'
+        ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes)
+        : (Number.isFinite(signedRaw)
+          ? signedRaw
+          : signedMarginPctFromVotes(demVotes, repVotes, totalVotes));
       const marginPct = Math.abs(signedMarginPct);
       const useCountyMarginPrecision = String(options?.marginPrecision || '').toLowerCase() === 'county';
       const rawMarginPctForDisplay = marginPctValue(repVotes, demVotes, totalVotes);
@@ -31087,7 +31091,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Number(s.total_votes || 0),
             s.rep_candidate,
             s.dem_candidate,
-            Number(s.margin_pct),
+            useCountyMarginPrecision ? NaN : Number(s.margin_pct),
             { precision: useCountyMarginPrecision ? 'county' : 'default' }
           ).text;
           return `<div style="margin-top:4px;color:${color};font-weight:800;">${s.year}: ${label}</div>`;
