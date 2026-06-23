@@ -10169,7 +10169,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-21-1';
+    const DATA_CACHE_BUSTER = '2026-06-22-1';
     const APP_BUILD_ID = '2026-06-14-1';
 
     function withCacheBuster(path) {
@@ -23881,6 +23881,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!series || series.length === 0) {
         return buildTooltipShell(title, '<div style="color:#999;">No historical data</div>');
       }
+      const useCountyMarginPrecision = /(?:state\s+house\s+district\s+97|hd-?97)\b/i.test(String(title || ''));
       const lines = series
         .slice()
         .sort((a, b) => a.year - b.year)
@@ -23893,7 +23894,8 @@ document.addEventListener('DOMContentLoaded', function() {
             Number(s.total_votes || 0),
             s.rep_candidate,
             s.dem_candidate,
-            Number(s.margin_pct)
+            useCountyMarginPrecision ? NaN : Number(s.margin_pct),
+            { precision: useCountyMarginPrecision ? 'county' : 'default' }
           ).text;
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#cbd5e1;">${s.year}</span><span style="color:${color};font-weight:700;">${label}</span></div>`;
         })
@@ -30871,13 +30873,13 @@ document.addEventListener('DOMContentLoaded', function() {
               <div style="margin-bottom: 16px;">
                 <h5>Margin</h5>
                 <p style="color: ${winner === 'Republican' ? '#dc2626' : '#2563eb'}; font-weight: bold; font-size: 18px;">
-                  ${winner} +${toFixedForDisplay(marginPct, 2)}%
+                  ${winner} +${(chamber === 'house' && Number(districtNum) === 97 ? formatCountyMarginPctForDisplay(marginPct) : toFixedForDisplay(marginPct, 2))}%
                 </p>
               </div>
               <div style="margin-bottom: 16px;">
                 <h5>Vote Breakdown</h5>
-                <p class="tooltip-vote-line"><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span class="tooltip-vote-pct">${toFixedForDisplay(demPct, 2)}%</span> (${demVotes.toLocaleString()})</p>
-                <p class="tooltip-vote-line"><span style="color: #dc2626; font-weight: bold;">Republican: </span><span class="tooltip-vote-pct">${toFixedForDisplay(repPct, 2)}%</span> (${repVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(demPct, marginPct) : toFixedForDisplay(demPct, 2))}%</span> (${demVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #dc2626; font-weight: bold;">Republican: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(repPct, marginPct) : toFixedForDisplay(repPct, 2))}%</span> (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
             `;
