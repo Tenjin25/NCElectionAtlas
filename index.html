@@ -13001,16 +13001,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 25);
     }
 
-    function buildAriaSummary(label, demVotes, repVotes, otherVotes = 0) {
+    function buildAriaSummary(label, demVotes, repVotes, otherVotes = 0, meta = null) {
       const d = Number(demVotes || 0);
       const r = Number(repVotes || 0);
       const o = Number(otherVotes || 0);
       const t = d + r + o;
       if (t <= 0) return `${label} has no vote data.`;
-      const signed = signedMarginPctFromVotes(d, r, t);
+      const isCountyContext = String(meta?.kind || '').toLowerCase() === 'county';
+      const signed = isCountyContext
+        ? signedCountyMarginPctDisplayValue(d, r, t)
+        : signedMarginPctFromVotes(d, r, t);
       const winner = signed > 0 ? 'R' : (signed < 0 ? 'D' : 'T');
       const comp = compactCompetitivenessLabel(Math.abs(signed), winner === 'T' ? 'R' : winner);
-      const lead = leadMarginPctLabel(r, d, t);
+      const lead = isCountyContext ? leadCountyMarginPctLabel(r, d, t) : leadMarginPctLabel(r, d, t);
       return `${label} is ${comp}; lead ${lead}; Republican ${r.toLocaleString()} votes, Democratic ${d.toLocaleString()} votes, Other ${o.toLocaleString()} votes.`;
     }
 
@@ -15043,7 +15046,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
       } catch (_) {}
       updateRecountRadarBadge();
-      try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes)); } catch (_) {}
+      try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes, meta)); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
     }
 
@@ -15082,7 +15085,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterContext(title, sub, { showClear: false });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       updateRecountRadarBadge();
-      try { announceForScreenReader(buildAriaSummary(title || 'Hovered area', demVotes, repVotes, otherVotes)); } catch (_) {}
+      try { announceForScreenReader(buildAriaSummary(title || 'Hovered area', demVotes, repVotes, otherVotes, meta)); } catch (_) {}
     }
 
     function refreshPinnedPrecinctForContest(contestType, year) {
@@ -27473,10 +27476,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!sidebarReady) return;
       // Margin
       const margin = demVotes - repVotes;
-      const signedMarginPctRaw = Number(countyData[`${contestType}_margin_pct`]);
-      const signedMarginPct = Number.isFinite(signedMarginPctRaw)
-        ? signedMarginPctRaw
-        : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
       const marginPct = Math.abs(signedMarginPct);
       const marginPctLabel = formatCountyMarginPctForDisplay(marginPct);
       const winner = margin > 0 ? 'Democratic' : (margin < 0 ? 'Republican' : 'Tie');
@@ -31011,7 +31011,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const othPct = (otherVotes / totalVotes) * 100.0;
       const signedRaw = Number(row.margin_pct);
       const signedMarginPct = String(options?.marginPrecision || '').toLowerCase() === 'county'
-        ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes)
+        ? signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes)
         : (Number.isFinite(signedRaw)
           ? signedRaw
           : signedMarginPctFromVotes(demVotes, repVotes, totalVotes));
