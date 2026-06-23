@@ -9056,7 +9056,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var helpClose = document.getElementById('help-close');
   try {
     var buildEl = document.getElementById('build-stamp');
-    if (buildEl && typeof APP_BUILD_ID !== 'undefined' && APP_BUILD_ID) buildEl.textContent = `Build ${APP_BUILD_ID}`;
+    if (buildEl && typeof APP_BUILD_ID !== 'undefined' && APP_BUILD_ID) {
+      buildEl.textContent = `Deployed build ${APP_BUILD_ID}`;
+      buildEl.title = `HTML/data cache token ${APP_BUILD_ID}`;
+    }
   } catch (_) {}
   function updateLegendColors() {
     // Keep legend swatches aligned with the same color functions used by map fills.
@@ -10169,8 +10172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-23-2';
-    const APP_BUILD_ID = '2026-06-23-2';
+    const DATA_CACHE_BUSTER = '2026-06-23-3';
+    const APP_BUILD_ID = '2026-06-23-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
