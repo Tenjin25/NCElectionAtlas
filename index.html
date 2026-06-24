@@ -10172,8 +10172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-23-6';
-    const APP_BUILD_ID = '2026-06-23-6';
+    const DATA_CACHE_BUSTER = '2026-06-23-7';
+    const APP_BUILD_ID = '2026-06-23-7';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -19162,10 +19162,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let contestChangeInFlight = false;
     let queuedContestSelection = null;
     let contestSelectionSeq = 0;
+    let contestSelectionFrame = 0;
     let lastCompletedContestSelection = '';
     let lastContestApplySig = '';
-    const contestSelectNavKeys = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
-
     function scenarioSignature() {
       const swing = Number(scenarioSwingPct || 0);
       const scope = String(scenarioScope || '').trim().toLowerCase();
@@ -19188,25 +19187,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function wireContestSelectHandlers(sel) {
       if (!sel) return;
       const triggerContestSelection = () => {
-        handleContestSelectionChange(sel.value);
-      };
-      sel.onchange = triggerContestSelection;
-      sel.oninput = triggerContestSelection;
-      if (sel.dataset.keyboardContestNavWired === 'true') return;
-      sel.dataset.keyboardContestNavWired = 'true';
-      sel.addEventListener('keydown', function(ev) {
-        if (!contestSelectNavKeys.has(ev?.key)) return;
-        const before = (sel.value || '').toString();
+        const nextValue = (sel.value || '').toString().trim();
+        try {
+          if (contestSelectionFrame && typeof window.cancelAnimationFrame === 'function') {
+            window.cancelAnimationFrame(contestSelectionFrame);
+          }
+        } catch (_) {}
         const schedule = (typeof window.requestAnimationFrame === 'function')
           ? window.requestAnimationFrame.bind(window)
           : (cb => setTimeout(cb, 0));
-        schedule(() => {
-          const after = (sel.value || '').toString();
-          if (after !== before) {
-            handleContestSelectionChange(after);
-          }
+        contestSelectionFrame = schedule(() => {
+          contestSelectionFrame = 0;
+          handleContestSelectionChange(nextValue);
         });
-      });
+      };
+      sel.onchange = triggerContestSelection;
     }
 
     function shouldRefreshCountyDetailsOnContestChange() {
