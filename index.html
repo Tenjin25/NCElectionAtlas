@@ -10172,8 +10172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-23-3';
-    const APP_BUILD_ID = '2026-06-23-3';
+    const DATA_CACHE_BUSTER = '2026-06-23-4';
+    const APP_BUILD_ID = '2026-06-23-4';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -24595,7 +24595,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
       ];
       Object.entries(countyTotals).forEach(([countyNorm, totals]) => {
-        const signed = signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+        const signed = signedCountyMarginPctDisplayValue(totals.dem, totals.rep, totals.total);
         countySignedMargins[countyNorm] = signed;
         const winner = winnerFromSignedMarginPct(signed);
         const color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
@@ -25940,7 +25940,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'county', county: countyDisplay.toUpperCase(), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+      const signedMarginPct = signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
       const tierMeta = competitivenessTierMetaFromSignedMarginPct(signedMarginPct);
       const winner = signedMarginPct > 0 ? 'R' : (signedMarginPct < 0 ? 'D' : 'T');
       const subtitle = `${formatContestLabel(contestType, year)}`;
@@ -33129,20 +33129,20 @@ document.addEventListener('DOMContentLoaded', function() {
           const demPct = (demVotes / totalVotes) * 100;
           const repPct = (repVotes / totalVotes) * 100;
           const winner = repPct > demPct ? 'R' : (demPct > repPct ? 'D' : 'T');
-          const signedMarginPct = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+          const signedMarginPct = signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
           const marginPctAbs = Math.abs(signedMarginPct);
           let color = '#e0e0e0';
 
           if (mode === 'flips') {
             const prev = vizPrevCache?.prevCountyTotals?.[countyName] || null;
-            const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            const prevSigned = prev ? signedCountyMarginPctDisplayValue(prev.dem, prev.rep, prev.total) : 0;
             const f = flipInfo(prevSigned, signedMarginPct);
             color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
           } else if (mode === 'winners') {
             color = colorForWinnerMode(winner);
           } else if (mode === 'shift' && prevCountyTotals) {
             const prev = prevCountyTotals[countyName];
-            const prevSigned = prev ? signedMarginPctFromVotes(prev.dem, prev.rep, prev.total) : 0;
+            const prevSigned = prev ? signedCountyMarginPctDisplayValue(prev.dem, prev.rep, prev.total) : 0;
             const shift = signedMarginPct - prevSigned;
             color = colorForShiftMode(shift);
           } else {
