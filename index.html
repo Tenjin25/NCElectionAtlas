@@ -10172,8 +10172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-23-5';
-    const APP_BUILD_ID = '2026-06-23-5';
+    const DATA_CACHE_BUSTER = '2026-06-23-6';
+    const APP_BUILD_ID = '2026-06-23-6';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -19341,6 +19341,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
           if (next.key) lastCompletedContestSelection = next.key;
           queueCountyDetailsRefresh();
+          try {
+            const lastUnderscoreIndex = next.key.lastIndexOf('_');
+            const contestType = lastUnderscoreIndex > 0 ? next.key.substring(0, lastUnderscoreIndex) : next.key;
+            const year = lastUnderscoreIndex > 0 ? Number(next.key.substring(lastUnderscoreIndex + 1)) : NaN;
+            if (contestType && Number.isFinite(year)) {
+              scheduleCountyVoteDeltaCachesForTooltip(contestType, year, 2);
+            }
+          } catch (_) {}
           try { refreshStartHereHint(); } catch (_) {}
           break;
         }
@@ -32348,7 +32356,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const nextApplySig = buildContestApplySignature(contestKey, contestType, year);
       try { syncModelTuningControls(); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
-      try { scheduleCountyVoteDeltaCachesForTooltip(contestType, Number(year), 2); } catch (_) {}
 
       // Fast path: if the exact same contest/view/mode/toggles are already applied, avoid rebuilding expressions,
       // county totals, and other expensive work. Preserve UI/hover behavior by running only lightweight refreshes.
