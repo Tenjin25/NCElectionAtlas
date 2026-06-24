@@ -31992,34 +31992,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 	    async function tryLoadContestSliceStrict(contestType, year) {
-	      const key = `${contestType}_${year}`;
-	      try {
-	        const payload = await loadJSON(`${CONFIG.paths.contests_dir}/${key}.json`);
-	        return (payload.rows || []).map(r => ({
-	          year: Number(year),
-	          county: r.county,
-	          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-	          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-	          [`${contestType}_other`]: Number(r.other_votes) || 0,
-	          [`${contestType}_total`]: Number(r.total_votes) || 0,
-	          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-	          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-	          [`${contestType}_margin`]: Number(r.margin) || 0,
-	          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-	          [`${contestType}_winner`]: r.winner || '',
-	          [`${contestType}_color`]: r.color || ''
-	        }));
-	      } catch (_) {
-	        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
-	          try {
-	            return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
-	          } catch (err) {
-	            console.warn('Strict presidential CSV load failed for', year, err?.message || err);
-	          }
-	        }
-	        return null;
-	      }
-	    }
+      const key = `${contestType}_${year}`;
+      const manifestHasEntries = Array.isArray(contestManifest) && contestManifest.length > 0;
+      const manifestEntry = manifestHasEntries
+        ? (contestManifest.find(e => e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope) || null)
+        : null;
+      const manifestFile = (manifestEntry?.file || '').toString().trim();
+
+      if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+        try {
+          return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+        } catch (err) {
+          console.warn('Strict presidential CSV load failed for', year, err?.message || err);
+        }
+      }
+
+      if (manifestHasEntries && !manifestEntry) {
+        return null;
+      }
+
+      try {
+        const payloadPath = manifestFile
+          ? `${CONFIG.paths.contests_dir}/${manifestFile}`
+          : `${CONFIG.paths.contests_dir}/${key}.json`;
+        const payload = await loadJSON(payloadPath);
+        return (payload.rows || []).map(r => ({
+          year: Number(year),
+          county: r.county,
+          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
+          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
+          [`${contestType}_other`]: Number(r.other_votes) || 0,
+          [`${contestType}_total`]: Number(r.total_votes) || 0,
+          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
+          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
+          [`${contestType}_margin`]: Number(r.margin) || 0,
+          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
+          [`${contestType}_winner`]: r.winner || '',
+          [`${contestType}_color`]: r.color || ''
+        }));
+      } catch (_) {
+        return null;
+      }
+    }
 
     async function getPreviousContestSlice(contestType, year) {
       const y = Number(year);
