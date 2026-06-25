@@ -29568,7 +29568,7 @@ document.addEventListener('DOMContentLoaded', function() {
               lastSelectedCounty = `District ${districtNum}`;
 
               // Pin vote counter to this district for current contest (if any).
-              const contestValue = document.getElementById('contestSelect')?.value || '';
+              const contestValue = getActiveContestValue();
               if (contestValue) {
                 const i = contestValue.lastIndexOf('_');
                 const contestType = contestValue.substring(0, i);
@@ -29687,7 +29687,7 @@ document.addEventListener('DOMContentLoaded', function() {
               const districtNumDisplay = String(districtNum).padStart(2, '0');
               lastSelectedCounty = `State House District ${districtNumDisplay}`;
 
-              const contestValue = document.getElementById('contestSelect')?.value || '';
+              const contestValue = getActiveContestValue();
               if (contestValue) {
                 const i = contestValue.lastIndexOf('_');
                 const contestType = contestValue.substring(0, i);
@@ -29805,7 +29805,7 @@ document.addEventListener('DOMContentLoaded', function() {
               const districtNumDisplay = String(districtNum).padStart(2, '0');
               lastSelectedCounty = `State Senate District ${districtNumDisplay}`;
 
-              const contestValue = document.getElementById('contestSelect')?.value || '';
+              const contestValue = getActiveContestValue();
               if (contestValue) {
                 const i = contestValue.lastIndexOf('_');
                 const contestType = contestValue.substring(0, i);
@@ -30271,7 +30271,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const scope = sourceId === 'districts'
         ? 'congressional'
         : (sourceId === 'state-house' ? 'state_house' : 'state_senate');
-      await showAndPinDistrictSelection(scope, districtNum, document.getElementById('contestSelect')?.value || '');
+      await showAndPinDistrictSelection(scope, districtNum, getActiveContestValue());
     }
 
     async function handlePrecinctSelection(countyNameRaw, precinctCodeRaw) {
