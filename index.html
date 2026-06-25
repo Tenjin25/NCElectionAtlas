@@ -10172,8 +10172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-06-25-1';
-    const APP_BUILD_ID = '2026-06-25-1';
+    const DATA_CACHE_BUSTER = '2026-06-25-2';
+    const APP_BUILD_ID = '2026-06-25-2';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -14971,7 +14971,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let series = [];
         const trendOptions = {};
         trendOptions.selectedYear = Number(year);
-        trendOptions.marginPrecision = (meta.kind === 'county' || (meta.kind === 'district' && meta.scope === 'state_house' && Number(meta.districtNum) === 97)) ? 'county' : 'default';
+        trendOptions.marginPrecision = (meta.kind === 'county' || (meta.kind === 'district' && isLincolnCountyEquivalentHouseDistrict(meta.scope, meta.districtNum))) ? 'county' : 'default';
         trendOptions.focusKind = meta.kind;
         trendOptions.contestType = contestType;
         let censusContext = null;
@@ -20936,6 +20936,21 @@ document.addEventListener('DOMContentLoaded', function() {
       return 0;
     }
 
+
+    function isLincolnCountyEquivalentHouseDistrict(scope, districtNum) {
+      return String(scope || '').toLowerCase() === 'state_house' && Number(districtNum) === 97;
+    }
+
+    function signedDistrictMarginPctForDisplay(scope, districtNum, demVotes, repVotes, totalVotes, fallbackMarginPct = NaN) {
+      if (isLincolnCountyEquivalentHouseDistrict(scope, districtNum)) {
+        return signedCountyMarginPctDisplayValue(demVotes, repVotes, totalVotes);
+      }
+      const fallback = Number(fallbackMarginPct);
+      return Number.isFinite(fallback)
+        ? fallback
+        : signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
+    }
+
     function leadCountyMarginPctLabel(repVotes, demVotes, totalVotes) {
       const margin = Number(repVotes || 0) - Number(demVotes || 0);
       if (!margin) return 'Tie';
@@ -22052,16 +22067,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!repCand) repCand = cand.rep || '';
           } catch (_) {}
         }
+        const demVotes = Number(r.dem_votes) || 0;
+        const repVotes = Number(r.rep_votes) || 0;
+        const otherVotes = Number(r.other_votes) || 0;
+        const totalVotes = Number(r.total_votes) || (demVotes + repVotes + otherVotes);
+        const signedMarginPct = signedDistrictMarginPctForDisplay(scope, districtNum, demVotes, repVotes, totalVotes, r.margin_pct);
         out.push({
           year,
-          dem_votes: Number(r.dem_votes) || 0,
-          rep_votes: Number(r.rep_votes) || 0,
-          other_votes: Number(r.other_votes) || 0,
-          total_votes: Number(r.total_votes) || 0,
+          dem_votes: demVotes,
+          rep_votes: repVotes,
+          other_votes: otherVotes,
+          total_votes: totalVotes,
           dem_candidate: demCand,
           rep_candidate: repCand,
-          winner: r.winner || '',
-          margin_pct: Number(r.margin_pct) || 0,
+          winner: signedMarginPct > 0 ? 'REP' : (signedMarginPct < 0 ? 'DEM' : 'TIE'),
+          margin_pct: signedMarginPct,
           coverage_pct: payload?.meta?.match_coverage_pct
         });
       }
@@ -23914,7 +23934,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Number(s.total_votes || 0),
             s.rep_candidate,
             s.dem_candidate,
-            useCountyMarginPrecision ? NaN : Number(s.margin_pct),
+            Number(s.margin_pct),
             { precision: useCountyMarginPrecision ? 'county' : 'default' }
           ).text;
           return `<div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#cbd5e1;">${s.year}</span><span style="color:${color};font-weight:700;">${label}</span></div>`;
@@ -26608,9 +26628,14 @@ document.addEventListener('DOMContentLoaded', function() {
         { kind: 'district', scope, districtNum: Number(districtNum), contestType, year: Number(year) }
       );
 
-      const signedMarginPct = (scope === 'state_house' && Number(districtNum) === 97)
-        ? signedMarginPctFromVotes(demVotes, repVotes, totalVotes)
-        : (('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, totalVotes));
+      const signedMarginPct = signedDistrictMarginPctForDisplay(
+        scope,
+        districtNum,
+        demVotes,
+        repVotes,
+        totalVotes,
+        row.margin_pct
+      );
       let prevSignedForFlip = null;
       let prevYearForFlip = null;
       try {
@@ -26620,8 +26645,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (prevResults) {
           const prevRow = prevResults[String(districtNum)] || prevResults[String(Number(districtNum))] || null;
           if (prevRow) {
-            const prevSignedRaw = Number(prevRow.margin_pct);
-            if (Number.isFinite(prevSignedRaw)) prevSignedForFlip = prevSignedRaw;
+            const prevDemVotes = Number(prevRow.dem_votes || 0);
+            const prevRepVotes = Number(prevRow.rep_votes || 0);
+            const prevOtherVotes = Number(prevRow.other_votes || 0);
+            const prevTotalVotes = Number(prevRow.total_votes || (prevDemVotes + prevRepVotes + prevOtherVotes));
+            prevSignedForFlip = signedDistrictMarginPctForDisplay(
+              scope,
+              districtNum,
+              prevDemVotes,
+              prevRepVotes,
+              prevTotalVotes,
+              prevRow.margin_pct
+            );
           }
         }
       } catch (_) {}
@@ -26634,7 +26669,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (signedMarginPct < 0 ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = signedMarginPct > 0 ? 'rep' : (signedMarginPct < 0 ? 'dem' : 'tie');
-      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct, { precision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
+      const marginCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedMarginPct, { precision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default' });
       let shiftDelta = NaN;
       let shiftClass = 'tie';
       if (currentVizMode === 'shift' && Number.isFinite(Number(prevSignedForFlip)) && prevYearForFlip) {
@@ -26655,7 +26690,7 @@ document.addEventListener('DOMContentLoaded', function() {
         winnerParty,
         marginPct: Math.abs(signedMarginPct),
         winnerLineText: marginCall?.text || '',
-        marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default',
+        marginPrecision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default',
         prevSignedMarginPct: prevSignedForFlip,
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: prevYearForFlip,
@@ -31110,7 +31145,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Number(s.total_votes || 0),
             s.rep_candidate,
             s.dem_candidate,
-            useCountyMarginPrecision ? NaN : Number(s.margin_pct),
+            Number(s.margin_pct),
             { precision: useCountyMarginPrecision ? 'county' : 'default' }
           ).text;
           return `<div style="margin-top:4px;color:${color};font-weight:800;">${s.year}: ${label}</div>`;
@@ -31307,7 +31342,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const repBlank = !((row.rep_candidate || '').toString().trim());
             if (demBlank || repBlank) cand = await getContestCandidates(contestType, year);
           }
-          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
+          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-election');
@@ -31319,7 +31354,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const series = await getDistrictTrendSeries(scope, contestType, districtNum);
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
-          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series, { marginPrecision: (scope === 'state_house' && Number(districtNum) === 97) ? 'county' : 'default' });
+          if (el) el.innerHTML = renderDistrictTrendLinesHTML(series, { marginPrecision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default' });
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-trends');
@@ -33665,7 +33700,14 @@ document.addEventListener('DOMContentLoaded', function() {
             totalVotes += rowTotalVotes;
             currentDistrictTurnoutTotals[String(Number(districtId))] = rowTotalVotes;
 
-            const signed = ('margin_pct' in row) ? Number(row.margin_pct || 0) : signedMarginPctFromVotes(demVotes, repVotes, rowTotalVotes);
+            const signed = signedDistrictMarginPctForDisplay(
+              districtScope,
+              districtId,
+              demVotes,
+              repVotes,
+              rowTotalVotes,
+              row.margin_pct
+            );
             const winnerRaw = (row.winner || '').toString().toUpperCase();
             const winner = winnerRaw.startsWith('REP') ? 'R' : (winnerRaw.startsWith('DEM') ? 'D' : winnerFromSignedMarginPct(signed));
             let color = '#e0e0e0';
@@ -33683,14 +33725,28 @@ document.addEventListener('DOMContentLoaded', function() {
               );
             } else if (mode === 'flips') {
               const prevRow = prevResults ? (prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null) : null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedDistrictMarginPctForDisplay(
+                districtScope,
+                districtId,
+                Number(prevRow.dem_votes || 0),
+                Number(prevRow.rep_votes || 0),
+                Number(prevRow.total_votes || (Number(prevRow.dem_votes || 0) + Number(prevRow.rep_votes || 0) + Number(prevRow.other_votes || 0))),
+                prevRow.margin_pct
+              ) : 0;
               const f = flipInfo(prevSigned, signed);
               color = f.flipped ? colorForFlipMode(f.to) : colorForFlipMode('T');
             } else if (mode === 'winners') {
               color = colorForWinnerMode(winner);
             } else if (mode === 'shift' && prevResults && prevYear) {
               const prevRow = prevResults[String(districtId)] || prevResults[String(Number(districtId))] || null;
-              const prevSigned = prevRow ? Number(prevRow.margin_pct || 0) : 0;
+              const prevSigned = prevRow ? signedDistrictMarginPctForDisplay(
+                districtScope,
+                districtId,
+                Number(prevRow.dem_votes || 0),
+                Number(prevRow.rep_votes || 0),
+                Number(prevRow.total_votes || (Number(prevRow.dem_votes || 0) + Number(prevRow.rep_votes || 0) + Number(prevRow.other_votes || 0))),
+                prevRow.margin_pct
+              ) : 0;
               color = colorForShiftMode(signed - prevSigned);
             } else {
               color = colorForMarginMode(Math.abs(signed), winner === 'T' ? 'R' : winner);
