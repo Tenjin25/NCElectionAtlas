@@ -107,7 +107,20 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–June 2026)
 
 
-**Last updated:** June 19, 2026
+**Last updated:** June 24, 2026
+
+### County Margin Threshold Consistency + Contest Switch Performance (June 23-24, 2026)
+
+- Fixed a county-threshold consistency bug where some county-facing surfaces could display a rounded county margin like `20.00%` while the county fill bucket still behaved as if the raw unrounded value were below that threshold.
+- Unified the county-facing margin/tier/color path so county labels, county hover/focus summaries, county map fills, and county split-ticket county overlays all use the same county display-precision logic.
+- This was most visible in edge cases like **Henderson County, US Senate 2020**, where the underlying aggregate is about `19.9988%` but the intended county-facing display rounds to `20.00%`.
+- Kept the fix scoped to front-end county presentation and bucket consistency; the underlying contest JSON and county vote totals were not changed.
+
+- Reduced avoidable contest-switch overhead by making the strict background contest loader manifest-aware, so tooltip/history warmups stop guessing nonexistent contest JSON paths when the normal loader already knows the correct manifest or OpenElections source.
+- Eliminated noisy background `404` fetches for older presidential warmups (for example, historical `president_2004` / `2008` / `2012` strict JSON probes) and extended the same manifest-aware strict-path benefit to other contest types.
+- Deferred county vote-delta tooltip warmup until after the visible contest render completes so the first on-screen map update is less likely to compete with non-essential background work.
+- Made the contest dropdown switch less eager: it now reacts to committed selection changes instead of intermediate navigation/input events, and waits one frame before starting the heavier contest-load path so the native select can close cleanly.
+- Bumped front-end build/cache tokens after these pushes so GitHub Pages and browser caches fetch the latest contest-switch behavior instead of serving stale HTML.
 
 ### Desktop Pop Change Hover Summary + District Label Cleanup (June 19, 2026)
 

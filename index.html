@@ -12230,6 +12230,17 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
 
+    function getActiveContestValue(preferredValue = '') {
+      const preferred = String(preferredValue || '').trim();
+      if (preferred) return preferred;
+      const selected = String(document.getElementById('contestSelect')?.value || '').trim();
+      if (selected) return selected;
+      const metaContestType = String(currentContestMeta?.contestType || '').trim();
+      const metaYear = String(currentContestMeta?.year || '').trim();
+      if (metaContestType && metaYear) return `${metaContestType}_${metaYear}`;
+      return '';
+    }
+
     function updateModeledInputsInline() {
       const el = document.getElementById('model-inputs-inline');
       if (!el) return;
@@ -26455,7 +26466,7 @@ document.addEventListener('DOMContentLoaded', function() {
           ? 'State Senate District'
           : 'Congressional District';
       const panelDistrictNum = scope === 'congressional' ? districtNumText : paddedDistrictNum;
-      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const contestValue = getActiveContestValue();
       const _demoRow = getDistrictDemographics(scope, districtNum);
       const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
       if (!contestValue) {
@@ -31178,7 +31189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         demographicInfo = `<div style="margin:0 0 12px 0;color:#475569;font-weight:800;">${desc}</div>`;
       }
 
-      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const contestValue = getActiveContestValue();
       if (!contestValue) {
         contentEl.innerHTML = demographicInfo + '<div style="color:#999;">Select a contest to see district results.</div>';
         detailsDiv.style.display = 'block';
@@ -31266,7 +31277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         demographicInfo = `<div style="margin:0 0 12px 0;color:#475569;font-weight:800;">${desc}</div>`;
       }
 
-      const contestValue = document.getElementById('contestSelect')?.value || '';
+      const contestValue = getActiveContestValue();
       if (!contestValue) {
         contentEl.innerHTML = demographicInfo + '<div style="color:#999;">Select a contest to see district results.</div>';
         detailsDiv.style.display = 'block';
