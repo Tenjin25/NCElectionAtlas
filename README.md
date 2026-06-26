@@ -107,7 +107,14 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–June 2026)
 
 
-**Last updated:** June 24, 2026
+**Last updated:** June 25, 2026
+
+### Lincoln County-Equivalent District Fallback + Cache Refresh (June 25, 2026)
+
+- Added a county-equivalent fallback path for the Lincoln-backed State House edge case so district hover cards, sidebar summaries, trend history, flip/shift comparisons, and statewide district totals can still resolve from county aggregate data when that special-case district row is missing or needs canonical county values.
+- Reused county-facing margin precision for this edge case so winner labels, margin calls, and trend displays stay aligned with the same rounded county presentation logic used elsewhere in the atlas.
+- Bumped the app/data cache-buster tokens in index.html so GitHub Pages and browser caches pick up the latest district-fallback behavior promptly.
+- Kept scope limited to front-end fallback/rendering behavior for this special case; underlying contest JSON, district slice files, and vote totals were not changed.
 
 ### County Margin Threshold Consistency + Contest Switch Performance (June 23-24, 2026)
 
@@ -1370,3 +1377,4 @@ This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) fo
 - This is a personal/data engineering project. Treat results as **best-effort** until validated against official canvass totals.
 - Precinct and district boundary vintages vary by year; reallocation is an approximation that depends on crosswalk coverage.
 - Always verify results against official sources before using for analysis or reporting.
+
