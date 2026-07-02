@@ -726,20 +726,20 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] {
-  background: rgba(3,7,18,0.97);
+  background: rgba(3,7,18,0.96);
   color: #e5e7eb;
   border: 1px solid rgba(148,163,184,0.24);
-  border-radius: 14px;
-  box-shadow: 0 20px 46px rgba(0,0,0,0.30);
+  border-radius: 8px;
+  box-shadow: 0 8px 26px rgba(0,0,0,0.22);
   padding: 0;
-  max-width: 372px;
-  min-width: 292px;
+  max-width: 310px;
+  min-width: 250px;
   backdrop-filter: blur(10px);
   opacity: 1;
 }
 
 #hover-tooltip[data-context="votehub-results"] .votehub-results-card {
-  padding: 16px 16px 0;
+  padding: 12px 14px 0;
   font-family: inherit;
 }
 
@@ -748,19 +748,19 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-title {
-  font-size: 17px;
+  font-size: 13px;
   font-weight: 800;
   color: #f8fafc;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-subtitle {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
-  margin-bottom: 10px;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-bottom: 8px;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-winner {
@@ -786,11 +786,11 @@ body.focus-active.hover-preview-active .vote-counter {
 
 #hover-tooltip[data-context="votehub-results"] .vhr-row {
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) auto auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 9px;
-  padding: 6px 0;
-  font-size: 13px;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12.5px;
   color: #e2e8f0;
 }
 
@@ -838,20 +838,20 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-total {
-  margin: 12px 0 0;
-  padding: 12px 16px 10px;
+  margin: 8px 0 0;
+  padding: 8px 14px 10px;
   border-top: 1px solid rgba(148,163,184,0.22);
-  font-size: 12px;
+  font-size: 11.5px;
   color: #94a3b8;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-flip {
-  margin: 12px 0 8px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(148,163,184,0.22);
-  font-size: 12px;
+  margin: 6px 0 8px;
+  padding-top: 0;
+  border-top: none;
+  font-size: 11.5px;
   font-weight: 800;
-  color: #fca5a5;
+  color: #cbd5e1;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-flip.rep {
@@ -907,19 +907,19 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-popchange {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-popchange-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
+  gap: 12px;
   align-items: start;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-popchange-main {
-  font-size: 14px;
-  line-height: 1.42;
+  font-size: 12.5px;
+  line-height: 1.4;
   font-weight: 800;
 }
 
@@ -940,8 +940,8 @@ body.focus-active.hover-preview-active .vote-counter {
 
 #hover-tooltip[data-context="votehub-results"] .vhr-popchange-values {
   text-align: right;
-  font-size: 14px;
-  line-height: 1.42;
+  font-size: 12.5px;
+  line-height: 1.4;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -10245,8 +10245,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-02-1';
-    const APP_BUILD_ID = '2026-07-02-1';
+    const DATA_CACHE_BUSTER = '2026-07-02-2';
+    const APP_BUILD_ID = '2026-07-02-2';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -26250,10 +26250,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!(p2020 > 0) || !(p2025 > 0) || !Number.isFinite(pct)) return '';
         if (String(populationChangeMetric || 'pct') === 'abs' && Number.isFinite(abs)) {
           const signAbs = abs > 0 ? '+' : '';
-          return `<div class="tooltip-insight">Population 2020â†’2025: ${p2020.toLocaleString()} â†’ ${p2025.toLocaleString()} (${signAbs}${Math.round(abs).toLocaleString()}).</div>`;
+          return `<div class="tooltip-insight">Population 2020->2025: ${p2020.toLocaleString()} -> ${p2025.toLocaleString()} (${signAbs}${Math.round(abs).toLocaleString()}).</div>`;
         }
         const signPct = pct > 0 ? '+' : '';
-        return `<div class="tooltip-insight">Population 2020â†’2025: ${p2020.toLocaleString()} â†’ ${p2025.toLocaleString()} (${signPct}${pct.toFixed(1)}%).</div>`;
+        return `<div class="tooltip-insight">Population 2020->2025: ${p2020.toLocaleString()} -> ${p2025.toLocaleString()} (${signPct}${pct.toFixed(1)}%).</div>`;
       })();
       const popChangeHeaderMeta = (() => {
         if (currentVizMode !== 'population_change') return null;
@@ -26274,7 +26274,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const toneLabel = tone === 'gain' ? 'Growth' : (tone === 'loss' ? 'Decline' : 'Flat');
         return {
           line: `Population change: ${signAbs}${Math.round(abs).toLocaleString()} (${pctLine})`,
-          raw: `${p2020.toLocaleString()} â†’ ${p2025.toLocaleString()}`,
+          raw: `${p2020.toLocaleString()} -> ${p2025.toLocaleString()}`,
           tone,
           label: toneLabel
         };
@@ -26334,7 +26334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showWinnerLine: true,
         shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
         shiftToneClass: shiftClass,
-        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}â†’${vizShiftCache.year}` : '',
+        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
       const popChangeVotehubCore = popChangeHeaderMeta
@@ -26550,7 +26550,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showWinnerLine: true,
         shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
         shiftToneClass: shiftClass,
-        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}â†’${vizShiftCache.year}` : '',
+        shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
       const pinnedShell = !!tooltipPinned;
@@ -28929,7 +28929,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? (flipMeta.to === 'R' ? 'rep' : (flipMeta.to === 'D' ? 'dem' : 'tie'))
         : 'tie';
       const flipLabel = (flipMeta && flipMeta.flipped)
-        ? `Flipped ${flipMeta.from === 'R' ? 'RÃ¢â€ â€™D' : 'DÃ¢â€ â€™R'}${flipYearLabel ? ` since ${String(flipYearLabel)}` : ''}`
+        ? `Flipped ${flipMeta.from === 'R' ? 'R->D' : 'D->R'}${flipYearLabel ? ` since ${String(flipYearLabel)}` : ''}`
         : '';
       const flipLine = flipLabel ? `<div class="vhr-flip ${flipToneClass}">${escapeHtml(flipLabel)}</div>` : '';
 
