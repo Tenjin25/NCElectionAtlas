@@ -107,7 +107,23 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 ## Recent Updates (March–June 2026)
 
 
-**Last updated:** June 25, 2026
+**Last updated:** July 8, 2026
+
+### Early District Contest Recalibration + Whole-County Sync (July 8, 2026)
+
+- Recalibrated the `2004 president` and `2008 governor` district contest JSON slices for both the 2022 legislative lines and 2024 legislative lines using refreshed district-statistics CSV shares.
+- Updated the affected files in both `data/district_contests/` and `data/district_contests_2024_lines/` for:
+  - `state_house_governor_2008.json`
+  - `state_house_president_2004.json`
+  - `state_senate_governor_2008.json`
+  - `state_senate_president_2004.json`
+- Enforced exact county-level vote breakdowns for whole-county districts so county-equivalent districts no longer drift slightly from canonical county totals in these early contests.
+- The whole-county district sync now covers:
+  - State House: `HD-65` Rockingham, `HD-86` Burke, `HD-97` Lincoln
+  - State Senate: `SD-6` Onslow, `SD-10` Johnston
+- Added `scripts/enforce_whole_county_district_totals.py` so the whole-county override is reproducible from the raw precinct election exports plus the precinct-to-district crosswalks.
+- Bumped the front-end build/cache-buster tokens in `index.html` so refreshed district JSON files are fetched promptly after deploys.
+- Restyled the minimized atlas title pill to use a more North Carolina-themed blue treatment with state-flag-inspired red/white/blue accents.
 
 ### Lincoln County-Equivalent District Fallback + Cache Refresh (June 25, 2026)
 
