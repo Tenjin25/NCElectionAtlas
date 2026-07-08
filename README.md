@@ -104,7 +104,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–June 2026)
+## Recent Updates (March–July 2026)
 
 
 **Last updated:** July 8, 2026
@@ -123,7 +123,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
   - State Senate: `SD-6` Onslow, `SD-10` Johnston
 - Added `scripts/enforce_whole_county_district_totals.py` so the whole-county override is reproducible from the raw precinct election exports plus the precinct-to-district crosswalks.
 - Bumped the front-end build/cache-buster tokens in `index.html` so refreshed district JSON files are fetched promptly after deploys.
-- Restyled the minimized atlas title pill to use a more North Carolina-themed blue treatment with state-flag-inspired red/white/blue accents.
+- Restyled the minimized atlas title pill in follow-up passes so the collapsed control state now matches the expanded atlas title treatment instead of using a separate blue-heavy variant.
 
 ### Lincoln County-Equivalent District Fallback + Cache Refresh (June 25, 2026)
 
