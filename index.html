@@ -739,7 +739,7 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .votehub-results-card {
-  padding: 12px 14px 0;
+  padding: 12px 14px;
   font-family: inherit;
 }
 
@@ -956,26 +956,6 @@ body.focus-active.hover-preview-active .vote-counter {
   border-top: 1px solid rgba(148,163,184,0.22);
 }
 
-#hover-tooltip[data-context="votehub-results"] .vhr-footer {
-  margin-top: 10px;
-  padding: 14px 18px 0;
-  border-top: 1px solid rgba(148,163,184,0.22);
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-footer .tooltip-more {
-  margin-top: 0;
-  padding-top: 12px;
-  border-top: none;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-footer .tooltip-more summary {
-  justify-content: flex-start;
-  min-height: 56px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border-color: rgba(148, 163, 184, 0.24);
-  background: rgba(15, 23, 42, 0.42);
-}
 
 body.focus-active #hover-tooltip[data-context="preview"] {
   opacity: 0.82;
@@ -10245,8 +10225,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-04-1';
-    const APP_BUILD_ID = '2026-07-04-1';
+    const DATA_CACHE_BUSTER = '2026-07-07-1';
+    const APP_BUILD_ID = '2026-07-07-1';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -26377,12 +26357,11 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `${votehubCore}`.trim()
         : `
             ${votehubCore}
-            <div class="vhr-footer">
-              <details class="tooltip-more" aria-label="More details">
-                <summary>More details</summary>
-                <div class="tooltip-more-body">${detailLines}</div>
-              </details>
-            </div>
+            ${popChangeTopLineMobile}
+            <details class="tooltip-more" aria-label="More details">
+              <summary>More details</summary>
+              <div class="tooltip-more-body">${detailLines}</div>
+            </details>
           `.trim();
 
       const copyText = `${countyDisplay} County`;
