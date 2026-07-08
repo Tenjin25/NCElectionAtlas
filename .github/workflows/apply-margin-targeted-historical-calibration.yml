@@ -1,0 +1,64 @@
+name: Apply margin-targeted historical calibration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-margin-targeted-historical-calibration.yml'
+      - 'scripts/calibrate_district_slices_to_stats_margins.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Restore temporary stats CSVs from prior calibration commit
+        run: |
+          git restore --source=a703267541915369472c9638321f563238e8019e --worktree -- data/district_stats_2024_lines
+          ls -la data/district_stats_2024_lines
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Apply margin-targeted calibration
+        run: |
+          python scripts/calibrate_district_slices_to_stats_margins.py \
+            --map 'data/district_contests_2024_lines/state_house_president_2004.json=data/district_stats_2024_lines/NC-2024-State-House-district-statistics 2004 pres.csv' \
+            --map 'data/district_contests_2024_lines/state_house_governor_2008.json=data/district_stats_2024_lines/NC-2024-State-House-district-statistics 2008 gov.csv' \
+            --map 'data/district_contests_2024_lines/state_senate_president_2004.json=data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics 2004 pres.csv' \
+            --map 'data/district_contests_2024_lines/state_senate_governor_2008.json=data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics 2008 gov.csv' \
+            --format pretty \
+            --margin-basis total \
+            --precision 2 \
+            --other-search-radius 250 \
+            --margin-search-radius 2000
+
+      - name: Commit calibrated JSONs and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf data/district_stats_2024_lines
+          git add \
+            data/district_contests_2024_lines/state_house_president_2004.json \
+            data/district_contests_2024_lines/state_house_governor_2008.json \
+            data/district_contests_2024_lines/state_senate_president_2004.json \
+            data/district_contests_2024_lines/state_senate_governor_2008.json
+          git rm --ignore-unmatch .github/workflows/apply-margin-targeted-historical-calibration.yml
+          if git diff --cached --quiet; then
+            echo "No margin-targeted calibration changes to commit."
+          else
+            git commit -m "Apply margin-targeted 2024-line historical calibration [skip ci]"
+            git push
+          fi
