@@ -1,0 +1,84 @@
+name: Apply targeted DRA calibration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/apply_targeted_dra_calibration_uploads.py
+      - .github/workflows/apply-targeted-dra-calibration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply targeted calibration
+        run: python scripts/apply_targeted_dra_calibration_uploads.py
+
+      - name: Verify changed file scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          allowed=(
+            "data/district_contests/state_house_president_2004.json"
+            "data/district_contests/state_house_governor_2008.json"
+            "data/district_contests/state_senate_president_2004.json"
+            "data/district_contests/state_senate_governor_2008.json"
+            "data/district_contests_2024_lines/state_house_president_2004.json"
+            "data/district_contests_2024_lines/state_house_governor_2008.json"
+            "data/district_contests_2024_lines/state_senate_president_2004.json"
+            "data/district_contests_2024_lines/state_senate_governor_2008.json"
+            "data/district_contests_2026_lines/congressional_president_2024.json"
+          )
+          mapfile -t changed < <(git diff --name-only)
+          if [ ${#changed[@]} -eq 0 ]; then
+            echo "No calibration changes produced."
+            exit 0
+          fi
+          for file in "${changed[@]}"; do
+            ok=0
+            for allowed_file in "${allowed[@]}"; do
+              if [ "$file" = "$allowed_file" ]; then
+                ok=1
+                break
+              fi
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Unexpected changed file: $file"
+              exit 1
+            fi
+          done
+          printf 'Allowed changed files:\n'
+          printf ' - %s\n' "${changed[@]}"
+
+      - name: Commit calibrated JSON slices
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No JSON changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/district_contests/state_house_president_2004.json \
+            data/district_contests/state_house_governor_2008.json \
+            data/district_contests/state_senate_president_2004.json \
+            data/district_contests/state_senate_governor_2008.json \
+            data/district_contests_2024_lines/state_house_president_2004.json \
+            data/district_contests_2024_lines/state_house_governor_2008.json \
+            data/district_contests_2024_lines/state_senate_president_2004.json \
+            data/district_contests_2024_lines/state_senate_governor_2008.json \
+            data/district_contests_2026_lines/congressional_president_2024.json
+          git commit -m "Calibrate targeted district JSONs from DRA stats [skip ci]"
+          git push
