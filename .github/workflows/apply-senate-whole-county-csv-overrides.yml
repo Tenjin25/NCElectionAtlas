@@ -1,0 +1,159 @@
+name: Apply Senate whole-county CSV overrides
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-senate-whole-county-csv-overrides.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Apply SD-6 Onslow and SD-10 Johnston overrides
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          def color_for_margin(margin_pct):
+              abs_margin = abs(margin_pct)
+              if abs_margin < 0.5:
+                  return '#f7f7f7'
+              rep_win = margin_pct > 0
+              if abs_margin >= 40:
+                  return '#67000d' if rep_win else '#08306b'
+              if abs_margin >= 30:
+                  return '#a50f15' if rep_win else '#08519c'
+              if abs_margin >= 20:
+                  return '#cb181d' if rep_win else '#3182bd'
+              if abs_margin >= 10:
+                  return '#ef3b2c' if rep_win else '#6baed6'
+              if abs_margin >= 5.5:
+                  return '#fb6a4a' if rep_win else '#9ecae1'
+              if abs_margin >= 1:
+                  return '#fcae91' if rep_win else '#c6dbef'
+              return '#fee8c8' if rep_win else '#e1f5fe'
+
+          # These are the CSV-calibrated whole-county Senate rows:
+          #   SD-6  = Onslow County
+          #   SD-10 = Johnston County
+          # Apply them to both the 2024-line folder and the 2022-line baseline folder.
+          OVERRIDES = {
+              'state_senate_president_2004.json': {
+                  '6': {
+                      'dem_votes': 10906,
+                      'rep_votes': 26222,
+                      'other_votes': 149,
+                      'total_votes': 37277,
+                      'margin': 15316,
+                      'margin_pct': 41.09,
+                      'winner': 'REP',
+                  },
+                  '10': {
+                      'dem_votes': 16559,
+                      'rep_votes': 37608,
+                      'other_votes': 190,
+                      'total_votes': 54357,
+                      'margin': 21049,
+                      'margin_pct': 38.72,
+                      'winner': 'REP',
+                  },
+              },
+              'state_senate_governor_2008.json': {
+                  '6': {
+                      'dem_votes': 24553,
+                      'rep_votes': 22608,
+                      'other_votes': 1964,
+                      'total_votes': 49125,
+                      'margin': -1945,
+                      'margin_pct': -3.96,
+                      'winner': 'DEM',
+                  },
+                  '10': {
+                      'dem_votes': 29427,
+                      'rep_votes': 39483,
+                      'other_votes': 1709,
+                      'total_votes': 70619,
+                      'margin': 10056,
+                      'margin_pct': 14.24,
+                      'winner': 'REP',
+                  },
+              },
+          }
+
+          TARGET_DIRS = [
+              Path('data/district_contests_2024_lines'),
+              Path('data/district_contests'),
+          ]
+
+          touched = []
+          audit = []
+          for folder in TARGET_DIRS:
+              for filename, district_overrides in OVERRIDES.items():
+                  path = folder / filename
+                  payload = json.loads(path.read_text(encoding='utf-8'))
+                  results = payload.get('general', {}).get('results', {})
+                  for district, values in district_overrides.items():
+                      row = results.get(district)
+                      if not isinstance(row, dict):
+                          raise RuntimeError(f'Missing district {district} in {path}')
+                      before = {
+                          'dem_votes': row.get('dem_votes'),
+                          'rep_votes': row.get('rep_votes'),
+                          'other_votes': row.get('other_votes'),
+                          'total_votes': row.get('total_votes'),
+                          'margin': row.get('margin'),
+                          'margin_pct': row.get('margin_pct'),
+                          'winner': row.get('winner'),
+                      }
+                      row.update(values)
+                      row['margin'] = int(row['rep_votes']) - int(row['dem_votes'])
+                      row['margin_pct'] = round((row['margin'] / row['total_votes']) * 100, 2) if row['total_votes'] else 0
+                      row['winner'] = 'REP' if row['margin'] > 0 else ('DEM' if row['margin'] < 0 else 'TIE')
+                      if isinstance(row.get('competitiveness'), dict):
+                          row['competitiveness']['color'] = color_for_margin(row['margin_pct'])
+                      else:
+                          row['competitiveness'] = {'color': color_for_margin(row['margin_pct'])}
+                      after = {
+                          'dem_votes': row.get('dem_votes'),
+                          'rep_votes': row.get('rep_votes'),
+                          'other_votes': row.get('other_votes'),
+                          'total_votes': row.get('total_votes'),
+                          'margin': row.get('margin'),
+                          'margin_pct': row.get('margin_pct'),
+                          'winner': row.get('winner'),
+                      }
+                      audit.append({'file': str(path), 'district': district, 'before': before, 'after': after})
+                  path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+                  touched.append(str(path))
+
+          print(json.dumps({'touched': touched, 'audit': audit}, indent=2))
+          PY
+
+      - name: Commit override patch and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/district_contests_2024_lines/state_senate_president_2004.json \
+            data/district_contests_2024_lines/state_senate_governor_2008.json \
+            data/district_contests/state_senate_president_2004.json \
+            data/district_contests/state_senate_governor_2008.json
+          git rm --ignore-unmatch .github/workflows/apply-senate-whole-county-csv-overrides.yml
+          if git diff --cached --quiet; then
+            echo "No Senate whole-county override changes to commit."
+          else
+            git commit -m "Apply Onslow and Johnston Senate whole-county overrides [skip ci]"
+            git push
+          fi
