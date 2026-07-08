@@ -1,0 +1,36 @@
+name: Repair extra 2022 senate governor districts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - scripts/repair_2022_senate_governor_extra.py
+      - .github/workflows/repair-2022-senate-governor-extra.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply targeted repair
+        run: python scripts/repair_2022_senate_governor_extra.py
+      - name: Remove temporary repair files
+        run: git rm --ignore-unmatch scripts/repair_2022_senate_governor_extra.py .github/workflows/repair-2022-senate-governor-extra.yml
+      - name: Commit repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/district_contests/state_senate_governor_2008.json
+          if git diff --cached --quiet; then
+            echo "No staged changes to commit."
+            exit 0
+          fi
+          git commit -m "Repair extra 2022 Senate governor districts [skip ci]"
+          git push
