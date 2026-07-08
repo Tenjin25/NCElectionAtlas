@@ -1,0 +1,58 @@
+name: Apply 2024-line historical calibration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-2024-line-historical-calibration.yml'
+      - 'data/district_stats_2024_lines/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Calibrate targeted 2024-line historical slices
+        run: |
+          python scripts/calibrate_district_slices_from_stats_csv.py \
+            --map 'data/district_contests_2024_lines/state_house_president_2004.json=data/district_stats_2024_lines/NC-2024-State-House-district-statistics 2004 pres.csv' \
+            --map 'data/district_contests_2024_lines/state_house_governor_2008.json=data/district_stats_2024_lines/NC-2024-State-House-district-statistics 2008 gov.csv' \
+            --map 'data/district_contests_2024_lines/state_senate_president_2004.json=data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics 2004 pres.csv' \
+            --map 'data/district_contests_2024_lines/state_senate_governor_2008.json=data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics 2008 gov.csv' \
+            --format pretty
+
+      - name: Commit calibrated JSONs and remove temporary inputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/district_contests_2024_lines/state_house_president_2004.json \
+            data/district_contests_2024_lines/state_house_governor_2008.json \
+            data/district_contests_2024_lines/state_senate_president_2004.json \
+            data/district_contests_2024_lines/state_senate_governor_2008.json
+          git rm --ignore-unmatch \
+            .github/workflows/apply-2024-line-historical-calibration.yml \
+            data/district_stats_2024_lines/NC-2024-State-House-district-statistics\ 2004\ pres.csv \
+            data/district_stats_2024_lines/NC-2024-State-House-district-statistics\ 2008\ gov.csv \
+            data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics\ 2004\ pres.csv \
+            data/district_stats_2024_lines/NC-2024-State-Senate-district-statistics\ 2008\ gov.csv
+          if git diff --cached --quiet; then
+            echo "No calibrated JSON changes to commit."
+          else
+            git commit -m "Calibrate 2004 president and 2008 governor 2024-line legislative slices [skip ci]"
+            git push
+          fi
