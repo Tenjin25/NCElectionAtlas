@@ -811,6 +811,7 @@ Implementation note:
 
 - Fixed front-end precinct label rendering so code-prefixed full names that simply repeat the same friendly name no longer display duplicated text after normalization.
 - Exact duplicate patterns like `PROV PROVIDENCE` now collapse to `Providence` instead of surfacing a redundant code/name pairing in hover cards and other precinct-facing UI.
+- Applied the same cleanup to friendly-name labels that already embed an abbreviated prefix, so county labels like `Caswell - Prov Providence` now reduce cleanly to `Caswell - Providence`.
 - Kept the existing `Friendly (CODE)` behavior for genuinely code-heavy precinct labels that still need disambiguation.
 
 
