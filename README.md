@@ -106,7 +106,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 8, 2026
+**Last updated:** July 9, 2026
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -817,8 +817,15 @@ Implementation note:
 - Kept the existing `Friendly (CODE)` behavior for genuinely code-heavy precinct labels that still need disambiguation.
 - Removed a duplicate flip badge from the mobile county tooltip `More details` panel so touch users only see the flip callout once in the results card.
 
+### Follow-Up Precinct Friendly-Name Cleanup + County Controls (July 9, 2026)
 
-**Last updated:** July 9, 2026
+- Hid district-line toggles entirely while the atlas is in Counties mode so county workflows no longer show irrelevant 2022/2024 line controls.
+- Expanded the precinct-friendly-name cleanup pass with additional source-backed overrides and alias-preference logic so compacted labels resolve cleanly across more counties instead of keeping stray code fragments in front of the human-readable name.
+- Regenerated `data/precinct_friendly_names.json` again after this follow-up pass, cleaning up `80` changed county/code labels relative to the prior committed atlas build.
+- This pass specifically fixed additional malformed labels in counties such as Alleghany, Beaufort, Bertie, Carteret, Chowan, Columbus, Currituck, Dare, Davie, Haywood, Jones, Martin, McDowell, Nash, Orange, Stanly, and Surry.
+- Clean examples from this pass include `Gap Civil`, `Roxobel`, `Broad Creek`, `Wardville`, `NW Whiteville`, `Jamesville`, `West Marion`, `Red Oak`, `Carrboro`, and numbered `Mt Airy` precinct labels.
+- Bumped the front-end build/cache-buster tokens again so precinct-mode label changes and county-control cleanup are fetched immediately after deployment.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

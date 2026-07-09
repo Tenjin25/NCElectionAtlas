@@ -17,6 +17,33 @@ function formatDisplayName(raw) {
 
 function applyManualOverrides(counties) {
   const overrides = {
+    ALLEGHANY: {
+      '01': 'Cherry Lane',
+      '03A': 'Gap Civil',
+      '04': 'Glade Creek',
+      '06A': 'Prathers Creek'
+    },
+    BEAUFORT: {
+      GILEA: 'Gilead'
+    },
+    BERTIE: {
+      RX: 'Roxobel',
+      SN: 'Snakebite',
+      WD: 'Woodville',
+      WH: 'Whites'
+    },
+    CARTERET: {
+      BCRK: 'Broad Creek',
+      ISLE: 'Emerald Isle'
+    },
+    CHOWAN: {
+      '1': 'East Edenton',
+      '2': 'West Edenton',
+      '3': 'Rocky Hock',
+      '4': 'Center Hill',
+      '5': 'Wardville',
+      '6': 'Yeopim'
+    },
     MADISON: {
       'EBBS C': 'Ebbs Chapel',
       'HOT SP': 'Hot Springs',
@@ -54,9 +81,69 @@ function applyManualOverrides(counties) {
     JACKSON: {
       SDC: 'Sylva South Ward'
     },
+    CURRITUCK: {
+      CO: 'Coinjock'
+    },
+    DARE: {
+      FRCO: 'Frisco'
+    },
+    COLUMBUS: {
+      P01A: 'Bogue',
+      P06: 'Cerro Gordo',
+      P07: 'Chadbourn',
+      P14: 'Ransom',
+      P15: 'Tatum',
+      P16B: 'Waccamaw',
+      P82: 'NW Whiteville'
+    },
+    DAVIE: {
+      '01': 'North Calahaln',
+      '02': 'South Calahaln',
+      '03': 'Clarksville',
+      '04': 'Cooleemee',
+      '05': 'Farmington',
+      '06': 'Fulton',
+      '07': 'Jerusalem',
+      '09': 'South Mocksville',
+      '10': 'East Shady Grove',
+      '11': 'West Shady Grove',
+      '12': 'Smith Grove',
+      '13': 'Hillsdale'
+    },
+    JONES: {
+      P01: 'Beaver Creek',
+      P02: 'Chinquapin',
+      P03: 'Cypress Creek',
+      P04: 'Pollocksville',
+      P05: 'Trenton',
+      P06: 'Tuckahoe',
+      P07: 'White Oak'
+    },
+    HAYWOOD: {
+      P: 'Pigeon'
+    },
+    MARTIN: {
+      GSN: 'Goose Nest',
+      GRF: 'Griffins',
+      HMT: 'Hamilton',
+      JMV: 'Jamesville'
+    },
+    MCDOWELL: {
+      'WEST M': 'West Marion'
+    },
     MOORE: {
       'EUR-WP': 'Eureka/Whispering Pines',
-      PHC: 'Pinehurst C'
+      PHC: 'Pinehurst C',
+      SSP: 'South Southern Pines'
+    },
+    NASH: {
+      P01A: 'Bailey',
+      P05A: 'Coopers',
+      P08A: 'Nashville',
+      P09A: 'Castalia',
+      P10A: 'Griffins',
+      P11A: 'Red Oak',
+      P15A: 'Oak Level'
     },
     NORTHAMPTON: {
       CREEKS: 'Creeksville',
@@ -71,8 +158,29 @@ function applyManualOverrides(counties) {
       SEVERN: 'Severn'
     },
     CLEVELAND: {
+      'KM N': 'Kings Mountain North',
+      'KM S': 'Kings Mountain South',
       'S C': 'Shelby Central',
       'S S': 'Shelby South'
+    },
+    ORANGE: {
+      CA: 'Carr',
+      CB1: 'Carrboro',
+      OW1: 'Owasa',
+      WW1: 'Westwood'
+    },
+    STANLY: {
+      '0015': 'Badin',
+      '0021': 'Endy',
+      '0026': 'Tyson',
+      '0120': 'Almond'
+    },
+    SURRY: {
+      '12': 'Mt Airy 1',
+      '15': 'Mt Airy 5',
+      '16': 'Mt Airy 6',
+      '17': 'Mt Airy 7',
+      '19': 'Mt Airy 9'
     },
     WILSON: {
       PRBL: 'Black Creek',
@@ -123,6 +231,18 @@ function normalizeAliasNameCandidate(raw) {
   if (!cleaned) return '';
   if (/VOTING\s*DISTRICT/i.test(cleaned)) return '';
   if (/^\d+$/.test(cleaned)) return '';
+  return cleaned;
+}
+
+function collapseRedundantLeadingToken(raw) {
+  const cleaned = normalizeAliasNameCandidate(raw);
+  if (!cleaned) return '';
+  const tokens = cleaned.split(/\s+/).filter(Boolean);
+  if (tokens.length < 2) return cleaned;
+  const [first, second, ...rest] = tokens;
+  if (first.length >= 4 && second.startsWith(first.slice(0, 3))) {
+    return [second, ...rest].join(' ').trim();
+  }
   return cleaned;
 }
 
@@ -187,7 +307,7 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
 
 function setBestNameForCode(perCounty, code, nameCandidate) {
   if (!perCounty || !code || !nameCandidate) return;
-  const cand = normalizeAliasNameCandidate(nameCandidate);
+  const cand = collapseRedundantLeadingToken(nameCandidate);
   if (!cand) return;
   const prev = perCounty.get(code) || '';
   if (!prev) {
