@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-2';
-    const APP_BUILD_ID = '2026-07-09-2';
+    const DATA_CACHE_BUSTER = '2026-07-09-3';
+    const APP_BUILD_ID = '2026-07-09-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29364,13 +29364,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const cleaned = toTitleCaseName(String(rawName || '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim());
       if (!cleaned) return '';
       const parts = cleaned.split(/\s+/).filter(Boolean);
-      if (parts.length === 2) {
+      if (parts.length >= 2) {
         const first = parts[0];
         const second = parts[1];
         const firstUpper = first.toUpperCase();
         const secondUpper = second.toUpperCase();
         if (firstUpper.length >= 3 && secondUpper.length > firstUpper.length && secondUpper.startsWith(firstUpper)) {
-          return second;
+          return parts.slice(1).join(' ');
         }
       }
       return cleaned;
