@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-4';
-    const APP_BUILD_ID = '2026-07-09-4';
+    const DATA_CACHE_BUSTER = '2026-07-09-5';
+    const APP_BUILD_ID = '2026-07-09-5';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29378,14 +29378,27 @@ document.addEventListener('DOMContentLoaded', function() {
       if (parts.length >= 2) {
         const first = parts[0];
         const second = parts[1];
+        const remainder = parts.slice(1).join(' ');
         const firstUpper = first.toUpperCase();
         const secondUpper = second.toUpperCase();
+        const remainderUpper = remainder.toUpperCase();
+        const remainderInitials = parts.slice(1)
+          .map(part => String(part || '').replace(/[^A-Z0-9]/gi, '').toUpperCase())
+          .filter(Boolean)
+          .map(part => part[0])
+          .join('');
         if (
           firstUpper.length >= 3 &&
-          secondUpper.length > firstUpper.length &&
-          (secondUpper.startsWith(firstUpper) || isOrderedAbbreviation(firstUpper, secondUpper))
+          firstUpper.length <= 4 &&
+          remainderUpper.replace(/[^A-Z0-9]/g, '').length > firstUpper.length &&
+          (
+            secondUpper.startsWith(firstUpper) ||
+            remainderUpper.startsWith(`${firstUpper} `) ||
+            isOrderedAbbreviation(firstUpper, secondUpper) ||
+            remainderInitials === firstUpper
+          )
         ) {
-          return parts.slice(1).join(' ');
+          return remainder;
         }
       }
       return cleaned;
