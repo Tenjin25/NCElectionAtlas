@@ -807,8 +807,14 @@ Implementation note:
 - Bumped the front-end build/cache-buster tokens in `index.html` so refreshed district JSON files are fetched promptly after deploys.
 - Restyled the minimized atlas title pill in follow-up passes so the collapsed control state now matches the expanded atlas title treatment instead of using a separate blue-heavy variant.
 
+### Precinct Label De-Duplication (July 9, 2026)
 
-**Last updated:** July 8, 2026
+- Fixed front-end precinct label rendering so code-prefixed full names that simply repeat the same friendly name no longer display duplicated text after normalization.
+- Exact duplicate patterns like `PROV PROVIDENCE` now collapse to `Providence` instead of surfacing a redundant code/name pairing in hover cards and other precinct-facing UI.
+- Kept the existing `Friendly (CODE)` behavior for genuinely code-heavy precinct labels that still need disambiguation.
+
+
+**Last updated:** July 9, 2026
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
