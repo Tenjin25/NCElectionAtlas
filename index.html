@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-7';
-    const APP_BUILD_ID = '2026-07-09-7';
+    const DATA_CACHE_BUSTER = '2026-07-09-8';
+    const APP_BUILD_ID = '2026-07-09-8';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29363,6 +29363,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function normalizeFriendlyPrecinctName(rawName) {
       const cleaned = toTitleCaseName(String(rawName || '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim());
       if (!cleaned) return '';
+      const splitNameSegments = (value) => String(value || '')
+        .split(/[\s\/-]+/)
+        .map(part => String(part || '').replace(/[^A-Z0-9]/gi, '').toUpperCase())
+        .filter(Boolean);
       const isOrderedAbbreviation = (abbrRaw, wordRaw) => {
         const abbr = String(abbrRaw || '').replace(/[^A-Z]/gi, '').toUpperCase();
         const word = String(wordRaw || '').replace(/[^A-Z]/gi, '').toUpperCase();
@@ -29381,6 +29385,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const remainder = parts.slice(1).join(' ');
         const firstUpper = first.toUpperCase();
         const secondUpper = second.toUpperCase();
+        if (first.includes('/')) {
+          const slashParts = first.split('/').map(part => String(part || '').trim()).filter(Boolean);
+          const lastSlashPart = (slashParts[slashParts.length - 1] || '').toUpperCase();
+          if (
+            slashParts.length >= 2 &&
+            lastSlashPart.length >= 3 &&
+            secondUpper.length > lastSlashPart.length &&
+            secondUpper.startsWith(lastSlashPart)
+          ) {
+            const prefix = slashParts.slice(0, -1).join('/');
+            const suffix = parts.slice(1).join(' ');
+            if (prefix && suffix) return `${prefix}/${suffix}`;
+          }
+        }
         if (firstUpper === 'ST' && secondUpper === 'STEPHENS') return cleaned;
         const remainderUpper = remainder.toUpperCase();
         const remainderInitials = parts.slice(1)
@@ -29394,6 +29412,13 @@ document.addEventListener('DOMContentLoaded', function() {
           .filter(Boolean)
           .map(part => part[0])
           .join('');
+        const postSecond = parts.slice(2).join(' ');
+        const remainderSegments = splitNameSegments(remainder);
+        const postSecondSegments = splitNameSegments(postSecond);
+        const leadingSegment = remainderSegments[0] || '';
+        const trailingSegmentInitials = remainderSegments.slice(1).map(part => part[0]).join('');
+        const postSecondLeadingSegment = postSecondSegments[0] || '';
+        const postSecondTrailingInitials = postSecondSegments.slice(1).map(part => part[0]).join('');
         const compoundFirstWordPrefixLen = Math.max(0, firstUpper.length - trailingInitials.length);
         const matchesCompoundFirstWord = (
           trailingInitials &&
@@ -29401,6 +29426,17 @@ document.addEventListener('DOMContentLoaded', function() {
           secondUpper.length > compoundFirstWordPrefixLen &&
           firstUpper.endsWith(trailingInitials) &&
           secondUpper.startsWith(firstUpper.slice(0, compoundFirstWordPrefixLen))
+        );
+        const matchesSplitRemainderAbbreviation = (
+          parts.length >= 3 &&
+          firstUpper.length >= 2 &&
+          firstUpper.length <= 4 &&
+          secondUpper.length >= 1 &&
+          secondUpper.length <= 3 &&
+          postSecondLeadingSegment.length > firstUpper.length &&
+          (postSecondLeadingSegment.startsWith(firstUpper) || isOrderedAbbreviation(firstUpper, postSecondLeadingSegment)) &&
+          postSecondTrailingInitials &&
+          postSecondTrailingInitials === secondUpper
         );
         if (
           firstUpper.length >= 2 &&
@@ -29411,9 +29447,11 @@ document.addEventListener('DOMContentLoaded', function() {
             remainderUpper.startsWith(`${firstUpper} `) ||
             (firstUpper.length >= 3 && isOrderedAbbreviation(firstUpper, secondUpper)) ||
             (remainderWordCount >= 2 && remainderInitials === firstUpper) ||
-            matchesCompoundFirstWord
+            matchesCompoundFirstWord ||
+            matchesSplitRemainderAbbreviation
           )
         ) {
+          if (matchesSplitRemainderAbbreviation && postSecond) return postSecond;
           return remainder;
         }
       }
