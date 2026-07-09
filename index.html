@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-6';
-    const APP_BUILD_ID = '2026-07-09-6';
+    const DATA_CACHE_BUSTER = '2026-07-09-7';
+    const APP_BUILD_ID = '2026-07-09-7';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29381,6 +29381,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const remainder = parts.slice(1).join(' ');
         const firstUpper = first.toUpperCase();
         const secondUpper = second.toUpperCase();
+        if (firstUpper === 'ST' && secondUpper === 'STEPHENS') return cleaned;
         const remainderUpper = remainder.toUpperCase();
         const remainderInitials = parts.slice(1)
           .map(part => String(part || '').replace(/[^A-Z0-9]/gi, '').toUpperCase())
@@ -29388,6 +29389,19 @@ document.addEventListener('DOMContentLoaded', function() {
           .map(part => part[0])
           .join('');
         const remainderWordCount = parts.slice(1).length;
+        const trailingInitials = parts.slice(2)
+          .map(part => String(part || '').replace(/[^A-Z0-9]/gi, '').toUpperCase())
+          .filter(Boolean)
+          .map(part => part[0])
+          .join('');
+        const compoundFirstWordPrefixLen = Math.max(0, firstUpper.length - trailingInitials.length);
+        const matchesCompoundFirstWord = (
+          trailingInitials &&
+          compoundFirstWordPrefixLen >= 2 &&
+          secondUpper.length > compoundFirstWordPrefixLen &&
+          firstUpper.endsWith(trailingInitials) &&
+          secondUpper.startsWith(firstUpper.slice(0, compoundFirstWordPrefixLen))
+        );
         if (
           firstUpper.length >= 2 &&
           firstUpper.length <= 4 &&
@@ -29396,7 +29410,8 @@ document.addEventListener('DOMContentLoaded', function() {
             secondUpper.startsWith(firstUpper) ||
             remainderUpper.startsWith(`${firstUpper} `) ||
             (firstUpper.length >= 3 && isOrderedAbbreviation(firstUpper, secondUpper)) ||
-            (remainderWordCount >= 2 && remainderInitials === firstUpper)
+            (remainderWordCount >= 2 && remainderInitials === firstUpper) ||
+            matchesCompoundFirstWord
           )
         ) {
           return remainder;
