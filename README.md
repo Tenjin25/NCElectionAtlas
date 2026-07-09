@@ -812,7 +812,10 @@ Implementation note:
 - Fixed front-end precinct label rendering so code-prefixed full names that simply repeat the same friendly name no longer display duplicated text after normalization.
 - Exact duplicate patterns like `PROV PROVIDENCE` now collapse to `Providence` instead of surfacing a redundant code/name pairing in hover cards and other precinct-facing UI.
 - Applied the same cleanup across abbreviated friendly-name prefixes more broadly, so labels like `Caswell - Prov Providence`, `Caswell - Pros Prospect Hill`, and similar county-specific variants now reduce cleanly to just the expanded precinct name.
+- Regenerated `data/precinct_friendly_names.json` with targeted overrides for the remaining malformed county/precinct labels, cleaning up examples like `Mars Hill`, `Andrews North Ward`, `Boiling Spring Lakes`, `Longwood`, `Garysburg/Pleasant Hill`, the Wilson County short-form labels, and `Sylva South Ward`.
+- Standardized saint-style precinct names so labels like `St Stephens`, `St John`, and `St Pauls` now render with punctuation as `St. Stephens`, `St. John`, and `St. Pauls`.
 - Kept the existing `Friendly (CODE)` behavior for genuinely code-heavy precinct labels that still need disambiguation.
+- Removed a duplicate flip badge from the mobile county tooltip `More details` panel so touch users only see the flip callout once in the results card.
 
 
 **Last updated:** July 9, 2026
