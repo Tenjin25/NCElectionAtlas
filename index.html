@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-3';
-    const APP_BUILD_ID = '2026-07-09-3';
+    const DATA_CACHE_BUSTER = '2026-07-09-4';
+    const APP_BUILD_ID = '2026-07-09-4';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29363,13 +29363,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function normalizeFriendlyPrecinctName(rawName) {
       const cleaned = toTitleCaseName(String(rawName || '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim());
       if (!cleaned) return '';
+      const isOrderedAbbreviation = (abbrRaw, wordRaw) => {
+        const abbr = String(abbrRaw || '').replace(/[^A-Z]/gi, '').toUpperCase();
+        const word = String(wordRaw || '').replace(/[^A-Z]/gi, '').toUpperCase();
+        if (abbr.length < 3 || word.length <= abbr.length) return false;
+        let idx = 0;
+        for (const ch of word) {
+          if (ch === abbr[idx]) idx += 1;
+          if (idx >= abbr.length) return true;
+        }
+        return false;
+      };
       const parts = cleaned.split(/\s+/).filter(Boolean);
       if (parts.length >= 2) {
         const first = parts[0];
         const second = parts[1];
         const firstUpper = first.toUpperCase();
         const secondUpper = second.toUpperCase();
-        if (firstUpper.length >= 3 && secondUpper.length > firstUpper.length && secondUpper.startsWith(firstUpper)) {
+        if (
+          firstUpper.length >= 3 &&
+          secondUpper.length > firstUpper.length &&
+          (secondUpper.startsWith(firstUpper) || isOrderedAbbreviation(firstUpper, secondUpper))
+        ) {
           return parts.slice(1).join(' ');
         }
       }
@@ -29417,6 +29432,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const full = String(fullName || '').replace(/\s+/g, ' ').trim();
       const fallbackFull = String(fallbackFullName || '').replace(/\s+/g, ' ').trim();
+      const normalizedFull = normalizeFriendlyPrecinctName(full);
+      const normalizedFallbackFull = normalizeFriendlyPrecinctName(fallbackFull);
 
       // If the shapefile's "full name" is just a code-ish token (or a "VOTING DISTRICT" placeholder),
       // prefer a real friendly label when we have it.
@@ -29436,8 +29453,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
+      // Some shapefile full-name fields use abbreviated-prefix labels like "LWD LONGWOOD".
+      // Normalize those the same way we normalize the dedicated friendly-name index.
+      if (friendly) {
+        const friendlyUpper = friendly.toUpperCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizedFullUpper = normalizedFull.toUpperCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizedFallbackUpper = normalizedFallbackFull.toUpperCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (normalizedFullUpper && normalizedFullUpper === friendlyUpper) return friendly;
+        if (normalizedFallbackUpper && normalizedFallbackUpper === friendlyUpper) return friendly;
+      }
+
       const codeOnly = canonicalCode || rawCode;
-      return full || fallbackFull || friendlyLabel || (codeOnly ? `Precinct ${codeOnly}` : '');
+      return normalizedFull || normalizedFallbackFull || friendlyLabel || (codeOnly ? `Precinct ${codeOnly}` : '');
     }
 
     async function ensurePrecinctVariantOverrides() {
