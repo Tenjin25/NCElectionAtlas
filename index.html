@@ -29412,7 +29412,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (friendlyLabel && rawCode) {
         const fullUpper = full.toUpperCase();
         const fullCompact = fullUpper.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
-        if (fullCompact.startsWith(`${rawCode} `) || fullCompact.startsWith(`${rawCode}_`)) return friendlyLabel;
+        if (fullCompact.startsWith(`${rawCode} `) || fullCompact.startsWith(`${rawCode}_`)) {
+          const remainder = fullCompact.slice(rawCode.length).replace(/^[_\s-]+/, '').trim();
+          const friendlyUpper = friendly.toUpperCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+          if (remainder && remainder === friendlyUpper) return friendly;
+          return friendlyLabel;
+        }
       }
 
       const codeOnly = canonicalCode || rawCode;
