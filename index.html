@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-8';
-    const APP_BUILD_ID = '2026-07-09-8';
+    const DATA_CACHE_BUSTER = '2026-07-09-9';
+    const APP_BUILD_ID = '2026-07-09-9';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29252,7 +29252,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
               }
               codesMap.forEach((label, code) => {
-                if (!existing.has(code)) existing.set(code, label);
+                if (!existing.has(code)) {
+                  existing.set(code, label);
+                  return;
+                }
+                const current = String(existing.get(code) || '');
+                const currentNormalized = normalizeFriendlyPrecinctName(current);
+                const labelNormalized = normalizeFriendlyPrecinctName(label);
+                const currentCompact = currentNormalized.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                const labelCompact = labelNormalized.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                const aliasClearlyBetter = (
+                  !!labelNormalized &&
+                  /\s/.test(labelNormalized) &&
+                  !!currentCompact &&
+                  !!labelCompact &&
+                  currentCompact !== labelCompact &&
+                  currentCompact.includes(labelCompact)
+                );
+                if (aliasClearlyBetter) existing.set(code, label);
               });
             });
           } catch (_) {}
