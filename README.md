@@ -13,19 +13,19 @@ The live app is now presented as **North Carolina Election Atlas**, which is the
 ## Screenshots
 
 **Counties view — 2024 Presidential**
-![Counties view](Screenshots/Atlas2024PresCounty.png)
+![Counties view](Screenshots/AtlasLatest2024PresCounty.png)
 
 **Congressional Districts — 2020 Presidential**
-![Congressional Districts view](Screenshots/Atlas2020PresCong.png)
+![Congressional Districts view](Screenshots/Latest2020PresCongress.png)
 
-**Precinct view — Wake County zoomed in**
-![Precinct view](Screenshots/AtlasWakeZoom.png)
+**Precinct view — Forsyth County zoomed in**
+![Precinct view](Screenshots/ForsythPrecinctZoom.png)
 
 **State House — 2024 Presidential** 
-![State House Districts view](Screenshots/Atlas2024PresStateHouse.png)
+![State House Districts view](Screenshots/2024StateHousePres.png)
 
 **State Senate - 2022 US Senate**
-![State Senate Districts view](Screenshots/Atlas2022USSenStateSen.png)
+![State Senate Districts view](Screenshots/2022USSenStatSen.png)
 
 ---
 
