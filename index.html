@@ -9790,7 +9790,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <button id="state-senate-view" class="view-toggle-btn" onclick="setMapView('state_senate')" data-testid="view-state-senate" aria-label="Show state senate districts view" aria-pressed="false">State Senate</button>
                 </div>
             </div>
-            <div class="control-group" style="margin-bottom:10px;">
+            <div id="district-lines-control-group" class="control-group" style="margin-bottom:10px;">
                 <span class="section-kicker">District Lines</span>
                 <div class="view-toggle-row" style="display:flex;gap:6px;flex-wrap:wrap;">
                   <button id="district-lines-2022" class="view-toggle-btn active" type="button" data-testid="lines-2022" aria-label="Use 2022 district lines" aria-pressed="true">2022 Lines</button>
@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-9';
-    const APP_BUILD_ID = '2026-07-09-9';
+    const DATA_CACHE_BUSTER = '2026-07-09-10';
+    const APP_BUILD_ID = '2026-07-09-10';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -12638,9 +12638,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateDistrictLinesToggleUI() {
       const y = normalizeDistrictLinesYear(currentDistrictLinesYear);
+      const group = document.getElementById('district-lines-control-group');
       const btn2022 = document.getElementById('district-lines-2022');
       const btn2024 = document.getElementById('district-lines-2024');
       const btn2026 = document.getElementById('district-lines-2026');
+      const showLinesControls = currentView !== 'counties';
+      if (group) group.style.display = showLinesControls ? '' : 'none';
       if (btn2022) {
         btn2022.classList.toggle('active', y === 2022);
         btn2022.setAttribute('aria-pressed', y === 2022 ? 'true' : 'false');
