@@ -8,6 +8,114 @@ function toTitleCaseName(raw) {
   return s.replace(/\b([a-z])/g, (m, c) => c.toUpperCase());
 }
 
+function formatDisplayName(raw) {
+  let s = toTitleCaseName(raw);
+  if (!s) return '';
+  s = s.replace(/\bSt (?=[A-Z])/g, 'St. ');
+  return s;
+}
+
+function applyManualOverrides(counties) {
+  const overrides = {
+    MADISON: {
+      'EBBS C': 'Ebbs Chapel',
+      'HOT SP': 'Hot Springs',
+      'MARS H': 'Mars Hill'
+    },
+    CHEROKEE: {
+      ANNW: 'Andrews North Ward',
+      ANSW: 'Andrews South Ward',
+      CSON: 'Culberson',
+      GCRK: 'Grape Creek',
+      HIWA: 'Hiwassee Dam',
+      MARB: 'Marble',
+      PCHT: 'Peachtree',
+      RGER: 'Ranger',
+      TOPT: 'Topton',
+      UNKA: 'Unaka'
+    },
+    BRUNSWICK: {
+      SB02: 'Boiling Spring Lakes',
+      SB01: 'Bolivia',
+      CB02: 'Shallotte',
+      CB03: 'Frying Pan',
+      WB06: 'Grissettown',
+      NB02: 'Leland',
+      WB03: 'Longwood',
+      NB03: 'Town Creek',
+      NB05: 'Woodburn',
+      CB01: 'Supply',
+      WB01: 'Waccamaw'
+    },
+    CASWELL: {
+      PH: 'Prospect Hill',
+      PROVI: 'Providence'
+    },
+    JACKSON: {
+      SDC: 'Sylva South Ward'
+    },
+    MOORE: {
+      'EUR-WP': 'Eureka/Whispering Pines',
+      PHC: 'Pinehurst C'
+    },
+    NORTHAMPTON: {
+      CREEKS: 'Creeksville',
+      GALATI: 'Galatia',
+      GAPL: 'Garysburg/Pleasant Hill',
+      GASTON: 'Gaston',
+      'LAKE G': 'Lake Gaston',
+      LASKER: 'Lasker',
+      NEWTOW: 'Newtown',
+      'RICH S': 'Rich Square',
+      SEABOA: 'Seaboard',
+      SEVERN: 'Severn'
+    },
+    CLEVELAND: {
+      'S C': 'Shelby Central',
+      'S S': 'Shelby South'
+    },
+    WILSON: {
+      PRBL: 'Black Creek',
+      PRCR: 'Crossroads',
+      PRGA: 'Gardners',
+      PROL: 'Old Fields',
+      PRSA: 'Saratoga',
+      PRSP: 'Spring Hill',
+      PRST: 'Stantonsburg',
+      PRTA: 'Taylors',
+      PRTO: 'Toisnot',
+      PRWA: 'Wilson A',
+      PRWB: 'Wilson B',
+      PRWC: 'Wilson C',
+      PRWD: 'Wilson D',
+      PRWE: 'Wilson E',
+      PRWH: 'Wilson H',
+      PRWI: 'Wilson I',
+      PRWJ: 'Wilson J',
+      PRWK: 'Wilson K',
+      PRWL: 'Wilson L',
+      PRWM: 'Wilson M',
+      PRWN: 'Wilson N',
+      PRWP: 'Wilson P',
+      PRWQ: 'Wilson Q',
+      PRWR: 'Wilson R'
+    },
+    CATAWBA: {
+      '28': 'St. Stephens',
+      '29': 'St. Stephens'
+    }
+  };
+
+  for (const [county, countyOverrides] of Object.entries(overrides)) {
+    if (!counties[county]) counties[county] = {};
+    for (const [code, displayName] of Object.entries(countyOverrides)) {
+      counties[county][code] = displayName;
+    }
+  }
+
+  return counties;
+}
+
 function normalizeAliasNameCandidate(raw) {
   const s = String(raw || '').trim().toUpperCase();
   if (!s) return '';
@@ -129,12 +237,12 @@ function buildFriendlyNamesIndex(aliasIndexPayload) {
     if (!perCounty.size) continue;
     const outCounty = {};
     for (const [code, name] of perCounty.entries()) {
-      outCounty[code] = toTitleCaseName(name);
+      outCounty[code] = formatDisplayName(name);
     }
     out[countyRaw] = outCounty;
   }
 
-  return out;
+  return applyManualOverrides(out);
 }
 
 function main() {
