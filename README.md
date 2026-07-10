@@ -859,7 +859,7 @@ Implementation note:
 - Added a targeted Wake suffix-merge cleanup so canonical precincts absorb `A`-suffix variants like `01-07A` and `07-07A` after county restoration, matching the refreshed geometry more cleanly.
 - Updated `scripts/build_precinct_friendly_names.js` so explicit county overrides now take final precedence over raw `enr_desc` text from the GeoJSON, preventing confirmed names from being overwritten during regeneration.
 - Expanded source-backed Cleveland County friendly names to the current preferred labels, including `Bethware`, `Lawn Dale`, `Mooresboro-Young`, `Shelby North`, `Shelby East`, `Shelby Central`, and `Shelby South`.
-- Spot-checked current Union County precinct naming against the official Union County Board of Elections precinct map page: [Union County Precinct Maps](https://unioncountyncelections.gov/voting/precinct-maps).
+- Spot-checked current Union County precinct naming against the official Union County Board of Elections precinct map page: [Union County Precinct Maps](https://unioncountyncelections.gov/voting/precinct-maps). This was one verification pass within a broader refresh that also updated other counties, rather than the only county changed in that round.
 - Bumped the atlas build/cache-buster tokens again so refreshed contest JSON, precinct crosswalk outputs, and friendly-name labels are fetched immediately after deploy.
 
 ### Follow-Up Precinct Label + Centroid Cleanup (July 10, 2026)
