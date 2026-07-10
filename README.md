@@ -106,7 +106,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 9, 2026
+**Last updated:** July 10, 2026
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -844,6 +844,24 @@ Implementation note:
   - `data/reports/voting_precincts_nconemap_2026-07-09_diff_details.csv`
 - Bumped the front-end cache-buster token again so browsers fetch the refreshed precinct geometry, alias/friendly-name data, and calibrated contest JSON immediately after deploy.
 
+### Precinct Crosswalk Repair + Friendly-Name Source Pass (July 10, 2026)
+
+- Added reproducible precinct-geometry repair tooling for the latest NCOneMap precinct refresh:
+  - `scripts/export_git_geojson.py`
+  - `scripts/build_precinct_geometry_crosswalks.py`
+  - `scripts/apply_precinct_crosswalk_to_2024_contests.js`
+  - `scripts/apply_weighted_precinct_crosswalk_to_2024_contests.js`
+  - `scripts/restore_2024_county_contests_from_raw.js`
+  - `scripts/merge_noncanonical_suffix_precincts_2024.js`
+- Generated overlap diagnostics and best-match outputs in `data/crosswalks/precinct_stable_to_nconemap_2026_07_*` so the atlas now has an auditable bridge between the prior precinct keyspace and the refreshed NCOneMap geometry.
+- Repaired 2024 precinct contest key drift with a conservative two-step workflow: safe one-to-one renames where geometry matches cleanly, then weighted overlap redistribution only for the remaining split/merged cases.
+- Restored affected 2024 statewide county slices directly from the raw OpenElections precinct export where overlap-only remaps were not trustworthy enough on their own, preventing bad remaps in counties such as Gaston and Wake.
+- Added a targeted Wake suffix-merge cleanup so canonical precincts absorb `A`-suffix variants like `01-07A` and `07-07A` after county restoration, matching the refreshed geometry more cleanly.
+- Updated `scripts/build_precinct_friendly_names.js` so explicit county overrides now take final precedence over raw `enr_desc` text from the GeoJSON, preventing confirmed names from being overwritten during regeneration.
+- Expanded source-backed Cleveland County friendly names to the current preferred labels, including `Bethware`, `Lawn Dale`, `Mooresboro-Young`, `Shelby North`, `Shelby East`, `Shelby Central`, and `Shelby South`.
+- Spot-checked current Union County precinct naming against the official Union County Board of Elections precinct map page: [Union County Precinct Maps](https://unioncountyncelections.gov/voting/precinct-maps).
+- Bumped the atlas build/cache-buster tokens again so refreshed contest JSON, precinct crosswalk outputs, and friendly-name labels are fetched immediately after deploy.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
@@ -1098,7 +1116,7 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 - `data/Voting_Precincts.geojson` — Polygon boundaries for all precincts
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
 - `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
-- `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show `Creedmoor (CRDM)`-style names in hover/selection UI
+- `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show human-readable precinct names in hover/selection UI
 
 To rebuild from the latest NCSBE shapefile:
 
