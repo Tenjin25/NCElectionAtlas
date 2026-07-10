@@ -885,6 +885,17 @@ Implementation note:
 - This keeps source-backed labels like `GTCC Ceasar Cone II Aviation Bldg`, `UNCG-Elliot University Center`, `CFCC-North Campus-McKeithan Center`, and `Allen's Crossroads VFD` readable in the live precinct UI rather than degrading back to over-normalized text.
 - Bumped the atlas build/cache-buster token again so browsers fetch the refreshed friendly-name data immediately after deploy.
 
+### Mobile Precinct Focus + Additional County Name Passes (July 10, 2026)
+
+- Added additional source-backed precinct friendly-name overrides and regenerated `data/precinct_friendly_names.json` for:
+  - Lee County (`Southern Lee High School`, `BT Bullock Elementary School`, `JR Ingram Elementary School`, and related current polling-place labels)
+  - Wayne County (`Fremont Town Hall`, `Eureka Methodist Church`, `Little River Fire Station`, `Steele Memorial Library`, and the rest of the current Wayne precinct polling-place set)
+  - Scotland County (`Scotland County Annex`, `South Johnson Elementary School Gym`, `Scotland Place`, `National Guard Armory`, `Gibson Fire Station`, `Laurel Hill Community Center`, and `Wagram Recreation Center`)
+- Added a Transylvania-specific legacy precinct bridge in the front end so historical contest rows keyed as `CC` / `RE` correctly match current geometry keyed as `CC.1` / `RE.1`.
+- Fixed a Cleveland County precinct-matching regression where short spaced Shelby codes such as `S C`, `S S`, and `S 4A` could collapse to the same base token during variant expansion, causing `Shelby Central`, `Shelby South`, and `Shelby North` to inherit the same results.
+- Refined mobile precinct-mode onboarding and focus behavior so touch guidance now follows the active geography target (`county`, `precinct`, or `district`) and pinned selections automatically promote the vote counter instead of leaving details buried behind open mobile sheets.
+- Kept `scripts/build_precinct_friendly_names.js` output pretty-printed and preserved acronym casing like `BT`, `JR`, `CFCC`, `GTCC`, `UNCG`, `UNCW`, `UMC`, `AME`, `CME`, `VFD`, `PCA`, and `PLC` during regeneration so county-sourced official names remain readable after rebuilds.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

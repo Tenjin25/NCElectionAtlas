@@ -146,6 +146,15 @@ function applyManualOverrides(counties) {
       '28': 'Indian Springs Fire Station',
       '29': 'Wayne County Public Library'
     },
+    SCOTLAND: {
+      '01-16': 'Scotland County Annex',
+      '02-25': 'South Johnson Elementary School Gym',
+      '03': 'Scotland Place',
+      '04': 'National Guard Armory',
+      '05-10': 'Gibson Fire Station',
+      '06-89': 'Laurel Hill Community Center',
+      '07': 'Wagram Recreation Center'
+    },
     CURRITUCK: {
       CO: 'Coinjock'
     },

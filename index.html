@@ -14410,11 +14410,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildFocusGuideCardHTML() {
       const touch = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+      const target = mobileFocusTargetLabel();
       const primary = touch
-        ? 'Choose a contest, then tap a county to pin details.'
+        ? `Choose a contest, then tap a ${target} to pin details.`
         : 'Choose a contest, then hover a county for a quick preview.';
       const secondary = touch
-        ? 'Tip: tap another county to switch focus.'
+        ? `Tip: tap another ${target} to switch focus.`
         : 'Tip: click a county to pin details.';
       return `
         <div class="focus-watch">
@@ -15103,6 +15104,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
       } catch (_) {}
+      try { promoteMobilePinnedSelectionUI(meta); } catch (_) {}
       updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes, meta)); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
@@ -15127,7 +15129,8 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshFocusTrend(voteCounterBaseline);
       } else {
         const touch = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
-        setVoteCounterContext('Statewide', touch ? 'Choose a contest, then tap a county' : 'Choose a contest, then hover a county', { showClear: false });
+        const target = mobileFocusTargetLabel();
+        setVoteCounterContext('Statewide', touch ? `Choose a contest, then tap a ${target}` : 'Choose a contest, then hover a county', { showClear: false });
         try { updateVoteCounter(0, 0, 0, null, { kind: 'statewide' }); } catch (_) {}
         renderFocusTrendEmpty('Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span>', 'Trends');
         showVoteCounter();
@@ -15315,6 +15318,26 @@ document.addEventListener('DOMContentLoaded', function() {
       try { updateMobileOverlayOffsets(); } catch (_) {}
     }
 
+    function mobileFocusTargetLabel() {
+      try {
+        const touch = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+        if (!touch) return 'county';
+        if (currentView === 'counties' && precinctsEnabled) return 'precinct';
+        if (currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate') return 'district';
+      } catch (_) {}
+      return 'county';
+    }
+
+    function promoteMobilePinnedSelectionUI(meta = null) {
+      try {
+        if (!(isMobileViewportNow && isMobileViewportNow())) return;
+        const kind = String(meta?.kind || '').toLowerCase();
+        if (!kind) return;
+        try { closeAllMobileSheets(); } catch (_) {}
+        setVoteCounterMinimizedState(false);
+      } catch (_) {}
+    }
+
     function hideVoteCounter() {
       const counter = document.getElementById('vote-counter');
       if (counter) counter.style.display = 'none';
@@ -15335,13 +15358,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildStartHereHintText({ hasContest = false } = {}) {
       const touch = (typeof isTouchInteractionMode === 'function') ? isTouchInteractionMode() : false;
+      const target = mobileFocusTargetLabel();
       if (!hasContest) {
         return touch
-          ? 'Choose a contest, then tap a county. Tap to pin details.'
+          ? `Choose a contest, then tap a ${target}. Tap to pin details.`
           : 'Choose a contest, then hover a county. Click to pin details.';
       }
       return touch
-        ? 'Now tap a county to pin details. Tap another county to switch.'
+        ? `Now tap a ${target} to pin details. Tap another ${target} to switch.`
         : 'Now hover a county for a quick preview. Click to pin details.';
     }
 
@@ -32548,9 +32572,14 @@ document.addEventListener('DOMContentLoaded', function() {
 	        // Try to extract a compact base token for later split/alias expansion.
 	        let baseToken = '';
 	        try {
-	          const firstToken = precRaw.split(/\s+/, 1)[0].trim();
-	          const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim().toUpperCase();
-	          baseToken = (token0 || '').toString().replace(/[^A-Z0-9.\-]/g, '').trim();
+            const compactMultiToken = precRaw.replace(/\s+/g, '').trim().toUpperCase();
+            if (precRaw.includes(' ') && /^[A-Z0-9]{2,4}$/.test(compactMultiToken)) {
+              baseToken = compactMultiToken;
+            } else {
+	            const firstToken = precRaw.split(/\s+/, 1)[0].trim();
+	            const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim().toUpperCase();
+	            baseToken = (token0 || '').toString().replace(/[^A-Z0-9.\-]/g, '').trim();
+            }
 	        } catch (_) { baseToken = ''; }
 	        if (baseToken) addKey(baseToken);
 
@@ -32960,9 +32989,16 @@ document.addEventListener('DOMContentLoaded', function() {
 	        // like "03S" -> "03SE"/"03SM" and "10" -> "10A"/"10B" using the centroid index.
 	        let baseToken = '';
 	        try {
-	          const firstToken = precRaw.split(/\s+/, 1)[0].trim();
-	          const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim();
-	          baseToken = (token0 || '').toString().trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, '').trim();
+            const compactMultiToken = precRaw.replace(/\s+/g, '').trim().toUpperCase();
+            if (precRaw.includes(' ') && /^[A-Z0-9]{2,4}$/.test(compactMultiToken)) {
+              // Preserve short spaced codes like "S C", "S S", "S 4A", and "KM N"
+              // as a single compact token so they don't collapse to just the first word.
+              baseToken = compactMultiToken;
+            } else {
+	            const firstToken = precRaw.split(/\s+/, 1)[0].trim();
+	            const token0 = (firstToken.includes('_') ? firstToken.split('_', 1)[0] : firstToken).trim();
+	            baseToken = (token0 || '').toString().trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, '').trim();
+            }
 	        } catch (_) { baseToken = ''; }
 	        try {
 	          addKnownLegacyCentroidBridges(countyNorm, precRaw, addKey);
