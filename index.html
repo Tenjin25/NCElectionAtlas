@@ -30314,6 +30314,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     let flySearchWired = false;
+    let flySearchAutoSubmitTimer = null;
+    let lastAutoSubmittedFlySearchQuery = '';
 
     function getFlySearchInputs() {
       return ['county-search', 'desktop-fly-search']
@@ -30477,6 +30479,101 @@ document.addEventListener('DOMContentLoaded', function() {
       dropdown.classList.add('visible');
     }
 
+    async function findPrecinctSearchMatch(countyNameRaw, precinctCodeRaw) {
+      const county = (countyNameRaw || '').toString().trim().toUpperCase();
+      const code = (precinctCodeRaw || '').toString().trim().toUpperCase();
+      if (!county || !code) return null;
+
+      try { await ensurePrecinctCodeIndex(); } catch (_) {}
+      try { await ensurePrecinctAliasIndex(); } catch (_) {}
+
+      if (isNonGeographicPrecinctToken(code, county)) {
+        return { county, code, nonGeographic: true };
+      }
+
+      await ensurePrecinctCentroidsLoaded();
+      const src = map.getSource('precinct-centroids');
+      const gj = src ? (src._data || src.data) : null;
+      if (!gj || !gj.features) return null;
+
+      const target = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+      const targetVariants = new Set([target]);
+      const addTargetVariant = (variantCode) => {
+        const vc = (variantCode || '').toString().trim().toUpperCase();
+        if (!vc) return;
+        const full = `${county} - ${vc}`.replace(/\s+/g, ' ').trim();
+        if (full) targetVariants.add(full);
+      };
+
+      try {
+        addNumericBaseVariantsFromAlphaSuffix(code, addTargetVariant);
+        addEmbeddedPrecinctCodeVariants(code, addTargetVariant);
+        const countyNorm = normalizeCountyToken(county);
+        addKnownLegacyCentroidBridges(countyNorm, code, addTargetVariant);
+        const codes = precinctCodeIndexByCounty && countyNorm ? precinctCodeIndexByCounty.get(countyNorm) : null;
+        if (codes) {
+          addCompactCodeVariants(code, codes, addTargetVariant);
+          addPrefixStrippedNumericVariants(code, codes, addTargetVariant);
+          if (countyNorm === 'WAKE') addClosestHyphenCodeVariants(code, codes, addTargetVariant);
+        }
+      } catch (_) {}
+
+      let hit = null;
+      let matchedTarget = target;
+      for (const cand of targetVariants) {
+        hit = gj.features.find(f => ((f.properties || {}).precinct_norm || '').toString().trim().toUpperCase() === cand);
+        if (hit) {
+          matchedTarget = cand;
+          break;
+        }
+      }
+
+      return {
+        county,
+        code,
+        target,
+        matchedTarget,
+        hit,
+        nonGeographic: false
+      };
+    }
+
+    function scheduleFlySearchAutoSubmit(searchInput) {
+      if (flySearchAutoSubmitTimer) {
+        clearTimeout(flySearchAutoSubmitTimer);
+        flySearchAutoSubmitTimer = null;
+      }
+      const input = searchInput && searchInput.tagName ? searchInput : null;
+      if (!input) return;
+
+      const query = (input.value || '').toString().trim();
+      const parsed = parseSearchQuery(query);
+      if (parsed.kind !== 'precinct') {
+        lastAutoSubmittedFlySearchQuery = '';
+        return;
+      }
+
+      flySearchAutoSubmitTimer = setTimeout(async () => {
+        flySearchAutoSubmitTimer = null;
+        const liveQuery = (input.value || '').toString().trim();
+        if (!liveQuery) return;
+        const liveParsed = parseSearchQuery(liveQuery);
+        if (liveParsed.kind !== 'precinct') return;
+        if (liveQuery.toUpperCase() === lastAutoSubmittedFlySearchQuery) return;
+
+        let match = null;
+        try {
+          match = await findPrecinctSearchMatch(liveParsed.county, liveParsed.code);
+        } catch (_) {
+          match = null;
+        }
+        if (!match || !match.hit || match.nonGeographic) return;
+
+        lastAutoSubmittedFlySearchQuery = liveQuery.toUpperCase();
+        await submitFlySearch(input);
+      }, 260);
+    }
+
     function wireFlySearchUI(counties) {
       const inputs = getFlySearchInputs();
       if (!inputs.length) return;
@@ -30489,6 +30586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('input', function() {
           syncFlySearchInputs(this.value, this);
           renderSearchDropdown(dropdown, buildSearchSuggestions(this.value, counties), this);
+          scheduleFlySearchAutoSubmit(this);
         });
 
         searchInput.addEventListener('focus', function() {
@@ -30501,6 +30599,10 @@ document.addEventListener('DOMContentLoaded', function() {
             await submitFlySearch(this);
           } else if (e.key === 'Escape') {
             hideAllSearchDropdowns();
+            if (flySearchAutoSubmitTimer) {
+              clearTimeout(flySearchAutoSubmitTimer);
+              flySearchAutoSubmitTimer = null;
+            }
           }
         });
       });
@@ -30708,51 +30810,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handlePrecinctSelection(countyNameRaw, precinctCodeRaw) {
-      const county = (countyNameRaw || '').toString().trim().toUpperCase();
-      const code = (precinctCodeRaw || '').toString().trim().toUpperCase();
-      try { await ensurePrecinctCodeIndex(); } catch (_) {}
-      try { await ensurePrecinctAliasIndex(); } catch (_) {}
-      if (isNonGeographicPrecinctToken(code, county)) {
+      const match = await findPrecinctSearchMatch(countyNameRaw, precinctCodeRaw);
+      const county = (match?.county || countyNameRaw || '').toString().trim().toUpperCase();
+      const code = (match?.code || precinctCodeRaw || '').toString().trim().toUpperCase();
+      if (match?.nonGeographic) {
         setStatus(`${county} - ${code} is a non-geographic vote bucket (e.g., Early Vote/Absentee) and isn't mapped to a precinct shape.`);
         try { showCountyDetails(county); } catch (_) {}
         return;
       }
-
-      await ensurePrecinctCentroidsLoaded();
-      const src = map.getSource('precinct-centroids');
-      const gj = src ? (src._data || src.data) : null;
-      if (!gj || !gj.features) return;
-
-      const target = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
-      const targetVariants = new Set([target]);
-      const addTargetVariant = (variantCode) => {
-        const vc = (variantCode || '').toString().trim().toUpperCase();
-        if (!vc) return;
-        const full = `${county} - ${vc}`.replace(/\s+/g, ' ').trim();
-        if (full) targetVariants.add(full);
-      };
-      try {
-        addNumericBaseVariantsFromAlphaSuffix(code, addTargetVariant);
-        addEmbeddedPrecinctCodeVariants(code, addTargetVariant);
-        const countyNorm = normalizeCountyToken(county);
-        addKnownLegacyCentroidBridges(countyNorm, code, addTargetVariant);
-        const codes = precinctCodeIndexByCounty && countyNorm ? precinctCodeIndexByCounty.get(countyNorm) : null;
-        if (codes) {
-          addCompactCodeVariants(code, codes, addTargetVariant);
-          addPrefixStrippedNumericVariants(code, codes, addTargetVariant);
-          if (countyNorm === 'WAKE') addClosestHyphenCodeVariants(code, codes, addTargetVariant);
-        }
-      } catch (_) {}
-
-      let hit = null;
-      let matchedTarget = target;
-      for (const cand of targetVariants) {
-        hit = gj.features.find(f => ((f.properties || {}).precinct_norm || '').toString().trim().toUpperCase() === cand);
-        if (hit) {
-          matchedTarget = cand;
-          break;
-        }
-      }
+      const target = match?.target || `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+      const hit = match?.hit || null;
+      const matchedTarget = match?.matchedTarget || target;
       if (!hit) {
         console.warn('Precinct not found for search:', target);
         setFlySearchFeedback('#ef4444');
