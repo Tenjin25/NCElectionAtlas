@@ -871,6 +871,20 @@ Implementation note:
 - Tightened shared precinct display-name formatting for `Mc...` names as well, so labels such as Rockingham's `McCoy` no longer flatten to `Mccoy` during regeneration.
 - Bumped the atlas build/cache-buster tokens again so browsers fetch the refreshed precinct geometry, centroid labels, friendly-name data, and reformatted JSON outputs immediately after deploy.
 
+### Official County Precinct Name Pass + Acronym Preservation (July 10, 2026)
+
+- Expanded `scripts/build_precinct_friendly_names.js` with additional source-backed county overrides and regenerated `data/precinct_friendly_names.json`.
+- Added official current-name mappings for:
+  - Gates County precinct labels from the county polling-place list
+  - New Hanover County precinct labels from the county polling-place list
+  - Guilford County precinct labels from the county polling-place table/export
+  - Swain County recoveries such as `Bryson City 1`, `Bryson City 2`, and `Whittier/Cherokee`
+  - Onslow County `NE22A` / `NE22B` church-based labels
+  - Perquimans County fixes for `East Hertford`, `New Hope`, and `West Hertford`
+- Hardened shared friendly-name formatting so common institutional acronyms and suffixes survive regeneration instead of being flattened by title-casing, including `NC A&T`, `UNCG`, `GTCC`, `CFCC`, `UNCW`, `UMC`, `AME`, `CME`, `VFD`, `PCA`, `PLC`, plus apostrophes and roman numerals such as `II`.
+- This keeps source-backed labels like `GTCC Ceasar Cone II Aviation Bldg`, `UNCG-Elliot University Center`, `CFCC-North Campus-McKeithan Center`, and `Allen's Crossroads VFD` readable in the live precinct UI rather than degrading back to over-normalized text.
+- Bumped the atlas build/cache-buster token again so browsers fetch the refreshed friendly-name data immediately after deploy.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

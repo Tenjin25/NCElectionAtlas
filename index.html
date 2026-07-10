@@ -10209,8 +10209,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-10-03';
-    const APP_BUILD_ID = '2026-07-10-03';
+    const DATA_CACHE_BUSTER = '2026-07-10-04';
+    const APP_BUILD_ID = '2026-07-10-04';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -26404,9 +26404,9 @@ document.addEventListener('DOMContentLoaded', function() {
         lastPrecinctHoverRenderedAt = now;
       } catch (_) {}
       const [contestType, year] = parseContestValue(contestValue);
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        const pinnedShell = !!tooltipPinned;
         const copyText = (precinctNorm || title || '').toString().trim();
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26437,7 +26437,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = currentPrecinctResults ? currentPrecinctResults.get(precinctNorm) : null;
       if (!row) {
         const hoverTitle = buildTooltipTitleWithTier(title);
-        const pinnedShell = !!tooltipPinned;
         const copyText = (precinctNorm || title || '').toString().trim();
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26526,7 +26525,6 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
-      const pinnedShell = !!tooltipPinned;
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
@@ -29008,6 +29006,7 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
+            if (isTouchInteractionMode()) setTooltipPinned(true);
             const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
             const label = full || (props.prec_id || '').toString().trim();
             setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${label}`.trim());
@@ -29709,6 +29708,7 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
+            if (isTouchInteractionMode()) setTooltipPinned(true);
             if (props.county_nam && props.prec_id) {
               showCountyDetails(props.county_nam);
               const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
@@ -30777,6 +30777,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
+            if (isTouchInteractionMode()) setTooltipPinned(true);
           }
         }
       } catch (_) {}
@@ -33267,6 +33268,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (perfOn && perfLabel) {
           const dt = atlasPerfNow() - perfT0;
           console.log(`[atlas] ${perfLabel}: ${dt.toFixed(1)}ms`);
+        }
+
+        if (needsPrecinctDetail && !skipPrecinctRowBuild && currentPrecinctResults) {
+          try {
+            backfillHistoricalPrecinctResultsWithCountyFallback(
+              currentPrecinctResults,
+              countyAgg,
+              contestType,
+              year
+            );
+          } catch (_) {}
         }
 
         if (!cachedAggBundle) {
