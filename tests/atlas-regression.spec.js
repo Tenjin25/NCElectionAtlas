@@ -42,6 +42,11 @@ async function pickContestKey(page) {
   });
 }
 
+async function flyToPrecinct(page, query = 'Wake 01-14') {
+  await page.fill('#desktop-fly-search', query);
+  await page.press('#desktop-fly-search', 'Enter');
+}
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
@@ -194,18 +199,15 @@ test.describe('North Carolina Election Atlas regression checks', () => {
   });
 
   test('precinct search selection sets yellow-highlight target and zooms in', async ({ page }) => {
-    await page.click('#precinct-toggle');
-    await page.waitForFunction(() => {
-      const text = (document.getElementById('precinct-toggle')?.textContent || '').trim();
-      return text === 'Precincts On' || text === 'Precincts Loading';
-    });
-
-    await page.getByRole('button', { name: 'Wake 01-14' }).first().click();
+    await flyToPrecinct(page, 'Wake 01-14');
 
     await page.waitForFunction(() => {
       try {
         if (typeof selectedPrecinctNorm === 'undefined' || typeof map === 'undefined' || !map) return false;
-        return /^WAKE - /i.test(String(selectedPrecinctNorm || '')) && Number(map.getZoom()) >= 9.8;
+        const toggleText = (document.getElementById('precinct-toggle')?.textContent || '').trim();
+        return /^WAKE - /i.test(String(selectedPrecinctNorm || ''))
+          && Number(map.getZoom()) >= 9.8
+          && (toggleText === 'Precincts On' || toggleText === 'Precincts Loading');
       } catch (_) {
         return false;
       }
@@ -214,12 +216,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     const selectedState = await page.evaluate(() => {
       const selected = typeof selectedPrecinctNorm === 'undefined' ? '' : String(selectedPrecinctNorm || '');
       const zoom = (typeof map !== 'undefined' && map && typeof map.getZoom === 'function') ? Number(map.getZoom()) : 0;
+      const toggleText = String(document.getElementById('precinct-toggle')?.textContent || '').trim();
       const searchValue = String(document.getElementById('county-search')?.value || '').trim();
-      return { selected, zoom, searchValue };
+      return { selected, zoom, searchValue, toggleText };
     });
 
     expect(selectedState.selected).toMatch(/^WAKE - /i);
     expect(selectedState.zoom).toBeGreaterThanOrEqual(9.8);
+    expect(['Precincts On', 'Precincts Loading']).toContain(selectedState.toggleText);
     expect(selectedState.searchValue.toUpperCase()).toContain('WAKE -');
   });
 
@@ -233,13 +237,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       contestKey
     );
 
-    await page.click('#precinct-toggle');
-    await page.waitForFunction(() => {
-      const text = (document.getElementById('precinct-toggle')?.textContent || '').trim();
-      return text === 'Precincts On' || text === 'Precincts Loading';
-    }, { timeout: APP_READY_TIMEOUT });
-
-    await page.getByRole('button', { name: 'Wake 01-14' }).first().click();
+    await flyToPrecinct(page, 'Wake 01-14');
     await page.waitForFunction(() => {
       try {
         if (typeof selectedPrecinctNorm === 'undefined' || typeof map === 'undefined' || !map) return false;
@@ -293,13 +291,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       firstContestKey
     );
 
-    await page.click('#precinct-toggle');
-    await page.waitForFunction(() => {
-      const text = (document.getElementById('precinct-toggle')?.textContent || '').trim();
-      return text === 'Precincts On' || text === 'Precincts Loading';
-    }, { timeout: APP_READY_TIMEOUT });
-
-    await page.getByRole('button', { name: 'Wake 01-14' }).first().click();
+    await flyToPrecinct(page, 'Wake 01-14');
     await page.waitForFunction(() => {
       try {
         if (typeof selectedPrecinctNorm === 'undefined' || typeof map === 'undefined' || !map) return false;

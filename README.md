@@ -896,6 +896,13 @@ Implementation note:
 - Refined mobile precinct-mode onboarding and focus behavior so touch guidance now follows the active geography target (`county`, `precinct`, or `district`) and pinned selections automatically promote the vote counter instead of leaving details buried behind open mobile sheets.
 - Kept `scripts/build_precinct_friendly_names.js` output pretty-printed and preserved acronym casing like `BT`, `JR`, `CFCC`, `GTCC`, `UNCG`, `UNCW`, `UMC`, `AME`, `CME`, `VFD`, `PCA`, and `PLC` during regeneration so county-sourced official names remain readable after rebuilds.
 
+### Mobile Precinct Search + Sheet Layout Follow-Up (July 10, 2026)
+
+- Added exact-match auto-resolve behavior for precinct fly-to searches so valid precinct queries can jump without requiring an extra manual submit tap on mobile, including county-first friendly-name inputs from the newer front-end precinct naming system instead of only legacy code-style queries.
+- Updated precinct search selection flow so choosing a valid precinct automatically returns the atlas to `Counties` view and turns the precinct overlay on before zooming/highlighting the selected precinct.
+- Added a dedicated mobile precinct-mode sheet treatment for the Search panel: when precincts are on, the mobile search sheet now uses a tighter layout, compact context cards, and a live mode hint so the panel reads as a precinct workspace instead of generic county search.
+- Refined the collapsed mobile Search sheet in precinct mode so it keeps useful mode/coverage status visible while hiding the full search form until the sheet is expanded again.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
