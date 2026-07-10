@@ -10209,7 +10209,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-09-14';
+    const DATA_CACHE_BUSTER = '2026-07-09-15';
     const APP_BUILD_ID = '2026-07-09-14';
 
     function withCacheBuster(path) {
@@ -20403,7 +20403,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // If it's already mixed-case, keep it.
       const hasLower = /[a-z]/.test(s);
       const hasUpper = /[A-Z]/.test(s);
-      if (hasLower && hasUpper) return s;
+      if (hasLower && hasUpper) {
+        return s
+          .replace(/\bSt (?=[A-Z])/g, 'St. ')
+          .replace(/\bMt (?=[A-Z])/g, 'Mt. ');
+      }
 
       const lower = s.toLowerCase();
       const parts = lower.split(/(\s+|-)/); // keep separators
@@ -20414,7 +20418,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (p.startsWith("o'") && p.length > 2) return "O'" + p[2].toUpperCase() + p.slice(3);
         return p.charAt(0).toUpperCase() + p.slice(1);
       }).join('');
-      return titled;
+      return titled
+        .replace(/\bSt (?=[A-Z])/g, 'St. ')
+        .replace(/\bMt (?=[A-Z])/g, 'Mt. ');
     }
 
     function displayCountyName(raw) {
@@ -29492,7 +29498,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!code) return '';
       const friendly = getPrecinctFriendlyName(countyNameOrNorm, code);
       if (!friendly) return `Precinct ${code}`;
-      return `${friendly} (${code})`;
+      return friendly;
     }
 
     function isNoisyPrecinctFullName(fullRaw, codeRaw = '') {
@@ -29514,7 +29520,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const rawCode = String(code || '').trim().toUpperCase();
       const canonicalCode = rawCode ? resolvePrecinctCanonicalCode(countyName, rawCode) : '';
       const friendly = rawCode ? getPrecinctFriendlyName(countyName, rawCode) : '';
-      const friendlyLabel = (canonicalCode && friendly) ? `${friendly} (${canonicalCode})` : '';
+      const friendlyLabel = friendly || '';
 
       const full = String(fullName || '').replace(/\s+/g, ' ').trim();
       const fallbackFull = String(fallbackFullName || '').replace(/\s+/g, ' ').trim();
@@ -29535,7 +29541,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const remainder = fullCompact.slice(rawCode.length).replace(/^[_\s-]+/, '').trim();
           const friendlyUpper = friendly.toUpperCase().replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
           if (remainder && remainder === friendlyUpper) return friendly;
-          return friendlyLabel;
+          return friendly;
         }
       }
 

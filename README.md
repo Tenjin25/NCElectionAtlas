@@ -826,6 +826,24 @@ Implementation note:
 - Clean examples from this pass include `Gap Civil`, `Roxobel`, `Broad Creek`, `Wardville`, `NW Whiteville`, `Jamesville`, `West Marion`, `Red Oak`, `Carrboro`, and numbered `Mt Airy` precinct labels.
 - Bumped the front-end build/cache-buster tokens again so precinct-mode label changes and county-control cleanup are fetched immediately after deployment.
 
+### NCOneMap Precinct Geometry Refresh + Friendly-Name Recovery (July 9, 2026)
+
+- Replaced the atlas precinct geometry with a normalized build of the latest NCOneMap `Voting_Precincts.geojson`, preserving `prec_id`, `county_nam`, `enr_desc`, and atlas-style `precinct_norm` keys so existing precinct result JSON continues to join against the live geometry.
+- Regenerated `data/Voting_Precincts.geojson`, `data/precinct_centroids.geojson`, `data/precinct_alias_index.json`, and `data/precinct_friendly_names.json` from that newer source so precinct hover/search/selection all read from the same refreshed geometry set.
+- Added reproducible helper scripts for this precinct-geometry refresh workflow:
+  - `scripts/normalize_voting_precincts_geojson.py`
+  - `scripts/build_precinct_alias_index.py`
+  - `scripts/compare_precinct_geojsons.py`
+- Updated `scripts/build_precinct_friendly_names.js` to merge usable `enr_desc` labels directly from the refreshed precinct GeoJSON, instead of relying only on older alias inference.
+- Restored additional source-backed friendly names that were degraded or missing after the NCOneMap swap, including recoveries in Ashe, Greene, and Granville plus follow-up punctuation cleanup for `St.` and `Mt.` patterns such as `St. Stephens` and `Mt. Airy`.
+- Simplified front-end precinct display behavior so when a real friendly precinct name is available the atlas shows just that name, rather than defaulting to `Friendly Name (CODE)` in normal precinct-facing UI.
+- Reduced the remaining precincts with still-textual-but-unresolved labels to a much smaller residual group, leaving mostly source-limited code-style placeholders rather than duplicated name/code strings.
+- Recalibrated `data/district_contests/congressional_governor_2008.json` for the affected congressional slices so the checked-in district results stay aligned with the latest correction pass.
+- Added NCOneMap comparison diagnostics in:
+  - `data/reports/voting_precincts_nconemap_2026-07-09_diff_summary.json`
+  - `data/reports/voting_precincts_nconemap_2026-07-09_diff_details.csv`
+- Bumped the front-end cache-buster token again so browsers fetch the refreshed precinct geometry, alias/friendly-name data, and calibrated contest JSON immediately after deploy.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

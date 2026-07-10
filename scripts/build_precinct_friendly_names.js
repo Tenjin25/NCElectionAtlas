@@ -12,6 +12,7 @@ function formatDisplayName(raw) {
   let s = toTitleCaseName(raw);
   if (!s) return '';
   s = s.replace(/\bSt (?=[A-Z])/g, 'St. ');
+  s = s.replace(/\bMt (?=[A-Z])/g, 'Mt. ');
   return s;
 }
 
@@ -22,6 +23,9 @@ function applyManualOverrides(counties) {
       '03A': 'Gap Civil',
       '04': 'Glade Creek',
       '06A': 'Prathers Creek'
+    },
+    ASHE: {
+      '13': 'Obids'
     },
     BEAUFORT: {
       GILEA: 'Gilead'
@@ -83,6 +87,31 @@ function applyManualOverrides(counties) {
     },
     CURRITUCK: {
       CO: 'Coinjock'
+    },
+    GREENE: {
+      MAUR: 'Maury',
+      BEAR: 'Bear Gardens',
+      BULL: 'Bull Head',
+      CAST: 'Castoria',
+      HOOK: 'Hookerton',
+      'SH#1': 'Snow Hill',
+      SHIN: 'Shine',
+      WALS: 'Walstonburg'
+    },
+    GRANVILLE: {
+      ANTI: 'Antioch',
+      BERE: 'Berea',
+      BTNR: 'Butner',
+      CORI: 'Corinth',
+      CRDL: 'Credle',
+      CRDM: 'Creedmoor',
+      EAOX: 'East Oxford',
+      OKHL: 'Oak Hill',
+      SALM: 'Salem',
+      SASS: 'Sassafras Fork',
+      SOOX: 'South Oxford',
+      TYHO: 'Tally Ho',
+      WOEL: 'West Oxford Elementary'
     },
     DARE: {
       FRCO: 'Frisco'
@@ -217,7 +246,7 @@ function applyManualOverrides(counties) {
   for (const [county, countyOverrides] of Object.entries(overrides)) {
     if (!counties[county]) counties[county] = {};
     for (const [code, displayName] of Object.entries(countyOverrides)) {
-      counties[county][code] = displayName;
+      counties[county][code] = formatDisplayName(displayName);
     }
   }
 
@@ -256,6 +285,60 @@ function isCodeLikeToken(raw) {
   // Short all-letter tokens are usually precinct codes (CRDM, BCK), not display names.
   if (compact.length <= 4 && /^[A-Z]+$/.test(compact)) return true;
   return false;
+}
+
+function normalizeCounty(raw) {
+  return String(raw || '').trim().toUpperCase();
+}
+
+function normalizeCode(raw) {
+  return String(raw || '').trim().toUpperCase();
+}
+
+function normalizeDirectGeoName(raw) {
+  const s = String(raw || '').trim().toUpperCase();
+  if (!s) return '';
+  const cleaned = s
+    .replace(/VOTING\s*DISTRICT/gi, ' ')
+    .replace(/[_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return '';
+  if (/^\d+$/.test(cleaned)) return '';
+  return cleaned;
+}
+
+function shouldUseDirectName(raw, codeRaw) {
+  const name = normalizeDirectGeoName(raw);
+  const code = normalizeCode(codeRaw);
+  if (!name || !code) return false;
+  const nameCompact = name.replace(/[^A-Z0-9]/g, '');
+  const codeCompact = code.replace(/[^A-Z0-9]/g, '');
+  if (!nameCompact || !codeCompact) return false;
+  if (nameCompact === codeCompact) return false;
+  const letters = (name.match(/[A-Z]/g) || []).length;
+  if (!letters) return false;
+  if (!/[0-9]/.test(nameCompact)) return letters >= 3;
+  if (/[\/\s-]/.test(name)) return true;
+  return !isCodeLikeToken(name);
+}
+
+function mergeGeoJsonNames(out, votingGeoJsonPayload) {
+  const features = Array.isArray(votingGeoJsonPayload?.features) ? votingGeoJsonPayload.features : [];
+  for (const feature of features) {
+    const props = feature?.properties || {};
+    const county = normalizeCounty(props.county_nam);
+    const code = normalizeCode(props.prec_id);
+    const enrDesc = normalizeDirectGeoName(props.enr_desc);
+    if (!county || !code || !shouldUseDirectName(enrDesc, code)) continue;
+    if (!out[county]) out[county] = {};
+    const perCounty = new Map(Object.entries(out[county]));
+    setBestNameForCode(perCounty, code, enrDesc);
+    out[county] = Object.fromEntries(
+      Array.from(perCounty.entries(), ([precinctCode, name]) => [precinctCode, formatDisplayName(name)])
+    );
+  }
+  return out;
 }
 
 function scoreNameCandidate(raw) {
@@ -370,16 +453,23 @@ function main() {
   const inputPath = process.argv[2]
     ? path.resolve(process.argv[2])
     : path.join(repoRoot, 'data', 'precinct_alias_index.json');
+  const votingGeoJsonPath = process.argv[4]
+    ? path.resolve(process.argv[4])
+    : path.join(repoRoot, 'data', 'Voting_Precincts.geojson');
   const outputPath = process.argv[3]
     ? path.resolve(process.argv[3])
     : path.join(repoRoot, 'data', 'precinct_friendly_names.json');
 
   const payload = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
-  const counties = buildFriendlyNamesIndex(payload);
+  const votingGeoJson = JSON.parse(fs.readFileSync(votingGeoJsonPath, 'utf8'));
+  const counties = mergeGeoJsonNames(buildFriendlyNamesIndex(payload), votingGeoJson);
   const out = {
     version: 1,
     generated_at: new Date().toISOString(),
-    generated_from: [path.relative(repoRoot, inputPath).replace(/\\/g, '/')],
+    generated_from: [
+      path.relative(repoRoot, inputPath).replace(/\\/g, '/'),
+      path.relative(repoRoot, votingGeoJsonPath).replace(/\\/g, '/')
+    ],
     counties
   };
 
