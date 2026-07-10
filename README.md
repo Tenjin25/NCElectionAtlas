@@ -862,6 +862,15 @@ Implementation note:
 - Spot-checked current Union County precinct naming against the official Union County Board of Elections precinct map page: [Union County Precinct Maps](https://unioncountyncelections.gov/voting/precinct-maps).
 - Bumped the atlas build/cache-buster tokens again so refreshed contest JSON, precinct crosswalk outputs, and friendly-name labels are fetched immediately after deploy.
 
+### Follow-Up Precinct Label + Centroid Cleanup (July 10, 2026)
+
+- Pretty-printed the checked-in atlas JSON artifacts with stable nested formatting so large contest, mapping, and district-result files are easier to inspect and diff by hand.
+- Filled remaining Greene County friendly-name gaps for `ARBA` and `SUGG`, then regenerated the precinct friendly-name index so those labels no longer fall back to opaque code-only names in the front end.
+- Repaired the current Vance County precinct label path for the refreshed NCOneMap geometry, mapping the live split keys (`EH1`, `HTOP`, `NH1`, `SH1`, `SH2`, etc.) to readable display names so compact abbreviations no longer leak into precinct-mode UI.
+- Synced both Vance and Greene `enr_desc` labels in `data/Voting_Precincts.geojson` and regenerated `data/precinct_centroids.geojson`, removing stale centroid IDs and ensuring the centroid layer carries readable `enr_desc` / `name` / `label` values instead of old or placeholder code strings.
+- Tightened shared precinct display-name formatting for `Mc...` names as well, so labels such as Rockingham's `McCoy` no longer flatten to `Mccoy` during regeneration.
+- Bumped the atlas build/cache-buster tokens again so browsers fetch the refreshed precinct geometry, centroid labels, friendly-name data, and reformatted JSON outputs immediately after deploy.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

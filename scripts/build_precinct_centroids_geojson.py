@@ -15,6 +15,10 @@ def normalize_precinct_norm(county_nam: str, prec_id: str) -> str:
     return raw
 
 
+def clean_label(raw: str) -> str:
+    return RE_WS.sub(" ", str(raw or "").strip())
+
+
 def scan_bbox(coords, bbox):
     # coords can be nested lists; leaf is [x, y] (or [x, y, ...]).
     if not coords:
@@ -76,6 +80,9 @@ def main():
                 "properties": {
                     "county_nam": county_nam,
                     "prec_id": prec_id,
+                    "enr_desc": clean_label(props.get("enr_desc") or ""),
+                    "name": clean_label(props.get("enr_desc") or ""),
+                    "label": clean_label(props.get("enr_desc") or ""),
                     "precinct_norm": normalize_precinct_norm(county_nam, prec_id),
                 },
                 "geometry": {"type": "Point", "coordinates": [x, y]},

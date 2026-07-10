@@ -11,6 +11,7 @@ function toTitleCaseName(raw) {
 function formatDisplayName(raw) {
   let s = toTitleCaseName(raw);
   if (!s) return '';
+  s = s.replace(/\bMc([a-z])/g, (m, c) => `Mc${c.toUpperCase()}`);
   s = s.replace(/\bSt (?=[A-Z])/g, 'St. ');
   s = s.replace(/\bMt (?=[A-Z])/g, 'Mt. ');
   return s;
@@ -89,6 +90,7 @@ function applyManualOverrides(counties) {
       CO: 'Coinjock'
     },
     GREENE: {
+      ARBA: 'Arba',
       MAUR: 'Maury',
       BEAR: 'Bear Gardens',
       BULL: 'Bull Head',
@@ -96,6 +98,7 @@ function applyManualOverrides(counties) {
       HOOK: 'Hookerton',
       'SH#1': 'Snow Hill',
       SHIN: 'Shine',
+      SUGG: 'Sugg',
       WALS: 'Walstonburg'
     },
     GRANVILLE: {
@@ -311,6 +314,20 @@ function applyManualOverrides(counties) {
       PRWP: 'Wilson P',
       PRWQ: 'Wilson Q',
       PRWR: 'Wilson R'
+    },
+    VANCE: {
+      CC: 'Community College',
+      EH1: 'Central Henderson',
+      HTOP: 'South Henderson',
+      KITT: 'Kittrell',
+      MIDD: 'Middleburg',
+      NH: 'New Hope',
+      NH1: 'Central Henderson',
+      NV: 'Northern Vance',
+      SCRK: 'Sandy Creek',
+      SH1: 'South Henderson',
+      SH2: 'South Henderson',
+      WH: 'West Henderson'
     },
     CATAWBA: {
       '28': 'St. Stephens',
