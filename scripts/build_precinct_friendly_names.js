@@ -17,8 +17,10 @@ function formatDisplayName(raw) {
   s = s.replace(/\bMt (?=[A-Z])/g, 'Mt. ');
   s = s.replace(/\bAme\b/g, 'AME');
   s = s.replace(/\bCme\b/g, 'CME');
+  s = s.replace(/\bBt\b/g, 'BT');
   s = s.replace(/\bCfcc\b/g, 'CFCC');
   s = s.replace(/\bGtcc\b/g, 'GTCC');
+  s = s.replace(/\bJr\b/g, 'JR');
   s = s.replace(/\bMlk\b/g, 'MLK');
   s = s.replace(/\bPca\b/g, 'PCA');
   s = s.replace(/\bPlc\b/g, 'PLC');
@@ -101,6 +103,48 @@ function applyManualOverrides(counties) {
     },
     JACKSON: {
       SDC: 'Sylva South Ward'
+    },
+    LEE: {
+      A1: 'Southern Lee High School',
+      A2: 'J Glenn Edwards Elementary School',
+      B1: 'Deep River Elementary School',
+      B2: 'BT Bullock Elementary School',
+      C1: 'Greenwood Elementary School',
+      C2: 'Tramway Elementary School',
+      D1: 'JR Ingram Elementary School',
+      D2: 'American Legion',
+      E1: 'Broadway Elementary School',
+      E2: 'East Lee Middle School'
+    },
+    WAYNE: {
+      '01': 'Fremont Town Hall',
+      '02': 'Eureka Methodist Church',
+      '03': 'Little River Fire Station',
+      '04': 'Pikeville Fire Station',
+      '05': 'Belfast Fire Department',
+      '06': 'Crossway Church',
+      '07': 'New Hope Fire Station',
+      '08': 'Oakland Fire Station',
+      '09': 'Westwood United Methodist Church',
+      '10': 'Word Of Truth Christian Fellowship',
+      '11': 'Greenleaf Christian Church',
+      '12': 'Adamsville Baptist Church',
+      '13': 'Central Heights Free Will Baptist Church',
+      '14': 'New Hope Friends Church',
+      '15': 'Seven Springs Baptist Church',
+      '16': 'American Legion Post 11',
+      '17': 'St. James AME Zion Church',
+      '18': 'Wages Bldg',
+      '1920': 'First African Baptist Church',
+      '21': 'St. Luke United Methodist Church',
+      '22': 'Faith Alliance Church',
+      '23': 'The Hydrant Wesleyan Church',
+      '24': 'Woodmenlife Lodge 481 Grantham',
+      '2530': 'Steele Memorial Library',
+      '26': 'Dudley Fire Station',
+      '27': 'Mays Chapel Church',
+      '28': 'Indian Springs Fire Station',
+      '29': 'Wayne County Public Library'
     },
     CURRITUCK: {
       CO: 'Coinjock'
@@ -815,7 +859,7 @@ function main() {
     counties
   };
 
-  fs.writeFileSync(outputPath, JSON.stringify(out), 'utf8');
+  fs.writeFileSync(outputPath, `${JSON.stringify(out, null, 2)}\n`, 'utf8');
   console.log(`Wrote ${Object.keys(counties).length} counties -> ${path.relative(repoRoot, outputPath)}`);
 }
 
