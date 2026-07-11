@@ -928,6 +928,13 @@ Implementation note:
 - Extended that bridge into the main precinct result matcher, the prior-cycle precinct margin cache, the precinct fly-to search path, and the canonical precinct-code resolver so older contest/model slices have a better chance of joining to the active NCOneMap geometry.
 - Bumped the front-end cache-buster again after the bridge hookup so browsers do not keep serving the pre-bridge precinct resolver.
 
+### Tooltip / Model / Precinct Label Follow-Up (July 11, 2026)
+
+- Nudged the default `US Senate (2026) model` turnout factor from `0.575` to `0.58` and synced the neutral preset plus turnout slider default to that same value so the statewide model can be tightened slightly without reworking the broader Senate blend logic.
+- Added county-aware display-name overrides for `Craven` and `Lincoln` precinct labels so `Van-EP Vanceboro`, `Lincolnton North`, and `Lincolnton South` render cleanly in the current front-end naming layer instead of keeping the raw compact/slash-coded forms.
+- Re-aligned the county and precinct mobile pin/tooltip flow toward the older `index (14).html` behavior by removing the newer pre-pinned tooltip-shell shortcut and restoring the older render-first, pin-second sequence for county/precinct selections.
+- Bumped the front-end data cache-buster again so browsers pull the latest tooltip-behavior and precinct-label refinements immediately after deploy.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.

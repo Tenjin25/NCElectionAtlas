@@ -9977,7 +9977,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div class="scenario-row" id="model-turnout-row" style="display:none;">
                 <label for="model-turnout">Expected turnout</label>
-                <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.575" data-testid="model-turnout" aria-label="Model turnout factor" />
+                <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.58" data-testid="model-turnout" aria-label="Model turnout factor" />
                 <span class="scenario-value" id="model-turnout-value">57.5%</span>
                 <div class="scenario-help">Scales the turnout baseline before county redistribution.</div>
               </div>
@@ -10336,8 +10336,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-04';
-    const APP_BUILD_ID = '2026-07-11-04';
+    const DATA_CACHE_BUSTER = '2026-07-11-05';
+    const APP_BUILD_ID = '2026-07-11-05';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11590,7 +11590,7 @@ document.addEventListener('DOMContentLoaded', function() {
         turnoutRuralWhiteMul: 0.96,
         turnoutContestType: 'president',
         turnoutYear: 2024,
-        turnoutFactor: 0.575,
+        turnoutFactor: 0.58,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
         description: 'Blended 2022 + 2020 Senate anchors with a 2024 President climate and calibrated 55–60% turnout'
@@ -11679,7 +11679,7 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'neutral_baseline',
           label: 'Neutral',
           // Keep in sync with the calibrated default.
-          patch: { blendWeight: 0.72, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
+          patch: { blendWeight: 0.72, turnoutFactor: 0.58, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
         },
         {
           id: 'dem_high_turnout',
@@ -15311,7 +15311,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const norm = normalizeCountyToken(meta.precinctNorm || meta.precinct || '');
       if (!norm) return false;
-      const row = currentPrecinctResults.get(norm);
+      const match = findPrecinctResultRow({
+        precinctNorm: norm,
+        countyName: meta.county || '',
+        code: norm.includes(' - ') ? norm.split(' - ')[1] : '',
+        fullName: meta.precinct || ''
+      });
+      const row = match?.row || null;
       if (!row) return false;
 
       const demVotes = Number(row[`${contestType}_dem`] || 0);
@@ -15331,7 +15337,7 @@ document.addEventListener('DOMContentLoaded', function() {
           kind: 'precinct',
           county,
           precinct: precinctDisplay,
-          precinctNorm: norm,
+          precinctNorm: match?.key || norm,
           contestType,
           year: Number(year)
         },
@@ -15509,12 +15515,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!(isMobileViewportNow && isMobileViewportNow())) return;
         const kind = String(meta?.kind || '').toLowerCase();
         if (!kind) return;
-
-        // A map selection should update the selected-results panel without
-        // forcing its mobile sheet open. Preserve whatever collapsed/expanded
-        // state the user already chose. This applies equally to counties,
-        // districts, and precincts loaded from the current precinct data map.
+        const counter = document.getElementById('vote-counter');
+        const counterWasMinimized = !!(counter && counter.classList.contains('minimized'));
+        try {
+          if (mobileInputRestoreTimer) {
+            clearTimeout(mobileInputRestoreTimer);
+            mobileInputRestoreTimer = null;
+          }
+        } catch (_) {}
+        try {
+          const active = document.activeElement;
+          if (isMobileEditableField(active) && typeof active.blur === 'function') {
+            active.blur();
+          }
+        } catch (_) {}
+        try {
+          mobileInputFocusSnapshot = null;
+          document.body.classList.remove('mobile-input-active');
+        } catch (_) {}
         try { closeAllMobileSheets(); } catch (_) {}
+        if (kind === 'district' || kind === 'region') {
+          setVoteCounterMinimizedState(false);
+        } else {
+          setVoteCounterMinimizedState(counterWasMinimized);
+        }
+        try { updateMobileOverlayOffsets(); } catch (_) {}
       } catch (_) {}
     }
 
@@ -26619,7 +26644,7 @@ document.addEventListener('DOMContentLoaded', function() {
         lastPrecinctHoverRenderedAt = now;
       } catch (_) {}
       const [contestType, year] = parseContestValue(contestValue);
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      const pinnedShell = !!tooltipPinned;
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -26649,7 +26674,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      const row = currentPrecinctResults ? currentPrecinctResults.get(precinctNorm) : null;
+      const rowMatch = findPrecinctResultRow({
+        precinctNorm,
+        countyName,
+        code: displayCode,
+        fullName: precFull,
+        fallbackFullName: fallbackFull
+      });
+      const row = rowMatch?.row || null;
       if (!row) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -26704,10 +26736,22 @@ document.addEventListener('DOMContentLoaded', function() {
       if (currentVizMode === 'shift' && vizShiftCache?.prevYear) {
         const prevShiftMap = vizShiftCache?.prevPrecinctMarginByNorm;
         let prevSignedForShift = null;
-        if (prevShiftMap?.has(precinctNorm)) {
-          const prevShiftSigned = Number(prevShiftMap.get(precinctNorm));
-          if (Number.isFinite(prevShiftSigned)) prevSignedForShift = prevShiftSigned;
-        } else if (Number.isFinite(Number(prevSignedForFlip))) {
+        const lookupKeys = buildPrecinctResultLookupKeys({
+          precinctNorm,
+          countyName,
+          code: displayCode,
+          fullName: precFull,
+          fallbackFullName: fallbackFull
+        });
+        for (const key of lookupKeys) {
+          if (!prevShiftMap?.has(key)) continue;
+          const prevShiftSigned = Number(prevShiftMap.get(key));
+          if (Number.isFinite(prevShiftSigned)) {
+            prevSignedForShift = prevShiftSigned;
+            break;
+          }
+        }
+        if (!Number.isFinite(Number(prevSignedForShift)) && Number.isFinite(Number(prevSignedForFlip))) {
           // Fallback when shift cache misses this precinct but generic previous data exists.
           prevSignedForShift = Number(prevSignedForFlip);
         }
@@ -26716,7 +26760,7 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
         }
       }
-      const inner = buildVotehubResultsTooltip({
+      const votehubCore = buildVotehubResultsTooltip({
         title,
         subtitle: 'Precinct',
         demName: demCandidate,
@@ -26740,6 +26784,27 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
+      const flipLine = (prevSignedForFlip !== null)
+        ? flipLineHTML(prevSignedForFlip, curSigned, vizPrevCache?.prevYear || null, Number(year))
+        : '';
+      const fallbackNotice = String(row?.__fallback_scope || '').trim()
+        ? '<div class="tooltip-insight">Using county-level fallback results for this historical precinct.</div>'
+        : '';
+      const detailLines = `
+            ${flipLine}
+            ${fallbackNotice}
+          `.trim();
+      const inner = isDesktopTooltipMode()
+        ? `${votehubCore}`.trim()
+        : `
+            ${votehubCore}
+            <div class="vhr-footer">
+              <details class="tooltip-more" aria-label="More details">
+                <summary>More details</summary>
+                <div class="tooltip-more-body">${detailLines || '<div class="tooltip-insight">No extra details for this precinct.</div>'}</div>
+              </details>
+            </div>
+          `.trim();
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
@@ -26747,7 +26812,9 @@ document.addEventListener('DOMContentLoaded', function() {
         buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
+      clearDesktopHoverExpandState();
       wireTooltipButtons();
+      try { markOnboardingSeen(); } catch (_) {}
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
       setVoteCounterHoverState(
@@ -29792,7 +29859,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const perCounty = precinctFriendlyNameByCountyCode ? precinctFriendlyNameByCountyCode.get(countyNorm) : null;
       const rawName = perCounty ? (perCounty.get(code) || '') : '';
       if (!rawName) return '';
-      return normalizeFriendlyPrecinctName(rawName);
+      const normalized = normalizeFriendlyPrecinctName(rawName);
+      if (countyNorm === 'CRAVEN' && normalized.toUpperCase() === 'VAN EP') return 'Van-EP Vanceboro';
+      if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/NORTH') return 'Lincolnton North';
+      if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/SOUTH') return 'Lincolnton South';
+      return normalized;
     }
 
     function formatPrecinctDisplayLabel(countyNameOrNorm, precinctCodeRaw) {
@@ -29859,6 +29930,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const codeOnly = canonicalCode || rawCode;
       return normalizedFull || normalizedFallbackFull || friendlyLabel || (codeOnly ? `Precinct ${codeOnly}` : '');
+    }
+
+    function buildPrecinctResultLookupKeys({ precinctNorm = '', countyName = '', code = '', fullName = '', fallbackFullName = '' } = {}) {
+      const keys = new Set();
+      const countyNorm = normalizeCountyToken(countyName || (precinctNorm.includes(' - ') ? precinctNorm.split(' - ')[0] : ''));
+      const normPrecinct = normalizeCountyToken(precinctNorm);
+      const codeRaw = String(code || (precinctNorm.includes(' - ') ? precinctNorm.split(' - ')[1] : '') || '').trim().toUpperCase();
+
+      const addKey = (value) => {
+        const key = normalizeCountyToken(value);
+        if (key) keys.add(key);
+      };
+      const addCountyCode = (value) => {
+        const token = (value || '').toString().trim().toUpperCase();
+        if (!countyNorm || !token) return;
+        addKey(`${countyNorm} - ${token}`);
+      };
+
+      if (normPrecinct) addKey(normPrecinct);
+      if (countyNorm && codeRaw) addCountyCode(codeRaw);
+
+      const canonicalCode = resolvePrecinctCanonicalCode(countyNorm, codeRaw);
+      if (canonicalCode) addCountyCode(canonicalCode);
+
+      [fullName, fallbackFullName].forEach((label) => {
+        const raw = String(label || '').replace(/\s+/g, ' ').trim();
+        if (!raw) return;
+        addCountyCode(raw);
+        const normalized = normalizeFriendlyPrecinctName(raw);
+        if (normalized && normalized !== raw) addCountyCode(normalized);
+      });
+
+      const aliasSourceTokens = new Set([codeRaw, canonicalCode]);
+      [fullName, fallbackFullName].forEach((label) => {
+        const raw = String(label || '').replace(/\s+/g, ' ').trim().toUpperCase();
+        if (raw) aliasSourceTokens.add(raw);
+      });
+
+      try {
+        const codes = precinctCodeIndexByCounty && countyNorm ? precinctCodeIndexByCounty.get(countyNorm) : null;
+        const countyAliases = precinctAliasIndexByCounty && countyNorm ? precinctAliasIndexByCounty.get(countyNorm) : null;
+        aliasSourceTokens.forEach(token => {
+          const rawToken = (token || '').toString().trim().toUpperCase();
+          if (!rawToken) return;
+          addNumericBaseVariantsFromAlphaSuffix(rawToken, addCountyCode);
+          addEmbeddedPrecinctCodeVariants(rawToken, addCountyCode);
+          addKnownLegacyCentroidBridges(countyNorm, rawToken, addCountyCode);
+          addStableToOneMapCrosswalkBridges(countyNorm, rawToken, addCountyCode);
+          applyPrecinctVariantOverrides(countyNorm, rawToken, addCountyCode);
+          if (codes) {
+            addCompactCodeVariants(rawToken, codes, addCountyCode);
+            addPrefixStrippedNumericVariants(rawToken, codes, addCountyCode);
+            if (countyNorm === 'WAKE') addClosestHyphenCodeVariants(rawToken, codes, addCountyCode);
+          }
+          if (countyAliases) {
+            const aliasResolved = resolveUniquePrecinctCodeByAlias(countyAliases, rawToken);
+            if (aliasResolved) addCountyCode(aliasResolved);
+          }
+        });
+      } catch (_) {}
+
+      return Array.from(keys);
+    }
+
+    function findPrecinctResultRow(match = {}) {
+      if (!currentPrecinctResults || typeof currentPrecinctResults.get !== 'function') return null;
+      const keys = buildPrecinctResultLookupKeys(match);
+      for (const key of keys) {
+        const row = currentPrecinctResults.get(key);
+        if (row) return { key, row };
+      }
+      return null;
     }
 
     async function ensurePrecinctVariantOverrides() {
@@ -31201,9 +31344,13 @@ document.addEventListener('DOMContentLoaded', function() {
       // Pin vote counter if we have precinct-level results keyed by precinct_norm.
       const contestValue = document.getElementById('contestSelect')?.value || '';
       const [contestType, year] = parseContestValue(contestValue);
-      const row = currentPrecinctResults
-        ? (currentPrecinctResults.get(matchedTarget) || currentPrecinctResults.get(target))
-        : null;
+      const rowMatch = findPrecinctResultRow({
+        precinctNorm: matchedTarget,
+        countyName: county,
+        code: resolvedCode,
+        fullName: displayTitle
+      });
+      const row = rowMatch?.row || null;
       if (row && contestType) {
         const demVotes = Number(row[`${contestType}_dem`] || 0);
         const repVotes = Number(row[`${contestType}_rep`] || 0);
@@ -31214,7 +31361,7 @@ document.addEventListener('DOMContentLoaded', function() {
           demVotes,
           repVotes,
           otherVotes,
-          { kind: 'precinct', county, precinct: displayTitle, precinctNorm: matchedTarget, contestType, year: Number(year) },
+          { kind: 'precinct', county, precinct: displayTitle, precinctNorm: rowMatch?.key || matchedTarget, contestType, year: Number(year) },
           { demCandidate: row[`${contestType}_dem_candidate`] || '', repCandidate: row[`${contestType}_rep_candidate`] || '' }
         );
       }
@@ -31283,6 +31430,20 @@ document.addEventListener('DOMContentLoaded', function() {
           setFlySearchFeedback('#10b981');
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
+          try {
+            if (isTouchInteractionMode() && typeof renderCountyHoverAtPoint === 'function') {
+              const centerLng = (Number(bbox[0]) + Number(bbox[2])) / 2;
+              const centerLat = (Number(bbox[1]) + Number(bbox[3])) / 2;
+              const projected = (map && typeof map.project === 'function')
+                ? map.project([centerLng, centerLat])
+                : null;
+              if (projected && Number.isFinite(projected.x) && Number.isFinite(projected.y)) {
+                setTooltipPinned(false);
+                renderCountyHoverAtPoint({ point: { x: projected.x, y: projected.y }, features: [found] }, { forceTooltip: true });
+                setTooltipPinned(true);
+              }
+            }
+          } catch (_) {}
         } else {
           console.warn('[DIAGNOSTIC] County not found:', countyName, 'normalized:', normTarget);
           setFlySearchFeedback('#ef4444');
