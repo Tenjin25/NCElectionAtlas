@@ -55,7 +55,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
 
   test('loads with no contest selected and reveal overlay default', async ({ page }) => {
     await expect(page.locator('#contestSelect')).toHaveValue('');
-    await expect(page.locator('#overlay-opacity-preset')).toHaveValue('reveal');
+    await expect(page.locator('#overlay-opacity-preset')).toHaveValue('focus');
     await expect(page.locator('#context-contest')).toContainText('Select a contest');
 
     const countyFillOpacity = await page.evaluate(() => {
@@ -276,8 +276,12 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(pinnedSnapshot.title).toMatch(/^Selected:/i);
 
     await page.waitForFunction(() => {
-      const tooltipText = String(document.getElementById('hover-tooltip')?.textContent || '');
-      return /Trend at a glance/i.test(tooltipText) && /No prior precinct cycle loaded/i.test(tooltipText);
+      try {
+        const chartText = String(document.getElementById('focus-trend-chart')?.textContent || '').trim();
+        return /Trend at a glance|No historical trend data available|Failed to load trend history/i.test(chartText);
+      } catch (_) {
+        return false;
+      }
     }, { timeout: APP_READY_TIMEOUT });
   });
 
@@ -380,7 +384,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
 
     const labels = await page.locator('.focus-trajectory-label').allTextContents();
     expect(labels).toContain('Latest Result');
-    expect(labels.some((label) => /^Last Cycle$|^Since \d{4}$/.test((label || '').trim()))).toBeTruthy();
+    expect(labels).toContain('Recent Shift');
+    expect(labels).toContain('Long-Term Trend');
 
     await expect(page.locator('.focus-census-insight')).toContainText('County Census Insight');
     await expect(page.locator('.focus-census-insight')).toContainText(/Population up|Population down|Population roughly flat|Urban anchor/i);

@@ -106,7 +106,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 10, 2026
+**Last updated:** July 11, 2026
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -911,6 +911,15 @@ Implementation note:
 - Removed the separate early-year polygon geometry swap so precinct polygons and centroids stay on the same NCOneMap precinct keyspace instead of splitting old contests across two incompatible join paths.
 - Added a defensive front-end fallback for years before `2016`: older precinct-mode statewide contests now stay on centroids at all zoom levels rather than switching into a partially broken polygon view.
 - This keeps historical precinct mode usable while the remaining pre-2016 polygon-join edge cases are revisited more carefully.
+
+### Mobile Precinct Pinning Restore + Smoke-Test Refresh (July 11, 2026)
+
+- Restored precinct click/search selection behavior to mirror the county tooltip-pinning flow instead of forcing the newer always-open desktop precinct tooltip behavior.
+- On touch/mobile, selecting a precinct still opens and pins the tooltip; on desktop, the selection/highlight path now stays cleaner and avoids leaving a forced pinned-style tooltip behind after search or map clicks.
+- Tightened the collapsed mobile precinct Search sheet again so the compact precinct workspace keeps the useful status hints while dropping extra visual bulk.
+- Updated the Playwright regression expectations to match the current atlas defaults and the restored county-style precinct-selection behavior.
+- Re-ran the full smoke/regression suite with Playwright after the restore; all `9` tests passed.
+- Bumped the front-end data cache-buster token again so browsers fetch the refreshed mobile precinct behavior and updated regression-aligned build promptly after deploy.
 
 ### UI / UX
 
