@@ -10304,8 +10304,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-02';
-    const APP_BUILD_ID = '2026-07-11-01';
+    const DATA_CACHE_BUSTER = '2026-07-11-03';
+    const APP_BUILD_ID = '2026-07-11-03';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -15477,8 +15477,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!(isMobileViewportNow && isMobileViewportNow())) return;
         const kind = String(meta?.kind || '').toLowerCase();
         if (!kind) return;
+
+        // A map selection should update the selected-results panel without
+        // forcing its mobile sheet open. Preserve whatever collapsed/expanded
+        // state the user already chose. This applies equally to counties,
+        // districts, and precincts loaded from the current precinct data map.
         try { closeAllMobileSheets(); } catch (_) {}
-        setVoteCounterMinimizedState(false);
       } catch (_) {}
     }
 
