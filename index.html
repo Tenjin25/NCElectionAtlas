@@ -10338,7 +10338,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-07-11-08';
-    const APP_BUILD_ID = '2026-07-11-08';
+    const APP_BUILD_ID = '2026-07-11-07';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -28841,10 +28841,10 @@ document.addEventListener('DOMContentLoaded', function() {
               // Reuse the fly-to county path so click and search have consistent zoom behavior.
               handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
+              setTooltipPinned(false);
               if (isTouchInteractionMode()) {
-                // Pin before rendering so the mobile shell includes Copy/Close controls.
-                setTooltipPinned(true);
                 renderCountyHoverAtPoint(e, { forceTooltip: true });
+                setTooltipPinned(true);
               } else {
                 hideHoverTooltip();
               }
@@ -31450,20 +31450,6 @@ document.addEventListener('DOMContentLoaded', function() {
           setFlySearchFeedback('#10b981');
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
-          try {
-            if (isTouchInteractionMode() && typeof renderCountyHoverAtPoint === 'function') {
-              const centerLng = (Number(bbox[0]) + Number(bbox[2])) / 2;
-              const centerLat = (Number(bbox[1]) + Number(bbox[3])) / 2;
-              const projected = (map && typeof map.project === 'function')
-                ? map.project([centerLng, centerLat])
-                : null;
-              if (projected && Number.isFinite(projected.x) && Number.isFinite(projected.y)) {
-                setTooltipPinned(false);
-                renderCountyHoverAtPoint({ point: { x: projected.x, y: projected.y }, features: [found] }, { forceTooltip: true });
-                setTooltipPinned(true);
-              }
-            }
-          } catch (_) {}
         } else {
           console.warn('[DIAGNOSTIC] County not found:', countyName, 'normalized:', normTarget);
           setFlySearchFeedback('#ef4444');
