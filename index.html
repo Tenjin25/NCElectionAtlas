@@ -9201,11 +9201,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       min-height: 36px !important;
       padding: 7px 10px !important;
     }
-    body.mobile-tooltip-visible .map-topbar.mobile-sheet-panel {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
   }
 </style>
 </head>
@@ -10338,7 +10333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-07-11-08';
-    const APP_BUILD_ID = '2026-07-11-07';
+    const APP_BUILD_ID = '2026-07-11-08';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10693,7 +10688,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       clearDesktopHoverExpandState();
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
-      try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
       clearHoverOutline();
       clearPrecinctHoverFeature();
       clearVoteCounterHoverState();
@@ -15259,17 +15253,6 @@ document.addEventListener('DOMContentLoaded', function() {
       setFocusModeActive(true);
       try {
         if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
-      } catch (_) {}
-      try {
-        const kind = String(meta?.kind || '').toLowerCase();
-        if (kind === 'county') {
-          if (isMobileViewportNow && isMobileViewportNow()) {
-            setVoteCounterMinimizedState(false);
-            updateMobileOverlayOffsets();
-          }
-        } else {
-          promoteMobilePinnedSelectionUI(meta);
-        }
       } catch (_) {}
       updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes, meta)); } catch (_) {}
@@ -31662,7 +31645,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
-      try { document.body.classList.toggle('mobile-tooltip-visible', isTouchInteractionMode()); } catch (_) {}
       tooltip.dataset.context = String(context || '');
       tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}
@@ -31696,7 +31678,6 @@ document.addEventListener('DOMContentLoaded', function() {
       try { tooltip.dataset.context = ''; } catch (_) {}
       try { tooltip.dataset.copyText = ''; } catch (_) {}
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
-      try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
     }
 
     function setTooltipPinned(pinned) {
@@ -31704,7 +31685,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       tooltip.setAttribute('data-pinned', tooltipPinned ? '1' : '0');
-      try { document.body.classList.toggle('mobile-tooltip-pinned', tooltipPinned && isTouchInteractionMode()); } catch (_) {}
     }
 
     function buildTooltipShell(title, innerHtml, options = {}) {
@@ -31773,7 +31753,6 @@ document.addEventListener('DOMContentLoaded', function() {
           try { if (tooltip) tooltip.dataset.context = ''; } catch (_) {}
           try { if (tooltip) tooltip.dataset.copyText = ''; } catch (_) {}
           try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
-          try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
           clearHoverOutline();
           clearVoteCounterHoverState();
           try { clearSelectedPrecinctNorm(); } catch (_) {}
