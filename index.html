@@ -9201,8 +9201,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       min-height: 36px !important;
       padding: 7px 10px !important;
     }
-    body.mobile-tooltip-pinned .map-topbar.mobile-sheet-panel[data-mobile-snap="collapsed"] {
+    body.mobile-tooltip-visible .map-topbar.mobile-sheet-panel {
       opacity: 0 !important;
+      visibility: hidden !important;
       pointer-events: none !important;
     }
   }
@@ -10336,8 +10337,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-07';
-    const APP_BUILD_ID = '2026-07-11-07';
+    const DATA_CACHE_BUSTER = '2026-07-11-08';
+    const APP_BUILD_ID = '2026-07-11-08';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10692,6 +10693,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       clearDesktopHoverExpandState();
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
+      try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
       clearHoverOutline();
       clearPrecinctHoverFeature();
       clearVoteCounterHoverState();
@@ -28840,9 +28842,9 @@ document.addEventListener('DOMContentLoaded', function() {
               handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
               if (isTouchInteractionMode()) {
-                setTooltipPinned(false);
-                renderCountyHoverAtPoint(e, { forceTooltip: true });
+                // Pin before rendering so the mobile shell includes Copy/Close controls.
                 setTooltipPinned(true);
+                renderCountyHoverAtPoint(e, { forceTooltip: true });
               } else {
                 hideHoverTooltip();
               }
@@ -29300,10 +29302,12 @@ document.addEventListener('DOMContentLoaded', function() {
           if (e?.point && e?.features?.[0]) {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
-            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
+              // Pin before rendering so the mobile shell includes Copy/Close controls.
+              setTooltipPinned(true);
               renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
             } else {
+              setTooltipPinned(false);
               hideHoverTooltip();
             }
             const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
@@ -30164,10 +30168,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
-            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
+              // Pin before rendering so the mobile shell includes Copy/Close controls.
+              setTooltipPinned(true);
               renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
             } else {
+              setTooltipPinned(false);
               hideHoverTooltip();
             }
             if (props.county_nam && props.prec_id) {
@@ -31389,10 +31395,12 @@ document.addEventListener('DOMContentLoaded', function() {
               const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
               if (rendered && rendered.length) feature = rendered[0];
             }
-            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
+              // Pin before rendering so the mobile shell includes Copy/Close controls.
+              setTooltipPinned(true);
               renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
             } else {
+              setTooltipPinned(false);
               hideHoverTooltip();
             }
           }
@@ -31668,6 +31676,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
+      try { document.body.classList.toggle('mobile-tooltip-visible', isTouchInteractionMode()); } catch (_) {}
       tooltip.dataset.context = String(context || '');
       tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}
@@ -31701,6 +31710,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try { tooltip.dataset.context = ''; } catch (_) {}
       try { tooltip.dataset.copyText = ''; } catch (_) {}
       try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
+      try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
     }
 
     function setTooltipPinned(pinned) {
@@ -31777,6 +31787,7 @@ document.addEventListener('DOMContentLoaded', function() {
           try { if (tooltip) tooltip.dataset.context = ''; } catch (_) {}
           try { if (tooltip) tooltip.dataset.copyText = ''; } catch (_) {}
           try { document.body.classList.remove('hover-preview-active'); } catch (_) {}
+          try { document.body.classList.remove('mobile-tooltip-visible'); } catch (_) {}
           clearHoverOutline();
           clearVoteCounterHoverState();
           try { clearSelectedPrecinctNorm(); } catch (_) {}
