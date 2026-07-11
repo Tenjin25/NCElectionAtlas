@@ -9977,7 +9977,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div class="scenario-row" id="model-turnout-row" style="display:none;">
                 <label for="model-turnout">Expected turnout</label>
-                <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.58" data-testid="model-turnout" aria-label="Model turnout factor" />
+                <input id="model-turnout" type="range" min="0.35" max="0.85" step="0.025" value="0.575" data-testid="model-turnout" aria-label="Model turnout factor" />
                 <span class="scenario-value" id="model-turnout-value">57.5%</span>
                 <div class="scenario-help">Scales the turnout baseline before county redistribution.</div>
               </div>
@@ -11590,7 +11590,7 @@ document.addEventListener('DOMContentLoaded', function() {
         turnoutRuralWhiteMul: 0.96,
         turnoutContestType: 'president',
         turnoutYear: 2024,
-        turnoutFactor: 0.58,
+        turnoutFactor: 0.575,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
         description: 'Blended 2022 + 2020 Senate anchors with a 2024 President climate and calibrated 55–60% turnout'
@@ -11679,7 +11679,7 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'neutral_baseline',
           label: 'Neutral',
           // Keep in sync with the calibrated default.
-          patch: { blendWeight: 0.72, turnoutFactor: 0.58, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
+          patch: { blendWeight: 0.72, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
         },
         {
           id: 'dem_high_turnout',
@@ -15258,7 +15258,17 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
       } catch (_) {}
-      try { promoteMobilePinnedSelectionUI(meta); } catch (_) {}
+      try {
+        const kind = String(meta?.kind || '').toLowerCase();
+        if (kind === 'county') {
+          if (isMobileViewportNow && isMobileViewportNow()) {
+            setVoteCounterMinimizedState(false);
+            updateMobileOverlayOffsets();
+          }
+        } else {
+          promoteMobilePinnedSelectionUI(meta);
+        }
+      } catch (_) {}
       updateRecountRadarBadge();
       try { announceForScreenReader(buildAriaSummary(title || 'Selected area', demVotes, repVotes, otherVotes, meta)); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
