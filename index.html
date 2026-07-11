@@ -29872,6 +29872,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!rawName) return '';
       const normalized = normalizeFriendlyPrecinctName(rawName);
       if (countyNorm === 'CRAVEN' && normalized.toUpperCase() === 'VAN EP') return 'Van-EP Vanceboro';
+      if (countyNorm === 'DAVIE' && normalized.toUpperCase() === 'NORTH MOCKS CITY') return 'North Mocksville City';
       if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/NORTH') return 'Lincolnton North';
       if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/SOUTH') return 'Lincolnton South';
       return normalized;
