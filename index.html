@@ -28830,8 +28830,9 @@ document.addEventListener('DOMContentLoaded', function() {
               handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
               if (isTouchInteractionMode()) {
-                setTooltipPinned(true);
+                setTooltipPinned(false);
                 renderCountyHoverAtPoint(e, { forceTooltip: true });
+                setTooltipPinned(true);
               } else {
                 hideHoverTooltip();
               }
