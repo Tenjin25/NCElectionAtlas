@@ -9174,7 +9174,39 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       font-feature-settings: "tnum" 1;
     }
   }
-    </style>
+    
+  /* Mobile pinned tooltip restoration: keep header actions visible and fully isolate the card. */
+  @media (max-width: 768px) {
+    #hover-tooltip[data-pinned="1"] {
+      z-index: 10040 !important;
+      background: #030712 !important;
+      opacity: 1 !important;
+      isolation: isolate;
+    }
+    #hover-tooltip[data-pinned="1"] .tooltip-head {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: flex-start !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+    }
+    #hover-tooltip[data-pinned="1"] .tooltip-actions {
+      display: flex !important;
+      flex: 0 0 auto !important;
+      width: auto !important;
+      gap: 6px !important;
+    }
+    #hover-tooltip[data-pinned="1"] .tooltip-btn {
+      flex: 0 0 auto !important;
+      min-height: 36px !important;
+      padding: 7px 10px !important;
+    }
+    body.mobile-tooltip-pinned .map-topbar.mobile-sheet-panel[data-mobile-snap="collapsed"] {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  }
+</style>
 </head>
 <body>
 <!-- Move JS to script block -->
@@ -10106,7 +10138,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 
   <!-- Vote Counter Display - VoteHub Style -->
-  <div class="vote-counter" id="vote-counter" data-testid="vote-counter">
+  <div class="vote-counter minimized" id="vote-counter" data-testid="vote-counter">
     <div class="vote-counter-context" id="vote-counter-context">
       <div class="context-left">
         <div class="context-title-row">
@@ -10304,8 +10336,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-03';
-    const APP_BUILD_ID = '2026-07-11-03';
+    const DATA_CACHE_BUSTER = '2026-07-11-04';
+    const APP_BUILD_ID = '2026-07-11-04';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -15568,7 +15600,10 @@ document.addEventListener('DOMContentLoaded', function() {
           e.stopPropagation();
           toggleVoteCounterMinimized();
         });
-        setVoteCounterMinimizedState(false);
+        // Mobile starts with the selected-results panel minimized by default.
+        // Desktop retains the expanded presentation. The first user press then
+        // becomes the authoritative state through voteCounterMinimizeUserOverride.
+        setVoteCounterMinimizedState(!!(isMobileViewportNow && isMobileViewportNow()));
       }
       document.addEventListener('click', async (e) => {
         const btn = e.target && typeof e.target.closest === 'function'
@@ -28727,10 +28762,9 @@ document.addEventListener('DOMContentLoaded', function() {
               // Reuse the fly-to county path so click and search have consistent zoom behavior.
               handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
-              setTooltipPinned(false);
               if (isTouchInteractionMode()) {
-                renderCountyHoverAtPoint(e, { forceTooltip: true });
                 setTooltipPinned(true);
+                renderCountyHoverAtPoint(e, { forceTooltip: true });
               } else {
                 hideHoverTooltip();
               }
@@ -29191,7 +29225,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTooltipPinned(false);
             if (isTouchInteractionMode()) {
               renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
               hideHoverTooltip();
             }
@@ -29979,7 +30012,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTooltipPinned(false);
             if (isTouchInteractionMode()) {
               renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
               hideHoverTooltip();
             }
@@ -30274,8 +30306,8 @@ document.addEventListener('DOMContentLoaded', function() {
               // Mobile-friendly: show a tap tooltip (and outline) on selection.
               try {
                 setDistrictHoverOutline('congressional', districtNum);
-                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
+                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'congressional',
@@ -30283,8 +30315,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
-                  setTooltipPinned(true);
                 } else {
+                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -30392,8 +30424,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
               try {
                 setDistrictHoverOutline('state_house', districtNum);
-                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
+                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'state_house',
@@ -30401,8 +30433,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
-                  setTooltipPinned(true);
                 } else {
+                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -30510,8 +30542,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
               try {
                 setDistrictHoverOutline('state_senate', districtNum);
-                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
+                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'state_senate',
@@ -30519,8 +30551,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
-                  setTooltipPinned(true);
                 } else {
+                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -31201,7 +31233,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setTooltipPinned(false);
             if (isTouchInteractionMode()) {
               renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
               hideHoverTooltip();
             }
@@ -31504,6 +31535,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       tooltip.setAttribute('data-pinned', tooltipPinned ? '1' : '0');
+      try { document.body.classList.toggle('mobile-tooltip-pinned', tooltipPinned && isTouchInteractionMode()); } catch (_) {}
     }
 
     function buildTooltipShell(title, innerHtml, options = {}) {
