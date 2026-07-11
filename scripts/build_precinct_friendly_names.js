@@ -635,6 +635,9 @@ function applyManualOverrides(counties) {
     CATAWBA: {
       '28': 'St. Stephens',
       '29': 'St. Stephens'
+    },
+    CRAVEN: {
+      VE14: 'Van-Ep (Vanceboro)'
     }
   };
 
