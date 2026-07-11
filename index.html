@@ -2791,6 +2791,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     --state-red-strong: #b91c1c;
     --state-ribbon: linear-gradient(90deg, var(--state-red) 0%, #f8fafc 50%, var(--state-blue) 100%);
     --state-accent-gradient: linear-gradient(135deg, var(--state-red-strong) 0%, var(--state-blue-strong) 100%);
+    --nc-control-active: linear-gradient(135deg, #b91c1c 0%, #1d4ed8 100%);
+    --nc-control-active-strong: linear-gradient(135deg, #991b1b 0%, #1e40af 100%);
+    --nc-control-idle: linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+    --nc-control-muted: linear-gradient(180deg, rgba(51, 65, 85, 0.96) 0%, rgba(30, 41, 59, 0.98) 100%);
+    --nc-control-ring: rgba(96, 165, 250, 0.28);
+    --nc-control-shadow: 0 10px 22px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255,255,255,0.04) inset;
     --ui-bg: rgba(255, 255, 255, 0.9);
     --ui-border: rgba(15, 23, 42, 0.12);
     --ui-shadow: 0 14px 36px rgba(15, 23, 42, 0.2);
@@ -6354,7 +6360,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     min-height: 36px;
     padding: 0 12px;
     border-radius: 999px;
-    border: 1px solid rgba(16, 185, 129, 0.20);
+    border: 1px solid rgba(191, 219, 254, 0.22);
     font-weight: 900;
     cursor: pointer;
     letter-spacing: 0.01em;
@@ -6431,8 +6437,10 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   #precinct-toggle {
-    background: linear-gradient(180deg, #065f46 0%, #047857 100%) !important;
-    box-shadow: 0 12px 22px rgba(6, 95, 70, 0.20) !important;
+    background: var(--nc-control-idle) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(191, 219, 254, 0.18) !important;
+    box-shadow: var(--nc-control-shadow) !important;
   }
 
   .desktop-statewide-panel {
@@ -8490,12 +8498,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .tool-chip-btn {
-    background: #0f766e;
+    background: var(--nc-control-idle);
     color: #ffffff;
     border-radius: 8px;
     height: 32px;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    border: 1px solid rgba(191, 219, 254, 0.16);
+    box-shadow: var(--nc-control-shadow);
     font-size: 11px;
     display: inline-flex;
     align-items: center;
@@ -8507,7 +8515,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .tool-chip-btn:hover {
-    background: #0b5f5a;
+    background: var(--nc-control-active-strong);
   }
 
   .tool-chip-btn:focus-visible,
@@ -8519,29 +8527,27 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .tool-chip-btn.tool-chip-btn-ghost {
-    background: #155e75;
+    background: linear-gradient(180deg, rgba(30, 64, 175, 0.96) 0%, rgba(30, 41, 59, 0.98) 100%);
   }
 
   .tool-chip-btn.tool-chip-btn-ghost:hover {
-    background: #0e7490;
+    background: var(--nc-control-active-strong);
   }
 
   .tool-chip-btn.tool-chip-btn-muted {
-    background: #334155;
+    background: var(--nc-control-muted);
   }
 
   .tool-chip-btn.tool-chip-btn-muted:hover {
-    background: #1e293b;
+    background: linear-gradient(180deg, rgba(71, 85, 105, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
   }
 
-  #smart-insights-toggle[aria-pressed="true"] {
-    background: #0f766e;
-    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.24), 0 10px 22px rgba(15, 23, 42, 0.14);
-  }
-
+  .tool-chip-btn[aria-pressed="true"],
+  #smart-insights-toggle[aria-pressed="true"],
   #follow-hover-toggle[aria-pressed="true"] {
-    background: #0f766e;
-    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.24), 0 10px 22px rgba(15, 23, 42, 0.14);
+    background: var(--nc-control-active);
+    border-color: rgba(191, 219, 254, 0.24);
+    box-shadow: 0 0 0 2px var(--nc-control-ring), 0 12px 24px rgba(15, 23, 42, 0.18);
   }
 
   @media (min-width: 769px) {
@@ -10292,8 +10298,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-10-05';
-    const APP_BUILD_ID = '2026-07-10-05';
+    const DATA_CACHE_BUSTER = '2026-07-10-06';
+    const APP_BUILD_ID = '2026-07-10-06';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29877,7 +29883,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           btn.textContent = precinctsEnabled ? 'Precincts On' : 'Precincts Off';
         }
-        btn.style.background = precinctsEnabled ? '#1d4ed8' : '#065f46';
+        btn.style.background = precinctsEnabled ? 'var(--nc-control-active)' : 'var(--nc-control-idle)';
         btn.style.opacity = precinctLoadInFlight ? '0.75' : '1';
         btn.setAttribute('aria-pressed', precinctsEnabled ? 'true' : 'false');
         btn.setAttribute('aria-busy', precinctLoadInFlight ? 'true' : 'false');
