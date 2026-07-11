@@ -28749,10 +28749,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getDesiredPrecinctGeometryMode() {
-      const year = Number(currentContestMeta?.year);
-      // VTD20 is only useful for truly legacy cycles; modern precinct-level contest keys (2014+)
-      // are aligned to `data/Voting_Precincts.geojson` precinct IDs (including split precinct suffixes).
-      if (Number.isFinite(year) && year <= 2012) return 'vtd20';
+      // Keep polygon and centroid joins on the same NCOneMap precinct keyspace.
+      // Earlier cycles still rely on alias/variant matching, but using a separate VTD20 polygon
+      // source caused old contests to color centroids while leaving polygons unmatched.
       return 'precinct';
     }
 
