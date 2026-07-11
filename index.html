@@ -10304,7 +10304,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-01';
+    const DATA_CACHE_BUSTER = '2026-07-11-02';
     const APP_BUILD_ID = '2026-07-11-01';
 
     function withCacheBuster(path) {
@@ -10346,6 +10346,7 @@ document.addEventListener('DOMContentLoaded', function() {
         precinct_centroids: withBase('./data/precinct_centroids.geojson'),
         precinct_aliases: withBase('./data/precinct_alias_index.json'),
         precinct_friendly_names: withBase('./data/precinct_friendly_names.json'),
+        precinct_stable_to_nconemap_old_to_new: withBase('./data/crosswalks/precinct_stable_to_nconemap_2026_07_best_old_to_new.csv'),
         precinct_variant_overrides: withBase('./data/mappings/precinct_variant_overrides.json'),
         districts: withBase('./data/tileset/nc_cd118_tileset.geojson'),
         districts_2022: withBase('./data/tileset/nc_cd118_tileset.geojson'),
@@ -11350,9 +11351,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctCodeIndexByCounty = null; // Map<string countyNorm, Set<string prec_id>> built from precinct centroids.
     let precinctAliasIndexByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctFriendlyNameByCountyCode = null; // Map<string countyNorm, Map<string code, string displayName>>
+    let precinctStableToOneMapByCounty = null; // Map<string countyNorm, Map<string old_alias, string[] newCodes>>
     let precinctFriendlyNamesLoadInFlight = false;
     let precinctFriendlyNamesFileLoaded = false;
     let precinctAliasLoadInFlight = false;
+    let precinctStableToOneMapLoadInFlight = false;
     let precinctVariantOverridesByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctVariantOverridesLoadInFlight = false;
     let precinctFullNameByNormCache = null; // Map<string precinct_norm, string precinct_display_name> (from precinct polygons when loaded)
@@ -13083,7 +13086,8 @@ document.addEventListener('DOMContentLoaded', function() {
       startupPrecinctAliasPreloadScheduled = true;
       const aliasPath = CONFIG.paths?.precinct_aliases;
       const friendlyPath = CONFIG.paths?.precinct_friendly_names;
-      if (!aliasPath && !friendlyPath) return;
+      const stableToOneMapPath = CONFIG.paths?.precinct_stable_to_nconemap_old_to_new;
+      if (!aliasPath && !friendlyPath && !stableToOneMapPath) return;
 
       // Load lightweight code->name labels immediately so hover feels "instant".
       try {
@@ -13093,9 +13097,12 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
 
       const beginLoad = () => {
-        if (!aliasPath) return;
-        if (precinctAliasIndexByCounty || precinctAliasLoadInFlight) return;
-        ensurePrecinctAliasIndex().catch(() => {});
+        if (aliasPath && !precinctAliasIndexByCounty && !precinctAliasLoadInFlight) {
+          ensurePrecinctAliasIndex().catch(() => {});
+        }
+        if (stableToOneMapPath && !precinctStableToOneMapByCounty && !precinctStableToOneMapLoadInFlight) {
+          ensurePrecinctStableToOneMapIndex().catch(() => {});
+        }
       };
 
       let kicked = false;
@@ -13958,6 +13965,26 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       if (hits.size === 1) return Array.from(hits)[0];
       return null;
+    }
+
+    function addStableToOneMapCrosswalkBridges(countyNorm, rawPrecinctValue, addVariantFn) {
+      if (!precinctStableToOneMapByCounty || !countyNorm || typeof addVariantFn !== 'function') return;
+      const countyMap = precinctStableToOneMapByCounty.get((countyNorm || '').toString().trim().toUpperCase());
+      if (!countyMap) return;
+
+      const resolved = resolveUniquePrecinctCodeByAlias(countyMap, rawPrecinctValue);
+      if (resolved) {
+        addVariantFn(resolved);
+        return;
+      }
+
+      const raw = (rawPrecinctValue || '').toString().trim().toUpperCase();
+      if (!raw) return;
+      const direct = countyMap.get(raw);
+      if (Array.isArray(direct) && direct.length === 1) {
+        const code = (direct[0] || '').toString().trim().toUpperCase();
+        if (code) addVariantFn(code);
+      }
     }
 
     function applyPrecinctVariantOverrides(countyNorm, rawPrecinctValue, addVariantFn) {
@@ -24031,6 +24058,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let precinctAliasIdx = null;
       try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
       try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
+      try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
       try { await ensurePrecinctVariantOverrides(); } catch (_) {}
 
       function normalizePrecinctCodeToken(value) {
@@ -24065,12 +24093,14 @@ document.addEventListener('DOMContentLoaded', function() {
         addNumericBaseVariantsFromAlphaSuffix(raw, addCode);
         addEmbeddedPrecinctCodeVariants(raw, addCode);
         addKnownLegacyCentroidBridges(countyNorm, raw, addCode);
+        addStableToOneMapCrosswalkBridges(countyNorm, raw, addCode);
 
         const baseToken = extractBaseCodeToken(raw);
         if (baseToken && baseToken !== raw) {
           addCode(baseToken);
           extractPrecinctAliasCandidates(baseToken).forEach(addCode);
           addKnownLegacyCentroidBridges(countyNorm, baseToken, addCode);
+          addStableToOneMapCrosswalkBridges(countyNorm, baseToken, addCode);
         }
 
         if (countyCodes) {
@@ -29443,6 +29473,75 @@ document.addEventListener('DOMContentLoaded', function() {
       return precinctAliasIndexByCounty;
     }
 
+    async function ensurePrecinctStableToOneMapIndex() {
+      if (precinctStableToOneMapByCounty) return precinctStableToOneMapByCounty;
+      if (precinctStableToOneMapLoadInFlight) return null;
+      const path = CONFIG.paths?.precinct_stable_to_nconemap_old_to_new;
+      if (!path) return null;
+      precinctStableToOneMapLoadInFlight = true;
+      try {
+        const csvText = await loadCSV(path);
+        const rows = parseCSV(csvText);
+        const out = new Map();
+
+        const addAlias = (countyMap, aliasRaw, codeRaw) => {
+          const alias = String(aliasRaw || '').trim().toUpperCase();
+          const code = String(codeRaw || '').trim().toUpperCase();
+          if (!alias || !code) return;
+          if (!countyMap.has(alias)) countyMap.set(alias, new Set());
+          countyMap.get(alias).add(code);
+        };
+
+        rows.forEach(row => {
+          const countyNorm = normalizeCountyToken(row?.county || '');
+          const newCode = String(row?.new_precinct_id || '').trim().toUpperCase();
+          if (!countyNorm || !newCode) return;
+
+          const isBestForOld = row?.is_best_for_old === true || String(row?.is_best_for_old || '').trim().toLowerCase() === 'true' || Number(row?.rank_for_old) === 1;
+          if (!isBestForOld) return;
+
+          const countyMap = out.has(countyNorm) ? out.get(countyNorm) : new Map();
+          const oldKey = String(row?.old_precinct_key || '').trim().toUpperCase();
+          const oldCode = String(row?.old_precinct_id || '').trim().toUpperCase();
+          const oldName = String(row?.old_precinct_name || '').trim().toUpperCase();
+          const oldKeyCode = oldKey.includes(' - ') ? oldKey.split(' - ', 2)[1].trim().toUpperCase() : oldKey;
+
+          addAlias(countyMap, oldKey, newCode);
+          addAlias(countyMap, oldKeyCode, newCode);
+          addAlias(countyMap, oldCode, newCode);
+          addAlias(countyMap, oldName, newCode);
+
+          extractPrecinctAliasCandidates(oldKey).forEach(alias => addAlias(countyMap, alias, newCode));
+          extractPrecinctAliasCandidates(oldKeyCode).forEach(alias => addAlias(countyMap, alias, newCode));
+          extractPrecinctAliasCandidates(oldCode).forEach(alias => addAlias(countyMap, alias, newCode));
+          extractPrecinctAliasCandidates(oldName).forEach(alias => addAlias(countyMap, alias, newCode));
+
+          const normalizedName = normalizeFriendlyPrecinctName(oldName);
+          if (normalizedName) {
+            addAlias(countyMap, normalizedName, newCode);
+            extractPrecinctAliasCandidates(normalizedName).forEach(alias => addAlias(countyMap, alias, newCode));
+          }
+
+          out.set(countyNorm, countyMap);
+        });
+
+        precinctStableToOneMapByCounty = new Map();
+        out.forEach((aliasMap, countyNorm) => {
+          const normalizedAliasMap = new Map();
+          aliasMap.forEach((codeSet, alias) => {
+            const codes = Array.from(codeSet || []).map(code => String(code || '').trim().toUpperCase()).filter(Boolean);
+            if (codes.length) normalizedAliasMap.set(alias, codes);
+          });
+          if (normalizedAliasMap.size) precinctStableToOneMapByCounty.set(countyNorm, normalizedAliasMap);
+        });
+      } catch (err) {
+        console.warn('Failed to load stable-to-NCOneMap precinct bridge:', err?.message || err);
+      } finally {
+        precinctStableToOneMapLoadInFlight = false;
+      }
+      return precinctStableToOneMapByCounty;
+    }
+
     async function ensurePrecinctFriendlyNamesIndex() {
       if (precinctFriendlyNamesFileLoaded && precinctFriendlyNameByCountyCode) return precinctFriendlyNameByCountyCode;
       if (precinctFriendlyNamesLoadInFlight) return null;
@@ -29527,6 +29626,19 @@ document.addEventListener('DOMContentLoaded', function() {
           for (const token of tryCodes) {
             if (aliasMap.has(token)) {
               const codes = aliasMap.get(token) || [];
+              const best = Array.isArray(codes) && codes.length ? String(codes[0] || '').trim().toUpperCase() : '';
+              if (best) return best;
+            }
+          }
+        }
+      } catch (_) {}
+
+      try {
+        const stableAliasMap = precinctStableToOneMapByCounty ? precinctStableToOneMapByCounty.get(countyNorm) : null;
+        if (stableAliasMap) {
+          for (const token of tryCodes) {
+            if (stableAliasMap.has(token)) {
+              const codes = stableAliasMap.get(token) || [];
               const best = Array.isArray(codes) && codes.length ? String(codes[0] || '').trim().toUpperCase() : '';
               if (best) return best;
             }
@@ -30635,6 +30747,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       try { await ensurePrecinctCodeIndex(); } catch (_) {}
       try { await ensurePrecinctAliasIndex(); } catch (_) {}
+      try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
       try { await ensurePrecinctFriendlyNamesIndex(); } catch (_) {}
 
       if (isNonGeographicPrecinctToken(code, county)) {
@@ -30671,6 +30784,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addNumericBaseVariantsFromAlphaSuffix(code, addTargetVariant);
         addEmbeddedPrecinctCodeVariants(code, addTargetVariant);
         addKnownLegacyCentroidBridges(countyNorm, code, addTargetVariant);
+        addStableToOneMapCrosswalkBridges(countyNorm, code, addTargetVariant);
         const codes = precinctCodeIndexByCounty && countyNorm ? precinctCodeIndexByCounty.get(countyNorm) : null;
         const aliasMap = precinctAliasIndexByCounty && countyNorm ? precinctAliasIndexByCounty.get(countyNorm) : null;
         const friendlyNames = precinctFriendlyNameByCountyCode && countyNorm ? precinctFriendlyNameByCountyCode.get(countyNorm) : null;
@@ -32815,6 +32929,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      if (includePrecinctMargins) {
 	        try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
           try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
+          try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
           try { await ensurePrecinctVariantOverrides(); } catch (_) {}
 	      }
 	      function isNonGeographicPrecinctCode(code, countyNorm = '') {
@@ -32877,6 +32992,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	          const codes = precinctIdx && countyNorm ? precinctIdx.get(countyNorm) : null;
             addKnownLegacyCentroidBridges(countyNorm, precRaw, addKey);
             if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
+            addStableToOneMapCrosswalkBridges(countyNorm, precRaw, addKey);
+            if (baseToken && baseToken !== precRaw) addStableToOneMapCrosswalkBridges(countyNorm, baseToken, addKey);
             if (codes) {
               addCompactCodeVariants(precRaw, codes, addKey);
               addPrefixStrippedNumericVariants(precRaw, codes, addKey);
@@ -33227,6 +33344,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (needsPrecinctDetail) {
         try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
         try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
+        try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
         try { await ensurePrecinctVariantOverrides(); } catch (_) {}
       }
       if (staleCheck()) return;
@@ -33284,6 +33402,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        try {
 	          addKnownLegacyCentroidBridges(countyNorm, precRaw, addKey);
 	          if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
+            addStableToOneMapCrosswalkBridges(countyNorm, precRaw, addKey);
+            if (baseToken && baseToken !== precRaw) addStableToOneMapCrosswalkBridges(countyNorm, baseToken, addKey);
 	        } catch (_) {}
 
           // Many older exports use "CODE NAME" or "CODE_NAME ..." where the geometry key

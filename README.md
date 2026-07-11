@@ -921,6 +921,13 @@ Implementation note:
 - Re-ran the full smoke/regression suite with Playwright after the restore; all `9` tests passed.
 - Bumped the front-end data cache-buster token again so browsers fetch the refreshed mobile precinct behavior and updated regression-aligned build promptly after deploy.
 
+### Legacy Precinct-to-NCOneMap Live Bridge (July 11, 2026)
+
+- Compared the current precinct resolver against the earlier `69fe6c0` restore-point baseline and confirmed the larger regression risk came from the NCOneMap precinct keyspace swap rather than from the top-level modeled-race tuning constants.
+- Wired the live front end to `data/crosswalks/precinct_stable_to_nconemap_2026_07_best_old_to_new.csv` so older stable precinct IDs and names can resolve onto the refreshed NCOneMap precinct geometry without rolling back the newer source.
+- Extended that bridge into the main precinct result matcher, the prior-cycle precinct margin cache, the precinct fly-to search path, and the canonical precinct-code resolver so older contest/model slices have a better chance of joining to the active NCOneMap geometry.
+- Bumped the front-end cache-buster again after the bridge hookup so browsers do not keep serving the pre-bridge precinct resolver.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
