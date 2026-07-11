@@ -906,6 +906,12 @@ Implementation note:
 - Reworked the toolbar/toggle control palette to use a more restrained North Carolina red/blue accent treatment, replacing the older green-heavy precinct/control styling with shared NC-themed idle and active states.
 - Bumped the atlas build/cache-buster tokens again so browsers fetch the refreshed mobile precinct search flow and NC-themed control styling immediately after deploy.
 
+### Legacy Precinct-Mode Follow-Up (July 10, 2026)
+
+- Removed the separate early-year polygon geometry swap so precinct polygons and centroids stay on the same NCOneMap precinct keyspace instead of splitting old contests across two incompatible join paths.
+- Added a defensive front-end fallback for years before `2016`: older precinct-mode statewide contests now stay on centroids at all zoom levels rather than switching into a partially broken polygon view.
+- This keeps historical precinct mode usable while the remaining pre-2016 polygon-join edge cases are revisited more carefully.
+
 ### UI / UX
 
 - Restored zoom-based precinct rendering behavior (centroids at statewide zoom, polygons at higher zoom) while keeping anti-stutter hover guards during map movement.
