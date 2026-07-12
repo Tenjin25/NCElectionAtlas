@@ -10340,8 +10340,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-10';
-    const APP_BUILD_ID = '2026-07-11-10';
+    const DATA_CACHE_BUSTER = '2026-07-11-11';
+    const APP_BUILD_ID = '2026-07-11-11';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -26495,36 +26495,11 @@ document.addEventListener('DOMContentLoaded', function() {
           label: toneLabel
         };
       })();
-      const popChangeToneColor = popChangeHeaderMeta?.tone === 'gain'
-        ? '#166534'
-        : (popChangeHeaderMeta?.tone === 'loss' ? '#7c2d12' : '#334155');
-      const popChangeTopLineDesktop = (() => {
-        if (!popChangeHeaderMeta) return '';
-        if (!isDesktopTooltipMode()) return '';
-        return `
-          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.28);border:1px solid rgba(148,163,184,0.32);">
-            <strong style="color:#f8fafc;">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
-            <span style="color:rgba(226,232,240,0.92);">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
-            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
-          </div>
-        `.trim();
-      })();
-      const popChangeTopLineMobile = (() => {
-        if (!popChangeHeaderMeta) return '';
-        if (isDesktopTooltipMode()) return '';
-        return `
-          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
-            <strong style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
-            <span style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
-            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
-          </div>
-        `.trim();
-      })();
       const winnerName = winner === 'R'
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (winner === 'D' ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = winner === 'R' ? 'rep' : (winner === 'D' ? 'dem' : 'tie');
-      const defaultVotehubCore = buildVotehubResultsTooltip({
+      const votehubCore = buildVotehubResultsTooltip({
         title: `${countyDisplay} County`,
         subtitle: String(currentVizMode || '') === 'population_change'
           ? 'Population change'
@@ -26553,7 +26528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
-      const popChangeVotehubCore = popChangeHeaderMeta
+      const populationChangeVotehubCore = popChangeHeaderMeta
         ? buildPopulationChangeCountyTooltip({
             title: `${countyDisplay} County`,
             subtitle: 'Population change',
@@ -26573,31 +26548,25 @@ document.addEventListener('DOMContentLoaded', function() {
             flipYearLabel: vizPrevCache?.prevYear || null
           })
         : '';
-      const votehubCore = (currentVizMode === 'population_change' && popChangeVotehubCore)
-        ? popChangeVotehubCore
-        : defaultVotehubCore;
       const detailLines = isDesktopTooltipMode()
         ? ''
         : `
             ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
             ${censusDetailLine}
             ${popChangeDetailLine}
-            ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight" style="color:${popChangeToneColor};font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
+            ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight tooltip-insight-tone-text">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
             ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
             ${deltaBlock}
             ${splitInsightLine}
             ${demoLine}
           `.trim();
-      const inner = isDesktopTooltipMode()
-        ? `${votehubCore}`.trim()
-        : `
-            ${votehubCore}
-            ${popChangeTopLineMobile}
-            <details class="tooltip-more" aria-label="More details">
-              <summary>More details</summary>
-              <div class="tooltip-more-body">${detailLines}</div>
-            </details>
-          `.trim();
+      const detailSection = isDesktopTooltipMode()
+        ? ''
+        : `<details class="tooltip-more" aria-label="More details"><summary>More details</summary><div class="tooltip-more-body">${detailLines}</div></details>`;
+      const inner = `
+        ${(currentVizMode === 'population_change' && populationChangeVotehubCore) ? populationChangeVotehubCore : votehubCore}
+        ${detailSection}
+      `.trim();
 
       const copyText = `${countyDisplay} County`;
       showHoverTooltip(
@@ -26763,7 +26732,7 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
         }
       }
-      const votehubCore = buildVotehubResultsTooltip({
+      const inner = buildVotehubResultsTooltip({
         title,
         subtitle: 'Precinct',
         demName: demCandidate,
@@ -26787,27 +26756,6 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
-      const flipLine = (prevSignedForFlip !== null)
-        ? flipLineHTML(prevSignedForFlip, curSigned, vizPrevCache?.prevYear || null, Number(year))
-        : '';
-      const fallbackNotice = String(row?.__fallback_scope || '').trim()
-        ? '<div class="tooltip-insight">Using county-level fallback results for this historical precinct.</div>'
-        : '';
-      const detailLines = `
-            ${flipLine}
-            ${fallbackNotice}
-          `.trim();
-      const inner = isDesktopTooltipMode()
-        ? `${votehubCore}`.trim()
-        : `
-            ${votehubCore}
-            <div class="vhr-footer">
-              <details class="tooltip-more" aria-label="More details">
-                <summary>More details</summary>
-                <div class="tooltip-more-body">${detailLines || '<div class="tooltip-insight">No extra details for this precinct.</div>'}</div>
-              </details>
-            </div>
-          `.trim();
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
