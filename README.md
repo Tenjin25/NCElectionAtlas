@@ -106,7 +106,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 11, 2026
+**Last updated:** July 12, 2026
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -911,6 +911,13 @@ Implementation note:
 - Removed the separate early-year polygon geometry swap so precinct polygons and centroids stay on the same NCOneMap precinct keyspace instead of splitting old contests across two incompatible join paths.
 - Added a defensive front-end fallback for years before `2016`: older precinct-mode statewide contests now stay on centroids at all zoom levels rather than switching into a partially broken polygon view.
 - This keeps historical precinct mode usable while the remaining pre-2016 polygon-join edge cases are revisited more carefully.
+
+### Latest Index Sync (July 12, 2026)
+
+- Pulled the latest upstream `index.html` changes from `origin/main` into the local workspace.
+- Synced the hover/mobile tooltip work that followed the earlier NC/WI tooltip comparisons, including the newer upstream positioning and interaction cleanup now present in the live index source.
+- Carried forward the upstream cache-buster / app build token bumps that shipped with those tooltip updates, so the checked-in local index now matches the latest remote front-end file.
+- Followed up on the Columbus precinct drift fix after the first pass missed some frontend lookup paths: `P117`/`P245` now also resolve consistently as `P11`/`P24` in the variant overrides, demographics/CVAP tables, and 2024 district crosswalk files.
 
 ### Mobile Precinct Pinning Restore + Smoke-Test Refresh (July 11, 2026)
 
