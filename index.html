@@ -8411,6 +8411,14 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       transform: translateY(6px) !important;
     }
 
+    body.mobile-tooltip-pinned .map-topbar.mobile-sheet-panel,
+    body.mobile-tooltip-pinned .vote-counter,
+    body.mobile-tooltip-pinned .viz-modes {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(8px) !important;
+    }
+
     body.mobile-input-active .vote-counter {
       opacity: 0;
       pointer-events: none;
@@ -10332,8 +10340,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-09';
-    const APP_BUILD_ID = '2026-07-11-09';
+    const DATA_CACHE_BUSTER = '2026-07-11-10';
+    const APP_BUILD_ID = '2026-07-11-10';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29286,9 +29294,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
             if (isTouchInteractionMode()) {
-              // Pin before rendering so the mobile shell includes Copy/Close controls.
-              setTooltipPinned(true);
+              setTooltipPinned(false);
               renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
+              setTooltipPinned(true);
             } else {
               setTooltipPinned(false);
               hideHoverTooltip();
@@ -30152,9 +30160,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
             if (isTouchInteractionMode()) {
-              // Pin before rendering so the mobile shell includes Copy/Close controls.
-              setTooltipPinned(true);
+              setTooltipPinned(false);
               renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
+              setTooltipPinned(true);
             } else {
               setTooltipPinned(false);
               hideHoverTooltip();
@@ -31379,9 +31387,9 @@ document.addEventListener('DOMContentLoaded', function() {
               if (rendered && rendered.length) feature = rendered[0];
             }
             if (isTouchInteractionMode()) {
-              // Pin before rendering so the mobile shell includes Copy/Close controls.
-              setTooltipPinned(true);
+              setTooltipPinned(false);
               renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
+              setTooltipPinned(true);
             } else {
               setTooltipPinned(false);
               hideHoverTooltip();
@@ -31683,6 +31691,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function setTooltipPinned(pinned) {
       tooltipPinned = !!pinned;
       const tooltip = document.getElementById('hover-tooltip');
+      try {
+        const touchPinned = tooltipPinned && isTouchInteractionMode();
+        document.body.classList.toggle('mobile-tooltip-pinned', !!touchPinned);
+      } catch (_) {}
       if (!tooltip) return;
       tooltip.setAttribute('data-pinned', tooltipPinned ? '1' : '0');
     }
