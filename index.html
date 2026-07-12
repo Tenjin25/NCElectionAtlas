@@ -906,6 +906,57 @@ body.focus-active.hover-preview-active .vote-counter {
   color: #cbd5e1;
 }
 
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange {
+  margin-bottom: 8px;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main {
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.gain,
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.gain {
+  color: #166534;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.loss,
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.loss {
+  color: #92400e;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.flat,
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.flat {
+  color: #94a3b8;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values {
+  text-align: right;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-tone {
+  display: block;
+  margin-top: 2px;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-popchange-divider {
+  margin: 12px 0 0;
+  border-top: 1px solid rgba(148,163,184,0.22);
+}
+
+
 body.focus-active #hover-tooltip[data-context="preview"] {
   opacity: 0.82;
 }
@@ -8241,62 +8292,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       min-height: 0 !important;
     }
 
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode {
-      border-color: rgba(96, 165, 250, 0.32) !important;
-      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.26), 0 0 0 1px rgba(30, 64, 175, 0.10) inset !important;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-meta {
-      margin-bottom: 8px;
-      gap: 9px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-copy strong {
-      font-size: 12px;
-      line-height: 1.15;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .fly-search-bar {
-      gap: 6px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-quick-stats,
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-mode-hint {
-      display: block;
-      padding: 8px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(191, 219, 254, 0.18);
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.84) 0%, rgba(15, 23, 42, 0.74) 100%);
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-quick-stats {
-      margin-top: 8px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-mode-hint {
-      margin-top: 6px;
-      color: rgba(219, 234, 254, 0.96);
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .map-topbar-hints {
-      margin-top: 10px;
-      gap: 6px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .context-banner {
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .context-banner-item {
-      padding: 8px 10px;
-      border-radius: 12px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode .context-banner-value {
-      font-size: 12px;
-    }
-
     .map-topbar.mobile-sheet-panel .mobile-topbar-toggle {
       display: none !important;
     }
@@ -8308,25 +8303,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     .map-topbar.mobile-sheet-panel[data-mobile-snap="collapsed"] .map-topbar-details,
     .map-topbar.mobile-sheet-panel[data-mobile-snap="collapsed"] .map-topbar-copy span,
     .map-topbar.mobile-sheet-panel[data-mobile-snap="collapsed"] .map-topbar-hints {
-      display: none !important;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode[data-mobile-snap="collapsed"] {
-      max-height: 96px !important;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode[data-mobile-snap="collapsed"] .fly-search-bar {
-      display: none !important;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode[data-mobile-snap="collapsed"] .map-topbar-quick-stats,
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode[data-mobile-snap="collapsed"] .map-topbar-mode-hint {
-      display: block !important;
-      margin-top: 4px;
-      padding: 7px 9px;
-    }
-
-    .map-topbar.mobile-sheet-panel.mobile-precinct-mode[data-mobile-snap="collapsed"] .context-banner {
       display: none !important;
     }
 
@@ -8358,14 +8334,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       opacity: 0.22;
       pointer-events: none;
       transform: translateY(6px) !important;
-    }
-
-    body.mobile-tooltip-pinned .map-topbar.mobile-sheet-panel,
-    body.mobile-tooltip-pinned .vote-counter,
-    body.mobile-tooltip-pinned .viz-modes {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transform: translateY(8px) !important;
     }
 
     body.mobile-input-active .vote-counter {
@@ -9132,33 +9100,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
   }
     
-  /* Mobile pinned tooltip restoration: keep header actions visible and fully isolate the card. */
-  @media (max-width: 768px) {
-    #hover-tooltip[data-pinned="1"] {
-      z-index: 10040 !important;
-      background: #030712 !important;
-      opacity: 1 !important;
-      isolation: isolate;
-    }
-    #hover-tooltip[data-pinned="1"] .tooltip-head {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: flex-start !important;
-      justify-content: space-between !important;
-      gap: 8px !important;
-    }
-    #hover-tooltip[data-pinned="1"] .tooltip-actions {
-      display: flex !important;
-      flex: 0 0 auto !important;
-      width: auto !important;
-      gap: 6px !important;
-    }
-    #hover-tooltip[data-pinned="1"] .tooltip-btn {
-      flex: 0 0 auto !important;
-      min-height: 36px !important;
-      padding: 7px 10px !important;
-    }
-  }
 </style>
 </head>
 <body>
@@ -10289,8 +10230,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-12';
-    const APP_BUILD_ID = '2026-07-11-12';
+    const DATA_CACHE_BUSTER = '2026-07-11-13';
+    const APP_BUILD_ID = '2026-07-11-13';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -15440,59 +15381,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return 'county';
     }
 
-    function updateMobilePrecinctModeUI() {
-      const topbar = document.getElementById('map-topbar');
+    function updateMobileModeHint() {
       const hintEl = document.getElementById('map-topbar-mode-hint');
       const isPrecinctMode = currentView === 'counties' && !!precinctsEnabled;
       const isDistrictView = currentView === 'districts' || currentView === 'state_house' || currentView === 'state_senate';
-      const isMobile = !!(isMobileViewportNow && isMobileViewportNow());
       const hint = isPrecinctMode
         ? 'Precinct mode is on. Tap a precinct to pin details.'
         : (isDistrictView
             ? 'District mode is active. Precinct jumps return to counties.'
             : 'County mode. Turn on precincts for finer detail.');
 
-      if (topbar) topbar.classList.toggle('mobile-precinct-mode', isPrecinctMode);
-      try {
-        document.body.classList.toggle('mobile-precinct-mode', isMobile && isPrecinctMode);
-      } catch (_) {}
       if (hintEl) {
         hintEl.textContent = hint;
         hintEl.setAttribute('data-mode', isPrecinctMode ? 'precinct' : (isDistrictView ? 'district' : 'county'));
       }
-    }
-
-    function promoteMobilePinnedSelectionUI(meta = null) {
-      try {
-        if (!(isMobileViewportNow && isMobileViewportNow())) return;
-        const kind = String(meta?.kind || '').toLowerCase();
-        if (!kind) return;
-        const counter = document.getElementById('vote-counter');
-        const counterWasMinimized = !!(counter && counter.classList.contains('minimized'));
-        try {
-          if (mobileInputRestoreTimer) {
-            clearTimeout(mobileInputRestoreTimer);
-            mobileInputRestoreTimer = null;
-          }
-        } catch (_) {}
-        try {
-          const active = document.activeElement;
-          if (isMobileEditableField(active) && typeof active.blur === 'function') {
-            active.blur();
-          }
-        } catch (_) {}
-        try {
-          mobileInputFocusSnapshot = null;
-          document.body.classList.remove('mobile-input-active');
-        } catch (_) {}
-        try { closeAllMobileSheets(); } catch (_) {}
-        if (kind === 'district' || kind === 'region') {
-          setVoteCounterMinimizedState(false);
-        } else {
-          setVoteCounterMinimizedState(counterWasMinimized);
-        }
-        try { updateMobileOverlayOffsets(); } catch (_) {}
-      } catch (_) {}
     }
 
     function hideVoteCounter() {
@@ -24585,7 +24487,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (modeEl) modeEl.textContent = getReadableModeLabel(currentVizMode);
       if (contestEl) contestEl.textContent = contestValue ? `${formatContestLabel(contestType, year)}` : 'Select a contest';
       if (focusEl) focusEl.textContent = getReadableFocusLabel();
-      try { updateMobilePrecinctModeUI(); } catch (_) {}
+      try { updateMobileModeHint(); } catch (_) {}
       updateControlSummary(contestValue);
       try { updateFiltersActiveChip(); } catch (_) {}
       try {
@@ -26444,11 +26346,36 @@ document.addEventListener('DOMContentLoaded', function() {
           label: toneLabel
         };
       })();
+      const popChangeToneColor = popChangeHeaderMeta?.tone === 'gain'
+        ? '#166534'
+        : (popChangeHeaderMeta?.tone === 'loss' ? '#7c2d12' : '#334155');
+      const popChangeTopLineDesktop = (() => {
+        if (!popChangeHeaderMeta) return '';
+        if (!isDesktopTooltipMode()) return '';
+        return `
+          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.28);border:1px solid rgba(148,163,184,0.32);">
+            <strong style="color:#f8fafc;">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:rgba(226,232,240,0.92);">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
+          </div>
+        `.trim();
+      })();
+      const popChangeTopLineMobile = (() => {
+        if (!popChangeHeaderMeta) return '';
+        if (isDesktopTooltipMode()) return '';
+        return `
+          <div class="tooltip-insight" style="margin:0 0 8px 0;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,0.06);border:1px solid rgba(148,163,184,0.35);">
+            <strong style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.line)}</strong><br>
+            <span style="color:${popChangeToneColor};">${escapeHtml(popChangeHeaderMeta.raw)}</span><br>
+            <span style="color:${popChangeToneColor};font-size:11px;font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</span>
+          </div>
+        `.trim();
+      })();
       const winnerName = winner === 'R'
         ? shortCandidateLabel(repCandidate, 'Republican')
         : (winner === 'D' ? shortCandidateLabel(demCandidate, 'Democratic') : 'Tie');
       const winnerParty = winner === 'R' ? 'rep' : (winner === 'D' ? 'dem' : 'tie');
-      const votehubCore = buildVotehubResultsTooltip({
+      const defaultVotehubCore = buildVotehubResultsTooltip({
         title: `${countyDisplay} County`,
         subtitle: String(currentVizMode || '') === 'population_change'
           ? 'Population change'
@@ -26477,25 +26404,51 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
+      const popChangeVotehubCore = popChangeHeaderMeta
+        ? buildPopulationChangeCountyTooltip({
+            title: `${countyDisplay} County`,
+            subtitle: 'Population change',
+            popChangeLine: popChangeHeaderMeta.line,
+            popChangeRaw: popChangeHeaderMeta.raw,
+            popChangeToneLabel: popChangeHeaderMeta.label,
+            popChangeToneClass: popChangeHeaderMeta.tone,
+            demName: demCandidate,
+            repName: repCandidate,
+            otherName: 'Other',
+            demVotes,
+            repVotes,
+            otherVotes,
+            totalVotes,
+            prevSignedMarginPct: prevSignedForFlip,
+            currentSignedMarginPct: signedMarginPct,
+            flipYearLabel: vizPrevCache?.prevYear || null
+          })
+        : '';
+      const votehubCore = (currentVizMode === 'population_change' && popChangeVotehubCore)
+        ? popChangeVotehubCore
+        : defaultVotehubCore;
       const detailLines = isDesktopTooltipMode()
         ? ''
         : `
             ${finalInsight ? `<div class="tooltip-insight">${escapeHtml(finalInsight)}</div>` : ''}
             ${censusDetailLine}
             ${popChangeDetailLine}
-            ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight tooltip-insight-tone-text">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
+            ${(currentVizMode === 'population_change' && popChangeHeaderMeta?.label) ? `<div class="tooltip-insight" style="color:${popChangeToneColor};font-weight:700;">${escapeHtml(popChangeHeaderMeta.label)}</div>` : ''}
             ${(currentVizMode === 'shift' && Number.isFinite(shiftDelta) && vizShiftCache?.prevYear) ? '' : shiftLine}
             ${deltaBlock}
             ${splitInsightLine}
             ${demoLine}
           `.trim();
-      const detailSection = isDesktopTooltipMode()
-        ? ''
-        : `<details class="tooltip-more" aria-label="More details"><summary>More details</summary><div class="tooltip-more-body">${detailLines}</div></details>`;
-      const inner = `
-        ${votehubCore}
-        ${detailSection}
-      `.trim();
+      const inner = isDesktopTooltipMode()
+        ? `${votehubCore}`.trim()
+        : `
+            ${votehubCore}
+            ${popChangeTopLineMobile}
+            <details class="tooltip-more" aria-label="More details">
+              <summary>More details</summary>
+              <div class="tooltip-more-body">${detailLines}</div>
+            </details>
+          `.trim();
 
       const copyText = `${countyDisplay} County`;
       showHoverTooltip(
@@ -26545,7 +26498,8 @@ document.addEventListener('DOMContentLoaded', function() {
         lastPrecinctHoverRenderedAt = now;
       } catch (_) {}
       const [contestType, year] = parseContestValue(contestValue);
-      const pinnedShell = !!tooltipPinned;
+      const shouldPinTooltip = !!(pinSelection && isTouchInteractionMode());
+      const pinnedShell = !!(tooltipPinned || shouldPinTooltip);
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -26557,6 +26511,7 @@ document.addEventListener('DOMContentLoaded', function() {
             { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
           );
           wireTooltipButtons();
+          if (shouldPinTooltip) setTooltipPinned(true);
           return;
         }
         let startText = '';
@@ -26572,6 +26527,7 @@ document.addEventListener('DOMContentLoaded', function() {
           { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
+        if (shouldPinTooltip) setTooltipPinned(true);
         return;
       }
 
@@ -26594,6 +26550,7 @@ document.addEventListener('DOMContentLoaded', function() {
             { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
           );
           wireTooltipButtons();
+          if (shouldPinTooltip) setTooltipPinned(true);
           return;
         }
         showHoverTooltip(
@@ -26603,6 +26560,7 @@ document.addEventListener('DOMContentLoaded', function() {
           { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
+        if (shouldPinTooltip) setTooltipPinned(true);
         return;
       }
 
@@ -26661,7 +26619,7 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
         }
       }
-      const inner = buildVotehubResultsTooltip({
+      const votehubCore = buildVotehubResultsTooltip({
         title,
         subtitle: 'Precinct',
         demName: demCandidate,
@@ -26685,6 +26643,27 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
+      const flipLine = (prevSignedForFlip !== null)
+        ? flipLineHTML(prevSignedForFlip, curSigned, vizPrevCache?.prevYear || null, Number(year))
+        : '';
+      const fallbackNotice = String(row?.__fallback_scope || '').trim()
+        ? '<div class="tooltip-insight">Using county-level fallback results for this historical precinct.</div>'
+        : '';
+      const detailLines = `
+            ${flipLine}
+            ${fallbackNotice}
+          `.trim();
+      const inner = isDesktopTooltipMode()
+        ? `${votehubCore}`.trim()
+        : `
+            ${votehubCore}
+            <div class="vhr-footer">
+              <details class="tooltip-more" aria-label="More details">
+                <summary>More details</summary>
+                <div class="tooltip-more-body">${detailLines || '<div class="tooltip-insight">No extra details for this precinct.</div>'}</div>
+              </details>
+            </div>
+          `.trim();
       const copyText = (precinctNorm || title || '').toString().trim();
       showHoverTooltip(
         point.x,
@@ -26694,6 +26673,7 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       clearDesktopHoverExpandState();
       wireTooltipButtons();
+      if (shouldPinTooltip) setTooltipPinned(true);
       try { markOnboardingSeen(); } catch (_) {}
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
@@ -29170,12 +29150,10 @@ document.addEventListener('DOMContentLoaded', function() {
           if (e?.point && e?.features?.[0]) {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
+            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
-              setTooltipPinned(false);
               renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
-              setTooltipPinned(false);
               hideHoverTooltip();
             }
             const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
@@ -30036,12 +30014,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
+            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
-              setTooltipPinned(false);
               renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
-              setTooltipPinned(false);
               hideHoverTooltip();
             }
             if (props.county_nam && props.prec_id) {
@@ -30070,7 +30046,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updatePrecinctVisibility() {
-      try { updateMobilePrecinctModeUI(); } catch (_) {}
+      try { updateMobileModeHint(); } catch (_) {}
       const btn = document.getElementById('precinct-toggle');
       if (btn) {
         if (precinctLoadInFlight) {
@@ -30335,8 +30311,8 @@ document.addEventListener('DOMContentLoaded', function() {
               // Mobile-friendly: show a tap tooltip (and outline) on selection.
               try {
                 setDistrictHoverOutline('congressional', districtNum);
+                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
-                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'congressional',
@@ -30344,8 +30320,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'CD118FP', 'CD119FP', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
+                  setTooltipPinned(true);
                 } else {
-                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -30453,8 +30429,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
               try {
                 setDistrictHoverOutline('state_house', districtNum);
+                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
-                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'state_house',
@@ -30462,8 +30438,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'SLDLST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
+                  setTooltipPinned(true);
                 } else {
-                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -30571,8 +30547,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
               try {
                 setDistrictHoverOutline('state_senate', districtNum);
+                setTooltipPinned(false);
                 if (isTouchInteractionMode()) {
-                  setTooltipPinned(true);
                   await renderDistrictHover(
                     e,
                     'state_senate',
@@ -30580,8 +30556,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ['DISTRICT', 'SLDUST', 'district_id', 'district', 'NAMELSAD'],
                     { forceTooltip: true }
                   );
+                  setTooltipPinned(true);
                 } else {
-                  setTooltipPinned(false);
                   hideHoverTooltip();
                 }
               } catch (_) {}
@@ -31263,12 +31239,10 @@ document.addEventListener('DOMContentLoaded', function() {
               const rendered = map.queryRenderedFeatures([projected.x, projected.y], { layers });
               if (rendered && rendered.length) feature = rendered[0];
             }
+            setTooltipPinned(false);
             if (isTouchInteractionMode()) {
-              setTooltipPinned(false);
               renderPrecinctHoverAtPoint({ x: projected.x, y: projected.y }, feature, { forceTooltip: true, pinSelection: true });
-              setTooltipPinned(true);
             } else {
-              setTooltipPinned(false);
               hideHoverTooltip();
             }
           }
@@ -31318,6 +31292,20 @@ document.addEventListener('DOMContentLoaded', function() {
           setFlySearchFeedback('#10b981');
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
+          try {
+            if (isTouchInteractionMode() && typeof renderCountyHoverAtPoint === 'function') {
+              const centerLng = (Number(bbox[0]) + Number(bbox[2])) / 2;
+              const centerLat = (Number(bbox[1]) + Number(bbox[3])) / 2;
+              const projected = (map && typeof map.project === 'function')
+                ? map.project([centerLng, centerLat])
+                : null;
+              if (projected && Number.isFinite(projected.x) && Number.isFinite(projected.y)) {
+                setTooltipPinned(false);
+                renderCountyHoverAtPoint({ point: { x: projected.x, y: projected.y }, features: [found] }, { forceTooltip: true });
+                setTooltipPinned(true);
+              }
+            }
+          } catch (_) {}
         } else {
           console.warn('[DIAGNOSTIC] County not found:', countyName, 'normalized:', normTarget);
           setFlySearchFeedback('#ef4444');
@@ -31568,10 +31556,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function setTooltipPinned(pinned) {
       tooltipPinned = !!pinned;
       const tooltip = document.getElementById('hover-tooltip');
-      try {
-        const touchPinned = tooltipPinned && isTouchInteractionMode();
-        document.body.classList.toggle('mobile-tooltip-pinned', !!touchPinned);
-      } catch (_) {}
       if (!tooltip) return;
       tooltip.setAttribute('data-pinned', tooltipPinned ? '1' : '0');
     }
