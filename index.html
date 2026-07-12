@@ -10230,8 +10230,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-13';
-    const APP_BUILD_ID = '2026-07-11-13';
+    const DATA_CACHE_BUSTER = '2026-07-11-14';
+    const APP_BUILD_ID = '2026-07-11-14';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -15396,6 +15396,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hintEl.setAttribute('data-mode', isPrecinctMode ? 'precinct' : (isDistrictView ? 'district' : 'county'));
       }
     }
+
 
     function hideVoteCounter() {
       const counter = document.getElementById('vote-counter');
@@ -26491,15 +26492,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const tooltipVisible = !!tooltip && tooltip.style.display !== 'none' && (tooltip.innerHTML || '').trim().length > 0;
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
-        if (hoverKey === lastPrecinctHoverKey && tooltipVisible) return;
-        if (tooltipVisible && now - lastPrecinctHoverRenderedAt < PRECINCT_HOVER_THROTTLE_MS) return;
+        const forcedDesktopSelection = !!(forceTooltip && pinSelection && isDesktopTooltipMode());
+        if (!forcedDesktopSelection) {
+          if (hoverKey === lastPrecinctHoverKey && tooltipVisible) return;
+          if (tooltipVisible && now - lastPrecinctHoverRenderedAt < PRECINCT_HOVER_THROTTLE_MS) return;
+        }
 
         lastPrecinctHoverKey = hoverKey;
         lastPrecinctHoverRenderedAt = now;
       } catch (_) {}
       const [contestType, year] = parseContestValue(contestValue);
-      const shouldPinTooltip = !!(pinSelection && isTouchInteractionMode());
-      const pinnedShell = !!(tooltipPinned || shouldPinTooltip);
+      const pinnedShell = !!tooltipPinned;
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -26511,7 +26514,6 @@ document.addEventListener('DOMContentLoaded', function() {
             { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
           );
           wireTooltipButtons();
-          if (shouldPinTooltip) setTooltipPinned(true);
           return;
         }
         let startText = '';
@@ -26527,7 +26529,6 @@ document.addEventListener('DOMContentLoaded', function() {
           { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
-        if (shouldPinTooltip) setTooltipPinned(true);
         return;
       }
 
@@ -26550,7 +26551,6 @@ document.addEventListener('DOMContentLoaded', function() {
             { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
           );
           wireTooltipButtons();
-          if (shouldPinTooltip) setTooltipPinned(true);
           return;
         }
         showHoverTooltip(
@@ -26560,7 +26560,6 @@ document.addEventListener('DOMContentLoaded', function() {
           { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
-        if (shouldPinTooltip) setTooltipPinned(true);
         return;
       }
 
@@ -26673,7 +26672,6 @@ document.addEventListener('DOMContentLoaded', function() {
       );
       clearDesktopHoverExpandState();
       wireTooltipButtons();
-      if (shouldPinTooltip) setTooltipPinned(true);
       try { markOnboardingSeen(); } catch (_) {}
       const precinctMeta = { kind: 'precinct', county: countyName, precinct: title, precinctNorm, contestType, year: Number(year) };
       const precinctCandidates = { demCandidate, repCandidate };
@@ -28683,6 +28681,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         // Add county click event handler
         map.on('click', 'county-fill', async (e) => {
+          try {
+            if (precinctsEnabled && e?.point) {
+              const precinctHitLayers = [
+                'precinct-selected-outline',
+                'precinct-selected-fill',
+                'precinct-selection-dim',
+                'precinct-fill',
+                'precinct-dot',
+                'precinct-dot-missing'
+              ].filter(id => map.getLayer(id));
+              if (precinctHitLayers.length) {
+                const precinctHits = map.queryRenderedFeatures(e.point, { layers: precinctHitLayers });
+                if (precinctHits && precinctHits.length) return;
+              }
+            }
+          } catch (_) {}
           if (e.features && e.features[0] && e.features[0].properties) {
             const countyName = e.features[0].properties.precinct_name || e.features[0].properties.NAME20 || e.features[0].properties.CountyName || e.features[0].properties.county_nam || e.features[0].properties.COUNTYNAME || e.features[0].properties.County || e.features[0].properties.NAME || e.features[0].properties.name;
             if (countyName) {
@@ -29142,8 +29156,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const props = e.features?.[0]?.properties || {};
         const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
         const countyName = props.county_nam || '';
+        const touchMode = isTouchInteractionMode();
         if (countyName) {
-          showCountyDetails(countyName);
+          if (touchMode) showCountyDetails(countyName);
           lastSelectedCounty = countyName;
         }
         try {
@@ -29151,11 +29166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(e.features[0], { padding: 44, duration: 900, maxZoom: 13.8 });
             setTooltipPinned(false);
-            if (isTouchInteractionMode()) {
-              renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
-            } else {
-              hideHoverTooltip();
-            }
+            renderPrecinctHoverAtPoint(e.point, e.features[0], { forceTooltip: true, pinSelection: true });
             const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
             const label = full || (props.prec_id || '').toString().trim();
             setStatus(`Selected precinct highlighted in yellow: ${props.county_nam || ''} ${label}`.trim());
@@ -30008,6 +30019,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         map.on('click', layerId, (e) => {
           try {
+            try { e?.originalEvent?.preventDefault?.(); } catch (_) {}
             const f = e?.features?.[0];
             if (!f) return;
             const props = f.properties || {};
@@ -30015,13 +30027,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (precinctNorm) setSelectedPrecinctNorm(precinctNorm);
             zoomToClickedPrecinctFeature(f, { padding: 42, duration: 880, maxZoom: 13.0 });
             setTooltipPinned(false);
-            if (isTouchInteractionMode()) {
-              renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
-            } else {
-              hideHoverTooltip();
-            }
+            renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
             if (props.county_nam && props.prec_id) {
-              showCountyDetails(props.county_nam);
+              if (isTouchInteractionMode()) showCountyDetails(props.county_nam);
+              lastSelectedCounty = props.county_nam;
               const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
               const label = full || (props.prec_id || '').toString().trim();
               setStatus(`Selected precinct highlighted in yellow: ${props.county_nam} ${label}`);
