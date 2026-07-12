@@ -11,6 +11,14 @@ const overrideRepNomineeStrength = process.env.REP_NOMINEE_STRENGTH;
 const overrideBlendWeight = process.env.MODEL_BLEND_WEIGHT;
 const overrideRecenterStrength = process.env.MODEL_RECENTER_STRENGTH;
 const overrideCandidateBonusWeight = process.env.MODEL_CANDIDATE_BONUS_WEIGHT;
+const overrideDurablePriorityFloor = process.env.MODEL_DURABLE_PRIORITY_FLOOR;
+const overrideRepeatableCrossoverBoost = process.env.MODEL_REPEATABLE_CROSSOVER_BOOST;
+const overrideRealignedResidualFloor = process.env.MODEL_REALIGNED_RESIDUAL_FLOOR;
+const overrideRealignedDurableFloor = process.env.MODEL_REALIGNED_DURABLE_FLOOR;
+const debugCounties = String(process.env.MODEL_DEBUG_COUNTIES || '')
+  .split(',')
+  .map((v) => v.trim().toUpperCase())
+  .filter(Boolean);
 
 const systemChromeExeCandidates = [
   path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
@@ -63,7 +71,11 @@ async function main() {
       overrideRepNomineeStrength !== undefined ||
       overrideBlendWeight !== undefined ||
       overrideRecenterStrength !== undefined ||
-      overrideCandidateBonusWeight !== undefined
+      overrideCandidateBonusWeight !== undefined ||
+      overrideDurablePriorityFloor !== undefined ||
+      overrideRepeatableCrossoverBoost !== undefined ||
+      overrideRealignedResidualFloor !== undefined ||
+      overrideRealignedDurableFloor !== undefined
     ) {
       await page.evaluate((overrides) => {
         const def = MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026;
@@ -73,6 +85,10 @@ async function main() {
         if (overrides.blend !== null && overrides.blend !== undefined && overrides.blend !== '') def.blendWeight = Number(overrides.blend);
         if (overrides.recenter !== null && overrides.recenter !== undefined && overrides.recenter !== '') def.statewideRecenterStrength = Number(overrides.recenter);
         if (overrides.bonusWeight !== null && overrides.bonusWeight !== undefined && overrides.bonusWeight !== '') def.candidateBonusWeight = Number(overrides.bonusWeight);
+        if (overrides.durablePriority !== null && overrides.durablePriority !== undefined && overrides.durablePriority !== '') def.candidateBonusDurablePriorityFloor = Number(overrides.durablePriority);
+        if (overrides.repeatableBoost !== null && overrides.repeatableBoost !== undefined && overrides.repeatableBoost !== '') def.candidateBonusRepeatableCrossoverBoost = Number(overrides.repeatableBoost);
+        if (overrides.realignedResidual !== null && overrides.realignedResidual !== undefined && overrides.realignedResidual !== '') def.candidateBonusRealignedFormerDemFederalResidualFloor = Number(overrides.realignedResidual);
+        if (overrides.realignedDurable !== null && overrides.realignedDurable !== undefined && overrides.realignedDurable !== '') def.candidateBonusRealignedFormerDemFederalDurableFloor = Number(overrides.realignedDurable);
         try { modeledCountyOutputCache?.clear?.(); } catch (_) {}
         try { modeledCountyOutputInflight?.clear?.(); } catch (_) {}
         try { modeledDistrictOutputCache?.clear?.(); } catch (_) {}
@@ -83,7 +99,11 @@ async function main() {
         rep: overrideRepNomineeStrength ?? null,
         blend: overrideBlendWeight ?? null,
         recenter: overrideRecenterStrength ?? null,
-        bonusWeight: overrideCandidateBonusWeight ?? null
+        bonusWeight: overrideCandidateBonusWeight ?? null,
+        durablePriority: overrideDurablePriorityFloor ?? null,
+        repeatableBoost: overrideRepeatableCrossoverBoost ?? null,
+        realignedResidual: overrideRealignedResidualFloor ?? null,
+        realignedDurable: overrideRealignedDurableFloor ?? null
       });
     }
     await page.selectOption('#contestSelect', 'us_senate_model_2026');
@@ -92,7 +112,7 @@ async function main() {
       return /Whatley|Cooper|R\+|D\+/.test(leadText);
     }, { timeout: 240000 });
 
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async (countyDebugList) => {
       const pickStat = (label) => {
         const stats = Array.from(document.querySelectorAll('.statewide-stat'));
         for (const stat of stats) {
@@ -113,6 +133,21 @@ async function main() {
         acc.total += Number(row?.us_senate_model_total || 0);
         return acc;
       }, { dem: 0, rep: 0, other: 0, total: 0 });
+      const countyMargins = {};
+      (countyDebugList || []).forEach((countyNorm) => {
+        const row = (rows || []).find((r) => String(r?.county || '').trim().toUpperCase() === countyNorm);
+        if (!row) return;
+        countyMargins[countyNorm] = {
+          dem: Number(row?.us_senate_model_dem || 0),
+          rep: Number(row?.us_senate_model_rep || 0),
+          other: Number(row?.us_senate_model_other || 0),
+          total: Number(row?.us_senate_model_total || 0),
+          marginPct: Number(row?.us_senate_model_margin_pct || 0),
+          candidateEffect: Number(row?.__model_candidate_effect_d_pts || 0),
+          durableEffect: Number(row?.__model_candidate_effect_durable_pts || 0),
+          personalEffect: Number(row?.__model_candidate_effect_personal_pts || 0)
+        };
+      });
       return {
         buildId: window.__ATLAS_BUILD__ || '',
         contestValue: document.getElementById('contestSelect')?.value || '',
@@ -127,9 +162,14 @@ async function main() {
         repNomineeStrengthPts: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.repNomineeStrengthPts),
         blendWeight: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.blendWeight),
         statewideRecenterStrength: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.statewideRecenterStrength),
-        candidateBonusWeight: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusWeight)
+        candidateBonusWeight: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusWeight),
+        candidateBonusDurablePriorityFloor: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusDurablePriorityFloor),
+        candidateBonusRepeatableCrossoverBoost: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusRepeatableCrossoverBoost),
+        candidateBonusRealignedFormerDemFederalResidualFloor: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusRealignedFormerDemFederalResidualFloor),
+        candidateBonusRealignedFormerDemFederalDurableFloor: Number(MODELED_CONTEST_DEFINITIONS?.us_senate_model_2026?.candidateBonusRealignedFormerDemFederalDurableFloor),
+        countyMargins
       };
-    });
+    }, debugCounties);
 
     console.log(JSON.stringify(result, null, 2));
   } finally {
