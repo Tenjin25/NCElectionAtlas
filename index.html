@@ -906,57 +906,6 @@ body.focus-active.hover-preview-active .vote-counter {
   color: #cbd5e1;
 }
 
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange {
-  margin-bottom: 8px;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: start;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main {
-  font-size: 12.5px;
-  line-height: 1.4;
-  font-weight: 800;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.gain,
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.gain {
-  color: #166534;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.loss,
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.loss {
-  color: #92400e;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-main.flat,
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values.flat {
-  color: #94a3b8;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-values {
-  text-align: right;
-  font-size: 12.5px;
-  line-height: 1.4;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-tone {
-  display: block;
-  margin-top: 2px;
-}
-
-#hover-tooltip[data-context="votehub-results"] .vhr-popchange-divider {
-  margin: 12px 0 0;
-  border-top: 1px solid rgba(148,163,184,0.22);
-}
-
-
 body.focus-active #hover-tooltip[data-context="preview"] {
   opacity: 0.82;
 }
@@ -10340,8 +10289,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-11';
-    const APP_BUILD_ID = '2026-07-11-11';
+    const DATA_CACHE_BUSTER = '2026-07-11-12';
+    const APP_BUILD_ID = '2026-07-11-12';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -26528,26 +26477,6 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
       });
-      const populationChangeVotehubCore = popChangeHeaderMeta
-        ? buildPopulationChangeCountyTooltip({
-            title: `${countyDisplay} County`,
-            subtitle: 'Population change',
-            popChangeLine: popChangeHeaderMeta.line,
-            popChangeRaw: popChangeHeaderMeta.raw,
-            popChangeToneLabel: popChangeHeaderMeta.label,
-            popChangeToneClass: popChangeHeaderMeta.tone,
-            demName: demCandidate,
-            repName: repCandidate,
-            otherName: 'Other',
-            demVotes,
-            repVotes,
-            otherVotes,
-            totalVotes,
-            prevSignedMarginPct: prevSignedForFlip,
-            currentSignedMarginPct: signedMarginPct,
-            flipYearLabel: vizPrevCache?.prevYear || null
-          })
-        : '';
       const detailLines = isDesktopTooltipMode()
         ? ''
         : `
@@ -26564,7 +26493,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? ''
         : `<details class="tooltip-more" aria-label="More details"><summary>More details</summary><div class="tooltip-more-body">${detailLines}</div></details>`;
       const inner = `
-        ${(currentVizMode === 'population_change' && populationChangeVotehubCore) ? populationChangeVotehubCore : votehubCore}
+        ${votehubCore}
         ${detailSection}
       `.trim();
 
