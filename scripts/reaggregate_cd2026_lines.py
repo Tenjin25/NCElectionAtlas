@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+override_vendor = os.environ.get("NCEA_GEOPANDAS_VENDOR", "").strip()
+vendor_candidates = [Path(override_vendor)] if override_vendor else [ROOT / ".python-vendor" / "geopandas", ROOT / ".vendor" / "geopandas"]
+for vendor_dir in vendor_candidates:
+    if vendor_dir.exists():
+        sys.path.insert(0, str(vendor_dir))
 
 import geopandas as gpd
 import pandas as pd
@@ -85,7 +94,7 @@ def build_precinct_crosswalk(precinct_geojson: Path, cd_shp: Path, district_col:
     inter["overlap_area"] = inter.geometry.area
     inter = inter[inter["overlap_area"] > 0].copy()
     inter["area_weight"] = inter["overlap_area"] / inter["prec_area"]
-    inter = inter[["precinct_key", "district", "area_weight"]].copy()
+    inter = inter[["precinct_key", "district", "prec_area", "area_weight"]].copy()
 
     s = inter.groupby("precinct_key", as_index=False)["area_weight"].sum().rename(columns={"area_weight": "sum_w"})
     inter = inter.merge(s, on="precinct_key", how="left")
@@ -122,10 +131,33 @@ def build_vote_maps(results_node: dict) -> dict[str, dict[str, int]]:
 
 def canonicalize_precinct_key(precinct_key: str) -> str:
     key = str(precinct_key or "").strip().upper()
+    key = re.sub(r"\s+", " ", key)
     m = re.match(r"^(.*? - [A-Z0-9]+)_.+$", key)
     if m:
         return m.group(1)
+    m = re.match(r"^(.*? - [A-Z0-9.\-]+)\s+.+$", key)
+    if m:
+        return m.group(1)
     return key
+
+
+def is_non_geographic_precinct_key(precinct_key: str) -> bool:
+    key = str(precinct_key or "").strip().upper()
+    if " - " in key:
+        key = key.split(" - ", 1)[1].strip()
+    if not key:
+        return True
+    if key in {"EV", "PROVISIONAL", "TRANSFER"}:
+        return True
+    if key.startswith("ABSEN") or key.startswith("ABSENTEE"):
+        return True
+    if key.startswith("ONE STOP") or key.startswith("ONESTOP"):
+        return True
+    if key.startswith("PROVI") or key.startswith("TRANS"):
+        return True
+    if "ABSENTEE" in key or "PROVISIONAL" in key or "ONE STOP" in key or "TRANSFER" in key:
+        return True
+    return False
 
 
 def build_target_county_map(
@@ -179,14 +211,30 @@ def weighted_aggregate(
     vote_map: dict[str, dict[str, int]],
     crosswalk: pd.DataFrame,
     target_counties: dict[str, set[str]] | None = None,
-) -> tuple[dict[str, dict[str, int]], int, int]:
+) -> tuple[dict[str, dict[str, int]], int, int, int]:
     by_precinct: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    county_fallback_weights: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    county_district_area: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
     for _, r in crosswalk.iterrows():
         raw_key = str(r["precinct_key"]).strip().upper()
         by_precinct[raw_key].append((str(r["district"]).strip(), float(r["area_weight"])))
+        county = raw_key.split(" - ", 1)[0].strip().upper() if " - " in raw_key else ""
+        if county:
+            county_district_area[county][str(r["district"]).strip()] += float(r["prec_area"]) * float(r["area_weight"])
+
+    for county, district_area in county_district_area.items():
+        total_area = sum(district_area.values())
+        if total_area <= 0:
+            continue
+        county_fallback_weights[county] = [
+            (district, area / total_area)
+            for district, area in sorted(district_area.items())
+            if area > 0
+        ]
 
     out: dict[str, dict[str, float]] = defaultdict(lambda: {"dem_votes": 0.0, "rep_votes": 0.0, "other_votes": 0.0})
     matched = 0
+    county_fallback_used = 0
     total = 0
     for pk, votes in vote_map.items():
         county = pk.split(" - ", 1)[0].strip().upper() if " - " in pk else ""
@@ -194,6 +242,8 @@ def weighted_aggregate(
         alloc = by_precinct.get(pk)
         if not alloc:
             alloc = by_precinct.get(canonicalize_precinct_key(pk))
+        if not alloc and county:
+            alloc = county_fallback_weights.get(county)
         if not alloc:
             continue
         filtered_alloc: list[tuple[str, float]] = []
@@ -205,6 +255,8 @@ def weighted_aggregate(
         if not filtered_alloc:
             continue
         matched += 1
+        if pk not in by_precinct and canonicalize_precinct_key(pk) not in by_precinct:
+            county_fallback_used += 1
         weight_sum = sum(w for _, w in filtered_alloc)
         if weight_sum <= 0:
             continue
@@ -221,7 +273,7 @@ def weighted_aggregate(
             "rep_votes": int(round(vals["rep_votes"])),
             "other_votes": int(round(vals["other_votes"])),
         }
-    return rounded, matched, total
+    return rounded, matched, total, county_fallback_used
 
 
 def patch_district_row(template_row: dict, new_votes: dict[str, int]) -> dict:
@@ -287,7 +339,9 @@ def main() -> None:
             continue
 
         vote_map = build_vote_maps(contest_node)
-        agg_votes, matched, total = weighted_aggregate(vote_map, crosswalk, target_counties=target_counties)
+        agg_votes, matched, total, county_fallback_used = weighted_aggregate(
+            vote_map, crosswalk, target_counties=target_counties
+        )
         if agg_votes and is_uncontested_partisan_contest(agg_votes):
             if dst.exists():
                 dst.unlink()
@@ -306,6 +360,7 @@ def main() -> None:
         payload["meta"]["match_coverage_pct"] = round((matched / total * 100.0), 2) if total else 0.0
         payload["meta"]["matched_precinct_keys"] = int(matched)
         payload["meta"]["total_precinct_keys"] = int(total)
+        payload["meta"]["county_fallback_precinct_keys"] = int(county_fallback_used)
 
         dst.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         print(f"Wrote {dst.name}: patched districts {sorted(target_districts)}")

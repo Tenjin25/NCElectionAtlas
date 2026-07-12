@@ -10252,7 +10252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-04';
+    const DATA_CACHE_BUSTER = '2026-07-12-05';
     const APP_BUILD_ID = '2026-07-12-04';
 
     function withCacheBuster(path) {
@@ -13867,10 +13867,6 @@ document.addEventListener('DOMContentLoaded', function() {
           '13': ['34'],
           '34': ['13']
         },
-        COLUMBUS: {
-          P117: ['P11'],
-          P245: ['P24']
-        },
         TRANSYLVANIA: {
           CC: ['CC.1'],
           RE: ['RE.1']
@@ -13929,7 +13925,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const resolved = resolveUniquePrecinctCodeByAlias(countyMap, rawPrecinctValue);
       if (resolved) {
-        addVariantFn(resolved);
+        if (isKnownPrecinctCodeForCounty(countyNorm, resolved)) addVariantFn(resolved);
         return;
       }
 
@@ -13938,7 +13934,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const direct = countyMap.get(raw);
       if (Array.isArray(direct) && direct.length === 1) {
         const code = (direct[0] || '').toString().trim().toUpperCase();
-        if (code) addVariantFn(code);
+        if (code && isKnownPrecinctCodeForCounty(countyNorm, code)) addVariantFn(code);
       }
     }
 
