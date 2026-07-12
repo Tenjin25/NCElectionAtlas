@@ -503,7 +503,8 @@ Implementation note:
   - `baselineReliabilityFloor: 0.41`
   - `urbanDemElasticityWeight: 0.27`
   - `trendCarryoverWeight: 0.32`
-  - `nomineeStrengthPts: 1.6`
+  - `demNomineeStrengthPts: 1.6`
+  - `repNomineeStrengthPts: 0.0`
 - Extended the same balanced pass to modeled district scopes (Congressional, State House, State Senate) so district layers track the statewide recalibration more consistently:
   - `districtBlendMul* : 0.94`
   - `districtDeviationBrake* : 0.92`

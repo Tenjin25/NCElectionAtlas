@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-10';
-    const APP_BUILD_ID = '2026-07-12-10';
+    const DATA_CACHE_BUSTER = '2026-07-12-11';
+    const APP_BUILD_ID = '2026-07-12-11';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11390,8 +11390,8 @@ document.addEventListener('DOMContentLoaded', function() {
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
         senateResidualElasticityEnabled: false,
-        nomineeStrengthParty: 'DEM',
-        nomineeStrengthPts: 1.75,
+        demNomineeStrengthPts: 1.75,
+        repNomineeStrengthPts: 0.35,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -17007,8 +17007,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateUrbanDemWeightRaw = Number(modeledDef?.urbanDemElasticityWeight);
           const senateAnomalyClampRaw = Number(modeledDef?.anomalySwingClampPts);
           const senateTrendCarryRaw = Number(modeledDef?.trendCarryoverWeight);
-          const senateNomineeStrengthRaw = Number(modeledDef?.nomineeStrengthPts);
-          const senateNomineeStrengthParty = String(modeledDef?.nomineeStrengthParty || '').trim().toUpperCase();
+          const senateDemNomineeStrengthRaw = Number(modeledDef?.demNomineeStrengthPts);
+          const senateRepNomineeStrengthRaw = Number(modeledDef?.repNomineeStrengthPts);
+          const senateLegacyNomineeStrengthRaw = Number(modeledDef?.nomineeStrengthPts);
+          const senateLegacyNomineeStrengthParty = String(modeledDef?.nomineeStrengthParty || '').trim().toUpperCase();
           const senateAnomalyCountySet = new Set(
             (Array.isArray(modeledDef?.anomalyClampCounties) ? modeledDef.anomalyClampCounties : ['ROBESON', 'BLADEN', 'SCOTLAND'])
               .map(v => normalizeCountyToken(v))
@@ -17028,7 +17030,16 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateUrbanDemWeight = Number.isFinite(senateUrbanDemWeightRaw) ? Math.max(0, Math.min(1, senateUrbanDemWeightRaw)) : 0.25;
           const senateAnomalyClampPts = Number.isFinite(senateAnomalyClampRaw) ? Math.max(4, Math.min(24, senateAnomalyClampRaw)) : 12;
           const senateTrendCarryWeight = Number.isFinite(senateTrendCarryRaw) ? Math.max(0, Math.min(1, senateTrendCarryRaw)) : 0.40;
-          const senateNomineeStrengthPts = Number.isFinite(senateNomineeStrengthRaw) ? Math.max(0, Math.min(4, senateNomineeStrengthRaw)) : 2.0;
+          const senateDemNomineeStrengthPts = Number.isFinite(senateDemNomineeStrengthRaw)
+            ? Math.max(0, Math.min(4, senateDemNomineeStrengthRaw))
+            : (senateLegacyNomineeStrengthParty === 'DEM' && Number.isFinite(senateLegacyNomineeStrengthRaw)
+              ? Math.max(0, Math.min(4, senateLegacyNomineeStrengthRaw))
+              : 0);
+          const senateRepNomineeStrengthPts = Number.isFinite(senateRepNomineeStrengthRaw)
+            ? Math.max(0, Math.min(4, senateRepNomineeStrengthRaw))
+            : (senateLegacyNomineeStrengthParty === 'REP' && Number.isFinite(senateLegacyNomineeStrengthRaw)
+              ? Math.max(0, Math.min(4, senateLegacyNomineeStrengthRaw))
+              : 0);
           const senateDebugCfg = (() => {
             try {
               const cfg = window.SENATE_MODEL_DEBUG || {};
@@ -17614,8 +17625,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     * (0.80 + (0.20 * outlierBrake));
                 }
 
-                if (senateNomineeStrengthPts > 0 && (senateNomineeStrengthParty === 'DEM' || senateNomineeStrengthParty === 'REP')) {
-                  const sign = senateNomineeStrengthParty === 'REP' ? 1 : -1;
+                const nomineeStrengthSignedPts = (() => {
+                  const demPts = Number.isFinite(senateDemNomineeStrengthPts) ? senateDemNomineeStrengthPts : 0;
+                  const repPts = Number.isFinite(senateRepNomineeStrengthPts) ? senateRepNomineeStrengthPts : 0;
+                  return repPts - demPts;
+                })();
+                if (Math.abs(nomineeStrengthSignedPts) > 1e-6) {
+                  const sign = nomineeStrengthSignedPts > 0 ? 1 : -1;
+                  const strengthPts = Math.abs(nomineeStrengthSignedPts);
                   const polarizedScale = 0.45 + (0.55 * computeFederalizationBrake(Math.abs(weightedCountyBase), 18, 36, 0.45));
                   const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
                   const medianDev = Number(senateDiag?.medianDev);
@@ -17630,7 +17647,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   else if (senateFamily === 'realigned_former_d_federal') portability *= 0.90;
                   else if (senateFamily === 'metro_suburban') portability *= 1.04;
                   if (isRealignedFormerDemFederalCounty) portability *= 0.82;
-                  targetSigned += sign * senateNomineeStrengthPts * polarizedScale * portability;
+                  targetSigned += sign * strengthPts * polarizedScale * portability;
                 }
               }
 
