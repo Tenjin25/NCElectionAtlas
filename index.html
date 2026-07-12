@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-12';
-    const APP_BUILD_ID = '2026-07-12-12';
+    const DATA_CACHE_BUSTER = '2026-07-12-13';
+    const APP_BUILD_ID = '2026-07-12-13';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11382,7 +11382,7 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityMinVotes: 15000,
         baselineReliabilityMaxVotes: 110000,
         baselineReliabilityFloor: 0.41,
-        statewideRecenterStrength: 0.96,
+        statewideRecenterStrength: 0.60,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         ruralGopOverperformanceWeight: 0.15,
         urbanDemElasticityWeight: 0.27,
@@ -11442,7 +11442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.27,
+        candidateBonusWeight: 0.25,
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.20,
