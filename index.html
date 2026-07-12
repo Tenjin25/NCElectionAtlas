@@ -8355,13 +8355,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
 
     #hover-tooltip[data-pinned="1"] {
-      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px) !important;
-      max-height: min(68vh, calc(100vh - 24px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px))) !important;
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px + var(--vote-counter-h, 0px) + 8px) !important;
+      max-height: min(58vh, calc(100vh - 12px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px))) !important;
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
     }
 
     @supports (height: 100svh) {
       #hover-tooltip[data-pinned="1"] {
-        max-height: min(68svh, calc(100svh - 24px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px))) !important;
+        max-height: min(58svh, calc(100svh - 12px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px) - var(--vote-counter-h, 0px))) !important;
       }
     }
 
@@ -10248,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-16';
-    const APP_BUILD_ID = '2026-07-11-16';
+    const DATA_CACHE_BUSTER = '2026-07-12-02';
+    const APP_BUILD_ID = '2026-07-12-02';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -31569,6 +31573,23 @@ document.addEventListener('DOMContentLoaded', function() {
       tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}
       try { wireDesktopTooltipExpandOnClick(); } catch (_) {}
+      try {
+        tooltip.querySelectorAll('.tooltip-more').forEach(detailsEl => {
+          detailsEl.addEventListener('toggle', () => {
+            try {
+              if (!detailsEl.open || !isMobileInteractionMode()) return;
+              const body = detailsEl.querySelector('.tooltip-more-body');
+              if (!body || typeof body.offsetTop !== 'number') return;
+              const targetTop = Math.max(0, detailsEl.offsetTop - 8);
+              if (typeof tooltip.scrollTo === 'function') {
+                tooltip.scrollTo({ top: targetTop, behavior: 'smooth' });
+              } else {
+                tooltip.scrollTop = targetTop;
+              }
+            } catch (_) {}
+          }, { passive: true });
+        });
+      } catch (_) {}
        
       // Position tooltip near mouse but avoid edges
       const tooltipRect = tooltip.getBoundingClientRect();
