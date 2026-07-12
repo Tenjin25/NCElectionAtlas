@@ -16,6 +16,13 @@ const NON_GEO_FLAGS = [
   'EARLY ',
 ];
 
+const LEGACY_CANONICAL_CODE_BRIDGES = {
+  COLUMBUS: {
+    P117: 'P11',
+    P245: 'P24'
+  }
+};
+
 function norm(value) {
   return String(value || '').trim().toUpperCase();
 }
@@ -150,6 +157,11 @@ function resolveCanonicalCode(county, rawToken, aliasIndex, friendlyReverse) {
   const countyFriendly = friendlyReverse.get(county);
   const token = norm(rawToken);
   if (!county || !token) return '';
+
+  const countyBridgeMap = LEGACY_CANONICAL_CODE_BRIDGES[county];
+  if (countyBridgeMap && countyBridgeMap[token]) {
+    return norm(countyBridgeMap[token]);
+  }
 
   if (countyAliases) {
     for (const candidate of aliasCandidates(token)) {
