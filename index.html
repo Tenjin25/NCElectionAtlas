@@ -8347,6 +8347,24 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       transform: translateY(8px) !important;
     }
 
+    /* A pinned result tooltip is the single mobile result surface. */
+    body:has(#hover-tooltip[data-pinned="1"]) .vote-counter,
+    body:has(#hover-tooltip[data-pinned="1"]) .main-controls.minimized {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    #hover-tooltip[data-pinned="1"] {
+      bottom: calc(var(--safe-bottom, 0px) + var(--mobile-dock-h, 62px) + 24px) !important;
+      max-height: min(68vh, calc(100vh - 24px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px))) !important;
+    }
+
+    @supports (height: 100svh) {
+      #hover-tooltip[data-pinned="1"] {
+        max-height: min(68svh, calc(100svh - 24px - var(--safe-top, 0px) - var(--safe-bottom, 0px) - var(--mobile-dock-h, 62px))) !important;
+      }
+    }
+
     .map-topbar,
     .main-controls,
     .legend,
@@ -10230,8 +10248,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-11-14';
-    const APP_BUILD_ID = '2026-07-11-14';
+    const DATA_CACHE_BUSTER = '2026-07-11-16';
+    const APP_BUILD_ID = '2026-07-11-16';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10574,6 +10592,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.matchMedia && window.matchMedia('(hover: none)').matches) return true;
       } catch (_) {}
       return false;
+    }
+
+    // Treat responsive/mobile-width testing as mobile too, even when DevTools still reports a mouse pointer.
+    // This keeps the county docked tooltip pinned with Copy/Close in mobile layouts.
+    function isMobileInteractionMode() {
+      try { if (isMobileViewportNow()) return true; } catch (_) {}
+      return isTouchInteractionMode();
     }
 
     function closeHoverUI({ force = false } = {}) {
@@ -15148,6 +15173,13 @@ document.addEventListener('DOMContentLoaded', function() {
       setVoteCounterContext(title, sub, { showClear: true });
       updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
       refreshFocusTrend(voteCounterPinned);
+      // A map selection should not reopen the large selected-results card on phones.
+      // Preserve an explicit user expansion, but otherwise keep the compact July 7 presentation.
+      try {
+        if (isMobileViewportNow() && !voteCounterMinimizeUserOverride) {
+          setVoteCounterMinimizedState(true);
+        }
+      } catch (_) {}
       setFocusModeActive(true);
       try {
         if (String(meta?.kind || '').toLowerCase() === 'county') pulseCountySelection(meta?.county || title);
@@ -26131,7 +26163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!contestValue || !row) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${countyDisplay} County`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26168,7 +26200,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalVotes = Number(row[`${contestType}_total`] || 0);
       if (totalVotes <= 0) {
         const hoverTitle = buildTooltipTitleWithTier(`${countyDisplay} County`);
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${countyDisplay} County`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26211,7 +26243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const demo = countyDemographics?.counties?.[norm] || null;
         demoLine = buildCountyDemographicsHoverHTML(demo, norm);
       } catch (_) {}
-      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || (forceTooltip && isTouchInteractionMode());
+      const showDemoLine = (currentVizMode === 'demographics') || tooltipPinned || (forceTooltip && isMobileInteractionMode());
       if (!showDemoLine) demoLine = '';
 
       const chips = [];
@@ -26295,7 +26327,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'Smart Insights: one of today’s key counties.';
       })();
       const finalInsight = tooltipInsight || smartInsight;
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
       const deltaBlock = buildCountyDeltaBlockHTML(norm, contestType, { presentation: 'desktop-expanded' });
       const censusDetailLine = (() => {
         try {
@@ -26502,7 +26534,11 @@ document.addEventListener('DOMContentLoaded', function() {
         lastPrecinctHoverRenderedAt = now;
       } catch (_) {}
       const [contestType, year] = parseContestValue(contestValue);
-      const pinnedShell = !!tooltipPinned;
+      // Mobile taps need the pinned shell before HTML is built so Copy/Close are present.
+      // Desktop hover/click styling remains independent.
+      const mobilePinnedSelection = !!(pinSelection && isMobileInteractionMode());
+      const pinnedShell = !!tooltipPinned || mobilePinnedSelection;
+      if (mobilePinnedSelection) setTooltipPinned(true);
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -26751,7 +26787,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function queueHoverRefresh({ forceTooltip = false } = {}) {
-      if (isTouchInteractionMode() && !tooltipPinned && !forceTooltip) return;
+      if (isMobileInteractionMode() && !tooltipPinned && !forceTooltip) return;
       if (hoverRefreshRaf) return;
       hoverRefreshRaf = requestAnimationFrame(async () => {
         hoverRefreshRaf = null;
@@ -26785,7 +26821,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const _demoRow = getDistrictDemographics(scope, districtNum);
       const _demoHTML = buildDemoHTML(_demoRow, scope, districtNum);
       if (!contestValue) {
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26838,7 +26874,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (!row) {
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26878,7 +26914,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ? totalVotesRaw
         : (demVotes + repVotes + otherVotes);
       if (totalVotes <= 0) {
-        const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+        const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
@@ -26962,7 +26998,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       } catch (_) {}
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isTouchInteractionMode()));
+      const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
       const subtitleByScope = scope === 'congressional'
         ? 'Congressional District'
         : (scope === 'state_senate' ? 'State Senate' : 'State House');
@@ -27325,7 +27361,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         if (!activeMobileSheetKey && mobileSheetVoteCounterSnapshot !== null) {
           const blocked = !!(document.body.classList.contains('mobile-input-active') || mobileInputFocusSnapshot);
-          if (!blocked && mobileSheetVoteCounterSnapshot) {
+          if (!blocked && mobileSheetVoteCounterSnapshot && voteCounterMinimizeUserOverride) {
             setVoteCounterMinimizedState(false);
           }
           mobileSheetVoteCounterSnapshot = null;
@@ -27543,7 +27579,9 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.classList.remove('mobile-input-active');
       if (!isMobileViewportNow()) return;
       try {
-        if (!snap.voteCounterWasMinimized) setVoteCounterMinimizedState(false);
+        if (!snap.voteCounterWasMinimized && voteCounterMinimizeUserOverride) {
+          setVoteCounterMinimizedState(false);
+        }
       } catch (_) {}
       if (snap.activeSheetKey) {
         openMobileSheet(snap.activeSheetKey, snap.activeSheetSnap || 'half');
@@ -28689,7 +28727,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'precinct-selection-dim',
                 'precinct-fill',
                 'precinct-dot',
-                'precinct-dot-missing'
+                'precinct-dot-missing',
+                'precinct-dot-selected'
               ].filter(id => map.getLayer(id));
               if (precinctHitLayers.length) {
                 const precinctHits = map.queryRenderedFeatures(e.point, { layers: precinctHitLayers });
@@ -28704,7 +28743,7 @@ document.addEventListener('DOMContentLoaded', function() {
               handleCountySelection(countyName);
               setCountyHoverOutline(countyName);
               setTooltipPinned(false);
-              if (isTouchInteractionMode()) {
+              if (isMobileInteractionMode()) {
                 renderCountyHoverAtPoint(e, { forceTooltip: true });
                 setTooltipPinned(true);
               } else {
@@ -29156,9 +29195,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const props = e.features?.[0]?.properties || {};
         const precinctNorm = (props.precinct_norm || '').toString().trim().toUpperCase();
         const countyName = props.county_nam || '';
-        const touchMode = isTouchInteractionMode();
         if (countyName) {
-          if (touchMode) showCountyDetails(countyName);
+          // Retain county context for search/trends, but do not replace the precinct selection.
           lastSelectedCounty = countyName;
         }
         try {
@@ -30029,7 +30067,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTooltipPinned(false);
             renderPrecinctHoverAtPoint(e.point, f, { forceTooltip: true, pinSelection: true });
             if (props.county_nam && props.prec_id) {
-              if (isTouchInteractionMode()) showCountyDetails(props.county_nam);
+              // Do not let a centroid tap replace precinct results with county results.
               lastSelectedCounty = props.county_nam;
               const full = (props.precinct_full_name || props.precinct_desc || props.enr_desc || props.ENR_DESC || '').toString().replace(/\s+/g, ' ').trim();
               const label = full || (props.prec_id || '').toString().trim();
@@ -31302,7 +31340,7 @@ document.addEventListener('DOMContentLoaded', function() {
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: computeMapViewportPadding(28), duration: 1000 });
           showCountyDetails(lastSelectedCounty);
           try {
-            if (isTouchInteractionMode() && typeof renderCountyHoverAtPoint === 'function') {
+            if (isMobileInteractionMode() && typeof renderCountyHoverAtPoint === 'function') {
               const centerLng = (Number(bbox[0]) + Number(bbox[2])) / 2;
               const centerLat = (Number(bbox[1]) + Number(bbox[3])) / 2;
               const projected = (map && typeof map.project === 'function')
