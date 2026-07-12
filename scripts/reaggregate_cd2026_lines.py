@@ -11,6 +11,8 @@ import pandas as pd
 
 
 TARGET_CRS = "EPSG:5070"
+COUNTY_GEOJSON = Path("data/census/tl_2020_37_county20.geojson")
+MIN_COUNTY_OVERLAP_PCT = 0.5
 
 
 def calculate_competitiveness(margin_pct: float) -> str:
@@ -61,10 +63,17 @@ def build_precinct_crosswalk(precinct_geojson: Path, cd_shp: Path, district_col:
     p["prec_area"] = p.geometry.area
 
     d = gpd.read_file(cd_shp)
-    if district_col not in d.columns:
+    district_lookup = {str(col).strip().lower(): col for col in d.columns}
+    district_col_resolved = district_lookup.get(str(district_col).strip().lower())
+    if district_col_resolved is None:
+        for fallback in ("district", "dist", "districts"):
+            if fallback in district_lookup:
+                district_col_resolved = district_lookup[fallback]
+                break
+    if district_col_resolved is None:
         raise ValueError(f"District shapefile missing column: {district_col}")
-    d = d[[district_col, "geometry"]].copy()
-    d["district"] = d[district_col].astype(str).str.strip()
+    d = d[[district_col_resolved, "geometry"]].copy()
+    d["district"] = d[district_col_resolved].astype(str).str.strip()
     d = d[["district", "geometry"]].to_crs(TARGET_CRS)
 
     inter = gpd.overlay(
@@ -111,27 +120,99 @@ def build_vote_maps(results_node: dict) -> dict[str, dict[str, int]]:
     return out
 
 
+def canonicalize_precinct_key(precinct_key: str) -> str:
+    key = str(precinct_key or "").strip().upper()
+    m = re.match(r"^(.*? - [A-Z0-9]+)_.+$", key)
+    if m:
+        return m.group(1)
+    return key
+
+
+def build_target_county_map(
+    county_geojson: Path,
+    cd_shp: Path,
+    district_col: str,
+    target_districts: set[str],
+    min_overlap_pct: float = MIN_COUNTY_OVERLAP_PCT,
+) -> dict[str, set[str]]:
+    counties = gpd.read_file(county_geojson)
+    county_name_col = "NAME20" if "NAME20" in counties.columns else "NAME"
+    counties = counties[[county_name_col, "geometry"]].copy().to_crs(TARGET_CRS)
+    counties["county"] = counties[county_name_col].astype(str).str.strip().str.upper()
+    counties["county_area"] = counties.geometry.area
+
+    districts = gpd.read_file(cd_shp)
+    district_lookup = {str(col).strip().lower(): col for col in districts.columns}
+    district_col_resolved = district_lookup.get(str(district_col).strip().lower())
+    if district_col_resolved is None:
+        for fallback in ("district", "dist", "districts"):
+            if fallback in district_lookup:
+                district_col_resolved = district_lookup[fallback]
+                break
+    if district_col_resolved is None:
+        raise ValueError(f"District shapefile missing column: {district_col}")
+    districts = districts[[district_col_resolved, "geometry"]].copy().to_crs(TARGET_CRS)
+    districts["district"] = (
+        districts[district_col_resolved].astype(str).str.strip().str.replace(r"\.0$", "", regex=True).str.lstrip("0")
+    )
+    districts.loc[districts["district"] == "", "district"] = "0"
+    districts = districts[districts["district"].isin(target_districts)].copy()
+
+    inter = gpd.overlay(
+        counties[["county", "county_area", "geometry"]],
+        districts[["district", "geometry"]],
+        how="intersection",
+        keep_geom_type=False,
+    )
+    inter["overlap_area"] = inter.geometry.area
+    inter = inter[inter["overlap_area"] > 0].copy()
+    inter["pct_of_county"] = inter["overlap_area"] / inter["county_area"] * 100.0
+    inter = inter[inter["pct_of_county"] >= float(min_overlap_pct)].copy()
+
+    target_counties: dict[str, set[str]] = defaultdict(set)
+    for _, row in inter.iterrows():
+        target_counties[str(row["district"]).strip()].add(str(row["county"]).strip().upper())
+    return dict(target_counties)
+
+
 def weighted_aggregate(
     vote_map: dict[str, dict[str, int]],
     crosswalk: pd.DataFrame,
+    target_counties: dict[str, set[str]] | None = None,
 ) -> tuple[dict[str, dict[str, int]], int, int]:
     by_precinct: dict[str, list[tuple[str, float]]] = defaultdict(list)
     for _, r in crosswalk.iterrows():
-        by_precinct[str(r["precinct_key"]).strip().upper()].append((str(r["district"]).strip(), float(r["area_weight"])))
+        raw_key = str(r["precinct_key"]).strip().upper()
+        by_precinct[raw_key].append((str(r["district"]).strip(), float(r["area_weight"])))
 
     out: dict[str, dict[str, float]] = defaultdict(lambda: {"dem_votes": 0.0, "rep_votes": 0.0, "other_votes": 0.0})
     matched = 0
     total = 0
     for pk, votes in vote_map.items():
+        county = pk.split(" - ", 1)[0].strip().upper() if " - " in pk else ""
         total += 1
         alloc = by_precinct.get(pk)
         if not alloc:
+            alloc = by_precinct.get(canonicalize_precinct_key(pk))
+        if not alloc:
+            continue
+        filtered_alloc: list[tuple[str, float]] = []
+        for district, w in alloc:
+            allowed_counties = (target_counties or {}).get(str(district).strip())
+            if allowed_counties is not None and county not in allowed_counties:
+                continue
+            filtered_alloc.append((district, w))
+        if not filtered_alloc:
             continue
         matched += 1
-        for district, w in alloc:
-            out[district]["dem_votes"] += votes["dem_votes"] * w
-            out[district]["rep_votes"] += votes["rep_votes"] * w
-            out[district]["other_votes"] += votes["other_votes"] * w
+        weight_sum = sum(w for _, w in filtered_alloc)
+        if weight_sum <= 0:
+            continue
+        for district, w in filtered_alloc:
+            w_norm = w / weight_sum
+            out[district]["dem_votes"] += votes["dem_votes"] * w_norm
+            out[district]["rep_votes"] += votes["rep_votes"] * w_norm
+            out[district]["other_votes"] += votes["other_votes"] * w_norm
 
     rounded: dict[str, dict[str, int]] = {}
     for d, vals in out.items():
@@ -166,11 +247,23 @@ def patch_district_row(template_row: dict, new_votes: dict[str, int]) -> dict:
     return row
 
 
+def is_uncontested_partisan_contest(agg_votes: dict[str, dict[str, int]]) -> bool:
+    dem_total = 0
+    rep_total = 0
+    other_total = 0
+    for row in agg_votes.values():
+        dem_total += int(row.get("dem_votes", 0) or 0)
+        rep_total += int(row.get("rep_votes", 0) or 0)
+        other_total += int(row.get("other_votes", 0) or 0)
+    return (dem_total == 0 or rep_total == 0) and other_total == 0
+
+
 def main() -> None:
     args = parse_args()
     target_districts = {d.strip().lstrip("0") or "0" for d in str(args.target_districts).split(",") if d.strip()}
 
     crosswalk = build_precinct_crosswalk(args.precinct_geojson, args.cd_shapefile, args.district_col)
+    target_counties = build_target_county_map(COUNTY_GEOJSON, args.cd_shapefile, args.district_col, target_districts)
     args.out_crosswalk.parent.mkdir(parents=True, exist_ok=True)
     crosswalk.to_csv(args.out_crosswalk, index=False)
     print(f"Wrote crosswalk: {args.out_crosswalk} ({len(crosswalk):,} rows)")
@@ -179,23 +272,27 @@ def main() -> None:
     results_by_year = agg.get("results_by_year", {})
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    for src in sorted(args.in_dir.glob("*.json")):
+    for src in sorted(args.in_dir.glob("congressional_*.json")):
         dst = args.out_dir / src.name
-        payload = json.loads(src.read_text(encoding="utf-8"))
+        payload_path = dst if dst.exists() else src
+        payload = json.loads(payload_path.read_text(encoding="utf-8"))
         meta = extract_cd_file_meta(src.name)
         if not meta:
-            dst.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             continue
         contest_type, year = meta
         year_node = results_by_year.get(str(year), {})
         contest_node = (((year_node.get(contest_type) or {}).get("general")) or {}).get("results")
         if not isinstance(contest_node, dict):
-            dst.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             print(f"Skipped {src.name}: no precinct aggregate for {contest_type} {year}")
             continue
 
         vote_map = build_vote_maps(contest_node)
-        agg_votes, matched, total = weighted_aggregate(vote_map, crosswalk)
+        agg_votes, matched, total = weighted_aggregate(vote_map, crosswalk, target_counties=target_counties)
+        if agg_votes and is_uncontested_partisan_contest(agg_votes):
+            if dst.exists():
+                dst.unlink()
+            print(f"Skipped {src.name}: uncontested partisan contest")
+            continue
 
         results = (((payload.get("general") or {}).get("results")) or {})
         for district in target_districts:

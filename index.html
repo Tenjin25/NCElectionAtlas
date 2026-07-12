@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-03';
-    const APP_BUILD_ID = '2026-07-12-03';
+    const DATA_CACHE_BUSTER = '2026-07-12-04';
+    const APP_BUILD_ID = '2026-07-12-04';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29775,7 +29775,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!rawName) return '';
       const normalized = normalizeFriendlyPrecinctName(rawName);
       if (countyNorm === 'CRAVEN' && normalized.toUpperCase() === 'VAN EP') return 'Van-EP Vanceboro';
-      if (countyNorm === 'DAVIE' && normalized.toUpperCase() === 'NORTH MOCKS CITY') return 'North Mocksville City';
+      if (countyNorm === 'DAVIE' && normalized.toUpperCase() === 'NORTH MOCKS CITY') return 'North Mocksville County';
       if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/NORTH') return 'Lincolnton North';
       if (countyNorm === 'LINCOLN' && normalized.toUpperCase() === 'LINCOLNTON/SOUTH') return 'Lincolnton South';
       return normalized;
