@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-09';
-    const APP_BUILD_ID = '2026-07-12-09';
+    const DATA_CACHE_BUSTER = '2026-07-12-10';
+    const APP_BUILD_ID = '2026-07-12-10';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11390,8 +11390,8 @@ document.addEventListener('DOMContentLoaded', function() {
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
         senateResidualElasticityEnabled: false,
-        incumbentParty: 'DEM',
-        incumbentBoostPts: 1.75,
+        nomineeStrengthParty: 'DEM',
+        nomineeStrengthPts: 1.75,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -17007,8 +17007,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateUrbanDemWeightRaw = Number(modeledDef?.urbanDemElasticityWeight);
           const senateAnomalyClampRaw = Number(modeledDef?.anomalySwingClampPts);
           const senateTrendCarryRaw = Number(modeledDef?.trendCarryoverWeight);
-          const senateIncumbentBoostRaw = Number(modeledDef?.incumbentBoostPts);
-          const senateIncumbentParty = String(modeledDef?.incumbentParty || '').trim().toUpperCase();
+          const senateNomineeStrengthRaw = Number(modeledDef?.nomineeStrengthPts);
+          const senateNomineeStrengthParty = String(modeledDef?.nomineeStrengthParty || '').trim().toUpperCase();
           const senateAnomalyCountySet = new Set(
             (Array.isArray(modeledDef?.anomalyClampCounties) ? modeledDef.anomalyClampCounties : ['ROBESON', 'BLADEN', 'SCOTLAND'])
               .map(v => normalizeCountyToken(v))
@@ -17028,7 +17028,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateUrbanDemWeight = Number.isFinite(senateUrbanDemWeightRaw) ? Math.max(0, Math.min(1, senateUrbanDemWeightRaw)) : 0.25;
           const senateAnomalyClampPts = Number.isFinite(senateAnomalyClampRaw) ? Math.max(4, Math.min(24, senateAnomalyClampRaw)) : 12;
           const senateTrendCarryWeight = Number.isFinite(senateTrendCarryRaw) ? Math.max(0, Math.min(1, senateTrendCarryRaw)) : 0.40;
-          const senateIncumbentBoostPts = Number.isFinite(senateIncumbentBoostRaw) ? Math.max(0, Math.min(4, senateIncumbentBoostRaw)) : 2.0;
+          const senateNomineeStrengthPts = Number.isFinite(senateNomineeStrengthRaw) ? Math.max(0, Math.min(4, senateNomineeStrengthRaw)) : 2.0;
           const senateDebugCfg = (() => {
             try {
               const cfg = window.SENATE_MODEL_DEBUG || {};
@@ -17614,8 +17614,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     * (0.80 + (0.20 * outlierBrake));
                 }
 
-                if (senateIncumbentBoostPts > 0 && (senateIncumbentParty === 'DEM' || senateIncumbentParty === 'REP')) {
-                  const sign = senateIncumbentParty === 'REP' ? 1 : -1;
+                if (senateNomineeStrengthPts > 0 && (senateNomineeStrengthParty === 'DEM' || senateNomineeStrengthParty === 'REP')) {
+                  const sign = senateNomineeStrengthParty === 'REP' ? 1 : -1;
                   const polarizedScale = 0.45 + (0.55 * computeFederalizationBrake(Math.abs(weightedCountyBase), 18, 36, 0.45));
                   const durableScore = clamp01(Number(senateDiag?.durableScore ?? 0.55));
                   const medianDev = Number(senateDiag?.medianDev);
@@ -17630,7 +17630,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   else if (senateFamily === 'realigned_former_d_federal') portability *= 0.90;
                   else if (senateFamily === 'metro_suburban') portability *= 1.04;
                   if (isRealignedFormerDemFederalCounty) portability *= 0.82;
-                  targetSigned += sign * senateIncumbentBoostPts * polarizedScale * portability;
+                  targetSigned += sign * senateNomineeStrengthPts * polarizedScale * portability;
                 }
               }
 
