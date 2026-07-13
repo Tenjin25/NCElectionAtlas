@@ -18,10 +18,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
-try:
-    import geopandas as gpd
-except ImportError:  # Attribute-only SBE reads can use the lighter pyshp fallback.
-    gpd = None
+import geopandas as gpd
 
 from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, load_vap, shatter_votes
 
@@ -73,8 +70,6 @@ KNOWN_OFFICE_KEYS = {
     "NC SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
     "SUPERINTENDENT OF PUBLIC INSTRUCTION": "superintendent",
     "SUPER. OF PUBLIC INSTRUCTION": "superintendent",
-    "NC HOUSE OF REPRESENTATIVES": "state_house",
-    "NC STATE SENATE": "state_senate",
     "NC COURT OF APPEALS JUDGE SEAT 12": "nc_court_of_appeals_judge_seat_12",
     "NC COURT OF APPEALS JUDGE SEAT 14": "nc_court_of_appeals_judge_seat_14",
     "NC COURT OF APPEALS JUDGE SEAT 15": "nc_court_of_appeals_judge_seat_15",
@@ -173,14 +168,7 @@ def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
     """
     if not shp_path.exists():
         return {}
-    if gpd is not None:
-        g0 = gpd.read_file(shp_path)
-    else:
-        import shapefile
-
-        reader = shapefile.Reader(str(shp_path))
-        field_names = [field[0] for field in reader.fields[1:]]
-        g0 = pd.DataFrame(reader.records(), columns=field_names)
+    g0 = gpd.read_file(shp_path)
     cols = {c.lower(): c for c in list(g0.columns)}
 
     # Support multiple vintage schemas.
@@ -464,10 +452,6 @@ def calculate_competitiveness(margin_pct: float) -> str:
 def load_district_map(path: Path, block_col: str, district_col: str) -> pd.DataFrame:
     d = pd.read_csv(path, dtype=str)
     d.columns = [str(c).strip() for c in d.columns]
-    if block_col not in d.columns and "block_geoid20" in d.columns:
-        block_col = "block_geoid20"
-    if district_col not in d.columns and "district" in d.columns:
-        district_col = "district"
     out = d[[block_col, district_col]].copy()
     out.columns = ["block_geoid20", "district"]
     out["block_geoid20"] = out["block_geoid20"].astype(str).str.strip().str.zfill(15)
@@ -476,30 +460,6 @@ def load_district_map(path: Path, block_col: str, district_col: str) -> pd.DataF
     out.loc[m, "district"] = out.loc[m, "district"].str.lstrip("0")
     out.loc[out["district"] == "", "district"] = "0"
     return out.dropna().drop_duplicates(subset=["block_geoid20"], keep="first")
-
-
-def build_precinct_district_vap_shares(
-    crosswalk_df: pd.DataFrame,
-    vap_df: pd.DataFrame,
-    district_map: pd.DataFrame,
-) -> pd.DataFrame:
-    """Precompute invariant precinct-to-district VAP weights for all contests."""
-    blocks = (
-        crosswalk_df[["block_geoid20", "precinct_id"]]
-        .merge(vap_df[["block_geoid20", "vap_count"]], on="block_geoid20", how="left")
-        .merge(district_map[["block_geoid20", "district"]], on="block_geoid20", how="inner")
-    )
-    blocks["vap_count"] = blocks["vap_count"].fillna(Decimal(0))
-    grouped = blocks.groupby(["precinct_id", "district"], as_index=False)["vap_count"].sum()
-    totals = grouped.groupby("precinct_id", as_index=False)["vap_count"].sum().rename(
-        columns={"vap_count": "precinct_vap"}
-    )
-    grouped = grouped.merge(totals, on="precinct_id", how="left")
-    grouped["share"] = grouped.apply(
-        lambda r: Decimal(0) if r["precinct_vap"] == 0 else r["vap_count"] / r["precinct_vap"],
-        axis=1,
-    )
-    return grouped[["precinct_id", "district", "share"]]
 
 def _signed_margin_pct(dem_votes: int, rep_votes: int, total_votes: int) -> float:
     t = float(total_votes or 0)
@@ -1186,7 +1146,6 @@ def agg_party_to_scope(
     county_shares: pd.DataFrame,
     precinct_bucket_shares: pd.DataFrame,
     matched_precincts: set[str],
-    precinct_district_vap_shares: pd.DataFrame | None = None,
     county_non_geo_party: pd.DataFrame | None = None,
 ) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
     def _alloc_all_votes_by_bucket_then_county(res_df: pd.DataFrame) -> dict[str, int]:
@@ -1258,23 +1217,14 @@ def agg_party_to_scope(
 
     for col in ["dem_votes", "rep_votes", "other_votes"]:
         res_df = to_results_df(precinct_party, col)
-        if precinct_district_vap_shares is not None:
-            allocated = res_df.merge(precinct_district_vap_shares, on="precinct_id", how="inner")
-            matched = max(matched, int(allocated["precinct_id"].nunique()))
-            allocated["block_votes_raw"] = allocated["votes"] * allocated["share"]
-            agg = allocated.groupby("district", as_index=False)["block_votes_raw"].sum()
-            agg["votes_rounded"] = agg["block_votes_raw"].map(
-                lambda x: int(x.quantize(Decimal("1")))
-            )
-        else:
-            shattered, audit = shatter_votes(
-                results_df=res_df,
-                crosswalk_df=crosswalk_df,
-                vap_df=vap_df,
-                precision=28,
-            )
-            matched = max(matched, int(len(audit)))
-            agg = aggregate_to_districts(shattered, map_path, block_col, district_col)
+        shattered, audit = shatter_votes(
+            results_df=res_df,
+            crosswalk_df=crosswalk_df,
+            vap_df=vap_df,
+            precision=28,
+        )
+        matched = max(matched, int(len(audit)))
+        agg = aggregate_to_districts(shattered, map_path, block_col, district_col)
         party_district[col] = apply_unmatched_county_fallback(
             district_df=agg,
             results_df=res_df,
@@ -1433,14 +1383,6 @@ def main() -> None:
         help="Optional regex to filter derived contest_type keys (e.g. '^president$' or '^nc_').",
     )
     parser.add_argument(
-        "--include-legislative-synthetic",
-        action="store_true",
-        help=(
-            "Combine district-specific NC House and NC Senate offices into statewide "
-            "party-vote contests so they can be overlaid onto a different legislative plan."
-        ),
-    )
-    parser.add_argument(
         "--contests-only",
         action="store_true",
         help="Only write precinct-level contest slices (skip VAP shatter + district aggregation).",
@@ -1481,19 +1423,6 @@ def main() -> None:
     build_auto_precinct_overrides._sbe_map = sbe_map  # type: ignore[attr-defined]
 
     src = pd.read_csv(args.results_csv, dtype=str, low_memory=False)
-    if args.include_legislative_synthetic:
-        office_u = src["office"].fillna("").astype(str).str.strip().str.upper()
-        synthetic_frames = []
-        house_rows = src[office_u.str.match(r"^NC HOUSE OF REPRESENTATIVES DISTRICT\s*0*[0-9]+$")].copy()
-        if not house_rows.empty:
-            house_rows["office"] = "NC HOUSE OF REPRESENTATIVES"
-            synthetic_frames.append(house_rows)
-        senate_rows = src[office_u.str.match(r"^NC STATE SENATE DISTRICT\s*0*[0-9]+$")].copy()
-        if not senate_rows.empty:
-            senate_rows["office"] = "NC STATE SENATE"
-            synthetic_frames.append(senate_rows)
-        if synthetic_frames:
-            src = pd.concat([src, *synthetic_frames], ignore_index=True)
     crosswalk_df = load_crosswalk(args.crosswalk_csv, "precinct_id", "block_geoid20")
     matched_precincts = set(crosswalk_df["precinct_id"].astype(str).str.strip().str.upper().unique())
     src_precinct_ids = (
@@ -1617,9 +1546,6 @@ def main() -> None:
         min_county_share=args.min_county_share,
     )
     cd_bucket_shares = build_precinct_bucket_shares(crosswalk_df, vap_df, cd_map)
-    house_precinct_vap_shares = build_precinct_district_vap_shares(crosswalk_df, vap_df, house_map)
-    senate_precinct_vap_shares = build_precinct_district_vap_shares(crosswalk_df, vap_df, senate_map)
-    cd_precinct_vap_shares = build_precinct_district_vap_shares(crosswalk_df, vap_df, cd_map)
 
     out_dir = args.district_contests_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1647,12 +1573,6 @@ def main() -> None:
             county_non_geo_party = None
         if precinct_party.empty:
             continue
-        if contest_type == "state_house" and args.include_legislative_synthetic:
-            dem_candidate = "Democratic House candidates"
-            rep_candidate = "Republican House candidates"
-        elif contest_type == "state_senate" and args.include_legislative_synthetic:
-            dem_candidate = "Democratic Senate candidates"
-            rep_candidate = "Republican Senate candidates"
 
         dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
             precinct_party,
@@ -1664,7 +1584,6 @@ def main() -> None:
             house_shares,
             house_bucket_shares,
             matched_precincts,
-            precinct_district_vap_shares=house_precinct_vap_shares,
             county_non_geo_party=county_non_geo_party,
         )
         dem_s, rep_s, oth_s, _, _ = agg_party_to_scope(
@@ -1677,7 +1596,6 @@ def main() -> None:
             senate_shares,
             senate_bucket_shares,
             matched_precincts,
-            precinct_district_vap_shares=senate_precinct_vap_shares,
             county_non_geo_party=county_non_geo_party,
         )
         dem_c, rep_c, oth_c, _, _ = agg_party_to_scope(
@@ -1690,7 +1608,6 @@ def main() -> None:
             cd_shares,
             cd_bucket_shares,
             matched_precincts,
-            precinct_district_vap_shares=cd_precinct_vap_shares,
             county_non_geo_party=county_non_geo_party,
         )
 
