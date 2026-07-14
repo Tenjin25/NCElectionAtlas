@@ -1,7 +1,16 @@
+"""Build precinct label points that always lie inside their polygons.
+
+Uses shapely representative_point (guaranteed on-surface) instead of a raw
+bounding-box midpoint, which can land in a neighboring precinct for concave
+or L-shaped polygons (observed in Cabarrus 01-10 / 02-01).
+"""
+from __future__ import annotations
+
 import json
-import math
 import re
 from pathlib import Path
+
+from shapely.geometry import shape
 
 
 RE_NON_KEY = re.compile(r"[^a-z0-9 .\-]", flags=re.IGNORECASE)
@@ -19,37 +28,25 @@ def clean_label(raw: str) -> str:
     return RE_WS.sub(" ", str(raw or "").strip())
 
 
-def scan_bbox(coords, bbox):
-    # coords can be nested lists; leaf is [x, y] (or [x, y, ...]).
-    if not coords:
-        return
-    first = coords[0]
-    if isinstance(first, (float, int)):
-        x = float(coords[0])
-        y = float(coords[1])
-        bbox[0] = min(bbox[0], x)
-        bbox[1] = min(bbox[1], y)
-        bbox[2] = max(bbox[2], x)
-        bbox[3] = max(bbox[3], y)
-        return
-    for sub in coords:
-        scan_bbox(sub, bbox)
-
-
-def centroid_from_bbox(geom) -> tuple[float, float] | None:
-    if not geom:
+def point_inside_geom(geom_obj) -> tuple[float, float] | None:
+    if not geom_obj:
         return None
-    coords = geom.get("coordinates")
-    if coords is None:
+    try:
+        geom = shape(geom_obj)
+    except Exception:
         return None
-    bbox = [math.inf, math.inf, -math.inf, -math.inf]
-    scan_bbox(coords, bbox)
-    if not math.isfinite(bbox[0]) or not math.isfinite(bbox[1]):
+    if geom.is_empty:
         return None
-    return ((bbox[0] + bbox[2]) / 2.0, (bbox[1] + bbox[3]) / 2.0)
+    # Prefer a guaranteed interior point; fall back to centroid if needed.
+    pt = geom.representative_point()
+    if pt.is_empty:
+        pt = geom.centroid
+    if pt.is_empty:
+        return None
+    return (float(pt.x), float(pt.y))
 
 
-def main():
+def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     in_path = repo_root / "data" / "Voting_Precincts.geojson"
     out_path = repo_root / "data" / "precinct_centroids.geojson"
@@ -67,11 +64,10 @@ def main():
         prec_id = (props.get("prec_id") or "").strip()
         if not county_nam or not prec_id:
             continue
-        c = centroid_from_bbox(feat.get("geometry"))
+        c = point_inside_geom(feat.get("geometry"))
         if not c:
             continue
         x, y = c
-        # Keep the output small and deterministic.
         x = round(x, 6)
         y = round(y, 6)
         out_features.append(
@@ -100,4 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
