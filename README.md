@@ -74,7 +74,7 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
-- **Unopposed Filtering (Counties):** Unopposed Council of State contests are hidden from the Counties picker
+- **Unopposed Filtering (Counties):** Unopposed Council of State contests and uncontested / same-party-only judicial contests are hidden from the Counties picker
 	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 	- **County Focus Panel (Newsroom-style):** Clicking a county gives a dominant **At a glance** summary (winner, margin strength, vote split, story, “what to watch”), plus a short **Why it votes this way** explainer, a **Confidence** meter, and a one-line **Compared with North Carolina** context sentence; deeper detail stays behind expandable sections
 	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Stable Republican (Stronghold)`, `Strengthening Democratic (Edge)`, `Emerging Republican (Tilt)`, or `Battleground`, with the category pill stacked under the trajectory header for more readable long labels
@@ -101,13 +101,25 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
-- **Judicial Contests:** Supported in Counties view when corresponding JSON slices exist
+- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts from **2008 onward** when contested two-party margins can be shown (pre-2018 ballots were nonpartisan; party leans come from `data/mappings/judicial_candidate_party_overrides.csv`). Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 12, 2026
+**Last updated:** July 14, 2026
 
+### Pre-2018 Judicial County/Precinct Layers + Nickname Labels (July 14, 2026)
+
+- Reaggregated contested NC Supreme Court and Court of Appeals seats for **2008–2016** into `data/contests/` (same precinct-row layout already used by Counties and Precincts), and refreshed `data/contests/manifest.json`.
+- Added `data/mappings/judicial_candidate_party_overrides.csv` and wired it through `scripts/build_district_contests_from_batch_shatter.py` so blank / nonpartisan OE party labels map to DEM/REP leans for displayable margins.
+- Added `scripts/reaggregate_pre2018_judicial_contests.py` to rebuild those judicial county/precinct slices for selected years, applying the override map and **skipping uncontested** seats (unopposed, same-party-only generals, or missing DEM/REP totals after overrides).
+- 25 contested pre-2018 judicial slices are now live in the Counties picker (plus existing 2016 Court of Appeals seats and the remapped 2016 Edmunds/Morgan Supreme Court race). Intentionally skipped examples include Stroud 2014 (unopposed), Martin 2008 (unopposed), Steelman 2010 (unopposed), Tyson 2008 (both general candidates Democratic), Elmore 2010 (both Republican), and the 2010 multi-candidate IRV vacancy.
+- Extended office-key inference for older OE labels (`NC … - Name Seat`, unseated 2016 Supreme Court associate justice) and named-seat display names in the contest picker.
+- Removed the front-end `year < 2018` judicial hide rule; Counties now filters judicial contests with the same `major_party_contested` gate used for Council of State.
+- Candidate tooltips / focus panels / vote-counter labels now prefer ballot nicknames from parentheses when OE provides them (`Michael R. (Mike) Morgan` → `Mike Morgan`, `Robert H. (Bob) Edmunds, Jr.` → `Bob Edmunds, Jr.`).
+- Switched the live atlas precinct geometry / choropleth remaps / VAP bridges onto `data/2025Voting_Precincts.geojson`, repaired selected 2020 precinct contest joins (including OE-backed county rebuilds), and pointed `scripts/build_precinct_friendly_names.js` at that geometry.
+- Regenerated `data/precinct_friendly_names.json` with fixes for mangled OneMap labels such as Cleveland `S E` / `S N` (`Shelby East` / `Shelby North`) and Orange `HE` (`Hillsborough East`), including stronger smash-token / glued-direction cleanup in the Node builder.
+- Bumped the front-end data cache-buster / app build tokens to `2026-07-14-2` so Pages clients fetch the new contest slices, friendly names, and nickname labeling promptly after deploy.
 ### Demographics + Accessibility (March 21, 2026)
 
 - Added a dedicated `Demographics` map mode across counties, congressional districts, state house, state senate, and precinct overlays.
@@ -1198,14 +1210,16 @@ The Counties view aggregates these rows to county totals and also uses them to p
 - `total_votes`
 - `major_party_contested`
 
-The Counties dropdown uses `major_party_contested` to suppress unopposed Council of State contests.
+The Counties dropdown uses `major_party_contested` to suppress unopposed Council of State contests and uncontested judicial contests.
 
 ### 2. Precinct Geometry (Precincts Overlay)
 
-- `data/Voting_Precincts.geojson` — Polygon boundaries for all precincts
+- `data/2025Voting_Precincts.geojson` — Live polygon boundaries for the atlas precinct overlay (current NCOneMap 2025 keyspace)
+- `data/Voting_Precincts.geojson` — Earlier precinct geometry retained for scripts/comparisons that still reference it
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
 - `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
 - `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show human-readable precinct names in hover/selection UI
+- `data/mappings/judicial_candidate_party_overrides.csv` — Pre-2018 (and selected blank-party) judicial candidate → DEM/REP/OTHER leans used when building county/precinct contest slices
 
 To rebuild from the latest NCSBE shapefile:
 
@@ -1213,7 +1227,7 @@ To rebuild from the latest NCSBE shapefile:
 py scripts/build_voting_precincts_geojson.py
 ```
 
-To (re)generate friendly precinct display names from the alias index:
+To (re)generate friendly precinct display names from the alias index + live geometry:
 
 ```powershell
 node scripts/build_precinct_friendly_names.js
@@ -1222,7 +1236,7 @@ node scripts/build_precinct_friendly_names.js
 Notes:
 - This mapping is intentionally **county-scoped**: the same short code can mean different things in different counties.
 - If a code has no known friendly name, the UI falls back to showing the raw code.
-
+- The friendly-name builder defaults to `data/2025Voting_Precincts.geojson` and applies county overrides last so confirmed labels (for example, Cleveland Shelby seats) are not overwritten by smash tokens.
 ### 3. District Contest Slices (District Views)
 
 - `data/district_contests/<scope>_<contest_type>_<year>.json` — Aggregated results for each district
@@ -1540,6 +1554,12 @@ py scripts/build_district_contests_from_batch_shatter.py `
   --write-contests
 ```
 
+To rebuild contested pre-2018 judicial county/precinct slices (overrides + uncontested skip):
+
+```powershell
+py scripts/reaggregate_pre2018_judicial_contests.py --years 2008,2010,2012,2014,2016
+```
+
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
@@ -1578,6 +1598,7 @@ Coverage is tracked per contest and per county. Remaining unmatched keys are han
   - Counties view → `data/contests/manifest.json`
   - District views → `data/district_contests/manifest.json`
 - **A Council of State contest/year is missing in Counties view:** Check `major_party_contested` in `data/contests/manifest.json`. Unopposed contests are intentionally hidden.
+- **A pre-2018 judicial contest is missing in Counties view:** Confirm it exists in `data/contests/` and that `major_party_contested` is `true` after overrides. Rebuild with `scripts/reaggregate_pre2018_judicial_contests.py` if needed; uncontested / same-party seats are intentionally skipped.
 - **Controls panel is missing / you only see the map:** This is almost always a UI layering issue. Confirm `.main-controls` is `position: fixed` (or `absolute`) with a `z-index` above `#map`; hard refresh (`Ctrl+Shift+R`) after CSS edits.
 - **On desktop, hover feels “too thin” (no vote deltas / census line):** Hover previews are intentionally compact, but should still show a small `Votes Δ`/population line plus a single census context line. If you don’t see them, hard refresh (`Ctrl+Shift+R`) after pulling the latest `index.html`.
 - **Demographics chips are hard to read in hover cards:** Turn on `High contrast demographics` in controls, then hard refresh (`Ctrl+Shift+R`) to ensure latest CSS/JS assets are loaded.
