@@ -53,6 +53,20 @@ Artifacts:
 - `precinct_key_overrides_2008_vtd00_auto.csv`
 - `qa_2008_vtd00_salvage_summary.json`
 
+## 2008 SBE Shapefile Salvage
+
+Closest official NCSBE precinct maps near 2008:
+- `Precincts2006Gen.zip`
+- `SBE_PRECINCTS_20120901.zip`
+from https://dl.ncsbe.gov/?prefix=ShapeFiles/Precinct/
+
+```bash
+python scripts/salvage_2008_overrides_from_sbe.py --apply-to-overrides
+python scripts/report_unmatched_precincts.py
+```
+
+Artifacts: `precinct_key_overrides_2008_sbe_*.csv`, `sbe2012_to_nconemap_*.csv`, `qa_2008_sbe_salvage_summary.json`.
+
 ## Recommended Workflow
 
 1. Read `unmatched_precinct_summary.csv` to choose the next year/county target.
