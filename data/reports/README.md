@@ -39,6 +39,34 @@ Older intermediate artifacts are moved to `data/reports/archive/`.
 - `qa_2010_added_overrides_summary.csv`  
   Summary QA metrics for 2010 rewrite/applied override batches.
 
+## 2008 Name-Only Salvage (VTD00)
+
+2008 NCSBE `results_pct` exports drop `precinct_abbrv` and keep display names only.
+Salvage path:
+
+1. Build `data/crosswalks/vtd00_to_nconemap_*` via `scripts/build_vtd_to_modern_precinct_crosswalk.py`
+2. Generate/apply overrides with `scripts/salvage_2008_overrides_from_vtd00.py --apply-to-overrides`
+3. Re-run `scripts/report_unmatched_precincts.py`
+
+Artifacts:
+- `precinct_key_overrides_2008_vtd00_suggestions.csv`
+- `precinct_key_overrides_2008_vtd00_auto.csv`
+- `qa_2008_vtd00_salvage_summary.json`
+
+## 2008 SBE Shapefile Salvage
+
+Closest official NCSBE precinct maps near 2008:
+- `Precincts2006Gen.zip`
+- `SBE_PRECINCTS_20120901.zip`
+from https://dl.ncsbe.gov/?prefix=ShapeFiles/Precinct/
+
+```bash
+python scripts/salvage_2008_overrides_from_sbe.py --apply-to-overrides
+python scripts/report_unmatched_precincts.py
+```
+
+Artifacts: `precinct_key_overrides_2008_sbe_*.csv`, `sbe2012_to_nconemap_*.csv`, `qa_2008_sbe_salvage_summary.json`.
+
 ## Recommended Workflow
 
 1. Read `unmatched_precinct_summary.csv` to choose the next year/county target.
