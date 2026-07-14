@@ -424,7 +424,8 @@ def is_non_geographic_precinct(name: str, county: str | None = None) -> bool:
     # Some counties use a compact "ONESTOP" label.
     if t == "ONESTOP" or t.startswith("ONESTOP "):
         return True
-    if re.match(r"^EV[A-Z0-9]+$", t):
+    # Bare "EV" appears in some county exports (e.g. Henderson) as an early-vote bucket.
+    if t == "EV" or re.match(r"^EV[A-Z0-9]+$", t):
         return True
     return any(flag in t for flag in NON_GEO_FLAGS)
 
