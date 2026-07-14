@@ -48,7 +48,7 @@ def point_inside_geom(geom_obj) -> tuple[float, float] | None:
 
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    in_path = repo_root / "data" / "Voting_Precincts.geojson"
+    in_path = repo_root / "data" / "2025Voting_Precincts.geojson"
     out_path = repo_root / "data" / "precinct_centroids.geojson"
 
     if not in_path.exists():

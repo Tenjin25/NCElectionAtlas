@@ -1,6 +1,6 @@
 """
 Build area-weighted crosswalks from local precinct geometries
-(data/Voting_Precincts.geojson) to NC court-ordered 2022 district lines.
+(data/2025Voting_Precincts.geojson) to NC court-ordered 2022 district lines.
 """
 from __future__ import annotations
 
@@ -129,7 +129,7 @@ def main() -> None:
     data_dir = root / "data"
     census = data_dir / "census"
 
-    precincts = _load_precincts(data_dir / "Voting_Precincts.geojson")
+    precincts = _load_precincts(data_dir / "2025Voting_Precincts.geojson")
     house_shp = _resolve_existing_path(
         [
             data_dir / "tl_2022_37_sldl" / "tl_2022_37_sldl.shp",

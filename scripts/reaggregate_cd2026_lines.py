@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Build a precinct->CD2026 crosswalk from SL 2025-95 and patch CD slices (e.g., CD-01 and CD-03)."
     )
-    p.add_argument("--precinct-geojson", type=Path, default=Path("data/Voting_Precincts.geojson"))
+    p.add_argument("--precinct-geojson", type=Path, default=Path("data/2025Voting_Precincts.geojson"))
     p.add_argument("--cd-shapefile", type=Path, default=Path("data/sl2025_95_shapefile/SL 2025-95.shp"))
     p.add_argument("--district-col", default="District")
     p.add_argument("--aggregated", type=Path, default=Path("data/nc_elections_aggregated.json"))

@@ -1,4 +1,4 @@
-"""Fix 2020 precinct contest keys for Voting_Precincts choropleth join.
+"""Fix 2020 precinct contest keys for 2025Voting_Precincts choropleth join.
 
 1) Rename high-confidence key variants onto polygon IDs (Gaston *A / -1, Rockingham
    ED vs ED-1, etc.).
@@ -25,7 +25,7 @@ def norm(s: object) -> str:
 
 
 def load_poly_by_county() -> dict[str, set[str]]:
-    gdf = gpd.read_file(ROOT / "data/Voting_Precincts.geojson")
+    gdf = gpd.read_file(ROOT / "data/2025Voting_Precincts.geojson")
     out: dict[str, set[str]] = defaultdict(set)
     for _, r in gdf.iterrows():
         county = norm(r["county_nam"])
@@ -36,52 +36,41 @@ def load_poly_by_county() -> dict[str, set[str]]:
 
 
 def gaston_style_remap(code: str, poly: set[str]) -> str:
-    """Map '1A'/'10A' onto '01'/'10' or '06-1' when those are the polygon IDs."""
-    m = re.fullmatch(r"0*([0-9]{1,3})A", code)
-    if not m:
+    """Map OE/legacy '01'/'04-1' onto 2025 OneMap '*A' IDs (1A, 4A, 10A...)."""
+    if code in poly:
         return code
-    n = int(m.group(1))
-    z2 = f"{n:02d}"
-    bare = str(n)
-    for cand in (z2, bare, f"{z2}-1", f"{bare}-1"):
-        if cand in poly:
-            return cand
+    # Already A-suffixed
+    if re.fullmatch(r"0*[0-9]{1,3}A", code):
+        n = int(re.fullmatch(r"0*([0-9]{1,3})A", code).group(1))
+        for cand in (f"{n}A", f"{n:02d}A"):
+            if cand in poly:
+                return cand
+        return code
+    # Bare or zero-padded integer, optional -1 split suffix used on older layers
+    m = re.fullmatch(r"0*([0-9]{1,3})(?:-1)?", code)
+    if m:
+        n = int(m.group(1))
+        for cand in (f"{n}A", f"{n:02d}A"):
+            if cand in poly:
+                return cand
     return code
 
 
 def rockingham_remap(code: str, poly: set[str]) -> str:
-    aliases = {
-        "ED": "ED-1",
-        "HO-1": "HO",
-        "HU-1": "HU",
-        "LI-1": "LI",
-        "WS-1": "WS",
-        "RE-1": "RC",  # only if RC in poly and RE-1 not — validate below
-        "RE-2": "RC",
-    }
-    # Careful with RE-*: only map if target exists and source doesn't
+    # 2025Voting_Precincts already uses ED / HO-1 / WS-1 style IDs — keep as-is.
     if code in poly:
         return code
-    if code == "RE-1" and "RC" in poly:
-        return "RC"
-    if code == "RE-2" and "SE" in poly:
-        # unknown — leave for allocate path
-        return code
-    tgt = aliases.get(code)
-    if tgt and tgt in poly and code not in poly:
-        return tgt
-    # WI / MO / ST / ED already handled
-    if code == "ST" and "SE" in poly:
-        return "SE"
-    if code == "MO" and "MS" in poly:
-        return "MS"
-    if code == "WI" and "IR" in poly:
-        return "IR"
     return code
 
 
 def cleveland_remap(code: str, poly: set[str]) -> str:
-    # contest 'S E' / 'S N' vs poly 'S 4A' etc. — not safe 1:1; leave
+    # 2025 uses 'S E' / 'S N'; older layers used 'S 4A' / 'S 5'.
+    aliases = {"S 4A": "S E", "S 5": "S N", "S4A": "S E", "S5": "S N"}
+    if code in poly:
+        return code
+    tgt = aliases.get(code)
+    if tgt and tgt in poly:
+        return tgt
     return code
 
 
@@ -94,10 +83,11 @@ def propose_remap(county: str, code: str, poly: set[str]) -> str:
         return rockingham_remap(code, poly)
     if county == "CLEVELAND":
         return cleveland_remap(code, poly)
-    # Generic: zero-pad bare integers when poly uses zero-padded forms
+    # Generic: zero-pad / A-suffix when those are the 2025 polygon IDs
     if re.fullmatch(r"[0-9]{1,3}", code):
-        z2 = f"{int(code):02d}"
-        for cand in (z2, f"{z2}-1", f"{code}-1"):
+        n = int(code)
+        z2 = f"{n:02d}"
+        for cand in (z2, f"{n}A", f"{z2}A", f"{z2}-1", f"{code}-1"):
             if cand in poly:
                 return cand
     return code

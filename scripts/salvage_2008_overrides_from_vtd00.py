@@ -258,7 +258,7 @@ def main() -> None:
     ap.add_argument(
         "--voting-geojson",
         type=Path,
-        default=Path("data/Voting_Precincts.geojson"),
+        default=Path("data/2025Voting_Precincts.geojson"),
     )
     ap.add_argument("--min-old-share", type=float, default=0.85)
     ap.add_argument(

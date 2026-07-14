@@ -783,7 +783,7 @@ def main() -> None:
         senate_cw = data_dir / "crosswalks" / "precinct_to_2022_state_senate.csv"
         congress_cw = data_dir / "crosswalks" / "precinct_to_cd118.csv"
         crosswalk_key_col = "precinct_key"
-    voting_geojson = data_dir / "Voting_Precincts.geojson"
+    voting_geojson = data_dir / "2025Voting_Precincts.geojson"
     vtd_2008 = data_dir / "census" / "tl_2008_37_vtd00_merged.geojson"
     vtd_2012 = data_dir / "census" / "tl_2012_37_vtd10" / "tl_2012_37_vtd10.shp"
     vtd_2020_candidates = [

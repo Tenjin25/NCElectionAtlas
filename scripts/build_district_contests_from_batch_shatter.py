@@ -121,17 +121,10 @@ PRECINCT_ALIASES: dict[str, dict[str, str]] = {
         "HAR": "12-09",
         "HARRISBURG": "12-09",
     },
-    # 2020 OE → current OneMap Voting_Precincts tokens (high-confidence only).
-    "ROCKINGHAM": {
-        "ED": "ED-1",
-        "HO-1": "HO",
-        "HU-1": "HU",
-        "LI-1": "LI",
-        "WS-1": "WS",
-        "ST": "SE",
-        "MO": "MS",
-        "WI": "IR",
-        "RE-1": "RC",
+    # OE numeric codes → 2025Voting_Precincts *A keys.
+    "GASTON": {
+        **{f"{i:02d}": f"{i}A" for i in range(1, 41)},
+        **{str(i): f"{i}A" for i in range(1, 41)},
     },
 }
 
@@ -1353,7 +1346,11 @@ def main() -> None:
     parser.add_argument("--batch-dir", type=Path, default=Path("data/tmp/shatter/batch_2024_council_judicial_overlay_test"))
     parser.add_argument("--results-csv", type=Path, default=Path("data/2024/20241105__nc__general__precinct.csv"))
     parser.add_argument("--district-contests-dir", type=Path, default=Path("data/district_contests"))
-    parser.add_argument("--crosswalk-csv", type=Path, default=Path("data/crosswalks/block20_to_precinct.csv"))
+    parser.add_argument(
+        "--crosswalk-csv",
+        type=Path,
+        default=Path("data/crosswalks/block20_to_onemap_2025.csv"),
+    )
     parser.add_argument("--vap-csv", type=Path, default=Path("data/census/block_vap_2020_nc.csv"))
     parser.add_argument("--house-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-4.csv"))
     parser.add_argument("--senate-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-2.csv"))

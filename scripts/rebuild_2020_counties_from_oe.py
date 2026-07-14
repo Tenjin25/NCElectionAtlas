@@ -1,6 +1,6 @@
 """Rebuild selected 2020 counties in precinct contest JSONs from OpenElections.
 
-Uses build_precinct_party_votes (non-geo precinct_candidate) + Voting_Precincts
+Uses build_precinct_party_votes (non-geo precinct_candidate) + 2025Voting_Precincts
 key matching. Replaces only TARGET_COUNTIES rows in each *_2020.json so the rest
 of the state stays intact. Does not write district_contests*.
 """
@@ -26,10 +26,10 @@ from build_district_contests_from_batch_shatter import (  # noqa: E402
 )
 
 OE_PATH = ROOT / "data/2020/20201103__nc__general__precinct.csv"
-POLY_PATH = ROOT / "data/Voting_Precincts.geojson"
+POLY_PATH = ROOT / "data/2025Voting_Precincts.geojson"
 CONTESTS_DIR = ROOT / "data/contests"
 
-TARGET_COUNTIES = {"RICHMOND", "HARNETT", "BLADEN", "WAKE"}
+TARGET_COUNTIES = {"RICHMOND", "HARNETT", "BLADEN", "WAKE", "GASTON", "CABARRUS", "BUNCOMBE"}
 
 
 def norm(s: object) -> str:
@@ -45,22 +45,35 @@ def load_poly() -> dict[str, set[str]]:
     return out
 
 
+def gaston_oem_aliases(code: str, poly: set[str]) -> str:
+    """Map OE '01'/'14' onto 2025 OneMap '1A'/'14A'."""
+    if code in poly:
+        return code
+    m = re.fullmatch(r"0*([0-9]{1,3})(?:-1)?", code)
+    if not m:
+        return code
+    n = int(m.group(1))
+    for cand in (f"{n}A", f"{n:02d}A"):
+        if cand in poly:
+            return cand
+    return code
+
+
 def wake_oem_aliases(code: str, poly: set[str]) -> str:
     """Map a few OE tokens onto current OneMap when exact key missing."""
     if code in poly:
         return code
-    # Letter suffix collapsed onto base when base exists (already in PRECINCT_ALIASES).
     m = re.fullmatch(r"(.+[0-9])([A-Z])", code)
     if m and m.group(1) in poly:
         return m.group(1)
-    # 03-00 retired → split 03-01/03-02: keep as 03-00 only if present; else leave
-    # for residual handling (caller may drop or allocate).
     return code
 
 
 def county_code_remap(county: str, code: str, poly: set[str]) -> str:
     if county == "WAKE":
         return wake_oem_aliases(code, poly)
+    if county == "GASTON":
+        return gaston_oem_aliases(code, poly)
     return code if code in poly else code
 
 
