@@ -121,6 +121,18 @@ PRECINCT_ALIASES: dict[str, dict[str, str]] = {
         "HAR": "12-09",
         "HARRISBURG": "12-09",
     },
+    # 2020 OE → current OneMap Voting_Precincts tokens (high-confidence only).
+    "ROCKINGHAM": {
+        "ED": "ED-1",
+        "HO-1": "HO",
+        "HU-1": "HU",
+        "LI-1": "LI",
+        "WS-1": "WS",
+        "ST": "SE",
+        "MO": "MS",
+        "WI": "IR",
+        "RE-1": "RC",
+    },
 }
 
 
@@ -426,6 +438,29 @@ def is_non_geographic_precinct(name: str, county: str | None = None) -> bool:
         return True
     # Bare "EV" appears in some county exports (e.g. Henderson) as an early-vote bucket.
     if t == "EV" or re.match(r"^EV[A-Z0-9]+$", t):
+        return True
+    # Buncombe 2020 OE uses 4-letter early-vote *site* codes (AVML, WGSC, …) alongside
+    # geographic decimal precincts (01.1). Those sites must allocate, not choropleth.
+    if c == "BUNCOMBE" and re.fullmatch(r"[A-Z]{4}", t):
+        return True
+    # Recurring county BOE / DSS / co-op one-stop site labels (not polygon keys).
+    if t in {
+        "BOE OFFICE",
+        "MURFREE CNTR",
+        "DET OF SOCIAL SERVICES",
+        "PINES CHAP FELLSHIP HALL",
+        "CO OP",
+        "BROWDER",
+        "BLAD COUNTY GYM",
+        "BAY TREE FIRE DEPT",
+        "BOOK T. WASHINGTON",
+        "SPAULDING MONROE",
+        "TAR HEEL MUNI BLD",
+        "EAST ARCADIA",
+    }:
+        return True
+    # Hamlet / Ellerbe appear as Richmond early-vote sites in 2020 OE (polygons use 01–16).
+    if c == "RICHMOND" and t in {"HAMLET", "ELLERBE"}:
         return True
     return any(flag in t for flag in NON_GEO_FLAGS)
 
