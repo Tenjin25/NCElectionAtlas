@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-14-4';
-    const APP_BUILD_ID = '2026-07-14-4';
+    const DATA_CACHE_BUSTER = '2026-07-14-5';
+    const APP_BUILD_ID = '2026-07-14-5';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29048,10 +29048,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return formatVotehubPct(v, 2);
       };
       const normalizeCandidateLabel = (value, fallback) => {
-        const raw = (value || '').toString().trim();
-        const cleaned = typeof stripRunningMateName === 'function'
-          ? stripRunningMateName(raw)
-          : raw;
+        const cleaned = typeof fullCandidateLabel === 'function'
+          ? fullCandidateLabel(value, '')
+          : ((value || '').toString().trim());
         return cleaned || fallback;
       };
       const rows = [];
@@ -29141,10 +29140,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const safeTotal = total > 0 ? total : 0;
       const pct = (value) => safeTotal > 0 ? (Number(value || 0) / safeTotal) * 100 : 0;
       const normalizeCandidateLabel = (value, fallback) => {
-        const raw = (value || '').toString().trim();
-        const cleaned = typeof stripRunningMateName === 'function'
-          ? stripRunningMateName(raw)
-          : raw;
+        const cleaned = typeof fullCandidateLabel === 'function'
+          ? fullCandidateLabel(value, '')
+          : ((value || '').toString().trim());
         return cleaned || fallback;
       };
 
