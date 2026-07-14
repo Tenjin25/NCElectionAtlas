@@ -85,7 +85,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results-csv", type=Path, default=Path("data/2008/20081104__nc__general__precinct.csv"))
     ap.add_argument("--sbe-2006", type=Path, default=Path("downloads/ncsbe/precinct_shp/2006/Precincts2006Gen.shp"))
-    ap.add_argument("--modern", type=Path, default=Path("data/Voting_Precincts.geojson"))
+    ap.add_argument("--modern", type=Path, default=Path("data/2025Voting_Precincts.geojson"))
     ap.add_argument("--unmatched-examples", type=Path, default=Path("data/reports/unmatched_precinct_examples.csv"))
     ap.add_argument("--min-old-share", type=float, default=0.35)
     ap.add_argument("--out-crosswalk-prefix", type=Path, default=Path("data/crosswalks/sbe2006_to_nconemap"))

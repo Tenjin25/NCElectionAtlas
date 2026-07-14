@@ -58,7 +58,7 @@ function calculateCompetitiveness(marginPct) {
 }
 
 function buildCanonicalKeySet(repoRoot) {
-  const payload = JSON.parse(fs.readFileSync(path.join(repoRoot, 'data', 'Voting_Precincts.geojson'), 'utf8'));
+  const payload = JSON.parse(fs.readFileSync(path.join(repoRoot, 'data', '2025Voting_Precincts.geojson'), 'utf8'));
   const out = new Set();
   for (const feature of (payload.features || [])) {
     const props = feature.properties || {};

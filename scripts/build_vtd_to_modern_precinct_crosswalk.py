@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Build area-overlap crosswalks from vintage VTDs (VTD00 / VTD10) onto modern
-NCOneMap Voting_Precincts geometry.
+NCOneMap 2025Voting_Precincts geometry.
 
 Pre-2012 election exports often use era VTD codes/names (e.g. ALEXANDER - G1 /
 "GWALTNEY #1"). Modern geometry frequently merges those units (G1G2, LRSL).
@@ -102,8 +102,8 @@ def main() -> None:
     ap.add_argument(
         "--modern",
         type=Path,
-        default=Path("data/Voting_Precincts.geojson"),
-        help="Modern Voting_Precincts GeoJSON",
+        default=Path("data/2025Voting_Precincts.geojson"),
+        help="Modern 2025Voting_Precincts GeoJSON",
     )
     ap.add_argument("--modern-label", default="nconemap")
     ap.add_argument("--min-share", type=float, default=0.01)

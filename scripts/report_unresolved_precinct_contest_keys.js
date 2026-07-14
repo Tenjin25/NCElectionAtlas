@@ -6,7 +6,7 @@ function norm(value) {
 }
 
 function buildCanonicalKeySet() {
-  const payload = JSON.parse(fs.readFileSync(path.join('data', 'Voting_Precincts.geojson'), 'utf8'));
+  const payload = JSON.parse(fs.readFileSync(path.join('data', '2025Voting_Precincts.geojson'), 'utf8'));
   const out = new Set();
   for (const feature of (payload.features || [])) {
     const props = feature.properties || {};

@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-12-17';
-    const APP_BUILD_ID = '2026-07-12-17';
+    const DATA_CACHE_BUSTER = '2026-07-14-1';
+    const APP_BUILD_ID = '2026-07-14-1';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10289,7 +10289,7 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       paths: {
         counties: withBase('./data/census/tl_2020_37_county20.geojson'),
-        precincts: withBase('./data/Voting_Precincts.geojson'),
+        precincts: withBase('./data/2025Voting_Precincts.geojson'),
         precincts_fallback_vtd20: withBase('./data/census/tl_2020_37_vtd20/tl_2020_37_vtd20.geojson'),
         precinct_centroids: withBase('./data/precinct_centroids.geojson'),
         precinct_aliases: withBase('./data/precinct_alias_index.json'),
@@ -11037,7 +11037,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const rows = Number(entry.rows || entry.districts || 0) || 0;
       if (!contestType || rows <= 0) return false;
       const isJudicial = contestType.startsWith('nc_supreme_court_') || contestType.startsWith('nc_court_of_appeals_');
-      if (isJudicial && Number.isFinite(year) && year < 2018) return false;
+      // Judicial (incl. pre-2018 nonpartisan ballot remaps) and Council of State:
+      // hide uncontested / same-party-only seats.
+      if (isJudicial && !parseMajorPartyContested(entry)) return false;
       if (COUNCIL_OF_STATE_CONTEST_TYPES.has(contestType) && !parseMajorPartyContested(entry)) return false;
       return true;
     }
@@ -19337,6 +19339,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	      if (contestType.startsWith('nc_supreme_court_associate_justice_seat_')) {
 	        const seat = contestType.replace('nc_supreme_court_associate_justice_seat_', '').replace(/^0+/, '');
 	        return `NC Supreme Court Associate Justice Seat ${seat || contestType}`;
+	      }
+	      if (contestType.startsWith('nc_supreme_court_associate_justice_') && contestType.endsWith('_seat')) {
+	        const who = contestType.replace('nc_supreme_court_associate_justice_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
+	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
+	        return `NC Supreme Court Associate Justice (${label})`;
 	      }
 	      if (contestType.startsWith('nc_supreme_court_chief_justice_seat_')) {
 	        const seat = contestType.replace('nc_supreme_court_chief_justice_seat_', '').replace(/^0+/, '');

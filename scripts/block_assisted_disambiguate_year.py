@@ -63,7 +63,7 @@ def main() -> None:
     year_data = src.get("results_by_year", {}).get(str(args.year), {})
 
     # Build alias index consistent with pipeline.
-    voting_geojson = data_dir / "Voting_Precincts.geojson"
+    voting_geojson = data_dir / "2025Voting_Precincts.geojson"
     alias_index = build_precinct_alias_index(voting_geojson)
     enrich_alias_index_from_vtd(alias_index, vtd_path=data_dir / "census" / "tl_2008_37_vtd00_merged.geojson", county_col="COUNTYFP00", code_col="VTDST00", name_col="NAME00")
     enrich_alias_index_from_vtd(alias_index, vtd_path=data_dir / "census" / "tl_2012_37_vtd10" / "tl_2012_37_vtd10.shp", county_col="COUNTYFP10", code_col="VTDST10", name_col="NAME10")

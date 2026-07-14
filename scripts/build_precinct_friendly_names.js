@@ -853,7 +853,7 @@ function main() {
     : path.join(repoRoot, 'data', 'precinct_alias_index.json');
   const votingGeoJsonPath = process.argv[4]
     ? path.resolve(process.argv[4])
-    : path.join(repoRoot, 'data', 'Voting_Precincts.geojson');
+    : path.join(repoRoot, 'data', '2025Voting_Precincts.geojson');
   const outputPath = process.argv[3]
     ? path.resolve(process.argv[3])
     : path.join(repoRoot, 'data', 'precinct_friendly_names.json');
