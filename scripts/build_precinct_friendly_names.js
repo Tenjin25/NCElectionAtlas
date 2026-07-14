@@ -52,6 +52,9 @@ function formatDisplayName(raw) {
   s = s.replace(/\bSw\b/g, 'SW');
   // Preserve dotted initials like H.J. / C.C. after title-casing.
   s = s.replace(/\b([A-Za-z])\.([A-Za-z])\./g, (m, a, b) => `${a.toUpperCase()}.${b.toUpperCase()}.`);
+  // Only glued alphabetic seat letters like SHILOH-A (keep Davidson 1-B / Home - Paul).
+  s = s.replace(/\b([A-Za-z]{4,})-([A-Za-z])\b/g, '$1 $2');
+  s = s.replace(/\s+/g, ' ').trim();
   s = s.replace(/\bAme\b/g, 'AME');
   s = s.replace(/\bCme\b/g, 'CME');
   s = s.replace(/\bBt\b/g, 'BT');
@@ -677,7 +680,18 @@ function applyManualOverrides(counties) {
       '29': 'St. Stephens'
     },
     CRAVEN: {
-      VE14: 'Van-Ep (Vanceboro)'
+      VE14: 'Van-Ep (Vanceboro)',
+      N4: 'H.J. Macdonald'
+    },
+    IREDELL: {
+      'CH-A': 'Chambersburg A',
+      'CH-B': 'Chambersburg B',
+      'SH-A': 'Shiloh A',
+      'SH-B': 'Shiloh B'
+    },
+    MCDOWELL: {
+      'M.COVE': 'Montford Cove',
+      'N.COVE': 'North Cove'
     }
   };
 
@@ -711,6 +725,44 @@ function collapseRedundantLeadingToken(raw) {
     return [second, ...rest].join(' ').trim();
   }
   return cleaned;
+}
+
+function collapseRedundantCodePrefix(nameRaw, codeRaw) {
+  // Only for structured seat codes like SH-A / CH-B / M.COVE.
+  // Plain word codes (EAST, NORTH, ROSE, CAPE) must not eat their own place names.
+  const cleaned = normalizeAliasNameCandidate(nameRaw);
+  if (!cleaned) return '';
+  const code = normalizeCode(codeRaw);
+  if (!/[-.]/.test(code)) return collapseRedundantLeadingToken(cleaned);
+
+  const codeParts = code
+    .replace(/\./g, ' ')
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean);
+  // Tokenize for comparison only; do not rewrite hyphens in the kept display string
+  // unless we successfully strip a redundant code prefix.
+  const compareTokens = cleaned
+    .replace(/\./g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (codeParts.length && compareTokens.length > codeParts.length) {
+    let matches = true;
+    for (let i = 0; i < codeParts.length; i += 1) {
+      if (compareTokens[i] !== codeParts[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      const rest = compareTokens.slice(codeParts.length).join(' ').trim();
+      if (rest) return collapseRedundantLeadingToken(rest);
+    }
+  }
+  return collapseRedundantLeadingToken(cleaned);
 }
 
 function isCodeLikeToken(raw) {
@@ -864,20 +916,28 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
 
 function setBestNameForCode(perCounty, code, nameCandidate) {
   if (!perCounty || !code || !nameCandidate) return;
-  const cand = collapseRedundantLeadingToken(nameCandidate);
+  const cand = collapseRedundantCodePrefix(nameCandidate, code);
   if (!cand) return;
   const prev = perCounty.get(code) || '';
   if (!prev) {
     perCounty.set(code, cand);
     return;
   }
-  const prevScore = scoreNameCandidate(prev);
+  const prevNorm = collapseRedundantCodePrefix(prev, code) || prev;
+  const prevScore = scoreNameCandidate(prevNorm);
   const candScore = scoreNameCandidate(cand);
+  // Prefer the cleaned form when an older value still carries a redundant code prefix.
+  const prevCompact = prevNorm.replace(/[^A-Z0-9]/g, '');
+  const candCompact = cand.replace(/[^A-Z0-9]/g, '');
+  if (candCompact === prevCompact && cand.length <= prevNorm.length && candScore + 1e-6 >= prevScore) {
+    perCounty.set(code, cand);
+    return;
+  }
   if (candScore > prevScore + 1e-6) {
     perCounty.set(code, cand);
     return;
   }
-  if (Math.abs(candScore - prevScore) < 1e-6 && cand.length > prev.length) {
+  if (Math.abs(candScore - prevScore) < 1e-6 && cand.length > prevNorm.length) {
     perCounty.set(code, cand);
   }
 }
