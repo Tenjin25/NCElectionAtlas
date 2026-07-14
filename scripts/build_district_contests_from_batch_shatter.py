@@ -443,6 +443,9 @@ def is_non_geographic_precinct(name: str, county: str | None = None) -> bool:
     # geographic decimal precincts (01.1). Those sites must allocate, not choropleth.
     if c == "BUNCOMBE" and re.fullmatch(r"[A-Z]{4}", t):
         return True
+    # Wake compact transfer buckets: "TRANS 1-40" (TRANSFER abbreviated).
+    if t.startswith("TRANS ") or t.startswith("TRANS_") or re.match(r"^TRANS\d", t):
+        return True
     # Recurring county BOE / DSS / co-op one-stop site labels (not polygon keys).
     if t in {
         "BOE OFFICE",
