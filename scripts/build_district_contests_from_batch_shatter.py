@@ -23,6 +23,57 @@ import geopandas as gpd
 from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, load_vap, shatter_votes
 
 
+# year_max (inclusive) -> preferred block→precinct match maps (first existing path wins).
+# District aggregation matches OE keys + shatters through this map (vintage → blocks → district).
+# OneMap 2025 is only the default for recent years; do not use it for pre-2022 matching.
+VINTAGE_MATCH_CROSSWALKS: list[tuple[int, tuple[Path, ...]]] = [
+    (
+        2006,
+        (Path("data/crosswalks/block20_to_vtd00.csv"),),
+    ),
+    (
+        2012,
+        (
+            Path("data/crosswalks/block20_to_sbe_2012_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2012.csv"),
+        ),
+    ),
+    (
+        2017,
+        (
+            Path("data/crosswalks/block20_to_sbe_2016_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2014_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2014.csv"),
+        ),
+    ),
+    (
+        2021,
+        (Path("data/crosswalks/block20_to_sbe_2020.csv"),),
+    ),
+    (
+        9999,
+        (Path("data/crosswalks/block20_to_onemap_2025.csv"),),
+    ),
+]
+
+
+def resolve_vintage_match_crosswalk(year: int, fallback: Path | None = None) -> Path:
+    """Pick the election-proximal block→precinct CSV for matching + VAP shatter."""
+    y = int(year)
+    for year_max, candidates in VINTAGE_MATCH_CROSSWALKS:
+        if y <= int(year_max):
+            for path in candidates:
+                if Path(path).exists():
+                    return Path(path)
+            break
+    if fallback is not None and Path(fallback).exists():
+        return Path(fallback)
+    raise FileNotFoundError(
+        f"No vintage match crosswalk found for year={y}. "
+        f"Checked ladder through year_max tiers and fallback={fallback!s}."
+    )
+
+
 NON_GEO_FLAGS = [
     "ABSENTEE",
     "ABSEN",
@@ -387,10 +438,25 @@ def infer_office_key(office: str) -> str | None:
     if m:
         return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
 
-    # 2014-ish formats like:
+    # 2010/2012 "NC … - Name Seat" labels (OE) and 2014 parentheses forms.
+    #   "NC COURT OF APPEALS JUDGE - Bryant Seat"
+    #   "NC SUPREME COURT ASSOCIATE JUSTICE - Newby Seat"
     #   "NC COURT OF APPEALS JUDGE (DAVIS)"
     #   "NC SUPREME COURT ASSOCIATE JUSTICE (HUDSON)"
     #   "NC SUPREME COURT CHIEF JUSTICE (PARKER)"
+    #   "NC SUPREME COURT ASSOCIATE JUSTICE" (2016 Edmunds seat – seat omitted in OE)
+    m = re.match(r"^NC COURT OF APPEALS JUDGE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^NC SUPREME COURT ASSOCIATE JUSTICE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_supreme_court_associate_justice_{_slug(m.group(1))}_seat"
+
+    m = re.match(r"^NC SUPREME COURT CHIEF JUSTICE\s*-\s*(.+?)\s+SEAT$", o_full)
+    if m:
+        return f"nc_supreme_court_chief_justice_{_slug(m.group(1))}_seat"
+
     m = re.match(r"^NC COURT OF APPEALS JUDGE\s*\((.+?)\)$", o_full)
     if m:
         return f"nc_court_of_appeals_judge_{_slug(m.group(1))}_seat"
@@ -402,6 +468,14 @@ def infer_office_key(office: str) -> str | None:
     m = re.match(r"^NC SUPREME COURT CHIEF JUSTICE\s*\((.+?)\)$", o_full)
     if m:
         return f"nc_supreme_court_chief_justice_{_slug(m.group(1))}_seat"
+
+    if o_full == "NC SUPREME COURT ASSOCIATE JUSTICE":
+        # 2016 OE dropped the seat name; historically the Edmunds associate seat.
+        return "nc_supreme_court_associate_justice_edmunds_seat"
+
+    # Skip multi-candidate IRV vacancy contests (no clean two-party map).
+    if "IRV" in o_full:
+        return None
 
     return None
 
@@ -935,7 +1009,7 @@ def apply_unmatched_county_fallback(
 
 
 def party_group(party: str) -> str:
-    p = str(party).strip().upper()
+    p = str(party).strip().upper().replace("\x00", "")
     if p == "DEM":
         return "dem_votes"
     if p == "REP":
@@ -943,10 +1017,54 @@ def party_group(party: str) -> str:
     return "other_votes"
 
 
+_JUDICIAL_PARTY_OVERRIDE_CACHE: dict[int, dict[str, str]] | None = None
+
+
+def _norm_candidate_key(name: str) -> str:
+    s = str(name or "").strip().upper().replace("\x00", "")
+    s = re.sub(r"[.,]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def load_judicial_candidate_party_overrides(
+    path: Path | None = None,
+) -> dict[int, dict[str, str]]:
+    """year -> {normalized candidate name -> dem_votes|rep_votes|other_votes}."""
+    global _JUDICIAL_PARTY_OVERRIDE_CACHE
+    if _JUDICIAL_PARTY_OVERRIDE_CACHE is not None:
+        return _JUDICIAL_PARTY_OVERRIDE_CACHE
+
+    csv_path = path or Path("data/mappings/judicial_candidate_party_overrides.csv")
+    out: dict[int, dict[str, str]] = {}
+    if not csv_path.exists():
+        _JUDICIAL_PARTY_OVERRIDE_CACHE = out
+        return out
+
+    raw = pd.read_csv(csv_path, dtype=str).fillna("")
+    for _, row in raw.iterrows():
+        try:
+            year = int(str(row.get("year") or "").strip())
+        except Exception:
+            continue
+        cand = _norm_candidate_key(row.get("candidate") or "")
+        party = str(row.get("party") or "").strip().upper()
+        if not cand or party not in {"DEM", "REP", "OTHER"}:
+            continue
+        bucket = {"DEM": "dem_votes", "REP": "rep_votes", "OTHER": "other_votes"}[party]
+        out.setdefault(year, {})[cand] = bucket
+
+    _JUDICIAL_PARTY_OVERRIDE_CACHE = out
+    return out
+
+
 def apply_candidate_party_overrides(df: pd.DataFrame, election_year: int | None = None) -> pd.DataFrame:
     """
-    Targeted overrides for known edge cases where ballot-party label should not
-    be treated as DEM/REP for margin calculations.
+    Targeted overrides where ballot-party labels are missing/wrong for DEM/REP margins.
+
+    - 2018: Anglin (Supreme Court) -> other
+    - Pre-2018 (and 2016 SC): judicial candidate lean map from
+      data/mappings/judicial_candidate_party_overrides.csv
     """
     out = df.copy()
     if out.empty:
@@ -965,6 +1083,17 @@ def apply_candidate_party_overrides(df: pd.DataFrame, election_year: int | None 
         # Chris/Christopher Anglin in NC Supreme Court race should roll into Other.
         mask = cand.str.contains(r"\bANGLIN\b", regex=True, na=False) & office.str.contains("SUPREME COURT", na=False)
         out.loc[mask, "party_group"] = "other_votes"
+
+    if y is not None:
+        lean_map = load_judicial_candidate_party_overrides().get(y) or {}
+        if lean_map:
+            office_u = out["office"].astype(str).str.upper()
+            judicial = office_u.str.contains(r"SUPREME COURT|COURT OF APPEALS", regex=True, na=False)
+            if judicial.any():
+                keys = out.loc[judicial, "candidate"].map(_norm_candidate_key)
+                mapped = keys.map(lean_map)
+                hit = judicial & mapped.notna()
+                out.loc[hit, "party_group"] = mapped.loc[hit].astype(str)
 
     return out
 
@@ -1301,6 +1430,7 @@ def build_payload(
     rep_candidate: str,
     matched: int,
     total: int,
+    match_crosswalk: str | None = None,
 ) -> dict:
     keys = sorted(set(dem_map) | set(rep_map) | set(oth_map), key=lambda x: (int(x) if str(x).isdigit() else x))
     results = {}
@@ -1325,18 +1455,21 @@ def build_payload(
             "competitiveness": {"color": calculate_competitiveness(margin_pct)},
         }
     cov = (matched / total * 100.0) if total else 0.0
+    meta = {
+        "match_coverage_pct": round(cov, 2),
+        "matched_precinct_keys": int(matched),
+        "total_precinct_keys": int(total),
+        "source": "batch_shatter_vap_party_split",
+        "office": office_label,
+        "nongeo_allocation_mode": nongeo_allocation_mode,
+    }
+    if match_crosswalk:
+        meta["match_crosswalk"] = match_crosswalk
     return {
         "year": year,
         "scope": scope,
         "contest_type": contest_type,
-        "meta": {
-            "match_coverage_pct": round(cov, 2),
-            "matched_precinct_keys": int(matched),
-            "total_precinct_keys": int(total),
-            "source": "batch_shatter_vap_party_split",
-            "office": office_label,
-            "nongeo_allocation_mode": nongeo_allocation_mode,
-        },
+        "meta": meta,
         "general": {"results": results},
     }
 
@@ -1350,6 +1483,22 @@ def main() -> None:
         "--crosswalk-csv",
         type=Path,
         default=Path("data/crosswalks/block20_to_onemap_2025.csv"),
+        help="Fallback / explicit block→precinct map. Ignored for matching when --auto-vintage-match is on.",
+    )
+    parser.add_argument(
+        "--auto-vintage-match",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Select block→precinct match map by election year "
+            "(VTD00 / SBE2012 / SBE2016 / SBE2020 / OneMap2025). Default: on."
+        ),
+    )
+    parser.add_argument(
+        "--match-crosswalk-csv",
+        type=Path,
+        default=None,
+        help="Optional explicit match/shatter map (overrides --auto-vintage-match).",
     )
     parser.add_argument("--vap-csv", type=Path, default=Path("data/census/block_vap_2020_nc.csv"))
     parser.add_argument("--house-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-4.csv"))
@@ -1459,7 +1608,23 @@ def main() -> None:
     build_auto_precinct_overrides._sbe_map = sbe_map  # type: ignore[attr-defined]
 
     src = pd.read_csv(args.results_csv, dtype=str, low_memory=False)
-    crosswalk_df = load_crosswalk(args.crosswalk_csv, "precinct_id", "block_geoid20")
+
+    if args.match_crosswalk_csv is not None:
+        match_crosswalk_path = Path(args.match_crosswalk_csv)
+    elif args.auto_vintage_match:
+        match_crosswalk_path = resolve_vintage_match_crosswalk(
+            int(args.year), fallback=Path(args.crosswalk_csv)
+        )
+    else:
+        match_crosswalk_path = Path(args.crosswalk_csv)
+    if not match_crosswalk_path.exists():
+        raise FileNotFoundError(f"Match crosswalk not found: {match_crosswalk_path}")
+    print(
+        f"Match/shatter crosswalk for {int(args.year)}: {match_crosswalk_path.as_posix()} "
+        f"(auto_vintage_match={bool(args.auto_vintage_match)})"
+    )
+
+    crosswalk_df = load_crosswalk(match_crosswalk_path, "precinct_id", "block_geoid20")
     matched_precincts = set(crosswalk_df["precinct_id"].astype(str).str.strip().str.upper().unique())
     src_precinct_ids = (
         src["county"].astype(str).str.strip().str.upper()
@@ -1661,6 +1826,7 @@ def main() -> None:
                 rep_candidate=rep_candidate,
                 matched=matched,
                 total=total,
+                match_crosswalk=match_crosswalk_path.as_posix(),
             ),
             f"state_senate_{contest_type}_{args.year}.json": build_payload(
                 year=args.year,
@@ -1675,6 +1841,7 @@ def main() -> None:
                 rep_candidate=rep_candidate,
                 matched=matched,
                 total=total,
+                match_crosswalk=match_crosswalk_path.as_posix(),
             ),
             f"congressional_{contest_type}_{args.year}.json": build_payload(
                 year=args.year,
@@ -1689,6 +1856,7 @@ def main() -> None:
                 rep_candidate=rep_candidate,
                 matched=matched,
                 total=total,
+                match_crosswalk=match_crosswalk_path.as_posix(),
             ),
         }
         for name, payload in payloads.items():
