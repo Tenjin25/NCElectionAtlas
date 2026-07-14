@@ -118,8 +118,8 @@ As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-
 - Removed the front-end `year < 2018` judicial hide rule; Counties now filters judicial contests with the same `major_party_contested` gate used for Council of State.
 - Candidate tooltips / focus panels / vote-counter labels now prefer ballot nicknames from parentheses when OE provides them (`Michael R. (Mike) Morgan` → `Mike Morgan`, `Robert H. (Bob) Edmunds, Jr.` → `Bob Edmunds, Jr.`).
 - Switched the live atlas precinct geometry / choropleth remaps / VAP bridges onto `data/2025Voting_Precincts.geojson`, repaired selected 2020 precinct contest joins (including OE-backed county rebuilds), and pointed `scripts/build_precinct_friendly_names.js` at that geometry.
-- Regenerated `data/precinct_friendly_names.json` with fixes for mangled OneMap labels such as Cleveland `S E` / `S N` (`Shelby East` / `Shelby North`) and Orange `HE` (`Hillsborough East`), including stronger smash-token / glued-direction cleanup in the Node builder.
-- Bumped the front-end data cache-buster / app build tokens to `2026-07-14-2` so Pages clients fetch the new contest slices, friendly names, and nickname labeling promptly after deploy.
+- Regenerated `data/precinct_friendly_names.json` with fixes for mangled OneMap labels such as Cleveland `S E` / `S N` (`Shelby East` / `Shelby North`), Orange `HE` (`Hillsborough East`), and Iredell code-prefixed seats (`Sh A Shiloh A` → `Shiloh A`, `Ch A Chambersburg A` → `Chambersburg A`), while preserving already-good names (for example `McMannen`, `Scuppernong`, `H.J. Macdonald`, `Wittenburg`).
+- Bumped the front-end data cache-buster / app build tokens to `2026-07-14-4` so Pages clients fetch the new contest slices, friendly names, and nickname labeling promptly after deploy.
 ### Demographics + Accessibility (March 21, 2026)
 
 - Added a dedicated `Demographics` map mode across counties, congressional districts, state house, state senate, and precinct overlays.

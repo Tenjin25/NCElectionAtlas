@@ -28,14 +28,21 @@ function splitGluedDirectionSuffix(raw) {
 function formatDisplayName(raw) {
   let s = String(raw || '').trim();
   if (!s) return '';
-  // HillsboroughEast / SHELBYEAST-style tokens from OE/geo.
-  s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // HillsboroughEast-style tokens from OE/geo — but do not split Mc/Mac/O' compounds
+  // (McMannen / McLeod / McNairy must stay intact).
+  s = s.replace(/([a-z])([A-Z])/g, (full, a, b, offset, str) => {
+    const lead2 = str.slice(Math.max(0, offset - 1), offset + 1); // e.g. "Mc" when matching cM
+    const lead3 = str.slice(Math.max(0, offset - 2), offset + 1); // e.g. "Mac"
+    if (/mc$/i.test(lead2) || /mac$/i.test(lead3) || /o'$/i.test(lead2)) return full;
+    return `${a} ${b}`;
+  });
   s = splitGluedDirectionSuffix(s);
   s = toTitleCaseName(s);
   if (!s) return '';
   s = splitGluedDirectionSuffix(s);
   s = s.replace(/\b([A-Za-z]+)\s+(East|West|North|South|Central)\b/g, (full, place, dir) => `${place} ${dir}`);
   s = s.replace(/'S\b/g, "'s");
+  // Only rewrite flattened "Mcfoo" tokens; leave already-correct "McFoo" alone.
   s = s.replace(/\bMc([a-z])/g, (m, c) => `Mc${c.toUpperCase()}`);
   s = s.replace(/\bSt (?=[A-Z])/g, 'St. ');
   s = s.replace(/\bMt (?=[A-Z])/g, 'Mt. ');
@@ -43,6 +50,11 @@ function formatDisplayName(raw) {
   s = s.replace(/\bNe\b/g, 'NE');
   s = s.replace(/\bSe\b/g, 'SE');
   s = s.replace(/\bSw\b/g, 'SW');
+  // Preserve dotted initials like H.J. / C.C. after title-casing.
+  s = s.replace(/\b([A-Za-z])\.([A-Za-z])\./g, (m, a, b) => `${a.toUpperCase()}.${b.toUpperCase()}.`);
+  // Only glued alphabetic seat letters like SHILOH-A (keep Davidson 1-B / Home - Paul).
+  s = s.replace(/\b([A-Za-z]{4,})-([A-Za-z])\b/g, '$1 $2');
+  s = s.replace(/\s+/g, ' ').trim();
   s = s.replace(/\bAme\b/g, 'AME');
   s = s.replace(/\bCme\b/g, 'CME');
   s = s.replace(/\bBt\b/g, 'BT');
@@ -668,7 +680,18 @@ function applyManualOverrides(counties) {
       '29': 'St. Stephens'
     },
     CRAVEN: {
-      VE14: 'Van-Ep (Vanceboro)'
+      VE14: 'Van-Ep (Vanceboro)',
+      N4: 'H.J. Macdonald'
+    },
+    IREDELL: {
+      'CH-A': 'Chambersburg A',
+      'CH-B': 'Chambersburg B',
+      'SH-A': 'Shiloh A',
+      'SH-B': 'Shiloh B'
+    },
+    MCDOWELL: {
+      'M.COVE': 'Montford Cove',
+      'N.COVE': 'North Cove'
     }
   };
 
@@ -702,6 +725,44 @@ function collapseRedundantLeadingToken(raw) {
     return [second, ...rest].join(' ').trim();
   }
   return cleaned;
+}
+
+function collapseRedundantCodePrefix(nameRaw, codeRaw) {
+  // Only for structured seat codes like SH-A / CH-B / M.COVE.
+  // Plain word codes (EAST, NORTH, ROSE, CAPE) must not eat their own place names.
+  const cleaned = normalizeAliasNameCandidate(nameRaw);
+  if (!cleaned) return '';
+  const code = normalizeCode(codeRaw);
+  if (!/[-.]/.test(code)) return collapseRedundantLeadingToken(cleaned);
+
+  const codeParts = code
+    .replace(/\./g, ' ')
+    .split(/[^A-Z0-9]+/)
+    .filter(Boolean);
+  // Tokenize for comparison only; do not rewrite hyphens in the kept display string
+  // unless we successfully strip a redundant code prefix.
+  const compareTokens = cleaned
+    .replace(/\./g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (codeParts.length && compareTokens.length > codeParts.length) {
+    let matches = true;
+    for (let i = 0; i < codeParts.length; i += 1) {
+      if (compareTokens[i] !== codeParts[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      const rest = compareTokens.slice(codeParts.length).join(' ').trim();
+      if (rest) return collapseRedundantLeadingToken(rest);
+    }
+  }
+  return collapseRedundantLeadingToken(cleaned);
 }
 
 function isCodeLikeToken(raw) {
@@ -782,6 +843,9 @@ function scoreNameCandidate(raw) {
   // Prefer real spaced place names over code-glued smash tokens (SESHELBYEAST).
   score += spaces * 6.0;
   score += Math.min(24, s.length);
+  // Prefer dotted initials (H.J.) over spaced single letters (H J).
+  score += ((s.match(/\b[A-Z]\.[A-Z]\./g) || []).length) * 10;
+  score -= ((s.match(/\b[A-Z]\s+[A-Z]\b/g) || []).length) * 5;
   if (/VOTING\s*DISTRICT/i.test(s)) score -= 1000;
   if (/^(EARLY|ABSENTEE|PROVISIONAL|ONE\s+STOP|MAIL)/i.test(s)) score -= 20;
   if (!spaces && letters >= 10) score -= 8;
@@ -809,15 +873,24 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
 
   let rest = '';
   if (alias.startsWith(code)) {
-    rest = alias.slice(code.length).trim();
-    rest = rest.replace(/^[_\s]+/, '').trim();
-  } else if (
+    const after = alias.slice(code.length);
+    // Require an explicit separator after the code. Otherwise short codes like
+    // "W"/"SC"/"PR" eat the start of real place names (Wittenburg, Scuppernong).
+    if (/^[\s_-]+/.test(after)) {
+      rest = after.replace(/^[_\s-]+/, '').trim();
+    }
+  }
+  if (
+    !rest &&
     codeCompact.length >= 2 &&
     aliasCompact.startsWith(codeCompact) &&
     aliasCompact.length > codeCompact.length + 2
   ) {
-    // Compact smash keys like "SESHELBYEAST" for code "S E".
-    rest = splitCompactDirectionName(aliasCompact.slice(codeCompact.length));
+    const remainder = aliasCompact.slice(codeCompact.length);
+    // Compact smash keys only (SESHELBYEAST), not place names that share a letter prefix.
+    if (/(NORTH|SOUTH|EAST|WEST|CENTRAL)$/.test(remainder) && remainder.length >= 5) {
+      rest = splitCompactDirectionName(remainder);
+    }
   }
   if (!rest) return '';
   rest = rest.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -843,20 +916,28 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
 
 function setBestNameForCode(perCounty, code, nameCandidate) {
   if (!perCounty || !code || !nameCandidate) return;
-  const cand = collapseRedundantLeadingToken(nameCandidate);
+  const cand = collapseRedundantCodePrefix(nameCandidate, code);
   if (!cand) return;
   const prev = perCounty.get(code) || '';
   if (!prev) {
     perCounty.set(code, cand);
     return;
   }
-  const prevScore = scoreNameCandidate(prev);
+  const prevNorm = collapseRedundantCodePrefix(prev, code) || prev;
+  const prevScore = scoreNameCandidate(prevNorm);
   const candScore = scoreNameCandidate(cand);
+  // Prefer the cleaned form when an older value still carries a redundant code prefix.
+  const prevCompact = prevNorm.replace(/[^A-Z0-9]/g, '');
+  const candCompact = cand.replace(/[^A-Z0-9]/g, '');
+  if (candCompact === prevCompact && cand.length <= prevNorm.length && candScore + 1e-6 >= prevScore) {
+    perCounty.set(code, cand);
+    return;
+  }
   if (candScore > prevScore + 1e-6) {
     perCounty.set(code, cand);
     return;
   }
-  if (Math.abs(candScore - prevScore) < 1e-6 && cand.length > prev.length) {
+  if (Math.abs(candScore - prevScore) < 1e-6 && cand.length > prevNorm.length) {
     perCounty.set(code, cand);
   }
 }
