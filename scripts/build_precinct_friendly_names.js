@@ -8,13 +8,41 @@ function toTitleCaseName(raw) {
   return s.replace(/\b([a-z])/g, (m, c) => c.toUpperCase());
 }
 
-function formatDisplayName(raw) {
-  let s = toTitleCaseName(raw);
+function splitGluedDirectionSuffix(raw) {
+  const s = String(raw || '').trim();
   if (!s) return '';
+  // Keep true compass compounds intact.
+  if (/^(north|south)(east|west)$/i.test(s)) return s;
+  if (/^(east|west|north|south|central)$/i.test(s)) return s;
+  return s.replace(
+    /\b([A-Za-z]{3,}?)(east|west|north|south|central)\b/gi,
+    (full, place, dir) => {
+      const f = String(full || '').toLowerCase();
+      if (['northeast', 'northwest', 'southeast', 'southwest'].includes(f)) return full;
+      if (['east', 'west', 'north', 'south', 'central'].includes(f)) return full;
+      return `${place} ${dir}`;
+    }
+  );
+}
+
+function formatDisplayName(raw) {
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  // HillsboroughEast / SHELBYEAST-style tokens from OE/geo.
+  s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+  s = splitGluedDirectionSuffix(s);
+  s = toTitleCaseName(s);
+  if (!s) return '';
+  s = splitGluedDirectionSuffix(s);
+  s = s.replace(/\b([A-Za-z]+)\s+(East|West|North|South|Central)\b/g, (full, place, dir) => `${place} ${dir}`);
   s = s.replace(/'S\b/g, "'s");
   s = s.replace(/\bMc([a-z])/g, (m, c) => `Mc${c.toUpperCase()}`);
   s = s.replace(/\bSt (?=[A-Z])/g, 'St. ');
   s = s.replace(/\bMt (?=[A-Z])/g, 'Mt. ');
+  s = s.replace(/\bNw\b/g, 'NW');
+  s = s.replace(/\bNe\b/g, 'NE');
+  s = s.replace(/\bSe\b/g, 'SE');
+  s = s.replace(/\bSw\b/g, 'SW');
   s = s.replace(/\bAme\b/g, 'AME');
   s = s.replace(/\bCme\b/g, 'CME');
   s = s.replace(/\bBt\b/g, 'BT');
@@ -503,6 +531,8 @@ function applyManualOverrides(counties) {
       'S 4A': 'Shelby North',
       'S 5': 'Shelby East',
       'S C': 'Shelby Central',
+      'S E': 'Shelby East',
+      'S N': 'Shelby North',
       'S S': 'Shelby South',
       SHANGI: 'Shanghai',
       WACO: 'Waco'
@@ -510,6 +540,7 @@ function applyManualOverrides(counties) {
     ORANGE: {
       CA: 'Carr',
       CB1: 'Carrboro',
+      HE: 'Hillsborough East',
       OW1: 'Owasa',
       WW1: 'Westwood'
     },
@@ -748,11 +779,23 @@ function scoreNameCandidate(raw) {
   let score = 0;
   score += letters * 2.2;
   score -= digits * 3.5;
-  score += spaces * 1.0;
+  // Prefer real spaced place names over code-glued smash tokens (SESHELBYEAST).
+  score += spaces * 6.0;
   score += Math.min(24, s.length);
   if (/VOTING\s*DISTRICT/i.test(s)) score -= 1000;
   if (/^(EARLY|ABSENTEE|PROVISIONAL|ONE\s+STOP|MAIL)/i.test(s)) score -= 20;
+  if (!spaces && letters >= 10) score -= 8;
   return score;
+}
+
+function splitCompactDirectionName(raw) {
+  const s = String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '');
+  if (!s) return '';
+  const m = s.match(/^(.*?)(NORTH|SOUTH|EAST|WEST|CENTRAL)$/);
+  if (!m || !m[1] || m[1].length < 3) return s;
+  const full = s.toLowerCase();
+  if (['northeast', 'northwest', 'southeast', 'southwest'].includes(full)) return s;
+  return `${m[1]} ${m[2]}`;
 }
 
 function extractNameFromAlias(aliasRaw, codeRaw) {
@@ -761,17 +804,26 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
   if (!alias || !code) return '';
   if (alias === code) return '';
 
+  const codeCompact = code.replace(/[^A-Z0-9]/g, '');
+  const aliasCompact = alias.replace(/[^A-Z0-9]/g, '');
+
   let rest = '';
   if (alias.startsWith(code)) {
     rest = alias.slice(code.length).trim();
     rest = rest.replace(/^[_\s]+/, '').trim();
+  } else if (
+    codeCompact.length >= 2 &&
+    aliasCompact.startsWith(codeCompact) &&
+    aliasCompact.length > codeCompact.length + 2
+  ) {
+    // Compact smash keys like "SESHELBYEAST" for code "S E".
+    rest = splitCompactDirectionName(aliasCompact.slice(codeCompact.length));
   }
   if (!rest) return '';
   rest = rest.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!rest) return '';
   if (/VOTING\s*DISTRICT/i.test(rest)) return '';
 
-  const codeCompact = code.replace(/[^A-Z0-9]/g, '');
   const restCompact = rest.replace(/[^A-Z0-9]/g, '');
   if (restCompact === codeCompact) return '';
   if (restCompact.endsWith(codeCompact) && restCompact.length <= codeCompact.length + 2) return '';
@@ -780,6 +832,9 @@ function extractNameFromAlias(aliasRaw, codeRaw) {
   if (!/\s/.test(rest)) {
     const compactOnly = rest.replace(/[^A-Z0-9]/g, '');
     if (compactOnly.length <= 6 && /^[A-Z0-9]+$/.test(compactOnly)) return '';
+    // Last chance: SHELBYEAST -> SHELBY EAST
+    const split = splitCompactDirectionName(compactOnly);
+    if (split && /\s/.test(split)) rest = split;
   }
   const cleaned = normalizeAliasNameCandidate(rest);
   if (!cleaned) return '';
