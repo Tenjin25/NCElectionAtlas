@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-5';
-    const APP_BUILD_ID = '2026-07-15-4';
+    const DATA_CACHE_BUSTER = '2026-07-15-6';
+    const APP_BUILD_ID = '2026-07-15-6';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10322,6 +10322,7 @@ document.addEventListener('DOMContentLoaded', function() {
           state_senate_2024: withBase('./data/cvap_aggregates/state_senate_2024_lines__cvap24.csv')
         },
         election: withBase('./data/nc_elections_aggregated.json'),
+        county_contests_dir: withBase('./data/county_contests'),
         district_election: withBase('./data/nc_district_results_2022_lines.json'),
         district_contests_dir: withBase('./data/district_contests'),
         district_contests_2020_2024_dir: withBase('./data/district_contests_2020_2024'),
@@ -10778,6 +10779,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let congressionalData = []; // Optional legacy district-level table
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
+    let countyContestSliceCache = new Map();
     let districtSliceCache = new Map();
 
     function attachOfficialCountyTotalsToRows(rows, payload) {
@@ -10829,6 +10831,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const jsonResultByPath = new Map(); // requestPath -> resolved static JSON/GeoJSON payload
     const csvTextByPath = new Map(); // requestPath -> resolved small/medium static CSV text
     const contestSliceInflight = new Map(); // `${contestType}_${year}` -> Promise<rows[]>
+    const countyContestSliceInflight = new Map(); // `${contestType}_${year}` -> Promise<county rows[]>
     const districtSliceInflight = new Map(); // `${linesYear}|${scope}_${contestType}_${year}` -> Promise<payload>
     let countyTrendSeriesCache = new Map(); // Map<string key, Array<seriesRow>> (in-session cache)
     const districtCarryCrosswalkCache = new Map();
@@ -10945,7 +10948,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const p = (async () => {
         try {
-          const rows = strict ? await tryLoadContestSliceStrict(ct, y) : await loadContestSlice(ct, y);
+          const rows = strict ? await tryLoadContestSliceStrict(ct, y) : await loadCountyContestSlice(ct, y);
           if (!rows || !rows.length) {
             countyAggregateByContestYearCache.set(key, null);
             return null;
@@ -19030,7 +19033,58 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       }
 
-	    async function loadContestSlice(contestType, year) {
+      function mapContestPayloadRows(payload, contestType, year) {
+        return (payload?.rows || []).map(r => ({
+          year: Number(year),
+          county: r.county,
+          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
+          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
+          [`${contestType}_other`]: Number(r.other_votes) || 0,
+          [`${contestType}_total`]: Number(r.total_votes) || 0,
+          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
+          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
+          [`${contestType}_margin`]: Number(r.margin) || 0,
+          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
+          [`${contestType}_winner`]: r.winner || '',
+          [`${contestType}_color`]: r.color || ''
+        }));
+      }
+
+      async function loadCountyContestSlice(contestType, year) {
+        if (getModeledContestDefinition(contestType, year)) return loadContestSlice(contestType, year);
+        const key = `${contestType}_${year}`;
+        if (countyContestSliceCache.has(key)) return countyContestSliceCache.get(key);
+        if (countyContestSliceInflight.has(key)) return countyContestSliceInflight.get(key);
+
+        const p = atlasPerf(`slice.county:${key}`, async () => {
+          const manifestEntry = (contestManifest || []).find(e => (
+            e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope
+          )) || null;
+          const manifestFile = String(manifestEntry?.file || '').trim();
+          if (!manifestFile || manifestFile.startsWith('open_elections_csv_')) {
+            return loadContestSlice(contestType, year);
+          }
+          try {
+            const payload = await loadJSON(`${CONFIG.paths.county_contests_dir}/${manifestFile}`);
+            const rows = mapContestPayloadRows(payload, contestType, year);
+            if (!rows.length) throw new Error('empty county slice');
+            countyContestSliceCache.set(key, rows);
+            return rows;
+          } catch (_) {
+            return loadContestSlice(contestType, year);
+          }
+        });
+
+        countyContestSliceInflight.set(key, p);
+        try {
+          return await p;
+        } finally {
+          countyContestSliceInflight.delete(key);
+        }
+      }
+
+	    async function loadContestSlice(contestType, year, opts = null) {
+        if (opts?.preferCounty) return loadCountyContestSlice(contestType, year);
         const modeledDef = getModeledContestDefinition(contestType, year);
         if (modeledDef) {
           const sig = getModeledDefSignature(modeledDef);
@@ -19084,20 +19138,7 @@ document.addEventListener('DOMContentLoaded', function() {
               ? `${CONFIG.paths.contests_dir}/${manifestFile}`
               : `${CONFIG.paths.contests_dir}/${key}.json`;
 	          const payload = await loadJSON(payloadPath);
-	          const rows = (payload.rows || []).map(r => ({
-	            year: Number(year),
-	            county: r.county,
-              [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-              [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-              [`${contestType}_other`]: Number(r.other_votes) || 0,
-              [`${contestType}_total`]: Number(r.total_votes) || 0,
-              [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-              [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-              [`${contestType}_margin`]: Number(r.margin) || 0,
-              [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-              [`${contestType}_winner`]: r.winner || '',
-              [`${contestType}_color`]: r.color || ''
-            }));
+	          const rows = mapContestPayloadRows(payload, contestType, year);
 	          attachOfficialCountyTotalsToRows(rows, payload);
 	          contestSliceCache.set(key, rows);
 	          return rows;
@@ -33857,8 +33898,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (staleCheck()) return;
 
-      // Filter data for this contest and year
-      const contestData = await loadContestSlice(contestType, year);
+      // Keep county mode on the compact 100-row payload. The full crosswalked
+      // precinct slice is only needed when the precinct overlay is active.
+      let needsPrecinctDetail = !!precinctsEnabled;
+      if (needsPrecinctDetail && shouldDeferPrecinctDetail()) {
+        needsPrecinctDetail = false;
+      }
+      const contestData = needsPrecinctDetail
+        ? await loadContestSlice(contestType, year)
+        : await loadCountyContestSlice(contestType, year);
       if (staleCheck()) return;
       
       debugLog(`Applying ${contestType} for ${year}:`, contestData.length, 'counties found');
@@ -33875,13 +33923,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	          .trim()
 	          .toUpperCase();
 	      }
-
-      // Only build heavy precinct matching/color expressions when the overlay is enabled.
-      // If users switch contests with precincts off, keep the county path fast.
-      let needsPrecinctDetail = !!precinctsEnabled;
-      if (needsPrecinctDetail && shouldDeferPrecinctDetail()) {
-        needsPrecinctDetail = false;
-      }
 
       // Precinct key matching needs to tolerate (a) non-geographic buckets in results
       // (absentee/one-stop/etc) and (b) modern precinct splits where historical results
