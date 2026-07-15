@@ -83,6 +83,16 @@ test('official county totals override county aggregates without changing precinc
   expect(snapshot.statewide).toEqual({ dem: 50, rep: 35, other: 3, total: 88 });
 });
 
+test('compact county slices stay small and contain one row per county', async ({ request }) => {
+  const response = await request.get('/data/county_contests/governor_2000.json');
+  expect(response.ok()).toBeTruthy();
+  const body = await response.body();
+  const payload = JSON.parse(body.toString('utf8'));
+  expect(body.length).toBeLessThan(50_000);
+  expect(payload.rows).toHaveLength(100);
+  expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
+});
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');

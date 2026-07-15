@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTEST_DIR = ROOT / "data" / "contests"
+COUNTY_CONTEST_DIR = ROOT / "data" / "county_contests"
 
 
 def norm(value: object) -> str:
@@ -141,6 +142,22 @@ def aggregate_county_totals(payload: dict, raw_rows: list[dict[str, str]]) -> di
     return dict(sorted(totals.items()))
 
 
+def write_compact_county_slice(path: Path, payload: dict, county_totals: dict[str, dict]) -> None:
+    year = contest_year(path, payload)
+    contest_type = str(payload.get("contest_type") or re.sub(r"_\d{4}$", "", path.stem))
+    rows = [{"county": county, **totals} for county, totals in county_totals.items()]
+    compact = {
+        "year": year,
+        "contest_type": contest_type,
+        "rows": rows,
+    }
+    COUNTY_CONTEST_DIR.mkdir(parents=True, exist_ok=True)
+    (COUNTY_CONTEST_DIR / path.name).write_text(
+        json.dumps(compact, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true", help="Write matched county totals into contest JSON files.")
@@ -179,6 +196,8 @@ def main() -> int:
             continue
 
         summary["matched"].append({"file": path.name, "office": office, "method": method})
+        if args.write:
+            write_compact_county_slice(path, payload, county_totals)
         if payload.get("county_totals") == county_totals:
             continue
         summary["changed"].append(path.name)
