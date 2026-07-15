@@ -3,65 +3,72 @@
   "scope": "state_house",
   "contest_type": "auditor",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "AUDITOR"
+    "office": "AUDITOR",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 20249,
-        "rep_votes": 17512,
+        "dem_votes": 20172,
+        "rep_votes": 17709,
         "other_votes": 0,
-        "total_votes": 37761,
+        "total_votes": 37881,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2737,
-        "margin_pct": -7.25,
+        "margin": -2463,
+        "margin_pct": -6.5,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "2": {
-        "dem_votes": 22333,
-        "rep_votes": 15976,
+        "dem_votes": 22281,
+        "rep_votes": 15603,
         "other_votes": 0,
-        "total_votes": 38309,
+        "total_votes": 37884,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6357,
-        "margin_pct": -16.59,
+        "margin": -6678,
+        "margin_pct": -17.63,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "3": {
-        "dem_votes": 18371,
-        "rep_votes": 17700,
+        "dem_votes": 18838,
+        "rep_votes": 18302,
         "other_votes": 0,
-        "total_votes": 36071,
+        "total_votes": 37140,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -671,
-        "margin_pct": -1.86,
+        "margin": -536,
+        "margin_pct": -1.44,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "4": {
-        "dem_votes": 16606,
-        "rep_votes": 14612,
+        "dem_votes": 18022,
+        "rep_votes": 15845,
         "other_votes": 0,
-        "total_votes": 31218,
+        "total_votes": 33867,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1994,
-        "margin_pct": -6.39,
+        "margin": -2177,
+        "margin_pct": -6.43,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
@@ -82,294 +89,294 @@
         }
       },
       "6": {
-        "dem_votes": 11544,
-        "rep_votes": 12374,
+        "dem_votes": 10232,
+        "rep_votes": 9276,
         "other_votes": 0,
-        "total_votes": 23918,
+        "total_votes": 19508,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 830,
-        "margin_pct": 3.47,
-        "winner": "REP",
+        "margin": -956,
+        "margin_pct": -4.9,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#c6dbef"
         }
       },
       "7": {
-        "dem_votes": 17452,
-        "rep_votes": 14306,
+        "dem_votes": 14643,
+        "rep_votes": 12837,
         "other_votes": 0,
-        "total_votes": 31758,
+        "total_votes": 27480,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -3146,
-        "margin_pct": -9.91,
+        "margin": -1806,
+        "margin_pct": -6.57,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "8": {
-        "dem_votes": 21528,
-        "rep_votes": 14883,
+        "dem_votes": 25217,
+        "rep_votes": 15830,
         "other_votes": 0,
-        "total_votes": 36411,
+        "total_votes": 41047,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6645,
-        "margin_pct": -18.25,
+        "margin": -9387,
+        "margin_pct": -22.87,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "9": {
-        "dem_votes": 20668,
-        "rep_votes": 14288,
+        "dem_votes": 16959,
+        "rep_votes": 13330,
         "other_votes": 0,
-        "total_votes": 34956,
+        "total_votes": 30289,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6380,
-        "margin_pct": -18.25,
+        "margin": -3629,
+        "margin_pct": -11.98,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "10": {
-        "dem_votes": 17870,
-        "rep_votes": 16476,
+        "dem_votes": 16994,
+        "rep_votes": 15725,
         "other_votes": 0,
-        "total_votes": 34346,
+        "total_votes": 32719,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1394,
-        "margin_pct": -4.06,
+        "margin": -1269,
+        "margin_pct": -3.88,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "11": {
-        "dem_votes": 18689,
-        "rep_votes": 16366,
+        "dem_votes": 20792,
+        "rep_votes": 17286,
         "other_votes": 0,
-        "total_votes": 35055,
+        "total_votes": 38078,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2323,
-        "margin_pct": -6.63,
+        "margin": -3506,
+        "margin_pct": -9.21,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "12": {
-        "dem_votes": 22599,
+        "dem_votes": 22598,
         "rep_votes": 15355,
         "other_votes": 0,
-        "total_votes": 37954,
+        "total_votes": 37953,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -7244,
-        "margin_pct": -19.09,
+        "margin": -7243,
+        "margin_pct": -19.08,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "13": {
-        "dem_votes": 15986,
-        "rep_votes": 23053,
+        "dem_votes": 15514,
+        "rep_votes": 22447,
         "other_votes": 0,
-        "total_votes": 39039,
+        "total_votes": 37961,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 7067,
-        "margin_pct": 18.1,
+        "margin": 6933,
+        "margin_pct": 18.26,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "14": {
-        "dem_votes": 8380,
-        "rep_votes": 8860,
+        "dem_votes": 8189,
+        "rep_votes": 8972,
         "other_votes": 0,
-        "total_votes": 17240,
+        "total_votes": 17161,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 480,
-        "margin_pct": 2.78,
+        "margin": 783,
+        "margin_pct": 4.56,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "15": {
-        "dem_votes": 9752,
-        "rep_votes": 11995,
+        "dem_votes": 9443,
+        "rep_votes": 11459,
         "other_votes": 0,
-        "total_votes": 21747,
+        "total_votes": 20902,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2243,
-        "margin_pct": 10.31,
+        "margin": 2016,
+        "margin_pct": 9.65,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "16": {
-        "dem_votes": 13244,
-        "rep_votes": 15646,
+        "dem_votes": 13198,
+        "rep_votes": 15578,
         "other_votes": 0,
-        "total_votes": 28890,
+        "total_votes": 28776,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2402,
-        "margin_pct": 8.31,
+        "margin": 2380,
+        "margin_pct": 8.27,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "17": {
-        "dem_votes": 14637,
-        "rep_votes": 17152,
+        "dem_votes": 14797,
+        "rep_votes": 15533,
         "other_votes": 0,
-        "total_votes": 31789,
+        "total_votes": 30330,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2515,
-        "margin_pct": 7.91,
+        "margin": 736,
+        "margin_pct": 2.43,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "18": {
-        "dem_votes": 22064,
-        "rep_votes": 16880,
+        "dem_votes": 14171,
+        "rep_votes": 12162,
         "other_votes": 0,
-        "total_votes": 38944,
+        "total_votes": 26333,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -5184,
-        "margin_pct": -13.31,
+        "margin": -2009,
+        "margin_pct": -7.63,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "19": {
-        "dem_votes": 15270,
-        "rep_votes": 18359,
+        "dem_votes": 18038,
+        "rep_votes": 21867,
         "other_votes": 0,
-        "total_votes": 33629,
+        "total_votes": 39905,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3089,
-        "margin_pct": 9.19,
+        "margin": 3829,
+        "margin_pct": 9.6,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "20": {
-        "dem_votes": 16205,
-        "rep_votes": 20665,
+        "dem_votes": 21175,
+        "rep_votes": 23504,
         "other_votes": 0,
-        "total_votes": 36870,
+        "total_votes": 44679,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4460,
-        "margin_pct": 12.1,
+        "margin": 2329,
+        "margin_pct": 5.21,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fcae91"
         }
       },
       "21": {
-        "dem_votes": 16122,
-        "rep_votes": 14119,
+        "dem_votes": 5163,
+        "rep_votes": 5464,
         "other_votes": 0,
-        "total_votes": 30241,
+        "total_votes": 10627,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2003,
-        "margin_pct": -6.62,
-        "winner": "DEM",
+        "margin": 301,
+        "margin_pct": 2.83,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#fcae91"
         }
       },
       "22": {
-        "dem_votes": 22601,
-        "rep_votes": 16743,
+        "dem_votes": 22616,
+        "rep_votes": 16758,
         "other_votes": 0,
-        "total_votes": 39344,
+        "total_votes": 39374,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
         "margin": -5858,
-        "margin_pct": -14.89,
+        "margin_pct": -14.88,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "23": {
-        "dem_votes": 33251,
-        "rep_votes": 12745,
+        "dem_votes": 33271,
+        "rep_votes": 12759,
         "other_votes": 0,
-        "total_votes": 45996,
+        "total_votes": 46030,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -20506,
-        "margin_pct": -44.58,
+        "margin": -20512,
+        "margin_pct": -44.56,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "24": {
-        "dem_votes": 21909,
-        "rep_votes": 15777,
+        "dem_votes": 21704,
+        "rep_votes": 16101,
         "other_votes": 0,
-        "total_votes": 37686,
+        "total_votes": 37805,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6132,
-        "margin_pct": -16.27,
+        "margin": -5603,
+        "margin_pct": -14.82,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "25": {
-        "dem_votes": 23727,
-        "rep_votes": 19579,
+        "dem_votes": 23842,
+        "rep_votes": 19173,
         "other_votes": 0,
-        "total_votes": 43306,
+        "total_votes": 43015,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4148,
-        "margin_pct": -9.58,
+        "margin": -4669,
+        "margin_pct": -10.85,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "26": {
-        "dem_votes": 12128,
-        "rep_votes": 16029,
+        "dem_votes": 9989,
+        "rep_votes": 13981,
         "other_votes": 0,
-        "total_votes": 28157,
+        "total_votes": 23970,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3901,
-        "margin_pct": 13.85,
+        "margin": 3992,
+        "margin_pct": 16.65,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -390,1260 +397,1260 @@
         }
       },
       "28": {
-        "dem_votes": 11685,
-        "rep_votes": 15443,
+        "dem_votes": 16174,
+        "rep_votes": 19832,
         "other_votes": 0,
-        "total_votes": 27128,
+        "total_votes": 36006,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3758,
-        "margin_pct": 13.85,
+        "margin": 3658,
+        "margin_pct": 10.16,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "29": {
-        "dem_votes": 26809,
-        "rep_votes": 10196,
+        "dem_votes": 31243,
+        "rep_votes": 12771,
         "other_votes": 0,
-        "total_votes": 37005,
+        "total_votes": 44014,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -16613,
-        "margin_pct": -44.89,
+        "margin": -18472,
+        "margin_pct": -41.97,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 30321,
-        "rep_votes": 8466,
+        "dem_votes": 30678,
+        "rep_votes": 7778,
         "other_votes": 0,
-        "total_votes": 38787,
+        "total_votes": 38456,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -21855,
-        "margin_pct": -56.35,
+        "margin": -22900,
+        "margin_pct": -59.55,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 26616,
-        "rep_votes": 5698,
+        "dem_votes": 21984,
+        "rep_votes": 4292,
         "other_votes": 0,
-        "total_votes": 32314,
+        "total_votes": 26276,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -20918,
-        "margin_pct": -64.73,
+        "margin": -17692,
+        "margin_pct": -67.33,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "32": {
-        "dem_votes": 24493,
-        "rep_votes": 12628,
+        "dem_votes": 27292,
+        "rep_votes": 14083,
         "other_votes": 0,
-        "total_votes": 37121,
+        "total_votes": 41375,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -11865,
-        "margin_pct": -31.96,
+        "margin": -13209,
+        "margin_pct": -31.93,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "33": {
-        "dem_votes": 17074,
-        "rep_votes": 14952,
+        "dem_votes": 16257,
+        "rep_votes": 14108,
         "other_votes": 0,
-        "total_votes": 32026,
+        "total_votes": 30365,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2122,
-        "margin_pct": -6.63,
+        "margin": -2149,
+        "margin_pct": -7.08,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "34": {
-        "dem_votes": 17621,
-        "rep_votes": 15431,
+        "dem_votes": 24942,
+        "rep_votes": 24626,
         "other_votes": 0,
-        "total_votes": 33052,
+        "total_votes": 49568,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2190,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "35": {
-        "dem_votes": 16419,
-        "rep_votes": 14378,
-        "other_votes": 0,
-        "total_votes": 30797,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2041,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "36": {
-        "dem_votes": 16185,
-        "rep_votes": 14174,
-        "other_votes": 0,
-        "total_votes": 30359,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2011,
-        "margin_pct": -6.62,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "37": {
-        "dem_votes": 16554,
-        "rep_votes": 14496,
-        "other_votes": 0,
-        "total_votes": 31050,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2058,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "38": {
-        "dem_votes": 18458,
-        "rep_votes": 16164,
-        "other_votes": 0,
-        "total_votes": 34622,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2294,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "39": {
-        "dem_votes": 16977,
-        "rep_votes": 14867,
-        "other_votes": 0,
-        "total_votes": 31844,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2110,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "40": {
-        "dem_votes": 17770,
-        "rep_votes": 15561,
-        "other_votes": 0,
-        "total_votes": 33331,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2209,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "41": {
-        "dem_votes": 16917,
-        "rep_votes": 14814,
-        "other_votes": 0,
-        "total_votes": 31731,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2103,
-        "margin_pct": -6.63,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "42": {
-        "dem_votes": 19255,
-        "rep_votes": 11441,
-        "other_votes": 0,
-        "total_votes": 30696,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -7814,
-        "margin_pct": -25.46,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "43": {
-        "dem_votes": 19020,
-        "rep_votes": 11301,
-        "other_votes": 0,
-        "total_votes": 30321,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -7719,
-        "margin_pct": -25.46,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "44": {
-        "dem_votes": 19783,
-        "rep_votes": 11754,
-        "other_votes": 0,
-        "total_votes": 31537,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -8029,
-        "margin_pct": -25.46,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "45": {
-        "dem_votes": 18108,
-        "rep_votes": 10759,
-        "other_votes": 0,
-        "total_votes": 28867,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -7349,
-        "margin_pct": -25.46,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "46": {
-        "dem_votes": 22779,
-        "rep_votes": 10787,
-        "other_votes": 0,
-        "total_votes": 33566,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -11992,
-        "margin_pct": -35.73,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "47": {
-        "dem_votes": 20040,
-        "rep_votes": 7581,
-        "other_votes": 0,
-        "total_votes": 27621,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -12459,
-        "margin_pct": -45.11,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08306b"
-        }
-      },
-      "48": {
-        "dem_votes": 18569,
-        "rep_votes": 9287,
-        "other_votes": 0,
-        "total_votes": 27856,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -9282,
-        "margin_pct": -33.32,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "49": {
-        "dem_votes": 18029,
-        "rep_votes": 15789,
-        "other_votes": 0,
-        "total_votes": 33818,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2240,
-        "margin_pct": -6.62,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "50": {
-        "dem_votes": 26677,
-        "rep_votes": 13264,
-        "other_votes": 0,
-        "total_votes": 39941,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -13413,
-        "margin_pct": -33.58,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "51": {
-        "dem_votes": 15457,
-        "rep_votes": 14845,
-        "other_votes": 0,
-        "total_votes": 30302,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -612,
-        "margin_pct": -2.02,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "52": {
-        "dem_votes": 19818,
-        "rep_votes": 15722,
-        "other_votes": 0,
-        "total_votes": 35540,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -4096,
-        "margin_pct": -11.53,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "53": {
-        "dem_votes": 12671,
-        "rep_votes": 14916,
-        "other_votes": 0,
-        "total_votes": 27587,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 2245,
-        "margin_pct": 8.14,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "54": {
-        "dem_votes": 18586,
-        "rep_votes": 15126,
-        "other_votes": 0,
-        "total_votes": 33712,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -3460,
-        "margin_pct": -10.26,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "55": {
-        "dem_votes": 20009,
-        "rep_votes": 18141,
-        "other_votes": 0,
-        "total_votes": 38150,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -1868,
-        "margin_pct": -4.9,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "56": {
-        "dem_votes": 27797,
-        "rep_votes": 11918,
-        "other_votes": 0,
-        "total_votes": 39715,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -15879,
-        "margin_pct": -39.98,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "57": {
-        "dem_votes": 22103,
-        "rep_votes": 19556,
-        "other_votes": 0,
-        "total_votes": 41659,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2547,
-        "margin_pct": -6.11,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "58": {
-        "dem_votes": 26890,
-        "rep_votes": 10509,
-        "other_votes": 0,
-        "total_votes": 37399,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -16381,
-        "margin_pct": -43.8,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08306b"
-        }
-      },
-      "59": {
-        "dem_votes": 17782,
-        "rep_votes": 17461,
-        "other_votes": 0,
-        "total_votes": 35243,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -321,
-        "margin_pct": -0.91,
+        "margin": -316,
+        "margin_pct": -0.64,
         "winner": "DEM",
         "competitiveness": {
           "color": "#e1f5fe"
         }
       },
-      "60": {
-        "dem_votes": 21783,
-        "rep_votes": 13735,
+      "35": {
+        "dem_votes": 7666,
+        "rep_votes": 9877,
         "other_votes": 0,
-        "total_votes": 35518,
+        "total_votes": 17543,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -8048,
-        "margin_pct": -22.66,
-        "winner": "DEM",
+        "margin": 2211,
+        "margin_pct": 12.6,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#ef3b2c"
         }
       },
-      "61": {
-        "dem_votes": 31309,
-        "rep_votes": 9418,
+      "36": {
+        "dem_votes": 9911,
+        "rep_votes": 11273,
         "other_votes": 0,
-        "total_votes": 40727,
+        "total_votes": 21184,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -21891,
-        "margin_pct": -53.75,
+        "margin": 1362,
+        "margin_pct": 6.43,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "37": {
+        "dem_votes": 9644,
+        "rep_votes": 11757,
+        "other_votes": 0,
+        "total_votes": 21401,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 2113,
+        "margin_pct": 9.87,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "38": {
+        "dem_votes": 27834,
+        "rep_votes": 6318,
+        "other_votes": 0,
+        "total_votes": 34152,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -21516,
+        "margin_pct": -63.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
-      "62": {
-        "dem_votes": 16752,
-        "rep_votes": 19891,
+      "39": {
+        "dem_votes": 9253,
+        "rep_votes": 8912,
         "other_votes": 0,
-        "total_votes": 36643,
+        "total_votes": 18165,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3139,
-        "margin_pct": 8.57,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "63": {
-        "dem_votes": 14468,
-        "rep_votes": 14432,
-        "other_votes": 0,
-        "total_votes": 28900,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -36,
-        "margin_pct": -0.12,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#f7f7f7"
-        }
-      },
-      "64": {
-        "dem_votes": 15948,
-        "rep_votes": 15907,
-        "other_votes": 0,
-        "total_votes": 31855,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -41,
-        "margin_pct": -0.13,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#f7f7f7"
-        }
-      },
-      "65": {
-        "dem_votes": 19638,
-        "rep_votes": 19245,
-        "other_votes": 0,
-        "total_votes": 38883,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -393,
-        "margin_pct": -1.01,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "66": {
-        "dem_votes": 16474,
-        "rep_votes": 14427,
-        "other_votes": 0,
-        "total_votes": 30901,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -2047,
-        "margin_pct": -6.62,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "67": {
-        "dem_votes": 16541,
-        "rep_votes": 21096,
-        "other_votes": 0,
-        "total_votes": 37637,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 4555,
-        "margin_pct": 12.1,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "68": {
-        "dem_votes": 5984,
-        "rep_votes": 11528,
-        "other_votes": 0,
-        "total_votes": 17512,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 5544,
-        "margin_pct": 31.66,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
-      "69": {
-        "dem_votes": 12232,
-        "rep_votes": 22601,
-        "other_votes": 0,
-        "total_votes": 34833,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 10369,
-        "margin_pct": 29.77,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
-      "70": {
-        "dem_votes": 11607,
-        "rep_votes": 22576,
-        "other_votes": 0,
-        "total_votes": 34183,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 10969,
-        "margin_pct": 32.09,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
-      "71": {
-        "dem_votes": 23838,
-        "rep_votes": 10739,
-        "other_votes": 0,
-        "total_votes": 34577,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -13099,
-        "margin_pct": -37.88,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "72": {
-        "dem_votes": 26370,
-        "rep_votes": 11607,
-        "other_votes": 0,
-        "total_votes": 37977,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -14763,
-        "margin_pct": -38.87,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08519c"
-        }
-      },
-      "73": {
-        "dem_votes": 12224,
-        "rep_votes": 13416,
-        "other_votes": 0,
-        "total_votes": 25640,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 1192,
-        "margin_pct": 4.65,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "74": {
-        "dem_votes": 16993,
-        "rep_votes": 19904,
-        "other_votes": 0,
-        "total_votes": 36897,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 2911,
-        "margin_pct": 7.89,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "75": {
-        "dem_votes": 13343,
-        "rep_votes": 16241,
-        "other_votes": 0,
-        "total_votes": 29584,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 2898,
-        "margin_pct": 9.8,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "76": {
-        "dem_votes": 15803,
-        "rep_votes": 19907,
-        "other_votes": 0,
-        "total_votes": 35710,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 4104,
-        "margin_pct": 11.49,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "77": {
-        "dem_votes": 14245,
-        "rep_votes": 25204,
-        "other_votes": 0,
-        "total_votes": 39449,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 10959,
-        "margin_pct": 27.78,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
-      "78": {
-        "dem_votes": 12112,
-        "rep_votes": 23135,
-        "other_votes": 0,
-        "total_votes": 35247,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 11023,
-        "margin_pct": 31.27,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
-      "79": {
-        "dem_votes": 20366,
-        "rep_votes": 19613,
-        "other_votes": 0,
-        "total_votes": 39979,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -753,
+        "margin": -341,
         "margin_pct": -1.88,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
-      "80": {
-        "dem_votes": 13174,
-        "rep_votes": 19806,
+      "40": {
+        "dem_votes": 22827,
+        "rep_votes": 26289,
         "other_votes": 0,
-        "total_votes": 32980,
+        "total_votes": 49116,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6632,
-        "margin_pct": 20.11,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
-      "81": {
-        "dem_votes": 13147,
-        "rep_votes": 19764,
-        "other_votes": 0,
-        "total_votes": 32911,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 6617,
-        "margin_pct": 20.11,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
-      "82": {
-        "dem_votes": 13504,
-        "rep_votes": 15800,
-        "other_votes": 0,
-        "total_votes": 29304,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 2296,
-        "margin_pct": 7.84,
+        "margin": 3462,
+        "margin_pct": 7.05,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
-      "83": {
-        "dem_votes": 15200,
-        "rep_votes": 21414,
+      "41": {
+        "dem_votes": 28062,
+        "rep_votes": 28098,
         "other_votes": 0,
-        "total_votes": 36614,
+        "total_votes": 56160,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6214,
-        "margin_pct": 16.97,
+        "margin": 36,
+        "margin_pct": 0.06,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#f7f7f7"
+        }
+      },
+      "42": {
+        "dem_votes": 16700,
+        "rep_votes": 6820,
+        "other_votes": 0,
+        "total_votes": 23520,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -9880,
+        "margin_pct": -42.01,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "43": {
+        "dem_votes": 18950,
+        "rep_votes": 13541,
+        "other_votes": 0,
+        "total_votes": 32491,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -5409,
+        "margin_pct": -16.65,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "44": {
+        "dem_votes": 23550,
+        "rep_votes": 13544,
+        "other_votes": 0,
+        "total_votes": 37094,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -10006,
+        "margin_pct": -26.97,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "45": {
+        "dem_votes": 16951,
+        "rep_votes": 11310,
+        "other_votes": 0,
+        "total_votes": 28261,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -5641,
+        "margin_pct": -19.96,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "46": {
+        "dem_votes": 22522,
+        "rep_votes": 12284,
+        "other_votes": 0,
+        "total_votes": 34806,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -10238,
+        "margin_pct": -29.41,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "47": {
+        "dem_votes": 20286,
+        "rep_votes": 6080,
+        "other_votes": 0,
+        "total_votes": 26366,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -14206,
+        "margin_pct": -53.88,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "48": {
+        "dem_votes": 18541,
+        "rep_votes": 9264,
+        "other_votes": 0,
+        "total_votes": 27805,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -9277,
+        "margin_pct": -33.36,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "49": {
+        "dem_votes": 25110,
+        "rep_votes": 21029,
+        "other_votes": 0,
+        "total_votes": 46139,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -4081,
+        "margin_pct": -8.85,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "50": {
+        "dem_votes": 28363,
+        "rep_votes": 17123,
+        "other_votes": 0,
+        "total_votes": 45486,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -11240,
+        "margin_pct": -24.71,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "51": {
+        "dem_votes": 15184,
+        "rep_votes": 14328,
+        "other_votes": 0,
+        "total_votes": 29512,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -856,
+        "margin_pct": -2.9,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
+        }
+      },
+      "52": {
+        "dem_votes": 18903,
+        "rep_votes": 14028,
+        "other_votes": 0,
+        "total_votes": 32931,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -4875,
+        "margin_pct": -14.8,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "53": {
+        "dem_votes": 11849,
+        "rep_votes": 15895,
+        "other_votes": 0,
+        "total_votes": 27744,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4046,
+        "margin_pct": 14.58,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "84": {
-        "dem_votes": 13499,
-        "rep_votes": 18448,
+      "54": {
+        "dem_votes": 18111,
+        "rep_votes": 14552,
         "other_votes": 0,
-        "total_votes": 31947,
+        "total_votes": 32663,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4949,
-        "margin_pct": 15.49,
-        "winner": "REP",
+        "margin": -3559,
+        "margin_pct": -10.9,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#6baed6"
         }
       },
-      "85": {
-        "dem_votes": 16100,
-        "rep_votes": 22526,
+      "55": {
+        "dem_votes": 18696,
+        "rep_votes": 16004,
         "other_votes": 0,
-        "total_votes": 38626,
+        "total_votes": 34700,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6426,
-        "margin_pct": 16.64,
-        "winner": "REP",
+        "margin": -2692,
+        "margin_pct": -7.76,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#9ecae1"
         }
       },
-      "86": {
-        "dem_votes": 17182,
-        "rep_votes": 18655,
+      "56": {
+        "dem_votes": 26039,
+        "rep_votes": 8020,
         "other_votes": 0,
-        "total_votes": 35837,
+        "total_votes": 34059,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1473,
-        "margin_pct": 4.11,
+        "margin": -18019,
+        "margin_pct": -52.91,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "57": {
+        "dem_votes": 20027,
+        "rep_votes": 16422,
+        "other_votes": 0,
+        "total_votes": 36449,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -3605,
+        "margin_pct": -9.89,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "58": {
+        "dem_votes": 27698,
+        "rep_votes": 11154,
+        "other_votes": 0,
+        "total_votes": 38852,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -16544,
+        "margin_pct": -42.58,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "59": {
+        "dem_votes": 16845,
+        "rep_votes": 17442,
+        "other_votes": 0,
+        "total_votes": 34287,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 597,
+        "margin_pct": 1.74,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
-      "87": {
-        "dem_votes": 15402,
-        "rep_votes": 19980,
+      "60": {
+        "dem_votes": 20881,
+        "rep_votes": 13101,
         "other_votes": 0,
-        "total_votes": 35382,
+        "total_votes": 33982,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4578,
-        "margin_pct": 12.94,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "88": {
-        "dem_votes": 18936,
-        "rep_votes": 12153,
-        "other_votes": 0,
-        "total_votes": 31089,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -6783,
-        "margin_pct": -21.82,
+        "margin": -7780,
+        "margin_pct": -22.89,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
-      "89": {
-        "dem_votes": 14553,
-        "rep_votes": 20583,
+      "61": {
+        "dem_votes": 32230,
+        "rep_votes": 10137,
         "other_votes": 0,
-        "total_votes": 35136,
+        "total_votes": 42367,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6030,
-        "margin_pct": 17.16,
-        "winner": "REP",
+        "margin": -22093,
+        "margin_pct": -52.15,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#08306b"
         }
       },
-      "90": {
-        "dem_votes": 14805,
-        "rep_votes": 18054,
+      "62": {
+        "dem_votes": 18994,
+        "rep_votes": 22407,
         "other_votes": 0,
-        "total_votes": 32859,
+        "total_votes": 41401,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3249,
-        "margin_pct": 9.89,
+        "margin": 3413,
+        "margin_pct": 8.24,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
-      "91": {
-        "dem_votes": 17315,
-        "rep_votes": 22200,
+      "63": {
+        "dem_votes": 16653,
+        "rep_votes": 12258,
         "other_votes": 0,
-        "total_votes": 39515,
+        "total_votes": 28911,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4885,
-        "margin_pct": 12.36,
+        "margin": -4395,
+        "margin_pct": -15.2,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "64": {
+        "dem_votes": 13809,
+        "rep_votes": 18086,
+        "other_votes": 0,
+        "total_votes": 31895,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4277,
+        "margin_pct": 13.41,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "92": {
-        "dem_votes": 18830,
-        "rep_votes": 12085,
+      "65": {
+        "dem_votes": 19667,
+        "rep_votes": 19252,
         "other_votes": 0,
-        "total_votes": 30915,
+        "total_votes": 38919,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6745,
-        "margin_pct": -21.82,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "93": {
-        "dem_votes": 20602,
-        "rep_votes": 20164,
-        "other_votes": 0,
-        "total_votes": 40766,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -438,
+        "margin": -415,
         "margin_pct": -1.07,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
-      "94": {
-        "dem_votes": 15707,
-        "rep_votes": 23476,
+      "66": {
+        "dem_votes": 16222,
+        "rep_votes": 10773,
         "other_votes": 0,
-        "total_votes": 39183,
+        "total_votes": 26995,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 7769,
-        "margin_pct": 19.83,
+        "margin": -5449,
+        "margin_pct": -20.19,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "67": {
+        "dem_votes": 16538,
+        "rep_votes": 21099,
+        "other_votes": 0,
+        "total_votes": 37637,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4561,
+        "margin_pct": 12.12,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "68": {
+        "dem_votes": 7480,
+        "rep_votes": 14511,
+        "other_votes": 0,
+        "total_votes": 21991,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 7031,
+        "margin_pct": 31.97,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "69": {
+        "dem_votes": 12053,
+        "rep_votes": 21764,
+        "other_votes": 0,
+        "total_votes": 33817,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 9711,
+        "margin_pct": 28.72,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "70": {
+        "dem_votes": 11243,
+        "rep_votes": 21747,
+        "other_votes": 0,
+        "total_votes": 32990,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 10504,
+        "margin_pct": 31.84,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "71": {
+        "dem_votes": 23129,
+        "rep_votes": 9944,
+        "other_votes": 0,
+        "total_votes": 33073,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -13185,
+        "margin_pct": -39.87,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "72": {
+        "dem_votes": 25892,
+        "rep_votes": 9852,
+        "other_votes": 0,
+        "total_votes": 35744,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -16040,
+        "margin_pct": -44.87,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "73": {
+        "dem_votes": 11014,
+        "rep_votes": 11217,
+        "other_votes": 0,
+        "total_votes": 22231,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 203,
+        "margin_pct": 0.91,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fee8c8"
+        }
+      },
+      "74": {
+        "dem_votes": 17015,
+        "rep_votes": 21824,
+        "other_votes": 0,
+        "total_votes": 38839,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4809,
+        "margin_pct": 12.38,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "75": {
+        "dem_votes": 15666,
+        "rep_votes": 17867,
+        "other_votes": 0,
+        "total_votes": 33533,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 2201,
+        "margin_pct": 6.56,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "76": {
+        "dem_votes": 16264,
+        "rep_votes": 16853,
+        "other_votes": 0,
+        "total_votes": 33117,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 589,
+        "margin_pct": 1.78,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "77": {
+        "dem_votes": 14707,
+        "rep_votes": 26121,
+        "other_votes": 0,
+        "total_votes": 40828,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 11414,
+        "margin_pct": 27.96,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "78": {
+        "dem_votes": 13605,
+        "rep_votes": 26352,
+        "other_votes": 0,
+        "total_votes": 39957,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 12747,
+        "margin_pct": 31.9,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "79": {
+        "dem_votes": 20441,
+        "rep_votes": 19415,
+        "other_votes": 0,
+        "total_votes": 39856,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -1026,
+        "margin_pct": -2.57,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
+        }
+      },
+      "80": {
+        "dem_votes": 11614,
+        "rep_votes": 20359,
+        "other_votes": 0,
+        "total_votes": 31973,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 8745,
+        "margin_pct": 27.35,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "81": {
+        "dem_votes": 14681,
+        "rep_votes": 19146,
+        "other_votes": 0,
+        "total_votes": 33827,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4465,
+        "margin_pct": 13.2,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "82": {
+        "dem_votes": 13743,
+        "rep_votes": 16403,
+        "other_votes": 0,
+        "total_votes": 30146,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 2660,
+        "margin_pct": 8.82,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "83": {
+        "dem_votes": 15235,
+        "rep_votes": 25125,
+        "other_votes": 0,
+        "total_votes": 40360,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 9890,
+        "margin_pct": 24.5,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "84": {
+        "dem_votes": 16907,
+        "rep_votes": 20691,
+        "other_votes": 0,
+        "total_votes": 37598,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 3784,
+        "margin_pct": 10.06,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "85": {
+        "dem_votes": 16296,
+        "rep_votes": 22665,
+        "other_votes": 0,
+        "total_votes": 38961,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 6369,
+        "margin_pct": 16.35,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "86": {
+        "dem_votes": 17168,
+        "rep_votes": 18631,
+        "other_votes": 0,
+        "total_votes": 35799,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 1463,
+        "margin_pct": 4.09,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "87": {
+        "dem_votes": 15169,
+        "rep_votes": 20074,
+        "other_votes": 0,
+        "total_votes": 35243,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4905,
+        "margin_pct": 13.92,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "88": {
+        "dem_votes": 18219,
+        "rep_votes": 8513,
+        "other_votes": 0,
+        "total_votes": 26732,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -9706,
+        "margin_pct": -36.31,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "89": {
+        "dem_votes": 14099,
+        "rep_votes": 22465,
+        "other_votes": 0,
+        "total_votes": 36564,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 8366,
+        "margin_pct": 22.88,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "90": {
+        "dem_votes": 15074,
+        "rep_votes": 19070,
+        "other_votes": 0,
+        "total_votes": 34144,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 3996,
+        "margin_pct": 11.7,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "91": {
+        "dem_votes": 16098,
+        "rep_votes": 21156,
+        "other_votes": 0,
+        "total_votes": 37254,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 5058,
+        "margin_pct": 13.58,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "92": {
+        "dem_votes": 15165,
+        "rep_votes": 8057,
+        "other_votes": 0,
+        "total_votes": 23222,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -7108,
+        "margin_pct": -30.61,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "93": {
+        "dem_votes": 20863,
+        "rep_votes": 20119,
+        "other_votes": 0,
+        "total_votes": 40982,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -744,
+        "margin_pct": -1.82,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
+        }
+      },
+      "94": {
+        "dem_votes": 15422,
+        "rep_votes": 22434,
+        "other_votes": 0,
+        "total_votes": 37856,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 7012,
+        "margin_pct": 18.52,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "95": {
-        "dem_votes": 13191,
-        "rep_votes": 18027,
+        "dem_votes": 9575,
+        "rep_votes": 14858,
         "other_votes": 0,
-        "total_votes": 31218,
+        "total_votes": 24433,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4836,
-        "margin_pct": 15.49,
+        "margin": 5283,
+        "margin_pct": 21.62,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "96": {
-        "dem_votes": 15176,
-        "rep_votes": 21605,
+        "dem_votes": 15900,
+        "rep_votes": 20752,
         "other_votes": 0,
-        "total_votes": 36781,
+        "total_votes": 36652,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6429,
-        "margin_pct": 17.48,
+        "margin": 4852,
+        "margin_pct": 13.24,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "97": {
-        "dem_votes": 13304,
-        "rep_votes": 20246,
+        "dem_votes": 13248,
+        "rep_votes": 20156,
         "other_votes": 0,
-        "total_votes": 33550,
+        "total_votes": 33404,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6942,
-        "margin_pct": 20.69,
+        "margin": 6908,
+        "margin_pct": 20.68,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "98": {
-        "dem_votes": 17224,
-        "rep_votes": 11054,
+        "dem_votes": 12277,
+        "rep_votes": 17712,
         "other_votes": 0,
-        "total_votes": 28278,
+        "total_votes": 29989,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6170,
-        "margin_pct": -21.82,
-        "winner": "DEM",
+        "margin": 5435,
+        "margin_pct": 18.12,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#ef3b2c"
         }
       },
       "99": {
-        "dem_votes": 17610,
-        "rep_votes": 11302,
+        "dem_votes": 20326,
+        "rep_votes": 4521,
         "other_votes": 0,
-        "total_votes": 28912,
+        "total_votes": 24847,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6308,
-        "margin_pct": -21.82,
+        "margin": -15805,
+        "margin_pct": -63.61,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "100": {
-        "dem_votes": 16943,
-        "rep_votes": 10874,
+        "dem_votes": 20336,
+        "rep_votes": 6871,
         "other_votes": 0,
-        "total_votes": 27817,
+        "total_votes": 27207,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6069,
-        "margin_pct": -21.82,
+        "margin": -13465,
+        "margin_pct": -49.49,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "101": {
-        "dem_votes": 17150,
-        "rep_votes": 11007,
+        "dem_votes": 21752,
+        "rep_votes": 7213,
         "other_votes": 0,
-        "total_votes": 28157,
+        "total_votes": 28965,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6143,
-        "margin_pct": -21.82,
+        "margin": -14539,
+        "margin_pct": -50.2,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "102": {
-        "dem_votes": 19783,
-        "rep_votes": 12696,
+        "dem_votes": 21959,
+        "rep_votes": 6549,
         "other_votes": 0,
-        "total_votes": 32479,
+        "total_votes": 28508,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -7087,
-        "margin_pct": -21.82,
+        "margin": -15410,
+        "margin_pct": -54.06,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "103": {
-        "dem_votes": 18178,
-        "rep_votes": 11667,
+        "dem_votes": 15645,
+        "rep_votes": 23443,
         "other_votes": 0,
-        "total_votes": 29845,
+        "total_votes": 39088,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6511,
-        "margin_pct": -21.82,
-        "winner": "DEM",
+        "margin": 7798,
+        "margin_pct": 19.95,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#ef3b2c"
         }
       },
       "104": {
-        "dem_votes": 17756,
-        "rep_votes": 11396,
+        "dem_votes": 15562,
+        "rep_votes": 21760,
         "other_votes": 0,
-        "total_votes": 29152,
+        "total_votes": 37322,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6360,
-        "margin_pct": -21.82,
-        "winner": "DEM",
+        "margin": 6198,
+        "margin_pct": 16.61,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#ef3b2c"
         }
       },
       "105": {
-        "dem_votes": 18529,
-        "rep_votes": 11891,
+        "dem_votes": 14338,
+        "rep_votes": 16551,
         "other_votes": 0,
-        "total_votes": 30420,
+        "total_votes": 30889,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6638,
-        "margin_pct": -21.82,
-        "winner": "DEM",
+        "margin": 2213,
+        "margin_pct": 7.16,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#fb6a4a"
         }
       },
       "106": {
-        "dem_votes": 18164,
-        "rep_votes": 11657,
+        "dem_votes": 17043,
+        "rep_votes": 11110,
         "other_votes": 0,
-        "total_votes": 29821,
+        "total_votes": 28153,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6507,
-        "margin_pct": -21.82,
+        "margin": -5933,
+        "margin_pct": -21.07,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "107": {
-        "dem_votes": 18015,
-        "rep_votes": 11562,
+        "dem_votes": 24543,
+        "rep_votes": 6440,
         "other_votes": 0,
-        "total_votes": 29577,
+        "total_votes": 30983,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6453,
-        "margin_pct": -21.82,
+        "margin": -18103,
+        "margin_pct": -58.43,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "108": {
-        "dem_votes": 12706,
-        "rep_votes": 17027,
+        "dem_votes": 11475,
+        "rep_votes": 17740,
         "other_votes": 0,
-        "total_votes": 29733,
+        "total_votes": 29215,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4321,
-        "margin_pct": 14.53,
+        "margin": 6265,
+        "margin_pct": 21.44,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "109": {
-        "dem_votes": 13081,
-        "rep_votes": 17531,
+        "dem_votes": 12058,
+        "rep_votes": 16329,
         "other_votes": 0,
-        "total_votes": 30612,
+        "total_votes": 28387,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4450,
-        "margin_pct": 14.54,
+        "margin": 4271,
+        "margin_pct": 15.05,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "110": {
-        "dem_votes": 16249,
-        "rep_votes": 19093,
+        "dem_votes": 18715,
+        "rep_votes": 19147,
         "other_votes": 0,
-        "total_votes": 35342,
+        "total_votes": 37862,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2844,
-        "margin_pct": 8.05,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "111": {
-        "dem_votes": 17222,
-        "rep_votes": 18338,
-        "other_votes": 0,
-        "total_votes": 35560,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 1116,
-        "margin_pct": 3.14,
+        "margin": 432,
+        "margin_pct": 1.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
-      "112": {
-        "dem_votes": 17235,
-        "rep_votes": 11061,
+      "111": {
+        "dem_votes": 15668,
+        "rep_votes": 17822,
         "other_votes": 0,
-        "total_votes": 28296,
+        "total_votes": 33490,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6174,
-        "margin_pct": -21.82,
+        "margin": 2154,
+        "margin_pct": 6.43,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "112": {
+        "dem_votes": 17188,
+        "rep_votes": 11665,
+        "other_votes": 0,
+        "total_votes": 28853,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -5523,
+        "margin_pct": -19.14,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "113": {
-        "dem_votes": 17612,
-        "rep_votes": 21638,
+        "dem_votes": 18009,
+        "rep_votes": 22238,
         "other_votes": 0,
-        "total_votes": 39250,
+        "total_votes": 40247,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4026,
-        "margin_pct": 10.26,
+        "margin": 4229,
+        "margin_pct": 10.51,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "114": {
-        "dem_votes": 27479,
-        "rep_votes": 16313,
+        "dem_votes": 29391,
+        "rep_votes": 17321,
         "other_votes": 0,
-        "total_votes": 43792,
+        "total_votes": 46712,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -11166,
-        "margin_pct": -25.5,
+        "margin": -12070,
+        "margin_pct": -25.84,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "115": {
-        "dem_votes": 19509,
-        "rep_votes": 16875,
+        "dem_votes": 16780,
+        "rep_votes": 13611,
         "other_votes": 0,
-        "total_votes": 36384,
+        "total_votes": 30391,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2634,
-        "margin_pct": -7.24,
+        "margin": -3169,
+        "margin_pct": -10.43,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "116": {
-        "dem_votes": 20696,
-        "rep_votes": 14640,
+        "dem_votes": 21515,
+        "rep_votes": 16910,
         "other_votes": 0,
-        "total_votes": 35336,
+        "total_votes": 38425,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6056,
-        "margin_pct": -17.14,
+        "margin": -4605,
+        "margin_pct": -11.98,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "117": {
-        "dem_votes": 15489,
-        "rep_votes": 22334,
+        "dem_votes": 16230,
+        "rep_votes": 22518,
         "other_votes": 0,
-        "total_votes": 37823,
+        "total_votes": 38748,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6845,
-        "margin_pct": 18.1,
+        "margin": 6288,
+        "margin_pct": 16.23,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -1664,27 +1671,27 @@
         }
       },
       "119": {
-        "dem_votes": 19943,
-        "rep_votes": 17344,
+        "dem_votes": 19940,
+        "rep_votes": 17339,
         "other_votes": 0,
-        "total_votes": 37287,
+        "total_votes": 37279,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2599,
-        "margin_pct": -6.97,
+        "margin": -2601,
+        "margin_pct": -6.98,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "120": {
-        "dem_votes": 15521,
-        "rep_votes": 21323,
+        "dem_votes": 15526,
+        "rep_votes": 21330,
         "other_votes": 0,
-        "total_votes": 36844,
+        "total_votes": 36856,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Leslie Merritt",
-        "margin": 5802,
+        "margin": 5804,
         "margin_pct": 15.75,
         "winner": "REP",
         "competitiveness": {

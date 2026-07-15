@@ -3,22 +3,30 @@
   "scope": "state_senate",
   "contest_type": "governor",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "GOVERNOR"
+    "office": "GOVERNOR",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines",
+    "margin_calibrated_to": "dra_stats_or_live"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 54837,
-        "rep_votes": 41809,
+        "dem_votes": 54839,
+        "rep_votes": 41810,
         "other_votes": 2356,
-        "total_votes": 99002,
+        "total_votes": 99005,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -13028,
+        "margin": -13029,
         "margin_pct": -13.16,
         "winner": "DEM",
         "competitiveness": {
@@ -26,13 +34,13 @@
         }
       },
       "2": {
-        "dem_votes": 54573,
-        "rep_votes": 37053,
-        "other_votes": 1965,
-        "total_votes": 93591,
+        "dem_votes": 54608,
+        "rep_votes": 37077,
+        "other_votes": 1966,
+        "total_votes": 93651,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -17520,
+        "margin": -17531,
         "margin_pct": -18.72,
         "winner": "DEM",
         "competitiveness": {
@@ -54,13 +62,13 @@
         }
       },
       "4": {
-        "dem_votes": 51780,
-        "rep_votes": 40696,
+        "dem_votes": 51785,
+        "rep_votes": 40700,
         "other_votes": 1532,
-        "total_votes": 94008,
+        "total_votes": 94017,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -11084,
+        "margin": -11085,
         "margin_pct": -11.79,
         "winner": "DEM",
         "competitiveness": {
@@ -68,13 +76,13 @@
         }
       },
       "5": {
-        "dem_votes": 62883,
+        "dem_votes": 62885,
         "rep_votes": 35395,
         "other_votes": 1791,
-        "total_votes": 100069,
+        "total_votes": 100071,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -27488,
+        "margin": -27490,
         "margin_pct": -27.47,
         "winner": "DEM",
         "competitiveness": {
@@ -82,13 +90,13 @@
         }
       },
       "6": {
-        "dem_votes": 24552,
-        "rep_votes": 22608,
+        "dem_votes": 24560,
+        "rep_votes": 22614,
         "other_votes": 1965,
-        "total_votes": 49125,
+        "total_votes": 49139,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -1944,
+        "margin": -1946,
         "margin_pct": -3.96,
         "winner": "DEM",
         "competitiveness": {
@@ -96,13 +104,13 @@
         }
       },
       "7": {
-        "dem_votes": 43675,
-        "rep_votes": 43006,
-        "other_votes": 3800,
-        "total_votes": 90481,
+        "dem_votes": 44383,
+        "rep_votes": 43703,
+        "other_votes": 3861,
+        "total_votes": 91947,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -669,
+        "margin": -680,
         "margin_pct": -0.74,
         "winner": "DEM",
         "competitiveness": {
@@ -110,13 +118,13 @@
         }
       },
       "8": {
-        "dem_votes": 44037,
-        "rep_votes": 36773,
-        "other_votes": 3166,
-        "total_votes": 83976,
+        "dem_votes": 43291,
+        "rep_votes": 36150,
+        "other_votes": 3112,
+        "total_votes": 82553,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -7264,
+        "margin": -7141,
         "margin_pct": -8.65,
         "winner": "DEM",
         "competitiveness": {
@@ -124,13 +132,13 @@
         }
       },
       "9": {
-        "dem_votes": 48939,
-        "rep_votes": 36457,
-        "other_votes": 2325,
-        "total_votes": 87721,
+        "dem_votes": 48565,
+        "rep_votes": 36178,
+        "other_votes": 2308,
+        "total_votes": 87051,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -12482,
+        "margin": -12387,
         "margin_pct": -14.23,
         "winner": "DEM",
         "competitiveness": {
@@ -138,13 +146,13 @@
         }
       },
       "10": {
-        "dem_votes": 29429,
-        "rep_votes": 39479,
-        "other_votes": 1711,
-        "total_votes": 70619,
+        "dem_votes": 29510,
+        "rep_votes": 39587,
+        "other_votes": 1716,
+        "total_votes": 70813,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 10050,
+        "margin": 10077,
         "margin_pct": 14.23,
         "winner": "REP",
         "competitiveness": {
@@ -152,13 +160,13 @@
         }
       },
       "11": {
-        "dem_votes": 53775,
-        "rep_votes": 38803,
-        "other_votes": 1764,
-        "total_votes": 94342,
+        "dem_votes": 53671,
+        "rep_votes": 38728,
+        "other_votes": 1761,
+        "total_votes": 94160,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -14972,
+        "margin": -14943,
         "margin_pct": -15.87,
         "winner": "DEM",
         "competitiveness": {
@@ -166,13 +174,13 @@
         }
       },
       "12": {
-        "dem_votes": 31198,
-        "rep_votes": 32956,
-        "other_votes": 1719,
-        "total_votes": 65873,
+        "dem_votes": 31555,
+        "rep_votes": 33334,
+        "other_votes": 1739,
+        "total_votes": 66628,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 1758,
+        "margin": 1779,
         "margin_pct": 2.67,
         "winner": "REP",
         "competitiveness": {
@@ -180,13 +188,13 @@
         }
       },
       "13": {
-        "dem_votes": 39883,
-        "rep_votes": 36160,
-        "other_votes": 2995,
-        "total_votes": 79038,
+        "dem_votes": 51254,
+        "rep_votes": 46470,
+        "other_votes": 3848,
+        "total_votes": 101572,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -3723,
+        "margin": -4784,
         "margin_pct": -4.71,
         "winner": "DEM",
         "competitiveness": {
@@ -194,13 +202,13 @@
         }
       },
       "14": {
-        "dem_votes": 51538,
-        "rep_votes": 22916,
-        "other_votes": 1831,
-        "total_votes": 76285,
+        "dem_votes": 37811,
+        "rep_votes": 16812,
+        "other_votes": 1344,
+        "total_votes": 55967,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -28622,
+        "margin": -20999,
         "margin_pct": -37.52,
         "winner": "DEM",
         "competitiveness": {
@@ -208,13 +216,13 @@
         }
       },
       "15": {
-        "dem_votes": 44353,
-        "rep_votes": 35717,
-        "other_votes": 3615,
-        "total_votes": 83685,
+        "dem_votes": 50255,
+        "rep_votes": 40469,
+        "other_votes": 4097,
+        "total_votes": 94821,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -8636,
+        "margin": -9786,
         "margin_pct": -10.32,
         "winner": "DEM",
         "competitiveness": {
@@ -222,13 +230,13 @@
         }
       },
       "16": {
-        "dem_votes": 35686,
-        "rep_votes": 36311,
-        "other_votes": 3282,
-        "total_votes": 75279,
+        "dem_votes": 43704,
+        "rep_votes": 44469,
+        "other_votes": 4020,
+        "total_votes": 92193,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 625,
+        "margin": 765,
         "margin_pct": 0.83,
         "winner": "REP",
         "competitiveness": {
@@ -236,13 +244,13 @@
         }
       },
       "17": {
-        "dem_votes": 30555,
-        "rep_votes": 38742,
-        "other_votes": 2902,
-        "total_votes": 72199,
+        "dem_votes": 22554,
+        "rep_votes": 28598,
+        "other_votes": 2142,
+        "total_votes": 53294,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 8187,
+        "margin": 6044,
         "margin_pct": 11.34,
         "winner": "REP",
         "competitiveness": {
@@ -250,13 +258,13 @@
         }
       },
       "18": {
-        "dem_votes": 35226,
-        "rep_votes": 38062,
-        "other_votes": 2532,
-        "total_votes": 75820,
+        "dem_votes": 29994,
+        "rep_votes": 32408,
+        "other_votes": 2155,
+        "total_votes": 64557,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 2836,
+        "margin": 2414,
         "margin_pct": 3.74,
         "winner": "REP",
         "competitiveness": {
@@ -264,13 +272,13 @@
         }
       },
       "19": {
-        "dem_votes": 47579,
-        "rep_votes": 30732,
-        "other_votes": 1769,
-        "total_votes": 80080,
+        "dem_votes": 48715,
+        "rep_votes": 31464,
+        "other_votes": 1811,
+        "total_votes": 81990,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -16847,
+        "margin": -17251,
         "margin_pct": -21.04,
         "winner": "DEM",
         "competitiveness": {
@@ -278,13 +286,13 @@
         }
       },
       "20": {
-        "dem_votes": 55687,
-        "rep_votes": 25987,
-        "other_votes": 3112,
-        "total_votes": 84786,
+        "dem_votes": 59181,
+        "rep_votes": 27617,
+        "other_votes": 3307,
+        "total_votes": 90105,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -29700,
+        "margin": -31564,
         "margin_pct": -35.03,
         "winner": "DEM",
         "competitiveness": {
@@ -292,13 +300,13 @@
         }
       },
       "21": {
-        "dem_votes": 47496,
-        "rep_votes": 40673,
-        "other_votes": 2187,
-        "total_votes": 90356,
+        "dem_votes": 46467,
+        "rep_votes": 39793,
+        "other_votes": 2139,
+        "total_votes": 88399,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -6823,
+        "margin": -6674,
         "margin_pct": -7.55,
         "winner": "DEM",
         "competitiveness": {
@@ -306,13 +314,13 @@
         }
       },
       "22": {
-        "dem_votes": 56985,
-        "rep_votes": 22406,
-        "other_votes": 3472,
-        "total_votes": 82863,
+        "dem_votes": 53186,
+        "rep_votes": 20912,
+        "other_votes": 3241,
+        "total_votes": 77339,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -34579,
+        "margin": -32274,
         "margin_pct": -41.73,
         "winner": "DEM",
         "competitiveness": {
@@ -320,13 +328,13 @@
         }
       },
       "23": {
-        "dem_votes": 63797,
-        "rep_votes": 34560,
-        "other_votes": 4205,
-        "total_votes": 102562,
+        "dem_votes": 63733,
+        "rep_votes": 34523,
+        "other_votes": 4200,
+        "total_votes": 102456,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -29237,
+        "margin": -29210,
         "margin_pct": -28.51,
         "winner": "DEM",
         "competitiveness": {
@@ -334,13 +342,13 @@
         }
       },
       "24": {
-        "dem_votes": 47127,
-        "rep_votes": 21293,
-        "other_votes": 1141,
-        "total_votes": 69561,
+        "dem_votes": 47060,
+        "rep_votes": 21262,
+        "other_votes": 1139,
+        "total_votes": 69461,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -25834,
+        "margin": -25798,
         "margin_pct": -37.14,
         "winner": "DEM",
         "competitiveness": {
@@ -348,13 +356,13 @@
         }
       },
       "25": {
-        "dem_votes": 36763,
-        "rep_votes": 42370,
-        "other_votes": 2955,
-        "total_votes": 82088,
+        "dem_votes": 36625,
+        "rep_votes": 42211,
+        "other_votes": 2943,
+        "total_votes": 81779,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 5607,
+        "margin": 5586,
         "margin_pct": 6.83,
         "winner": "REP",
         "competitiveness": {
@@ -362,13 +370,13 @@
         }
       },
       "26": {
-        "dem_votes": 44446,
-        "rep_votes": 47649,
-        "other_votes": 3489,
-        "total_votes": 95584,
+        "dem_votes": 41691,
+        "rep_votes": 44695,
+        "other_votes": 3273,
+        "total_votes": 89659,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 3203,
+        "margin": 3004,
         "margin_pct": 3.35,
         "winner": "REP",
         "competitiveness": {
@@ -376,13 +384,13 @@
         }
       },
       "27": {
-        "dem_votes": 43487,
-        "rep_votes": 37803,
-        "other_votes": 2419,
-        "total_votes": 83709,
+        "dem_votes": 46240,
+        "rep_votes": 40196,
+        "other_votes": 2573,
+        "total_votes": 89009,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -5684,
+        "margin": -6044,
         "margin_pct": -6.79,
         "winner": "DEM",
         "competitiveness": {
@@ -390,13 +398,13 @@
         }
       },
       "28": {
-        "dem_votes": 69849,
-        "rep_votes": 27833,
-        "other_votes": 2980,
-        "total_votes": 100662,
+        "dem_votes": 70413,
+        "rep_votes": 28057,
+        "other_votes": 3005,
+        "total_votes": 101475,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -42016,
+        "margin": -42356,
         "margin_pct": -41.74,
         "winner": "DEM",
         "competitiveness": {
@@ -404,13 +412,13 @@
         }
       },
       "29": {
-        "dem_votes": 41674,
-        "rep_votes": 51588,
-        "other_votes": 2519,
-        "total_votes": 95781,
+        "dem_votes": 41368,
+        "rep_votes": 51209,
+        "other_votes": 2501,
+        "total_votes": 95078,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 9914,
+        "margin": 9841,
         "margin_pct": 10.35,
         "winner": "REP",
         "competitiveness": {
@@ -418,13 +426,13 @@
         }
       },
       "30": {
-        "dem_votes": 33482,
-        "rep_votes": 52046,
-        "other_votes": 3212,
-        "total_votes": 88740,
+        "dem_votes": 33440,
+        "rep_votes": 51981,
+        "other_votes": 3209,
+        "total_votes": 88630,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 18564,
+        "margin": 18541,
         "margin_pct": 20.92,
         "winner": "REP",
         "competitiveness": {
@@ -432,13 +440,13 @@
         }
       },
       "31": {
-        "dem_votes": 44240,
-        "rep_votes": 39932,
-        "other_votes": 3017,
-        "total_votes": 87189,
+        "dem_votes": 45066,
+        "rep_votes": 40678,
+        "other_votes": 3074,
+        "total_votes": 88818,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -4308,
+        "margin": -4388,
         "margin_pct": -4.94,
         "winner": "DEM",
         "competitiveness": {
@@ -446,13 +454,13 @@
         }
       },
       "32": {
-        "dem_votes": 55019,
-        "rep_votes": 41500,
-        "other_votes": 2678,
-        "total_votes": 99197,
+        "dem_votes": 54055,
+        "rep_votes": 40771,
+        "other_votes": 2632,
+        "total_votes": 97458,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -13519,
+        "margin": -13284,
         "margin_pct": -13.63,
         "winner": "DEM",
         "competitiveness": {
@@ -460,13 +468,13 @@
         }
       },
       "33": {
-        "dem_votes": 31423,
-        "rep_votes": 56234,
-        "other_votes": 2045,
-        "total_votes": 89702,
+        "dem_votes": 31441,
+        "rep_votes": 56267,
+        "other_votes": 2046,
+        "total_votes": 89754,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 24811,
+        "margin": 24826,
         "margin_pct": 27.66,
         "winner": "REP",
         "competitiveness": {
@@ -474,13 +482,13 @@
         }
       },
       "34": {
-        "dem_votes": 26391,
-        "rep_votes": 46907,
-        "other_votes": 1634,
-        "total_votes": 74932,
+        "dem_votes": 26141,
+        "rep_votes": 46463,
+        "other_votes": 1618,
+        "total_votes": 74222,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 20516,
+        "margin": 20322,
         "margin_pct": 27.38,
         "winner": "REP",
         "competitiveness": {
@@ -488,13 +496,13 @@
         }
       },
       "35": {
-        "dem_votes": 20830,
-        "rep_votes": 50854,
-        "other_votes": 1463,
-        "total_votes": 73147,
+        "dem_votes": 21347,
+        "rep_votes": 52122,
+        "other_votes": 1500,
+        "total_votes": 74969,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 30024,
+        "margin": 30775,
         "margin_pct": 41.05,
         "winner": "REP",
         "competitiveness": {
@@ -502,13 +510,13 @@
         }
       },
       "36": {
-        "dem_votes": 36557,
-        "rep_votes": 53777,
-        "other_votes": 2899,
-        "total_votes": 93233,
+        "dem_votes": 36541,
+        "rep_votes": 53754,
+        "other_votes": 2897,
+        "total_votes": 93192,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 17220,
+        "margin": 17213,
         "margin_pct": 18.47,
         "winner": "REP",
         "competitiveness": {
@@ -516,13 +524,13 @@
         }
       },
       "37": {
-        "dem_votes": 26330,
-        "rep_votes": 55271,
-        "other_votes": 1802,
-        "total_votes": 83403,
+        "dem_votes": 26697,
+        "rep_votes": 56041,
+        "other_votes": 1827,
+        "total_votes": 84565,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 28941,
+        "margin": 29344,
         "margin_pct": 34.7,
         "winner": "REP",
         "competitiveness": {
@@ -530,13 +538,13 @@
         }
       },
       "38": {
-        "dem_votes": 51939,
-        "rep_votes": 26905,
-        "other_votes": 1839,
-        "total_votes": 80683,
+        "dem_votes": 47466,
+        "rep_votes": 24587,
+        "other_votes": 1680,
+        "total_votes": 73733,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -25034,
+        "margin": -22879,
         "margin_pct": -31.03,
         "winner": "DEM",
         "competitiveness": {
@@ -544,13 +552,13 @@
         }
       },
       "39": {
-        "dem_votes": 35456,
-        "rep_votes": 44317,
-        "other_votes": 1736,
-        "total_votes": 81509,
+        "dem_votes": 32177,
+        "rep_votes": 40218,
+        "other_votes": 1575,
+        "total_votes": 73970,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 8861,
+        "margin": 8041,
         "margin_pct": 10.87,
         "winner": "REP",
         "competitiveness": {
@@ -558,13 +566,13 @@
         }
       },
       "40": {
-        "dem_votes": 46880,
-        "rep_votes": 30757,
-        "other_votes": 1592,
-        "total_votes": 79229,
+        "dem_votes": 44196,
+        "rep_votes": 28996,
+        "other_votes": 1501,
+        "total_votes": 74693,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -16123,
+        "margin": -15200,
         "margin_pct": -20.35,
         "winner": "DEM",
         "competitiveness": {
@@ -572,13 +580,13 @@
         }
       },
       "41": {
-        "dem_votes": 43111,
-        "rep_votes": 32673,
-        "other_votes": 1366,
-        "total_votes": 77150,
+        "dem_votes": 43679,
+        "rep_votes": 33103,
+        "other_votes": 1384,
+        "total_votes": 78166,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -10438,
+        "margin": -10576,
         "margin_pct": -13.53,
         "winner": "DEM",
         "competitiveness": {
@@ -586,13 +594,13 @@
         }
       },
       "42": {
-        "dem_votes": 23326,
-        "rep_votes": 53110,
-        "other_votes": 1576,
-        "total_votes": 78012,
+        "dem_votes": 28354,
+        "rep_votes": 64560,
+        "other_votes": 1916,
+        "total_votes": 94830,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 29784,
+        "margin": 36206,
         "margin_pct": 38.18,
         "winner": "REP",
         "competitiveness": {
@@ -600,13 +608,13 @@
         }
       },
       "43": {
-        "dem_votes": 27318,
-        "rep_votes": 49204,
-        "other_votes": 1418,
-        "total_votes": 77940,
+        "dem_votes": 26359,
+        "rep_votes": 47477,
+        "other_votes": 1369,
+        "total_votes": 75205,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 21886,
+        "margin": 21118,
         "margin_pct": 28.08,
         "winner": "REP",
         "competitiveness": {
@@ -614,13 +622,13 @@
         }
       },
       "44": {
-        "dem_votes": 30902,
-        "rep_votes": 53026,
-        "other_votes": 1625,
-        "total_votes": 85553,
+        "dem_votes": 31830,
+        "rep_votes": 54618,
+        "other_votes": 1673,
+        "total_votes": 88121,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 22124,
+        "margin": 22788,
         "margin_pct": 25.86,
         "winner": "REP",
         "competitiveness": {
@@ -628,13 +636,13 @@
         }
       },
       "45": {
-        "dem_votes": 30959,
-        "rep_votes": 61567,
-        "other_votes": 2178,
-        "total_votes": 94704,
+        "dem_votes": 30597,
+        "rep_votes": 60848,
+        "other_votes": 2152,
+        "total_votes": 93597,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 30608,
+        "margin": 30251,
         "margin_pct": 32.32,
         "winner": "REP",
         "competitiveness": {
@@ -642,13 +650,13 @@
         }
       },
       "46": {
-        "dem_votes": 40719,
-        "rep_votes": 44662,
-        "other_votes": 2850,
-        "total_votes": 88231,
+        "dem_votes": 42146,
+        "rep_votes": 46228,
+        "other_votes": 2949,
+        "total_votes": 91323,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 3943,
+        "margin": 4082,
         "margin_pct": 4.47,
         "winner": "REP",
         "competitiveness": {
@@ -656,13 +664,13 @@
         }
       },
       "47": {
-        "dem_votes": 46832,
-        "rep_votes": 51696,
-        "other_votes": 3457,
-        "total_votes": 101985,
+        "dem_votes": 47505,
+        "rep_votes": 52440,
+        "other_votes": 3506,
+        "total_votes": 103451,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 4864,
+        "margin": 4935,
         "margin_pct": 4.77,
         "winner": "REP",
         "competitiveness": {
@@ -670,13 +678,13 @@
         }
       },
       "48": {
-        "dem_votes": 37895,
-        "rep_votes": 48328,
+        "dem_votes": 37885,
+        "rep_votes": 48316,
         "other_votes": 3109,
-        "total_votes": 89332,
+        "total_votes": 89310,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 10433,
+        "margin": 10431,
         "margin_pct": 11.68,
         "winner": "REP",
         "competitiveness": {
@@ -684,13 +692,13 @@
         }
       },
       "49": {
-        "dem_votes": 53016,
-        "rep_votes": 32748,
-        "other_votes": 3648,
-        "total_votes": 89412,
+        "dem_votes": 51173,
+        "rep_votes": 31608,
+        "other_votes": 3521,
+        "total_votes": 86302,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -20268,
+        "margin": -19565,
         "margin_pct": -22.67,
         "winner": "DEM",
         "competitiveness": {
@@ -698,13 +706,13 @@
         }
       },
       "50": {
-        "dem_votes": 47225,
-        "rep_votes": 45041,
-        "other_votes": 3485,
-        "total_votes": 95751,
+        "dem_votes": 47187,
+        "rep_votes": 45006,
+        "other_votes": 3483,
+        "total_votes": 95676,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": -2184,
+        "margin": -2181,
         "margin_pct": -2.28,
         "winner": "DEM",
         "competitiveness": {

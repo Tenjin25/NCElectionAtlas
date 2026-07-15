@@ -3,23 +3,30 @@
   "scope": "state_house",
   "contest_type": "president",
   "meta": {
-    "match_coverage_pct": 71.67,
-    "matched_precinct_keys": 2016,
-    "total_precinct_keys": 2813,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
     "office": "PRESIDENT AND VICE PRESIDENT OF THE UNITED STATES",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines",
+    "margin_calibrated_to": "dra_stats_or_live"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 18337,
-        "rep_votes": 22311,
+        "dem_votes": 18338,
+        "rep_votes": 22310,
         "other_votes": 389,
         "total_votes": 41037,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3974,
+        "margin": 3972,
         "margin_pct": 9.68,
         "winner": "REP",
         "competitiveness": {
@@ -27,13 +34,13 @@
         }
       },
       "2": {
-        "dem_votes": 23735,
-        "rep_votes": 19939,
-        "other_votes": 389,
-        "total_votes": 44063,
+        "dem_votes": 21789,
+        "rep_votes": 18306,
+        "other_votes": 357,
+        "total_votes": 40452,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -3796,
+        "margin": -3483,
         "margin_pct": -8.61,
         "winner": "DEM",
         "competitiveness": {
@@ -41,13 +48,13 @@
         }
       },
       "3": {
-        "dem_votes": 17201,
-        "rep_votes": 22844,
-        "other_votes": 319,
-        "total_votes": 40364,
+        "dem_votes": 16610,
+        "rep_votes": 22059,
+        "other_votes": 309,
+        "total_votes": 38978,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5643,
+        "margin": 5449,
         "margin_pct": 13.98,
         "winner": "REP",
         "competitiveness": {
@@ -55,13 +62,13 @@
         }
       },
       "4": {
-        "dem_votes": 14472,
-        "rep_votes": 18618,
-        "other_votes": 191,
-        "total_votes": 33281,
+        "dem_votes": 15685,
+        "rep_votes": 20180,
+        "other_votes": 207,
+        "total_votes": 36072,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 4146,
+        "margin": 4495,
         "margin_pct": 12.46,
         "winner": "REP",
         "competitiveness": {
@@ -70,12 +77,12 @@
       },
       "5": {
         "dem_votes": 22212,
-        "rep_votes": 16554,
-        "other_votes": 305,
+        "rep_votes": 16555,
+        "other_votes": 304,
         "total_votes": 39071,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -5658,
+        "margin": -5657,
         "margin_pct": -14.48,
         "winner": "DEM",
         "competitiveness": {
@@ -83,13 +90,13 @@
         }
       },
       "6": {
-        "dem_votes": 6039,
-        "rep_votes": 7348,
-        "other_votes": 123,
-        "total_votes": 13510,
+        "dem_votes": 9077,
+        "rep_votes": 11045,
+        "other_votes": 184,
+        "total_votes": 20306,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 1309,
+        "margin": 1968,
         "margin_pct": 9.69,
         "winner": "REP",
         "competitiveness": {
@@ -97,13 +104,13 @@
         }
       },
       "7": {
-        "dem_votes": 15411,
-        "rep_votes": 16388,
-        "other_votes": 363,
-        "total_votes": 32162,
+        "dem_votes": 13786,
+        "rep_votes": 14661,
+        "other_votes": 324,
+        "total_votes": 28771,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 977,
+        "margin": 875,
         "margin_pct": 3.04,
         "winner": "REP",
         "competitiveness": {
@@ -111,13 +118,13 @@
         }
       },
       "8": {
-        "dem_votes": 24968,
-        "rep_votes": 20317,
-        "other_votes": 257,
-        "total_votes": 45542,
+        "dem_votes": 23618,
+        "rep_votes": 19219,
+        "other_votes": 244,
+        "total_votes": 43081,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -4651,
+        "margin": -4399,
         "margin_pct": -10.21,
         "winner": "DEM",
         "competitiveness": {
@@ -125,13 +132,13 @@
         }
       },
       "9": {
-        "dem_votes": 15532,
-        "rep_votes": 13610,
-        "other_votes": 198,
-        "total_votes": 29340,
+        "dem_votes": 16818,
+        "rep_votes": 14737,
+        "other_votes": 215,
+        "total_votes": 31770,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -1922,
+        "margin": -2081,
         "margin_pct": -6.55,
         "winner": "DEM",
         "competitiveness": {
@@ -139,13 +146,13 @@
         }
       },
       "10": {
-        "dem_votes": 17158,
-        "rep_votes": 19169,
-        "other_votes": 180,
-        "total_votes": 36507,
+        "dem_votes": 16367,
+        "rep_votes": 18286,
+        "other_votes": 172,
+        "total_votes": 34825,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2011,
+        "margin": 1919,
         "margin_pct": 5.51,
         "winner": "REP",
         "competitiveness": {
@@ -153,13 +160,13 @@
         }
       },
       "11": {
-        "dem_votes": 23930,
-        "rep_votes": 16509,
-        "other_votes": 509,
-        "total_votes": 40948,
+        "dem_votes": 23778,
+        "rep_votes": 16405,
+        "other_votes": 505,
+        "total_votes": 40688,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7421,
+        "margin": -7373,
         "margin_pct": -18.12,
         "winner": "DEM",
         "competitiveness": {
@@ -168,12 +175,12 @@
       },
       "12": {
         "dem_votes": 19552,
-        "rep_votes": 20490,
-        "other_votes": 185,
-        "total_votes": 40227,
+        "rep_votes": 20489,
+        "other_votes": 184,
+        "total_votes": 40225,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 938,
+        "margin": 937,
         "margin_pct": 2.33,
         "winner": "REP",
         "competitiveness": {
@@ -181,13 +188,13 @@
         }
       },
       "13": {
-        "dem_votes": 13281,
-        "rep_votes": 25189,
-        "other_votes": 363,
-        "total_votes": 38833,
+        "dem_votes": 13753,
+        "rep_votes": 26081,
+        "other_votes": 375,
+        "total_votes": 40209,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 11908,
+        "margin": 12328,
         "margin_pct": 30.66,
         "winner": "REP",
         "competitiveness": {
@@ -195,13 +202,13 @@
         }
       },
       "14": {
-        "dem_votes": 8197,
-        "rep_votes": 10472,
-        "other_votes": 165,
-        "total_votes": 18834,
+        "dem_votes": 8148,
+        "rep_votes": 10409,
+        "other_votes": 164,
+        "total_votes": 18721,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2275,
+        "margin": 2261,
         "margin_pct": 12.08,
         "winner": "REP",
         "competitiveness": {
@@ -209,13 +216,13 @@
         }
       },
       "15": {
-        "dem_votes": 8788,
-        "rep_votes": 14682,
-        "other_votes": 194,
-        "total_votes": 23664,
+        "dem_votes": 8457,
+        "rep_votes": 14130,
+        "other_votes": 186,
+        "total_votes": 22773,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5894,
+        "margin": 5673,
         "margin_pct": 24.91,
         "winner": "REP",
         "competitiveness": {
@@ -223,13 +230,13 @@
         }
       },
       "16": {
-        "dem_votes": 12422,
-        "rep_votes": 18743,
-        "other_votes": 291,
-        "total_votes": 31456,
+        "dem_votes": 12373,
+        "rep_votes": 18667,
+        "other_votes": 289,
+        "total_votes": 31329,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6321,
+        "margin": 6294,
         "margin_pct": 20.09,
         "winner": "REP",
         "competitiveness": {
@@ -237,13 +244,13 @@
         }
       },
       "17": {
-        "dem_votes": 13764,
-        "rep_votes": 19843,
-        "other_votes": 338,
-        "total_votes": 33945,
+        "dem_votes": 13137,
+        "rep_votes": 18940,
+        "other_votes": 323,
+        "total_votes": 32400,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6079,
+        "margin": 5803,
         "margin_pct": 17.91,
         "winner": "REP",
         "competitiveness": {
@@ -251,13 +258,13 @@
         }
       },
       "18": {
-        "dem_votes": 23258,
-        "rep_votes": 17630,
-        "other_votes": 372,
-        "total_votes": 41260,
+        "dem_votes": 16138,
+        "rep_votes": 12233,
+        "other_votes": 258,
+        "total_votes": 28629,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -5628,
+        "margin": -3905,
         "margin_pct": -13.64,
         "winner": "DEM",
         "competitiveness": {
@@ -265,13 +272,13 @@
         }
       },
       "19": {
-        "dem_votes": 16492,
-        "rep_votes": 22031,
-        "other_votes": 379,
-        "total_votes": 38902,
+        "dem_votes": 18239,
+        "rep_votes": 24366,
+        "other_votes": 420,
+        "total_votes": 43025,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5539,
+        "margin": 6127,
         "margin_pct": 14.24,
         "winner": "REP",
         "competitiveness": {
@@ -279,13 +286,13 @@
         }
       },
       "20": {
-        "dem_votes": 16964,
-        "rep_votes": 21793,
-        "other_votes": 411,
-        "total_votes": 39168,
+        "dem_votes": 21323,
+        "rep_votes": 27393,
+        "other_votes": 517,
+        "total_votes": 49233,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 4829,
+        "margin": 6070,
         "margin_pct": 12.33,
         "winner": "REP",
         "competitiveness": {
@@ -293,13 +300,13 @@
         }
       },
       "21": {
-        "dem_votes": 6744,
-        "rep_votes": 5771,
-        "other_votes": 110,
-        "total_votes": 12625,
+        "dem_votes": 6082,
+        "rep_votes": 5204,
+        "other_votes": 100,
+        "total_votes": 11386,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -973,
+        "margin": -878,
         "margin_pct": -7.71,
         "winner": "DEM",
         "competitiveness": {
@@ -307,13 +314,13 @@
         }
       },
       "22": {
-        "dem_votes": 19689,
-        "rep_votes": 21570,
+        "dem_votes": 19704,
+        "rep_votes": 21586,
         "other_votes": 259,
-        "total_votes": 41518,
+        "total_votes": 41549,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 1881,
+        "margin": 1882,
         "margin_pct": 4.53,
         "winner": "REP",
         "competitiveness": {
@@ -321,13 +328,13 @@
         }
       },
       "23": {
-        "dem_votes": 30307,
-        "rep_votes": 17778,
+        "dem_votes": 30330,
+        "rep_votes": 17790,
         "other_votes": 149,
-        "total_votes": 48234,
+        "total_votes": 48269,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -12529,
+        "margin": -12540,
         "margin_pct": -25.98,
         "winner": "DEM",
         "competitiveness": {
@@ -335,13 +342,13 @@
         }
       },
       "24": {
-        "dem_votes": 20759,
-        "rep_votes": 18512,
+        "dem_votes": 20849,
+        "rep_votes": 18591,
         "other_votes": 178,
-        "total_votes": 39449,
+        "total_votes": 39618,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -2247,
+        "margin": -2258,
         "margin_pct": -5.7,
         "winner": "DEM",
         "competitiveness": {
@@ -349,13 +356,13 @@
         }
       },
       "25": {
-        "dem_votes": 21992,
-        "rep_votes": 22591,
-        "other_votes": 277,
-        "total_votes": 44860,
+        "dem_votes": 21822,
+        "rep_votes": 22418,
+        "other_votes": 274,
+        "total_votes": 44514,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 599,
+        "margin": 596,
         "margin_pct": 1.34,
         "winner": "REP",
         "competitiveness": {
@@ -363,13 +370,13 @@
         }
       },
       "26": {
-        "dem_votes": 11481,
-        "rep_votes": 17484,
-        "other_votes": 263,
-        "total_votes": 29228,
+        "dem_votes": 10031,
+        "rep_votes": 15276,
+        "other_votes": 230,
+        "total_votes": 25537,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6003,
+        "margin": 5245,
         "margin_pct": 20.54,
         "winner": "REP",
         "competitiveness": {
@@ -377,13 +384,13 @@
         }
       },
       "27": {
-        "dem_votes": 30036,
+        "dem_votes": 30035,
         "rep_votes": 15695,
-        "other_votes": 173,
+        "other_votes": 174,
         "total_votes": 45904,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -14341,
+        "margin": -14340,
         "margin_pct": -31.24,
         "winner": "DEM",
         "competitiveness": {
@@ -391,13 +398,13 @@
         }
       },
       "28": {
-        "dem_votes": 10966,
-        "rep_votes": 18536,
-        "other_votes": 235,
-        "total_votes": 29737,
+        "dem_votes": 13744,
+        "rep_votes": 23233,
+        "other_votes": 294,
+        "total_votes": 37271,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7570,
+        "margin": 9489,
         "margin_pct": 25.46,
         "winner": "REP",
         "competitiveness": {
@@ -405,13 +412,13 @@
         }
       },
       "29": {
-        "dem_votes": 19042,
-        "rep_votes": 5329,
-        "other_votes": 212,
-        "total_votes": 24583,
+        "dem_votes": 36820,
+        "rep_votes": 10305,
+        "other_votes": 410,
+        "total_votes": 47535,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -13713,
+        "margin": -26515,
         "margin_pct": -55.78,
         "winner": "DEM",
         "competitiveness": {
@@ -419,13 +426,13 @@
         }
       },
       "30": {
-        "dem_votes": 39314,
-        "rep_votes": 10797,
-        "other_votes": 432,
-        "total_votes": 50543,
+        "dem_votes": 31668,
+        "rep_votes": 8698,
+        "other_votes": 347,
+        "total_votes": 40713,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -28517,
+        "margin": -22970,
         "margin_pct": -56.42,
         "winner": "DEM",
         "competitiveness": {
@@ -433,13 +440,13 @@
         }
       },
       "31": {
-        "dem_votes": 29812,
-        "rep_votes": 6319,
-        "other_votes": 211,
-        "total_votes": 36342,
+        "dem_votes": 22195,
+        "rep_votes": 4705,
+        "other_votes": 158,
+        "total_votes": 27058,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -23493,
+        "margin": -17490,
         "margin_pct": -64.64,
         "winner": "DEM",
         "competitiveness": {
@@ -447,13 +454,13 @@
         }
       },
       "32": {
-        "dem_votes": 23915,
-        "rep_votes": 15938,
-        "other_votes": 221,
-        "total_votes": 40074,
+        "dem_votes": 25924,
+        "rep_votes": 17275,
+        "other_votes": 240,
+        "total_votes": 43439,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7977,
+        "margin": -8649,
         "margin_pct": -19.91,
         "winner": "DEM",
         "competitiveness": {
@@ -461,13 +468,13 @@
         }
       },
       "33": {
-        "dem_votes": 17509,
-        "rep_votes": 15045,
-        "other_votes": 319,
-        "total_votes": 32873,
+        "dem_votes": 16663,
+        "rep_votes": 14317,
+        "other_votes": 304,
+        "total_votes": 31284,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -2464,
+        "margin": -2346,
         "margin_pct": -7.5,
         "winner": "DEM",
         "competitiveness": {
@@ -475,13 +482,13 @@
         }
       },
       "34": {
-        "dem_votes": 30312,
-        "rep_votes": 23285,
-        "other_votes": 501,
-        "total_votes": 54098,
+        "dem_votes": 29466,
+        "rep_votes": 22635,
+        "other_votes": 487,
+        "total_votes": 52588,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7027,
+        "margin": -6831,
         "margin_pct": -12.99,
         "winner": "DEM",
         "competitiveness": {
@@ -489,13 +496,13 @@
         }
       },
       "35": {
-        "dem_votes": 10013,
-        "rep_votes": 10658,
-        "other_votes": 234,
-        "total_votes": 20905,
+        "dem_votes": 8754,
+        "rep_votes": 9319,
+        "other_votes": 205,
+        "total_votes": 18278,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 645,
+        "margin": 565,
         "margin_pct": 3.09,
         "winner": "REP",
         "competitiveness": {
@@ -503,13 +510,13 @@
         }
       },
       "36": {
-        "dem_votes": 11898,
-        "rep_votes": 11016,
-        "other_votes": 246,
-        "total_votes": 23160,
+        "dem_votes": 11734,
+        "rep_votes": 10864,
+        "other_votes": 242,
+        "total_votes": 22840,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -882,
+        "margin": -870,
         "margin_pct": -3.81,
         "winner": "DEM",
         "competitiveness": {
@@ -517,13 +524,13 @@
         }
       },
       "37": {
-        "dem_votes": 10508,
-        "rep_votes": 11468,
-        "other_votes": 226,
-        "total_votes": 22202,
+        "dem_votes": 10566,
+        "rep_votes": 11530,
+        "other_votes": 228,
+        "total_votes": 22324,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 960,
+        "margin": 964,
         "margin_pct": 4.32,
         "winner": "REP",
         "competitiveness": {
@@ -531,13 +538,13 @@
         }
       },
       "38": {
-        "dem_votes": 29881,
-        "rep_votes": 6447,
-        "other_votes": 221,
-        "total_votes": 36549,
+        "dem_votes": 28688,
+        "rep_votes": 6189,
+        "other_votes": 212,
+        "total_votes": 35089,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -23434,
+        "margin": -22499,
         "margin_pct": -64.12,
         "winner": "DEM",
         "competitiveness": {
@@ -545,13 +552,13 @@
         }
       },
       "39": {
-        "dem_votes": 10685,
-        "rep_votes": 9367,
-        "other_votes": 181,
-        "total_votes": 20233,
+        "dem_votes": 9887,
+        "rep_votes": 8668,
+        "other_votes": 167,
+        "total_votes": 18722,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -1318,
+        "margin": -1219,
         "margin_pct": -6.51,
         "winner": "DEM",
         "competitiveness": {
@@ -559,13 +566,13 @@
         }
       },
       "40": {
-        "dem_votes": 25184,
-        "rep_votes": 25493,
-        "other_votes": 543,
-        "total_votes": 51220,
+        "dem_votes": 25703,
+        "rep_votes": 26017,
+        "other_votes": 554,
+        "total_votes": 52274,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 309,
+        "margin": 314,
         "margin_pct": 0.6,
         "winner": "REP",
         "competitiveness": {
@@ -573,13 +580,13 @@
         }
       },
       "41": {
-        "dem_votes": 29276,
-        "rep_votes": 23002,
-        "other_votes": 561,
-        "total_votes": 52839,
+        "dem_votes": 33292,
+        "rep_votes": 26159,
+        "other_votes": 638,
+        "total_votes": 60089,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -6274,
+        "margin": -7133,
         "margin_pct": -11.87,
         "winner": "DEM",
         "competitiveness": {
@@ -587,13 +594,13 @@
         }
       },
       "42": {
-        "dem_votes": 14355,
-        "rep_votes": 7182,
-        "other_votes": 112,
-        "total_votes": 21649,
+        "dem_votes": 16373,
+        "rep_votes": 8192,
+        "other_votes": 128,
+        "total_votes": 24693,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7173,
+        "margin": -8181,
         "margin_pct": -33.13,
         "winner": "DEM",
         "competitiveness": {
@@ -601,13 +608,13 @@
         }
       },
       "43": {
-        "dem_votes": 15803,
-        "rep_votes": 14205,
-        "other_votes": 160,
-        "total_votes": 30168,
+        "dem_votes": 17869,
+        "rep_votes": 16061,
+        "other_votes": 180,
+        "total_votes": 34110,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -1598,
+        "margin": -1808,
         "margin_pct": -5.3,
         "winner": "DEM",
         "competitiveness": {
@@ -615,13 +622,13 @@
         }
       },
       "44": {
-        "dem_votes": 28572,
-        "rep_votes": 18838,
-        "other_votes": 315,
-        "total_votes": 47725,
+        "dem_votes": 23381,
+        "rep_votes": 15414,
+        "other_votes": 257,
+        "total_votes": 39052,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -9734,
+        "margin": -7967,
         "margin_pct": -20.4,
         "winner": "DEM",
         "competitiveness": {
@@ -629,13 +636,13 @@
         }
       },
       "45": {
-        "dem_votes": 15963,
-        "rep_votes": 11925,
-        "other_votes": 145,
-        "total_votes": 28033,
+        "dem_votes": 16890,
+        "rep_votes": 12619,
+        "other_votes": 154,
+        "total_votes": 29663,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -4038,
+        "margin": -4271,
         "margin_pct": -14.4,
         "winner": "DEM",
         "competitiveness": {
@@ -643,13 +650,13 @@
         }
       },
       "46": {
-        "dem_votes": 16734,
-        "rep_votes": 19328,
-        "other_votes": 301,
-        "total_votes": 36363,
+        "dem_votes": 17037,
+        "rep_votes": 19677,
+        "other_votes": 306,
+        "total_votes": 37020,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2594,
+        "margin": 2640,
         "margin_pct": 7.13,
         "winner": "REP",
         "competitiveness": {
@@ -657,13 +664,13 @@
         }
       },
       "47": {
-        "dem_votes": 17399,
-        "rep_votes": 11099,
-        "other_votes": 254,
-        "total_votes": 28752,
+        "dem_votes": 16993,
+        "rep_votes": 10840,
+        "other_votes": 248,
+        "total_votes": 28081,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -6300,
+        "margin": -6153,
         "margin_pct": -21.91,
         "winner": "DEM",
         "competitiveness": {
@@ -671,13 +678,13 @@
         }
       },
       "48": {
-        "dem_votes": 17378,
-        "rep_votes": 12298,
+        "dem_votes": 17346,
+        "rep_votes": 12276,
         "other_votes": 168,
-        "total_votes": 29844,
+        "total_votes": 29790,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -5080,
+        "margin": -5070,
         "margin_pct": -17.02,
         "winner": "DEM",
         "competitiveness": {
@@ -685,13 +692,13 @@
         }
       },
       "49": {
-        "dem_votes": 24702,
-        "rep_votes": 15902,
-        "other_votes": 412,
-        "total_votes": 41016,
+        "dem_votes": 29788,
+        "rep_votes": 19174,
+        "other_votes": 496,
+        "total_votes": 49458,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -8800,
+        "margin": -10614,
         "margin_pct": -21.46,
         "winner": "DEM",
         "competitiveness": {
@@ -699,13 +706,13 @@
         }
       },
       "50": {
-        "dem_votes": 32883,
-        "rep_votes": 19339,
-        "other_votes": 541,
-        "total_votes": 52763,
+        "dem_votes": 29564,
+        "rep_votes": 17387,
+        "other_votes": 486,
+        "total_votes": 47437,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -13544,
+        "margin": -12177,
         "margin_pct": -25.67,
         "winner": "DEM",
         "competitiveness": {
@@ -713,13 +720,13 @@
         }
       },
       "51": {
-        "dem_votes": 14064,
-        "rep_votes": 17844,
-        "other_votes": 324,
-        "total_votes": 32232,
+        "dem_votes": 13691,
+        "rep_votes": 17372,
+        "other_votes": 315,
+        "total_votes": 31378,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3780,
+        "margin": 3681,
         "margin_pct": 11.73,
         "winner": "REP",
         "competitiveness": {
@@ -727,13 +734,13 @@
         }
       },
       "52": {
-        "dem_votes": 18035,
-        "rep_votes": 19914,
-        "other_votes": 349,
-        "total_votes": 38298,
+        "dem_votes": 16716,
+        "rep_votes": 18459,
+        "other_votes": 323,
+        "total_votes": 35498,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 1879,
+        "margin": 1743,
         "margin_pct": 4.91,
         "winner": "REP",
         "competitiveness": {
@@ -741,13 +748,13 @@
         }
       },
       "53": {
-        "dem_votes": 15093,
-        "rep_votes": 23833,
-        "other_votes": 321,
-        "total_votes": 39247,
+        "dem_votes": 11177,
+        "rep_votes": 17650,
+        "other_votes": 237,
+        "total_votes": 29064,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 8740,
+        "margin": 6473,
         "margin_pct": 22.27,
         "winner": "REP",
         "competitiveness": {
@@ -755,13 +762,13 @@
         }
       },
       "54": {
-        "dem_votes": 11223,
-        "rep_votes": 11182,
-        "other_votes": 248,
-        "total_votes": 22653,
+        "dem_votes": 17185,
+        "rep_votes": 17123,
+        "other_votes": 380,
+        "total_votes": 34688,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -41,
+        "margin": -62,
         "margin_pct": -0.18,
         "winner": "DEM",
         "competitiveness": {
@@ -769,13 +776,13 @@
         }
       },
       "55": {
-        "dem_votes": 18471,
-        "rep_votes": 21305,
-        "other_votes": 351,
-        "total_votes": 40127,
+        "dem_votes": 16972,
+        "rep_votes": 19575,
+        "other_votes": 322,
+        "total_votes": 36869,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2834,
+        "margin": 2603,
         "margin_pct": 7.06,
         "winner": "REP",
         "competitiveness": {
@@ -783,13 +790,13 @@
         }
       },
       "56": {
-        "dem_votes": 26468,
-        "rep_votes": 6135,
-        "other_votes": 406,
-        "total_votes": 33009,
+        "dem_votes": 30647,
+        "rep_votes": 7103,
+        "other_votes": 471,
+        "total_votes": 38221,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -20333,
+        "margin": -23544,
         "margin_pct": -61.6,
         "winner": "DEM",
         "competitiveness": {
@@ -797,13 +804,13 @@
         }
       },
       "57": {
-        "dem_votes": 23542,
-        "rep_votes": 20794,
-        "other_votes": 365,
-        "total_votes": 44701,
+        "dem_votes": 20563,
+        "rep_votes": 18162,
+        "other_votes": 319,
+        "total_votes": 39044,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -2748,
+        "margin": -2401,
         "margin_pct": -6.15,
         "winner": "DEM",
         "competitiveness": {
@@ -811,13 +818,13 @@
         }
       },
       "58": {
-        "dem_votes": 27732,
-        "rep_votes": 11402,
-        "other_votes": 245,
-        "total_votes": 39379,
+        "dem_votes": 28812,
+        "rep_votes": 11846,
+        "other_votes": 254,
+        "total_votes": 40912,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -16330,
+        "margin": -16966,
         "margin_pct": -41.47,
         "winner": "DEM",
         "competitiveness": {
@@ -825,13 +832,13 @@
         }
       },
       "59": {
-        "dem_votes": 17354,
-        "rep_votes": 19817,
-        "other_votes": 383,
-        "total_votes": 37554,
+        "dem_votes": 16866,
+        "rep_votes": 19260,
+        "other_votes": 372,
+        "total_votes": 36498,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2463,
+        "margin": 2394,
         "margin_pct": 6.56,
         "winner": "REP",
         "competitiveness": {
@@ -839,13 +846,13 @@
         }
       },
       "60": {
-        "dem_votes": 22367,
-        "rep_votes": 14967,
-        "other_votes": 244,
-        "total_votes": 37578,
+        "dem_votes": 21404,
+        "rep_votes": 14323,
+        "other_votes": 234,
+        "total_votes": 35961,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7400,
+        "margin": -7081,
         "margin_pct": -19.69,
         "winner": "DEM",
         "competitiveness": {
@@ -853,13 +860,13 @@
         }
       },
       "61": {
-        "dem_votes": 33494,
-        "rep_votes": 9506,
-        "other_votes": 292,
-        "total_votes": 43292,
+        "dem_votes": 34892,
+        "rep_votes": 9903,
+        "other_votes": 304,
+        "total_votes": 45099,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -23988,
+        "margin": -24989,
         "margin_pct": -55.41,
         "winner": "DEM",
         "competitiveness": {
@@ -867,13 +874,13 @@
         }
       },
       "62": {
-        "dem_votes": 17614,
-        "rep_votes": 21231,
-        "other_votes": 421,
-        "total_votes": 39266,
+        "dem_votes": 19922,
+        "rep_votes": 24012,
+        "other_votes": 476,
+        "total_votes": 44410,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3617,
+        "margin": 4090,
         "margin_pct": 9.21,
         "winner": "REP",
         "competitiveness": {
@@ -881,13 +888,13 @@
         }
       },
       "63": {
-        "dem_votes": 15470,
-        "rep_votes": 14302,
-        "other_votes": 224,
-        "total_votes": 29996,
+        "dem_votes": 15658,
+        "rep_votes": 14477,
+        "other_votes": 227,
+        "total_votes": 30362,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -1168,
+        "margin": -1181,
         "margin_pct": -3.89,
         "winner": "DEM",
         "competitiveness": {
@@ -895,13 +902,13 @@
         }
       },
       "64": {
-        "dem_votes": 13448,
-        "rep_votes": 20557,
-        "other_votes": 352,
-        "total_votes": 34357,
+        "dem_votes": 13326,
+        "rep_votes": 20369,
+        "other_votes": 348,
+        "total_votes": 34043,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7109,
+        "margin": 7043,
         "margin_pct": 20.69,
         "winner": "REP",
         "competitiveness": {
@@ -909,13 +916,13 @@
         }
       },
       "65": {
-        "dem_votes": 17255,
-        "rep_votes": 23899,
+        "dem_votes": 17270,
+        "rep_votes": 23921,
         "other_votes": 458,
-        "total_votes": 41612,
+        "total_votes": 41649,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6644,
+        "margin": 6651,
         "margin_pct": 15.97,
         "winner": "REP",
         "competitiveness": {
@@ -923,13 +930,13 @@
         }
       },
       "66": {
-        "dem_votes": 27700,
-        "rep_votes": 18549,
-        "other_votes": 425,
-        "total_votes": 46674,
+        "dem_votes": 16573,
+        "rep_votes": 11097,
+        "other_votes": 255,
+        "total_votes": 27925,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -9151,
+        "margin": -5476,
         "margin_pct": -19.61,
         "winner": "DEM",
         "competitiveness": {
@@ -939,8 +946,8 @@
       "67": {
         "dem_votes": 13804,
         "rep_votes": 25484,
-        "other_votes": 428,
-        "total_votes": 39716,
+        "other_votes": 427,
+        "total_votes": 39715,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
         "margin": 11680,
@@ -951,13 +958,13 @@
         }
       },
       "68": {
-        "dem_votes": 6648,
-        "rep_votes": 12571,
-        "other_votes": 161,
-        "total_votes": 19380,
+        "dem_votes": 8098,
+        "rep_votes": 15312,
+        "other_votes": 197,
+        "total_votes": 23607,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5923,
+        "margin": 7214,
         "margin_pct": 30.56,
         "winner": "REP",
         "competitiveness": {
@@ -965,13 +972,13 @@
         }
       },
       "69": {
-        "dem_votes": 12526,
-        "rep_votes": 24455,
-        "other_votes": 334,
-        "total_votes": 37315,
+        "dem_votes": 12205,
+        "rep_votes": 23829,
+        "other_votes": 326,
+        "total_votes": 36360,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 11929,
+        "margin": 11624,
         "margin_pct": 31.97,
         "winner": "REP",
         "competitiveness": {
@@ -979,13 +986,13 @@
         }
       },
       "70": {
-        "dem_votes": 10153,
-        "rep_votes": 25359,
-        "other_votes": 455,
-        "total_votes": 35967,
+        "dem_votes": 9822,
+        "rep_votes": 24533,
+        "other_votes": 440,
+        "total_votes": 34795,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 15206,
+        "margin": 14711,
         "margin_pct": 42.28,
         "winner": "REP",
         "competitiveness": {
@@ -993,13 +1000,13 @@
         }
       },
       "71": {
-        "dem_votes": 24280,
-        "rep_votes": 11224,
-        "other_votes": 283,
-        "total_votes": 35787,
+        "dem_votes": 23524,
+        "rep_votes": 10875,
+        "other_votes": 275,
+        "total_votes": 34674,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -13056,
+        "margin": -12649,
         "margin_pct": -36.48,
         "winner": "DEM",
         "competitiveness": {
@@ -1007,13 +1014,13 @@
         }
       },
       "72": {
-        "dem_votes": 27798,
-        "rep_votes": 11800,
-        "other_votes": 258,
-        "total_votes": 39856,
+        "dem_votes": 26388,
+        "rep_votes": 11201,
+        "other_votes": 245,
+        "total_votes": 37834,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -15998,
+        "margin": -15187,
         "margin_pct": -40.14,
         "winner": "DEM",
         "competitiveness": {
@@ -1021,13 +1028,13 @@
         }
       },
       "73": {
-        "dem_votes": 11879,
-        "rep_votes": 14982,
-        "other_votes": 181,
-        "total_votes": 27042,
+        "dem_votes": 10403,
+        "rep_votes": 13119,
+        "other_votes": 158,
+        "total_votes": 23680,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3103,
+        "margin": 2716,
         "margin_pct": 11.47,
         "winner": "REP",
         "competitiveness": {
@@ -1035,13 +1042,13 @@
         }
       },
       "74": {
-        "dem_votes": 16810,
-        "rep_votes": 21077,
-        "other_votes": 324,
-        "total_votes": 38211,
+        "dem_votes": 18057,
+        "rep_votes": 22642,
+        "other_votes": 349,
+        "total_votes": 41048,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 4267,
+        "margin": 4585,
         "margin_pct": 11.17,
         "winner": "REP",
         "competitiveness": {
@@ -1049,13 +1056,13 @@
         }
       },
       "75": {
-        "dem_votes": 12726,
-        "rep_votes": 17690,
-        "other_votes": 296,
-        "total_votes": 30712,
+        "dem_votes": 14610,
+        "rep_votes": 20308,
+        "other_votes": 339,
+        "total_votes": 35257,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 4964,
+        "margin": 5698,
         "margin_pct": 16.16,
         "winner": "REP",
         "competitiveness": {
@@ -1063,13 +1070,13 @@
         }
       },
       "76": {
-        "dem_votes": 16084,
-        "rep_votes": 21216,
-        "other_votes": 406,
-        "total_votes": 37706,
+        "dem_votes": 15069,
+        "rep_votes": 19877,
+        "other_votes": 380,
+        "total_votes": 35326,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5132,
+        "margin": 4808,
         "margin_pct": 13.61,
         "winner": "REP",
         "competitiveness": {
@@ -1077,13 +1084,13 @@
         }
       },
       "77": {
-        "dem_votes": 12842,
-        "rep_votes": 30622,
-        "other_votes": 500,
-        "total_votes": 43964,
+        "dem_votes": 12697,
+        "rep_votes": 30274,
+        "other_votes": 494,
+        "total_votes": 43465,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 17780,
+        "margin": 17577,
         "margin_pct": 40.44,
         "winner": "REP",
         "competitiveness": {
@@ -1091,13 +1098,13 @@
         }
       },
       "78": {
-        "dem_votes": 11472,
-        "rep_votes": 25368,
-        "other_votes": 380,
-        "total_votes": 37220,
+        "dem_votes": 12986,
+        "rep_votes": 28713,
+        "other_votes": 431,
+        "total_votes": 42130,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 13896,
+        "margin": 15727,
         "margin_pct": 37.33,
         "winner": "REP",
         "competitiveness": {
@@ -1106,12 +1113,12 @@
       },
       "79": {
         "dem_votes": 18148,
-        "rep_votes": 24245,
-        "other_votes": 289,
-        "total_votes": 42682,
+        "rep_votes": 24242,
+        "other_votes": 288,
+        "total_votes": 42678,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6097,
+        "margin": 6094,
         "margin_pct": 14.28,
         "winner": "REP",
         "competitiveness": {
@@ -1119,13 +1126,13 @@
         }
       },
       "80": {
-        "dem_votes": 9751,
-        "rep_votes": 21790,
-        "other_votes": 308,
-        "total_votes": 31849,
+        "dem_votes": 10182,
+        "rep_votes": 22753,
+        "other_votes": 321,
+        "total_votes": 33256,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 12039,
+        "margin": 12571,
         "margin_pct": 37.8,
         "winner": "REP",
         "competitiveness": {
@@ -1133,13 +1140,13 @@
         }
       },
       "81": {
-        "dem_votes": 12682,
-        "rep_votes": 23629,
-        "other_votes": 420,
-        "total_votes": 36731,
+        "dem_votes": 12165,
+        "rep_votes": 22664,
+        "other_votes": 402,
+        "total_votes": 35231,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10947,
+        "margin": 10499,
         "margin_pct": 29.8,
         "winner": "REP",
         "competitiveness": {
@@ -1147,13 +1154,13 @@
         }
       },
       "82": {
-        "dem_votes": 11864,
-        "rep_votes": 16205,
-        "other_votes": 182,
-        "total_votes": 28251,
+        "dem_votes": 13421,
+        "rep_votes": 18333,
+        "other_votes": 205,
+        "total_votes": 31959,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 4341,
+        "margin": 4912,
         "margin_pct": 15.37,
         "winner": "REP",
         "competitiveness": {
@@ -1161,13 +1168,13 @@
         }
       },
       "83": {
-        "dem_votes": 12973,
-        "rep_votes": 26738,
-        "other_votes": 394,
-        "total_votes": 40105,
+        "dem_votes": 13782,
+        "rep_votes": 28403,
+        "other_votes": 418,
+        "total_votes": 42603,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 13765,
+        "margin": 14621,
         "margin_pct": 34.32,
         "winner": "REP",
         "competitiveness": {
@@ -1175,13 +1182,13 @@
         }
       },
       "84": {
-        "dem_votes": 17688,
-        "rep_votes": 28878,
-        "other_votes": 436,
-        "total_votes": 47002,
+        "dem_votes": 14826,
+        "rep_votes": 24207,
+        "other_votes": 366,
+        "total_votes": 39399,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 11190,
+        "margin": 9381,
         "margin_pct": 23.81,
         "winner": "REP",
         "competitiveness": {
@@ -1189,13 +1196,13 @@
         }
       },
       "85": {
-        "dem_votes": 14761,
-        "rep_votes": 26276,
-        "other_votes": 626,
-        "total_votes": 41663,
+        "dem_votes": 14861,
+        "rep_votes": 26455,
+        "other_votes": 630,
+        "total_votes": 41946,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 11515,
+        "margin": 11594,
         "margin_pct": 27.64,
         "winner": "REP",
         "competitiveness": {
@@ -1203,13 +1210,13 @@
         }
       },
       "86": {
-        "dem_votes": 14901,
-        "rep_votes": 22102,
+        "dem_votes": 14886,
+        "rep_votes": 22079,
         "other_votes": 440,
-        "total_votes": 37443,
+        "total_votes": 37405,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7201,
+        "margin": 7193,
         "margin_pct": 19.23,
         "winner": "REP",
         "competitiveness": {
@@ -1217,13 +1224,13 @@
         }
       },
       "87": {
-        "dem_votes": 13024,
-        "rep_votes": 23631,
+        "dem_votes": 13020,
+        "rep_votes": 23626,
         "other_votes": 593,
-        "total_votes": 37248,
+        "total_votes": 37239,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10607,
+        "margin": 10606,
         "margin_pct": 28.48,
         "winner": "REP",
         "competitiveness": {
@@ -1231,13 +1238,13 @@
         }
       },
       "88": {
-        "dem_votes": 20231,
-        "rep_votes": 8659,
-        "other_votes": 233,
-        "total_votes": 29123,
+        "dem_votes": 20187,
+        "rep_votes": 8641,
+        "other_votes": 232,
+        "total_votes": 29060,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -11572,
+        "margin": -11546,
         "margin_pct": -39.73,
         "winner": "DEM",
         "competitiveness": {
@@ -1245,13 +1252,13 @@
         }
       },
       "89": {
-        "dem_votes": 13174,
-        "rep_votes": 26699,
-        "other_votes": 469,
-        "total_votes": 40342,
+        "dem_votes": 12500,
+        "rep_votes": 25336,
+        "other_votes": 446,
+        "total_votes": 38282,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 13525,
+        "margin": 12836,
         "margin_pct": 33.53,
         "winner": "REP",
         "competitiveness": {
@@ -1259,13 +1266,13 @@
         }
       },
       "90": {
-        "dem_votes": 11943,
-        "rep_votes": 22577,
-        "other_votes": 417,
-        "total_votes": 34937,
+        "dem_votes": 12319,
+        "rep_votes": 23289,
+        "other_votes": 430,
+        "total_votes": 36038,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10634,
+        "margin": 10970,
         "margin_pct": 30.44,
         "winner": "REP",
         "competitiveness": {
@@ -1273,13 +1280,13 @@
         }
       },
       "91": {
-        "dem_votes": 16345,
-        "rep_votes": 26371,
-        "other_votes": 593,
-        "total_votes": 43309,
+        "dem_votes": 14700,
+        "rep_votes": 23717,
+        "other_votes": 533,
+        "total_votes": 38950,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10026,
+        "margin": 9017,
         "margin_pct": 23.15,
         "winner": "REP",
         "competitiveness": {
@@ -1287,13 +1294,13 @@
         }
       },
       "92": {
-        "dem_votes": 16640,
-        "rep_votes": 8788,
-        "other_votes": 182,
-        "total_votes": 25610,
+        "dem_votes": 15874,
+        "rep_votes": 8383,
+        "other_votes": 174,
+        "total_votes": 24431,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7852,
+        "margin": -7491,
         "margin_pct": -30.66,
         "winner": "DEM",
         "competitiveness": {
@@ -1301,13 +1308,13 @@
         }
       },
       "93": {
-        "dem_votes": 20508,
-        "rep_votes": 23279,
-        "other_votes": 824,
-        "total_votes": 44611,
+        "dem_votes": 20551,
+        "rep_votes": 23327,
+        "other_votes": 826,
+        "total_votes": 44704,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2771,
+        "margin": 2776,
         "margin_pct": 6.21,
         "winner": "REP",
         "competitiveness": {
@@ -1315,13 +1322,13 @@
         }
       },
       "94": {
-        "dem_votes": 12633,
-        "rep_votes": 28231,
-        "other_votes": 702,
-        "total_votes": 41566,
+        "dem_votes": 12284,
+        "rep_votes": 27453,
+        "other_votes": 682,
+        "total_votes": 40419,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 15598,
+        "margin": 15169,
         "margin_pct": 37.53,
         "winner": "REP",
         "competitiveness": {
@@ -1329,13 +1336,13 @@
         }
       },
       "95": {
-        "dem_votes": 6851,
-        "rep_votes": 10354,
-        "other_votes": 164,
-        "total_votes": 17369,
+        "dem_votes": 10565,
+        "rep_votes": 15968,
+        "other_votes": 252,
+        "total_votes": 26785,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3503,
+        "margin": 5403,
         "margin_pct": 20.17,
         "winner": "REP",
         "competitiveness": {
@@ -1343,13 +1350,13 @@
         }
       },
       "96": {
-        "dem_votes": 15261,
-        "rep_votes": 22211,
-        "other_votes": 429,
-        "total_votes": 37901,
+        "dem_votes": 15428,
+        "rep_votes": 22456,
+        "other_votes": 434,
+        "total_votes": 38318,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 6950,
+        "margin": 7028,
         "margin_pct": 18.34,
         "winner": "REP",
         "competitiveness": {
@@ -1357,13 +1364,13 @@
         }
       },
       "97": {
-        "dem_votes": 11713,
-        "rep_votes": 23631,
-        "other_votes": 454,
-        "total_votes": 35798,
+        "dem_votes": 11663,
+        "rep_votes": 23529,
+        "other_votes": 452,
+        "total_votes": 35644,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 11918,
+        "margin": 11866,
         "margin_pct": 33.29,
         "winner": "REP",
         "competitiveness": {
@@ -1371,13 +1378,13 @@
         }
       },
       "98": {
-        "dem_votes": 14758,
-        "rep_votes": 18597,
-        "other_votes": 272,
-        "total_votes": 33627,
+        "dem_votes": 14239,
+        "rep_votes": 17944,
+        "other_votes": 263,
+        "total_votes": 32446,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3839,
+        "margin": 3705,
         "margin_pct": 11.42,
         "winner": "REP",
         "competitiveness": {
@@ -1385,13 +1392,13 @@
         }
       },
       "99": {
-        "dem_votes": 19676,
-        "rep_votes": 4358,
-        "other_votes": 135,
-        "total_votes": 24169,
+        "dem_votes": 21233,
+        "rep_votes": 4703,
+        "other_votes": 145,
+        "total_votes": 26081,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -15318,
+        "margin": -16530,
         "margin_pct": -63.38,
         "winner": "DEM",
         "competitiveness": {
@@ -1399,13 +1406,13 @@
         }
       },
       "100": {
-        "dem_votes": 22314,
-        "rep_votes": 7561,
-        "other_votes": 249,
-        "total_votes": 30124,
+        "dem_votes": 21397,
+        "rep_votes": 7251,
+        "other_votes": 239,
+        "total_votes": 28887,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -14753,
+        "margin": -14146,
         "margin_pct": -48.97,
         "winner": "DEM",
         "competitiveness": {
@@ -1413,13 +1420,13 @@
         }
       },
       "101": {
-        "dem_votes": 20785,
-        "rep_votes": 6598,
-        "other_votes": 179,
-        "total_votes": 27562,
+        "dem_votes": 23028,
+        "rep_votes": 7311,
+        "other_votes": 198,
+        "total_votes": 30537,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -14187,
+        "margin": -15717,
         "margin_pct": -51.47,
         "winner": "DEM",
         "competitiveness": {
@@ -1427,13 +1434,13 @@
         }
       },
       "102": {
-        "dem_votes": 24897,
-        "rep_votes": 6716,
-        "other_votes": 239,
-        "total_votes": 31852,
+        "dem_votes": 23972,
+        "rep_votes": 6466,
+        "other_votes": 231,
+        "total_votes": 30669,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -18181,
+        "margin": -17506,
         "margin_pct": -57.08,
         "winner": "DEM",
         "competitiveness": {
@@ -1441,13 +1448,13 @@
         }
       },
       "103": {
-        "dem_votes": 17550,
-        "rep_votes": 22789,
-        "other_votes": 337,
-        "total_votes": 40676,
+        "dem_votes": 18148,
+        "rep_votes": 23566,
+        "other_votes": 349,
+        "total_votes": 42063,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 5239,
+        "margin": 5418,
         "margin_pct": 12.88,
         "winner": "REP",
         "competitiveness": {
@@ -1455,13 +1462,13 @@
         }
       },
       "104": {
-        "dem_votes": 19083,
-        "rep_votes": 22402,
-        "other_votes": 334,
-        "total_votes": 41819,
+        "dem_votes": 18548,
+        "rep_votes": 21775,
+        "other_votes": 324,
+        "total_votes": 40647,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 3319,
+        "margin": 3227,
         "margin_pct": 7.94,
         "winner": "REP",
         "competitiveness": {
@@ -1469,13 +1476,13 @@
         }
       },
       "105": {
-        "dem_votes": 16930,
-        "rep_votes": 17179,
-        "other_votes": 272,
-        "total_votes": 34381,
+        "dem_votes": 16307,
+        "rep_votes": 16545,
+        "other_votes": 262,
+        "total_votes": 33114,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 249,
+        "margin": 238,
         "margin_pct": 0.72,
         "winner": "REP",
         "competitiveness": {
@@ -1483,13 +1490,13 @@
         }
       },
       "106": {
-        "dem_votes": 19221,
-        "rep_votes": 11621,
-        "other_votes": 221,
-        "total_votes": 31063,
+        "dem_votes": 18494,
+        "rep_votes": 11181,
+        "other_votes": 212,
+        "total_votes": 29887,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -7600,
+        "margin": -7313,
         "margin_pct": -24.47,
         "winner": "DEM",
         "competitiveness": {
@@ -1497,13 +1504,13 @@
         }
       },
       "107": {
-        "dem_votes": 23378,
-        "rep_votes": 5648,
-        "other_votes": 131,
-        "total_votes": 29157,
+        "dem_votes": 26093,
+        "rep_votes": 6304,
+        "other_votes": 146,
+        "total_votes": 32543,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -17730,
+        "margin": -19789,
         "margin_pct": -60.81,
         "winner": "DEM",
         "competitiveness": {
@@ -1511,13 +1518,13 @@
         }
       },
       "108": {
-        "dem_votes": 10476,
-        "rep_votes": 17527,
-        "other_votes": 171,
-        "total_votes": 28174,
+        "dem_votes": 11417,
+        "rep_votes": 19103,
+        "other_votes": 186,
+        "total_votes": 30706,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7051,
+        "margin": 7686,
         "margin_pct": 25.03,
         "winner": "REP",
         "competitiveness": {
@@ -1525,13 +1532,13 @@
         }
       },
       "109": {
-        "dem_votes": 10457,
-        "rep_votes": 17495,
-        "other_votes": 170,
-        "total_votes": 28122,
+        "dem_votes": 11228,
+        "rep_votes": 18786,
+        "other_votes": 183,
+        "total_votes": 30197,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7038,
+        "margin": 7558,
         "margin_pct": 25.03,
         "winner": "REP",
         "competitiveness": {
@@ -1539,13 +1546,13 @@
         }
       },
       "110": {
-        "dem_votes": 17065,
-        "rep_votes": 27530,
-        "other_votes": 324,
-        "total_votes": 44919,
+        "dem_votes": 15235,
+        "rep_votes": 24579,
+        "other_votes": 289,
+        "total_votes": 40103,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10465,
+        "margin": 9344,
         "margin_pct": 23.3,
         "winner": "REP",
         "competitiveness": {
@@ -1554,12 +1561,12 @@
       },
       "111": {
         "dem_votes": 13056,
-        "rep_votes": 22400,
-        "other_votes": 337,
-        "total_votes": 35793,
+        "rep_votes": 22402,
+        "other_votes": 338,
+        "total_votes": 35796,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 9344,
+        "margin": 9346,
         "margin_pct": 26.11,
         "winner": "REP",
         "competitiveness": {
@@ -1567,13 +1574,13 @@
         }
       },
       "112": {
-        "dem_votes": 18491,
-        "rep_votes": 12931,
-        "other_votes": 220,
-        "total_votes": 31642,
+        "dem_votes": 17798,
+        "rep_votes": 12447,
+        "other_votes": 211,
+        "total_votes": 30456,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -5560,
+        "margin": -5351,
         "margin_pct": -17.57,
         "winner": "DEM",
         "competitiveness": {
@@ -1581,13 +1588,13 @@
         }
       },
       "113": {
-        "dem_votes": 16048,
-        "rep_votes": 26434,
-        "other_votes": 561,
-        "total_votes": 43043,
+        "dem_votes": 16011,
+        "rep_votes": 26373,
+        "other_votes": 559,
+        "total_votes": 42943,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 10386,
+        "margin": 10362,
         "margin_pct": 24.13,
         "winner": "REP",
         "competitiveness": {
@@ -1595,13 +1602,13 @@
         }
       },
       "114": {
-        "dem_votes": 28660,
-        "rep_votes": 17812,
-        "other_votes": 608,
-        "total_votes": 47080,
+        "dem_votes": 30628,
+        "rep_votes": 19036,
+        "other_votes": 649,
+        "total_votes": 50313,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -10848,
+        "margin": -11592,
         "margin_pct": -23.04,
         "winner": "DEM",
         "competitiveness": {
@@ -1609,13 +1616,13 @@
         }
       },
       "115": {
-        "dem_votes": 20264,
-        "rep_votes": 18319,
-        "other_votes": 476,
-        "total_votes": 39059,
+        "dem_votes": 16885,
+        "rep_votes": 15264,
+        "other_votes": 396,
+        "total_votes": 32545,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -1945,
+        "margin": -1621,
         "margin_pct": -4.98,
         "winner": "DEM",
         "competitiveness": {
@@ -1623,13 +1630,13 @@
         }
       },
       "116": {
-        "dem_votes": 20792,
-        "rep_votes": 16363,
-        "other_votes": 501,
-        "total_votes": 37656,
+        "dem_votes": 22612,
+        "rep_votes": 17796,
+        "other_votes": 544,
+        "total_votes": 40952,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": -4429,
+        "margin": -4816,
         "margin_pct": -11.76,
         "winner": "DEM",
         "competitiveness": {
@@ -1637,13 +1644,13 @@
         }
       },
       "117": {
-        "dem_votes": 16475,
-        "rep_votes": 24370,
-        "other_votes": 463,
-        "total_votes": 41308,
+        "dem_votes": 16473,
+        "rep_votes": 24366,
+        "other_votes": 462,
+        "total_votes": 41301,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 7895,
+        "margin": 7893,
         "margin_pct": 19.11,
         "winner": "REP",
         "competitiveness": {
@@ -1652,12 +1659,12 @@
       },
       "118": {
         "dem_votes": 17756,
-        "rep_votes": 20102,
+        "rep_votes": 20101,
         "other_votes": 588,
-        "total_votes": 38446,
+        "total_votes": 38445,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 2346,
+        "margin": 2345,
         "margin_pct": 6.1,
         "winner": "REP",
         "competitiveness": {
@@ -1665,13 +1672,13 @@
         }
       },
       "119": {
-        "dem_votes": 18847,
-        "rep_votes": 20155,
-        "other_votes": 571,
-        "total_votes": 39573,
+        "dem_votes": 18842,
+        "rep_votes": 20152,
+        "other_votes": 570,
+        "total_votes": 39564,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 1308,
+        "margin": 1310,
         "margin_pct": 3.31,
         "winner": "REP",
         "competitiveness": {
@@ -1679,13 +1686,13 @@
         }
       },
       "120": {
-        "dem_votes": 13404,
-        "rep_votes": 25491,
-        "other_votes": 643,
-        "total_votes": 39538,
+        "dem_votes": 13408,
+        "rep_votes": 25499,
+        "other_votes": 644,
+        "total_votes": 39551,
         "dem_candidate": "Obama",
         "rep_candidate": "McCain",
-        "margin": 12087,
+        "margin": 12091,
         "margin_pct": 30.57,
         "winner": "REP",
         "competitiveness": {

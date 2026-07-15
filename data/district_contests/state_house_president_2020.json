@@ -3,12 +3,16 @@
   "scope": "state_house",
   "contest_type": "president",
   "meta": {
-    "match_coverage_pct": 90.67,
-    "matched_precinct_keys": 2448,
-    "total_precinct_keys": 2700,
+    "match_coverage_pct": 99.66,
+    "matched_precinct_keys": 2657,
+    "total_precinct_keys": 2666,
     "source": "batch_shatter_vap_party_split",
     "office": "US PRESIDENT",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2020.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
@@ -27,13 +31,13 @@
         }
       },
       "2": {
-        "dem_votes": 29777,
-        "rep_votes": 24008,
-        "other_votes": 692,
-        "total_votes": 54477,
+        "dem_votes": 28275,
+        "rep_votes": 22797,
+        "other_votes": 657,
+        "total_votes": 51729,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -5769,
+        "margin": -5478,
         "margin_pct": -10.59,
         "winner": "DEM",
         "competitiveness": {
@@ -69,10 +73,10 @@
         }
       },
       "5": {
-        "dem_votes": 21013,
-        "rep_votes": 20928,
-        "other_votes": 514,
-        "total_votes": 42455,
+        "dem_votes": 21010,
+        "rep_votes": 20925,
+        "other_votes": 513,
+        "total_votes": 42448,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
         "margin": -85,
@@ -83,13 +87,13 @@
         }
       },
       "6": {
-        "dem_votes": 9246,
-        "rep_votes": 12449,
-        "other_votes": 468,
-        "total_votes": 22163,
+        "dem_votes": 13152,
+        "rep_votes": 17708,
+        "other_votes": 666,
+        "total_votes": 31526,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 3203,
+        "margin": 4556,
         "margin_pct": 14.45,
         "winner": "REP",
         "competitiveness": {
@@ -111,13 +115,13 @@
         }
       },
       "8": {
-        "dem_votes": 26775,
+        "dem_votes": 26776,
         "rep_votes": 19424,
-        "other_votes": 718,
+        "other_votes": 717,
         "total_votes": 46917,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -7351,
+        "margin": -7352,
         "margin_pct": -15.67,
         "winner": "DEM",
         "competitiveness": {
@@ -125,13 +129,13 @@
         }
       },
       "9": {
-        "dem_votes": 20775,
+        "dem_votes": 20774,
         "rep_votes": 19258,
-        "other_votes": 622,
+        "other_votes": 623,
         "total_votes": 40655,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -1517,
+        "margin": -1516,
         "margin_pct": -3.73,
         "winner": "DEM",
         "competitiveness": {
@@ -140,12 +144,12 @@
       },
       "10": {
         "dem_votes": 17208,
-        "rep_votes": 20671,
-        "other_votes": 437,
+        "rep_votes": 20672,
+        "other_votes": 436,
         "total_votes": 38316,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 3463,
+        "margin": 3464,
         "margin_pct": 9.04,
         "winner": "REP",
         "competitiveness": {
@@ -153,13 +157,13 @@
         }
       },
       "11": {
-        "dem_votes": 33281,
-        "rep_votes": 15673,
-        "other_votes": 1163,
-        "total_votes": 50117,
+        "dem_votes": 30451,
+        "rep_votes": 14341,
+        "other_votes": 1063,
+        "total_votes": 45855,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -17608,
+        "margin": -16110,
         "margin_pct": -35.13,
         "winner": "DEM",
         "competitiveness": {
@@ -182,13 +186,13 @@
       },
       "13": {
         "dem_votes": 14661,
-        "rep_votes": 33691,
-        "other_votes": 726,
+        "rep_votes": 33690,
+        "other_votes": 727,
         "total_votes": 49078,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 19030,
-        "margin_pct": 38.78,
+        "margin": 19029,
+        "margin_pct": 38.77,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -237,13 +241,13 @@
         }
       },
       "17": {
-        "dem_votes": 22236,
-        "rep_votes": 35280,
-        "other_votes": 669,
-        "total_votes": 58185,
+        "dem_votes": 21862,
+        "rep_votes": 34686,
+        "other_votes": 657,
+        "total_votes": 57205,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 13044,
+        "margin": 12824,
         "margin_pct": 22.42,
         "winner": "REP",
         "competitiveness": {
@@ -251,13 +255,13 @@
         }
       },
       "18": {
-        "dem_votes": 30304,
-        "rep_votes": 24412,
-        "other_votes": 1014,
-        "total_votes": 55730,
+        "dem_votes": 28183,
+        "rep_votes": 22704,
+        "other_votes": 943,
+        "total_votes": 51830,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -5892,
+        "margin": -5479,
         "margin_pct": -10.57,
         "winner": "DEM",
         "competitiveness": {
@@ -265,13 +269,13 @@
         }
       },
       "19": {
-        "dem_votes": 23600,
-        "rep_votes": 37034,
-        "other_votes": 793,
-        "total_votes": 61427,
+        "dem_votes": 22487,
+        "rep_votes": 35288,
+        "other_votes": 755,
+        "total_votes": 58530,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 13434,
+        "margin": 12801,
         "margin_pct": 21.87,
         "winner": "REP",
         "competitiveness": {
@@ -279,13 +283,13 @@
         }
       },
       "20": {
-        "dem_votes": 23190,
-        "rep_votes": 22589,
-        "other_votes": 882,
-        "total_votes": 46661,
+        "dem_votes": 27056,
+        "rep_votes": 26354,
+        "other_votes": 1029,
+        "total_votes": 54439,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -601,
+        "margin": -702,
         "margin_pct": -1.29,
         "winner": "DEM",
         "competitiveness": {
@@ -293,13 +297,13 @@
         }
       },
       "21": {
-        "dem_votes": 16736,
-        "rep_votes": 7751,
-        "other_votes": 380,
-        "total_votes": 24867,
+        "dem_votes": 21943,
+        "rep_votes": 10163,
+        "other_votes": 498,
+        "total_votes": 32604,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -8985,
+        "margin": -11780,
         "margin_pct": -36.13,
         "winner": "DEM",
         "competitiveness": {
@@ -307,13 +311,13 @@
         }
       },
       "22": {
-        "dem_votes": 18291,
-        "rep_votes": 27086,
+        "dem_votes": 18294,
+        "rep_votes": 27091,
         "other_votes": 366,
-        "total_votes": 45743,
+        "total_votes": 45751,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 8795,
+        "margin": 8797,
         "margin_pct": 19.23,
         "winner": "REP",
         "competitiveness": {
@@ -321,10 +325,10 @@
         }
       },
       "23": {
-        "dem_votes": 27939,
-        "rep_votes": 19554,
-        "other_votes": 339,
-        "total_votes": 47832,
+        "dem_votes": 27938,
+        "rep_votes": 19553,
+        "other_votes": 340,
+        "total_votes": 47831,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
         "margin": -8385,
@@ -336,12 +340,12 @@
       },
       "24": {
         "dem_votes": 21422,
-        "rep_votes": 21065,
-        "other_votes": 425,
+        "rep_votes": 21066,
+        "other_votes": 424,
         "total_votes": 42912,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -357,
+        "margin": -356,
         "margin_pct": -0.83,
         "winner": "DEM",
         "competitiveness": {
@@ -363,13 +367,13 @@
         }
       },
       "26": {
-        "dem_votes": 18871,
-        "rep_votes": 25467,
-        "other_votes": 785,
-        "total_votes": 45123,
+        "dem_votes": 18869,
+        "rep_votes": 25466,
+        "other_votes": 786,
+        "total_votes": 45121,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 6596,
+        "margin": 6597,
         "margin_pct": 14.62,
         "winner": "REP",
         "competitiveness": {
@@ -378,12 +382,12 @@
       },
       "27": {
         "dem_votes": 28010,
-        "rep_votes": 17819,
-        "other_votes": 328,
+        "rep_votes": 17820,
+        "other_votes": 327,
         "total_votes": 46157,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -10191,
+        "margin": -10190,
         "margin_pct": -22.08,
         "winner": "DEM",
         "competitiveness": {
@@ -391,13 +395,13 @@
         }
       },
       "28": {
-        "dem_votes": 14928,
-        "rep_votes": 30948,
-        "other_votes": 586,
-        "total_votes": 46462,
+        "dem_votes": 14927,
+        "rep_votes": 30946,
+        "other_votes": 585,
+        "total_votes": 46458,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 16020,
+        "margin": 16019,
         "margin_pct": 34.48,
         "winner": "REP",
         "competitiveness": {
@@ -405,13 +409,13 @@
         }
       },
       "29": {
-        "dem_votes": 30265,
-        "rep_votes": 5266,
-        "other_votes": 585,
-        "total_votes": 36116,
+        "dem_votes": 40868,
+        "rep_votes": 7110,
+        "other_votes": 791,
+        "total_votes": 48769,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -24999,
+        "margin": -33758,
         "margin_pct": -69.22,
         "winner": "DEM",
         "competitiveness": {
@@ -419,13 +423,13 @@
         }
       },
       "30": {
-        "dem_votes": 50189,
-        "rep_votes": 7721,
-        "other_votes": 852,
-        "total_votes": 58762,
+        "dem_votes": 43839,
+        "rep_votes": 6744,
+        "other_votes": 744,
+        "total_votes": 51327,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -42468,
+        "margin": -37095,
         "margin_pct": -72.27,
         "winner": "DEM",
         "competitiveness": {
@@ -433,13 +437,13 @@
         }
       },
       "31": {
-        "dem_votes": 41868,
-        "rep_votes": 9730,
-        "other_votes": 855,
-        "total_votes": 52453,
+        "dem_votes": 39897,
+        "rep_votes": 9272,
+        "other_votes": 814,
+        "total_votes": 49983,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -32138,
+        "margin": -30625,
         "margin_pct": -61.27,
         "winner": "DEM",
         "competitiveness": {
@@ -461,13 +465,13 @@
         }
       },
       "33": {
-        "dem_votes": 33322,
-        "rep_votes": 19775,
-        "other_votes": 1067,
-        "total_votes": 54164,
+        "dem_votes": 30699,
+        "rep_votes": 18219,
+        "other_votes": 984,
+        "total_votes": 49902,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -13547,
+        "margin": -12480,
         "margin_pct": -25.01,
         "winner": "DEM",
         "competitiveness": {
@@ -475,13 +479,13 @@
         }
       },
       "34": {
-        "dem_votes": 43919,
-        "rep_votes": 24693,
-        "other_votes": 1393,
-        "total_votes": 70005,
+        "dem_votes": 41245,
+        "rep_votes": 23190,
+        "other_votes": 1308,
+        "total_votes": 65743,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -19226,
+        "margin": -18055,
         "margin_pct": -27.46,
         "winner": "DEM",
         "competitiveness": {
@@ -489,13 +493,13 @@
         }
       },
       "35": {
-        "dem_votes": 21496,
-        "rep_votes": 19435,
-        "other_votes": 865,
-        "total_votes": 41796,
+        "dem_votes": 24033,
+        "rep_votes": 21729,
+        "other_votes": 968,
+        "total_votes": 46730,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -2061,
+        "margin": -2304,
         "margin_pct": -4.93,
         "winner": "DEM",
         "competitiveness": {
@@ -503,13 +507,13 @@
         }
       },
       "36": {
-        "dem_votes": 22704,
-        "rep_votes": 16017,
-        "other_votes": 826,
-        "total_votes": 39547,
+        "dem_votes": 25636,
+        "rep_votes": 18085,
+        "other_votes": 933,
+        "total_votes": 44654,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -6687,
+        "margin": -7551,
         "margin_pct": -16.91,
         "winner": "DEM",
         "competitiveness": {
@@ -517,13 +521,13 @@
         }
       },
       "37": {
-        "dem_votes": 17784,
-        "rep_votes": 18835,
-        "other_votes": 805,
-        "total_votes": 37424,
+        "dem_votes": 19924,
+        "rep_votes": 21102,
+        "other_votes": 902,
+        "total_votes": 41928,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 1051,
+        "margin": 1178,
         "margin_pct": 2.81,
         "winner": "REP",
         "competitiveness": {
@@ -531,13 +535,13 @@
         }
       },
       "38": {
-        "dem_votes": 50003,
-        "rep_votes": 8533,
-        "other_votes": 970,
-        "total_votes": 59506,
+        "dem_votes": 46422,
+        "rep_votes": 7922,
+        "other_votes": 900,
+        "total_votes": 55244,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -41470,
+        "margin": -38500,
         "margin_pct": -69.69,
         "winner": "DEM",
         "competitiveness": {
@@ -545,13 +549,13 @@
         }
       },
       "39": {
-        "dem_votes": 23332,
-        "rep_votes": 14636,
-        "other_votes": 629,
-        "total_votes": 38597,
+        "dem_votes": 27941,
+        "rep_votes": 17527,
+        "other_votes": 753,
+        "total_votes": 46221,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -8696,
+        "margin": -10414,
         "margin_pct": -22.53,
         "winner": "DEM",
         "competitiveness": {
@@ -559,13 +563,13 @@
         }
       },
       "40": {
-        "dem_votes": 34730,
-        "rep_votes": 26137,
-        "other_votes": 1173,
-        "total_votes": 62040,
+        "dem_votes": 32344,
+        "rep_votes": 24342,
+        "other_votes": 1092,
+        "total_votes": 57778,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -8593,
+        "margin": -8002,
         "margin_pct": -13.85,
         "winner": "DEM",
         "competitiveness": {
@@ -573,13 +577,13 @@
         }
       },
       "41": {
-        "dem_votes": 35547,
-        "rep_votes": 18978,
-        "other_votes": 1113,
-        "total_votes": 55638,
+        "dem_votes": 32824,
+        "rep_votes": 17524,
+        "other_votes": 1028,
+        "total_votes": 51376,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -16569,
+        "margin": -15300,
         "margin_pct": -29.78,
         "winner": "DEM",
         "competitiveness": {
@@ -587,13 +591,13 @@
         }
       },
       "42": {
-        "dem_votes": 19298,
-        "rep_votes": 7966,
-        "other_votes": 599,
-        "total_votes": 27863,
+        "dem_votes": 19747,
+        "rep_votes": 8152,
+        "other_votes": 612,
+        "total_votes": 28511,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -11332,
+        "margin": -11595,
         "margin_pct": -40.67,
         "winner": "DEM",
         "competitiveness": {
@@ -601,13 +605,13 @@
         }
       },
       "43": {
-        "dem_votes": 18141,
-        "rep_votes": 19332,
-        "other_votes": 575,
-        "total_votes": 38048,
+        "dem_votes": 20326,
+        "rep_votes": 21660,
+        "other_votes": 643,
+        "total_votes": 42629,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 1191,
+        "margin": 1334,
         "margin_pct": 3.13,
         "winner": "REP",
         "competitiveness": {
@@ -615,13 +619,13 @@
         }
       },
       "44": {
-        "dem_votes": 25086,
-        "rep_votes": 15419,
-        "other_votes": 784,
-        "total_votes": 41289,
+        "dem_votes": 23497,
+        "rep_votes": 14443,
+        "other_votes": 734,
+        "total_votes": 38674,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -9667,
+        "margin": -9054,
         "margin_pct": -23.41,
         "winner": "DEM",
         "competitiveness": {
@@ -629,13 +633,13 @@
         }
       },
       "45": {
-        "dem_votes": 22362,
-        "rep_votes": 16885,
-        "other_votes": 703,
-        "total_votes": 39950,
+        "dem_votes": 20898,
+        "rep_votes": 15780,
+        "other_votes": 658,
+        "total_votes": 37336,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -5477,
+        "margin": -5118,
         "margin_pct": -13.71,
         "winner": "DEM",
         "competitiveness": {
@@ -643,14 +647,14 @@
         }
       },
       "46": {
-        "dem_votes": 14089,
-        "rep_votes": 25876,
-        "other_votes": 278,
+        "dem_votes": 14088,
+        "rep_votes": 25878,
+        "other_votes": 277,
         "total_votes": 40243,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 11787,
-        "margin_pct": 29.29,
+        "margin": 11790,
+        "margin_pct": 29.3,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -685,13 +689,13 @@
         }
       },
       "49": {
-        "dem_votes": 36564,
-        "rep_votes": 15915,
-        "other_votes": 1126,
-        "total_votes": 53605,
+        "dem_votes": 33657,
+        "rep_votes": 14650,
+        "other_votes": 1036,
+        "total_votes": 49343,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -20649,
+        "margin": -19007,
         "margin_pct": -38.52,
         "winner": "DEM",
         "competitiveness": {
@@ -699,13 +703,13 @@
         }
       },
       "50": {
-        "dem_votes": 33631,
-        "rep_votes": 25161,
-        "other_votes": 738,
-        "total_votes": 59530,
+        "dem_votes": 32704,
+        "rep_votes": 24467,
+        "other_votes": 717,
+        "total_votes": 57888,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -8470,
+        "margin": -8237,
         "margin_pct": -14.23,
         "winner": "DEM",
         "competitiveness": {
@@ -727,13 +731,13 @@
         }
       },
       "52": {
-        "dem_votes": 18546,
-        "rep_votes": 25182,
+        "dem_votes": 18545,
+        "rep_votes": 25180,
         "other_votes": 567,
-        "total_votes": 44295,
+        "total_votes": 44292,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 6636,
+        "margin": 6635,
         "margin_pct": 14.98,
         "winner": "REP",
         "competitiveness": {
@@ -741,13 +745,13 @@
         }
       },
       "53": {
-        "dem_votes": 19102,
-        "rep_votes": 35958,
-        "other_votes": 844,
-        "total_votes": 55904,
+        "dem_votes": 15912,
+        "rep_votes": 29953,
+        "other_votes": 704,
+        "total_votes": 46569,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 16856,
+        "margin": 14041,
         "margin_pct": 30.15,
         "winner": "REP",
         "competitiveness": {
@@ -755,13 +759,13 @@
         }
       },
       "54": {
-        "dem_votes": 17280,
-        "rep_votes": 14816,
-        "other_votes": 413,
-        "total_votes": 32509,
+        "dem_votes": 27824,
+        "rep_votes": 23857,
+        "other_votes": 665,
+        "total_votes": 52346,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -2464,
+        "margin": -3967,
         "margin_pct": -7.58,
         "winner": "DEM",
         "competitiveness": {
@@ -769,13 +773,13 @@
         }
       },
       "55": {
-        "dem_votes": 18273,
-        "rep_votes": 27204,
-        "other_votes": 538,
-        "total_votes": 46015,
+        "dem_votes": 16227,
+        "rep_votes": 24159,
+        "other_votes": 479,
+        "total_votes": 40865,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 8931,
+        "margin": 7932,
         "margin_pct": 19.41,
         "winner": "REP",
         "competitiveness": {
@@ -783,13 +787,13 @@
         }
       },
       "56": {
-        "dem_votes": 32286,
-        "rep_votes": 4660,
-        "other_votes": 570,
-        "total_votes": 37516,
+        "dem_votes": 33701,
+        "rep_votes": 4864,
+        "other_votes": 595,
+        "total_votes": 39160,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -27626,
+        "margin": -28837,
         "margin_pct": -73.64,
         "winner": "DEM",
         "competitiveness": {
@@ -798,12 +802,12 @@
       },
       "57": {
         "dem_votes": 28602,
-        "rep_votes": 19979,
-        "other_votes": 770,
+        "rep_votes": 19980,
+        "other_votes": 769,
         "total_votes": 49351,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -8623,
+        "margin": -8622,
         "margin_pct": -17.47,
         "winner": "DEM",
         "competitiveness": {
@@ -811,13 +815,13 @@
         }
       },
       "58": {
-        "dem_votes": 33663,
+        "dem_votes": 33664,
         "rep_votes": 12880,
-        "other_votes": 618,
+        "other_votes": 617,
         "total_votes": 47161,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -20783,
+        "margin": -20784,
         "margin_pct": -44.07,
         "winner": "DEM",
         "competitiveness": {
@@ -839,13 +843,13 @@
         }
       },
       "60": {
-        "dem_votes": 26653,
+        "dem_votes": 26652,
         "rep_votes": 16187,
-        "other_votes": 639,
+        "other_votes": 640,
         "total_votes": 43479,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -10466,
+        "margin": -10465,
         "margin_pct": -24.07,
         "winner": "DEM",
         "competitiveness": {
@@ -854,12 +858,12 @@
       },
       "61": {
         "dem_votes": 39263,
-        "rep_votes": 9183,
-        "other_votes": 738,
+        "rep_votes": 9184,
+        "other_votes": 737,
         "total_votes": 49184,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -30080,
+        "margin": -30079,
         "margin_pct": -61.16,
         "winner": "DEM",
         "competitiveness": {
@@ -868,12 +872,12 @@
       },
       "62": {
         "dem_votes": 24264,
-        "rep_votes": 22806,
-        "other_votes": 712,
+        "rep_votes": 22807,
+        "other_votes": 711,
         "total_votes": 47782,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -1458,
+        "margin": -1457,
         "margin_pct": -3.05,
         "winner": "DEM",
         "competitiveness": {
@@ -881,13 +885,13 @@
         }
       },
       "63": {
-        "dem_votes": 21770,
-        "rep_votes": 20293,
-        "other_votes": 628,
-        "total_votes": 42691,
+        "dem_votes": 20385,
+        "rep_votes": 19002,
+        "other_votes": 587,
+        "total_votes": 39974,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -1477,
+        "margin": -1383,
         "margin_pct": -3.46,
         "winner": "DEM",
         "competitiveness": {
@@ -895,13 +899,13 @@
         }
       },
       "64": {
-        "dem_votes": 17356,
-        "rep_votes": 25458,
-        "other_votes": 586,
-        "total_votes": 43400,
+        "dem_votes": 18442,
+        "rep_votes": 27052,
+        "other_votes": 623,
+        "total_votes": 46117,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 8102,
+        "margin": 8610,
         "margin_pct": 18.67,
         "winner": "REP",
         "competitiveness": {
@@ -910,12 +914,12 @@
       },
       "65": {
         "dem_votes": 15992,
-        "rep_votes": 31301,
-        "other_votes": 516,
+        "rep_votes": 31300,
+        "other_votes": 517,
         "total_votes": 47809,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 15309,
+        "margin": 15308,
         "margin_pct": 32.02,
         "winner": "REP",
         "competitiveness": {
@@ -923,13 +927,13 @@
         }
       },
       "66": {
-        "dem_votes": 44877,
-        "rep_votes": 18303,
-        "other_votes": 1178,
-        "total_votes": 64358,
+        "dem_votes": 30975,
+        "rep_votes": 12634,
+        "other_votes": 812,
+        "total_votes": 44421,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -26574,
+        "margin": -18341,
         "margin_pct": -41.29,
         "winner": "DEM",
         "competitiveness": {
@@ -951,13 +955,13 @@
         }
       },
       "68": {
-        "dem_votes": 18067,
-        "rep_votes": 26175,
-        "other_votes": 701,
-        "total_votes": 44943,
+        "dem_votes": 20681,
+        "rep_votes": 29962,
+        "other_votes": 803,
+        "total_votes": 51446,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 8108,
+        "margin": 9281,
         "margin_pct": 18.04,
         "winner": "REP",
         "competitiveness": {
@@ -965,13 +969,13 @@
         }
       },
       "69": {
-        "dem_votes": 18085,
-        "rep_votes": 32439,
-        "other_votes": 723,
-        "total_votes": 51247,
+        "dem_votes": 17608,
+        "rep_votes": 31583,
+        "other_votes": 703,
+        "total_votes": 49894,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 14354,
+        "margin": 13975,
         "margin_pct": 28.01,
         "winner": "REP",
         "competitiveness": {
@@ -993,13 +997,13 @@
         }
       },
       "71": {
-        "dem_votes": 28425,
-        "rep_votes": 11203,
-        "other_votes": 657,
-        "total_votes": 40285,
+        "dem_votes": 27839,
+        "rep_votes": 10972,
+        "other_votes": 643,
+        "total_votes": 39454,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -17222,
+        "margin": -16867,
         "margin_pct": -42.75,
         "winner": "DEM",
         "competitiveness": {
@@ -1007,13 +1011,13 @@
         }
       },
       "72": {
-        "dem_votes": 32624,
-        "rep_votes": 9746,
-        "other_votes": 698,
-        "total_votes": 43068,
+        "dem_votes": 30345,
+        "rep_votes": 9066,
+        "other_votes": 648,
+        "total_votes": 40059,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -22878,
+        "margin": -21279,
         "margin_pct": -53.12,
         "winner": "DEM",
         "competitiveness": {
@@ -1035,13 +1039,13 @@
         }
       },
       "74": {
-        "dem_votes": 24083,
-        "rep_votes": 24809,
-        "other_votes": 831,
-        "total_votes": 49723,
+        "dem_votes": 26061,
+        "rep_votes": 26847,
+        "other_votes": 899,
+        "total_votes": 53807,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 726,
+        "margin": 786,
         "margin_pct": 1.46,
         "winner": "REP",
         "competitiveness": {
@@ -1049,13 +1053,13 @@
         }
       },
       "75": {
-        "dem_votes": 17415,
-        "rep_votes": 21566,
-        "other_votes": 598,
-        "total_votes": 39579,
+        "dem_votes": 19945,
+        "rep_votes": 24700,
+        "other_votes": 684,
+        "total_votes": 45329,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 4151,
+        "margin": 4755,
         "margin_pct": 10.49,
         "winner": "REP",
         "competitiveness": {
@@ -1063,13 +1067,13 @@
         }
       },
       "76": {
-        "dem_votes": 16534,
+        "dem_votes": 16535,
         "rep_votes": 26944,
-        "other_votes": 595,
+        "other_votes": 594,
         "total_votes": 44073,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 10410,
+        "margin": 10409,
         "margin_pct": 23.62,
         "winner": "REP",
         "competitiveness": {
@@ -1091,13 +1095,13 @@
         }
       },
       "78": {
-        "dem_votes": 13123,
-        "rep_votes": 38412,
-        "other_votes": 563,
-        "total_votes": 52098,
+        "dem_votes": 13125,
+        "rep_votes": 38415,
+        "other_votes": 562,
+        "total_votes": 52102,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 25289,
+        "margin": 25290,
         "margin_pct": 48.54,
         "winner": "REP",
         "competitiveness": {
@@ -1106,12 +1110,12 @@
       },
       "79": {
         "dem_votes": 19364,
-        "rep_votes": 31638,
-        "other_votes": 567,
+        "rep_votes": 31637,
+        "other_votes": 568,
         "total_votes": 51569,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 12274,
+        "margin": 12273,
         "margin_pct": 23.8,
         "winner": "REP",
         "competitiveness": {
@@ -1119,38 +1123,38 @@
         }
       },
       "80": {
-        "dem_votes": 11957,
-        "rep_votes": 31658,
-        "other_votes": 606,
+        "dem_votes": 10671,
+        "rep_votes": 32936,
+        "other_votes": 614,
         "total_votes": 44221,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 19701,
-        "margin_pct": 44.55,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#67000d"
-        }
-      },
-      "81": {
-        "dem_votes": 10688,
-        "rep_votes": 32989,
-        "other_votes": 616,
-        "total_votes": 44293,
-        "dem_candidate": "Joseph R. Biden",
-        "rep_candidate": "Donald J. Trump",
-        "margin": 22301,
+        "margin": 22265,
         "margin_pct": 50.35,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
+      "81": {
+        "dem_votes": 11977,
+        "rep_votes": 31710,
+        "other_votes": 606,
+        "total_votes": 44293,
+        "dem_candidate": "Joseph R. Biden",
+        "rep_candidate": "Donald J. Trump",
+        "margin": 19733,
+        "margin_pct": 44.55,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#67000d"
+        }
+      },
       "82": {
-        "dem_votes": 20586,
-        "rep_votes": 22739,
+        "dem_votes": 20585,
+        "rep_votes": 22738,
         "other_votes": 709,
-        "total_votes": 44034,
+        "total_votes": 44032,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
         "margin": 2153,
@@ -1161,10 +1165,10 @@
         }
       },
       "83": {
-        "dem_votes": 13909,
-        "rep_votes": 40209,
-        "other_votes": 730,
-        "total_votes": 54848,
+        "dem_votes": 13910,
+        "rep_votes": 40210,
+        "other_votes": 729,
+        "total_votes": 54849,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
         "margin": 26300,
@@ -1175,14 +1179,14 @@
         }
       },
       "84": {
-        "dem_votes": 14351,
-        "rep_votes": 29311,
-        "other_votes": 566,
-        "total_votes": 44228,
+        "dem_votes": 14367,
+        "rep_votes": 29233,
+        "other_votes": 565,
+        "total_votes": 44165,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 14960,
-        "margin_pct": 33.82,
+        "margin": 14866,
+        "margin_pct": 33.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -1203,13 +1207,13 @@
         }
       },
       "86": {
-        "dem_votes": 13117,
+        "dem_votes": 13118,
         "rep_votes": 31021,
-        "other_votes": 464,
+        "other_votes": 463,
         "total_votes": 44602,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 17904,
+        "margin": 17903,
         "margin_pct": 40.14,
         "winner": "REP",
         "competitiveness": {
@@ -1245,13 +1249,13 @@
         }
       },
       "89": {
-        "dem_votes": 11750,
+        "dem_votes": 11751,
         "rep_votes": 35214,
-        "other_votes": 590,
+        "other_votes": 589,
         "total_votes": 47554,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 23464,
+        "margin": 23463,
         "margin_pct": 49.34,
         "winner": "REP",
         "competitiveness": {
@@ -1259,13 +1263,13 @@
         }
       },
       "90": {
-        "dem_votes": 10276,
-        "rep_votes": 34568,
-        "other_votes": 467,
-        "total_votes": 45311,
+        "dem_votes": 10567,
+        "rep_votes": 35545,
+        "other_votes": 480,
+        "total_votes": 46592,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 24292,
+        "margin": 24978,
         "margin_pct": 53.61,
         "winner": "REP",
         "competitiveness": {
@@ -1273,13 +1277,13 @@
         }
       },
       "91": {
-        "dem_votes": 15886,
-        "rep_votes": 37789,
-        "other_votes": 641,
-        "total_votes": 54316,
+        "dem_votes": 14133,
+        "rep_votes": 33619,
+        "other_votes": 570,
+        "total_votes": 48322,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 21903,
+        "margin": 19486,
         "margin_pct": 40.33,
         "winner": "REP",
         "competitiveness": {
@@ -1301,13 +1305,13 @@
         }
       },
       "93": {
-        "dem_votes": 21782,
-        "rep_votes": 29629,
+        "dem_votes": 21797,
+        "rep_votes": 29649,
         "other_votes": 868,
-        "total_votes": 52279,
+        "total_votes": 52314,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 7847,
+        "margin": 7852,
         "margin_pct": 15.01,
         "winner": "REP",
         "competitiveness": {
@@ -1315,13 +1319,13 @@
         }
       },
       "94": {
-        "dem_votes": 10130,
-        "rep_votes": 36419,
-        "other_votes": 480,
-        "total_votes": 47029,
+        "dem_votes": 9847,
+        "rep_votes": 35401,
+        "other_votes": 466,
+        "total_votes": 45714,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 26289,
+        "margin": 25554,
         "margin_pct": 55.9,
         "winner": "REP",
         "competitiveness": {
@@ -1329,14 +1333,14 @@
         }
       },
       "95": {
-        "dem_votes": 17289,
-        "rep_votes": 31169,
-        "other_votes": 798,
-        "total_votes": 49256,
+        "dem_votes": 17266,
+        "rep_votes": 31258,
+        "other_votes": 795,
+        "total_votes": 49319,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 13880,
-        "margin_pct": 28.18,
+        "margin": 13992,
+        "margin_pct": 28.37,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -1344,12 +1348,12 @@
       },
       "96": {
         "dem_votes": 16196,
-        "rep_votes": 27891,
-        "other_votes": 671,
+        "rep_votes": 27890,
+        "other_votes": 672,
         "total_votes": 44758,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 11695,
+        "margin": 11694,
         "margin_pct": 26.13,
         "winner": "REP",
         "competitiveness": {
@@ -1414,12 +1418,12 @@
       },
       "101": {
         "dem_votes": 32355,
-        "rep_votes": 9895,
-        "other_votes": 718,
+        "rep_votes": 9896,
+        "other_votes": 717,
         "total_votes": 42968,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -22460,
+        "margin": -22459,
         "margin_pct": -52.27,
         "winner": "DEM",
         "competitiveness": {
@@ -1428,12 +1432,12 @@
       },
       "102": {
         "dem_votes": 36018,
-        "rep_votes": 8901,
-        "other_votes": 870,
+        "rep_votes": 8902,
+        "other_votes": 869,
         "total_votes": 45789,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -27117,
+        "margin": -27116,
         "margin_pct": -59.22,
         "winner": "DEM",
         "competitiveness": {
@@ -1442,12 +1446,12 @@
       },
       "103": {
         "dem_votes": 25926,
-        "rep_votes": 21906,
-        "other_votes": 842,
+        "rep_votes": 21905,
+        "other_votes": 843,
         "total_votes": 48674,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -4020,
+        "margin": -4021,
         "margin_pct": -8.26,
         "winner": "DEM",
         "competitiveness": {
@@ -1470,12 +1474,12 @@
       },
       "105": {
         "dem_votes": 25924,
-        "rep_votes": 18275,
-        "other_votes": 737,
+        "rep_votes": 18276,
+        "other_votes": 736,
         "total_votes": 44936,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -7649,
+        "margin": -7648,
         "margin_pct": -17.02,
         "winner": "DEM",
         "competitiveness": {
@@ -1483,13 +1487,13 @@
         }
       },
       "106": {
-        "dem_votes": 32042,
+        "dem_votes": 32043,
         "rep_votes": 13287,
-        "other_votes": 709,
+        "other_votes": 708,
         "total_votes": 46038,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -18755,
+        "margin": -18756,
         "margin_pct": -40.74,
         "winner": "DEM",
         "competitiveness": {
@@ -1497,13 +1501,13 @@
         }
       },
       "107": {
-        "dem_votes": 37117,
+        "dem_votes": 37118,
         "rep_votes": 7550,
-        "other_votes": 731,
+        "other_votes": 730,
         "total_votes": 45398,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -29567,
+        "margin": -29568,
         "margin_pct": -65.13,
         "winner": "DEM",
         "competitiveness": {
@@ -1525,9 +1529,9 @@
         }
       },
       "109": {
-        "dem_votes": 19001,
-        "rep_votes": 27346,
-        "other_votes": 695,
+        "dem_votes": 19000,
+        "rep_votes": 27345,
+        "other_votes": 697,
         "total_votes": 47042,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
@@ -1540,12 +1544,12 @@
       },
       "110": {
         "dem_votes": 13740,
-        "rep_votes": 29856,
-        "other_votes": 415,
+        "rep_votes": 29857,
+        "other_votes": 414,
         "total_votes": 44011,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 16116,
+        "margin": 16117,
         "margin_pct": 36.62,
         "winner": "REP",
         "competitiveness": {
@@ -1553,13 +1557,13 @@
         }
       },
       "111": {
-        "dem_votes": 14662,
-        "rep_votes": 34558,
-        "other_votes": 568,
-        "total_votes": 49788,
+        "dem_votes": 13584,
+        "rep_votes": 32016,
+        "other_votes": 526,
+        "total_votes": 46126,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 19896,
+        "margin": 18432,
         "margin_pct": 39.96,
         "winner": "REP",
         "competitiveness": {
@@ -1568,12 +1572,12 @@
       },
       "112": {
         "dem_votes": 26466,
-        "rep_votes": 16424,
-        "other_votes": 711,
+        "rep_votes": 16425,
+        "other_votes": 710,
         "total_votes": 43601,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -10042,
+        "margin": -10041,
         "margin_pct": -23.03,
         "winner": "DEM",
         "competitiveness": {
@@ -1581,13 +1585,13 @@
         }
       },
       "113": {
-        "dem_votes": 17014,
-        "rep_votes": 33465,
-        "other_votes": 655,
-        "total_votes": 51134,
+        "dem_votes": 17178,
+        "rep_votes": 33788,
+        "other_votes": 661,
+        "total_votes": 51627,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 16451,
+        "margin": 16610,
         "margin_pct": 32.17,
         "winner": "REP",
         "competitiveness": {
@@ -1595,13 +1599,13 @@
         }
       },
       "114": {
-        "dem_votes": 35967,
-        "rep_votes": 18515,
-        "other_votes": 914,
-        "total_votes": 55396,
+        "dem_votes": 36582,
+        "rep_votes": 18832,
+        "other_votes": 930,
+        "total_votes": 56344,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -17452,
+        "margin": -17750,
         "margin_pct": -31.5,
         "winner": "DEM",
         "competitiveness": {
@@ -1609,13 +1613,13 @@
         }
       },
       "115": {
-        "dem_votes": 29220,
-        "rep_votes": 22716,
-        "other_votes": 904,
-        "total_votes": 52840,
+        "dem_votes": 30074,
+        "rep_votes": 23379,
+        "other_votes": 930,
+        "total_votes": 54383,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -6504,
+        "margin": -6695,
         "margin_pct": -12.31,
         "winner": "DEM",
         "competitiveness": {
@@ -1623,13 +1627,13 @@
         }
       },
       "116": {
-        "dem_votes": 31242,
-        "rep_votes": 21264,
-        "other_votes": 827,
-        "total_votes": 53333,
+        "dem_votes": 29781,
+        "rep_votes": 20269,
+        "other_votes": 789,
+        "total_votes": 50839,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": -9978,
+        "margin": -9512,
         "margin_pct": -18.71,
         "winner": "DEM",
         "competitiveness": {
@@ -1637,13 +1641,13 @@
         }
       },
       "117": {
-        "dem_votes": 22196,
-        "rep_votes": 31203,
-        "other_votes": 923,
-        "total_votes": 54322,
+        "dem_votes": 21994,
+        "rep_votes": 30919,
+        "other_votes": 916,
+        "total_votes": 53829,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 9007,
+        "margin": 8925,
         "margin_pct": 16.58,
         "winner": "REP",
         "competitiveness": {
@@ -1666,12 +1670,12 @@
       },
       "119": {
         "dem_votes": 20815,
-        "rep_votes": 27151,
-        "other_votes": 934,
+        "rep_votes": 27152,
+        "other_votes": 933,
         "total_votes": 48900,
         "dem_candidate": "Joseph R. Biden",
         "rep_candidate": "Donald J. Trump",
-        "margin": 6336,
+        "margin": 6337,
         "margin_pct": 12.96,
         "winner": "REP",
         "competitiveness": {

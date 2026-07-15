@@ -3,20 +3,24 @@
   "scope": "state_senate",
   "contest_type": "us_senate",
   "meta": {
-    "match_coverage_pct": 86.38,
-    "matched_precinct_keys": 2365,
-    "total_precinct_keys": 2738,
+    "match_coverage_pct": 100.0,
+    "matched_precinct_keys": 2703,
+    "total_precinct_keys": 2703,
     "source": "batch_shatter_vap_party_split",
     "office": "US SENATE",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 37350,
-        "rep_votes": 61823,
+        "dem_votes": 37352,
+        "rep_votes": 61825,
         "other_votes": 3266,
-        "total_votes": 102439,
+        "total_votes": 102443,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
         "margin": 24473,
@@ -27,13 +31,13 @@
         }
       },
       "2": {
-        "dem_votes": 37688,
-        "rep_votes": 55572,
-        "other_votes": 3288,
-        "total_votes": 96548,
+        "dem_votes": 37672,
+        "rep_votes": 55540,
+        "other_votes": 3287,
+        "total_votes": 96499,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 17884,
+        "margin": 17868,
         "margin_pct": 18.52,
         "winner": "REP",
         "competitiveness": {
@@ -55,83 +59,83 @@
         }
       },
       "4": {
-        "dem_votes": 44239,
-        "rep_votes": 49451,
-        "other_votes": 2284,
-        "total_votes": 95974,
+        "dem_votes": 44252,
+        "rep_votes": 49473,
+        "other_votes": 2285,
+        "total_votes": 96010,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 5212,
-        "margin_pct": 5.43,
+        "margin": 5221,
+        "margin_pct": 5.44,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "5": {
-        "dem_votes": 55909,
-        "rep_votes": 45503,
-        "other_votes": 2880,
-        "total_votes": 104292,
+        "dem_votes": 55915,
+        "rep_votes": 45520,
+        "other_votes": 2881,
+        "total_votes": 104316,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -10406,
-        "margin_pct": -9.98,
+        "margin": -10395,
+        "margin_pct": -9.96,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "6": {
-        "dem_votes": 17029,
-        "rep_votes": 36180,
+        "dem_votes": 17032,
+        "rep_votes": 36195,
         "other_votes": 2907,
-        "total_votes": 56116,
+        "total_votes": 56134,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 19151,
-        "margin_pct": 34.13,
+        "margin": 19163,
+        "margin_pct": 34.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "7": {
-        "dem_votes": 44178,
-        "rep_votes": 53137,
-        "other_votes": 4635,
-        "total_votes": 101950,
+        "dem_votes": 44756,
+        "rep_votes": 53687,
+        "other_votes": 4697,
+        "total_votes": 103140,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 8959,
-        "margin_pct": 8.79,
+        "margin": 8931,
+        "margin_pct": 8.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "8": {
-        "dem_votes": 36027,
-        "rep_votes": 58766,
-        "other_votes": 4007,
-        "total_votes": 98800,
+        "dem_votes": 35473,
+        "rep_votes": 58237,
+        "other_votes": 3947,
+        "total_votes": 97657,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 22739,
-        "margin_pct": 23.02,
+        "margin": 22764,
+        "margin_pct": 23.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "9": {
-        "dem_votes": 36169,
-        "rep_votes": 54177,
-        "other_votes": 2742,
-        "total_votes": 93088,
+        "dem_votes": 36148,
+        "rep_votes": 54152,
+        "other_votes": 2740,
+        "total_votes": 93040,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 18008,
+        "margin": 18004,
         "margin_pct": 19.35,
         "winner": "REP",
         "competitiveness": {
@@ -139,195 +143,195 @@
         }
       },
       "10": {
-        "dem_votes": 28279,
-        "rep_votes": 53977,
-        "other_votes": 2988,
-        "total_votes": 85244,
+        "dem_votes": 28351,
+        "rep_votes": 54094,
+        "other_votes": 2994,
+        "total_votes": 85439,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 25698,
-        "margin_pct": 30.15,
+        "margin": 25743,
+        "margin_pct": 30.13,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "11": {
-        "dem_votes": 48029,
-        "rep_votes": 47091,
-        "other_votes": 2315,
-        "total_votes": 97435,
+        "dem_votes": 47966,
+        "rep_votes": 46998,
+        "other_votes": 2311,
+        "total_votes": 97275,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -938,
-        "margin_pct": -0.96,
+        "margin": -968,
+        "margin_pct": -1.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#e1f5fe"
         }
       },
       "12": {
-        "dem_votes": 27412,
+        "dem_votes": 27420,
         "rep_votes": 41817,
-        "other_votes": 2543,
-        "total_votes": 71772,
+        "other_votes": 2544,
+        "total_votes": 71781,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 14405,
-        "margin_pct": 20.07,
+        "margin": 14397,
+        "margin_pct": 20.06,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "13": {
-        "dem_votes": 59702,
-        "rep_votes": 43649,
-        "other_votes": 3067,
-        "total_votes": 106418,
+        "dem_votes": 59602,
+        "rep_votes": 43320,
+        "other_votes": 3037,
+        "total_votes": 105959,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -16053,
-        "margin_pct": -15.08,
+        "margin": -16282,
+        "margin_pct": -15.37,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "14": {
-        "dem_votes": 51640,
-        "rep_votes": 19779,
-        "other_votes": 2058,
-        "total_votes": 73477,
+        "dem_votes": 52875,
+        "rep_votes": 20325,
+        "other_votes": 2130,
+        "total_votes": 75330,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -31861,
-        "margin_pct": -43.36,
+        "margin": -32550,
+        "margin_pct": -43.21,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "15": {
-        "dem_votes": 68605,
-        "rep_votes": 41656,
-        "other_votes": 3502,
-        "total_votes": 113763,
+        "dem_votes": 68264,
+        "rep_votes": 41606,
+        "other_votes": 3492,
+        "total_votes": 113362,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -26949,
-        "margin_pct": -23.69,
+        "margin": -26658,
+        "margin_pct": -23.52,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "16": {
-        "dem_votes": 47185,
-        "rep_votes": 35812,
-        "other_votes": 2892,
-        "total_votes": 85889,
+        "dem_votes": 48576,
+        "rep_votes": 36849,
+        "other_votes": 2971,
+        "total_votes": 88396,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -11373,
-        "margin_pct": -13.24,
+        "margin": -11727,
+        "margin_pct": -13.27,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "17": {
-        "dem_votes": 36081,
-        "rep_votes": 44885,
-        "other_votes": 3123,
-        "total_votes": 84089,
+        "dem_votes": 34579,
+        "rep_votes": 43761,
+        "other_votes": 3037,
+        "total_votes": 81377,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 8804,
-        "margin_pct": 10.47,
+        "margin": 9182,
+        "margin_pct": 11.28,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "18": {
-        "dem_votes": 39831,
-        "rep_votes": 45590,
-        "other_votes": 2717,
-        "total_votes": 88138,
+        "dem_votes": 39043,
+        "rep_votes": 45428,
+        "other_votes": 2685,
+        "total_votes": 87156,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 5759,
-        "margin_pct": 6.53,
+        "margin": 6385,
+        "margin_pct": 7.33,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "19": {
-        "dem_votes": 48167,
-        "rep_votes": 39744,
-        "other_votes": 3083,
-        "total_votes": 90994,
+        "dem_votes": 44871,
+        "rep_votes": 38641,
+        "other_votes": 2939,
+        "total_votes": 86451,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -8423,
-        "margin_pct": -9.26,
+        "margin": -6230,
+        "margin_pct": -7.21,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "20": {
-        "dem_votes": 63563,
-        "rep_votes": 29509,
-        "other_votes": 2483,
-        "total_votes": 95555,
+        "dem_votes": 65994,
+        "rep_votes": 30718,
+        "other_votes": 2582,
+        "total_votes": 99294,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -34054,
-        "margin_pct": -35.64,
+        "margin": -35276,
+        "margin_pct": -35.53,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "21": {
-        "dem_votes": 37625,
-        "rep_votes": 42882,
-        "other_votes": 2739,
-        "total_votes": 83246,
+        "dem_votes": 40944,
+        "rep_votes": 44008,
+        "other_votes": 2884,
+        "total_votes": 87836,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 5257,
-        "margin_pct": 6.32,
+        "margin": 3064,
+        "margin_pct": 3.49,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "22": {
-        "dem_votes": 74851,
-        "rep_votes": 22258,
-        "other_votes": 2278,
-        "total_votes": 99387,
+        "dem_votes": 72485,
+        "rep_votes": 21087,
+        "other_votes": 2183,
+        "total_votes": 95755,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -52593,
-        "margin_pct": -52.92,
+        "margin": -51398,
+        "margin_pct": -53.68,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "23": {
-        "dem_votes": 70313,
-        "rep_votes": 38908,
-        "other_votes": 2895,
-        "total_votes": 112116,
+        "dem_votes": 70278,
+        "rep_votes": 38888,
+        "other_votes": 2893,
+        "total_votes": 112059,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -31405,
+        "margin": -31390,
         "margin_pct": -28.01,
         "winner": "DEM",
         "competitiveness": {
@@ -335,55 +339,55 @@
         }
       },
       "24": {
-        "dem_votes": 35775,
-        "rep_votes": 33574,
-        "other_votes": 1815,
-        "total_votes": 71164,
+        "dem_votes": 35750,
+        "rep_votes": 33545,
+        "other_votes": 1813,
+        "total_votes": 71108,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -2201,
-        "margin_pct": -3.09,
+        "margin": -2205,
+        "margin_pct": -3.1,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "25": {
-        "dem_votes": 32949,
-        "rep_votes": 54821,
-        "other_votes": 3293,
-        "total_votes": 91063,
+        "dem_votes": 32988,
+        "rep_votes": 54810,
+        "other_votes": 3294,
+        "total_votes": 91092,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 21872,
-        "margin_pct": 24.02,
+        "margin": 21822,
+        "margin_pct": 23.96,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "26": {
-        "dem_votes": 39431,
-        "rep_votes": 60914,
-        "other_votes": 3419,
-        "total_votes": 103764,
+        "dem_votes": 39434,
+        "rep_votes": 60942,
+        "other_votes": 3420,
+        "total_votes": 103796,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 21483,
-        "margin_pct": 20.7,
+        "margin": 21508,
+        "margin_pct": 20.72,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "27": {
-        "dem_votes": 47522,
-        "rep_votes": 42718,
-        "other_votes": 3109,
-        "total_votes": 93349,
+        "dem_votes": 47504,
+        "rep_votes": 42695,
+        "other_votes": 3108,
+        "total_votes": 93307,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -4804,
+        "margin": -4809,
         "margin_pct": -5.15,
         "winner": "DEM",
         "competitiveness": {
@@ -391,13 +395,13 @@
         }
       },
       "28": {
-        "dem_votes": 71154,
-        "rep_votes": 25867,
-        "other_votes": 2687,
-        "total_votes": 99708,
+        "dem_votes": 71164,
+        "rep_votes": 25871,
+        "other_votes": 2688,
+        "total_votes": 99723,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -45287,
+        "margin": -45293,
         "margin_pct": -45.42,
         "winner": "DEM",
         "competitiveness": {
@@ -405,140 +409,140 @@
         }
       },
       "29": {
-        "dem_votes": 32075,
-        "rep_votes": 64206,
-        "other_votes": 3808,
-        "total_votes": 100089,
+        "dem_votes": 31300,
+        "rep_votes": 62619,
+        "other_votes": 3691,
+        "total_votes": 97610,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 32131,
-        "margin_pct": 32.1,
+        "margin": 31319,
+        "margin_pct": 32.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "30": {
-        "dem_votes": 22870,
-        "rep_votes": 69103,
-        "other_votes": 3792,
-        "total_votes": 95765,
+        "dem_votes": 22872,
+        "rep_votes": 69092,
+        "other_votes": 3791,
+        "total_votes": 95755,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 46233,
-        "margin_pct": 48.28,
+        "margin": 46220,
+        "margin_pct": 48.27,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "31": {
-        "dem_votes": 37427,
-        "rep_votes": 53651,
-        "other_votes": 3495,
-        "total_votes": 94573,
+        "dem_votes": 39365,
+        "rep_votes": 53464,
+        "other_votes": 3547,
+        "total_votes": 96376,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 16224,
-        "margin_pct": 17.16,
+        "margin": 14099,
+        "margin_pct": 14.63,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "32": {
-        "dem_votes": 57013,
-        "rep_votes": 45052,
-        "other_votes": 3023,
-        "total_votes": 105088,
+        "dem_votes": 55077,
+        "rep_votes": 45248,
+        "other_votes": 2971,
+        "total_votes": 103296,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -11961,
-        "margin_pct": -11.38,
+        "margin": -9829,
+        "margin_pct": -9.52,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "33": {
-        "dem_votes": 26482,
-        "rep_votes": 62061,
-        "other_votes": 4782,
-        "total_votes": 93325,
+        "dem_votes": 26511,
+        "rep_votes": 62097,
+        "other_votes": 4786,
+        "total_votes": 93394,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 35579,
-        "margin_pct": 38.12,
+        "margin": 35586,
+        "margin_pct": 38.1,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "34": {
-        "dem_votes": 33187,
-        "rep_votes": 50068,
-        "other_votes": 4175,
-        "total_votes": 87430,
+        "dem_votes": 33177,
+        "rep_votes": 50042,
+        "other_votes": 4171,
+        "total_votes": 87390,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 16881,
-        "margin_pct": 19.31,
+        "margin": 16865,
+        "margin_pct": 19.3,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "35": {
-        "dem_votes": 28681,
-        "rep_votes": 60902,
-        "other_votes": 3940,
-        "total_votes": 93523,
+        "dem_votes": 29465,
+        "rep_votes": 62505,
+        "other_votes": 4059,
+        "total_votes": 96029,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 32221,
-        "margin_pct": 34.45,
+        "margin": 33040,
+        "margin_pct": 34.41,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "36": {
-        "dem_votes": 21315,
-        "rep_votes": 72970,
-        "other_votes": 4077,
-        "total_votes": 98362,
+        "dem_votes": 21296,
+        "rep_votes": 72904,
+        "other_votes": 4074,
+        "total_votes": 98274,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 51655,
-        "margin_pct": 52.52,
+        "margin": 51608,
+        "margin_pct": 52.51,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "37": {
-        "dem_votes": 29232,
-        "rep_votes": 62317,
-        "other_votes": 4869,
-        "total_votes": 96418,
+        "dem_votes": 29236,
+        "rep_votes": 62337,
+        "other_votes": 4870,
+        "total_votes": 96443,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 33085,
-        "margin_pct": 34.31,
+        "margin": 33101,
+        "margin_pct": 34.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "38": {
-        "dem_votes": 62383,
-        "rep_votes": 18252,
+        "dem_votes": 62372,
+        "rep_votes": 18245,
         "other_votes": 3023,
-        "total_votes": 83658,
+        "total_votes": 83640,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -44131,
-        "margin_pct": -52.75,
+        "margin": -44127,
+        "margin_pct": -52.76,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -559,13 +563,13 @@
         }
       },
       "40": {
-        "dem_votes": 55051,
-        "rep_votes": 24833,
-        "other_votes": 3209,
-        "total_votes": 83093,
+        "dem_votes": 55044,
+        "rep_votes": 24829,
+        "other_votes": 3208,
+        "total_votes": 83081,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -30218,
+        "margin": -30215,
         "margin_pct": -36.37,
         "winner": "DEM",
         "competitiveness": {
@@ -573,10 +577,10 @@
         }
       },
       "41": {
-        "dem_votes": 57281,
-        "rep_votes": 31973,
+        "dem_votes": 57283,
+        "rep_votes": 31975,
         "other_votes": 3368,
-        "total_votes": 92622,
+        "total_votes": 92626,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
         "margin": -25308,
@@ -601,83 +605,83 @@
         }
       },
       "43": {
-        "dem_votes": 27656,
-        "rep_votes": 56504,
-        "other_votes": 4010,
-        "total_votes": 88170,
+        "dem_votes": 29026,
+        "rep_votes": 54580,
+        "other_votes": 4073,
+        "total_votes": 87679,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 28848,
-        "margin_pct": 32.72,
+        "margin": 25554,
+        "margin_pct": 29.14,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "44": {
-        "dem_votes": 27750,
-        "rep_votes": 59153,
-        "other_votes": 3899,
-        "total_votes": 90802,
+        "dem_votes": 26334,
+        "rep_votes": 60935,
+        "other_votes": 3824,
+        "total_votes": 91093,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 31403,
-        "margin_pct": 34.58,
+        "margin": 34601,
+        "margin_pct": 37.98,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "45": {
-        "dem_votes": 26870,
-        "rep_votes": 65552,
-        "other_votes": 4786,
-        "total_votes": 97208,
+        "dem_votes": 26305,
+        "rep_votes": 65268,
+        "other_votes": 4800,
+        "total_votes": 96373,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 38682,
-        "margin_pct": 39.79,
+        "margin": 38963,
+        "margin_pct": 40.43,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#67000d"
         }
       },
       "46": {
-        "dem_votes": 33276,
-        "rep_votes": 57057,
-        "other_votes": 4230,
-        "total_votes": 94563,
+        "dem_votes": 33269,
+        "rep_votes": 57020,
+        "other_votes": 4227,
+        "total_votes": 94516,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 23781,
-        "margin_pct": 25.15,
+        "margin": 23751,
+        "margin_pct": 25.13,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "47": {
-        "dem_votes": 34248,
-        "rep_votes": 61854,
-        "other_votes": 4411,
-        "total_votes": 100513,
+        "dem_votes": 36822,
+        "rep_votes": 65968,
+        "other_votes": 4732,
+        "total_votes": 107522,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 27606,
-        "margin_pct": 27.47,
+        "margin": 29146,
+        "margin_pct": 27.11,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "48": {
-        "dem_votes": 32003,
-        "rep_votes": 62214,
-        "other_votes": 3764,
-        "total_votes": 97981,
+        "dem_votes": 31984,
+        "rep_votes": 62178,
+        "other_votes": 3762,
+        "total_votes": 97924,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 30211,
+        "margin": 30194,
         "margin_pct": 30.83,
         "winner": "REP",
         "competitiveness": {
@@ -685,28 +689,28 @@
         }
       },
       "49": {
-        "dem_votes": 58993,
-        "rep_votes": 37865,
-        "other_votes": 4035,
-        "total_votes": 100893,
+        "dem_votes": 59008,
+        "rep_votes": 37891,
+        "other_votes": 4036,
+        "total_votes": 100935,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": -21128,
-        "margin_pct": -20.94,
+        "margin": -21117,
+        "margin_pct": -20.92,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "50": {
-        "dem_votes": 37136,
-        "rep_votes": 66490,
-        "other_votes": 4721,
-        "total_votes": 108347,
+        "dem_votes": 35197,
+        "rep_votes": 62901,
+        "other_votes": 4403,
+        "total_votes": 102501,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 29354,
-        "margin_pct": 27.09,
+        "margin": 27704,
+        "margin_pct": 27.03,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"

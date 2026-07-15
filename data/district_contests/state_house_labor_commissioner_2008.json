@@ -3,65 +3,72 @@
   "scope": "state_house",
   "contest_type": "labor_commissioner",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "COMMISSIONER OF LABOR"
+    "office": "COMMISSIONER OF LABOR",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 18801,
-        "rep_votes": 18947,
+        "dem_votes": 18785,
+        "rep_votes": 19076,
         "other_votes": 0,
-        "total_votes": 37748,
+        "total_votes": 37861,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 146,
-        "margin_pct": 0.39,
+        "margin": 291,
+        "margin_pct": 0.77,
         "winner": "REP",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#fee8c8"
         }
       },
       "2": {
-        "dem_votes": 20008,
-        "rep_votes": 18420,
+        "dem_votes": 19973,
+        "rep_votes": 18037,
         "other_votes": 0,
-        "total_votes": 38428,
+        "total_votes": 38010,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -1588,
-        "margin_pct": -4.13,
+        "margin": -1936,
+        "margin_pct": -5.09,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "3": {
-        "dem_votes": 15987,
-        "rep_votes": 19968,
+        "dem_votes": 16218,
+        "rep_votes": 20764,
         "other_votes": 0,
-        "total_votes": 35955,
+        "total_votes": 36982,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3981,
-        "margin_pct": 11.07,
+        "margin": 4546,
+        "margin_pct": 12.29,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "4": {
-        "dem_votes": 15245,
-        "rep_votes": 15969,
+        "dem_votes": 16540,
+        "rep_votes": 17311,
         "other_votes": 0,
-        "total_votes": 31214,
+        "total_votes": 33851,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 724,
-        "margin_pct": 2.32,
+        "margin": 771,
+        "margin_pct": 2.28,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
@@ -82,94 +89,94 @@
         }
       },
       "6": {
-        "dem_votes": 10448,
-        "rep_votes": 13534,
+        "dem_votes": 9314,
+        "rep_votes": 10259,
         "other_votes": 0,
-        "total_votes": 23982,
+        "total_votes": 19573,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3086,
-        "margin_pct": 12.87,
+        "margin": 945,
+        "margin_pct": 4.83,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fcae91"
         }
       },
       "7": {
-        "dem_votes": 16162,
-        "rep_votes": 15642,
+        "dem_votes": 13558,
+        "rep_votes": 13937,
         "other_votes": 0,
-        "total_votes": 31804,
+        "total_votes": 27495,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -520,
-        "margin_pct": -1.64,
+        "margin": 379,
+        "margin_pct": 1.38,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "8": {
+        "dem_votes": 23400,
+        "rep_votes": 17806,
+        "other_votes": 0,
+        "total_votes": 41206,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -5594,
+        "margin_pct": -13.58,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "9": {
+        "dem_votes": 15409,
+        "rep_votes": 14861,
+        "other_votes": 0,
+        "total_votes": 30270,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -548,
+        "margin_pct": -1.81,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
-      "8": {
-        "dem_votes": 19810,
-        "rep_votes": 16674,
-        "other_votes": 0,
-        "total_votes": 36484,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -3136,
-        "margin_pct": -8.6,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "9": {
-        "dem_votes": 19017,
-        "rep_votes": 16007,
-        "other_votes": 0,
-        "total_votes": 35024,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -3010,
-        "margin_pct": -8.59,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
       "10": {
-        "dem_votes": 16717,
-        "rep_votes": 17764,
+        "dem_votes": 15916,
+        "rep_votes": 16945,
         "other_votes": 0,
-        "total_votes": 34481,
+        "total_votes": 32861,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 1047,
-        "margin_pct": 3.04,
+        "margin": 1029,
+        "margin_pct": 3.13,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "11": {
-        "dem_votes": 17781,
-        "rep_votes": 17350,
+        "dem_votes": 19575,
+        "rep_votes": 18597,
         "other_votes": 0,
-        "total_votes": 35131,
+        "total_votes": 38172,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -431,
-        "margin_pct": -1.23,
+        "margin": -978,
+        "margin_pct": -2.56,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "12": {
-        "dem_votes": 20399,
-        "rep_votes": 17614,
+        "dem_votes": 20398,
+        "rep_votes": 17613,
         "other_votes": 0,
-        "total_votes": 38013,
+        "total_votes": 38011,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
         "margin": -2785,
@@ -180,196 +187,196 @@
         }
       },
       "13": {
-        "dem_votes": 14239,
-        "rep_votes": 24895,
+        "dem_votes": 14004,
+        "rep_votes": 24095,
         "other_votes": 0,
-        "total_votes": 39134,
+        "total_votes": 38099,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 10656,
-        "margin_pct": 27.23,
+        "margin": 10091,
+        "margin_pct": 26.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "14": {
-        "dem_votes": 7974,
-        "rep_votes": 9375,
+        "dem_votes": 7743,
+        "rep_votes": 9511,
         "other_votes": 0,
-        "total_votes": 17349,
+        "total_votes": 17254,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 1401,
-        "margin_pct": 8.08,
+        "margin": 1768,
+        "margin_pct": 10.25,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "15": {
-        "dem_votes": 8994,
-        "rep_votes": 12744,
+        "dem_votes": 8766,
+        "rep_votes": 12147,
         "other_votes": 0,
-        "total_votes": 21738,
+        "total_votes": 20913,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3750,
-        "margin_pct": 17.25,
+        "margin": 3381,
+        "margin_pct": 16.17,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "16": {
-        "dem_votes": 12256,
-        "rep_votes": 16646,
+        "dem_votes": 12215,
+        "rep_votes": 16574,
         "other_votes": 0,
-        "total_votes": 28902,
+        "total_votes": 28789,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 4390,
-        "margin_pct": 15.19,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "17": {
-        "dem_votes": 13690,
-        "rep_votes": 18037,
-        "other_votes": 0,
-        "total_votes": 31727,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": 4347,
-        "margin_pct": 13.7,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "18": {
-        "dem_votes": 21111,
-        "rep_votes": 17938,
-        "other_votes": 0,
-        "total_votes": 39049,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -3173,
-        "margin_pct": -8.13,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "19": {
-        "dem_votes": 14280,
-        "rep_votes": 19377,
-        "other_votes": 0,
-        "total_votes": 33657,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": 5097,
+        "margin": 4359,
         "margin_pct": 15.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "20": {
-        "dem_votes": 15235,
-        "rep_votes": 21843,
+      "17": {
+        "dem_votes": 13859,
+        "rep_votes": 16420,
         "other_votes": 0,
-        "total_votes": 37078,
+        "total_votes": 30279,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6608,
-        "margin_pct": 17.82,
+        "margin": 2561,
+        "margin_pct": 8.46,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "18": {
+        "dem_votes": 13573,
+        "rep_votes": 12830,
+        "other_votes": 0,
+        "total_votes": 26403,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -743,
+        "margin_pct": -2.81,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
+        }
+      },
+      "19": {
+        "dem_votes": 16938,
+        "rep_votes": 22988,
+        "other_votes": 0,
+        "total_votes": 39926,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 6050,
+        "margin_pct": 15.15,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "20": {
+        "dem_votes": 19951,
+        "rep_votes": 24967,
+        "other_votes": 0,
+        "total_votes": 44918,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 5016,
+        "margin_pct": 11.17,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "21": {
-        "dem_votes": 15340,
-        "rep_votes": 14967,
+        "dem_votes": 4899,
+        "rep_votes": 5777,
         "other_votes": 0,
-        "total_votes": 30307,
+        "total_votes": 10676,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -373,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 878,
+        "margin_pct": 8.22,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fb6a4a"
         }
       },
       "22": {
-        "dem_votes": 21151,
-        "rep_votes": 18392,
+        "dem_votes": 21164,
+        "rep_votes": 18408,
         "other_votes": 0,
-        "total_votes": 39543,
+        "total_votes": 39572,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -2759,
-        "margin_pct": -6.98,
+        "margin": -2756,
+        "margin_pct": -6.96,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "23": {
-        "dem_votes": 31601,
-        "rep_votes": 14556,
+        "dem_votes": 31618,
+        "rep_votes": 14573,
         "other_votes": 0,
-        "total_votes": 46157,
+        "total_votes": 46191,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
         "margin": -17045,
-        "margin_pct": -36.93,
+        "margin_pct": -36.9,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "24": {
-        "dem_votes": 20542,
-        "rep_votes": 17189,
+        "dem_votes": 20467,
+        "rep_votes": 17441,
         "other_votes": 0,
-        "total_votes": 37731,
+        "total_votes": 37908,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -3353,
-        "margin_pct": -8.89,
+        "margin": -3026,
+        "margin_pct": -7.98,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "25": {
-        "dem_votes": 22386,
-        "rep_votes": 21000,
+        "dem_votes": 22375,
+        "rep_votes": 20665,
         "other_votes": 0,
-        "total_votes": 43386,
+        "total_votes": 43040,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -1386,
-        "margin_pct": -3.19,
+        "margin": -1710,
+        "margin_pct": -3.97,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "26": {
-        "dem_votes": 10640,
-        "rep_votes": 17590,
+        "dem_votes": 9141,
+        "rep_votes": 14965,
         "other_votes": 0,
-        "total_votes": 28230,
+        "total_votes": 24106,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6950,
-        "margin_pct": 24.62,
+        "margin": 5824,
+        "margin_pct": 24.16,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -390,178 +397,346 @@
         }
       },
       "28": {
-        "dem_votes": 10251,
-        "rep_votes": 16947,
+        "dem_votes": 13703,
+        "rep_votes": 22251,
         "other_votes": 0,
-        "total_votes": 27198,
+        "total_votes": 35954,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6696,
-        "margin_pct": 24.62,
+        "margin": 8548,
+        "margin_pct": 23.77,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "29": {
-        "dem_votes": 25918,
-        "rep_votes": 11240,
+        "dem_votes": 30193,
+        "rep_votes": 13972,
         "other_votes": 0,
-        "total_votes": 37158,
+        "total_votes": 44165,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -14678,
-        "margin_pct": -39.5,
+        "margin": -16221,
+        "margin_pct": -36.73,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "30": {
-        "dem_votes": 29834,
-        "rep_votes": 9182,
+        "dem_votes": 30222,
+        "rep_votes": 8476,
         "other_votes": 0,
-        "total_votes": 39016,
+        "total_votes": 38698,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -20652,
-        "margin_pct": -52.93,
+        "margin": -21746,
+        "margin_pct": -56.19,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 26030,
-        "rep_votes": 6315,
+        "dem_votes": 21503,
+        "rep_votes": 4788,
         "other_votes": 0,
-        "total_votes": 32345,
+        "total_votes": 26291,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -19715,
-        "margin_pct": -60.95,
+        "margin": -16715,
+        "margin_pct": -63.58,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "32": {
-        "dem_votes": 22902,
-        "rep_votes": 14405,
+        "dem_votes": 25498,
+        "rep_votes": 16095,
         "other_votes": 0,
-        "total_votes": 37307,
+        "total_votes": 41593,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -8497,
-        "margin_pct": -22.78,
+        "margin": -9403,
+        "margin_pct": -22.61,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "33": {
-        "dem_votes": 16245,
-        "rep_votes": 15851,
+        "dem_votes": 15123,
+        "rep_votes": 15285,
         "other_votes": 0,
-        "total_votes": 32096,
+        "total_votes": 30408,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -394,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 162,
+        "margin_pct": 0.53,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fee8c8"
         }
       },
       "34": {
-        "dem_votes": 16766,
-        "rep_votes": 16358,
+        "dem_votes": 24060,
+        "rep_votes": 25678,
         "other_votes": 0,
-        "total_votes": 33124,
+        "total_votes": 49738,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -408,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 1618,
+        "margin_pct": 3.25,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fcae91"
         }
       },
       "35": {
-        "dem_votes": 15622,
-        "rep_votes": 15243,
+        "dem_votes": 7142,
+        "rep_votes": 10384,
         "other_votes": 0,
-        "total_votes": 30865,
+        "total_votes": 17526,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -379,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 3242,
+        "margin_pct": 18.5,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#ef3b2c"
         }
       },
       "36": {
-        "dem_votes": 15400,
-        "rep_votes": 15026,
+        "dem_votes": 9123,
+        "rep_votes": 12045,
         "other_votes": 0,
-        "total_votes": 30426,
+        "total_votes": 21168,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -374,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 2922,
+        "margin_pct": 13.8,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#ef3b2c"
         }
       },
       "37": {
-        "dem_votes": 15750,
-        "rep_votes": 15367,
+        "dem_votes": 8833,
+        "rep_votes": 12546,
         "other_votes": 0,
-        "total_votes": 31117,
+        "total_votes": 21379,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -383,
-        "margin_pct": -1.23,
-        "winner": "DEM",
+        "margin": 3713,
+        "margin_pct": 17.37,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#ef3b2c"
         }
       },
       "38": {
-        "dem_votes": 17562,
-        "rep_votes": 17136,
+        "dem_votes": 27434,
+        "rep_votes": 6957,
         "other_votes": 0,
-        "total_votes": 34698,
+        "total_votes": 34391,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -426,
-        "margin_pct": -1.23,
+        "margin": -20477,
+        "margin_pct": -59.54,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 16153,
-        "rep_votes": 15760,
+        "dem_votes": 8912,
+        "rep_votes": 9253,
         "other_votes": 0,
-        "total_votes": 31913,
+        "total_votes": 18165,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -393,
-        "margin_pct": -1.23,
+        "margin": 341,
+        "margin_pct": 1.88,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "40": {
+        "dem_votes": 21821,
+        "rep_votes": 27422,
+        "other_votes": 0,
+        "total_votes": 49243,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 5601,
+        "margin_pct": 11.37,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "41": {
+        "dem_votes": 26598,
+        "rep_votes": 29656,
+        "other_votes": 0,
+        "total_votes": 56254,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 3058,
+        "margin_pct": 5.44,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "42": {
+        "dem_votes": 16137,
+        "rep_votes": 7404,
+        "other_votes": 0,
+        "total_votes": 23541,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -8733,
+        "margin_pct": -37.1,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "43": {
+        "dem_votes": 17346,
+        "rep_votes": 15196,
+        "other_votes": 0,
+        "total_votes": 32542,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -2150,
+        "margin_pct": -6.61,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "44": {
+        "dem_votes": 22093,
+        "rep_votes": 15063,
+        "other_votes": 0,
+        "total_votes": 37156,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -7030,
+        "margin_pct": -18.92,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "45": {
+        "dem_votes": 15778,
+        "rep_votes": 12570,
+        "other_votes": 0,
+        "total_votes": 28348,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -3208,
+        "margin_pct": -11.32,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "46": {
+        "dem_votes": 20511,
+        "rep_votes": 14407,
+        "other_votes": 0,
+        "total_votes": 34918,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -6104,
+        "margin_pct": -17.48,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "47": {
+        "dem_votes": 18349,
+        "rep_votes": 8245,
+        "other_votes": 0,
+        "total_votes": 26594,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -10104,
+        "margin_pct": -37.99,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08519c"
+        }
+      },
+      "48": {
+        "dem_votes": 17027,
+        "rep_votes": 10838,
+        "other_votes": 0,
+        "total_votes": 27865,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -6189,
+        "margin_pct": -22.21,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "49": {
+        "dem_votes": 24054,
+        "rep_votes": 22302,
+        "other_votes": 0,
+        "total_votes": 46356,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -1752,
+        "margin_pct": -3.78,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
-      "40": {
-        "dem_votes": 16907,
-        "rep_votes": 16496,
+      "50": {
+        "dem_votes": 26318,
+        "rep_votes": 19105,
         "other_votes": 0,
-        "total_votes": 33403,
+        "total_votes": 45423,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": -7213,
+        "margin_pct": -15.88,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "51": {
+        "dem_votes": 13348,
+        "rep_votes": 16293,
+        "other_votes": 0,
+        "total_votes": 29641,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 2945,
+        "margin_pct": 9.94,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "52": {
+        "dem_votes": 16876,
+        "rep_votes": 16465,
+        "other_votes": 0,
+        "total_votes": 33341,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
         "margin": -411,
@@ -571,1092 +746,924 @@
           "color": "#c6dbef"
         }
       },
-      "41": {
-        "dem_votes": 16095,
-        "rep_votes": 15705,
-        "other_votes": 0,
-        "total_votes": 31800,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -390,
-        "margin_pct": -1.23,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "42": {
-        "dem_votes": 18041,
-        "rep_votes": 12710,
-        "other_votes": 0,
-        "total_votes": 30751,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -5331,
-        "margin_pct": -17.34,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "43": {
-        "dem_votes": 17821,
-        "rep_votes": 12555,
-        "other_votes": 0,
-        "total_votes": 30376,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -5266,
-        "margin_pct": -17.34,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "44": {
-        "dem_votes": 18536,
-        "rep_votes": 13058,
-        "other_votes": 0,
-        "total_votes": 31594,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -5478,
-        "margin_pct": -17.34,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "45": {
-        "dem_votes": 16967,
-        "rep_votes": 11953,
-        "other_votes": 0,
-        "total_votes": 28920,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -5014,
-        "margin_pct": -17.34,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "46": {
-        "dem_votes": 20954,
-        "rep_votes": 12770,
-        "other_votes": 0,
-        "total_votes": 33724,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -8184,
-        "margin_pct": -24.27,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "47": {
-        "dem_votes": 17917,
-        "rep_votes": 9887,
-        "other_votes": 0,
-        "total_votes": 27804,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -8030,
-        "margin_pct": -28.88,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "48": {
-        "dem_votes": 17051,
-        "rep_votes": 10865,
-        "other_votes": 0,
-        "total_votes": 27916,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -6186,
-        "margin_pct": -22.16,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "49": {
-        "dem_votes": 17154,
-        "rep_votes": 16738,
-        "other_votes": 0,
-        "total_votes": 33892,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -416,
-        "margin_pct": -1.23,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "50": {
-        "dem_votes": 25521,
-        "rep_votes": 14669,
-        "other_votes": 0,
-        "total_votes": 40190,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -10852,
-        "margin_pct": -27,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "51": {
-        "dem_votes": 13594,
-        "rep_votes": 16831,
-        "other_votes": 0,
-        "total_votes": 30425,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": 3237,
-        "margin_pct": 10.64,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "52": {
-        "dem_votes": 17691,
-        "rep_votes": 18259,
-        "other_votes": 0,
-        "total_votes": 35950,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": 568,
-        "margin_pct": 1.58,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
       "53": {
-        "dem_votes": 11320,
-        "rep_votes": 16340,
+        "dem_votes": 10701,
+        "rep_votes": 17174,
         "other_votes": 0,
-        "total_votes": 27660,
+        "total_votes": 27875,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 5020,
-        "margin_pct": 18.15,
+        "margin": 6473,
+        "margin_pct": 23.22,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "54": {
-        "dem_votes": 17267,
-        "rep_votes": 16606,
+        "dem_votes": 16814,
+        "rep_votes": 16022,
         "other_votes": 0,
-        "total_votes": 33873,
+        "total_votes": 32836,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -661,
-        "margin_pct": -1.95,
+        "margin": -792,
+        "margin_pct": -2.41,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "55": {
-        "dem_votes": 18687,
-        "rep_votes": 19682,
+        "dem_votes": 17431,
+        "rep_votes": 17474,
         "other_votes": 0,
-        "total_votes": 38369,
+        "total_votes": 34905,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 995,
-        "margin_pct": 2.59,
+        "margin": 43,
+        "margin_pct": 0.12,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "56": {
-        "dem_votes": 26996,
-        "rep_votes": 13030,
+        "dem_votes": 26131,
+        "rep_votes": 8551,
         "other_votes": 0,
-        "total_votes": 40026,
+        "total_votes": 34682,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -13966,
-        "margin_pct": -34.89,
+        "margin": -17580,
+        "margin_pct": -50.69,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08519c"
+          "color": "#08306b"
         }
       },
       "57": {
-        "dem_votes": 20298,
-        "rep_votes": 21787,
+        "dem_votes": 18466,
+        "rep_votes": 18325,
         "other_votes": 0,
-        "total_votes": 42085,
+        "total_votes": 36791,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 1489,
-        "margin_pct": 3.54,
-        "winner": "REP",
+        "margin": -141,
+        "margin_pct": -0.38,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "58": {
-        "dem_votes": 25514,
-        "rep_votes": 12105,
+        "dem_votes": 26260,
+        "rep_votes": 12826,
         "other_votes": 0,
-        "total_votes": 37619,
+        "total_votes": 39086,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -13409,
-        "margin_pct": -35.64,
+        "margin": -13434,
+        "margin_pct": -34.37,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "59": {
-        "dem_votes": 15750,
-        "rep_votes": 19931,
+        "dem_votes": 14860,
+        "rep_votes": 19861,
         "other_votes": 0,
-        "total_votes": 35681,
+        "total_votes": 34721,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 4181,
-        "margin_pct": 11.72,
+        "margin": 5001,
+        "margin_pct": 14.4,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "60": {
-        "dem_votes": 20341,
-        "rep_votes": 15401,
+        "dem_votes": 19514,
+        "rep_votes": 14712,
         "other_votes": 0,
-        "total_votes": 35742,
+        "total_votes": 34226,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -4940,
-        "margin_pct": -13.82,
+        "margin": -4802,
+        "margin_pct": -14.03,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "61": {
-        "dem_votes": 30006,
-        "rep_votes": 11000,
+        "dem_votes": 30855,
+        "rep_votes": 11807,
         "other_votes": 0,
-        "total_votes": 41006,
+        "total_votes": 42662,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -19006,
-        "margin_pct": -46.35,
+        "margin": -19048,
+        "margin_pct": -44.65,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "62": {
-        "dem_votes": 15051,
-        "rep_votes": 21901,
+        "dem_votes": 17051,
+        "rep_votes": 24697,
         "other_votes": 0,
-        "total_votes": 36952,
+        "total_votes": 41748,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6850,
-        "margin_pct": 18.54,
+        "margin": 7646,
+        "margin_pct": 18.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "63": {
-        "dem_votes": 12619,
-        "rep_votes": 16570,
+        "dem_votes": 14916,
+        "rep_votes": 14282,
         "other_votes": 0,
-        "total_votes": 29189,
+        "total_votes": 29198,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3951,
-        "margin_pct": 13.54,
-        "winner": "REP",
+        "margin": -634,
+        "margin_pct": -2.17,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#c6dbef"
         }
       },
       "64": {
-        "dem_votes": 13910,
-        "rep_votes": 18265,
+        "dem_votes": 11659,
+        "rep_votes": 20557,
         "other_votes": 0,
-        "total_votes": 32175,
+        "total_votes": 32216,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 4355,
-        "margin_pct": 13.54,
+        "margin": 8898,
+        "margin_pct": 27.62,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "65": {
-        "dem_votes": 17378,
-        "rep_votes": 21915,
+        "dem_votes": 17406,
+        "rep_votes": 21925,
         "other_votes": 0,
-        "total_votes": 39293,
+        "total_votes": 39331,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 4537,
-        "margin_pct": 11.55,
+        "margin": 4519,
+        "margin_pct": 11.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "66": {
-        "dem_votes": 15674,
-        "rep_votes": 15294,
+        "dem_votes": 15273,
+        "rep_votes": 11644,
         "other_votes": 0,
-        "total_votes": 30968,
+        "total_votes": 26917,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -380,
-        "margin_pct": -1.23,
+        "margin": -3629,
+        "margin_pct": -13.48,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#6baed6"
         }
       },
       "67": {
-        "dem_votes": 14270,
-        "rep_votes": 23838,
+        "dem_votes": 14266,
+        "rep_votes": 23840,
         "other_votes": 0,
-        "total_votes": 38108,
+        "total_votes": 38106,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 9568,
-        "margin_pct": 25.11,
+        "margin": 9574,
+        "margin_pct": 25.12,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "68": {
-        "dem_votes": 5693,
-        "rep_votes": 11900,
+        "dem_votes": 7110,
+        "rep_votes": 14972,
         "other_votes": 0,
-        "total_votes": 17593,
+        "total_votes": 22082,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6207,
-        "margin_pct": 35.28,
+        "margin": 7862,
+        "margin_pct": 35.6,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "69": {
-        "dem_votes": 11456,
-        "rep_votes": 23600,
+        "dem_votes": 11299,
+        "rep_votes": 22745,
         "other_votes": 0,
-        "total_votes": 35056,
+        "total_votes": 34044,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 12144,
-        "margin_pct": 34.64,
+        "margin": 11446,
+        "margin_pct": 33.62,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "70": {
-        "dem_votes": 9551,
-        "rep_votes": 24951,
+        "dem_votes": 9291,
+        "rep_votes": 24075,
         "other_votes": 0,
-        "total_votes": 34502,
+        "total_votes": 33366,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 15400,
-        "margin_pct": 44.64,
+        "margin": 14784,
+        "margin_pct": 44.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "71": {
-        "dem_votes": 22532,
-        "rep_votes": 12182,
+        "dem_votes": 21883,
+        "rep_votes": 11312,
         "other_votes": 0,
-        "total_votes": 34714,
+        "total_votes": 33195,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -10350,
-        "margin_pct": -29.82,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "72": {
-        "dem_votes": 25651,
-        "rep_votes": 12591,
-        "other_votes": 0,
-        "total_votes": 38242,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": -13060,
-        "margin_pct": -34.15,
+        "margin": -10571,
+        "margin_pct": -31.85,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
-      "73": {
-        "dem_votes": 11177,
-        "rep_votes": 14717,
+      "72": {
+        "dem_votes": 25341,
+        "rep_votes": 10648,
         "other_votes": 0,
-        "total_votes": 25894,
+        "total_votes": 35989,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3540,
-        "margin_pct": 13.67,
+        "margin": -14693,
+        "margin_pct": -40.83,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "73": {
+        "dem_votes": 10108,
+        "rep_votes": 12338,
+        "other_votes": 0,
+        "total_votes": 22446,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 2230,
+        "margin_pct": 9.93,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "74": {
-        "dem_votes": 15047,
-        "rep_votes": 22142,
+        "dem_votes": 14929,
+        "rep_votes": 24212,
         "other_votes": 0,
-        "total_votes": 37189,
+        "total_votes": 39141,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7095,
-        "margin_pct": 19.08,
+        "margin": 9283,
+        "margin_pct": 23.72,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "75": {
+        "dem_votes": 13998,
+        "rep_votes": 19773,
+        "other_votes": 0,
+        "total_votes": 33771,
+        "dem_candidate": "Mary Fant Donnan",
+        "rep_candidate": "Cherie Berry",
+        "margin": 5775,
+        "margin_pct": 17.1,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "75": {
-        "dem_votes": 11869,
-        "rep_votes": 17916,
-        "other_votes": 0,
-        "total_votes": 29785,
-        "dem_candidate": "Mary Fant Donnan",
-        "rep_candidate": "Cherie Berry",
-        "margin": 6047,
-        "margin_pct": 20.3,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
       "76": {
-        "dem_votes": 13891,
-        "rep_votes": 22225,
+        "dem_votes": 14697,
+        "rep_votes": 18927,
         "other_votes": 0,
-        "total_votes": 36116,
+        "total_votes": 33624,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 8334,
-        "margin_pct": 23.08,
+        "margin": 4230,
+        "margin_pct": 12.58,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#ef3b2c"
         }
       },
       "77": {
-        "dem_votes": 11512,
-        "rep_votes": 28359,
+        "dem_votes": 11849,
+        "rep_votes": 29403,
         "other_votes": 0,
-        "total_votes": 39871,
+        "total_votes": 41252,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 16847,
-        "margin_pct": 42.25,
+        "margin": 17554,
+        "margin_pct": 42.55,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "78": {
-        "dem_votes": 10503,
-        "rep_votes": 24943,
+        "dem_votes": 11743,
+        "rep_votes": 28344,
         "other_votes": 0,
-        "total_votes": 35446,
+        "total_votes": 40087,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 14440,
-        "margin_pct": 40.74,
+        "margin": 16601,
+        "margin_pct": 41.41,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "79": {
-        "dem_votes": 18282,
-        "rep_votes": 21748,
+        "dem_votes": 18297,
+        "rep_votes": 21617,
         "other_votes": 0,
-        "total_votes": 40030,
+        "total_votes": 39914,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3466,
-        "margin_pct": 8.66,
+        "margin": 3320,
+        "margin_pct": 8.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "80": {
-        "dem_votes": 10836,
-        "rep_votes": 22379,
+        "dem_votes": 9540,
+        "rep_votes": 22659,
         "other_votes": 0,
-        "total_votes": 33215,
+        "total_votes": 32199,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 11543,
-        "margin_pct": 34.75,
+        "margin": 13119,
+        "margin_pct": 40.74,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#67000d"
         }
       },
       "81": {
-        "dem_votes": 10814,
-        "rep_votes": 22332,
+        "dem_votes": 12090,
+        "rep_votes": 21981,
         "other_votes": 0,
-        "total_votes": 33146,
+        "total_votes": 34071,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 11518,
-        "margin_pct": 34.75,
+        "margin": 9891,
+        "margin_pct": 29.03,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "82": {
-        "dem_votes": 12194,
-        "rep_votes": 17379,
+        "dem_votes": 12381,
+        "rep_votes": 18049,
         "other_votes": 0,
-        "total_votes": 29573,
+        "total_votes": 30430,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 5185,
-        "margin_pct": 17.53,
+        "margin": 5668,
+        "margin_pct": 18.63,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "83": {
-        "dem_votes": 13169,
-        "rep_votes": 23922,
+        "dem_votes": 12897,
+        "rep_votes": 27862,
         "other_votes": 0,
-        "total_votes": 37091,
+        "total_votes": 40759,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 10753,
-        "margin_pct": 28.99,
+        "margin": 14965,
+        "margin_pct": 36.72,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "84": {
-        "dem_votes": 12176,
-        "rep_votes": 20029,
+        "dem_votes": 15133,
+        "rep_votes": 22788,
         "other_votes": 0,
-        "total_votes": 32205,
+        "total_votes": 37921,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7853,
-        "margin_pct": 24.38,
+        "margin": 7655,
+        "margin_pct": 20.19,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "85": {
-        "dem_votes": 14686,
-        "rep_votes": 24136,
+        "dem_votes": 14857,
+        "rep_votes": 24307,
         "other_votes": 0,
-        "total_votes": 38822,
+        "total_votes": 39164,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
         "margin": 9450,
-        "margin_pct": 24.34,
+        "margin_pct": 24.13,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "86": {
-        "dem_votes": 15214,
-        "rep_votes": 20895,
+        "dem_votes": 15203,
+        "rep_votes": 20869,
         "other_votes": 0,
-        "total_votes": 36109,
+        "total_votes": 36072,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 5681,
-        "margin_pct": 15.73,
+        "margin": 5666,
+        "margin_pct": 15.71,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "87": {
-        "dem_votes": 12992,
-        "rep_votes": 22770,
+        "dem_votes": 12763,
+        "rep_votes": 22845,
         "other_votes": 0,
-        "total_votes": 35762,
+        "total_votes": 35608,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 9778,
-        "margin_pct": 27.34,
+        "margin": 10082,
+        "margin_pct": 28.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "88": {
-        "dem_votes": 18460,
-        "rep_votes": 12812,
+        "dem_votes": 17864,
+        "rep_votes": 9136,
         "other_votes": 0,
-        "total_votes": 31272,
+        "total_votes": 27000,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5648,
-        "margin_pct": -18.06,
+        "margin": -8728,
+        "margin_pct": -32.33,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08519c"
         }
       },
       "89": {
-        "dem_votes": 12667,
-        "rep_votes": 22955,
+        "dem_votes": 12089,
+        "rep_votes": 25014,
         "other_votes": 0,
-        "total_votes": 35622,
+        "total_votes": 37103,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 10288,
-        "margin_pct": 28.88,
+        "margin": 12925,
+        "margin_pct": 34.84,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "90": {
-        "dem_votes": 12089,
-        "rep_votes": 21018,
+        "dem_votes": 12373,
+        "rep_votes": 22062,
         "other_votes": 0,
-        "total_votes": 33107,
+        "total_votes": 34435,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 8929,
-        "margin_pct": 26.97,
+        "margin": 9689,
+        "margin_pct": 28.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "91": {
-        "dem_votes": 14821,
-        "rep_votes": 24921,
+        "dem_votes": 13717,
+        "rep_votes": 23753,
         "other_votes": 0,
-        "total_votes": 39742,
+        "total_votes": 37470,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 10100,
-        "margin_pct": 25.41,
+        "margin": 10036,
+        "margin_pct": 26.78,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "92": {
-        "dem_votes": 18357,
-        "rep_votes": 12740,
+        "dem_votes": 14639,
+        "rep_votes": 8691,
         "other_votes": 0,
-        "total_votes": 31097,
+        "total_votes": 23330,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5617,
-        "margin_pct": -18.06,
+        "margin": -5948,
+        "margin_pct": -25.5,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "93": {
-        "dem_votes": 18808,
-        "rep_votes": 22216,
+        "dem_votes": 19060,
+        "rep_votes": 22194,
         "other_votes": 0,
-        "total_votes": 41024,
+        "total_votes": 41254,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 3408,
-        "margin_pct": 8.31,
+        "margin": 3134,
+        "margin_pct": 7.6,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "94": {
-        "dem_votes": 13201,
-        "rep_votes": 26337,
+        "dem_votes": 12904,
+        "rep_votes": 25266,
         "other_votes": 0,
-        "total_votes": 39538,
+        "total_votes": 38170,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 13136,
-        "margin_pct": 33.22,
+        "margin": 12362,
+        "margin_pct": 32.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "95": {
-        "dem_votes": 11898,
-        "rep_votes": 19572,
+        "dem_votes": 8807,
+        "rep_votes": 15824,
         "other_votes": 0,
-        "total_votes": 31470,
+        "total_votes": 24631,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7674,
-        "margin_pct": 24.39,
+        "margin": 7017,
+        "margin_pct": 28.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "96": {
-        "dem_votes": 13117,
-        "rep_votes": 24212,
+        "dem_votes": 13881,
+        "rep_votes": 23252,
         "other_votes": 0,
-        "total_votes": 37329,
+        "total_votes": 37133,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 11095,
-        "margin_pct": 29.72,
+        "margin": 9371,
+        "margin_pct": 25.24,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "97": {
-        "dem_votes": 11503,
-        "rep_votes": 22626,
+        "dem_votes": 11455,
+        "rep_votes": 22528,
         "other_votes": 0,
-        "total_votes": 34129,
+        "total_votes": 33983,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 11123,
-        "margin_pct": 32.59,
+        "margin": 11073,
+        "margin_pct": 32.58,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "98": {
-        "dem_votes": 16792,
-        "rep_votes": 11654,
+        "dem_votes": 11811,
+        "rep_votes": 18366,
         "other_votes": 0,
-        "total_votes": 28446,
+        "total_votes": 30177,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5138,
-        "margin_pct": -18.06,
-        "winner": "DEM",
+        "margin": 6555,
+        "margin_pct": 21.72,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#cb181d"
         }
       },
       "99": {
-        "dem_votes": 17168,
-        "rep_votes": 11915,
+        "dem_votes": 19774,
+        "rep_votes": 5182,
         "other_votes": 0,
-        "total_votes": 29083,
+        "total_votes": 24956,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5253,
-        "margin_pct": -18.06,
+        "margin": -14592,
+        "margin_pct": -58.47,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "100": {
-        "dem_votes": 16517,
-        "rep_votes": 11463,
+        "dem_votes": 19845,
+        "rep_votes": 7571,
         "other_votes": 0,
-        "total_votes": 27980,
+        "total_votes": 27416,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5054,
-        "margin_pct": -18.06,
+        "margin": -12274,
+        "margin_pct": -44.77,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "101": {
-        "dem_votes": 16719,
-        "rep_votes": 11603,
+        "dem_votes": 21207,
+        "rep_votes": 7916,
         "other_votes": 0,
-        "total_votes": 28322,
+        "total_votes": 29123,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5116,
-        "margin_pct": -18.06,
+        "margin": -13291,
+        "margin_pct": -45.64,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "102": {
-        "dem_votes": 19286,
-        "rep_votes": 13385,
+        "dem_votes": 21447,
+        "rep_votes": 7271,
         "other_votes": 0,
-        "total_votes": 32671,
+        "total_votes": 28718,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5901,
-        "margin_pct": -18.06,
+        "margin": -14176,
+        "margin_pct": -49.36,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "103": {
-        "dem_votes": 17722,
-        "rep_votes": 12299,
+        "dem_votes": 15453,
+        "rep_votes": 23814,
         "other_votes": 0,
-        "total_votes": 30021,
+        "total_votes": 39267,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5423,
-        "margin_pct": -18.06,
-        "winner": "DEM",
+        "margin": 8361,
+        "margin_pct": 21.29,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#cb181d"
         }
       },
       "104": {
-        "dem_votes": 17310,
-        "rep_votes": 12014,
+        "dem_votes": 15821,
+        "rep_votes": 21902,
         "other_votes": 0,
-        "total_votes": 29324,
+        "total_votes": 37723,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5296,
-        "margin_pct": -18.06,
-        "winner": "DEM",
+        "margin": 6081,
+        "margin_pct": 16.12,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "105": {
-        "dem_votes": 18063,
-        "rep_votes": 12536,
+        "dem_votes": 13791,
+        "rep_votes": 17233,
         "other_votes": 0,
-        "total_votes": 30599,
+        "total_votes": 31024,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5527,
-        "margin_pct": -18.06,
-        "winner": "DEM",
+        "margin": 3442,
+        "margin_pct": 11.09,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "106": {
-        "dem_votes": 17708,
-        "rep_votes": 12289,
+        "dem_votes": 16346,
+        "rep_votes": 11893,
         "other_votes": 0,
-        "total_votes": 29997,
+        "total_votes": 28239,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5419,
-        "margin_pct": -18.07,
+        "margin": -4453,
+        "margin_pct": -15.77,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "107": {
-        "dem_votes": 17563,
-        "rep_votes": 12189,
+        "dem_votes": 23947,
+        "rep_votes": 7162,
         "other_votes": 0,
-        "total_votes": 29752,
+        "total_votes": 31109,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5374,
-        "margin_pct": -18.06,
+        "margin": -16785,
+        "margin_pct": -53.96,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "108": {
-        "dem_votes": 11506,
-        "rep_votes": 18480,
+        "dem_votes": 10263,
+        "rep_votes": 19063,
         "other_votes": 0,
-        "total_votes": 29986,
+        "total_votes": 29326,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6974,
-        "margin_pct": 23.26,
+        "margin": 8800,
+        "margin_pct": 30.01,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 11846,
-        "rep_votes": 19026,
+        "dem_votes": 11114,
+        "rep_votes": 17570,
         "other_votes": 0,
-        "total_votes": 30872,
+        "total_votes": 28684,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7180,
-        "margin_pct": 23.26,
+        "margin": 6456,
+        "margin_pct": 22.51,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 14634,
-        "rep_votes": 21057,
+        "dem_votes": 16839,
+        "rep_votes": 21470,
         "other_votes": 0,
-        "total_votes": 35691,
+        "total_votes": 38309,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 6423,
-        "margin_pct": 18,
+        "margin": 4631,
+        "margin_pct": 12.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "111": {
-        "dem_votes": 15464,
-        "rep_votes": 20521,
+        "dem_votes": 13975,
+        "rep_votes": 19905,
         "other_votes": 0,
-        "total_votes": 35985,
+        "total_votes": 33880,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 5057,
-        "margin_pct": 14.05,
+        "margin": 5930,
+        "margin_pct": 17.5,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "112": {
-        "dem_votes": 16802,
-        "rep_votes": 11661,
+        "dem_votes": 16525,
+        "rep_votes": 12425,
         "other_votes": 0,
-        "total_votes": 28463,
+        "total_votes": 28950,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -5141,
-        "margin_pct": -18.06,
+        "margin": -4100,
+        "margin_pct": -14.16,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "113": {
-        "dem_votes": 15956,
-        "rep_votes": 23362,
+        "dem_votes": 16335,
+        "rep_votes": 24007,
         "other_votes": 0,
-        "total_votes": 39318,
+        "total_votes": 40342,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7406,
-        "margin_pct": 18.84,
+        "margin": 7672,
+        "margin_pct": 19.02,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "114": {
-        "dem_votes": 26281,
-        "rep_votes": 17662,
+        "dem_votes": 28168,
+        "rep_votes": 18700,
         "other_votes": 0,
-        "total_votes": 43943,
+        "total_votes": 46868,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -8619,
-        "margin_pct": -19.61,
+        "margin": -9468,
+        "margin_pct": -20.2,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "115": {
-        "dem_votes": 17909,
-        "rep_votes": 18419,
+        "dem_votes": 15424,
+        "rep_votes": 14931,
         "other_votes": 0,
-        "total_votes": 36328,
+        "total_votes": 30355,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 510,
-        "margin_pct": 1.4,
-        "winner": "REP",
+        "margin": -493,
+        "margin_pct": -1.62,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#c6dbef"
         }
       },
       "116": {
-        "dem_votes": 19330,
-        "rep_votes": 16016,
+        "dem_votes": 19931,
+        "rep_votes": 18481,
         "other_votes": 0,
-        "total_votes": 35346,
+        "total_votes": 38412,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -3314,
-        "margin_pct": -9.38,
+        "margin": -1450,
+        "margin_pct": -3.77,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#c6dbef"
         }
       },
       "117": {
-        "dem_votes": 14235,
-        "rep_votes": 23482,
+        "dem_votes": 14937,
+        "rep_votes": 23716,
         "other_votes": 0,
-        "total_votes": 37717,
+        "total_votes": 38653,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 9247,
-        "margin_pct": 24.52,
+        "margin": 8779,
+        "margin_pct": 22.71,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "118": {
-        "dem_votes": 17987,
+        "dem_votes": 17986,
         "rep_votes": 18142,
         "other_votes": 0,
-        "total_votes": 36129,
+        "total_votes": 36128,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 155,
+        "margin": 156,
         "margin_pct": 0.43,
         "winner": "REP",
         "competitiveness": {
@@ -1664,28 +1671,28 @@
         }
       },
       "119": {
-        "dem_votes": 18809,
-        "rep_votes": 18439,
+        "dem_votes": 18806,
+        "rep_votes": 18434,
         "other_votes": 0,
-        "total_votes": 37248,
+        "total_votes": 37240,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": -370,
-        "margin_pct": -0.99,
+        "margin": -372,
+        "margin_pct": -1.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#e1f5fe"
         }
       },
       "120": {
-        "dem_votes": 14424,
-        "rep_votes": 22314,
+        "dem_votes": 14429,
+        "rep_votes": 22321,
         "other_votes": 0,
-        "total_votes": 36738,
+        "total_votes": 36750,
         "dem_candidate": "Mary Fant Donnan",
         "rep_candidate": "Cherie Berry",
-        "margin": 7890,
-        "margin_pct": 21.48,
+        "margin": 7892,
+        "margin_pct": 21.47,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
