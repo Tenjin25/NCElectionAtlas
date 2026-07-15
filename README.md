@@ -62,8 +62,9 @@ These lines were chosen as the consistent historical baseline for two reasons:
 1. **Neutrality** — they were drawn by independent experts under court supervision, not by either party, making them the most politically neutral set of modern statewide district lines available. Using party-drawn maps as a baseline would embed partisan intent into the geographic frame when comparing results across years.
 2. **Practical coverage** — the 2022 remedial maps were actually used for a real election (the 2022 general), making them a grounded modern baseline for reallocating earlier results.
 
-Historical results from 2000–2020 are reallocated to these lines using Census block-level crosswalks (block → precinct → district), with unmatched votes distributed by candidate share within the county. [NHGIS](https://www.nhgis.org/) block-to-block crosswalks are used to bridge across Census vintages, which significantly cut down on mismatches in older eras.  
-As of the latest audit (`data/reports/precinct_match_year_summary_fresh_2026-03-19.csv`), geo-key match coverage is **99.42% across all years** and **99.28% for pre-2020 years**.
+Historical results from 2000–2020 are reallocated to these lines using Census block-level crosswalks (block → precinct → district), with unmatched votes distributed by candidate share within the county. [NHGIS](https://www.nhgis.org/) block-to-block crosswalks now bridge the 2000-block era into the 2020 block fabric: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> modern districts/layers`.
+
+The newest early-era bridge (`data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv`) matches **236,637 of 236,638** NC 2020 blocks (**99.9996%**) onto SBE 2006 precinct names, giving 2000/2002/2004/2006/2008 contests a reproducible cross-vintage precinct chain for the first time in this project.
 
 ## Features
 
@@ -1149,6 +1150,23 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 | Block-to-precinct crosswalks | Derived from 2020 Census block assignments |
 | Block-to-block crosswalks (cross-vintage) | [NHGIS Longitudinal Block Crosswalks](https://www.nhgis.org/documentation/tabular-data/crosswalks) |
 | District lines (2022 MQP + optional 2024) | Court-ordered remedial maps (2022 MQP); US Census TIGER/Line 2024 (CD/SLDL/SLDU) |
+
+### Crosswalk Coverage Audit
+
+The current block-to-precinct ladder uses election-proximal precinct vintages where possible. The early 2000s bridge is the first full cross-vintage chain in this repository for North Carolina: 2000 Census tabblocks are assigned to SBE 2006 precinct polygons, then carried forward through NHGIS 2000-to-2010 and 2010-to-2020 block crosswalks.
+
+| Election years | Preferred match map | Matched blocks | Coverage | Precinct keys |
+|----------------|---------------------|----------------|----------|---------------|
+| 2000-2008 | `block20_to_sbe_2006_via_block00_nhgis_filled.csv` | 236,637 / 236,638 | 99.9996% | 2,715 |
+| 2010-2012 | `block20_to_sbe_2012_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,746 |
+| 2014 | `block20_to_sbe_2014_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,725 |
+| 2016 | `block20_to_sbe_2016_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,704 |
+| 2018 | `block20_to_sbe_2017_via_block10.csv` | 236,637 / 236,638 | 99.9996% | 2,706 |
+| 2020 | `block20_to_sbe_2020.csv` | 236,638 / 236,638 | 100.0000% | 2,658 |
+| 2022 | `block20_to_sbe_2022.csv` | 236,638 / 236,638 | 100.0000% | 2,663 |
+| 2024 | `block20_to_sbe_2024.csv` | 236,638 / 236,638 | 100.0000% | 2,656 |
+
+Debug overlays for inspecting the 2006 bridge against current precinct geometry live in `data/reports/`: `sbe2006_precincts.geojson`, `sbe2006_precinct_centroids.geojson`, `onemap2025_precincts_sbe2006_nhgis_bridge.geojson`, and `centroids_sbe2006_nhgis_bridge.geojson`. The current precinct polygon bridge matches 2,632 / 2,632 current precinct polygons (100.0000%); the current centroid bridge matches 2,631 / 2,632 centroids (99.9620%).
 
 ## Getting Started
 

@@ -28,8 +28,22 @@ from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, l
 # OneMap 2025 is only the default for recent years; do not use it for pre-2022 matching.
 VINTAGE_MATCH_CROSSWALKS: list[tuple[int, tuple[Path, ...]]] = [
     (
-        2006,
-        (Path("data/crosswalks/block20_to_vtd00.csv"),),
+        2008,
+        (
+            Path("data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv"),
+            Path("data/crosswalks/block20_to_sbe_2006_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2006_via_block00_nhgis.csv"),
+            Path("data/crosswalks/block20_to_sbe_2006.csv"),
+            Path("data/crosswalks/block20_to_vtd00.csv"),
+        ),
+    ),
+    (
+        2010,
+        (
+            Path("data/crosswalks/block20_to_sbe_2012_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2012.csv"),
+            Path("data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv"),
+        ),
     ),
     (
         2012,
@@ -39,16 +53,51 @@ VINTAGE_MATCH_CROSSWALKS: list[tuple[int, tuple[Path, ...]]] = [
         ),
     ),
     (
-        2017,
+        2014,
+        (
+            Path("data/crosswalks/block20_to_sbe_2014_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2014.csv"),
+            Path("data/crosswalks/block20_to_sbe_2013.csv"),
+            Path("data/crosswalks/block20_to_sbe_2012_via_block10.csv"),
+        ),
+    ),
+    (
+        2016,
         (
             Path("data/crosswalks/block20_to_sbe_2016_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2015_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2015.csv"),
             Path("data/crosswalks/block20_to_sbe_2014_via_block10.csv"),
             Path("data/crosswalks/block20_to_sbe_2014.csv"),
         ),
     ),
     (
+        2018,
+        (
+            Path("data/crosswalks/block20_to_sbe_2017_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2017.csv"),
+            Path("data/crosswalks/block20_to_sbe_2016_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2015_via_block10.csv"),
+            Path("data/crosswalks/block20_to_sbe_2015.csv"),
+        ),
+    ),
+    (
         2021,
         (Path("data/crosswalks/block20_to_sbe_2020.csv"),),
+    ),
+    (
+        2023,
+        (
+            Path("data/crosswalks/block20_to_sbe_2022.csv"),
+            Path("data/crosswalks/block20_to_sbe_2020.csv"),
+        ),
+    ),
+    (
+        2025,
+        (
+            Path("data/crosswalks/block20_to_sbe_2024.csv"),
+            Path("data/crosswalks/block20_to_onemap_2025.csv"),
+        ),
     ),
     (
         9999,
@@ -227,9 +276,24 @@ def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
     g0 = gpd.read_file(shp_path)
     cols = {c.lower(): c for c in list(g0.columns)}
 
-    # Support multiple vintage schemas.
-    prec_col = cols.get("prec_id") or cols.get("precid") or cols.get("precinctid") or cols.get("precinct_id")
-    enr_col = cols.get("enr_desc") or cols.get("enrdesc") or cols.get("name") or cols.get("prec_name")
+    # Support multiple vintage schemas, including Precincts2006Gen
+    # (County, Precinct, SEIMS_Code).
+    prec_col = (
+        cols.get("prec_id")
+        or cols.get("seims_code")
+        or cols.get("precinct_i")
+        or cols.get("precid")
+        or cols.get("precinctid")
+        or cols.get("precinct_id")
+    )
+    enr_col = (
+        cols.get("enr_desc")
+        or cols.get("seims_desc")
+        or cols.get("precinct")
+        or cols.get("enrdesc")
+        or cols.get("name")
+        or cols.get("prec_name")
+    )
     county_col = cols.get("county_nam") or cols.get("county_name") or cols.get("countynam") or cols.get("county")
 
     if not prec_col or not enr_col or not county_col:
@@ -1526,6 +1590,12 @@ def main() -> None:
     )
     parser.add_argument("--year", type=int, default=2024)
     parser.add_argument(
+        "--sbe-precincts-2006-shp",
+        type=Path,
+        default=Path("data/Precincts2006Gen/Precincts2006Gen.shp"),
+        help="Optional NCSBE precinct shapefile path (2006-era) for Precinct/SEIMS_Code aliases.",
+    )
+    parser.add_argument(
         "--sbe-precincts-2012-shp",
         type=Path,
         default=Path("data/census/SBE_PRECINCTS_20120901/SBE_PRECINCTS_09012012.shp"),
@@ -1593,7 +1663,9 @@ def main() -> None:
     # Choose the most appropriate SBE precinct file for a given election year.
     # Using a far-off vintage can produce bad "matches" in urban counties where
     # precinct naming/codes shift over time.
-    if y <= 2012:
+    if y <= 2010:
+        shp = Path(args.sbe_precincts_2006_shp)
+    elif y <= 2012:
         shp = Path(args.sbe_precincts_2012_shp)
     elif y <= 2017:
         shp = Path(args.sbe_precincts_2014_shp)
@@ -1634,6 +1706,23 @@ def main() -> None:
     auto_overrides = build_auto_precinct_overrides(src_precinct_ids, matched_precincts)
     manual_overrides = load_precinct_overrides(args.precinct_overrides_csv, args.year)
     precinct_overrides = {**auto_overrides, **manual_overrides}
+    # Do not remount OE keys that already exist on the vintage match/shatter map.
+    # OneMap/choropleth remaps (e.g. WAKE 10-04→04-10, 12-05→12-08) move vote mass
+    # across districts for every contest when applied here.
+    before_n = len(precinct_overrides)
+    precinct_overrides = {
+        raw: can
+        for raw, can in precinct_overrides.items()
+        if _norm(str(raw)) not in matched_precincts
+        and _norm(str(can)) in matched_precincts
+        and _norm(str(raw)) != _norm(str(can))
+    }
+    skipped = before_n - len(precinct_overrides)
+    if skipped:
+        print(
+            f"Skipped {skipped:,} precinct overrides that remapped keys already "
+            f"present on the match map ({match_crosswalk_path.name})"
+        )
 
     offices_to_run: list[tuple[str, str]] = []
     if args.office_source == "summary":
@@ -1675,6 +1764,14 @@ def main() -> None:
                     src, office, precinct_overrides=precinct_overrides, election_year=args.year
                 )
             if precinct_party.empty:
+                continue
+            dem_tot = float(precinct_party["dem_votes"].sum()) if "dem_votes" in precinct_party else 0.0
+            rep_tot = float(precinct_party["rep_votes"].sum()) if "rep_votes" in precinct_party else 0.0
+            if dem_tot <= 0 or rep_tot <= 0:
+                print(
+                    f"  skip {contest_type}: not two-party contested "
+                    f"(dem={dem_tot:.0f} rep={rep_tot:.0f})"
+                )
                 continue
 
             args.contests_dir.mkdir(parents=True, exist_ok=True)
@@ -1773,6 +1870,17 @@ def main() -> None:
             )
             county_non_geo_party = None
         if precinct_party.empty:
+            continue
+
+        # Skip unopposed / same-party "uncontested" races (incl. judicial seats marked excluded
+        # in judicial_candidate_party_overrides notes once leaned — only one D/R bucket has votes).
+        dem_tot = float(precinct_party["dem_votes"].sum()) if "dem_votes" in precinct_party else 0.0
+        rep_tot = float(precinct_party["rep_votes"].sum()) if "rep_votes" in precinct_party else 0.0
+        if dem_tot <= 0 or rep_tot <= 0:
+            print(
+                f"  skip {contest_type}: not two-party contested "
+                f"(dem={dem_tot:.0f} rep={rep_tot:.0f})"
+            )
             continue
 
         dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
