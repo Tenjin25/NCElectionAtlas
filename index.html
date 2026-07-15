@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-2';
-    const APP_BUILD_ID = '2026-07-15-2';
+    const DATA_CACHE_BUSTER = '2026-07-15-3';
+    const APP_BUILD_ID = '2026-07-15-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -13092,6 +13092,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
+      if (layerDef?.id && map.getLayer(layerDef.id)) return false;
       const src = map.getSource(layerDef.source);
       const isVectorSource = !!src && src.type === 'vector';
       const sourceLayer = isVectorSource ? getVectorSourceLayer(layerDef.source) : null;
@@ -13103,6 +13104,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         map.addLayer(layerDef);
       }
+      return true;
     }
 
 
