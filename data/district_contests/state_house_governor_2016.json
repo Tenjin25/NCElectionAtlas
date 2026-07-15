@@ -3,23 +3,28 @@
   "scope": "state_house",
   "contest_type": "governor",
   "meta": {
-    "match_coverage_pct": 86.38,
-    "matched_precinct_keys": 2365,
-    "total_precinct_keys": 2738,
+    "match_coverage_pct": 100.0,
+    "matched_precinct_keys": 2703,
+    "total_precinct_keys": 2703,
     "source": "batch_shatter_vap_party_split",
     "office": "NC GOVERNOR",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines",
+    "margin_calibrated_to": "dra_stats_or_live"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 15961,
-        "rep_votes": 25108,
+        "dem_votes": 15964,
+        "rep_votes": 25115,
         "other_votes": 822,
-        "total_votes": 41891,
+        "total_votes": 41901,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 9147,
+        "margin": 9151,
         "margin_pct": 21.84,
         "winner": "REP",
         "competitiveness": {
@@ -27,13 +32,13 @@
         }
       },
       "2": {
-        "dem_votes": 24823,
-        "rep_votes": 19504,
-        "other_votes": 776,
-        "total_votes": 45103,
+        "dem_votes": 23807,
+        "rep_votes": 18707,
+        "other_votes": 745,
+        "total_votes": 43259,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -5319,
+        "margin": -5100,
         "margin_pct": -11.79,
         "winner": "DEM",
         "competitiveness": {
@@ -41,13 +46,13 @@
         }
       },
       "3": {
-        "dem_votes": 15022,
-        "rep_votes": 23901,
-        "other_votes": 726,
-        "total_votes": 39649,
+        "dem_votes": 15581,
+        "rep_votes": 24788,
+        "other_votes": 753,
+        "total_votes": 41122,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 8879,
+        "margin": 9207,
         "margin_pct": 22.39,
         "winner": "REP",
         "competitiveness": {
@@ -55,13 +60,13 @@
         }
       },
       "4": {
-        "dem_votes": 13907,
-        "rep_votes": 21129,
-        "other_votes": 371,
-        "total_votes": 35407,
+        "dem_votes": 14262,
+        "rep_votes": 21670,
+        "other_votes": 381,
+        "total_votes": 36313,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 7222,
+        "margin": 7408,
         "margin_pct": 20.4,
         "winner": "REP",
         "competitiveness": {
@@ -69,13 +74,13 @@
         }
       },
       "5": {
-        "dem_votes": 19154,
-        "rep_votes": 17599,
-        "other_votes": 620,
-        "total_votes": 37373,
+        "dem_votes": 19151,
+        "rep_votes": 17597,
+        "other_votes": 619,
+        "total_votes": 37367,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -1555,
+        "margin": -1554,
         "margin_pct": -4.16,
         "winner": "DEM",
         "competitiveness": {
@@ -83,13 +88,13 @@
         }
       },
       "6": {
-        "dem_votes": 6564,
-        "rep_votes": 8870,
-        "other_votes": 455,
-        "total_votes": 15889,
+        "dem_votes": 9249,
+        "rep_votes": 12498,
+        "other_votes": 642,
+        "total_votes": 22389,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 2306,
+        "margin": 3249,
         "margin_pct": 14.51,
         "winner": "REP",
         "competitiveness": {
@@ -111,10 +116,10 @@
         }
       },
       "8": {
-        "dem_votes": 24088,
-        "rep_votes": 20057,
+        "dem_votes": 24094,
+        "rep_votes": 20063,
         "other_votes": 730,
-        "total_votes": 44875,
+        "total_votes": 44887,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
         "margin": -4031,
@@ -125,13 +130,13 @@
         }
       },
       "9": {
-        "dem_votes": 17828,
-        "rep_votes": 16648,
+        "dem_votes": 17824,
+        "rep_votes": 16646,
         "other_votes": 592,
-        "total_votes": 35068,
+        "total_votes": 35062,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -1180,
+        "margin": -1178,
         "margin_pct": -3.36,
         "winner": "DEM",
         "competitiveness": {
@@ -139,13 +144,13 @@
         }
       },
       "10": {
-        "dem_votes": 16133,
-        "rep_votes": 18961,
-        "other_votes": 532,
-        "total_votes": 35626,
+        "dem_votes": 15717,
+        "rep_votes": 18473,
+        "other_votes": 518,
+        "total_votes": 34708,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 2828,
+        "margin": 2756,
         "margin_pct": 7.94,
         "winner": "REP",
         "competitiveness": {
@@ -153,13 +158,13 @@
         }
       },
       "11": {
-        "dem_votes": 28318,
-        "rep_votes": 14939,
-        "other_votes": 1191,
-        "total_votes": 44448,
+        "dem_votes": 28017,
+        "rep_votes": 14780,
+        "other_votes": 1179,
+        "total_votes": 43976,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -13379,
+        "margin": -13237,
         "margin_pct": -30.1,
         "winner": "DEM",
         "competitiveness": {
@@ -167,13 +172,13 @@
         }
       },
       "12": {
-        "dem_votes": 18110,
-        "rep_votes": 21263,
-        "other_votes": 407,
-        "total_votes": 39780,
+        "dem_votes": 18107,
+        "rep_votes": 21261,
+        "other_votes": 406,
+        "total_votes": 39774,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 3153,
+        "margin": 3154,
         "margin_pct": 7.93,
         "winner": "REP",
         "competitiveness": {
@@ -181,13 +186,13 @@
         }
       },
       "13": {
-        "dem_votes": 13479,
-        "rep_votes": 30119,
-        "other_votes": 960,
-        "total_votes": 44558,
+        "dem_votes": 13027,
+        "rep_votes": 29106,
+        "other_votes": 928,
+        "total_votes": 43061,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 16640,
+        "margin": 16079,
         "margin_pct": 37.34,
         "winner": "REP",
         "competitiveness": {
@@ -209,13 +214,13 @@
         }
       },
       "15": {
-        "dem_votes": 8922,
-        "rep_votes": 17162,
-        "other_votes": 775,
-        "total_votes": 26859,
+        "dem_votes": 8929,
+        "rep_votes": 17176,
+        "other_votes": 776,
+        "total_votes": 26881,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 8240,
+        "margin": 8247,
         "margin_pct": 30.68,
         "winner": "REP",
         "competitiveness": {
@@ -223,13 +228,13 @@
         }
       },
       "16": {
-        "dem_votes": 12785,
-        "rep_votes": 24624,
+        "dem_votes": 12777,
+        "rep_votes": 24610,
         "other_votes": 957,
-        "total_votes": 38366,
+        "total_votes": 38344,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 11839,
+        "margin": 11833,
         "margin_pct": 30.86,
         "winner": "REP",
         "competitiveness": {
@@ -237,13 +242,13 @@
         }
       },
       "17": {
-        "dem_votes": 16315,
-        "rep_votes": 26278,
-        "other_votes": 1016,
-        "total_votes": 43609,
+        "dem_votes": 15589,
+        "rep_votes": 25110,
+        "other_votes": 970,
+        "total_votes": 41669,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 9963,
+        "margin": 9521,
         "margin_pct": 22.85,
         "winner": "REP",
         "competitiveness": {
@@ -251,13 +256,13 @@
         }
       },
       "18": {
-        "dem_votes": 25987,
-        "rep_votes": 19627,
-        "other_votes": 1339,
-        "total_votes": 46953,
+        "dem_votes": 23969,
+        "rep_votes": 18101,
+        "other_votes": 1235,
+        "total_votes": 43305,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -6360,
+        "margin": -5868,
         "margin_pct": -13.55,
         "winner": "DEM",
         "competitiveness": {
@@ -265,13 +270,13 @@
         }
       },
       "19": {
-        "dem_votes": 20179,
-        "rep_votes": 26823,
-        "other_votes": 1368,
-        "total_votes": 48370,
+        "dem_votes": 19386,
+        "rep_votes": 25771,
+        "other_votes": 1315,
+        "total_votes": 46472,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 6644,
+        "margin": 6385,
         "margin_pct": 13.74,
         "winner": "REP",
         "competitiveness": {
@@ -279,13 +284,13 @@
         }
       },
       "20": {
-        "dem_votes": 19173,
-        "rep_votes": 19103,
-        "other_votes": 1086,
-        "total_votes": 39362,
+        "dem_votes": 22828,
+        "rep_votes": 22744,
+        "other_votes": 1294,
+        "total_votes": 46866,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -70,
+        "margin": -84,
         "margin_pct": -0.18,
         "winner": "DEM",
         "competitiveness": {
@@ -293,13 +298,13 @@
         }
       },
       "21": {
-        "dem_votes": 13754,
-        "rep_votes": 8469,
-        "other_votes": 577,
-        "total_votes": 22800,
+        "dem_votes": 16895,
+        "rep_votes": 10403,
+        "other_votes": 708,
+        "total_votes": 28006,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -5285,
+        "margin": -6492,
         "margin_pct": -23.18,
         "winner": "DEM",
         "competitiveness": {
@@ -307,10 +312,10 @@
         }
       },
       "22": {
-        "dem_votes": 17829,
-        "rep_votes": 23247,
+        "dem_votes": 17823,
+        "rep_votes": 23241,
         "other_votes": 454,
-        "total_votes": 41530,
+        "total_votes": 41518,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
         "margin": 5418,
@@ -321,13 +326,13 @@
         }
       },
       "23": {
-        "dem_votes": 27449,
-        "rep_votes": 18104,
+        "dem_votes": 27460,
+        "rep_votes": 18112,
         "other_votes": 363,
-        "total_votes": 45916,
+        "total_votes": 45935,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -9345,
+        "margin": -9348,
         "margin_pct": -20.35,
         "winner": "DEM",
         "competitiveness": {
@@ -335,13 +340,13 @@
         }
       },
       "24": {
-        "dem_votes": 21598,
-        "rep_votes": 18354,
-        "other_votes": 421,
-        "total_votes": 40373,
+        "dem_votes": 21663,
+        "rep_votes": 18407,
+        "other_votes": 423,
+        "total_votes": 40493,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -3244,
+        "margin": -3256,
         "margin_pct": -8.04,
         "winner": "DEM",
         "competitiveness": {
@@ -349,13 +354,13 @@
         }
       },
       "25": {
-        "dem_votes": 23519,
-        "rep_votes": 21293,
-        "other_votes": 476,
-        "total_votes": 45288,
+        "dem_votes": 23383,
+        "rep_votes": 21168,
+        "other_votes": 474,
+        "total_votes": 45025,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -2226,
+        "margin": -2215,
         "margin_pct": -4.92,
         "winner": "DEM",
         "competitiveness": {
@@ -363,13 +368,13 @@
         }
       },
       "26": {
-        "dem_votes": 11292,
-        "rep_votes": 16533,
-        "other_votes": 663,
-        "total_votes": 28488,
+        "dem_votes": 11353,
+        "rep_votes": 16623,
+        "other_votes": 666,
+        "total_votes": 28642,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 5241,
+        "margin": 5270,
         "margin_pct": 18.4,
         "winner": "REP",
         "competitiveness": {
@@ -377,13 +382,13 @@
         }
       },
       "27": {
-        "dem_votes": 28591,
-        "rep_votes": 15665,
+        "dem_votes": 28595,
+        "rep_votes": 15667,
         "other_votes": 362,
-        "total_votes": 44618,
+        "total_votes": 44624,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -12926,
+        "margin": -12928,
         "margin_pct": -28.97,
         "winner": "DEM",
         "competitiveness": {
@@ -391,13 +396,13 @@
         }
       },
       "28": {
-        "dem_votes": 14146,
-        "rep_votes": 25844,
+        "dem_votes": 14143,
+        "rep_votes": 25836,
         "other_votes": 566,
-        "total_votes": 40556,
+        "total_votes": 40545,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 11698,
+        "margin": 11693,
         "margin_pct": 28.84,
         "winner": "REP",
         "competitiveness": {
@@ -405,13 +410,13 @@
         }
       },
       "29": {
-        "dem_votes": 27755,
-        "rep_votes": 6143,
-        "other_votes": 657,
-        "total_votes": 34555,
+        "dem_votes": 37369,
+        "rep_votes": 8272,
+        "other_votes": 885,
+        "total_votes": 46526,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -21612,
+        "margin": -29097,
         "margin_pct": -62.54,
         "winner": "DEM",
         "competitiveness": {
@@ -419,13 +424,13 @@
         }
       },
       "30": {
-        "dem_votes": 43891,
-        "rep_votes": 9112,
-        "other_votes": 810,
-        "total_votes": 53813,
+        "dem_votes": 39765,
+        "rep_votes": 8255,
+        "other_votes": 734,
+        "total_votes": 48754,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -34779,
+        "margin": -31510,
         "margin_pct": -64.63,
         "winner": "DEM",
         "competitiveness": {
@@ -433,13 +438,13 @@
         }
       },
       "31": {
-        "dem_votes": 34068,
-        "rep_votes": 6731,
-        "other_votes": 682,
-        "total_votes": 41481,
+        "dem_votes": 30020,
+        "rep_votes": 5932,
+        "other_votes": 601,
+        "total_votes": 36553,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -27337,
+        "margin": -24088,
         "margin_pct": -65.9,
         "winner": "DEM",
         "competitiveness": {
@@ -447,13 +452,13 @@
         }
       },
       "32": {
-        "dem_votes": 22506,
-        "rep_votes": 15870,
+        "dem_votes": 22505,
+        "rep_votes": 15871,
         "other_votes": 466,
         "total_votes": 38842,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -6636,
+        "margin": -6634,
         "margin_pct": -17.08,
         "winner": "DEM",
         "competitiveness": {
@@ -461,13 +466,13 @@
         }
       },
       "33": {
-        "dem_votes": 22858,
-        "rep_votes": 14834,
+        "dem_votes": 22836,
+        "rep_votes": 14821,
         "other_votes": 767,
-        "total_votes": 38459,
+        "total_votes": 38424,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -8024,
+        "margin": -8015,
         "margin_pct": -20.86,
         "winner": "DEM",
         "competitiveness": {
@@ -489,13 +494,13 @@
         }
       },
       "35": {
-        "dem_votes": 15525,
-        "rep_votes": 16434,
-        "other_votes": 702,
-        "total_votes": 32661,
+        "dem_votes": 16093,
+        "rep_votes": 17034,
+        "other_votes": 727,
+        "total_votes": 33854,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 909,
+        "margin": 941,
         "margin_pct": 2.78,
         "winner": "REP",
         "competitiveness": {
@@ -503,13 +508,13 @@
         }
       },
       "36": {
-        "dem_votes": 19421,
-        "rep_votes": 16629,
-        "other_votes": 968,
-        "total_votes": 37018,
+        "dem_votes": 18961,
+        "rep_votes": 16236,
+        "other_votes": 945,
+        "total_votes": 36142,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -2792,
+        "margin": -2725,
         "margin_pct": -7.54,
         "winner": "DEM",
         "competitiveness": {
@@ -517,13 +522,13 @@
         }
       },
       "37": {
-        "dem_votes": 18214,
-        "rep_votes": 19395,
-        "other_votes": 1042,
-        "total_votes": 38651,
+        "dem_votes": 17511,
+        "rep_votes": 18648,
+        "other_votes": 1001,
+        "total_votes": 37160,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 1181,
+        "margin": 1137,
         "margin_pct": 3.06,
         "winner": "REP",
         "competitiveness": {
@@ -531,13 +536,13 @@
         }
       },
       "38": {
-        "dem_votes": 37107,
-        "rep_votes": 6834,
-        "other_votes": 727,
-        "total_votes": 44668,
+        "dem_votes": 35006,
+        "rep_votes": 6448,
+        "other_votes": 686,
+        "total_votes": 42140,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -30273,
+        "margin": -28558,
         "margin_pct": -67.77,
         "winner": "DEM",
         "competitiveness": {
@@ -545,13 +550,13 @@
         }
       },
       "39": {
-        "dem_votes": 14084,
-        "rep_votes": 9896,
-        "other_votes": 495,
-        "total_votes": 24475,
+        "dem_votes": 16135,
+        "rep_votes": 11337,
+        "other_votes": 568,
+        "total_votes": 28040,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -4188,
+        "margin": -4798,
         "margin_pct": -17.11,
         "winner": "DEM",
         "competitiveness": {
@@ -559,13 +564,13 @@
         }
       },
       "40": {
-        "dem_votes": 28011,
-        "rep_votes": 24521,
-        "other_votes": 1115,
-        "total_votes": 53647,
+        "dem_votes": 27620,
+        "rep_votes": 24176,
+        "other_votes": 1100,
+        "total_votes": 52896,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -3490,
+        "margin": -3444,
         "margin_pct": -6.51,
         "winner": "DEM",
         "competitiveness": {
@@ -573,13 +578,13 @@
         }
       },
       "41": {
-        "dem_votes": 29677,
-        "rep_votes": 19341,
-        "other_votes": 1303,
-        "total_votes": 50321,
+        "dem_votes": 28808,
+        "rep_votes": 18775,
+        "other_votes": 1264,
+        "total_votes": 48847,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -10336,
+        "margin": -10033,
         "margin_pct": -20.54,
         "winner": "DEM",
         "competitiveness": {
@@ -587,13 +592,13 @@
         }
       },
       "42": {
-        "dem_votes": 14676,
-        "rep_votes": 6627,
-        "other_votes": 554,
-        "total_votes": 21857,
+        "dem_votes": 16113,
+        "rep_votes": 7275,
+        "other_votes": 609,
+        "total_votes": 23997,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -8049,
+        "margin": -8838,
         "margin_pct": -36.83,
         "winner": "DEM",
         "competitiveness": {
@@ -601,13 +606,13 @@
         }
       },
       "43": {
-        "dem_votes": 14962,
-        "rep_votes": 16424,
-        "other_votes": 625,
-        "total_votes": 32011,
+        "dem_votes": 17158,
+        "rep_votes": 18836,
+        "other_votes": 717,
+        "total_votes": 36711,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 1462,
+        "margin": 1678,
         "margin_pct": 4.57,
         "winner": "REP",
         "competitiveness": {
@@ -615,13 +620,13 @@
         }
       },
       "44": {
-        "dem_votes": 22464,
-        "rep_votes": 15009,
-        "other_votes": 892,
-        "total_votes": 38365,
+        "dem_votes": 20444,
+        "rep_votes": 13660,
+        "other_votes": 812,
+        "total_votes": 34916,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -7455,
+        "margin": -6784,
         "margin_pct": -19.43,
         "winner": "DEM",
         "competitiveness": {
@@ -629,13 +634,13 @@
         }
       },
       "45": {
-        "dem_votes": 18347,
-        "rep_votes": 14701,
-        "other_votes": 837,
-        "total_votes": 33885,
+        "dem_votes": 16537,
+        "rep_votes": 13251,
+        "other_votes": 755,
+        "total_votes": 30543,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -3646,
+        "margin": -3286,
         "margin_pct": -10.76,
         "winner": "DEM",
         "competitiveness": {
@@ -643,13 +648,13 @@
         }
       },
       "46": {
-        "dem_votes": 13937,
-        "rep_votes": 20988,
+        "dem_votes": 13938,
+        "rep_votes": 20991,
         "other_votes": 444,
-        "total_votes": 35369,
+        "total_votes": 35373,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 7051,
+        "margin": 7053,
         "margin_pct": 19.94,
         "winner": "REP",
         "competitiveness": {
@@ -658,12 +663,12 @@
       },
       "47": {
         "dem_votes": 13915,
-        "rep_votes": 14057,
+        "rep_votes": 14056,
         "other_votes": 249,
-        "total_votes": 28221,
+        "total_votes": 28220,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 142,
+        "margin": 141,
         "margin_pct": 0.5,
         "winner": "REP",
         "competitiveness": {
@@ -671,13 +676,13 @@
         }
       },
       "48": {
-        "dem_votes": 17039,
-        "rep_votes": 13890,
-        "other_votes": 679,
-        "total_votes": 31608,
+        "dem_votes": 17023,
+        "rep_votes": 13878,
+        "other_votes": 678,
+        "total_votes": 31579,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -3149,
+        "margin": -3145,
         "margin_pct": -9.96,
         "winner": "DEM",
         "competitiveness": {
@@ -685,13 +690,13 @@
         }
       },
       "49": {
-        "dem_votes": 30590,
-        "rep_votes": 15770,
-        "other_votes": 1033,
-        "total_votes": 47393,
+        "dem_votes": 29915,
+        "rep_votes": 15422,
+        "other_votes": 1011,
+        "total_votes": 46348,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -14820,
+        "margin": -14493,
         "margin_pct": -31.27,
         "winner": "DEM",
         "competitiveness": {
@@ -699,13 +704,13 @@
         }
       },
       "50": {
-        "dem_votes": 34196,
-        "rep_votes": 19225,
-        "other_votes": 994,
-        "total_votes": 54415,
+        "dem_votes": 29215,
+        "rep_votes": 16426,
+        "other_votes": 849,
+        "total_votes": 46490,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -14971,
+        "margin": -12789,
         "margin_pct": -27.51,
         "winner": "DEM",
         "competitiveness": {
@@ -713,13 +718,13 @@
         }
       },
       "51": {
-        "dem_votes": 13914,
-        "rep_votes": 18007,
-        "other_votes": 695,
-        "total_votes": 32616,
+        "dem_votes": 13666,
+        "rep_votes": 17686,
+        "other_votes": 683,
+        "total_votes": 32035,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 4093,
+        "margin": 4020,
         "margin_pct": 12.55,
         "winner": "REP",
         "competitiveness": {
@@ -727,13 +732,13 @@
         }
       },
       "52": {
-        "dem_votes": 18199,
-        "rep_votes": 21808,
-        "other_votes": 815,
-        "total_votes": 40822,
+        "dem_votes": 18155,
+        "rep_votes": 21755,
+        "other_votes": 813,
+        "total_votes": 40723,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 3609,
+        "margin": 3600,
         "margin_pct": 8.84,
         "winner": "REP",
         "competitiveness": {
@@ -741,13 +746,13 @@
         }
       },
       "53": {
-        "dem_votes": 16845,
-        "rep_votes": 28796,
-        "other_votes": 923,
-        "total_votes": 46564,
+        "dem_votes": 14518,
+        "rep_votes": 24820,
+        "other_votes": 796,
+        "total_votes": 40134,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 11951,
+        "margin": 10302,
         "margin_pct": 25.67,
         "winner": "REP",
         "competitiveness": {
@@ -755,13 +760,13 @@
         }
       },
       "54": {
-        "dem_votes": 15157,
-        "rep_votes": 12321,
-        "other_votes": 465,
-        "total_votes": 27943,
+        "dem_votes": 23404,
+        "rep_votes": 19025,
+        "other_votes": 718,
+        "total_votes": 43147,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -2836,
+        "margin": -4379,
         "margin_pct": -10.15,
         "winner": "DEM",
         "competitiveness": {
@@ -769,13 +774,13 @@
         }
       },
       "55": {
-        "dem_votes": 16477,
-        "rep_votes": 22757,
-        "other_votes": 724,
-        "total_votes": 39958,
+        "dem_votes": 14953,
+        "rep_votes": 20654,
+        "other_votes": 658,
+        "total_votes": 36265,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 6280,
+        "margin": 5701,
         "margin_pct": 15.72,
         "winner": "REP",
         "competitiveness": {
@@ -783,13 +788,13 @@
         }
       },
       "56": {
-        "dem_votes": 32183,
-        "rep_votes": 5690,
-        "other_votes": 654,
-        "total_votes": 38527,
+        "dem_votes": 38745,
+        "rep_votes": 6851,
+        "other_votes": 788,
+        "total_votes": 46384,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -26493,
+        "margin": -31894,
         "margin_pct": -68.76,
         "winner": "DEM",
         "competitiveness": {
@@ -797,13 +802,13 @@
         }
       },
       "57": {
-        "dem_votes": 26651,
-        "rep_votes": 18951,
-        "other_votes": 1011,
-        "total_votes": 46613,
+        "dem_votes": 26655,
+        "rep_votes": 18953,
+        "other_votes": 1012,
+        "total_votes": 46620,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -7700,
+        "margin": -7702,
         "margin_pct": -16.52,
         "winner": "DEM",
         "competitiveness": {
@@ -812,12 +817,12 @@
       },
       "58": {
         "dem_votes": 28548,
-        "rep_votes": 10397,
-        "other_votes": 822,
+        "rep_votes": 10398,
+        "other_votes": 821,
         "total_votes": 39767,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -18151,
+        "margin": -18150,
         "margin_pct": -45.64,
         "winner": "DEM",
         "competitiveness": {
@@ -825,13 +830,13 @@
         }
       },
       "59": {
-        "dem_votes": 20186,
-        "rep_votes": 20505,
+        "dem_votes": 20209,
+        "rep_votes": 20529,
         "other_votes": 821,
-        "total_votes": 41512,
+        "total_votes": 41559,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 319,
+        "margin": 320,
         "margin_pct": 0.77,
         "winner": "REP",
         "competitiveness": {
@@ -839,13 +844,13 @@
         }
       },
       "60": {
-        "dem_votes": 22611,
-        "rep_votes": 13694,
+        "dem_votes": 22602,
+        "rep_votes": 13690,
         "other_votes": 857,
-        "total_votes": 37162,
+        "total_votes": 37149,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -8917,
+        "margin": -8912,
         "margin_pct": -23.99,
         "winner": "DEM",
         "competitiveness": {
@@ -853,13 +858,13 @@
         }
       },
       "61": {
-        "dem_votes": 33631,
-        "rep_votes": 7617,
+        "dem_votes": 33632,
+        "rep_votes": 7616,
         "other_votes": 835,
         "total_votes": 42083,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -26014,
+        "margin": -26016,
         "margin_pct": -61.82,
         "winner": "DEM",
         "competitiveness": {
@@ -867,13 +872,13 @@
         }
       },
       "62": {
-        "dem_votes": 24066,
-        "rep_votes": 23303,
+        "dem_votes": 24055,
+        "rep_votes": 23290,
         "other_votes": 1063,
-        "total_votes": 48432,
+        "total_votes": 48408,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -763,
+        "margin": -765,
         "margin_pct": -1.58,
         "winner": "DEM",
         "competitiveness": {
@@ -881,13 +886,13 @@
         }
       },
       "63": {
-        "dem_votes": 16435,
-        "rep_votes": 15238,
-        "other_votes": 576,
-        "total_votes": 32249,
+        "dem_votes": 16697,
+        "rep_votes": 15481,
+        "other_votes": 585,
+        "total_votes": 32763,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -1197,
+        "margin": -1216,
         "margin_pct": -3.71,
         "winner": "DEM",
         "competitiveness": {
@@ -895,13 +900,13 @@
         }
       },
       "64": {
-        "dem_votes": 15597,
-        "rep_votes": 22264,
-        "other_votes": 706,
-        "total_votes": 38567,
+        "dem_votes": 15400,
+        "rep_votes": 21984,
+        "other_votes": 697,
+        "total_votes": 38081,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 6667,
+        "margin": 6584,
         "margin_pct": 17.29,
         "winner": "REP",
         "competitiveness": {
@@ -909,13 +914,13 @@
         }
       },
       "65": {
-        "dem_votes": 16334,
-        "rep_votes": 24831,
+        "dem_votes": 16329,
+        "rep_votes": 24821,
         "other_votes": 850,
-        "total_votes": 42015,
+        "total_votes": 42000,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 8497,
+        "margin": 8492,
         "margin_pct": 20.22,
         "winner": "REP",
         "competitiveness": {
@@ -923,13 +928,13 @@
         }
       },
       "66": {
-        "dem_votes": 32809,
-        "rep_votes": 18241,
-        "other_votes": 1101,
-        "total_votes": 52151,
+        "dem_votes": 22294,
+        "rep_votes": 12396,
+        "other_votes": 749,
+        "total_votes": 35439,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -14568,
+        "margin": -9898,
         "margin_pct": -27.93,
         "winner": "DEM",
         "competitiveness": {
@@ -937,13 +942,13 @@
         }
       },
       "67": {
-        "dem_votes": 12821,
-        "rep_votes": 27710,
-        "other_votes": 776,
-        "total_votes": 41307,
+        "dem_votes": 12822,
+        "rep_votes": 27708,
+        "other_votes": 775,
+        "total_votes": 41305,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 14889,
+        "margin": 14886,
         "margin_pct": 36.04,
         "winner": "REP",
         "competitiveness": {
@@ -951,13 +956,13 @@
         }
       },
       "68": {
-        "dem_votes": 11992,
-        "rep_votes": 21778,
-        "other_votes": 797,
-        "total_votes": 34567,
+        "dem_votes": 13414,
+        "rep_votes": 24361,
+        "other_votes": 892,
+        "total_votes": 38667,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 9786,
+        "margin": 10947,
         "margin_pct": 28.31,
         "winner": "REP",
         "competitiveness": {
@@ -965,13 +970,13 @@
         }
       },
       "69": {
-        "dem_votes": 13303,
-        "rep_votes": 26715,
-        "other_votes": 980,
-        "total_votes": 40998,
+        "dem_votes": 13179,
+        "rep_votes": 26464,
+        "other_votes": 971,
+        "total_votes": 40614,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 13412,
+        "margin": 13285,
         "margin_pct": 32.71,
         "winner": "REP",
         "competitiveness": {
@@ -979,13 +984,13 @@
         }
       },
       "70": {
-        "dem_votes": 10367,
-        "rep_votes": 27217,
-        "other_votes": 914,
-        "total_votes": 38498,
+        "dem_votes": 10371,
+        "rep_votes": 27229,
+        "other_votes": 915,
+        "total_votes": 38515,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 16850,
+        "margin": 16858,
         "margin_pct": 43.77,
         "winner": "REP",
         "competitiveness": {
@@ -993,13 +998,13 @@
         }
       },
       "71": {
-        "dem_votes": 25895,
-        "rep_votes": 10453,
-        "other_votes": 902,
-        "total_votes": 37250,
+        "dem_votes": 25274,
+        "rep_votes": 10201,
+        "other_votes": 880,
+        "total_votes": 36355,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -15442,
+        "margin": -15073,
         "margin_pct": -41.46,
         "winner": "DEM",
         "competitiveness": {
@@ -1007,13 +1012,13 @@
         }
       },
       "72": {
-        "dem_votes": 28015,
-        "rep_votes": 10642,
-        "other_votes": 758,
-        "total_votes": 39415,
+        "dem_votes": 26228,
+        "rep_votes": 9962,
+        "other_votes": 710,
+        "total_votes": 36900,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -17373,
+        "margin": -16266,
         "margin_pct": -44.08,
         "winner": "DEM",
         "competitiveness": {
@@ -1021,13 +1026,13 @@
         }
       },
       "73": {
-        "dem_votes": 14849,
-        "rep_votes": 16349,
-        "other_votes": 918,
-        "total_votes": 32116,
+        "dem_votes": 15321,
+        "rep_votes": 16868,
+        "other_votes": 948,
+        "total_votes": 33137,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 1500,
+        "margin": 1547,
         "margin_pct": 4.67,
         "winner": "REP",
         "competitiveness": {
@@ -1035,13 +1040,13 @@
         }
       },
       "74": {
-        "dem_votes": 20452,
-        "rep_votes": 20615,
-        "other_votes": 866,
-        "total_votes": 41933,
+        "dem_votes": 21965,
+        "rep_votes": 22141,
+        "other_votes": 931,
+        "total_votes": 45037,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 163,
+        "margin": 176,
         "margin_pct": 0.39,
         "winner": "REP",
         "competitiveness": {
@@ -1049,13 +1054,13 @@
         }
       },
       "75": {
-        "dem_votes": 14372,
-        "rep_votes": 18244,
-        "other_votes": 841,
-        "total_votes": 33457,
+        "dem_votes": 16718,
+        "rep_votes": 21221,
+        "other_votes": 979,
+        "total_votes": 38918,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 3872,
+        "margin": 4503,
         "margin_pct": 11.57,
         "winner": "REP",
         "competitiveness": {
@@ -1063,13 +1068,13 @@
         }
       },
       "76": {
-        "dem_votes": 15685,
-        "rep_votes": 22494,
-        "other_votes": 1009,
-        "total_votes": 39188,
+        "dem_votes": 15705,
+        "rep_votes": 22525,
+        "other_votes": 1011,
+        "total_votes": 39241,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 6809,
+        "margin": 6820,
         "margin_pct": 17.38,
         "winner": "REP",
         "competitiveness": {
@@ -1077,13 +1082,13 @@
         }
       },
       "77": {
-        "dem_votes": 11986,
-        "rep_votes": 31530,
-        "other_votes": 992,
-        "total_votes": 44508,
+        "dem_votes": 11982,
+        "rep_votes": 31518,
+        "other_votes": 991,
+        "total_votes": 44491,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 19544,
+        "margin": 19536,
         "margin_pct": 43.91,
         "winner": "REP",
         "competitiveness": {
@@ -1091,13 +1096,13 @@
         }
       },
       "78": {
-        "dem_votes": 10938,
-        "rep_votes": 29721,
-        "other_votes": 815,
-        "total_votes": 41474,
+        "dem_votes": 11121,
+        "rep_votes": 30219,
+        "other_votes": 828,
+        "total_votes": 42168,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 18783,
+        "margin": 19098,
         "margin_pct": 45.29,
         "winner": "REP",
         "competitiveness": {
@@ -1105,13 +1110,13 @@
         }
       },
       "79": {
-        "dem_votes": 17049,
-        "rep_votes": 26466,
+        "dem_votes": 17042,
+        "rep_votes": 26455,
         "other_votes": 739,
-        "total_votes": 44254,
+        "total_votes": 44236,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 9417,
+        "margin": 9413,
         "margin_pct": 21.28,
         "winner": "REP",
         "competitiveness": {
@@ -1119,13 +1124,13 @@
         }
       },
       "80": {
-        "dem_votes": 10503,
-        "rep_votes": 26785,
+        "dem_votes": 10510,
+        "rep_votes": 26804,
         "other_votes": 818,
-        "total_votes": 38106,
+        "total_votes": 38132,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 16282,
+        "margin": 16294,
         "margin_pct": 42.73,
         "winner": "REP",
         "competitiveness": {
@@ -1133,13 +1138,13 @@
         }
       },
       "81": {
-        "dem_votes": 11442,
-        "rep_votes": 24075,
+        "dem_votes": 11436,
+        "rep_votes": 24063,
         "other_votes": 858,
-        "total_votes": 36375,
+        "total_votes": 36357,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 12633,
+        "margin": 12627,
         "margin_pct": 34.73,
         "winner": "REP",
         "competitiveness": {
@@ -1147,13 +1152,13 @@
         }
       },
       "82": {
-        "dem_votes": 15053,
-        "rep_votes": 17581,
-        "other_votes": 953,
-        "total_votes": 33587,
+        "dem_votes": 15021,
+        "rep_votes": 17545,
+        "other_votes": 951,
+        "total_votes": 33517,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 2528,
+        "margin": 2524,
         "margin_pct": 7.53,
         "winner": "REP",
         "competitiveness": {
@@ -1161,13 +1166,13 @@
         }
       },
       "83": {
-        "dem_votes": 12446,
-        "rep_votes": 33302,
-        "other_votes": 1063,
-        "total_votes": 46811,
+        "dem_votes": 12182,
+        "rep_votes": 32593,
+        "other_votes": 1041,
+        "total_votes": 45816,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 20856,
+        "margin": 20411,
         "margin_pct": 44.55,
         "winner": "REP",
         "competitiveness": {
@@ -1175,13 +1180,13 @@
         }
       },
       "84": {
-        "dem_votes": 15914,
-        "rep_votes": 29091,
-        "other_votes": 1183,
-        "total_votes": 46188,
+        "dem_votes": 12911,
+        "rep_votes": 23602,
+        "other_votes": 959,
+        "total_votes": 37472,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 13177,
+        "margin": 10691,
         "margin_pct": 28.53,
         "winner": "REP",
         "competitiveness": {
@@ -1189,13 +1194,13 @@
         }
       },
       "85": {
-        "dem_votes": 13264,
-        "rep_votes": 28839,
-        "other_votes": 1108,
-        "total_votes": 43211,
+        "dem_votes": 13270,
+        "rep_votes": 28850,
+        "other_votes": 1109,
+        "total_votes": 43229,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 15575,
+        "margin": 15580,
         "margin_pct": 36.04,
         "winner": "REP",
         "competitiveness": {
@@ -1203,13 +1208,13 @@
         }
       },
       "86": {
-        "dem_votes": 13372,
-        "rep_votes": 24466,
-        "other_votes": 876,
-        "total_votes": 38714,
+        "dem_votes": 13354,
+        "rep_votes": 24435,
+        "other_votes": 874,
+        "total_votes": 38663,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 11094,
+        "margin": 11081,
         "margin_pct": 28.66,
         "winner": "REP",
         "competitiveness": {
@@ -1217,13 +1222,13 @@
         }
       },
       "87": {
-        "dem_votes": 11161,
-        "rep_votes": 26416,
+        "dem_votes": 11163,
+        "rep_votes": 26422,
         "other_votes": 986,
-        "total_votes": 38563,
+        "total_votes": 38571,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 15255,
+        "margin": 15259,
         "margin_pct": 39.56,
         "winner": "REP",
         "competitiveness": {
@@ -1232,12 +1237,12 @@
       },
       "88": {
         "dem_votes": 23902,
-        "rep_votes": 9970,
-        "other_votes": 903,
+        "rep_votes": 9971,
+        "other_votes": 902,
         "total_votes": 34775,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -13932,
+        "margin": -13931,
         "margin_pct": -40.06,
         "winner": "DEM",
         "competitiveness": {
@@ -1245,13 +1250,13 @@
         }
       },
       "89": {
-        "dem_votes": 11875,
-        "rep_votes": 29273,
-        "other_votes": 1047,
-        "total_votes": 42195,
+        "dem_votes": 11397,
+        "rep_votes": 28094,
+        "other_votes": 1005,
+        "total_votes": 40496,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 17398,
+        "margin": 16697,
         "margin_pct": 41.23,
         "winner": "REP",
         "competitiveness": {
@@ -1259,13 +1264,13 @@
         }
       },
       "90": {
-        "dem_votes": 11066,
-        "rep_votes": 26528,
-        "other_votes": 721,
-        "total_votes": 38315,
+        "dem_votes": 11252,
+        "rep_votes": 26970,
+        "other_votes": 733,
+        "total_votes": 38955,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 15462,
+        "margin": 15718,
         "margin_pct": 40.35,
         "winner": "REP",
         "competitiveness": {
@@ -1273,13 +1278,13 @@
         }
       },
       "91": {
-        "dem_votes": 17133,
-        "rep_votes": 29360,
-        "other_votes": 1190,
-        "total_votes": 47683,
+        "dem_votes": 15285,
+        "rep_votes": 26191,
+        "other_votes": 1061,
+        "total_votes": 42537,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 12227,
+        "margin": 10906,
         "margin_pct": 25.64,
         "winner": "REP",
         "competitiveness": {
@@ -1287,13 +1292,13 @@
         }
       },
       "92": {
-        "dem_votes": 20997,
+        "dem_votes": 20998,
         "rep_votes": 10172,
-        "other_votes": 918,
+        "other_votes": 917,
         "total_votes": 32087,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -10825,
+        "margin": -10826,
         "margin_pct": -33.74,
         "winner": "DEM",
         "competitiveness": {
@@ -1301,13 +1306,13 @@
         }
       },
       "93": {
-        "dem_votes": 20491,
-        "rep_votes": 24247,
-        "other_votes": 1355,
-        "total_votes": 46093,
+        "dem_votes": 20517,
+        "rep_votes": 24278,
+        "other_votes": 1357,
+        "total_votes": 46152,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 3756,
+        "margin": 3761,
         "margin_pct": 8.15,
         "winner": "REP",
         "competitiveness": {
@@ -1315,13 +1320,13 @@
         }
       },
       "94": {
-        "dem_votes": 11485,
-        "rep_votes": 30680,
-        "other_votes": 901,
-        "total_votes": 43066,
+        "dem_votes": 11290,
+        "rep_votes": 30158,
+        "other_votes": 886,
+        "total_votes": 42334,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 19195,
+        "margin": 18868,
         "margin_pct": 44.57,
         "winner": "REP",
         "competitiveness": {
@@ -1329,13 +1334,13 @@
         }
       },
       "95": {
-        "dem_votes": 10073,
-        "rep_votes": 15674,
-        "other_votes": 983,
-        "total_votes": 26730,
+        "dem_votes": 13939,
+        "rep_votes": 21688,
+        "other_votes": 1361,
+        "total_votes": 36988,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 5601,
+        "margin": 7749,
         "margin_pct": 20.95,
         "winner": "REP",
         "competitiveness": {
@@ -1343,13 +1348,13 @@
         }
       },
       "96": {
-        "dem_votes": 14489,
-        "rep_votes": 23154,
-        "other_votes": 1021,
-        "total_votes": 38664,
+        "dem_votes": 14649,
+        "rep_votes": 23409,
+        "other_votes": 1033,
+        "total_votes": 39091,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 8665,
+        "margin": 8760,
         "margin_pct": 22.41,
         "winner": "REP",
         "competitiveness": {
@@ -1357,13 +1362,13 @@
         }
       },
       "97": {
-        "dem_votes": 11331,
-        "rep_votes": 27558,
-        "other_votes": 959,
-        "total_votes": 39848,
+        "dem_votes": 11284,
+        "rep_votes": 27441,
+        "other_votes": 954,
+        "total_votes": 39679,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 16227,
+        "margin": 16157,
         "margin_pct": 40.72,
         "winner": "REP",
         "competitiveness": {
@@ -1371,13 +1376,13 @@
         }
       },
       "98": {
-        "dem_votes": 19652,
-        "rep_votes": 19468,
+        "dem_votes": 19651,
+        "rep_votes": 19469,
         "other_votes": 1368,
         "total_votes": 40488,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -184,
+        "margin": -182,
         "margin_pct": -0.45,
         "winner": "DEM",
         "competitiveness": {
@@ -1385,13 +1390,13 @@
         }
       },
       "99": {
-        "dem_votes": 23598,
-        "rep_votes": 5038,
+        "dem_votes": 23589,
+        "rep_votes": 5036,
         "other_votes": 703,
-        "total_votes": 29339,
+        "total_votes": 29328,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -18560,
+        "margin": -18553,
         "margin_pct": -63.26,
         "winner": "DEM",
         "competitiveness": {
@@ -1399,13 +1404,13 @@
         }
       },
       "100": {
-        "dem_votes": 21211,
+        "dem_votes": 21210,
         "rep_votes": 6768,
-        "other_votes": 795,
+        "other_votes": 796,
         "total_votes": 28774,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -14443,
+        "margin": -14442,
         "margin_pct": -50.19,
         "winner": "DEM",
         "competitiveness": {
@@ -1414,12 +1419,12 @@
       },
       "101": {
         "dem_votes": 24814,
-        "rep_votes": 8258,
-        "other_votes": 755,
+        "rep_votes": 8259,
+        "other_votes": 754,
         "total_votes": 33827,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -16556,
+        "margin": -16555,
         "margin_pct": -48.94,
         "winner": "DEM",
         "competitiveness": {
@@ -1428,12 +1433,12 @@
       },
       "102": {
         "dem_votes": 28208,
-        "rep_votes": 6812,
-        "other_votes": 1068,
+        "rep_votes": 6811,
+        "other_votes": 1069,
         "total_votes": 36088,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -21396,
+        "margin": -21397,
         "margin_pct": -59.29,
         "winner": "DEM",
         "competitiveness": {
@@ -1456,12 +1461,12 @@
       },
       "104": {
         "dem_votes": 22164,
-        "rep_votes": 20598,
-        "other_votes": 882,
+        "rep_votes": 20597,
+        "other_votes": 883,
         "total_votes": 43644,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -1566,
+        "margin": -1567,
         "margin_pct": -3.59,
         "winner": "DEM",
         "competitiveness": {
@@ -1470,12 +1475,12 @@
       },
       "105": {
         "dem_votes": 20969,
-        "rep_votes": 18378,
-        "other_votes": 1029,
+        "rep_votes": 18377,
+        "other_votes": 1030,
         "total_votes": 40376,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -2591,
+        "margin": -2592,
         "margin_pct": -6.42,
         "winner": "DEM",
         "competitiveness": {
@@ -1483,13 +1488,13 @@
         }
       },
       "106": {
-        "dem_votes": 23126,
-        "rep_votes": 11834,
-        "other_votes": 894,
-        "total_votes": 35854,
+        "dem_votes": 23117,
+        "rep_votes": 11831,
+        "other_votes": 893,
+        "total_votes": 35841,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -11292,
+        "margin": -11286,
         "margin_pct": -31.49,
         "winner": "DEM",
         "competitiveness": {
@@ -1497,13 +1502,13 @@
         }
       },
       "107": {
-        "dem_votes": 28101,
-        "rep_votes": 6988,
+        "dem_votes": 28100,
+        "rep_votes": 6989,
         "other_votes": 833,
         "total_votes": 35922,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -21113,
+        "margin": -21111,
         "margin_pct": -58.77,
         "winner": "DEM",
         "competitiveness": {
@@ -1511,13 +1516,13 @@
         }
       },
       "108": {
-        "dem_votes": 12451,
-        "rep_votes": 24447,
-        "other_votes": 856,
-        "total_votes": 37754,
+        "dem_votes": 11727,
+        "rep_votes": 23024,
+        "other_votes": 807,
+        "total_votes": 35558,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 11996,
+        "margin": 11297,
         "margin_pct": 31.77,
         "winner": "REP",
         "competitiveness": {
@@ -1525,13 +1530,13 @@
         }
       },
       "109": {
-        "dem_votes": 11431,
-        "rep_votes": 24133,
-        "other_votes": 813,
-        "total_votes": 36377,
+        "dem_votes": 11724,
+        "rep_votes": 24753,
+        "other_votes": 833,
+        "total_votes": 37310,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 12702,
+        "margin": 13029,
         "margin_pct": 34.92,
         "winner": "REP",
         "competitiveness": {
@@ -1539,13 +1544,13 @@
         }
       },
       "110": {
-        "dem_votes": 13790,
-        "rep_votes": 19795,
-        "other_votes": 687,
-        "total_votes": 34272,
+        "dem_votes": 15612,
+        "rep_votes": 22409,
+        "other_votes": 777,
+        "total_votes": 38798,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 6005,
+        "margin": 6797,
         "margin_pct": 17.52,
         "winner": "REP",
         "competitiveness": {
@@ -1553,13 +1558,13 @@
         }
       },
       "111": {
-        "dem_votes": 14874,
-        "rep_votes": 27483,
-        "other_votes": 797,
-        "total_votes": 43154,
+        "dem_votes": 13736,
+        "rep_votes": 25381,
+        "other_votes": 737,
+        "total_votes": 39854,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 12609,
+        "margin": 11645,
         "margin_pct": 29.22,
         "winner": "REP",
         "competitiveness": {
@@ -1568,12 +1573,12 @@
       },
       "112": {
         "dem_votes": 20212,
-        "rep_votes": 13891,
-        "other_votes": 793,
+        "rep_votes": 13892,
+        "other_votes": 792,
         "total_votes": 34896,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -6321,
+        "margin": -6320,
         "margin_pct": -18.11,
         "winner": "DEM",
         "competitiveness": {
@@ -1581,13 +1586,13 @@
         }
       },
       "113": {
-        "dem_votes": 15773,
-        "rep_votes": 26690,
-        "other_votes": 1086,
-        "total_votes": 43549,
+        "dem_votes": 15867,
+        "rep_votes": 26850,
+        "other_votes": 1093,
+        "total_votes": 43810,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 10917,
+        "margin": 10983,
         "margin_pct": 25.07,
         "winner": "REP",
         "competitiveness": {
@@ -1595,13 +1600,13 @@
         }
       },
       "114": {
-        "dem_votes": 32187,
-        "rep_votes": 17069,
-        "other_votes": 1605,
-        "total_votes": 50861,
+        "dem_votes": 32258,
+        "rep_votes": 17108,
+        "other_votes": 1609,
+        "total_votes": 50975,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -15118,
+        "margin": -15150,
         "margin_pct": -29.72,
         "winner": "DEM",
         "competitiveness": {
@@ -1609,13 +1614,13 @@
         }
       },
       "115": {
-        "dem_votes": 23166,
-        "rep_votes": 17676,
-        "other_votes": 1305,
-        "total_votes": 42147,
+        "dem_votes": 23131,
+        "rep_votes": 17648,
+        "other_votes": 1302,
+        "total_votes": 42081,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -5490,
+        "margin": -5483,
         "margin_pct": -13.03,
         "winner": "DEM",
         "competitiveness": {
@@ -1623,13 +1628,13 @@
         }
       },
       "116": {
-        "dem_votes": 26522,
-        "rep_votes": 17128,
+        "dem_votes": 26519,
+        "rep_votes": 17126,
         "other_votes": 1384,
-        "total_votes": 45034,
+        "total_votes": 45029,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": -9394,
+        "margin": -9393,
         "margin_pct": -20.86,
         "winner": "DEM",
         "competitiveness": {
@@ -1637,13 +1642,13 @@
         }
       },
       "117": {
-        "dem_votes": 18439,
-        "rep_votes": 26402,
-        "other_votes": 1302,
-        "total_votes": 46143,
+        "dem_votes": 18316,
+        "rep_votes": 26227,
+        "other_votes": 1293,
+        "total_votes": 45836,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 7963,
+        "margin": 7911,
         "margin_pct": 17.26,
         "winner": "REP",
         "competitiveness": {
@@ -1651,13 +1656,13 @@
         }
       },
       "118": {
-        "dem_votes": 17660,
-        "rep_votes": 22674,
-        "other_votes": 1279,
-        "total_votes": 41613,
+        "dem_votes": 17662,
+        "rep_votes": 22677,
+        "other_votes": 1280,
+        "total_votes": 41619,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 5014,
+        "margin": 5015,
         "margin_pct": 12.05,
         "winner": "REP",
         "competitiveness": {
@@ -1665,10 +1670,10 @@
         }
       },
       "119": {
-        "dem_votes": 19465,
-        "rep_votes": 21427,
-        "other_votes": 1394,
-        "total_votes": 42286,
+        "dem_votes": 19460,
+        "rep_votes": 21422,
+        "other_votes": 1393,
+        "total_votes": 42275,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
         "margin": 1962,
@@ -1679,13 +1684,13 @@
         }
       },
       "120": {
-        "dem_votes": 12825,
-        "rep_votes": 27221,
+        "dem_votes": 12829,
+        "rep_votes": 27228,
         "other_votes": 1249,
-        "total_votes": 41295,
+        "total_votes": 41306,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Pat McCrory",
-        "margin": 14396,
+        "margin": 14399,
         "margin_pct": 34.86,
         "winner": "REP",
         "competitiveness": {

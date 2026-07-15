@@ -3,37 +3,44 @@
   "scope": "state_senate",
   "contest_type": "agriculture_commissioner",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "COMMISSIONER OF AGRICULTURE"
+    "office": "COMMISSIONER OF AGRICULTURE",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 44345,
-        "rep_votes": 50162,
+        "dem_votes": 44347,
+        "rep_votes": 50163,
         "other_votes": 0,
-        "total_votes": 94507,
+        "total_votes": 94510,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 5817,
-        "margin_pct": 6.16,
+        "margin": 5816,
+        "margin_pct": 6.15,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "2": {
-        "dem_votes": 42491,
-        "rep_votes": 47315,
+        "dem_votes": 42515,
+        "rep_votes": 47349,
         "other_votes": 0,
-        "total_votes": 89806,
+        "total_votes": 89864,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 4824,
-        "margin_pct": 5.37,
+        "margin": 4834,
+        "margin_pct": 5.38,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
@@ -54,10 +61,10 @@
         }
       },
       "4": {
-        "dem_votes": 44463,
-        "rep_votes": 46679,
+        "dem_votes": 44467,
+        "rep_votes": 46683,
         "other_votes": 0,
-        "total_votes": 91142,
+        "total_votes": 91150,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
         "margin": 2216,
@@ -68,27 +75,27 @@
         }
       },
       "5": {
-        "dem_votes": 56049,
-        "rep_votes": 41000,
+        "dem_votes": 56048,
+        "rep_votes": 41003,
         "other_votes": 0,
-        "total_votes": 97049,
+        "total_votes": 97051,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -15049,
-        "margin_pct": -15.51,
+        "margin": -15045,
+        "margin_pct": -15.5,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "6": {
-        "dem_votes": 19656,
-        "rep_votes": 26531,
+        "dem_votes": 19660,
+        "rep_votes": 26540,
         "other_votes": 0,
-        "total_votes": 46187,
+        "total_votes": 46200,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 6875,
+        "margin": 6880,
         "margin_pct": 14.89,
         "winner": "REP",
         "competitiveness": {
@@ -96,419 +103,419 @@
         }
       },
       "7": {
-        "dem_votes": 38218,
-        "rep_votes": 46470,
+        "dem_votes": 39122,
+        "rep_votes": 46943,
         "other_votes": 0,
-        "total_votes": 84688,
+        "total_votes": 86065,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 8252,
-        "margin_pct": 9.74,
+        "margin": 7821,
+        "margin_pct": 9.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "8": {
-        "dem_votes": 39685,
-        "rep_votes": 40106,
+        "dem_votes": 38803,
+        "rep_votes": 39655,
         "other_votes": 0,
-        "total_votes": 79791,
+        "total_votes": 78458,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 421,
-        "margin_pct": 0.53,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fee8c8"
-        }
-      },
-      "9": {
-        "dem_votes": 41457,
-        "rep_votes": 42862,
-        "other_votes": 0,
-        "total_votes": 84319,
-        "dem_candidate": "Ronnie Ansley",
-        "rep_candidate": "Steve Troxler",
-        "margin": 1405,
-        "margin_pct": 1.67,
+        "margin": 852,
+        "margin_pct": 1.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
-      "10": {
-        "dem_votes": 23627,
-        "rep_votes": 44988,
+      "9": {
+        "dem_votes": 41663,
+        "rep_votes": 42022,
         "other_votes": 0,
-        "total_votes": 68615,
+        "total_votes": 83685,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 21361,
-        "margin_pct": 31.13,
+        "margin": 359,
+        "margin_pct": 0.43,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#f7f7f7"
+        }
+      },
+      "10": {
+        "dem_votes": 23712,
+        "rep_votes": 45094,
+        "other_votes": 0,
+        "total_votes": 68806,
+        "dem_candidate": "Ronnie Ansley",
+        "rep_candidate": "Steve Troxler",
+        "margin": 21382,
+        "margin_pct": 31.08,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "11": {
-        "dem_votes": 47305,
-        "rep_votes": 44778,
+        "dem_votes": 47219,
+        "rep_votes": 44683,
         "other_votes": 0,
-        "total_votes": 92083,
+        "total_votes": 91902,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -2527,
-        "margin_pct": -2.74,
+        "margin": -2536,
+        "margin_pct": -2.76,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "12": {
-        "dem_votes": 26994,
-        "rep_votes": 36816,
+        "dem_votes": 26826,
+        "rep_votes": 37704,
         "other_votes": 0,
-        "total_votes": 63810,
+        "total_votes": 64530,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 9822,
-        "margin_pct": 15.39,
+        "margin": 10878,
+        "margin_pct": 16.86,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "13": {
-        "dem_votes": 36484,
-        "rep_votes": 39554,
+        "dem_votes": 47362,
+        "rep_votes": 50657,
         "other_votes": 0,
-        "total_votes": 76038,
+        "total_votes": 98019,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 3070,
-        "margin_pct": 4.04,
+        "margin": 3295,
+        "margin_pct": 3.36,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "14": {
-        "dem_votes": 35213,
-        "rep_votes": 38177,
+        "dem_votes": 35293,
+        "rep_votes": 20121,
         "other_votes": 0,
-        "total_votes": 73390,
+        "total_votes": 55414,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 2964,
-        "margin_pct": 4.04,
-        "winner": "REP",
+        "margin": -15172,
+        "margin_pct": -27.38,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#3182bd"
         }
       },
       "15": {
-        "dem_votes": 38630,
-        "rep_votes": 41880,
+        "dem_votes": 45095,
+        "rep_votes": 45946,
         "other_votes": 0,
-        "total_votes": 80510,
+        "total_votes": 91041,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 3250,
-        "margin_pct": 4.04,
+        "margin": 851,
+        "margin_pct": 0.93,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fee8c8"
         }
       },
       "16": {
-        "dem_votes": 34749,
-        "rep_votes": 37674,
+        "dem_votes": 39892,
+        "rep_votes": 47990,
         "other_votes": 0,
-        "total_votes": 72423,
+        "total_votes": 87882,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 2925,
-        "margin_pct": 4.04,
+        "margin": 8098,
+        "margin_pct": 9.21,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fb6a4a"
         }
       },
       "17": {
-        "dem_votes": 33327,
-        "rep_votes": 36132,
+        "dem_votes": 20556,
+        "rep_votes": 30352,
         "other_votes": 0,
-        "total_votes": 69459,
+        "total_votes": 50908,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 2805,
-        "margin_pct": 4.04,
+        "margin": 9796,
+        "margin_pct": 19.24,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "18": {
-        "dem_votes": 35890,
-        "rep_votes": 37308,
+        "dem_votes": 26124,
+        "rep_votes": 35723,
         "other_votes": 0,
-        "total_votes": 73198,
+        "total_votes": 61847,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 1418,
-        "margin_pct": 1.94,
+        "margin": 9599,
+        "margin_pct": 15.52,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "19": {
-        "dem_votes": 46405,
-        "rep_votes": 31266,
+        "dem_votes": 44975,
+        "rep_votes": 34562,
         "other_votes": 0,
-        "total_votes": 77671,
+        "total_votes": 79537,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -15139,
-        "margin_pct": -19.49,
+        "margin": -10413,
+        "margin_pct": -13.09,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "20": {
-        "dem_votes": 51651,
-        "rep_votes": 29908,
+        "dem_votes": 54056,
+        "rep_votes": 32430,
         "other_votes": 0,
-        "total_votes": 81559,
+        "total_votes": 86486,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -21743,
-        "margin_pct": -26.66,
+        "margin": -21626,
+        "margin_pct": -25.01,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "21": {
-        "dem_votes": 41270,
-        "rep_votes": 45799,
+        "dem_votes": 42691,
+        "rep_votes": 42466,
         "other_votes": 0,
-        "total_votes": 87069,
+        "total_votes": 85157,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 4529,
-        "margin_pct": 5.2,
-        "winner": "REP",
+        "margin": -225,
+        "margin_pct": -0.26,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "22": {
-        "dem_votes": 55433,
-        "rep_votes": 24558,
+        "dem_votes": 52958,
+        "rep_votes": 21910,
         "other_votes": 0,
-        "total_votes": 79991,
+        "total_votes": 74868,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -30875,
-        "margin_pct": -38.6,
+        "margin": -31048,
+        "margin_pct": -41.47,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08519c"
+          "color": "#08306b"
         }
       },
       "23": {
-        "dem_votes": 58337,
-        "rep_votes": 39491,
+        "dem_votes": 58280,
+        "rep_votes": 39448,
         "other_votes": 0,
-        "total_votes": 97828,
+        "total_votes": 97728,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -18846,
-        "margin_pct": -19.26,
+        "margin": -18832,
+        "margin_pct": -19.27,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "24": {
-        "dem_votes": 43247,
-        "rep_votes": 23682,
+        "dem_votes": 43196,
+        "rep_votes": 23638,
         "other_votes": 0,
-        "total_votes": 66929,
+        "total_votes": 66834,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -19565,
-        "margin_pct": -29.23,
+        "margin": -19558,
+        "margin_pct": -29.26,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "25": {
-        "dem_votes": 29830,
-        "rep_votes": 49914,
+        "dem_votes": 29915,
+        "rep_votes": 49592,
         "other_votes": 0,
-        "total_votes": 79744,
+        "total_votes": 79507,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 20084,
-        "margin_pct": 25.19,
+        "margin": 19677,
+        "margin_pct": 24.75,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "26": {
-        "dem_votes": 33320,
-        "rep_votes": 59823,
+        "dem_votes": 31151,
+        "rep_votes": 56247,
         "other_votes": 0,
-        "total_votes": 93143,
+        "total_votes": 87398,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 26503,
-        "margin_pct": 28.45,
+        "margin": 25096,
+        "margin_pct": 28.71,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "27": {
-        "dem_votes": 38275,
-        "rep_votes": 42726,
+        "dem_votes": 40093,
+        "rep_votes": 46040,
         "other_votes": 0,
-        "total_votes": 81001,
+        "total_votes": 86133,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 4451,
-        "margin_pct": 5.49,
+        "margin": 5947,
+        "margin_pct": 6.9,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fb6a4a"
         }
       },
       "28": {
-        "dem_votes": 63555,
-        "rep_votes": 34085,
+        "dem_votes": 63974,
+        "rep_votes": 34465,
         "other_votes": 0,
-        "total_votes": 97640,
+        "total_votes": 98439,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -29470,
-        "margin_pct": -30.18,
+        "margin": -29509,
+        "margin_pct": -29.98,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08519c"
+          "color": "#3182bd"
         }
       },
       "29": {
-        "dem_votes": 37049,
-        "rep_votes": 55181,
+        "dem_votes": 36744,
+        "rep_votes": 54762,
         "other_votes": 0,
-        "total_votes": 92230,
+        "total_votes": 91506,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 18132,
-        "margin_pct": 19.66,
+        "margin": 18018,
+        "margin_pct": 19.69,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "30": {
-        "dem_votes": 25134,
-        "rep_votes": 61187,
+        "dem_votes": 25112,
+        "rep_votes": 61101,
         "other_votes": 0,
-        "total_votes": 86321,
+        "total_votes": 86213,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 36053,
-        "margin_pct": 41.77,
+        "margin": 35989,
+        "margin_pct": 41.74,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "31": {
-        "dem_votes": 35985,
-        "rep_votes": 48678,
+        "dem_votes": 37790,
+        "rep_votes": 48478,
         "other_votes": 0,
-        "total_votes": 84663,
+        "total_votes": 86268,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 12693,
-        "margin_pct": 14.99,
+        "margin": 10688,
+        "margin_pct": 12.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "32": {
-        "dem_votes": 49196,
-        "rep_votes": 46101,
+        "dem_votes": 47340,
+        "rep_votes": 46244,
         "other_votes": 0,
-        "total_votes": 95297,
+        "total_votes": 93584,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -3095,
-        "margin_pct": -3.25,
+        "margin": -1096,
+        "margin_pct": -1.17,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "33": {
-        "dem_votes": 30786,
-        "rep_votes": 55119,
+        "dem_votes": 30807,
+        "rep_votes": 55147,
         "other_votes": 0,
-        "total_votes": 85905,
+        "total_votes": 85954,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 24333,
-        "margin_pct": 28.33,
+        "margin": 24340,
+        "margin_pct": 28.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "34": {
-        "dem_votes": 27416,
-        "rep_votes": 43455,
+        "dem_votes": 27149,
+        "rep_votes": 43057,
         "other_votes": 0,
-        "total_votes": 70871,
+        "total_votes": 70206,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 16039,
-        "margin_pct": 22.63,
+        "margin": 15908,
+        "margin_pct": 22.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "35": {
-        "dem_votes": 23886,
-        "rep_votes": 45001,
+        "dem_votes": 24423,
+        "rep_votes": 46184,
         "other_votes": 0,
-        "total_votes": 68887,
+        "total_votes": 70607,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 21115,
-        "margin_pct": 30.65,
+        "margin": 21761,
+        "margin_pct": 30.82,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "36": {
-        "dem_votes": 28206,
-        "rep_votes": 61578,
+        "dem_votes": 28194,
+        "rep_votes": 61550,
         "other_votes": 0,
-        "total_votes": 89784,
+        "total_votes": 89744,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 33372,
+        "margin": 33356,
         "margin_pct": 37.17,
         "winner": "REP",
         "competitiveness": {
@@ -516,196 +523,196 @@
         }
       },
       "37": {
-        "dem_votes": 31182,
-        "rep_votes": 47915,
+        "dem_votes": 28828,
+        "rep_votes": 51237,
         "other_votes": 0,
-        "total_votes": 79097,
+        "total_votes": 80065,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 16733,
-        "margin_pct": 21.16,
+        "margin": 22409,
+        "margin_pct": 27.99,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "38": {
-        "dem_votes": 43744,
-        "rep_votes": 32311,
+        "dem_votes": 51480,
+        "rep_votes": 18638,
         "other_votes": 0,
-        "total_votes": 76055,
+        "total_votes": 70118,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -11433,
-        "margin_pct": -15.03,
+        "margin": -32842,
+        "margin_pct": -46.84,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 44192,
-        "rep_votes": 32642,
+        "dem_votes": 36665,
+        "rep_votes": 32224,
         "other_votes": 0,
-        "total_votes": 76834,
+        "total_votes": 68889,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -11550,
-        "margin_pct": -15.03,
+        "margin": -4441,
+        "margin_pct": -6.45,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "40": {
-        "dem_votes": 42955,
-        "rep_votes": 31728,
+        "dem_votes": 47832,
+        "rep_votes": 23579,
         "other_votes": 0,
-        "total_votes": 74683,
+        "total_votes": 71411,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -11227,
-        "margin_pct": -15.03,
+        "margin": -24253,
+        "margin_pct": -33.96,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08519c"
         }
       },
       "41": {
-        "dem_votes": 41828,
-        "rep_votes": 30896,
+        "dem_votes": 47095,
+        "rep_votes": 27288,
         "other_votes": 0,
-        "total_votes": 72724,
+        "total_votes": 74383,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -10932,
-        "margin_pct": -15.03,
+        "margin": -19807,
+        "margin_pct": -26.63,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "42": {
-        "dem_votes": 42296,
-        "rep_votes": 31241,
+        "dem_votes": 34287,
+        "rep_votes": 53749,
         "other_votes": 0,
-        "total_votes": 73537,
+        "total_votes": 88036,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -11055,
-        "margin_pct": -15.03,
-        "winner": "DEM",
+        "margin": 19462,
+        "margin_pct": 22.11,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#cb181d"
         }
       },
       "43": {
-        "dem_votes": 29638,
-        "rep_votes": 44286,
+        "dem_votes": 28805,
+        "rep_votes": 42660,
         "other_votes": 0,
-        "total_votes": 73924,
+        "total_votes": 71465,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 14648,
-        "margin_pct": 19.81,
+        "margin": 13855,
+        "margin_pct": 19.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "44": {
-        "dem_votes": 33732,
-        "rep_votes": 47353,
+        "dem_votes": 34513,
+        "rep_votes": 48872,
         "other_votes": 0,
-        "total_votes": 81085,
+        "total_votes": 83385,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 13621,
-        "margin_pct": 16.8,
+        "margin": 14359,
+        "margin_pct": 17.22,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "45": {
-        "dem_votes": 33186,
-        "rep_votes": 57461,
+        "dem_votes": 32385,
+        "rep_votes": 57243,
         "other_votes": 0,
-        "total_votes": 90647,
+        "total_votes": 89628,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 24275,
-        "margin_pct": 26.78,
+        "margin": 24858,
+        "margin_pct": 27.73,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "46": {
-        "dem_votes": 37527,
-        "rep_votes": 46849,
+        "dem_votes": 38869,
+        "rep_votes": 48444,
         "other_votes": 0,
-        "total_votes": 84376,
+        "total_votes": 87313,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 9322,
-        "margin_pct": 11.05,
+        "margin": 9575,
+        "margin_pct": 10.97,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "47": {
-        "dem_votes": 40732,
-        "rep_votes": 55579,
+        "dem_votes": 41676,
+        "rep_votes": 56035,
         "other_votes": 0,
-        "total_votes": 96311,
+        "total_votes": 97711,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 14847,
-        "margin_pct": 15.42,
+        "margin": 14359,
+        "margin_pct": 14.7,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "48": {
-        "dem_votes": 33856,
-        "rep_votes": 51727,
+        "dem_votes": 33852,
+        "rep_votes": 51709,
         "other_votes": 0,
-        "total_votes": 85583,
+        "total_votes": 85561,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 17871,
-        "margin_pct": 20.88,
+        "margin": 17857,
+        "margin_pct": 20.87,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "49": {
-        "dem_votes": 47806,
-        "rep_votes": 37459,
+        "dem_votes": 46454,
+        "rep_votes": 35856,
         "other_votes": 0,
-        "total_votes": 85265,
+        "total_votes": 82310,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": -10347,
-        "margin_pct": -12.14,
+        "margin": -10598,
+        "margin_pct": -12.88,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "50": {
-        "dem_votes": 40867,
-        "rep_votes": 50676,
+        "dem_votes": 40809,
+        "rep_votes": 50624,
         "other_votes": 0,
-        "total_votes": 91543,
+        "total_votes": 91433,
         "dem_candidate": "Ronnie Ansley",
         "rep_candidate": "Steve Troxler",
-        "margin": 9809,
-        "margin_pct": 10.72,
+        "margin": 9815,
+        "margin_pct": 10.73,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

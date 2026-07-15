@@ -3,22 +3,29 @@
   "scope": "state_senate",
   "contest_type": "treasurer",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "TREASURER"
+    "office": "TREASURER",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 48278,
-        "rep_votes": 45444,
+        "dem_votes": 48280,
+        "rep_votes": 45445,
         "other_votes": 0,
-        "total_votes": 93722,
+        "total_votes": 93725,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -2834,
+        "margin": -2835,
         "margin_pct": -3.02,
         "winner": "DEM",
         "competitiveness": {
@@ -26,13 +33,13 @@
         }
       },
       "2": {
-        "dem_votes": 46063,
-        "rep_votes": 43413,
+        "dem_votes": 46094,
+        "rep_votes": 43440,
         "other_votes": 0,
-        "total_votes": 89476,
+        "total_votes": 89534,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -2650,
+        "margin": -2654,
         "margin_pct": -2.96,
         "winner": "DEM",
         "competitiveness": {
@@ -54,10 +61,10 @@
         }
       },
       "4": {
-        "dem_votes": 48350,
-        "rep_votes": 42032,
+        "dem_votes": 48354,
+        "rep_votes": 42036,
         "other_votes": 0,
-        "total_votes": 90382,
+        "total_votes": 90390,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
         "margin": -6318,
@@ -68,27 +75,27 @@
         }
       },
       "5": {
-        "dem_votes": 58352,
-        "rep_votes": 38547,
+        "dem_votes": 58351,
+        "rep_votes": 38550,
         "other_votes": 0,
-        "total_votes": 96899,
+        "total_votes": 96901,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -19805,
-        "margin_pct": -20.44,
+        "margin": -19801,
+        "margin_pct": -20.43,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "6": {
-        "dem_votes": 21863,
-        "rep_votes": 23989,
+        "dem_votes": 21869,
+        "rep_votes": 23996,
         "other_votes": 0,
-        "total_votes": 45852,
+        "total_votes": 45865,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 2126,
+        "margin": 2127,
         "margin_pct": 4.64,
         "winner": "REP",
         "competitiveness": {
@@ -96,619 +103,619 @@
         }
       },
       "7": {
-        "dem_votes": 41241,
-        "rep_votes": 43210,
+        "dem_votes": 42161,
+        "rep_votes": 43666,
         "other_votes": 0,
-        "total_votes": 84451,
+        "total_votes": 85827,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 1969,
-        "margin_pct": 2.33,
+        "margin": 1505,
+        "margin_pct": 1.75,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "8": {
-        "dem_votes": 41848,
-        "rep_votes": 37620,
+        "dem_votes": 40951,
+        "rep_votes": 37184,
         "other_votes": 0,
-        "total_votes": 79468,
+        "total_votes": 78135,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -4228,
-        "margin_pct": -5.32,
+        "margin": -3767,
+        "margin_pct": -4.82,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "9": {
-        "dem_votes": 45554,
-        "rep_votes": 37852,
+        "dem_votes": 45714,
+        "rep_votes": 37034,
         "other_votes": 0,
-        "total_votes": 83406,
+        "total_votes": 82748,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -7702,
-        "margin_pct": -9.23,
+        "margin": -8680,
+        "margin_pct": -10.49,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "10": {
-        "dem_votes": 29171,
-        "rep_votes": 38601,
+        "dem_votes": 29267,
+        "rep_votes": 38698,
         "other_votes": 0,
-        "total_votes": 67772,
+        "total_votes": 67965,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 9430,
-        "margin_pct": 13.91,
+        "margin": 9431,
+        "margin_pct": 13.88,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "11": {
-        "dem_votes": 52019,
-        "rep_votes": 39993,
+        "dem_votes": 51924,
+        "rep_votes": 39906,
         "other_votes": 0,
-        "total_votes": 92012,
+        "total_votes": 91830,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -12026,
-        "margin_pct": -13.07,
+        "margin": -12018,
+        "margin_pct": -13.09,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "12": {
-        "dem_votes": 31957,
-        "rep_votes": 31132,
+        "dem_votes": 31836,
+        "rep_votes": 31993,
         "other_votes": 0,
-        "total_votes": 63089,
+        "total_votes": 63829,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -825,
-        "margin_pct": -1.31,
-        "winner": "DEM",
+        "margin": 157,
+        "margin_pct": 0.25,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#f7f7f7"
         }
       },
       "13": {
-        "dem_votes": 43019,
-        "rep_votes": 32672,
+        "dem_votes": 56883,
+        "rep_votes": 41118,
         "other_votes": 0,
-        "total_votes": 75691,
+        "total_votes": 98001,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -10347,
-        "margin_pct": -13.67,
+        "margin": -15765,
+        "margin_pct": -16.09,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "14": {
-        "dem_votes": 41520,
-        "rep_votes": 31534,
+        "dem_votes": 37508,
+        "rep_votes": 16500,
         "other_votes": 0,
-        "total_votes": 73054,
+        "total_votes": 54008,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -9986,
-        "margin_pct": -13.67,
+        "margin": -21008,
+        "margin_pct": -38.9,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08519c"
         }
       },
       "15": {
-        "dem_votes": 45548,
-        "rep_votes": 34593,
+        "dem_votes": 54876,
+        "rep_votes": 36263,
         "other_votes": 0,
-        "total_votes": 80141,
+        "total_votes": 91139,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -10955,
-        "margin_pct": -13.67,
+        "margin": -18613,
+        "margin_pct": -20.42,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "16": {
-        "dem_votes": 40973,
-        "rep_votes": 31118,
+        "dem_votes": 47556,
+        "rep_votes": 40124,
         "other_votes": 0,
-        "total_votes": 72091,
+        "total_votes": 87680,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -9855,
-        "margin_pct": -13.67,
+        "margin": -7432,
+        "margin_pct": -8.48,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "17": {
-        "dem_votes": 39296,
-        "rep_votes": 29845,
+        "dem_votes": 24488,
+        "rep_votes": 26072,
         "other_votes": 0,
-        "total_votes": 69141,
+        "total_votes": 50560,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -9451,
-        "margin_pct": -13.67,
-        "winner": "DEM",
+        "margin": 1584,
+        "margin_pct": 3.13,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#fcae91"
         }
       },
       "18": {
-        "dem_votes": 41955,
-        "rep_votes": 30768,
+        "dem_votes": 31045,
+        "rep_votes": 30497,
         "other_votes": 0,
-        "total_votes": 72723,
+        "total_votes": 61542,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -11187,
-        "margin_pct": -15.38,
+        "margin": -548,
+        "margin_pct": -0.89,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#e1f5fe"
         }
       },
       "19": {
-        "dem_votes": 48846,
-        "rep_votes": 28741,
+        "dem_votes": 47759,
+        "rep_votes": 31604,
         "other_votes": 0,
-        "total_votes": 77587,
+        "total_votes": 79363,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -20105,
-        "margin_pct": -25.91,
+        "margin": -16155,
+        "margin_pct": -20.36,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "20": {
-        "dem_votes": 56363,
-        "rep_votes": 24583,
+        "dem_votes": 59306,
+        "rep_votes": 26705,
         "other_votes": 0,
-        "total_votes": 80946,
+        "total_votes": 86011,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -31780,
-        "margin_pct": -39.26,
+        "margin": -32601,
+        "margin_pct": -37.9,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "21": {
-        "dem_votes": 45135,
-        "rep_votes": 41715,
+        "dem_votes": 46211,
+        "rep_votes": 38818,
         "other_votes": 0,
-        "total_votes": 86850,
+        "total_votes": 85029,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -3420,
-        "margin_pct": -3.94,
+        "margin": -7393,
+        "margin_pct": -8.69,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "22": {
-        "dem_votes": 59101,
-        "rep_votes": 20653,
+        "dem_votes": 56065,
+        "rep_votes": 18433,
         "other_votes": 0,
-        "total_votes": 79754,
+        "total_votes": 74498,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -38448,
-        "margin_pct": -48.21,
+        "margin": -37632,
+        "margin_pct": -50.51,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "23": {
-        "dem_votes": 64626,
-        "rep_votes": 32094,
+        "dem_votes": 64557,
+        "rep_votes": 32061,
         "other_votes": 0,
-        "total_votes": 96720,
+        "total_votes": 96618,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -32532,
-        "margin_pct": -33.64,
+        "margin": -32496,
+        "margin_pct": -33.63,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "24": {
-        "dem_votes": 45638,
-        "rep_votes": 20770,
+        "dem_votes": 45580,
+        "rep_votes": 20733,
         "other_votes": 0,
-        "total_votes": 66408,
+        "total_votes": 66313,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -24868,
-        "margin_pct": -37.45,
+        "margin": -24847,
+        "margin_pct": -37.47,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "25": {
-        "dem_votes": 36017,
-        "rep_votes": 42513,
+        "dem_votes": 36339,
+        "rep_votes": 41942,
         "other_votes": 0,
-        "total_votes": 78530,
+        "total_votes": 78281,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 6496,
-        "margin_pct": 8.27,
+        "margin": 5603,
+        "margin_pct": 7.16,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "26": {
-        "dem_votes": 43369,
-        "rep_votes": 47239,
+        "dem_votes": 40691,
+        "rep_votes": 44358,
         "other_votes": 0,
-        "total_votes": 90608,
+        "total_votes": 85049,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 3870,
-        "margin_pct": 4.27,
+        "margin": 3667,
+        "margin_pct": 4.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "27": {
-        "dem_votes": 43400,
-        "rep_votes": 36448,
+        "dem_votes": 45716,
+        "rep_votes": 39101,
         "other_votes": 0,
-        "total_votes": 79848,
+        "total_votes": 84817,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -6952,
-        "margin_pct": -8.71,
+        "margin": -6615,
+        "margin_pct": -7.8,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "28": {
-        "dem_votes": 69550,
-        "rep_votes": 26751,
+        "dem_votes": 69992,
+        "rep_votes": 27082,
         "other_votes": 0,
-        "total_votes": 96301,
+        "total_votes": 97074,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -42799,
-        "margin_pct": -44.44,
+        "margin": -42910,
+        "margin_pct": -44.2,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "29": {
-        "dem_votes": 43635,
-        "rep_votes": 47648,
+        "dem_votes": 43064,
+        "rep_votes": 47504,
         "other_votes": 0,
-        "total_votes": 91283,
+        "total_votes": 90568,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 4013,
-        "margin_pct": 4.4,
+        "margin": 4440,
+        "margin_pct": 4.9,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "30": {
-        "dem_votes": 32420,
-        "rep_votes": 52892,
+        "dem_votes": 32389,
+        "rep_votes": 52817,
         "other_votes": 0,
-        "total_votes": 85312,
+        "total_votes": 85206,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 20472,
-        "margin_pct": 24,
+        "margin": 20428,
+        "margin_pct": 23.97,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "31": {
-        "dem_votes": 42317,
-        "rep_votes": 41608,
+        "dem_votes": 44094,
+        "rep_votes": 41444,
         "other_votes": 0,
-        "total_votes": 83925,
+        "total_votes": 85538,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -709,
-        "margin_pct": -0.84,
+        "margin": -2650,
+        "margin_pct": -3.1,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#e1f5fe"
+          "color": "#c6dbef"
         }
       },
       "32": {
-        "dem_votes": 54975,
-        "rep_votes": 39918,
+        "dem_votes": 53141,
+        "rep_votes": 40033,
         "other_votes": 0,
-        "total_votes": 94893,
+        "total_votes": 93174,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -15057,
-        "margin_pct": -15.87,
+        "margin": -13108,
+        "margin_pct": -14.07,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "33": {
-        "dem_votes": 36688,
-        "rep_votes": 48401,
+        "dem_votes": 36711,
+        "rep_votes": 48428,
         "other_votes": 0,
-        "total_votes": 85089,
+        "total_votes": 85139,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 11713,
-        "margin_pct": 13.77,
+        "margin": 11717,
+        "margin_pct": 13.76,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "34": {
-        "dem_votes": 31986,
-        "rep_votes": 38569,
+        "dem_votes": 31687,
+        "rep_votes": 38203,
         "other_votes": 0,
-        "total_votes": 70555,
+        "total_votes": 69890,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 6583,
-        "margin_pct": 9.33,
+        "margin": 6516,
+        "margin_pct": 9.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "35": {
-        "dem_votes": 25846,
-        "rep_votes": 42911,
+        "dem_votes": 26458,
+        "rep_votes": 44026,
         "other_votes": 0,
-        "total_votes": 68757,
+        "total_votes": 70484,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 17065,
-        "margin_pct": 24.82,
+        "margin": 17568,
+        "margin_pct": 24.92,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "36": {
-        "dem_votes": 35758,
-        "rep_votes": 52496,
+        "dem_votes": 35746,
+        "rep_votes": 52470,
         "other_votes": 0,
-        "total_votes": 88254,
+        "total_votes": 88216,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 16738,
-        "margin_pct": 18.97,
+        "margin": 16724,
+        "margin_pct": 18.96,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "37": {
-        "dem_votes": 34901,
-        "rep_votes": 44019,
+        "dem_votes": 32600,
+        "rep_votes": 47303,
         "other_votes": 0,
-        "total_votes": 78920,
+        "total_votes": 79903,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 9118,
-        "margin_pct": 11.55,
+        "margin": 14703,
+        "margin_pct": 18.4,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "38": {
-        "dem_votes": 45302,
-        "rep_votes": 30921,
+        "dem_votes": 52615,
+        "rep_votes": 17616,
         "other_votes": 0,
-        "total_votes": 76223,
+        "total_votes": 70231,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -14381,
-        "margin_pct": -18.87,
+        "margin": -34999,
+        "margin_pct": -49.83,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 45766,
-        "rep_votes": 31237,
+        "dem_votes": 38176,
+        "rep_votes": 30979,
         "other_votes": 0,
-        "total_votes": 77003,
+        "total_votes": 69155,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -14529,
-        "margin_pct": -18.87,
+        "margin": -7197,
+        "margin_pct": -10.41,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "40": {
-        "dem_votes": 44486,
-        "rep_votes": 30363,
+        "dem_votes": 49248,
+        "rep_votes": 22376,
         "other_votes": 0,
-        "total_votes": 74849,
+        "total_votes": 71624,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -14123,
-        "margin_pct": -18.87,
+        "margin": -26872,
+        "margin_pct": -37.52,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08519c"
         }
       },
       "41": {
-        "dem_votes": 43318,
-        "rep_votes": 29566,
+        "dem_votes": 48457,
+        "rep_votes": 26006,
         "other_votes": 0,
-        "total_votes": 72884,
+        "total_votes": 74463,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -13752,
-        "margin_pct": -18.87,
+        "margin": -22451,
+        "margin_pct": -30.15,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08519c"
         }
       },
       "42": {
-        "dem_votes": 43803,
-        "rep_votes": 29897,
+        "dem_votes": 36469,
+        "rep_votes": 51705,
         "other_votes": 0,
-        "total_votes": 73700,
+        "total_votes": 88174,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -13906,
-        "margin_pct": -18.87,
-        "winner": "DEM",
+        "margin": 15236,
+        "margin_pct": 17.28,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "43": {
-        "dem_votes": 31624,
-        "rep_votes": 42318,
+        "dem_votes": 30583,
+        "rep_votes": 40849,
         "other_votes": 0,
-        "total_votes": 73942,
+        "total_votes": 71432,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 10694,
-        "margin_pct": 14.46,
+        "margin": 10266,
+        "margin_pct": 14.37,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "44": {
-        "dem_votes": 36800,
-        "rep_votes": 44089,
+        "dem_votes": 37781,
+        "rep_votes": 45461,
         "other_votes": 0,
-        "total_votes": 80889,
+        "total_votes": 83242,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 7289,
-        "margin_pct": 9.01,
+        "margin": 7680,
+        "margin_pct": 9.23,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "45": {
-        "dem_votes": 37165,
-        "rep_votes": 53353,
+        "dem_votes": 36488,
+        "rep_votes": 53037,
         "other_votes": 0,
-        "total_votes": 90518,
+        "total_votes": 89525,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 16188,
-        "margin_pct": 17.88,
+        "margin": 16549,
+        "margin_pct": 18.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "46": {
-        "dem_votes": 41380,
-        "rep_votes": 42457,
+        "dem_votes": 42866,
+        "rep_votes": 43892,
         "other_votes": 0,
-        "total_votes": 83837,
+        "total_votes": 86758,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 1077,
-        "margin_pct": 1.28,
+        "margin": 1026,
+        "margin_pct": 1.18,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "47": {
-        "dem_votes": 45616,
-        "rep_votes": 49331,
+        "dem_votes": 46429,
+        "rep_votes": 49912,
         "other_votes": 0,
-        "total_votes": 94947,
+        "total_votes": 96341,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 3715,
-        "margin_pct": 3.91,
+        "margin": 3483,
+        "margin_pct": 3.62,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "48": {
-        "dem_votes": 36679,
-        "rep_votes": 48111,
+        "dem_votes": 36673,
+        "rep_votes": 48095,
         "other_votes": 0,
-        "total_votes": 84790,
+        "total_votes": 84768,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 11432,
-        "margin_pct": 13.48,
+        "margin": 11422,
+        "margin_pct": 13.47,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "49": {
-        "dem_votes": 51310,
-        "rep_votes": 33403,
+        "dem_votes": 49815,
+        "rep_votes": 31958,
         "other_votes": 0,
-        "total_votes": 84713,
+        "total_votes": 81773,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": -17907,
-        "margin_pct": -21.14,
+        "margin": -17857,
+        "margin_pct": -21.84,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "50": {
-        "dem_votes": 44761,
-        "rep_votes": 45681,
+        "dem_votes": 44724,
+        "rep_votes": 45587,
         "other_votes": 0,
-        "total_votes": 90442,
+        "total_votes": 90311,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Bill Daughtridge",
-        "margin": 920,
-        "margin_pct": 1.02,
+        "margin": 863,
+        "margin_pct": 0.96,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fee8c8"
         }
       }
     }

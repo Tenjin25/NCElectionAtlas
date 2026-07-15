@@ -3,12 +3,16 @@
   "scope": "state_house",
   "contest_type": "nc_court_of_appeals_judge_seat_10",
   "meta": {
-    "match_coverage_pct": 94.74,
-    "matched_precinct_keys": 2520,
-    "total_precinct_keys": 2660,
+    "match_coverage_pct": 99.36,
+    "matched_precinct_keys": 2639,
+    "total_precinct_keys": 2656,
     "source": "batch_shatter_vap_party_split",
     "office": "NC COURT OF APPEALS JUDGE SEAT 10",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2022.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
@@ -27,17 +31,17 @@
         }
       },
       "2": {
-        "dem_votes": 21021,
-        "rep_votes": 16737,
+        "dem_votes": 18966,
+        "rep_votes": 16152,
         "other_votes": 0,
-        "total_votes": 37758,
+        "total_votes": 35118,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -4284,
-        "margin_pct": -11.35,
+        "margin": -2814,
+        "margin_pct": -8.01,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "3": {
@@ -83,14 +87,14 @@
         }
       },
       "6": {
-        "dem_votes": 5248,
-        "rep_votes": 8383,
+        "dem_votes": 7656,
+        "rep_votes": 11513,
         "other_votes": 0,
-        "total_votes": 13631,
+        "total_votes": 19169,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 3135,
-        "margin_pct": 23,
+        "margin": 3857,
+        "margin_pct": 20.12,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -153,14 +157,14 @@
         }
       },
       "11": {
-        "dem_votes": 21514,
-        "rep_votes": 11326,
+        "dem_votes": 19749,
+        "rep_votes": 10145,
         "other_votes": 0,
-        "total_votes": 32840,
+        "total_votes": 29894,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -10188,
-        "margin_pct": -31.02,
+        "margin": -9604,
+        "margin_pct": -32.13,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
@@ -251,56 +255,56 @@
         }
       },
       "18": {
-        "dem_votes": 19619,
-        "rep_votes": 16650,
+        "dem_votes": 19381,
+        "rep_votes": 16975,
         "other_votes": 0,
-        "total_votes": 36269,
+        "total_votes": 36356,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -2969,
-        "margin_pct": -8.19,
+        "margin": -2406,
+        "margin_pct": -6.62,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "19": {
-        "dem_votes": 18661,
-        "rep_votes": 29384,
+        "dem_votes": 18425,
+        "rep_votes": 29707,
         "other_votes": 0,
-        "total_votes": 48045,
+        "total_votes": 48132,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 10723,
-        "margin_pct": 22.32,
+        "margin": 11282,
+        "margin_pct": 23.44,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "20": {
-        "dem_votes": 17081,
-        "rep_votes": 18588,
+        "dem_votes": 17553,
+        "rep_votes": 17940,
         "other_votes": 0,
-        "total_votes": 35669,
+        "total_votes": 35493,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 1507,
-        "margin_pct": 4.22,
+        "margin": 387,
+        "margin_pct": 1.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "21": {
-        "dem_votes": 12648,
-        "rep_votes": 6388,
+        "dem_votes": 18504,
+        "rep_votes": 8452,
         "other_votes": 0,
-        "total_votes": 19036,
+        "total_votes": 26956,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -6260,
-        "margin_pct": -32.89,
+        "margin": -10052,
+        "margin_pct": -37.29,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
@@ -405,42 +409,42 @@
         }
       },
       "29": {
-        "dem_votes": 23159,
-        "rep_votes": 3924,
+        "dem_votes": 32489,
+        "rep_votes": 6724,
         "other_votes": 0,
-        "total_votes": 27083,
+        "total_votes": 39213,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -19235,
-        "margin_pct": -71.02,
+        "margin": -25765,
+        "margin_pct": -65.71,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 37758,
-        "rep_votes": 6643,
+        "dem_votes": 32199,
+        "rep_votes": 5061,
         "other_votes": 0,
-        "total_votes": 44401,
+        "total_votes": 37260,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -31115,
-        "margin_pct": -70.08,
+        "margin": -27138,
+        "margin_pct": -72.83,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 26479,
-        "rep_votes": 6043,
+        "dem_votes": 24762,
+        "rep_votes": 5410,
         "other_votes": 0,
-        "total_votes": 32522,
+        "total_votes": 30172,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -20436,
-        "margin_pct": -62.84,
+        "margin": -19352,
+        "margin_pct": -64.14,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -461,126 +465,126 @@
         }
       },
       "33": {
-        "dem_votes": 20312,
-        "rep_votes": 14017,
+        "dem_votes": 18547,
+        "rep_votes": 12836,
         "other_votes": 0,
-        "total_votes": 34329,
+        "total_votes": 31383,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -6295,
-        "margin_pct": -18.34,
+        "margin": -5711,
+        "margin_pct": -18.2,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "34": {
-        "dem_votes": 30280,
-        "rep_votes": 17607,
+        "dem_votes": 28515,
+        "rep_votes": 16426,
         "other_votes": 0,
-        "total_votes": 47887,
+        "total_votes": 44941,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -12673,
-        "margin_pct": -26.46,
+        "margin": -12089,
+        "margin_pct": -26.9,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "35": {
-        "dem_votes": 16866,
-        "rep_votes": 15494,
+        "dem_votes": 19304,
+        "rep_votes": 18605,
         "other_votes": 0,
-        "total_votes": 32360,
+        "total_votes": 37909,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -1372,
-        "margin_pct": -4.24,
+        "margin": -699,
+        "margin_pct": -1.84,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "36": {
-        "dem_votes": 16775,
-        "rep_votes": 12056,
+        "dem_votes": 20083,
+        "rep_votes": 15191,
         "other_votes": 0,
-        "total_votes": 28831,
+        "total_votes": 35274,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -4719,
-        "margin_pct": -16.37,
+        "margin": -4892,
+        "margin_pct": -13.87,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "37": {
-        "dem_votes": 16341,
-        "rep_votes": 17278,
+        "dem_votes": 16166,
+        "rep_votes": 18000,
         "other_votes": 0,
-        "total_votes": 33619,
+        "total_votes": 34166,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 937,
-        "margin_pct": 2.79,
+        "margin": 1834,
+        "margin_pct": 5.37,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "38": {
-        "dem_votes": 26895,
-        "rep_votes": 5437,
+        "dem_votes": 25130,
+        "rep_votes": 4256,
         "other_votes": 0,
-        "total_votes": 32332,
+        "total_votes": 29386,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -21458,
-        "margin_pct": -66.37,
+        "margin": -20874,
+        "margin_pct": -71.03,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 17262,
-        "rep_votes": 12107,
+        "dem_votes": 17809,
+        "rep_votes": 11919,
         "other_votes": 0,
-        "total_votes": 29369,
+        "total_votes": 29728,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -5155,
-        "margin_pct": -17.55,
+        "margin": -5890,
+        "margin_pct": -19.81,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "40": {
-        "dem_votes": 27741,
-        "rep_votes": 22710,
+        "dem_votes": 25976,
+        "rep_votes": 21529,
         "other_votes": 0,
-        "total_votes": 50451,
+        "total_votes": 47505,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -5031,
-        "margin_pct": -9.97,
+        "margin": -4447,
+        "margin_pct": -9.36,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "41": {
-        "dem_votes": 23363,
-        "rep_votes": 13732,
+        "dem_votes": 21598,
+        "rep_votes": 12551,
         "other_votes": 0,
-        "total_votes": 37095,
+        "total_votes": 34149,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -9631,
-        "margin_pct": -25.96,
+        "margin": -9047,
+        "margin_pct": -26.49,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
@@ -685,14 +689,14 @@
         }
       },
       "49": {
-        "dem_votes": 26609,
-        "rep_votes": 12873,
+        "dem_votes": 24844,
+        "rep_votes": 11692,
         "other_votes": 0,
-        "total_votes": 39482,
+        "total_votes": 36536,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -13736,
-        "margin_pct": -34.79,
+        "margin": -13152,
+        "margin_pct": -36.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
@@ -727,56 +731,56 @@
         }
       },
       "52": {
-        "dem_votes": 12067,
-        "rep_votes": 17588,
+        "dem_votes": 12066,
+        "rep_votes": 17585,
         "other_votes": 0,
-        "total_votes": 29655,
+        "total_votes": 29651,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 5521,
-        "margin_pct": 18.62,
+        "margin": 5519,
+        "margin_pct": 18.61,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "53": {
-        "dem_votes": 13946,
-        "rep_votes": 25645,
+        "dem_votes": 11538,
+        "rep_votes": 22515,
         "other_votes": 0,
-        "total_votes": 39591,
+        "total_votes": 34053,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 11699,
-        "margin_pct": 29.55,
+        "margin": 10977,
+        "margin_pct": 32.24,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "54": {
-        "dem_votes": 14708,
-        "rep_votes": 14997,
+        "dem_votes": 22234,
+        "rep_votes": 17875,
         "other_votes": 0,
-        "total_votes": 29705,
+        "total_votes": 40109,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 289,
-        "margin_pct": 0.97,
-        "winner": "REP",
+        "margin": -4359,
+        "margin_pct": -10.87,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fee8c8"
+          "color": "#6baed6"
         }
       },
       "55": {
-        "dem_votes": 10305,
-        "rep_votes": 19492,
+        "dem_votes": 8990,
+        "rep_votes": 17250,
         "other_votes": 0,
-        "total_votes": 29797,
+        "total_votes": 26240,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 9187,
-        "margin_pct": 30.83,
+        "margin": 8260,
+        "margin_pct": 31.48,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -881,28 +885,28 @@
         }
       },
       "63": {
-        "dem_votes": 14402,
-        "rep_votes": 14652,
+        "dem_votes": 13498,
+        "rep_votes": 13715,
         "other_votes": 0,
-        "total_votes": 29054,
+        "total_votes": 27213,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 250,
-        "margin_pct": 0.86,
+        "margin": 217,
+        "margin_pct": 0.8,
         "winner": "REP",
         "competitiveness": {
           "color": "#fee8c8"
         }
       },
       "64": {
-        "dem_votes": 11310,
-        "rep_votes": 19180,
+        "dem_votes": 12215,
+        "rep_votes": 20118,
         "other_votes": 0,
-        "total_votes": 30490,
+        "total_votes": 32333,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 7870,
-        "margin_pct": 25.81,
+        "margin": 7903,
+        "margin_pct": 24.44,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -923,14 +927,14 @@
         }
       },
       "66": {
-        "dem_votes": 27853,
-        "rep_votes": 13067,
+        "dem_votes": 20705,
+        "rep_votes": 9612,
         "other_votes": 0,
-        "total_votes": 40920,
+        "total_votes": 30317,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": -14786,
-        "margin_pct": -36.13,
+        "margin": -11093,
+        "margin_pct": -36.59,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
@@ -951,28 +955,28 @@
         }
       },
       "68": {
-        "dem_votes": 12000,
-        "rep_votes": 19318,
+        "dem_votes": 13873,
+        "rep_votes": 22319,
         "other_votes": 0,
-        "total_votes": 31318,
+        "total_votes": 36192,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 7318,
-        "margin_pct": 23.37,
+        "margin": 8446,
+        "margin_pct": 23.34,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "69": {
-        "dem_votes": 11827,
-        "rep_votes": 23085,
+        "dem_votes": 11269,
+        "rep_votes": 22326,
         "other_votes": 0,
-        "total_votes": 34912,
+        "total_votes": 33595,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 11258,
-        "margin_pct": 32.25,
+        "margin": 11057,
+        "margin_pct": 32.91,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -1091,13 +1095,13 @@
         }
       },
       "78": {
-        "dem_votes": 7694,
-        "rep_votes": 27369,
+        "dem_votes": 7695,
+        "rep_votes": 27372,
         "other_votes": 0,
-        "total_votes": 35063,
+        "total_votes": 35067,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 19675,
+        "margin": 19677,
         "margin_pct": 56.11,
         "winner": "REP",
         "competitiveness": {
@@ -1259,14 +1263,14 @@
         }
       },
       "90": {
-        "dem_votes": 6520,
-        "rep_votes": 23007,
+        "dem_votes": 6647,
+        "rep_votes": 23663,
         "other_votes": 0,
-        "total_votes": 29527,
+        "total_votes": 30310,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 16487,
-        "margin_pct": 55.84,
+        "margin": 17016,
+        "margin_pct": 56.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
@@ -1315,14 +1319,14 @@
         }
       },
       "94": {
-        "dem_votes": 6750,
-        "rep_votes": 27401,
+        "dem_votes": 6624,
+        "rep_votes": 26744,
         "other_votes": 0,
-        "total_votes": 34151,
+        "total_votes": 33368,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 20651,
-        "margin_pct": 60.47,
+        "margin": 20120,
+        "margin_pct": 60.3,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
@@ -1511,56 +1515,56 @@
         }
       },
       "108": {
-        "dem_votes": 9629,
-        "rep_votes": 19407,
+        "dem_votes": 8696,
+        "rep_votes": 17813,
         "other_votes": 0,
-        "total_votes": 29036,
+        "total_votes": 26509,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 9778,
-        "margin_pct": 33.68,
+        "margin": 9117,
+        "margin_pct": 34.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 8758,
-        "rep_votes": 18428,
+        "dem_votes": 12258,
+        "rep_votes": 18686,
         "other_votes": 0,
-        "total_votes": 27186,
+        "total_votes": 30944,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 9670,
-        "margin_pct": 35.57,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
-      "110": {
-        "dem_votes": 9616,
-        "rep_votes": 16382,
-        "other_votes": 0,
-        "total_votes": 25998,
-        "dem_candidate": "Gale Murray Adams",
-        "rep_candidate": "John M. Tyson",
-        "margin": 6766,
-        "margin_pct": 26.03,
+        "margin": 6428,
+        "margin_pct": 20.77,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
-      "111": {
-        "dem_votes": 9311,
-        "rep_votes": 22387,
+      "110": {
+        "dem_votes": 8142,
+        "rep_votes": 18982,
         "other_votes": 0,
-        "total_votes": 31698,
+        "total_votes": 27124,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 13076,
-        "margin_pct": 41.25,
+        "margin": 10840,
+        "margin_pct": 39.96,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "111": {
+        "dem_votes": 8218,
+        "rep_votes": 21123,
+        "other_votes": 0,
+        "total_votes": 29341,
+        "dem_candidate": "Gale Murray Adams",
+        "rep_candidate": "John M. Tyson",
+        "margin": 12905,
+        "margin_pct": 43.98,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
@@ -1581,14 +1585,14 @@
         }
       },
       "113": {
-        "dem_votes": 12049,
-        "rep_votes": 24327,
+        "dem_votes": 12167,
+        "rep_votes": 24590,
         "other_votes": 0,
-        "total_votes": 36376,
+        "total_votes": 36757,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 12278,
-        "margin_pct": 33.75,
+        "margin": 12423,
+        "margin_pct": 33.8,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -1637,14 +1641,14 @@
         }
       },
       "117": {
-        "dem_votes": 16714,
-        "rep_votes": 24063,
+        "dem_votes": 16596,
+        "rep_votes": 23801,
         "other_votes": 0,
-        "total_votes": 40777,
+        "total_votes": 40397,
         "dem_candidate": "Gale Murray Adams",
         "rep_candidate": "John M. Tyson",
-        "margin": 7349,
-        "margin_pct": 18.02,
+        "margin": 7205,
+        "margin_pct": 17.84,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

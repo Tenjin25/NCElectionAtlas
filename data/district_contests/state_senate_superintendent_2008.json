@@ -3,22 +3,29 @@
   "scope": "state_senate",
   "contest_type": "superintendent",
   "meta": {
-    "match_coverage_pct": 11.4,
-    "matched_precinct_keys": 321,
-    "total_precinct_keys": 2815,
+    "match_coverage_pct": 94.11,
+    "matched_precinct_keys": 2587,
+    "total_precinct_keys": 2749,
     "source": "batch_shatter_vap_party_split",
-    "office": "SUPERINTENDENT OF PUBLIC INSTRUCTION"
+    "office": "SUPERINTENDENT OF PUBLIC INSTRUCTION",
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weight_plan": "sl_2022_mqp",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 48398,
-        "rep_votes": 45402,
+        "dem_votes": 48400,
+        "rep_votes": 45403,
         "other_votes": 0,
-        "total_votes": 93800,
+        "total_votes": 93803,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -2996,
+        "margin": -2997,
         "margin_pct": -3.19,
         "winner": "DEM",
         "competitiveness": {
@@ -26,14 +33,14 @@
         }
       },
       "2": {
-        "dem_votes": 45822,
-        "rep_votes": 43675,
+        "dem_votes": 45848,
+        "rep_votes": 43706,
         "other_votes": 0,
-        "total_votes": 89497,
+        "total_votes": 89554,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -2147,
-        "margin_pct": -2.4,
+        "margin": -2142,
+        "margin_pct": -2.39,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
@@ -54,10 +61,10 @@
         }
       },
       "4": {
-        "dem_votes": 49368,
-        "rep_votes": 40845,
+        "dem_votes": 49372,
+        "rep_votes": 40849,
         "other_votes": 0,
-        "total_votes": 90213,
+        "total_votes": 90221,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
         "margin": -8523,
@@ -68,27 +75,27 @@
         }
       },
       "5": {
-        "dem_votes": 59898,
-        "rep_votes": 36736,
+        "dem_votes": 59897,
+        "rep_votes": 36739,
         "other_votes": 0,
-        "total_votes": 96634,
+        "total_votes": 96636,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -23162,
-        "margin_pct": -23.97,
+        "margin": -23158,
+        "margin_pct": -23.96,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "6": {
-        "dem_votes": 20875,
-        "rep_votes": 25129,
+        "dem_votes": 20880,
+        "rep_votes": 25137,
         "other_votes": 0,
-        "total_votes": 46004,
+        "total_votes": 46017,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 4254,
+        "margin": 4257,
         "margin_pct": 9.25,
         "winner": "REP",
         "competitiveness": {
@@ -96,69 +103,69 @@
         }
       },
       "7": {
-        "dem_votes": 42362,
-        "rep_votes": 42253,
+        "dem_votes": 43288,
+        "rep_votes": 42700,
         "other_votes": 0,
-        "total_votes": 84615,
+        "total_votes": 85988,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -109,
-        "margin_pct": -0.13,
+        "margin": -588,
+        "margin_pct": -0.68,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#e1f5fe"
         }
       },
       "8": {
-        "dem_votes": 41000,
-        "rep_votes": 38311,
+        "dem_votes": 40093,
+        "rep_votes": 37885,
         "other_votes": 0,
-        "total_votes": 79311,
+        "total_votes": 77978,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -2689,
-        "margin_pct": -3.39,
+        "margin": -2208,
+        "margin_pct": -2.83,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "9": {
-        "dem_votes": 44777,
-        "rep_votes": 38720,
+        "dem_votes": 44965,
+        "rep_votes": 37890,
         "other_votes": 0,
-        "total_votes": 83497,
+        "total_votes": 82855,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -6057,
-        "margin_pct": -7.25,
+        "margin": -7075,
+        "margin_pct": -8.54,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "10": {
-        "dem_votes": 30120,
-        "rep_votes": 37504,
+        "dem_votes": 30224,
+        "rep_votes": 37591,
         "other_votes": 0,
-        "total_votes": 67624,
+        "total_votes": 67815,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 7384,
-        "margin_pct": 10.92,
+        "margin": 7367,
+        "margin_pct": 10.86,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "11": {
-        "dem_votes": 53423,
-        "rep_votes": 37651,
+        "dem_votes": 53320,
+        "rep_votes": 37574,
         "other_votes": 0,
-        "total_votes": 91074,
+        "total_votes": 90894,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -15772,
+        "margin": -15746,
         "margin_pct": -17.32,
         "winner": "DEM",
         "competitiveness": {
@@ -166,167 +173,167 @@
         }
       },
       "12": {
-        "dem_votes": 31868,
-        "rep_votes": 31319,
+        "dem_votes": 31723,
+        "rep_votes": 32188,
         "other_votes": 0,
-        "total_votes": 63187,
+        "total_votes": 63911,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -549,
-        "margin_pct": -0.87,
-        "winner": "DEM",
+        "margin": 465,
+        "margin_pct": 0.73,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#e1f5fe"
+          "color": "#fee8c8"
         }
       },
       "13": {
-        "dem_votes": 44073,
-        "rep_votes": 31432,
+        "dem_votes": 58424,
+        "rep_votes": 39406,
         "other_votes": 0,
-        "total_votes": 75505,
+        "total_votes": 97830,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -12641,
-        "margin_pct": -16.74,
+        "margin": -19018,
+        "margin_pct": -19.44,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "14": {
-        "dem_votes": 42538,
-        "rep_votes": 30337,
+        "dem_votes": 37733,
+        "rep_votes": 16015,
         "other_votes": 0,
-        "total_votes": 72875,
+        "total_votes": 53748,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -12201,
-        "margin_pct": -16.74,
+        "margin": -21718,
+        "margin_pct": -40.41,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "15": {
-        "dem_votes": 46665,
-        "rep_votes": 33280,
+        "dem_votes": 56445,
+        "rep_votes": 34456,
         "other_votes": 0,
-        "total_votes": 79945,
+        "total_votes": 90901,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -13385,
-        "margin_pct": -16.74,
+        "margin": -21989,
+        "margin_pct": -24.19,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "16": {
-        "dem_votes": 41977,
-        "rep_votes": 29937,
+        "dem_votes": 48818,
+        "rep_votes": 38654,
         "other_votes": 0,
-        "total_votes": 71914,
+        "total_votes": 87472,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -12040,
-        "margin_pct": -16.74,
+        "margin": -10164,
+        "margin_pct": -11.62,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "17": {
-        "dem_votes": 40260,
-        "rep_votes": 28712,
+        "dem_votes": 25000,
+        "rep_votes": 25432,
         "other_votes": 0,
-        "total_votes": 68972,
+        "total_votes": 50432,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -11548,
-        "margin_pct": -16.74,
-        "winner": "DEM",
+        "margin": 432,
+        "margin_pct": 0.86,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#fee8c8"
         }
       },
       "18": {
-        "dem_votes": 42624,
-        "rep_votes": 29929,
+        "dem_votes": 31760,
+        "rep_votes": 29706,
         "other_votes": 0,
-        "total_votes": 72553,
+        "total_votes": 61466,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -12695,
-        "margin_pct": -17.5,
+        "margin": -2054,
+        "margin_pct": -3.34,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
+        }
+      },
+      "19": {
+        "dem_votes": 47133,
+        "rep_votes": 32167,
+        "other_votes": 0,
+        "total_votes": 79300,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": -14966,
+        "margin_pct": -18.87,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
-      "19": {
-        "dem_votes": 48465,
-        "rep_votes": 29097,
-        "other_votes": 0,
-        "total_votes": 77562,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": -19368,
-        "margin_pct": -24.97,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
       "20": {
-        "dem_votes": 57076,
-        "rep_votes": 24015,
+        "dem_votes": 60149,
+        "rep_votes": 26042,
         "other_votes": 0,
-        "total_votes": 81091,
+        "total_votes": 86191,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -33061,
-        "margin_pct": -40.77,
+        "margin": -34107,
+        "margin_pct": -39.57,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08306b"
+          "color": "#08519c"
         }
       },
       "21": {
-        "dem_votes": 48462,
-        "rep_votes": 38908,
+        "dem_votes": 49781,
+        "rep_votes": 35805,
         "other_votes": 0,
-        "total_votes": 87370,
+        "total_votes": 85586,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -9554,
-        "margin_pct": -10.94,
+        "margin": -13976,
+        "margin_pct": -16.33,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "22": {
-        "dem_votes": 59637,
-        "rep_votes": 20092,
+        "dem_votes": 56471,
+        "rep_votes": 17968,
         "other_votes": 0,
-        "total_votes": 79729,
+        "total_votes": 74439,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -39545,
-        "margin_pct": -49.6,
+        "margin": -38503,
+        "margin_pct": -51.72,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "23": {
-        "dem_votes": 65157,
-        "rep_votes": 31625,
+        "dem_votes": 65092,
+        "rep_votes": 31591,
         "other_votes": 0,
-        "total_votes": 96782,
+        "total_votes": 96683,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -33532,
+        "margin": -33501,
         "margin_pct": -34.65,
         "winner": "DEM",
         "competitiveness": {
@@ -334,139 +341,139 @@
         }
       },
       "24": {
-        "dem_votes": 44152,
-        "rep_votes": 22620,
+        "dem_votes": 44100,
+        "rep_votes": 22578,
         "other_votes": 0,
-        "total_votes": 66772,
+        "total_votes": 66678,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -21532,
-        "margin_pct": -32.25,
+        "margin": -21522,
+        "margin_pct": -32.28,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "25": {
-        "dem_votes": 35256,
-        "rep_votes": 42960,
+        "dem_votes": 35430,
+        "rep_votes": 42519,
         "other_votes": 0,
-        "total_votes": 78216,
+        "total_votes": 77949,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 7704,
-        "margin_pct": 9.85,
+        "margin": 7089,
+        "margin_pct": 9.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "26": {
-        "dem_votes": 42123,
-        "rep_votes": 48056,
+        "dem_votes": 39372,
+        "rep_votes": 45267,
         "other_votes": 0,
-        "total_votes": 90179,
+        "total_votes": 84639,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 5933,
-        "margin_pct": 6.58,
+        "margin": 5895,
+        "margin_pct": 6.96,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "27": {
-        "dem_votes": 43771,
-        "rep_votes": 35974,
+        "dem_votes": 46193,
+        "rep_votes": 38529,
         "other_votes": 0,
-        "total_votes": 79745,
+        "total_votes": 84722,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -7797,
-        "margin_pct": -9.78,
+        "margin": -7664,
+        "margin_pct": -9.05,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "28": {
-        "dem_votes": 70681,
-        "rep_votes": 25593,
+        "dem_votes": 71088,
+        "rep_votes": 25934,
         "other_votes": 0,
-        "total_votes": 96274,
+        "total_votes": 97022,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -45088,
-        "margin_pct": -46.83,
+        "margin": -45154,
+        "margin_pct": -46.54,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "29": {
-        "dem_votes": 41049,
-        "rep_votes": 49978,
+        "dem_votes": 40637,
+        "rep_votes": 49701,
         "other_votes": 0,
-        "total_votes": 91027,
+        "total_votes": 90338,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 8929,
-        "margin_pct": 9.81,
+        "margin": 9064,
+        "margin_pct": 10.03,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "30": {
-        "dem_votes": 30481,
-        "rep_votes": 54536,
+        "dem_votes": 30453,
+        "rep_votes": 54458,
         "other_votes": 0,
-        "total_votes": 85017,
+        "total_votes": 84911,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 24055,
-        "margin_pct": 28.29,
+        "margin": 24005,
+        "margin_pct": 28.27,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "31": {
-        "dem_votes": 40760,
-        "rep_votes": 42873,
+        "dem_votes": 42536,
+        "rep_votes": 42708,
         "other_votes": 0,
-        "total_votes": 83633,
+        "total_votes": 85244,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 2113,
-        "margin_pct": 2.53,
+        "margin": 172,
+        "margin_pct": 0.2,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "32": {
-        "dem_votes": 55853,
-        "rep_votes": 38840,
+        "dem_votes": 54021,
+        "rep_votes": 38954,
         "other_votes": 0,
-        "total_votes": 94693,
+        "total_votes": 92975,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -17013,
-        "margin_pct": -17.97,
+        "margin": -15067,
+        "margin_pct": -16.21,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "33": {
-        "dem_votes": 34798,
-        "rep_votes": 50109,
+        "dem_votes": 34819,
+        "rep_votes": 50137,
         "other_votes": 0,
-        "total_votes": 84907,
+        "total_votes": 84956,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 15311,
+        "margin": 15318,
         "margin_pct": 18.03,
         "winner": "REP",
         "competitiveness": {
@@ -474,238 +481,238 @@
         }
       },
       "34": {
-        "dem_votes": 30721,
-        "rep_votes": 39656,
+        "dem_votes": 30427,
+        "rep_votes": 39287,
         "other_votes": 0,
-        "total_votes": 70377,
+        "total_votes": 69714,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 8935,
-        "margin_pct": 12.7,
+        "margin": 8860,
+        "margin_pct": 12.71,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "35": {
-        "dem_votes": 25276,
-        "rep_votes": 43227,
+        "dem_votes": 25869,
+        "rep_votes": 44352,
         "other_votes": 0,
-        "total_votes": 68503,
+        "total_votes": 70221,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 17951,
-        "margin_pct": 26.2,
+        "margin": 18483,
+        "margin_pct": 26.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "36": {
-        "dem_votes": 33427,
-        "rep_votes": 54445,
+        "dem_votes": 33414,
+        "rep_votes": 54419,
         "other_votes": 0,
-        "total_votes": 87872,
+        "total_votes": 87833,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 21018,
-        "margin_pct": 23.92,
+        "margin": 21005,
+        "margin_pct": 23.91,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "37": {
-        "dem_votes": 34168,
-        "rep_votes": 44465,
+        "dem_votes": 31930,
+        "rep_votes": 47621,
         "other_votes": 0,
-        "total_votes": 78633,
+        "total_votes": 79551,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 10297,
-        "margin_pct": 13.1,
+        "margin": 15691,
+        "margin_pct": 19.72,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "38": {
-        "dem_votes": 45966,
-        "rep_votes": 29899,
+        "dem_votes": 53044,
+        "rep_votes": 17044,
         "other_votes": 0,
-        "total_votes": 75865,
+        "total_votes": 70088,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -16067,
-        "margin_pct": -21.18,
+        "margin": -36000,
+        "margin_pct": -51.36,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 46437,
-        "rep_votes": 30205,
+        "dem_votes": 39231,
+        "rep_votes": 29370,
         "other_votes": 0,
-        "total_votes": 76642,
+        "total_votes": 68601,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -16232,
-        "margin_pct": -21.18,
+        "margin": -9861,
+        "margin_pct": -14.37,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "40": {
-        "dem_votes": 45138,
-        "rep_votes": 29360,
+        "dem_votes": 49297,
+        "rep_votes": 22141,
         "other_votes": 0,
-        "total_votes": 74498,
+        "total_votes": 71438,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -15778,
-        "margin_pct": -21.18,
+        "margin": -27156,
+        "margin_pct": -38.01,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08519c"
         }
       },
       "41": {
-        "dem_votes": 43953,
-        "rep_votes": 28590,
+        "dem_votes": 48618,
+        "rep_votes": 25620,
         "other_votes": 0,
-        "total_votes": 72543,
+        "total_votes": 74238,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -15363,
-        "margin_pct": -21.18,
+        "margin": -22998,
+        "margin_pct": -30.98,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08519c"
         }
       },
       "42": {
-        "dem_votes": 44445,
-        "rep_votes": 28909,
+        "dem_votes": 37977,
+        "rep_votes": 49614,
         "other_votes": 0,
-        "total_votes": 73354,
+        "total_votes": 87591,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -15536,
-        "margin_pct": -21.18,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "43": {
-        "dem_votes": 30531,
-        "rep_votes": 43193,
-        "other_votes": 0,
-        "total_votes": 73724,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 12662,
-        "margin_pct": 17.17,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "44": {
-        "dem_votes": 34864,
-        "rep_votes": 45771,
-        "other_votes": 0,
-        "total_votes": 80635,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 10907,
-        "margin_pct": 13.53,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "45": {
-        "dem_votes": 35988,
-        "rep_votes": 54248,
-        "other_votes": 0,
-        "total_votes": 90236,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 18260,
-        "margin_pct": 20.24,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#cb181d"
-        }
-      },
-      "46": {
-        "dem_votes": 40333,
-        "rep_votes": 43341,
-        "other_votes": 0,
-        "total_votes": 83674,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 3008,
-        "margin_pct": 3.59,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "47": {
-        "dem_votes": 45028,
-        "rep_votes": 49973,
-        "other_votes": 0,
-        "total_votes": 95001,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 4945,
-        "margin_pct": 5.21,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "48": {
-        "dem_votes": 36877,
-        "rep_votes": 48178,
-        "other_votes": 0,
-        "total_votes": 85055,
-        "dem_candidate": "June St. Clair Atkinson",
-        "rep_candidate": "Richard Morgan",
-        "margin": 11301,
+        "margin": 11637,
         "margin_pct": 13.29,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "49": {
-        "dem_votes": 51501,
-        "rep_votes": 33301,
+      "43": {
+        "dem_votes": 29712,
+        "rep_votes": 41590,
         "other_votes": 0,
-        "total_votes": 84802,
+        "total_votes": 71302,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": -18200,
-        "margin_pct": -21.46,
+        "margin": 11878,
+        "margin_pct": 16.66,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "44": {
+        "dem_votes": 35629,
+        "rep_votes": 47271,
+        "other_votes": 0,
+        "total_votes": 82900,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": 11642,
+        "margin_pct": 14.04,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "45": {
+        "dem_votes": 35458,
+        "rep_votes": 53799,
+        "other_votes": 0,
+        "total_votes": 89257,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": 18341,
+        "margin_pct": 20.55,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "46": {
+        "dem_votes": 41737,
+        "rep_votes": 44828,
+        "other_votes": 0,
+        "total_votes": 86565,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": 3091,
+        "margin_pct": 3.57,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "47": {
+        "dem_votes": 45636,
+        "rep_votes": 50748,
+        "other_votes": 0,
+        "total_votes": 96384,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": 5112,
+        "margin_pct": 5.3,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "48": {
+        "dem_votes": 36872,
+        "rep_votes": 48162,
+        "other_votes": 0,
+        "total_votes": 85034,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": 11290,
+        "margin_pct": 13.28,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "49": {
+        "dem_votes": 50090,
+        "rep_votes": 31804,
+        "other_votes": 0,
+        "total_votes": 81894,
+        "dem_candidate": "June St. Clair Atkinson",
+        "rep_candidate": "Richard Morgan",
+        "margin": -18286,
+        "margin_pct": -22.33,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "50": {
-        "dem_votes": 44349,
-        "rep_votes": 46354,
+        "dem_votes": 44363,
+        "rep_votes": 46205,
         "other_votes": 0,
-        "total_votes": 90703,
+        "total_votes": 90568,
         "dem_candidate": "June St. Clair Atkinson",
         "rep_candidate": "Richard Morgan",
-        "margin": 2005,
-        "margin_pct": 2.21,
+        "margin": 1842,
+        "margin_pct": 2.03,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"

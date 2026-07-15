@@ -3,94 +3,98 @@
   "scope": "state_house",
   "contest_type": "auditor",
   "meta": {
-    "match_coverage_pct": 86.38,
-    "matched_precinct_keys": 2365,
-    "total_precinct_keys": 2738,
+    "match_coverage_pct": 100.0,
+    "matched_precinct_keys": 2703,
+    "total_precinct_keys": 2703,
     "source": "batch_shatter_vap_party_split",
     "office": "NC AUDITOR",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_lines_year": 2022,
+    "district_lines_label": "2022 lines"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 17001,
-        "rep_votes": 22965,
+        "dem_votes": 17002,
+        "rep_votes": 22973,
         "other_votes": 0,
-        "total_votes": 39966,
+        "total_votes": 39975,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 5964,
-        "margin_pct": 14.92,
+        "margin": 5971,
+        "margin_pct": 14.94,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "2": {
-        "dem_votes": 24908,
-        "rep_votes": 18287,
+        "dem_votes": 23744,
+        "rep_votes": 17714,
         "other_votes": 0,
-        "total_votes": 43195,
+        "total_votes": 41458,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -6621,
-        "margin_pct": -15.33,
+        "margin": -6030,
+        "margin_pct": -14.54,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "3": {
-        "dem_votes": 16872,
-        "rep_votes": 21058,
+        "dem_votes": 17619,
+        "rep_votes": 21725,
         "other_votes": 0,
-        "total_votes": 37930,
+        "total_votes": 39344,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 4186,
-        "margin_pct": 11.04,
+        "margin": 4106,
+        "margin_pct": 10.44,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "4": {
-        "dem_votes": 15356,
-        "rep_votes": 18499,
+        "dem_votes": 15653,
+        "rep_votes": 19072,
         "other_votes": 0,
-        "total_votes": 33855,
+        "total_votes": 34725,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3143,
-        "margin_pct": 9.28,
+        "margin": 3419,
+        "margin_pct": 9.85,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "5": {
-        "dem_votes": 20173,
-        "rep_votes": 15650,
+        "dem_votes": 20169,
+        "rep_votes": 15649,
         "other_votes": 0,
-        "total_votes": 35823,
+        "total_votes": 35818,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -4523,
-        "margin_pct": -12.63,
+        "margin": -4520,
+        "margin_pct": -12.62,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "6": {
-        "dem_votes": 7080,
-        "rep_votes": 8366,
+        "dem_votes": 10037,
+        "rep_votes": 11756,
         "other_votes": 0,
-        "total_votes": 15446,
+        "total_votes": 21793,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1286,
-        "margin_pct": 8.33,
+        "margin": 1719,
+        "margin_pct": 7.89,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
@@ -111,66 +115,66 @@
         }
       },
       "8": {
-        "dem_votes": 25043,
-        "rep_votes": 18019,
+        "dem_votes": 25065,
+        "rep_votes": 18010,
         "other_votes": 0,
-        "total_votes": 43062,
+        "total_votes": 43075,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -7024,
-        "margin_pct": -16.31,
+        "margin": -7055,
+        "margin_pct": -16.38,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "9": {
-        "dem_votes": 18477,
-        "rep_votes": 15323,
+        "dem_votes": 18455,
+        "rep_votes": 15337,
         "other_votes": 0,
-        "total_votes": 33800,
+        "total_votes": 33792,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -3154,
-        "margin_pct": -9.33,
+        "margin": -3118,
+        "margin_pct": -9.23,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "10": {
-        "dem_votes": 17012,
-        "rep_votes": 17161,
+        "dem_votes": 16713,
+        "rep_votes": 16578,
         "other_votes": 0,
-        "total_votes": 34173,
+        "total_votes": 33291,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 149,
-        "margin_pct": 0.44,
-        "winner": "REP",
+        "margin": -135,
+        "margin_pct": -0.41,
+        "winner": "DEM",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
       "11": {
-        "dem_votes": 25313,
-        "rep_votes": 16741,
+        "dem_votes": 25131,
+        "rep_votes": 16488,
         "other_votes": 0,
-        "total_votes": 42054,
+        "total_votes": 41619,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -8572,
-        "margin_pct": -20.38,
+        "margin": -8643,
+        "margin_pct": -20.77,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "12": {
-        "dem_votes": 20243,
-        "rep_votes": 18224,
+        "dem_votes": 20240,
+        "rep_votes": 18221,
         "other_votes": 0,
-        "total_votes": 38467,
+        "total_votes": 38461,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
         "margin": -2019,
@@ -181,14 +185,14 @@
         }
       },
       "13": {
-        "dem_votes": 14239,
-        "rep_votes": 28270,
+        "dem_votes": 13482,
+        "rep_votes": 27588,
         "other_votes": 0,
-        "total_votes": 42509,
+        "total_votes": 41070,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14031,
-        "margin_pct": 33.01,
+        "margin": 14106,
+        "margin_pct": 34.35,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -209,181 +213,181 @@
         }
       },
       "15": {
-        "dem_votes": 9573,
-        "rep_votes": 15607,
+        "dem_votes": 9578,
+        "rep_votes": 15624,
         "other_votes": 0,
-        "total_votes": 25180,
+        "total_votes": 25202,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 6034,
-        "margin_pct": 23.96,
+        "margin": 6046,
+        "margin_pct": 23.99,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "16": {
-        "dem_votes": 12746,
-        "rep_votes": 23891,
+        "dem_votes": 12740,
+        "rep_votes": 23877,
         "other_votes": 0,
-        "total_votes": 36637,
+        "total_votes": 36617,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 11145,
-        "margin_pct": 30.42,
+        "margin": 11137,
+        "margin_pct": 30.41,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "17": {
-        "dem_votes": 15703,
-        "rep_votes": 26109,
+        "dem_votes": 15573,
+        "rep_votes": 24399,
         "other_votes": 0,
-        "total_votes": 41812,
+        "total_votes": 39972,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 10406,
-        "margin_pct": 24.89,
+        "margin": 8826,
+        "margin_pct": 22.08,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "18": {
-        "dem_votes": 24104,
-        "rep_votes": 20504,
+        "dem_votes": 22263,
+        "rep_votes": 18934,
         "other_votes": 0,
-        "total_votes": 44608,
+        "total_votes": 41197,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -3600,
-        "margin_pct": -8.07,
+        "margin": -3329,
+        "margin_pct": -8.08,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "19": {
-        "dem_votes": 18857,
-        "rep_votes": 27208,
+        "dem_votes": 17062,
+        "rep_votes": 27249,
         "other_votes": 0,
-        "total_votes": 46065,
+        "total_votes": 44311,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 8351,
-        "margin_pct": 18.13,
+        "margin": 10187,
+        "margin_pct": 22.99,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "20": {
-        "dem_votes": 16953,
-        "rep_votes": 20033,
+        "dem_votes": 20723,
+        "rep_votes": 23285,
         "other_votes": 0,
-        "total_votes": 36986,
+        "total_votes": 44008,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3080,
-        "margin_pct": 8.33,
+        "margin": 2562,
+        "margin_pct": 5.82,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "21": {
-        "dem_votes": 12246,
-        "rep_votes": 9299,
+        "dem_votes": 15139,
+        "rep_votes": 11333,
         "other_votes": 0,
-        "total_votes": 21545,
+        "total_votes": 26472,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -2947,
-        "margin_pct": -13.68,
+        "margin": -3806,
+        "margin_pct": -14.38,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "22": {
-        "dem_votes": 19364,
-        "rep_votes": 20117,
+        "dem_votes": 19356,
+        "rep_votes": 20115,
         "other_votes": 0,
-        "total_votes": 39481,
+        "total_votes": 39471,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 753,
-        "margin_pct": 1.91,
+        "margin": 759,
+        "margin_pct": 1.92,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "23": {
-        "dem_votes": 29287,
-        "rep_votes": 14781,
+        "dem_votes": 29295,
+        "rep_votes": 14792,
         "other_votes": 0,
-        "total_votes": 44068,
+        "total_votes": 44087,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -14506,
-        "margin_pct": -32.92,
+        "margin": -14503,
+        "margin_pct": -32.9,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "24": {
-        "dem_votes": 22423,
-        "rep_votes": 16687,
+        "dem_votes": 22296,
+        "rep_votes": 16936,
         "other_votes": 0,
-        "total_votes": 39110,
+        "total_votes": 39232,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -5736,
-        "margin_pct": -14.67,
+        "margin": -5360,
+        "margin_pct": -13.66,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "25": {
-        "dem_votes": 24367,
-        "rep_votes": 19862,
+        "dem_votes": 24429,
+        "rep_votes": 19538,
         "other_votes": 0,
-        "total_votes": 44229,
+        "total_votes": 43967,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -4505,
-        "margin_pct": -10.19,
+        "margin": -4891,
+        "margin_pct": -11.12,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "26": {
-        "dem_votes": 11432,
-        "rep_votes": 15741,
+        "dem_votes": 11503,
+        "rep_votes": 15820,
         "other_votes": 0,
-        "total_votes": 27173,
+        "total_votes": 27323,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 4309,
-        "margin_pct": 15.86,
+        "margin": 4317,
+        "margin_pct": 15.8,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "27": {
-        "dem_votes": 29962,
-        "rep_votes": 13430,
+        "dem_votes": 29966,
+        "rep_votes": 13431,
         "other_votes": 0,
-        "total_votes": 43392,
+        "total_votes": 43397,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -16532,
+        "margin": -16535,
         "margin_pct": -38.1,
         "winner": "DEM",
         "competitiveness": {
@@ -391,56 +395,56 @@
         }
       },
       "28": {
-        "dem_votes": 16310,
-        "rep_votes": 22698,
+        "dem_votes": 16301,
+        "rep_votes": 22694,
         "other_votes": 0,
-        "total_votes": 39008,
+        "total_votes": 38995,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 6388,
-        "margin_pct": 16.38,
+        "margin": 6393,
+        "margin_pct": 16.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "29": {
-        "dem_votes": 25579,
-        "rep_votes": 7372,
+        "dem_votes": 33110,
+        "rep_votes": 11122,
         "other_votes": 0,
-        "total_votes": 32951,
+        "total_votes": 44232,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -18207,
-        "margin_pct": -55.25,
+        "margin": -21988,
+        "margin_pct": -49.71,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 41038,
-        "rep_votes": 10437,
+        "dem_votes": 37854,
+        "rep_votes": 8855,
         "other_votes": 0,
-        "total_votes": 51475,
+        "total_votes": 46709,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -30601,
-        "margin_pct": -59.45,
+        "margin": -28999,
+        "margin_pct": -62.08,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 33800,
-        "rep_votes": 7061,
+        "dem_votes": 30696,
+        "rep_votes": 5519,
         "other_votes": 0,
-        "total_votes": 40861,
+        "total_votes": 36215,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -26739,
-        "margin_pct": -65.44,
+        "margin": -25177,
+        "margin_pct": -69.52,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -462,13 +466,13 @@
       },
       "33": {
         "dem_votes": 23618,
-        "rep_votes": 14215,
+        "rep_votes": 14184,
         "other_votes": 0,
-        "total_votes": 37833,
+        "total_votes": 37802,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -9403,
-        "margin_pct": -24.85,
+        "margin": -9434,
+        "margin_pct": -24.96,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
@@ -489,139 +493,139 @@
         }
       },
       "35": {
-        "dem_votes": 14684,
-        "rep_votes": 16713,
+        "dem_votes": 15215,
+        "rep_votes": 17328,
         "other_votes": 0,
-        "total_votes": 31397,
+        "total_votes": 32543,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 2029,
-        "margin_pct": 6.46,
+        "margin": 2113,
+        "margin_pct": 6.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "36": {
-        "dem_votes": 16687,
-        "rep_votes": 18055,
+        "dem_votes": 15902,
+        "rep_votes": 17974,
         "other_votes": 0,
-        "total_votes": 34742,
+        "total_votes": 33876,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1368,
-        "margin_pct": 3.94,
+        "margin": 2072,
+        "margin_pct": 6.12,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fb6a4a"
         }
       },
       "37": {
-        "dem_votes": 17025,
-        "rep_votes": 19850,
+        "dem_votes": 16447,
+        "rep_votes": 19052,
         "other_votes": 0,
-        "total_votes": 36875,
+        "total_votes": 35499,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 2825,
-        "margin_pct": 7.66,
+        "margin": 2605,
+        "margin_pct": 7.34,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "38": {
-        "dem_votes": 36140,
-        "rep_votes": 7417,
+        "dem_votes": 34512,
+        "rep_votes": 6569,
         "other_votes": 0,
-        "total_votes": 43557,
+        "total_votes": 41081,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -28723,
-        "margin_pct": -65.94,
+        "margin": -27943,
+        "margin_pct": -68.02,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 14202,
-        "rep_votes": 9633,
+        "dem_votes": 16487,
+        "rep_votes": 10840,
         "other_votes": 0,
-        "total_votes": 23835,
+        "total_votes": 27327,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -4569,
-        "margin_pct": -19.17,
+        "margin": -5647,
+        "margin_pct": -20.66,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "40": {
-        "dem_votes": 24820,
-        "rep_votes": 26108,
+        "dem_votes": 24201,
+        "rep_votes": 25992,
         "other_votes": 0,
-        "total_votes": 50928,
+        "total_votes": 50193,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1288,
-        "margin_pct": 2.53,
+        "margin": 1791,
+        "margin_pct": 3.57,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "41": {
-        "dem_votes": 27060,
-        "rep_votes": 20828,
+        "dem_votes": 26258,
+        "rep_votes": 20240,
         "other_votes": 0,
-        "total_votes": 47888,
+        "total_votes": 46498,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -6232,
-        "margin_pct": -13.01,
+        "margin": -6018,
+        "margin_pct": -12.94,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "42": {
-        "dem_votes": 15209,
-        "rep_votes": 6117,
+        "dem_votes": 16728,
+        "rep_votes": 6699,
         "other_votes": 0,
-        "total_votes": 21326,
+        "total_votes": 23427,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -9092,
-        "margin_pct": -42.63,
+        "margin": -10029,
+        "margin_pct": -42.81,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "43": {
-        "dem_votes": 16016,
-        "rep_votes": 14958,
+        "dem_votes": 18688,
+        "rep_votes": 16839,
         "other_votes": 0,
-        "total_votes": 30974,
+        "total_votes": 35527,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -1058,
-        "margin_pct": -3.42,
+        "margin": -1849,
+        "margin_pct": -5.2,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "44": {
-        "dem_votes": 23460,
-        "rep_votes": 13683,
+        "dem_votes": 21338,
+        "rep_votes": 12446,
         "other_votes": 0,
-        "total_votes": 37143,
+        "total_votes": 33784,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -9777,
+        "margin": -8892,
         "margin_pct": -26.32,
         "winner": "DEM",
         "competitiveness": {
@@ -629,41 +633,41 @@
         }
       },
       "45": {
-        "dem_votes": 19307,
-        "rep_votes": 13635,
+        "dem_votes": 17259,
+        "rep_votes": 12429,
         "other_votes": 0,
-        "total_votes": 32942,
+        "total_votes": 29688,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -5672,
-        "margin_pct": -17.22,
+        "margin": -4830,
+        "margin_pct": -16.27,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "46": {
-        "dem_votes": 15893,
-        "rep_votes": 17543,
+        "dem_votes": 15899,
+        "rep_votes": 17540,
         "other_votes": 0,
-        "total_votes": 33436,
+        "total_votes": 33439,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1650,
-        "margin_pct": 4.93,
+        "margin": 1641,
+        "margin_pct": 4.91,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "47": {
-        "dem_votes": 16548,
+        "dem_votes": 16547,
         "rep_votes": 9842,
         "other_votes": 0,
-        "total_votes": 26390,
+        "total_votes": 26389,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -6706,
+        "margin": -6705,
         "margin_pct": -25.41,
         "winner": "DEM",
         "competitiveness": {
@@ -671,139 +675,139 @@
         }
       },
       "48": {
-        "dem_votes": 18052,
-        "rep_votes": 12001,
+        "dem_votes": 18041,
+        "rep_votes": 11985,
         "other_votes": 0,
-        "total_votes": 30053,
+        "total_votes": 30026,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -6051,
-        "margin_pct": -20.13,
+        "margin": -6056,
+        "margin_pct": -20.17,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "49": {
-        "dem_votes": 27341,
-        "rep_votes": 17705,
+        "dem_votes": 26706,
+        "rep_votes": 17339,
         "other_votes": 0,
-        "total_votes": 45046,
+        "total_votes": 44045,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -9636,
-        "margin_pct": -21.39,
+        "margin": -9367,
+        "margin_pct": -21.27,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "50": {
-        "dem_votes": 32673,
-        "rep_votes": 20340,
+        "dem_votes": 26778,
+        "rep_votes": 18955,
         "other_votes": 0,
-        "total_votes": 53013,
+        "total_votes": 45733,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -12333,
-        "margin_pct": -23.26,
+        "margin": -7823,
+        "margin_pct": -17.11,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "51": {
-        "dem_votes": 14585,
-        "rep_votes": 16557,
+        "dem_votes": 14407,
+        "rep_votes": 16189,
         "other_votes": 0,
-        "total_votes": 31142,
+        "total_votes": 30596,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1972,
-        "margin_pct": 6.33,
+        "margin": 1782,
+        "margin_pct": 5.82,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "52": {
-        "dem_votes": 18563,
-        "rep_votes": 19785,
+        "dem_votes": 18537,
+        "rep_votes": 19712,
         "other_votes": 0,
-        "total_votes": 38348,
+        "total_votes": 38249,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1222,
-        "margin_pct": 3.19,
+        "margin": 1175,
+        "margin_pct": 3.07,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "53": {
-        "dem_votes": 17870,
-        "rep_votes": 27120,
+        "dem_votes": 14944,
+        "rep_votes": 23768,
         "other_votes": 0,
-        "total_votes": 44990,
+        "total_votes": 38712,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 9250,
-        "margin_pct": 20.56,
+        "margin": 8824,
+        "margin_pct": 22.79,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "54": {
-        "dem_votes": 14553,
-        "rep_votes": 12310,
+        "dem_votes": 22443,
+        "rep_votes": 19139,
         "other_votes": 0,
-        "total_votes": 26863,
+        "total_votes": 41582,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -2243,
-        "margin_pct": -8.35,
+        "margin": -3304,
+        "margin_pct": -7.95,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "55": {
-        "dem_votes": 17170,
-        "rep_votes": 21065,
+        "dem_votes": 15952,
+        "rep_votes": 18765,
         "other_votes": 0,
-        "total_votes": 38235,
+        "total_votes": 34717,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3895,
-        "margin_pct": 10.19,
+        "margin": 2813,
+        "margin_pct": 8.1,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "56": {
-        "dem_votes": 28060,
-        "rep_votes": 7811,
+        "dem_votes": 33911,
+        "rep_votes": 9170,
         "other_votes": 0,
-        "total_votes": 35871,
+        "total_votes": 43081,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -20249,
-        "margin_pct": -56.45,
+        "margin": -24741,
+        "margin_pct": -57.43,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "57": {
-        "dem_votes": 24287,
-        "rep_votes": 20538,
+        "dem_votes": 24289,
+        "rep_votes": 20543,
         "other_votes": 0,
-        "total_votes": 44825,
+        "total_votes": 44832,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -3749,
+        "margin": -3746,
         "margin_pct": -8.36,
         "winner": "DEM",
         "competitiveness": {
@@ -825,28 +829,28 @@
         }
       },
       "59": {
-        "dem_votes": 19532,
-        "rep_votes": 20592,
+        "dem_votes": 19542,
+        "rep_votes": 20628,
         "other_votes": 0,
-        "total_votes": 40124,
+        "total_votes": 40170,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1060,
-        "margin_pct": 2.64,
+        "margin": 1086,
+        "margin_pct": 2.7,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "60": {
-        "dem_votes": 21822,
-        "rep_votes": 14013,
+        "dem_votes": 21818,
+        "rep_votes": 14005,
         "other_votes": 0,
-        "total_votes": 35835,
+        "total_votes": 35823,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -7809,
-        "margin_pct": -21.79,
+        "margin": -7813,
+        "margin_pct": -21.81,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
@@ -867,363 +871,363 @@
         }
       },
       "62": {
-        "dem_votes": 21657,
-        "rep_votes": 24809,
+        "dem_votes": 21650,
+        "rep_votes": 24794,
         "other_votes": 0,
-        "total_votes": 46466,
+        "total_votes": 46444,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3152,
-        "margin_pct": 6.78,
+        "margin": 3144,
+        "margin_pct": 6.77,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "63": {
-        "dem_votes": 16182,
-        "rep_votes": 15016,
+        "dem_votes": 16598,
+        "rep_votes": 15111,
         "other_votes": 0,
-        "total_votes": 31198,
+        "total_votes": 31709,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -1166,
-        "margin_pct": -3.74,
+        "margin": -1487,
+        "margin_pct": -4.69,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "64": {
-        "dem_votes": 14960,
-        "rep_votes": 22200,
+        "dem_votes": 14583,
+        "rep_votes": 22095,
         "other_votes": 0,
-        "total_votes": 37160,
+        "total_votes": 36678,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 7240,
-        "margin_pct": 19.48,
+        "margin": 7512,
+        "margin_pct": 20.48,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "65": {
-        "dem_votes": 16217,
-        "rep_votes": 23789,
+        "dem_votes": 16212,
+        "rep_votes": 23780,
         "other_votes": 0,
-        "total_votes": 40006,
+        "total_votes": 39992,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 7572,
-        "margin_pct": 18.93,
+        "margin": 7568,
+        "margin_pct": 18.92,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "66": {
-        "dem_votes": 32394,
-        "rep_votes": 18314,
+        "dem_votes": 23909,
+        "rep_votes": 10628,
         "other_votes": 0,
-        "total_votes": 50708,
+        "total_votes": 34537,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -14080,
-        "margin_pct": -27.77,
+        "margin": -13281,
+        "margin_pct": -38.45,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08519c"
         }
       },
       "67": {
-        "dem_votes": 13495,
-        "rep_votes": 25801,
+        "dem_votes": 13492,
+        "rep_votes": 25802,
         "other_votes": 0,
-        "total_votes": 39296,
+        "total_votes": 39294,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12306,
-        "margin_pct": 31.32,
+        "margin": 12310,
+        "margin_pct": 31.33,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "68": {
-        "dem_votes": 10676,
-        "rep_votes": 22374,
+        "dem_votes": 11885,
+        "rep_votes": 25049,
         "other_votes": 0,
-        "total_votes": 33050,
+        "total_votes": 36934,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 11698,
-        "margin_pct": 35.39,
+        "margin": 13164,
+        "margin_pct": 35.64,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "69": {
-        "dem_votes": 12564,
-        "rep_votes": 26572,
+        "dem_votes": 12579,
+        "rep_votes": 26214,
         "other_votes": 0,
-        "total_votes": 39136,
+        "total_votes": 38793,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14008,
-        "margin_pct": 35.79,
+        "margin": 13635,
+        "margin_pct": 35.15,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "70": {
-        "dem_votes": 9850,
-        "rep_votes": 26837,
+        "dem_votes": 9853,
+        "rep_votes": 26850,
         "other_votes": 0,
-        "total_votes": 36687,
+        "total_votes": 36703,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 16987,
-        "margin_pct": 46.3,
+        "margin": 16997,
+        "margin_pct": 46.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "71": {
-        "dem_votes": 24973,
-        "rep_votes": 10918,
+        "dem_votes": 24732,
+        "rep_votes": 10312,
         "other_votes": 0,
-        "total_votes": 35891,
+        "total_votes": 35044,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -14055,
-        "margin_pct": -39.16,
+        "margin": -14420,
+        "margin_pct": -41.15,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08519c"
+          "color": "#08306b"
         }
       },
       "72": {
-        "dem_votes": 26677,
-        "rep_votes": 11256,
+        "dem_votes": 26273,
+        "rep_votes": 9280,
         "other_votes": 0,
-        "total_votes": 37933,
+        "total_votes": 35553,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -15421,
-        "margin_pct": -40.65,
+        "margin": -16993,
+        "margin_pct": -47.8,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "73": {
-        "dem_votes": 14412,
-        "rep_votes": 16133,
+        "dem_votes": 15218,
+        "rep_votes": 16316,
         "other_votes": 0,
-        "total_votes": 30545,
+        "total_votes": 31534,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 1721,
-        "margin_pct": 5.63,
+        "margin": 1098,
+        "margin_pct": 3.48,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "74": {
-        "dem_votes": 18598,
-        "rep_votes": 21719,
+        "dem_votes": 18928,
+        "rep_votes": 24340,
         "other_votes": 0,
-        "total_votes": 40317,
+        "total_votes": 43268,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3121,
-        "margin_pct": 7.74,
+        "margin": 5412,
+        "margin_pct": 12.51,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "75": {
-        "dem_votes": 13473,
-        "rep_votes": 18764,
+        "dem_votes": 16446,
+        "rep_votes": 21049,
         "other_votes": 0,
-        "total_votes": 32237,
+        "total_votes": 37495,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 5291,
-        "margin_pct": 16.41,
+        "margin": 4603,
+        "margin_pct": 12.28,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "76": {
-        "dem_votes": 15755,
-        "rep_votes": 21681,
+        "dem_votes": 15765,
+        "rep_votes": 21721,
         "other_votes": 0,
-        "total_votes": 37436,
+        "total_votes": 37486,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 5926,
-        "margin_pct": 15.83,
+        "margin": 5956,
+        "margin_pct": 15.89,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "77": {
-        "dem_votes": 11512,
-        "rep_votes": 30967,
+        "dem_votes": 11509,
+        "rep_votes": 30954,
         "other_votes": 0,
-        "total_votes": 42479,
+        "total_votes": 42463,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 19455,
-        "margin_pct": 45.8,
+        "margin": 19445,
+        "margin_pct": 45.79,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "78": {
-        "dem_votes": 10632,
-        "rep_votes": 28934,
+        "dem_votes": 10847,
+        "rep_votes": 29377,
         "other_votes": 0,
-        "total_votes": 39566,
+        "total_votes": 40224,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 18302,
-        "margin_pct": 46.26,
+        "margin": 18530,
+        "margin_pct": 46.07,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "79": {
-        "dem_votes": 17973,
-        "rep_votes": 24168,
+        "dem_votes": 17967,
+        "rep_votes": 24156,
         "other_votes": 0,
-        "total_votes": 42141,
+        "total_votes": 42123,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 6195,
-        "margin_pct": 14.7,
+        "margin": 6189,
+        "margin_pct": 14.69,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "80": {
-        "dem_votes": 10069,
-        "rep_votes": 26709,
+        "dem_votes": 10053,
+        "rep_votes": 26746,
         "other_votes": 0,
-        "total_votes": 36778,
+        "total_votes": 36799,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 16640,
-        "margin_pct": 45.24,
+        "margin": 16693,
+        "margin_pct": 45.36,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "81": {
-        "dem_votes": 11241,
-        "rep_votes": 23837,
+        "dem_votes": 11263,
+        "rep_votes": 23802,
         "other_votes": 0,
-        "total_votes": 35078,
+        "total_votes": 35065,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12596,
-        "margin_pct": 35.91,
+        "margin": 12539,
+        "margin_pct": 35.76,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "82": {
-        "dem_votes": 14669,
-        "rep_votes": 17333,
+        "dem_votes": 14543,
+        "rep_votes": 17397,
         "other_votes": 0,
-        "total_votes": 32002,
+        "total_votes": 31940,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 2664,
-        "margin_pct": 8.32,
+        "margin": 2854,
+        "margin_pct": 8.94,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "83": {
-        "dem_votes": 12743,
-        "rep_votes": 31848,
+        "dem_votes": 12064,
+        "rep_votes": 31557,
         "other_votes": 0,
-        "total_votes": 44591,
+        "total_votes": 43621,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 19105,
-        "margin_pct": 42.84,
+        "margin": 19493,
+        "margin_pct": 44.69,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "84": {
-        "dem_votes": 15519,
-        "rep_votes": 28452,
+        "dem_votes": 13232,
+        "rep_votes": 22518,
         "other_votes": 0,
-        "total_votes": 43971,
+        "total_votes": 35750,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12933,
-        "margin_pct": 29.41,
+        "margin": 9286,
+        "margin_pct": 25.97,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "85": {
-        "dem_votes": 12937,
-        "rep_votes": 27436,
+        "dem_votes": 12944,
+        "rep_votes": 27445,
         "other_votes": 0,
-        "total_votes": 40373,
+        "total_votes": 40389,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14499,
-        "margin_pct": 35.91,
+        "margin": 14501,
+        "margin_pct": 35.9,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "86": {
-        "dem_votes": 13482,
-        "rep_votes": 23775,
+        "dem_votes": 13472,
+        "rep_votes": 23736,
         "other_votes": 0,
-        "total_votes": 37257,
+        "total_votes": 37208,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 10293,
-        "margin_pct": 27.63,
+        "margin": 10264,
+        "margin_pct": 27.59,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "87": {
-        "dem_votes": 11553,
-        "rep_votes": 25216,
+        "dem_votes": 11555,
+        "rep_votes": 25223,
         "other_votes": 0,
-        "total_votes": 36769,
+        "total_votes": 36778,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 13663,
+        "margin": 13668,
         "margin_pct": 37.16,
         "winner": "REP",
         "competitiveness": {
@@ -1245,45 +1249,45 @@
         }
       },
       "89": {
-        "dem_votes": 11720,
-        "rep_votes": 28657,
+        "dem_votes": 11264,
+        "rep_votes": 27506,
         "other_votes": 0,
-        "total_votes": 40377,
+        "total_votes": 38770,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 16937,
-        "margin_pct": 41.95,
+        "margin": 16242,
+        "margin_pct": 41.89,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "90": {
-        "dem_votes": 10894,
-        "rep_votes": 25694,
+        "dem_votes": 11050,
+        "rep_votes": 26166,
         "other_votes": 0,
-        "total_votes": 36588,
+        "total_votes": 37216,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14800,
-        "margin_pct": 40.45,
+        "margin": 15116,
+        "margin_pct": 40.62,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "91": {
-        "dem_votes": 16588,
-        "rep_votes": 29224,
+        "dem_votes": 13934,
+        "rep_votes": 26909,
         "other_votes": 0,
-        "total_votes": 45812,
+        "total_votes": 40843,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12636,
-        "margin_pct": 27.58,
+        "margin": 12975,
+        "margin_pct": 31.77,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "92": {
@@ -1301,70 +1305,70 @@
         }
       },
       "93": {
-        "dem_votes": 19267,
-        "rep_votes": 23449,
+        "dem_votes": 19278,
+        "rep_votes": 23489,
         "other_votes": 0,
-        "total_votes": 42716,
+        "total_votes": 42767,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 4182,
-        "margin_pct": 9.79,
+        "margin": 4211,
+        "margin_pct": 9.85,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "94": {
-        "dem_votes": 11815,
-        "rep_votes": 28614,
+        "dem_votes": 11636,
+        "rep_votes": 28081,
         "other_votes": 0,
-        "total_votes": 40429,
+        "total_votes": 39717,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 16799,
-        "margin_pct": 41.55,
+        "margin": 16445,
+        "margin_pct": 41.41,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "95": {
-        "dem_votes": 8551,
-        "rep_votes": 16687,
+        "dem_votes": 11242,
+        "rep_votes": 23672,
         "other_votes": 0,
-        "total_votes": 25238,
+        "total_votes": 34914,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 8136,
-        "margin_pct": 32.24,
+        "margin": 12430,
+        "margin_pct": 35.6,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "96": {
-        "dem_votes": 14157,
-        "rep_votes": 22966,
+        "dem_votes": 14278,
+        "rep_votes": 23255,
         "other_votes": 0,
-        "total_votes": 37123,
+        "total_votes": 37533,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 8809,
-        "margin_pct": 23.73,
+        "margin": 8977,
+        "margin_pct": 23.92,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "97": {
-        "dem_votes": 11581,
-        "rep_votes": 26280,
+        "dem_votes": 11534,
+        "rep_votes": 26167,
         "other_votes": 0,
-        "total_votes": 37861,
+        "total_votes": 37701,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14699,
-        "margin_pct": 38.82,
+        "margin": 14633,
+        "margin_pct": 38.81,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -1385,14 +1389,14 @@
         }
       },
       "99": {
-        "dem_votes": 23503,
-        "rep_votes": 5046,
+        "dem_votes": 23496,
+        "rep_votes": 5042,
         "other_votes": 0,
-        "total_votes": 28549,
+        "total_votes": 28538,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -18457,
-        "margin_pct": -64.65,
+        "margin": -18454,
+        "margin_pct": -64.66,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -1483,13 +1487,13 @@
         }
       },
       "106": {
-        "dem_votes": 22139,
-        "rep_votes": 12526,
+        "dem_votes": 22130,
+        "rep_votes": 12521,
         "other_votes": 0,
-        "total_votes": 34665,
+        "total_votes": 34651,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -9613,
+        "margin": -9609,
         "margin_pct": -27.73,
         "winner": "DEM",
         "competitiveness": {
@@ -1511,59 +1515,59 @@
         }
       },
       "108": {
-        "dem_votes": 12296,
-        "rep_votes": 23576,
+        "dem_votes": 11358,
+        "rep_votes": 22542,
         "other_votes": 0,
-        "total_votes": 35872,
+        "total_votes": 33900,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 11280,
-        "margin_pct": 31.45,
+        "margin": 11184,
+        "margin_pct": 32.99,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 11226,
-        "rep_votes": 23373,
+        "dem_votes": 13854,
+        "rep_votes": 21582,
         "other_votes": 0,
-        "total_votes": 34599,
+        "total_votes": 35436,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12147,
-        "margin_pct": 35.11,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
-      "110": {
-        "dem_votes": 14086,
-        "rep_votes": 18659,
-        "other_votes": 0,
-        "total_votes": 32745,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Chuck Stuber",
-        "margin": 4573,
-        "margin_pct": 13.97,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "111": {
-        "dem_votes": 15002,
-        "rep_votes": 26366,
-        "other_votes": 0,
-        "total_votes": 41368,
-        "dem_candidate": "Beth A. Wood",
-        "rep_candidate": "Chuck Stuber",
-        "margin": 11364,
-        "margin_pct": 27.47,
+        "margin": 7728,
+        "margin_pct": 21.81,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
+        }
+      },
+      "110": {
+        "dem_votes": 14074,
+        "rep_votes": 22953,
+        "other_votes": 0,
+        "total_votes": 37027,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Chuck Stuber",
+        "margin": 8879,
+        "margin_pct": 23.98,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "111": {
+        "dem_votes": 13317,
+        "rep_votes": 24870,
+        "other_votes": 0,
+        "total_votes": 38187,
+        "dem_candidate": "Beth A. Wood",
+        "rep_candidate": "Chuck Stuber",
+        "margin": 11553,
+        "margin_pct": 30.25,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
         }
       },
       "112": {
@@ -1581,52 +1585,52 @@
         }
       },
       "113": {
-        "dem_votes": 14848,
-        "rep_votes": 27150,
+        "dem_votes": 14909,
+        "rep_votes": 27346,
         "other_votes": 0,
-        "total_votes": 41998,
+        "total_votes": 42255,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 12302,
-        "margin_pct": 29.29,
+        "margin": 12437,
+        "margin_pct": 29.43,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "114": {
-        "dem_votes": 30910,
-        "rep_votes": 17833,
+        "dem_votes": 30997,
+        "rep_votes": 17857,
         "other_votes": 0,
-        "total_votes": 48743,
+        "total_votes": 48854,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -13077,
-        "margin_pct": -26.83,
+        "margin": -13140,
+        "margin_pct": -26.9,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "115": {
-        "dem_votes": 21762,
-        "rep_votes": 18434,
+        "dem_votes": 21692,
+        "rep_votes": 18440,
         "other_votes": 0,
-        "total_votes": 40196,
+        "total_votes": 40132,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": -3328,
-        "margin_pct": -8.28,
+        "margin": -3252,
+        "margin_pct": -8.1,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "116": {
-        "dem_votes": 25283,
-        "rep_votes": 17775,
+        "dem_votes": 25280,
+        "rep_votes": 17772,
         "other_votes": 0,
-        "total_votes": 43058,
+        "total_votes": 43052,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
         "margin": -7508,
@@ -1637,24 +1641,24 @@
         }
       },
       "117": {
-        "dem_votes": 16965,
-        "rep_votes": 27737,
+        "dem_votes": 16886,
+        "rep_votes": 27512,
         "other_votes": 0,
-        "total_votes": 44702,
+        "total_votes": 44398,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 10772,
-        "margin_pct": 24.1,
+        "margin": 10626,
+        "margin_pct": 23.93,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "118": {
-        "dem_votes": 17049,
-        "rep_votes": 22841,
+        "dem_votes": 17052,
+        "rep_votes": 22844,
         "other_votes": 0,
-        "total_votes": 39890,
+        "total_votes": 39896,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
         "margin": 5792,
@@ -1665,27 +1669,27 @@
         }
       },
       "119": {
-        "dem_votes": 18481,
-        "rep_votes": 22180,
+        "dem_votes": 18477,
+        "rep_votes": 22172,
         "other_votes": 0,
-        "total_votes": 40661,
+        "total_votes": 40649,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 3699,
-        "margin_pct": 9.1,
+        "margin": 3695,
+        "margin_pct": 9.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "120": {
-        "dem_votes": 12213,
-        "rep_votes": 26987,
+        "dem_votes": 12217,
+        "rep_votes": 26994,
         "other_votes": 0,
-        "total_votes": 39200,
+        "total_votes": 39211,
         "dem_candidate": "Beth A. Wood",
         "rep_candidate": "Chuck Stuber",
-        "margin": 14774,
+        "margin": 14777,
         "margin_pct": 37.69,
         "winner": "REP",
         "competitiveness": {
