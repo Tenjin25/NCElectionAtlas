@@ -36,7 +36,7 @@ North Carolina's election data is complex: precinct boundaries and IDs change fr
 - **Making historical precinct-level results usable with modern geometry** (handling precinct ID changes, splits, merges, and early-vote/absentee buckets that don't map to geography)
 - **Showing district results on consistent district lines** — district views default to the court-ordered 2022 MQP lines (see below), with an optional toggle to 2024 lines for comparison; results are reallocated via block/VAP crosswalks where needed
 
-The project is powered by prebuilt JSON data slices and raw [OpenElections](https://openelections.net/) precinct CSVs, with geometry from NCSBE and Census Bureau TIGER files.
+The project is powered by prebuilt JSON data slices and raw [OpenElections](https://openelections.net/) precinct CSVs, with geometry from NC OneMap / NCSBE and Census Bureau TIGER files.
 
 ## Who This Atlas Is For
 
@@ -62,9 +62,9 @@ These lines were chosen as the consistent historical baseline for two reasons:
 1. **Neutrality** — they were drawn by independent experts under court supervision, not by either party, making them the most politically neutral set of modern statewide district lines available. Using party-drawn maps as a baseline would embed partisan intent into the geographic frame when comparing results across years.
 2. **Practical coverage** — the 2022 remedial maps were actually used for a real election (the 2022 general), making them a grounded modern baseline for reallocating earlier results.
 
-Historical results from 2000–2020 are reallocated to these lines using Census block-level crosswalks (block → precinct → district), with unmatched votes distributed by candidate share within the county. [NHGIS](https://www.nhgis.org/) block-to-block crosswalks now bridge the 2000-block era into the 2020 block fabric: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> modern districts/layers`.
+Historical district views are still presented on the selected modern district line set (default 2022 MQP), but the current precinct target is now the **December 2025 OneMap/SBE precinct basis** at `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`, with 2020-block assignments in `data/crosswalks/block20_to_onemap_2025_12.csv`.
 
-The newest early-era bridge (`data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv`) matches **236,637 of 236,638** NC 2020 blocks (**99.9996%**) onto SBE 2006 precinct names, giving 2000/2002/2004/2006/2008 contests a reproducible cross-vintage precinct chain for the first time in this project.
+The current bridge chain has two main branches. Modern SBE precinct vintages for **2020, 2022, and 2024** are VAP-weighted to the December 2025 OneMap basis. Early-era SBE 2006 is reached through [NHGIS](https://www.nhgis.org/) block-to-block crosswalks: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> Dec 2025 OneMap / modern districts`. Early-year district and precinct outputs are approximate VAP-weighted shatter/apportionment estimates, not exact historical precinct geometry.
 
 ## Features
 
@@ -107,7 +107,14 @@ The newest early-era bridge (`data/crosswalks/block20_to_sbe_2006_via_block00_nh
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 14, 2026
+**Last updated:** July 15, 2026
+
+### December 2025 OneMap/SBE Crosswalk Chain (July 15, 2026)
+
+- Documented the current modern precinct target: `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp` plus `data/crosswalks/block20_to_onemap_2025_12.csv`.
+- The production bridge chain now includes SBE 2020/2022/2024 precinct vintages to the December 2025 OneMap basis, and early-era SBE 2006 via 2000 tabblocks plus the NHGIS 2000-to-2010-to-2020 chain.
+- Production bridge artifacts include `data/mappings/sbe2006_to_onemap_precinct_bridge.json`, `data/mappings/sbe2006_to_onemap_precinct_weights.json`, and `data/mappings/sbe2006_to_modern_district_weights.json`.
+- Early-year district/precinct outputs are documented as VAP-weighted shatter/apportionment estimates. For 2000-2006, rebuilt outputs stay as shatter estimates unless there is an explicit trusted calibration target.
 
 ### Pre-2018 Judicial County/Precinct Layers + Nickname Labels (July 14, 2026)
 
@@ -1145,34 +1152,45 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 | Data | Source |
 |------|--------|
 | Precinct-level election results | [OpenElections North Carolina](https://github.com/openelections/openelections-data-nc) |
-| Precinct boundaries | NC State Board of Elections (NCSBE) shapefile |
+| Precinct boundaries | December 2025 OneMap/SBE precinct shapefile (`data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`) plus older SBE vintage precinct sources |
 | Census block geography | US Census Bureau TIGER/Line files |
-| Block-to-precinct crosswalks | Derived from 2020 Census block assignments |
+| Block-to-precinct crosswalks | Current target: `data/crosswalks/block20_to_onemap_2025_12.csv`; older SBE vintage maps remain in `data/crosswalks/` |
 | Block-to-block crosswalks (cross-vintage) | [NHGIS Longitudinal Block Crosswalks](https://www.nhgis.org/documentation/tabular-data/crosswalks) |
+| Precinct-to-precinct bridges | VAP-weighted SBE vintage / SBE 2006 bridges in `data/crosswalks/` and `data/mappings/` |
 | District lines (2022 MQP + optional 2024) | Court-ordered remedial maps (2022 MQP); US Census TIGER/Line 2024 (CD/SLDL/SLDU) |
 
 ### Crosswalk Coverage Audit
 
-The current block-to-precinct ladder uses election-proximal precinct vintages where possible. The early 2000s bridge is the first full cross-vintage chain in this repository for North Carolina: 2000 Census tabblocks are assigned to SBE 2006 precinct polygons, then carried forward through NHGIS 2000-to-2010 and 2010-to-2020 block crosswalks.
+The current production target is the December 2025 OneMap/SBE precinct layer. Coverage below is read from the existing CSV/JSON bridge artifacts rather than recomputed contest outputs.
 
-| Election years | Preferred match map | Matched blocks | Coverage | Precinct keys |
-|----------------|---------------------|----------------|----------|---------------|
-| 2000-2008 | `block20_to_sbe_2006_via_block00_nhgis_filled.csv` | 236,637 / 236,638 | 99.9996% | 2,715 |
-| 2010-2012 | `block20_to_sbe_2012_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,746 |
-| 2014 | `block20_to_sbe_2014_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,725 |
-| 2016 | `block20_to_sbe_2016_via_block10.csv` | 236,634 / 236,634 | 100.0000% | 2,704 |
-| 2018 | `block20_to_sbe_2017_via_block10.csv` | 236,637 / 236,638 | 99.9996% | 2,706 |
-| 2020 | `block20_to_sbe_2020.csv` | 236,638 / 236,638 | 100.0000% | 2,658 |
-| 2022 | `block20_to_sbe_2022.csv` | 236,638 / 236,638 | 100.0000% | 2,663 |
-| 2024 | `block20_to_sbe_2024.csv` | 236,638 / 236,638 | 100.0000% | 2,656 |
+| Chain | Main artifact(s) | Current coverage | Keys / notes |
+|-------|------------------|------------------|--------------|
+| December 2025 OneMap target | `block20_to_onemap_2025_12.csv` | 236,633 / 236,638 NC 2020 blocks (99.9979%) | 2,632 target precinct keys |
+| Early era / SBE 2006 | `block20_to_sbe_2006_via_block00_nhgis_filled.csv`; `sbe2006_to_onemap_precinct_*.json`; `sbe2006_to_modern_district_weights.json` | 236,638 / 236,638 blocks in the filled SBE 2006 map (100.0000%); district bridge report covers 2,715 / 2,715 SBE 2006 precincts in each modern district scope | 2,715 SBE 2006 precincts; 2,632 Dec 2025 target precincts |
+| 2020 SBE precincts -> Dec 2025 OneMap | `precinct_sbe_2020_to_onemap_2025_12_vap.csv` | 8,155,075 / 8,155,075 source VAP assigned (100.0000%) | 2,658 source precincts -> 2,632 target precincts |
+| 2022 SBE precincts -> Dec 2025 OneMap | `precinct_sbe_2022_to_onemap_2025_12_vap.csv` | 8,155,080 / 8,155,080 source VAP assigned (100.0000%) | 2,663 source precincts -> 2,632 target precincts |
+| 2024 SBE precincts -> Dec 2025 OneMap | `precinct_sbe_2024_to_onemap_2025_12_vap.csv` | 8,155,075 / 8,155,075 source VAP assigned (100.0000%) | 2,656 source precincts -> 2,632 target precincts |
 
-Debug overlays for inspecting the 2006 bridge against current precinct geometry live in `data/reports/`: `sbe2006_precincts.geojson`, `sbe2006_precinct_centroids.geojson`, `onemap2025_precincts_sbe2006_nhgis_bridge.geojson`, and `centroids_sbe2006_nhgis_bridge.geojson`. The current precinct polygon bridge matches 2,632 / 2,632 current precinct polygons (100.0000%); the current centroid bridge matches 2,631 / 2,632 centroids (99.9620%).
+Production SBE 2006 bridge artifacts include `data/mappings/sbe2006_to_onemap_precinct_bridge.json` (17,673 county-scoped alias rows), `data/mappings/sbe2006_to_onemap_precinct_weights.json` (VAP-weighted precinct shares), and `data/mappings/sbe2006_to_modern_district_weights.json` (seven modern district scopes across 2022, 2024, and 2026 line sets). Debug overlays for inspecting the SBE 2006 bridge against current precinct geometry live in `data/reports/`.
 
 ## Getting Started
 
 This project is deployed on GitHub Pages and requires no local setup to use. Simply visit the [live site](https://tenjin25.github.io/NCElectionAtlas/).
 
 To build or modify data files locally, you will need Python 3.x and PowerShell. See the "Rebuilding Data" section below.
+
+For GIS rebuilds, use the repo's virtual environment so `geopandas`, `shapely`, `pyproj`, `pyogrio`, and `rtree` resolve consistently:
+
+```powershell
+.\.venv\Scripts\activate
+python scripts\build_block_crosswalk_to_current_onemap.py
+```
+
+If you prefer not to activate the shell, call the venv interpreter directly:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\reaggregate_cd2026_lines.py
+```
 
 ### Automated UI Regression (Playwright)
 
@@ -1582,24 +1600,9 @@ py scripts/reaggregate_pre2018_judicial_contests.py --years 2008,2010,2012,2014,
 
 ### Crosswalk Coverage and Accuracy
 
-Precinct match rates are tracked directly from generated county+contest diagnostics. Current audited geo-key match rates (March 19, 2026) are:
+Current block/VAP bridge coverage is summarized in the Crosswalk Coverage Audit above. Contest-level match rates still vary by office, county, and year, and generated district contest JSON may include per-file metadata such as `match_coverage_pct`, `matched_precinct_keys`, and the target crosswalk used.
 
-| Year | Geo Match % | Unmatched Geo Keys |
-|------|-------------|--------------------|
-| 2000 | 98.81% | 320 |
-| 2002 | 98.79% | 33 |
-| 2004 | 98.69% | 396 |
-| 2008 | 99.04% | 292 |
-| 2010 | 99.67% | 9 |
-| 2012 | 99.75% | 70 |
-| 2014 | 99.60% | 11 |
-| 2016 | 99.74% | 119 |
-| 2018 | 99.63% | 40 |
-| 2020 | 99.51% | 260 |
-| 2022 | 99.66% | 63 |
-| 2024 | 99.81% | 75 |
-
-Coverage is tracked per contest and per county. Remaining unmatched keys are handled via alias resolution, bridge mappings, and county-level fallback allocation paths.
+Early-year district and precinct layers are approximate shatter/apportionment estimates. The SBE 2006 bridge gives the 2000-2006 era a reproducible cross-vintage path into the December 2025 OneMap basis, but it does not recreate exact historical precinct geometry. Those outputs stay as shatter estimates unless an explicit trusted calibration target exists.
 
 ### Other Limitations
 
