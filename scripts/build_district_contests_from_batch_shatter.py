@@ -20,6 +20,7 @@ from pathlib import Path
 import pandas as pd
 import geopandas as gpd
 
+from legacy_precinct_aliases import legacy_abbreviation_aliases_for_name
 from shatter_precinct_votes_vap import aggregate_to_districts, load_crosswalk, load_vap, shatter_votes
 
 
@@ -96,12 +97,12 @@ VINTAGE_MATCH_CROSSWALKS: list[tuple[int, tuple[Path, ...]]] = [
         2025,
         (
             Path("data/crosswalks/block20_to_sbe_2024.csv"),
-            Path("data/crosswalks/block20_to_onemap_2025.csv"),
+            Path("data/crosswalks/block20_to_onemap_2025_12.csv"),
         ),
     ),
     (
         9999,
-        (Path("data/crosswalks/block20_to_onemap_2025.csv"),),
+        (Path("data/crosswalks/block20_to_onemap_2025_12.csv"),),
     ),
 ]
 
@@ -286,41 +287,42 @@ def load_sbe_precinct_code_map(shp_path: Path) -> dict[tuple[str, str], str]:
         or cols.get("precinctid")
         or cols.get("precinct_id")
     )
-    enr_col = (
-        cols.get("enr_desc")
-        or cols.get("seims_desc")
-        or cols.get("precinct")
-        or cols.get("enrdesc")
-        or cols.get("name")
-        or cols.get("prec_name")
-    )
+    desc_cols = []
+    for name in ("enr_desc", "seims_desc", "precinct", "enrdesc", "name", "prec_name"):
+        col = cols.get(name)
+        if col and col not in desc_cols:
+            desc_cols.append(col)
     county_col = cols.get("county_nam") or cols.get("county_name") or cols.get("countynam") or cols.get("county")
 
-    if not prec_col or not enr_col or not county_col:
+    if not prec_col or not desc_cols or not county_col:
         return {}
 
-    g = g0[[prec_col, enr_col, county_col]].copy()
-    g.columns = ["PREC_ID", "ENR_DESC", "COUNTY_NAM"]
-
+    g = g0[[prec_col, county_col, *desc_cols]].copy()
+    g = g.rename(columns={prec_col: "PREC_ID", county_col: "COUNTY_NAM"})
     g["PREC_ID"] = g["PREC_ID"].astype(str).map(_norm)
-    g["ENR_DESC"] = g["ENR_DESC"].astype(str).map(_norm_spaces)
     g["COUNTY_NAM"] = g["COUNTY_NAM"].astype(str).map(_norm)
-    g = g[(g["PREC_ID"] != "") & (g["ENR_DESC"] != "") & (g["COUNTY_NAM"] != "")].copy()
+    for col in desc_cols:
+        g[col] = g[col].astype(str).map(_norm_spaces)
+    g = g[(g["PREC_ID"] != "") & (g["COUNTY_NAM"] != "")].copy()
 
     out: dict[tuple[str, str], str] = {}
     for _, r in g.iterrows():
-        key = (r["COUNTY_NAM"], r["ENR_DESC"])
-        out[key] = r["PREC_ID"]
-        # Common variants: underscores vs spaces.
-        out[(r["COUNTY_NAM"], _norm_spaces(r["ENR_DESC"].replace("_", " ")))] = r["PREC_ID"]
-        out[(r["COUNTY_NAM"], _norm_spaces(r["ENR_DESC"].replace(" ", "_")))] = r["PREC_ID"]
-        # Many ENR_DESC values include a code prefix like "CC01_CROSS CREEK #01".
-        # Add a variant that drops the leading "<CODE>_" so exports that only
-        # include the human-readable label can still resolve.
-        if "_" in r["ENR_DESC"]:
-            right = _norm_spaces(str(r["ENR_DESC"]).split("_", 1)[1])
-            if right:
-                out[(r["COUNTY_NAM"], right)] = r["PREC_ID"]
+        for col in desc_cols:
+            desc = str(r[col]).strip()
+            if not desc:
+                continue
+            key = (r["COUNTY_NAM"], desc)
+            out[key] = r["PREC_ID"]
+            # Common variants: underscores vs spaces.
+            out[(r["COUNTY_NAM"], _norm_spaces(desc.replace("_", " ")))] = r["PREC_ID"]
+            out[(r["COUNTY_NAM"], _norm_spaces(desc.replace(" ", "_")))] = r["PREC_ID"]
+            # Many description values include a code prefix like "CC01_CROSS CREEK #01".
+            # Add a variant that drops the leading "<CODE>_" so exports that only
+            # include the human-readable label can still resolve.
+            if "_" in desc:
+                right = _norm_spaces(str(desc).split("_", 1)[1])
+                if right:
+                    out[(r["COUNTY_NAM"], right)] = r["PREC_ID"]
     return out
 
 
@@ -622,7 +624,17 @@ def calculate_competitiveness(margin_pct: float) -> str:
 def load_district_map(path: Path, block_col: str, district_col: str) -> pd.DataFrame:
     d = pd.read_csv(path, dtype=str)
     d.columns = [str(c).strip() for c in d.columns]
-    out = d[[block_col, district_col]].copy()
+    block_candidates = [block_col, "block_geoid20", "GEOID", "GEOID20", "Block"]
+    district_candidates = [district_col, "district", "District", "CDFP", "DISTRICT"]
+    actual_block_col = next((c for c in block_candidates if c in d.columns), None)
+    actual_district_col = next((c for c in district_candidates if c in d.columns), None)
+    if actual_block_col is None or actual_district_col is None:
+        raise ValueError(
+            f"{path} missing district map columns. "
+            f"Need one of {block_candidates} and one of {district_candidates}; "
+            f"found {list(d.columns)}"
+        )
+    out = d[[actual_block_col, actual_district_col]].copy()
     out.columns = ["block_geoid20", "district"]
     out["block_geoid20"] = out["block_geoid20"].astype(str).str.strip().str.zfill(15)
     out["district"] = out["district"].astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
@@ -646,6 +658,35 @@ def _winner_label(dem_votes: int, rep_votes: int) -> str:
     return "TIE"
 
 
+def round_precinct_party_votes_preserve_county_totals(precinct_party: pd.DataFrame) -> pd.DataFrame:
+    """Round precinct vote floats while keeping each county/party total rounded exactly."""
+    if precinct_party is None or precinct_party.empty:
+        return precinct_party
+
+    out = precinct_party.copy()
+    out["precinct_id"] = out["precinct_id"].astype(str).str.strip().str.upper()
+    out["_county"] = out["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
+    vote_cols = [c for c in ["dem_votes", "rep_votes", "other_votes"] if c in out.columns]
+    for col in vote_cols:
+        out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
+        rounded = pd.Series(0, index=out.index, dtype="int64")
+        for _, idx in out.groupby("_county").groups.items():
+            vals = out.loc[idx, col].astype(float)
+            floors = vals.map(lambda v: int(v // 1))
+            target = int(round(float(vals.sum())))
+            remainder = target - int(floors.sum())
+            adjusted = floors.copy()
+            if remainder > 0:
+                order = (vals - floors).sort_values(ascending=False).index[:remainder]
+                adjusted.loc[order] = adjusted.loc[order] + 1
+            elif remainder < 0:
+                order = (vals - floors).sort_values(ascending=True).index[: abs(remainder)]
+                adjusted.loc[order] = adjusted.loc[order] - 1
+            rounded.loc[idx] = adjusted.astype("int64")
+        out[col] = rounded
+    return out.drop(columns=["_county"])
+
+
 def build_precinct_contest_payload(
     *,
     year: int,
@@ -655,6 +696,7 @@ def build_precinct_contest_payload(
     precinct_party: pd.DataFrame,
     dem_candidate: str,
     rep_candidate: str,
+    display_precinct_overrides: dict[str, str] | None = None,
 ) -> dict:
     """
     Build a data/contests/<contest_type>_<year>.json payload.
@@ -668,6 +710,8 @@ def build_precinct_contest_payload(
     other_total = 0
     if precinct_party is None or precinct_party.empty:
         return {"rows": []}
+    precinct_party = apply_display_precinct_overrides(precinct_party, display_precinct_overrides)
+    precinct_party = round_precinct_party_votes_preserve_county_totals(precinct_party)
 
     for _, r in precinct_party.iterrows():
         precinct_id = str(r.get("precinct_id", "")).strip().upper()
@@ -849,11 +893,18 @@ def load_precinct_overrides(path: Path, year: int) -> dict[str, str]:
 
 def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: set[str]) -> dict[str, str]:
     out: dict[str, str] = {}
-    vals = set(precinct_ids.astype(str).str.strip().str.upper())
+    vals = {
+        str(v).strip().upper()
+        for v in pd.Series(precinct_ids).dropna().tolist()
+        if str(v).strip() and str(v).strip().upper() not in {"NAN", "NONE"}
+    }
 
     county_tokens: dict[str, set[str]] = {}
     county_compact_tokens: dict[str, dict[str, set[str]]] = {}
-    for key in matched_precincts:
+    for raw_key in matched_precincts:
+        key = str(raw_key).strip().upper()
+        if key in {"", "NAN", "NONE"}:
+            continue
         if " - " not in key:
             continue
         county, tok = key.split(" - ", 1)
@@ -879,7 +930,7 @@ def build_auto_precinct_overrides(precinct_ids: pd.Series, matched_precincts: se
         cand = f"{county} - {toks[0]}"
         return cand if cand in matched_precincts else None
 
-    for raw in sorted(vals):
+    for raw in sorted(vals, key=str):
         if not raw or raw in matched_precincts or " - " not in raw:
             continue
         county, p = raw.split(" - ", 1)
@@ -980,6 +1031,99 @@ def apply_precinct_overrides(df: pd.DataFrame, overrides: dict[str, str] | None)
     out["precinct_id"] = out["precinct_id"].astype(str).str.strip().str.upper()
     out["precinct_id"] = out["precinct_id"].map(lambda k: overrides.get(k, k))
     return out
+
+
+def build_contest_display_overrides(
+    precinct_ids: pd.Series,
+    display_crosswalk_csv: Path | None,
+) -> dict[str, str]:
+    """
+    Build conservative precinct display remaps from source/SBE keys to OneMap keys.
+
+    District aggregation still uses the election-vintage match map. This helper is
+    only for precinct-level contest JSON, where row keys must join to the current
+    OneMap display layer.
+    """
+    if display_crosswalk_csv is None or not Path(display_crosswalk_csv).exists():
+        return {}
+
+    bridge = pd.read_csv(display_crosswalk_csv, dtype=str).fillna("")
+    required = {"sbe_precinct_id", "onemap_precinct_id", "share"}
+    if not required.issubset(set(bridge.columns)):
+        return {}
+
+    bridge = bridge[["sbe_precinct_id", "onemap_precinct_id", "share"]].copy()
+    bridge["sbe_precinct_id"] = bridge["sbe_precinct_id"].astype(str).str.strip().str.upper()
+    bridge["onemap_precinct_id"] = bridge["onemap_precinct_id"].astype(str).str.strip().str.upper()
+    bridge["share"] = pd.to_numeric(bridge["share"], errors="coerce").fillna(0.0)
+    bridge = bridge[(bridge["sbe_precinct_id"] != "") & (bridge["onemap_precinct_id"] != "")].copy()
+    if bridge.empty:
+        return {}
+
+    unique_bridge: dict[str, str] = {}
+    for sbe_id, group in bridge.groupby("sbe_precinct_id"):
+        targets = sorted(set(group["onemap_precinct_id"].astype(str)))
+        if len(targets) != 1:
+            continue
+        share = float(group["share"].sum())
+        if abs(share - 1.0) > 0.000001:
+            continue
+        unique_bridge[str(sbe_id)] = targets[0]
+
+    if not unique_bridge:
+        return {}
+
+    raw_ids = pd.Series(precinct_ids, dtype="string").astype(str).str.strip().str.upper()
+    onemap_ids = set(bridge["onemap_precinct_id"])
+
+    out: dict[str, str] = {}
+    for raw in sorted(set(raw_ids)):
+        if not raw or raw in onemap_ids:
+            continue
+        if " - " not in raw:
+            continue
+        county, precinct = raw.split(" - ", 1)
+        county = _norm(county)
+        precinct = _norm(precinct)
+
+        candidates: list[str] = []
+        if raw in unique_bridge:
+            candidates.append(raw)
+
+        sbe_map = getattr(build_auto_precinct_overrides, "_sbe_map", None)
+        if isinstance(sbe_map, dict):
+            hit = sbe_map.get((county, _norm_spaces(precinct)))
+            if hit:
+                candidates.append(f"{county} - {_norm(hit)}")
+
+        alias_hit = PRECINCT_ALIASES.get(county, {}).get(precinct)
+        if alias_hit:
+            candidates.append(f"{county} - {_norm(alias_hit)}")
+
+        if precinct.endswith("A"):
+            candidates.append(f"{county} - {precinct[:-1]}")
+
+        targets = {unique_bridge[cand] for cand in candidates if cand in unique_bridge}
+        if len(targets) == 1:
+            target = next(iter(targets))
+            if target != raw:
+                out[raw] = target
+    return out
+
+
+def apply_display_precinct_overrides(
+    precinct_party: pd.DataFrame,
+    overrides: dict[str, str] | None,
+) -> pd.DataFrame:
+    if not overrides or precinct_party is None or precinct_party.empty:
+        return precinct_party
+
+    out = precinct_party.copy()
+    out["precinct_id"] = out["precinct_id"].astype(str).str.strip().str.upper().map(lambda k: overrides.get(k, k))
+    vote_cols = [c for c in ["dem_votes", "rep_votes", "other_votes"] if c in out.columns]
+    for col in vote_cols:
+        out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0)
+    return out.groupby("precinct_id", as_index=False)[vote_cols].sum()
 
 
 def apply_county_share_overrides(
@@ -1480,6 +1624,240 @@ def agg_party_to_scope(
     )
 
 
+def load_sbe2006_district_weights(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def select_sbe2006_district_weight_scopes(
+    payload: dict,
+    *,
+    weight_set: str,
+    allocation_year: int,
+    cd_file: Path,
+) -> dict[str, dict]:
+    if not payload:
+        return {}
+    if weight_set == "none":
+        return {}
+    selected = weight_set
+    if selected == "auto":
+        cd_text = str(cd_file).lower()
+        if allocation_year >= 2026 or "2026" in cd_text or "sl2025" in cd_text:
+            selected = "2026"
+        elif allocation_year >= 2024:
+            selected = "2024"
+        else:
+            selected = "2022"
+
+    scope_sets = payload.get("scope_sets") or {}
+    scope_names = scope_sets.get(str(selected)) or {}
+    scopes = payload.get("scopes") or {}
+    out: dict[str, dict] = {}
+    for district_type in ("state_house", "state_senate", "congressional"):
+        scope_name = scope_names.get(district_type)
+        scope = scopes.get(scope_name) if scope_name else None
+        if isinstance(scope, dict) and scope.get("precincts"):
+            out[district_type] = scope
+    return out
+
+
+def build_sbe2006_weight_alias_lookup(precinct_ids: set[str]) -> dict[str, str]:
+    """Resolve OE/SBE2006 spelling variants to unique district-weight precinct keys."""
+    candidates: dict[str, set[str]] = {}
+
+    def add(alias: str, canonical: str) -> None:
+        alias = _norm_spaces(alias)
+        canonical = _norm_spaces(canonical)
+        if alias and canonical:
+            candidates.setdefault(alias, set()).add(canonical)
+
+    for canonical in precinct_ids:
+        canonical = _norm_spaces(canonical)
+        for alias in sbe2006_precinct_key_aliases(canonical):
+            add(alias, canonical)
+            add(_compact_token(alias), canonical)
+
+    # Keep only unambiguous aliases. Exact canonical keys are always safe.
+    lookup: dict[str, str] = {}
+    for alias, matches in candidates.items():
+        if alias in precinct_ids:
+            lookup[alias] = alias
+        elif len(matches) == 1:
+            lookup[alias] = next(iter(matches))
+    return lookup
+
+
+def sbe2006_precinct_key_aliases(precinct_id: str) -> set[str]:
+    """Generate conservative one-to-one candidate aliases for a SBE2006 precinct key."""
+    key = _norm_spaces(precinct_id)
+    out = {key} if key else set()
+    if " - " not in key:
+        return out
+
+    county, precinct = key.split(" - ", 1)
+    variants = {precinct}
+    no_hash = _norm_spaces(precinct.replace("#", " "))
+    variants.add(no_hash)
+    variants.update(legacy_abbreviation_aliases_for_name(county, precinct))
+
+    # Polling-place suffixes: "01.1 - SITE" / "001 - SITE" -> "01.1" / "001".
+    if " - " in precinct:
+        variants.add(_norm_spaces(precinct.split(" - ", 1)[0]))
+    m = re.match(r"^([A-Z]*0*\d+[A-Z]?(?:\.\d+)?)(?:\s+-\s+|\s+)", precinct)
+    if m:
+        variants.add(_norm_spaces(m.group(1)))
+
+    # Cumberland-style group suffixes and Davidson-style numeric suffixes.
+    variants.add(_norm_spaces(re.sub(r"\s*-\s*G\d+[A-Z]?$", "", precinct)))
+    variants.add(_norm_spaces(re.sub(r"\s+#\s*\d+[A-Z]?$", "", precinct)))
+
+    # Leading-zero variants: "BURLINGTON 04" <-> "BURLINGTON 4"; "001" -> "1".
+    variants.add(
+        _norm_spaces(
+            re.sub(
+                r"\b0+(\d+)([A-Z]?)\b",
+                lambda m: f"{int(m.group(1))}{m.group(2)}",
+                precinct,
+            )
+        )
+    )
+    variants.add(
+        _norm_spaces(
+            re.sub(
+                r"\b(\d{1})([A-Z]?)\b",
+                lambda m: f"0{m.group(1)}{m.group(2)}",
+                precinct,
+            )
+        )
+    )
+    variants.add(
+        _norm_spaces(
+            re.sub(
+                r"\b0*(\d{1,2})([A-Z]?)\b",
+                lambda m: f"{int(m.group(1)):02d}{m.group(2)}",
+                precinct,
+            )
+        )
+    )
+
+    # Directional aliases: "BANNER NORTH" <-> "NORTH BANNER".
+    directions = {"NORTH", "SOUTH", "EAST", "WEST", "NORTHEAST", "NORTHWEST", "SOUTHEAST", "SOUTHWEST"}
+    parts = precinct.split()
+    if len(parts) >= 2 and parts[0] in directions:
+        variants.add(_norm_spaces(" ".join([*parts[1:], parts[0]])))
+    if len(parts) >= 2 and parts[-1] in directions:
+        variants.add(_norm_spaces(" ".join([parts[-1], *parts[:-1]])))
+
+    for variant in list(variants):
+        if not variant:
+            continue
+        out.add(f"{county} - {variant}")
+        cleaned = clean_precinct_name(variant, county)
+        if cleaned:
+            out.add(f"{county} - {cleaned}")
+    return {x for x in out if x}
+
+
+def aggregate_precinct_party_with_district_weights(
+    precinct_party: pd.DataFrame,
+    scope_weights: dict,
+    *,
+    county_shares: pd.DataFrame | None = None,
+    county_non_geo_party: pd.DataFrame | None = None,
+) -> tuple[dict[str, int], dict[str, int], dict[str, int], int, int]:
+    """Aggregate precinct party totals directly through SBE2006->district weights."""
+    precincts = {
+        str(k).strip().upper(): v
+        for k, v in (scope_weights.get("precincts") or {}).items()
+        if isinstance(v, list)
+    }
+    total = int(len(precinct_party))
+    matched_ids = set(precincts)
+    alias_lookup = build_sbe2006_weight_alias_lookup(matched_ids)
+
+    def resolve_precinct_id(precinct_id: str) -> str | None:
+        key = _norm_spaces(precinct_id)
+        for alias in sbe2006_precinct_key_aliases(key):
+            if alias in precincts:
+                return alias
+            hit = alias_lookup.get(alias) or alias_lookup.get(_compact_token(alias))
+            if hit:
+                return hit
+        return None
+
+    resolved_keys = precinct_party["precinct_id"].astype(str).map(resolve_precinct_id)
+    matched = int(resolved_keys.notna().sum())
+
+    def _round_map(raw: dict[str, float]) -> dict[str, int]:
+        return {str(k): int(round(float(v))) for k, v in raw.items() if abs(float(v)) > 0}
+
+    def _aggregate_col(col: str) -> dict[str, int]:
+        base: dict[str, float] = {}
+        rows = precinct_party[["precinct_id", col]].copy()
+        rows["precinct_id"] = rows["precinct_id"].astype(str).map(_norm_spaces)
+        rows["resolved_precinct_id"] = rows["precinct_id"].map(resolve_precinct_id)
+        rows["votes"] = pd.to_numeric(rows[col], errors="coerce").fillna(0.0)
+        rows = rows[rows["votes"] != 0].copy()
+
+        for r in rows.itertuples(index=False):
+            precinct_id = str(r.resolved_precinct_id or "")
+            votes = float(r.votes)
+            entries = precincts.get(precinct_id)
+            if entries:
+                for entry in entries:
+                    district = str((entry or {}).get("district", "")).strip().lstrip("0") or "0"
+                    share = float((entry or {}).get("share") or 0.0)
+                    if district and share > 0:
+                        base[district] = base.get(district, 0.0) + votes * share
+                continue
+
+        if county_shares is not None and not county_shares.empty:
+            unmatched = rows[rows["resolved_precinct_id"].isna()].copy()
+            if not unmatched.empty:
+                unmatched["county"] = unmatched["precinct_id"].str.split(" - ").str[0].str.strip().str.upper()
+                u = unmatched.groupby("county", as_index=False)["votes"].sum()
+                alloc = u.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
+                if not alloc.empty:
+                    alloc["alloc_votes"] = pd.to_numeric(alloc["votes"], errors="coerce").fillna(0.0) * pd.to_numeric(
+                        alloc["share"], errors="coerce"
+                    ).fillna(0.0)
+                    for ar in alloc.itertuples(index=False):
+                        district = str(ar.district).strip().lstrip("0") or "0"
+                        base[district] = base.get(district, 0.0) + float(ar.alloc_votes)
+
+        return _round_map(base)
+
+    party_district = {col: _aggregate_col(col) for col in ["dem_votes", "rep_votes", "other_votes"]}
+
+    if county_non_geo_party is not None and not county_non_geo_party.empty and county_shares is not None:
+        for col in ["dem_votes", "rep_votes", "other_votes"]:
+            add_src = county_non_geo_party[county_non_geo_party["party_group"] == col][["county", "votes"]].copy()
+            if add_src.empty:
+                continue
+            add = add_src.merge(county_shares, on="county", how="left").dropna(subset=["district", "share"]).copy()
+            add["alloc_votes"] = pd.to_numeric(add["votes"], errors="coerce").fillna(0.0) * pd.to_numeric(
+                add["share"], errors="coerce"
+            ).fillna(0.0)
+            base = {k: float(v) for k, v in party_district[col].items()}
+            for ar in add.itertuples(index=False):
+                district = str(ar.district).strip().lstrip("0") or "0"
+                base[district] = base.get(district, 0.0) + float(ar.alloc_votes)
+            party_district[col] = _round_map(base)
+
+    return (
+        party_district["dem_votes"],
+        party_district["rep_votes"],
+        party_district["other_votes"],
+        matched,
+        total,
+    )
+
+
 def build_payload(
     *,
     year: int,
@@ -1495,6 +1873,11 @@ def build_payload(
     matched: int,
     total: int,
     match_crosswalk: str | None = None,
+    target_crosswalk: str | None = None,
+    district_weights_json: str | None = None,
+    district_weight_plan: str | None = None,
+    district_lines_year: int | None = None,
+    district_lines_label: str | None = None,
 ) -> dict:
     keys = sorted(set(dem_map) | set(rep_map) | set(oth_map), key=lambda x: (int(x) if str(x).isdigit() else x))
     results = {}
@@ -1529,6 +1912,16 @@ def build_payload(
     }
     if match_crosswalk:
         meta["match_crosswalk"] = match_crosswalk
+    if target_crosswalk:
+        meta["target_crosswalk"] = target_crosswalk
+    if district_weights_json:
+        meta["district_weights_json"] = district_weights_json
+    if district_weight_plan:
+        meta["district_weight_plan"] = district_weight_plan
+    if district_lines_year is not None:
+        meta["district_lines_year"] = int(district_lines_year)
+    if district_lines_label:
+        meta["district_lines_label"] = district_lines_label
     return {
         "year": year,
         "scope": scope,
@@ -1546,7 +1939,7 @@ def main() -> None:
     parser.add_argument(
         "--crosswalk-csv",
         type=Path,
-        default=Path("data/crosswalks/block20_to_onemap_2025.csv"),
+        default=Path("data/crosswalks/block20_to_onemap_2025_12.csv"),
         help="Fallback / explicit block→precinct map. Ignored for matching when --auto-vintage-match is on.",
     )
     parser.add_argument(
@@ -1564,11 +1957,51 @@ def main() -> None:
         default=None,
         help="Optional explicit match/shatter map (overrides --auto-vintage-match).",
     )
+    parser.add_argument(
+        "--contest-display-crosswalk-csv",
+        type=Path,
+        default=None,
+        help=(
+            "Optional SBE precinct -> modern OneMap precinct bridge used only for precinct contest display rows. "
+            "Pass this explicitly for a chosen modern target basis."
+        ),
+    )
     parser.add_argument("--vap-csv", type=Path, default=Path("data/census/block_vap_2020_nc.csv"))
     parser.add_argument("--house-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-4.csv"))
     parser.add_argument("--senate-file", type=Path, default=Path("data/tmp/block_assign_extract/SL 2022-2.csv"))
     parser.add_argument("--cd-file", type=Path, default=Path("data/census/block files/NC_CD118.txt"))
     parser.add_argument("--allocation-weights-json", type=Path, default=Path("data/mappings/allocation_weights.json"))
+    parser.add_argument(
+        "--sbe2006-district-weights-json",
+        type=Path,
+        default=Path("data/mappings/sbe2006_to_modern_district_weights.json"),
+        help="Optional SBE2006 precinct -> modern district weights for early-era district overlays.",
+    )
+    parser.add_argument(
+        "--sbe2006-district-weight-set",
+        choices=["auto", "none", "2022", "2024", "2026"],
+        default="auto",
+        help="District weight scope set for SBE2006-era overlays. Auto follows allocation year / CD file.",
+    )
+    parser.add_argument(
+        "--district-lines-year",
+        type=int,
+        choices=[2022, 2024, 2026],
+        default=None,
+        help="District line set recorded in output provenance metadata.",
+    )
+    parser.add_argument(
+        "--district-lines-label",
+        type=str,
+        default="",
+        help="Optional human-readable district line-set label for output provenance metadata.",
+    )
+    parser.add_argument(
+        "--emit-scopes",
+        type=str,
+        default="state_house,state_senate,congressional",
+        help="Comma-separated district scopes to write (default: all scopes).",
+    )
     parser.add_argument("--precinct-overrides-csv", type=Path, default=Path("data/mappings/precinct_key_overrides.csv"))
     parser.add_argument(
         "--allocation-year",
@@ -1655,6 +2088,24 @@ def main() -> None:
         help="When writing contests, only create files that do not already exist.",
     )
     args = parser.parse_args()
+    if args.district_lines_year is not None:
+        district_lines_year = int(args.district_lines_year)
+    elif int(args.allocation_year) in {2022, 2024, 2026}:
+        district_lines_year = int(args.allocation_year)
+    else:
+        district_lines_year = 2022
+    district_lines_label = str(args.district_lines_label or f"{district_lines_year} lines").strip()
+    emit_scopes = {
+        token.strip()
+        for token in str(args.emit_scopes or "").split(",")
+        if token.strip()
+    }
+    valid_emit_scopes = {"state_house", "state_senate", "congressional"}
+    invalid_emit_scopes = sorted(emit_scopes - valid_emit_scopes)
+    if invalid_emit_scopes:
+        raise ValueError(f"Invalid --emit-scopes values: {', '.join(invalid_emit_scopes)}")
+    if not emit_scopes:
+        emit_scopes = set(valid_emit_scopes)
 
     # Load the closest-available SBE precinct name->code alias map and attach it
     # to the cleaning/override helpers.
@@ -1724,6 +2175,12 @@ def main() -> None:
             f"present on the match map ({match_crosswalk_path.name})"
         )
 
+    contest_display_crosswalk = (
+        Path(args.contest_display_crosswalk_csv)
+        if int(args.year) >= 2024 and args.contest_display_crosswalk_csv is not None
+        else None
+    )
+
     offices_to_run: list[tuple[str, str]] = []
     if args.office_source == "summary":
         batch_summary = pd.read_csv(args.batch_dir / "summary.csv", dtype=str).fillna("")
@@ -1783,6 +2240,15 @@ def main() -> None:
                 except Exception:
                     payload = None
             else:
+                display_precinct_overrides = build_contest_display_overrides(
+                    precinct_party["precinct_id"],
+                    contest_display_crosswalk,
+                )
+                if display_precinct_overrides:
+                    print(
+                        f"  contest display remaps for {contest_type}: "
+                        f"{len(display_precinct_overrides):,} source keys -> OneMap keys"
+                    )
                 payload = build_precinct_contest_payload(
                     year=int(args.year),
                     contest_type=str(contest_type),
@@ -1791,6 +2257,7 @@ def main() -> None:
                     precinct_party=precinct_party,
                     dem_candidate=dem_candidate,
                     rep_candidate=rep_candidate,
+                    display_precinct_overrides=display_precinct_overrides,
                 )
                 # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
                 contest_file.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -1844,6 +2311,19 @@ def main() -> None:
         min_county_share=args.min_county_share,
     )
     cd_bucket_shares = build_precinct_bucket_shares(crosswalk_df, vap_df, cd_map)
+    sbe2006_weight_scopes = {}
+    if int(args.year) <= 2008 and str(args.sbe2006_district_weight_set) != "none":
+        sbe2006_weight_scopes = select_sbe2006_district_weight_scopes(
+            load_sbe2006_district_weights(args.sbe2006_district_weights_json),
+            weight_set=str(args.sbe2006_district_weight_set),
+            allocation_year=alloc_year,
+            cd_file=Path(args.cd_file),
+        )
+        if sbe2006_weight_scopes:
+            print(
+                "SBE2006 district chain scopes: "
+                + ", ".join(f"{k}={v.get('plan_id', '')}" for k, v in sorted(sbe2006_weight_scopes.items()))
+            )
 
     out_dir = args.district_contests_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1883,42 +2363,75 @@ def main() -> None:
             )
             continue
 
-        dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
-            precinct_party,
-            crosswalk_df,
-            vap_df,
-            args.house_file,
-            "Block",
-            "District",
-            house_shares,
-            house_bucket_shares,
-            matched_precincts,
-            county_non_geo_party=county_non_geo_party,
-        )
-        dem_s, rep_s, oth_s, _, _ = agg_party_to_scope(
-            precinct_party,
-            crosswalk_df,
-            vap_df,
-            args.senate_file,
-            "Block",
-            "District",
-            senate_shares,
-            senate_bucket_shares,
-            matched_precincts,
-            county_non_geo_party=county_non_geo_party,
-        )
-        dem_c, rep_c, oth_c, _, _ = agg_party_to_scope(
-            precinct_party,
-            crosswalk_df,
-            vap_df,
-            args.cd_file,
-            "GEOID",
-            "CDFP",
-            cd_shares,
-            cd_bucket_shares,
-            matched_precincts,
-            county_non_geo_party=county_non_geo_party,
-        )
+        if "state_house" in sbe2006_weight_scopes:
+            dem_h, rep_h, oth_h, matched, total = aggregate_precinct_party_with_district_weights(
+                precinct_party,
+                sbe2006_weight_scopes["state_house"],
+                county_shares=house_shares,
+                county_non_geo_party=county_non_geo_party,
+            )
+        else:
+            dem_h, rep_h, oth_h, matched, total = agg_party_to_scope(
+                precinct_party,
+                crosswalk_df,
+                vap_df,
+                args.house_file,
+                "Block",
+                "District",
+                house_shares,
+                house_bucket_shares,
+                matched_precincts,
+                county_non_geo_party=county_non_geo_party,
+            )
+        if "state_senate" in sbe2006_weight_scopes:
+            dem_s, rep_s, oth_s, _, _ = aggregate_precinct_party_with_district_weights(
+                precinct_party,
+                sbe2006_weight_scopes["state_senate"],
+                county_shares=senate_shares,
+                county_non_geo_party=county_non_geo_party,
+            )
+        else:
+            dem_s, rep_s, oth_s, _, _ = agg_party_to_scope(
+                precinct_party,
+                crosswalk_df,
+                vap_df,
+                args.senate_file,
+                "Block",
+                "District",
+                senate_shares,
+                senate_bucket_shares,
+                matched_precincts,
+                county_non_geo_party=county_non_geo_party,
+            )
+        if "congressional" in sbe2006_weight_scopes:
+            dem_c, rep_c, oth_c, _, _ = aggregate_precinct_party_with_district_weights(
+                precinct_party,
+                sbe2006_weight_scopes["congressional"],
+                county_shares=cd_shares,
+                county_non_geo_party=county_non_geo_party,
+            )
+        else:
+            dem_c, rep_c, oth_c, _, _ = agg_party_to_scope(
+                precinct_party,
+                crosswalk_df,
+                vap_df,
+                args.cd_file,
+                "GEOID",
+                "CDFP",
+                cd_shares,
+                cd_bucket_shares,
+                matched_precincts,
+                county_non_geo_party=county_non_geo_party,
+            )
+
+        def _district_weight_plan(scope_name: str) -> str | None:
+            scope_payload = sbe2006_weight_scopes.get(scope_name)
+            if not scope_payload:
+                return None
+            return str(scope_payload.get("plan_id") or scope_payload.get("scope") or "").strip() or None
+
+        def _district_weights_json(scope_name: str) -> str | None:
+            return args.sbe2006_district_weights_json.as_posix() if scope_name in sbe2006_weight_scopes else None
 
         payloads = {
             f"state_house_{contest_type}_{args.year}.json": build_payload(
@@ -1935,6 +2448,11 @@ def main() -> None:
                 matched=matched,
                 total=total,
                 match_crosswalk=match_crosswalk_path.as_posix(),
+                target_crosswalk=args.crosswalk_csv.as_posix(),
+                district_weights_json=_district_weights_json("state_house"),
+                district_weight_plan=_district_weight_plan("state_house"),
+                district_lines_year=district_lines_year,
+                district_lines_label=district_lines_label,
             ),
             f"state_senate_{contest_type}_{args.year}.json": build_payload(
                 year=args.year,
@@ -1950,6 +2468,11 @@ def main() -> None:
                 matched=matched,
                 total=total,
                 match_crosswalk=match_crosswalk_path.as_posix(),
+                target_crosswalk=args.crosswalk_csv.as_posix(),
+                district_weights_json=_district_weights_json("state_senate"),
+                district_weight_plan=_district_weight_plan("state_senate"),
+                district_lines_year=district_lines_year,
+                district_lines_label=district_lines_label,
             ),
             f"congressional_{contest_type}_{args.year}.json": build_payload(
                 year=args.year,
@@ -1965,9 +2488,16 @@ def main() -> None:
                 matched=matched,
                 total=total,
                 match_crosswalk=match_crosswalk_path.as_posix(),
+                target_crosswalk=args.crosswalk_csv.as_posix(),
+                district_weights_json=_district_weights_json("congressional"),
+                district_weight_plan=_district_weight_plan("congressional"),
+                district_lines_year=district_lines_year,
+                district_lines_label=district_lines_label,
             ),
         }
         for name, payload in payloads.items():
+            if str(payload.get("scope") or "") not in emit_scopes:
+                continue
             # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
             (out_dir / name).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
             written += 1
@@ -1976,6 +2506,15 @@ def main() -> None:
             args.contests_dir.mkdir(parents=True, exist_ok=True)
             contest_file = args.contests_dir / f"{contest_type}_{int(args.year)}.json"
             if (not args.contests_only_missing) or (not contest_file.exists()):
+                display_precinct_overrides = build_contest_display_overrides(
+                    precinct_party["precinct_id"],
+                    contest_display_crosswalk,
+                )
+                if display_precinct_overrides:
+                    print(
+                        f"  contest display remaps for {contest_type}: "
+                        f"{len(display_precinct_overrides):,} source keys -> OneMap keys"
+                    )
                 contest_payload = build_precinct_contest_payload(
                     year=int(args.year),
                     contest_type=str(contest_type),
@@ -1984,6 +2523,7 @@ def main() -> None:
                     precinct_party=precinct_party,
                     dem_candidate=dem_candidate,
                     rep_candidate=rep_candidate,
+                    display_precinct_overrides=display_precinct_overrides,
                 )
                 # Keep JSON pretty-printed for consistency with committed slice files and easier audit diffs.
                 contest_file.write_text(json.dumps(contest_payload, indent=2) + "\n", encoding="utf-8")
@@ -2020,10 +2560,20 @@ def main() -> None:
         try:
             payload = json.loads(p.read_text(encoding="utf-8"))
             districts = len(((payload.get("general") or {}).get("results")) or {})
+            meta = payload.get("meta") or {}
         except Exception:
             districts = 0
+            meta = {}
         manifest.append(
-            {"year": year, "scope": scope, "contest_type": contest_type, "file": p.name, "districts": districts}
+            {
+                "year": year,
+                "scope": scope,
+                "contest_type": contest_type,
+                "file": p.name,
+                "districts": districts,
+                "district_lines_year": meta.get("district_lines_year"),
+                "district_lines_label": meta.get("district_lines_label"),
+            }
         )
     manifest.sort(key=lambda x: (x["year"], x["scope"], x["contest_type"]))
     (out_dir / "manifest.json").write_text(json.dumps({"files": manifest}, indent=2), encoding="utf-8")
