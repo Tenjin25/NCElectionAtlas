@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-3';
-    const APP_BUILD_ID = '2026-07-15-3';
+    const DATA_CACHE_BUSTER = '2026-07-15-4';
+    const APP_BUILD_ID = '2026-07-15-4';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10773,6 +10773,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let districtManifestByLines = { '2022': [], '2024': [], '2026': [] };
     let currentDistrictLinesYear = 2022;
     const districtGeometryCache = new Map();
+    const districtGeometrySourceKeyById = new Map(); // sourceId -> `${scope}:${path}` currently installed on the map
     let congressionalData = []; // Optional legacy district-level table
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
@@ -10780,6 +10781,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // In-flight request dedupe (promise reuse) for atlas-wide loads.
     const jsonInflightByPath = new Map(); // requestPath -> Promise<any>
     const csvInflightByPath = new Map(); // requestPath -> Promise<string>
+    const jsonResultByPath = new Map(); // requestPath -> resolved static JSON/GeoJSON payload
+    const csvTextByPath = new Map(); // requestPath -> resolved small/medium static CSV text
     const contestSliceInflight = new Map(); // `${contestType}_${year}` -> Promise<rows[]>
     const districtSliceInflight = new Map(); // `${linesYear}|${scope}_${contestType}_${year}` -> Promise<payload>
     let countyTrendSeriesCache = new Map(); // Map<string key, Array<seriesRow>> (in-session cache)
@@ -11297,6 +11300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctsEnabled = false;
     let precinctSourceLoaded = false;
     let precinctLoadInFlight = false;
+    let precinctLoadPromise = null;
     let precinctGeometryMode = null; // 'precinct' or 'vtd20' based on contest year
     let lastPrecinctFillExpr = null; // Cached fill-color expression for precinct overlay.
     let lastPrecinctDotExpr = null; // Cached circle-color expression for precinct dots (statewide zoom).
@@ -11306,6 +11310,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctCentroidsData = null; // Cached centroids GeoJSON so we can annotate with has_polygon after polygons load.
     let precinctCentroidsLoaded = false;
     let precinctCentroidsLoadInFlight = false;
+    let precinctCentroidsLoadPromise = null;
     let countyNameByFipsMapCache = null; // Map<string fips3, string county_name>
     let precinctCodeIndexByCounty = null; // Map<string countyNorm, Set<string prec_id>> built from precinct centroids.
     let precinctAliasIndexByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
@@ -12748,9 +12753,17 @@ document.addEventListener('DOMContentLoaded', function() {
       await Promise.all(targets.map(async ({ sourceId, scope }) => {
         const src = map.getSource(sourceId);
         if (!src || src.type !== 'geojson' || typeof src.setData !== 'function') return;
+        const path = getDistrictGeometryPath(scope, linesYear);
+        const sourceKey = path ? `${scope}:${path}` : '';
+        if (sourceKey && districtGeometrySourceKeyById.get(sourceId) === sourceKey) {
+          const cached = districtGeometryCache.get(sourceKey);
+          if (cached) window[`${sourceId}__search_geojson`] = cached;
+          return;
+        }
         const data = await loadDistrictGeometry(scope, linesYear);
         if (!data) return;
         src.setData(data);
+        if (sourceKey) districtGeometrySourceKeyById.set(sourceId, sourceKey);
         window[`${sourceId}__search_geojson`] = data;
       }));
     }
@@ -15687,11 +15700,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadJSON(path) {
       const requestPath = withCacheBuster(path);
+      if (jsonResultByPath.has(requestPath)) return jsonResultByPath.get(requestPath);
       if (jsonInflightByPath.has(requestPath)) return jsonInflightByPath.get(requestPath);
       const p = atlasPerf(`json:${requestPath}`, async () => {
         const r = await fetch(requestPath, { cache: 'force-cache' });
         if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-        return r.json();
+        const data = await r.json();
+        jsonResultByPath.set(requestPath, data);
+        return data;
       });
       jsonInflightByPath.set(requestPath, p);
       try {
@@ -15703,11 +15719,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	    async function loadCSV(path) {
 	      const requestPath = withCacheBuster(path);
+	      if (csvTextByPath.has(requestPath)) return csvTextByPath.get(requestPath);
 	      if (csvInflightByPath.has(requestPath)) return csvInflightByPath.get(requestPath);
 	      const p = atlasPerf(`csv:${requestPath}`, async () => {
 	        const r = await fetch(requestPath, { cache: 'force-cache' });
 	        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-	        return r.text();
+	        const text = await r.text();
+	        // Cache small/medium static CSVs to avoid repeated fetch + decode while not
+	        // pinning very large raw election files in memory after they are parsed.
+	        if (text.length <= 5 * 1024 * 1024) {
+	          csvTextByPath.set(requestPath, text);
+	        }
+	        return text;
 	      });
 	      csvInflightByPath.set(requestPath, p);
 	      try {
@@ -20369,9 +20392,33 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
 
+    function isCurrentViewLayerReady(view) {
+      if (!map) return false;
+      const normalized = String(view || '').trim();
+      const primaryLayerByView = {
+        counties: 'county-fill',
+        districts: 'district-fill',
+        state_house: 'state-house-fill',
+        state_senate: 'state-senate-fill',
+        vtds_2000: 'vtds-2000-fill'
+      };
+      const layerId = primaryLayerByView[normalized];
+      return !!(layerId && map.getLayer(layerId));
+    }
+
     async function setMapView(view) {
       if (!appReady) {
         setStatus('Map is still loading. Try again in a moment.');
+        return;
+      }
+      if (String(view || '').trim() === String(currentView || '').trim() && isCurrentViewLayerReady(view)) {
+        updateDistrictLinesToggleUI();
+        try { reinforceMapLabelHalos(); } catch (_) {}
+        try { applyLayerOpacityTuning(); } catch (_) {}
+        try { setSplitTicketOverlayVisibility(); } catch (_) {}
+        try { updateBellwetherLayerVisibility(); } catch (_) {}
+        try { updateSmartInsightsOverlay(); } catch (_) {}
+        saveUIState();
         return;
       }
       const contestSelect = document.getElementById('contestSelect');
@@ -28999,123 +29046,129 @@ document.addEventListener('DOMContentLoaded', function() {
       const desiredMode = getDesiredPrecinctGeometryMode();
       const existingSrc = map.getSource('precincts');
       if (precinctSourceLoaded && existingSrc && precinctGeometryMode === desiredMode) return true;
+      if (precinctLoadInFlight && precinctLoadPromise) return precinctLoadPromise;
       if (precinctLoadInFlight) return false;
       precinctLoadInFlight = true;
-      const switching = !!(precinctSourceLoaded && existingSrc && precinctGeometryMode && precinctGeometryMode !== desiredMode);
-      setStatus(switching ? 'Switching precinct geometry...' : 'Loading precinct geometry...');
-      let usedVtdFallback = desiredMode === 'vtd20';
-      let precincts = null;
-      try {
-        const primaryPath = desiredMode === 'vtd20'
-          ? (CONFIG.paths?.precincts_fallback_vtd20 || CONFIG.paths.precincts)
-          : CONFIG.paths.precincts;
-        precincts = await loadJSON(primaryPath);
-      } catch (err) {
-        const fallbackPath = CONFIG.paths?.precincts_fallback_vtd20;
-        if (!fallbackPath) {
-          precinctLoadInFlight = false;
-          throw err;
-        }
+      precinctLoadPromise = (async () => {
+        const switching = !!(precinctSourceLoaded && existingSrc && precinctGeometryMode && precinctGeometryMode !== desiredMode);
+        setStatus(switching ? 'Switching precinct geometry...' : 'Loading precinct geometry...');
+        let usedVtdFallback = desiredMode === 'vtd20';
+        let precincts = null;
         try {
-          precincts = await loadJSON(fallbackPath);
-          usedVtdFallback = true;
-          console.warn('Primary precinct geometry load failed; using VTD20 fallback:', err?.message || err);
-        } catch (fallbackErr) {
-          precinctLoadInFlight = false;
-          throw fallbackErr;
-        }
-      }
-      let countyNameByFips = null;
-      try { countyNameByFips = await ensureCountyNameByFipsMap(); } catch (_) { countyNameByFips = null; }
-      const fullNameByNorm = new Map();
-      precincts.features = (precincts.features || []).map(feature => {
-        const original = feature.properties || {};
-        const rawFips = (original.COUNTYFP20 || original.COUNTYFP || '').toString().replace(/[^0-9]/g, '').slice(-3).padStart(3, '0');
-        const countyFromFips = (countyNameByFips && rawFips) ? (countyNameByFips.get(rawFips) || '') : '';
-        const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME20 || original.NAME || countyFromFips || '').toString().trim();
-        const countyNorm = countyRaw.replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
-        const precRaw = (original.prec_id || original.PREC_ID || original.VTDST20 || original.VTDST10 || original.VTDST00 || '').toString().trim();
-        const fullNameRaw = (original.enr_desc || original.ENR_DESC || original.precinct_full_name || original.precinct_name || '').toString();
-        const fullName = fullNameRaw.replace(/\s+/g, ' ').trim();
-        const precinctRaw = countyRaw && precRaw ? `${countyRaw} - ${precRaw}` : countyRaw;
-        const precinctNorm = (precinctRaw || '').replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
-        if (precinctNorm && fullName) fullNameByNorm.set(precinctNorm, fullName);
-        feature.properties = {
-          county_nam: countyRaw,
-          county_norm: countyNorm,
-          precinct_name: precinctRaw,
-          precinct_norm: precinctNorm,
-          prec_id: precRaw,
-          precinct_full_name: fullName,
-          id: original.id || original.objectid || null
-        };
-        return feature;
-      });
-      precinctFullNameByNormCache = fullNameByNorm.size ? fullNameByNorm : precinctFullNameByNormCache;
-      try {
-        const s = new Set();
-        (precincts.features || []).forEach(f => {
-          const n = (f?.properties?.precinct_norm || '').toString().trim().toUpperCase();
-          if (n) s.add(n);
-        });
-        precinctPolygonNormSet = s;
-
-        if (precinctCentroidsData && precinctCentroidsData.features) {
-          precinctCentroidsData.features = (precinctCentroidsData.features || []).map(f => {
-            const p = f.properties || {};
-            const n = (p.precinct_norm || '').toString().trim().toUpperCase();
-            const full = (!p.precinct_full_name && precinctFullNameByNormCache && n && precinctFullNameByNormCache.has(n))
-              ? String(precinctFullNameByNormCache.get(n) || '').toString().replace(/\s+/g, ' ').trim()
-              : (p.precinct_full_name || p.precinct_desc || '').toString().replace(/\s+/g, ' ').trim();
-            f.properties = { ...p, precinct_full_name: full || (p.precinct_full_name || ''), has_polygon: !!(n && precinctPolygonNormSet && precinctPolygonNormSet.has(n)) };
-            return f;
-          });
-          const src = map.getSource('precinct-centroids');
-          if (src && typeof src.setData === 'function') {
-            try { src.setData(precinctCentroidsData); } catch (_) {}
+          const primaryPath = desiredMode === 'vtd20'
+            ? (CONFIG.paths?.precincts_fallback_vtd20 || CONFIG.paths.precincts)
+            : CONFIG.paths.precincts;
+          precincts = await loadJSON(primaryPath);
+        } catch (err) {
+          const fallbackPath = CONFIG.paths?.precincts_fallback_vtd20;
+          if (!fallbackPath) {
+            throw err;
+          }
+          try {
+            precincts = await loadJSON(fallbackPath);
+            usedVtdFallback = true;
+            console.warn('Primary precinct geometry load failed; using VTD20 fallback:', err?.message || err);
+          } catch (fallbackErr) {
+            throw fallbackErr;
           }
         }
-      } catch (_) {}
-      // Do not overwrite window.countiesData (used for county search/zoom).
-      window.precinctsData = precincts;
-      if (existingSrc && typeof existingSrc.setData === 'function') {
-        try { existingSrc.setData(precincts); } catch (_) {}
-      } else {
-        map.addSource('precincts', { type: 'geojson', data: precincts, generateId: true });
-      }
-      precinctSourceLoaded = true;
-      precinctGeometryMode = usedVtdFallback ? 'vtd20' : 'precinct';
-      precinctLoadInFlight = false;
-      addPrecinctLayers();
-      ensureSplitTicketOverlayLayers();
-      if (splitTicketOverlayEnabled && currentContestMeta?.contestType && currentContestMeta?.year) {
-        refreshSplitTicketOverlayForSelection(currentContestMeta.contestType, currentContestMeta.year).catch(() => {});
-      }
-      // If a contest is already applied, paint precincts immediately.
+        let countyNameByFips = null;
+        try { countyNameByFips = await ensureCountyNameByFipsMap(); } catch (_) { countyNameByFips = null; }
+        const fullNameByNorm = new Map();
+        precincts.features = (precincts.features || []).map(feature => {
+          const original = feature.properties || {};
+          const rawFips = (original.COUNTYFP20 || original.COUNTYFP || '').toString().replace(/[^0-9]/g, '').slice(-3).padStart(3, '0');
+          const countyFromFips = (countyNameByFips && rawFips) ? (countyNameByFips.get(rawFips) || '') : '';
+          const countyRaw = (original.county_nam || original.COUNTYNAME || original.County || original.NAME20 || original.NAME || countyFromFips || '').toString().trim();
+          const countyNorm = countyRaw.replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+          const precRaw = (original.prec_id || original.PREC_ID || original.VTDST20 || original.VTDST10 || original.VTDST00 || '').toString().trim();
+          const fullNameRaw = (original.enr_desc || original.ENR_DESC || original.precinct_full_name || original.precinct_name || '').toString();
+          const fullName = fullNameRaw.replace(/\s+/g, ' ').trim();
+          const precinctRaw = countyRaw && precRaw ? `${countyRaw} - ${precRaw}` : countyRaw;
+          const precinctNorm = (precinctRaw || '').replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
+          if (precinctNorm && fullName) fullNameByNorm.set(precinctNorm, fullName);
+          feature.properties = {
+            county_nam: countyRaw,
+            county_norm: countyNorm,
+            precinct_name: precinctRaw,
+            precinct_norm: precinctNorm,
+            prec_id: precRaw,
+            precinct_full_name: fullName,
+            id: original.id || original.objectid || null
+          };
+          return feature;
+        });
+        precinctFullNameByNormCache = fullNameByNorm.size ? fullNameByNorm : precinctFullNameByNormCache;
+        try {
+          const s = new Set();
+          (precincts.features || []).forEach(f => {
+            const n = (f?.properties?.precinct_norm || '').toString().trim().toUpperCase();
+            if (n) s.add(n);
+          });
+          precinctPolygonNormSet = s;
+
+          if (precinctCentroidsData && precinctCentroidsData.features) {
+            precinctCentroidsData.features = (precinctCentroidsData.features || []).map(f => {
+              const p = f.properties || {};
+              const n = (p.precinct_norm || '').toString().trim().toUpperCase();
+              const full = (!p.precinct_full_name && precinctFullNameByNormCache && n && precinctFullNameByNormCache.has(n))
+                ? String(precinctFullNameByNormCache.get(n) || '').toString().replace(/\s+/g, ' ').trim()
+                : (p.precinct_full_name || p.precinct_desc || '').toString().replace(/\s+/g, ' ').trim();
+              f.properties = { ...p, precinct_full_name: full || (p.precinct_full_name || ''), has_polygon: !!(n && precinctPolygonNormSet && precinctPolygonNormSet.has(n)) };
+              return f;
+            });
+            const src = map.getSource('precinct-centroids');
+            if (src && typeof src.setData === 'function') {
+              try { src.setData(precinctCentroidsData); } catch (_) {}
+            }
+          }
+        } catch (_) {}
+        // Do not overwrite window.countiesData (used for county search/zoom).
+        window.precinctsData = precincts;
+        if (existingSrc && typeof existingSrc.setData === 'function') {
+          try { existingSrc.setData(precincts); } catch (_) {}
+        } else {
+          map.addSource('precincts', { type: 'geojson', data: precincts, generateId: true });
+        }
+        precinctSourceLoaded = true;
+        precinctGeometryMode = usedVtdFallback ? 'vtd20' : 'precinct';
+        addPrecinctLayers();
+        ensureSplitTicketOverlayLayers();
+        if (splitTicketOverlayEnabled && currentContestMeta?.contestType && currentContestMeta?.year) {
+          refreshSplitTicketOverlayForSelection(currentContestMeta.contestType, currentContestMeta.year).catch(() => {});
+        }
+        // If a contest is already applied, paint precincts immediately.
+        try {
+          if (lastPrecinctFillExpr && map.getLayer('precinct-fill')) {
+            map.setPaintProperty('precinct-fill', 'fill-color', lastPrecinctFillExpr);
+          }
+          if (lastPrecinctDotExpr && map.getLayer('precinct-dot')) {
+            map.setPaintProperty('precinct-dot', 'circle-color', lastPrecinctDotExpr);
+            if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-color', lastPrecinctDotExpr);
+          }
+        } catch (err) {
+          console.warn('Failed to apply cached precinct colors:', err?.message || err);
+        }
+        applyLayerOpacityTuning();
+        // Critical sync: when precinct geometry loads asynchronously after a zoom threshold,
+        // immediately recompute layer visibility/opacity so users don't need to toggle off/on.
+        try { updatePrecinctVisibility(); } catch (_) {}
+        // If we don't yet have cached precinct paint expressions for the active contest, refresh once.
+        try {
+          const contestKey = (document.getElementById('contestSelect')?.value || '').toString().trim();
+          if (precinctsEnabled && contestKey && (!lastPrecinctFillExpr || !lastPrecinctDotExpr)) {
+            applyContest(contestKey).catch(() => {});
+          }
+        } catch (_) {}
+        setStatus(usedVtdFallback ? 'Precinct geometry ready (VTD20)' : 'Precinct geometry ready');
+        return true;
+      })();
       try {
-        if (lastPrecinctFillExpr && map.getLayer('precinct-fill')) {
-          map.setPaintProperty('precinct-fill', 'fill-color', lastPrecinctFillExpr);
-        }
-        if (lastPrecinctDotExpr && map.getLayer('precinct-dot')) {
-          map.setPaintProperty('precinct-dot', 'circle-color', lastPrecinctDotExpr);
-          if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-color', lastPrecinctDotExpr);
-        }
-      } catch (err) {
-        console.warn('Failed to apply cached precinct colors:', err?.message || err);
+        return await precinctLoadPromise;
+      } finally {
+        precinctLoadInFlight = false;
+        precinctLoadPromise = null;
       }
-      applyLayerOpacityTuning();
-      // Critical sync: when precinct geometry loads asynchronously after a zoom threshold,
-      // immediately recompute layer visibility/opacity so users don't need to toggle off/on.
-      try { updatePrecinctVisibility(); } catch (_) {}
-      // If we don't yet have cached precinct paint expressions for the active contest, refresh once.
-      try {
-        const contestKey = (document.getElementById('contestSelect')?.value || '').toString().trim();
-        if (precinctsEnabled && contestKey && (!lastPrecinctFillExpr || !lastPrecinctDotExpr)) {
-          applyContest(contestKey).catch(() => {});
-        }
-      } catch (_) {}
-      setStatus(usedVtdFallback ? 'Precinct geometry ready (VTD20)' : 'Precinct geometry ready');
-      return true;
     }
 
     function buildVotehubResultsTooltip({
@@ -29399,8 +29452,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	    async function ensurePrecinctCentroidsLoaded() {
 	      if (precinctCentroidsLoaded || map.getSource('precinct-centroids')) return true;
+	      if (precinctCentroidsLoadInFlight && precinctCentroidsLoadPromise) return precinctCentroidsLoadPromise;
 	      if (precinctCentroidsLoadInFlight) return false;
 	      precinctCentroidsLoadInFlight = true;
+	      precinctCentroidsLoadPromise = (async () => {
 	      try {
 	        const pts = await loadJSON(CONFIG.paths.precinct_centroids);
           precinctCentroidsData = pts;
@@ -29463,6 +29518,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	        precinctCentroidsLoadInFlight = false;
 	      }
 	      return precinctCentroidsLoaded;
+	      })();
+	      try {
+	        return await precinctCentroidsLoadPromise;
+	      } finally {
+	        precinctCentroidsLoadPromise = null;
+	      }
 	    }
 
 	    async function ensurePrecinctCodeIndex() {
@@ -32717,21 +32778,24 @@ document.addEventListener('DOMContentLoaded', function() {
       try {
         let loadedAnyDistrictManifest = false;
         districtManifestByLines = { '2022': [], '2024': [], '2026': [] };
-        for (const linesYear of [2022, 2024, 2026]) {
+        const manifestLoads = await Promise.all([2022, 2024, 2026].map(async (linesYear) => {
           const dir = getActiveDistrictContestsDir(linesYear);
-          if (!dir) continue;
+          if (!dir) return { linesYear, files: [], err: null };
           try {
             const dManifest = await loadJSON(`${dir}/manifest.json`);
             const files = dManifest?.files || [];
-            districtManifestByLines[String(linesYear)] = files;
-            if (files.length > 0) loadedAnyDistrictManifest = true;
+            return { linesYear, files, err: null };
           } catch (err) {
-            districtManifestByLines[String(linesYear)] = [];
-            if (linesYear === 2022) {
-              console.warn('Primary district manifest not loaded:', err?.message || err);
-            }
+            return { linesYear, files: [], err };
           }
-        }
+        }));
+        manifestLoads.forEach(({ linesYear, files, err }) => {
+          districtManifestByLines[String(linesYear)] = Array.isArray(files) ? files : [];
+          if (files && files.length > 0) loadedAnyDistrictManifest = true;
+          if (err && Number(linesYear) === 2022) {
+            console.warn('Primary district manifest not loaded:', err?.message || err);
+          }
+        });
 
         if (!loadedAnyDistrictManifest) {
           throw new Error('No district manifests found');
@@ -32816,11 +32880,13 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         } else {
           const districtsGeoJSON = await loadDistrictGeometry('congressional', currentDistrictLinesYear);
+          const districtsPath = getDistrictGeometryPath('congressional', currentDistrictLinesYear);
           if (map.getSource('districts')) {
             map.getSource('districts').setData(districtsGeoJSON);
           } else {
             map.addSource('districts', { type: 'geojson', data: districtsGeoJSON });
           }
+          if (districtsPath) districtGeometrySourceKeyById.set('districts', `congressional:${districtsPath}`);
           window['districts__search_geojson'] = districtsGeoJSON;
         }
         setStatus('Congressional districts loaded');
@@ -32836,11 +32902,13 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         } else {
           const stateHouseGeoJSON = await loadDistrictGeometry('state_house', currentDistrictLinesYear);
+          const stateHousePath = getDistrictGeometryPath('state_house', currentDistrictLinesYear);
           if (map.getSource('state-house')) {
             map.getSource('state-house').setData(stateHouseGeoJSON);
           } else {
             map.addSource('state-house', { type: 'geojson', data: stateHouseGeoJSON });
           }
+          if (stateHousePath) districtGeometrySourceKeyById.set('state-house', `state_house:${stateHousePath}`);
           window['state-house__search_geojson'] = stateHouseGeoJSON;
         }
         const stateHouseCSV = await loadCSV(CONFIG.paths.state_house_info);
@@ -32858,11 +32926,13 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         } else {
           const stateSenateGeoJSON = await loadDistrictGeometry('state_senate', currentDistrictLinesYear);
+          const stateSenatePath = getDistrictGeometryPath('state_senate', currentDistrictLinesYear);
           if (map.getSource('state-senate')) {
             map.getSource('state-senate').setData(stateSenateGeoJSON);
           } else {
             map.addSource('state-senate', { type: 'geojson', data: stateSenateGeoJSON });
           }
+          if (stateSenatePath) districtGeometrySourceKeyById.set('state-senate', `state_senate:${stateSenatePath}`);
           window['state-senate__search_geojson'] = stateSenateGeoJSON;
         }
         const stateSenateCSV = await loadCSV(CONFIG.paths.state_senate_info);
