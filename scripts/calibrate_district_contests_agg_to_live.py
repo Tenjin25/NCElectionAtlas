@@ -171,6 +171,19 @@ def resolve_stats_csv(year: int, scope: str, contest_type: str) -> Path | None:
     path = STATS_CSV_BY_KEY.get(key)
     if path is not None and path.exists():
         return path
+    if scope == "state_house":
+        aliases = sorted(
+            {
+                alias
+                for alias, mapped_contest in DRA_DOWNLOAD_ALIAS_TO_CONTEST.items()
+                if mapped_contest == contest_type
+            }
+        )
+        for alias in aliases:
+            cand = Path(f"data/calibration_csvs/NC-2022-State-House-district-statistics {year} {alias}.csv")
+            if cand.exists():
+                STATS_CSV_BY_KEY[key] = cand
+                return cand
     short = CANONICAL_STATS_NAME.get(contest_type)
     if short and scope == "state_house":
         cand = Path(f"data/district-statistics {year} {short} State House 2022.csv")
@@ -570,7 +583,7 @@ def calibrate_agg_dir(
 
         stats_csv = resolve_stats_csv(year, scope, contest_type)
 
-        if year == 2020 and prefer_stats_csv and stats_csv is not None and stats_csv.exists():
+        if prefer_stats_csv and stats_csv is not None and stats_csv.exists():
             summary = calibrate_slice(
                 agg_path,
                 stats_csv,
@@ -584,7 +597,7 @@ def calibrate_agg_dir(
                 margin_search_radius=500,
                 audit_only=audit_only,
             )
-            summary["source"] = "2020_csv"
+            summary["source"] = f"{year}_csv"
             summary["file"] = agg_path.name
             summaries.append(summary)
             continue
