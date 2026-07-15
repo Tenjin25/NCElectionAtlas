@@ -1,7 +1,7 @@
 """Build a VAP-weighted bridge from SBE 2024 precinct keys to OneMap 2025 precincts.
 
 Election returns match SBE-style codes; the atlas current geography is
-`data/2025Voting_Precincts.geojson` via `block20_to_onemap_2025.csv`.
+the configured modern OneMap block map (December 2025 by default).
 This join uses shared 2020 Census blocks so the shatter chain can land on
 the current OneMap layer without losing SBE key coverage.
 """
@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--onemap-block-map",
         type=Path,
-        default=ROOT / "data/crosswalks/block20_to_onemap_2025.csv",
+        default=ROOT / "data/crosswalks/block20_to_onemap_2025_12.csv",
     )
     p.add_argument(
         "--vap-csv",
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--out-csv",
         type=Path,
-        default=ROOT / "data/crosswalks/precinct_sbe_2024_to_onemap_2025_vap.csv",
+        default=ROOT / "data/crosswalks/precinct_sbe_2024_to_onemap_2025_12_vap.csv",
     )
     return p.parse_args()
 

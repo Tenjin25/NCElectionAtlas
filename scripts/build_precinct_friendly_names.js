@@ -75,6 +75,13 @@ function formatDisplayName(raw) {
   return s;
 }
 
+// Balancing act: alias/geo heuristics are conservative and will keep missing cases.
+// Prefer adding county+code pins here over widening auto-cleanup. Overrides win last
+// (applied after alias index + geo merge). Workflow when a label is wrong:
+//   1. Add COUNTY: { CODE: 'Desired Display Name' } below
+//   2. node scripts/build_precinct_friendly_names.js
+//   3. Spot-check that code and a few nearby good names did not regress
+// Only broaden heuristics when the same smash/pattern hits many counties.
 function applyManualOverrides(counties) {
   const overrides = {
     ALLEGHANY: {
@@ -785,6 +792,75 @@ function normalizeCode(raw) {
   return String(raw || '').trim().toUpperCase();
 }
 
+function collectDisplayCodes(votingGeoJsonPayload) {
+  const features = Array.isArray(votingGeoJsonPayload?.features) ? votingGeoJsonPayload.features : [];
+  const out = new Map();
+  for (const feature of features) {
+    const props = feature?.properties || {};
+    const county = normalizeCounty(props.county_nam);
+    const code = normalizeCode(props.prec_id);
+    if (!county || !code) continue;
+    if (!out.has(county)) out.set(county, new Set());
+    out.get(county).add(code);
+  }
+  return out;
+}
+
+function pruneToDisplayCodes(counties, displayCodesByCounty) {
+  const out = {};
+  for (const [county, codeMap] of Object.entries(counties || {})) {
+    const allowedCodes = displayCodesByCounty.get(normalizeCounty(county));
+    if (!allowedCodes || !codeMap || typeof codeMap !== 'object') continue;
+    const kept = {};
+    for (const [code, name] of Object.entries(codeMap)) {
+      const normalizedCode = normalizeCode(code);
+      if (allowedCodes.has(normalizedCode)) {
+        kept[normalizedCode] = name;
+      }
+    }
+    if (Object.keys(kept).length) out[county] = kept;
+  }
+  return out;
+}
+
+function sortCountyCodeMap(counties) {
+  const sorted = {};
+  for (const county of Object.keys(counties || {}).sort((a, b) => a.localeCompare(b))) {
+    const codeMap = counties[county] || {};
+    const sortedCodes = {};
+    for (const code of Object.keys(codeMap).sort((a, b) => a.localeCompare(b))) {
+      sortedCodes[code] = codeMap[code];
+    }
+    sorted[county] = sortedCodes;
+  }
+  return sorted;
+}
+
+function stableStringify(value, level = 0) {
+  const pad = '  '.repeat(level);
+  const childPad = '  '.repeat(level + 1);
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    return `[\n${value.map(item => `${childPad}${stableStringify(item, level + 1)}`).join(',\n')}\n${pad}]`;
+  }
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value).sort((a, b) => a.localeCompare(b));
+    if (!keys.length) return '{}';
+    return `{\n${keys.map(key => `${childPad}${JSON.stringify(key)}: ${stableStringify(value[key], level + 1)}`).join(',\n')}\n${pad}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function stringifyFriendlyPayload(payload) {
+  return `{
+  "version": ${JSON.stringify(payload.version)},
+  "generated_at": ${JSON.stringify(payload.generated_at)},
+  "generated_from": ${stableStringify(payload.generated_from, 1)},
+  "counties": ${stableStringify(payload.counties, 1)}
+}
+`;
+}
+
 function normalizeDirectGeoName(raw) {
   const s = String(raw || '').trim().toUpperCase();
   if (!s) return '';
@@ -996,7 +1072,13 @@ function main() {
 
   const payload = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
   const votingGeoJson = JSON.parse(fs.readFileSync(votingGeoJsonPath, 'utf8'));
-  const counties = applyManualOverrides(mergeGeoJsonNames(buildFriendlyNamesIndex(payload), votingGeoJson));
+  const displayCodesByCounty = collectDisplayCodes(votingGeoJson);
+  const counties = sortCountyCodeMap(
+    pruneToDisplayCodes(
+      applyManualOverrides(mergeGeoJsonNames(buildFriendlyNamesIndex(payload), votingGeoJson)),
+      displayCodesByCounty
+    )
+  );
   const out = {
     version: 1,
     generated_at: new Date().toISOString(),
@@ -1007,7 +1089,7 @@ function main() {
     counties
   };
 
-  fs.writeFileSync(outputPath, `${JSON.stringify(out, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(outputPath, stringifyFriendlyPayload(out), 'utf8');
   console.log(`Wrote ${Object.keys(counties).length} counties -> ${path.relative(repoRoot, outputPath)}`);
 }
 

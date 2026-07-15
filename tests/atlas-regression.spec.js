@@ -47,6 +47,42 @@ async function flyToPrecinct(page, query = 'Wake 01-14') {
   await page.press('#desktop-fly-search', 'Enter');
 }
 
+test('official county totals override county aggregates without changing precinct rows', async ({ page }) => {
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await page.waitForFunction(() => (
+    typeof attachOfficialCountyTotalsToRows === 'function' &&
+    typeof buildCountyAggregateBundleFromSliceRows === 'function'
+  ), { timeout: APP_READY_TIMEOUT });
+
+  const snapshot = await page.evaluate(() => {
+    const rows = [{
+      year: 2024,
+      county: 'WAKE - 01-01',
+      president_dem: 40,
+      president_rep: 30,
+      president_other: 2,
+      president_total: 72
+    }];
+    attachOfficialCountyTotalsToRows(rows, {
+      county_totals: {
+        WAKE: { dem_votes: 50, rep_votes: 35, other_votes: 3, total_votes: 88 }
+      }
+    });
+    const bundle = buildCountyAggregateBundleFromSliceRows(rows, 'president');
+    return {
+      rowCount: rows.length,
+      precinctDem: rows[0].president_dem,
+      county: bundle?.totalsByCounty?.get('WAKE') || null,
+      statewide: bundle?.statewide || null
+    };
+  });
+
+  expect(snapshot.rowCount).toBe(1);
+  expect(snapshot.precinctDem).toBe(40);
+  expect(snapshot.county).toEqual({ dem: 50, rep: 35, other: 3, total: 88 });
+  expect(snapshot.statewide).toEqual({ dem: 50, rep: 35, other: 3, total: 88 });
+});
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');

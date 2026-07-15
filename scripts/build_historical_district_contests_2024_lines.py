@@ -42,6 +42,9 @@ def discover_general_csv_for_year(data_dir: Path, year: int) -> Path | None:
     matches = sorted(year_dir.glob("**/*__nc__general__precinct.csv"))
     if not matches:
         return None
+    november = [p for p in matches if p.name.startswith(f"{year}11")]
+    if november:
+        return max(november, key=lambda p: p.stat().st_size)
     # Pick the largest file as best proxy for the statewide November general file.
     return max(matches, key=lambda p: p.stat().st_size)
 
@@ -60,6 +63,7 @@ def build_year(
     cd_file: Path,
     allocation_weights_json: Path,
     precinct_overrides_csv: Path,
+    sbe_precincts_2006_shp: Path,
     allocation_year: int,
     min_county_share: float,
     nongeo_allocation_mode: str,
@@ -90,12 +94,18 @@ def build_year(
         str(allocation_weights_json),
         "--precinct-overrides-csv",
         str(precinct_overrides_csv),
+        "--sbe-precincts-2006-shp",
+        str(sbe_precincts_2006_shp),
         "--allocation-year",
         str(allocation_year),
         "--min-county-share",
         str(min_county_share),
         "--nongeo-allocation-mode",
         nongeo_allocation_mode,
+        "--district-lines-year",
+        "2024",
+        "--district-lines-label",
+        "2024 lines",
         "--office-source",
         "auto",
     ]
@@ -146,11 +156,14 @@ def rebuild_manifest(out_dir: Path) -> None:
             continue
 
         districts = 0
+        meta: dict = {}
         try:
             payload = json.loads(p.read_text(encoding="utf-8"))
             districts = len((((payload.get("general") or {}).get("results")) or {}))
+            meta = payload.get("meta") or {}
         except Exception:
             districts = 0
+            meta = {}
 
         manifest.append(
             {
@@ -159,6 +172,8 @@ def rebuild_manifest(out_dir: Path) -> None:
                 "contest_type": contest_type,
                 "file": p.name,
                 "districts": districts,
+                "district_lines_year": meta.get("district_lines_year"),
+                "district_lines_label": meta.get("district_lines_label"),
             }
         )
     manifest.sort(key=lambda x: (x["year"], x["scope"], x["contest_type"]))
@@ -202,7 +217,12 @@ def main() -> None:
     parser.add_argument("--python-exe", type=str, default=sys.executable)
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument("--out-dir", type=Path, default=Path("data/district_contests_2024_lines"))
-    parser.add_argument("--crosswalk-csv", type=Path, default=Path("data/crosswalks/block20_to_precinct.csv"))
+    parser.add_argument(
+        "--crosswalk-csv",
+        type=Path,
+        default=Path("data/crosswalks/block20_to_onemap_2025_12.csv"),
+        help="Modern target block->precinct map recorded in output provenance.",
+    )
     parser.add_argument("--vap-csv", type=Path, default=Path("data/census/block_vap_2020_nc.csv"))
     parser.add_argument(
         "--house-file",
@@ -228,6 +248,12 @@ def main() -> None:
         "--precinct-overrides-csv",
         type=Path,
         default=Path("data/mappings/precinct_key_overrides.csv"),
+    )
+    parser.add_argument(
+        "--sbe-precincts-2006-shp",
+        type=Path,
+        default=Path("data/Precincts2006Gen/Precincts2006Gen.shp"),
+        help="2006-era SBE precinct layer used for aliases in 2010-and-earlier builds.",
     )
     parser.add_argument(
         "--allocation-year",
@@ -343,6 +369,7 @@ def main() -> None:
                 cd_file=args.cd_file,
                 allocation_weights_json=args.allocation_weights_json,
                 precinct_overrides_csv=args.precinct_overrides_csv,
+                sbe_precincts_2006_shp=args.sbe_precincts_2006_shp,
                 allocation_year=args.allocation_year,
                 min_county_share=args.min_county_share,
                 nongeo_allocation_mode=args.nongeo_allocation_mode,
@@ -372,6 +399,7 @@ def main() -> None:
                     cd_file=args.cd_file,
                     allocation_weights_json=args.allocation_weights_json,
                     precinct_overrides_csv=args.precinct_overrides_csv,
+                    sbe_precincts_2006_shp=args.sbe_precincts_2006_shp,
                     allocation_year=args.allocation_year,
                     min_county_share=args.min_county_share,
                     nongeo_allocation_mode=args.nongeo_allocation_mode,

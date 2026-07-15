@@ -90,27 +90,24 @@ function isDefinitelyNonGeo(key) {
 }
 
 function buildWeightedMapping(repoRoot) {
-  const detailPath = path.join(repoRoot, 'data', 'crosswalks', 'precinct_stable_to_nconemap_2026_07_detail.csv');
-  const rows = parseCsv(fs.readFileSync(detailPath, 'utf8'));
-  const canonical = buildCanonicalKeySet(repoRoot);
+  const bridgePath = path.join(repoRoot, 'data', 'crosswalks', 'precinct_sbe_2024_to_onemap_2025_12_vap.csv');
+  const rows = parseCsv(fs.readFileSync(bridgePath, 'utf8'));
   const grouped = new Map();
 
   for (const row of rows) {
-    const sourceKey = norm(row.new_precinct_key);
-    const targetKey = norm(row.old_precinct_key);
+    const sourceKey = norm(row.sbe_precinct_id);
+    const targetKey = norm(row.onemap_precinct_id);
     if (!sourceKey || !targetKey) continue;
-    if (canonical.has(sourceKey)) continue;
-    if (!canonical.has(targetKey)) continue;
     if (isDefinitelyNonGeo(sourceKey)) continue;
-    const weight = Number.parseFloat(row.new_share || '0');
+    const weight = Number.parseFloat(row.share || '0');
     if (!(weight > 0)) continue;
     if (!grouped.has(sourceKey)) grouped.set(sourceKey, []);
     grouped.get(sourceKey).push({
       sourceKey,
       targetKey,
-      county: row.county,
+      county: sourceKey.split(/ - (.+)/, 2)[0] || '',
       weight,
-      jaccard: Number.parseFloat(row.jaccard || '0'),
+      jaccard: weight,
     });
   }
 
@@ -135,6 +132,26 @@ function buildWeightedMapping(repoRoot) {
   return mapping;
 }
 
+function updateContestManifest(repoRoot, changedFiles) {
+  const manifestPath = path.join(repoRoot, 'data', 'contests', 'manifest.json');
+  if (!fs.existsSync(manifestPath)) return;
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const files = Array.isArray(manifest.files) ? manifest.files : [];
+  let changed = false;
+  for (const [fileName, result] of Object.entries(changedFiles)) {
+    const entry = files.find((row) => row && row.file === fileName);
+    if (!entry) continue;
+    const nextRows = Number(result.expandedRows || 0);
+    if (Number.isFinite(nextRows) && nextRows > 0 && Number(entry.rows) !== nextRows) {
+      entry.rows = nextRows;
+      changed = true;
+    }
+  }
+  if (changed) {
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  }
+}
+
 function allocateIntegerShares(total, weights) {
   const raw = weights.map((weight) => total * weight);
   const floors = raw.map((value) => Math.floor(value));
@@ -152,6 +169,29 @@ function allocateIntegerShares(total, weights) {
 function numericVote(value) {
   const n = Number.parseInt(value, 10);
   return Number.isFinite(n) ? n : 0;
+}
+
+function buildCountyTotals(rows) {
+  const totals = {};
+  for (const row of rows || []) {
+    const county = norm(row.county).split(' - ')[0].trim();
+    if (!county) continue;
+    if (!totals[county]) {
+      totals[county] = {
+        dem_votes: 0,
+        rep_votes: 0,
+        other_votes: 0,
+        total_votes: 0,
+        dem_candidate: String(row.dem_candidate || ''),
+        rep_candidate: String(row.rep_candidate || ''),
+      };
+    }
+    totals[county].dem_votes += numericVote(row.dem_votes);
+    totals[county].rep_votes += numericVote(row.rep_votes);
+    totals[county].other_votes += numericVote(row.other_votes);
+    totals[county].total_votes += numericVote(row.total_votes);
+  }
+  return totals;
 }
 
 function recalcDerived(row) {
@@ -217,6 +257,11 @@ function aggregateRows(rows) {
 
 function applyToFile(filePath, weightedMapping) {
   const payload = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  // These rows still reflect the source election CSV here. Preserve their exact
+  // county sums before any precinct crosswalk allocation changes the row layer.
+  if (!payload.county_totals || Object.keys(payload.county_totals).length === 0) {
+    payload.county_totals = buildCountyTotals(payload.rows);
+  }
   const expanded = [];
   let replacedRows = 0;
   const touched = new Set();
@@ -243,23 +288,26 @@ function applyToFile(filePath, weightedMapping) {
 function main() {
   const repoRoot = path.resolve(__dirname, '..');
   const contestDir = path.join(repoRoot, 'data', 'contests');
+  const requestedFiles = new Set(process.argv.slice(2).map((name) => path.basename(name)));
   const weightedMapping = buildWeightedMapping(repoRoot);
   const changedFiles = {};
   let totalReplacedRows = 0;
 
   for (const fileName of fs.readdirSync(contestDir).filter((name) => name.endsWith('_2024.json')).sort()) {
+    if (requestedFiles.size > 0 && !requestedFiles.has(fileName)) continue;
     const result = applyToFile(path.join(contestDir, fileName), weightedMapping);
     if (result.replacedRows > 0) {
       changedFiles[fileName] = result;
       totalReplacedRows += result.replacedRows;
     }
   }
+  updateContestManifest(repoRoot, changedFiles);
 
   console.log(JSON.stringify({
     weighted_source_key_count: weightedMapping.size,
     total_replaced_rows: totalReplacedRows,
     changed_files: changedFiles,
-    gaston_targets: weightedMapping.get('GASTON - 10A') || [],
+    gaston_targets: weightedMapping.get('GASTON - 41') || [],
   }, null, 2));
 }
 
