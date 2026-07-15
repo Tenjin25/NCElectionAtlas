@@ -28988,8 +28988,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function shouldUseCentroidOnlyPrecinctMode() {
-      const year = Number(currentContestMeta?.year);
-      return Number.isFinite(year) && year < 2016;
+      // Older contests now use the SBE 2006 -> OneMap bridge/weights, so they
+      // can color modern precinct polygons instead of being locked to centroids.
+      return false;
     }
 
     async function ensurePrecinctSourceLoaded() {
@@ -33592,7 +33593,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const modeledDefForTiming = getModeledContestDefinition(contestType, yearNum);
       const modeledSigForTiming = modeledDefForTiming ? getModeledDefSignature(modeledDefForTiming) : '';
 
-      // If precinct polygons are visible, ensure we are using the appropriate geometry mode for the year (VTD20 only for legacy cycles).
+      // If precinct polygons are visible, ensure the current OneMap precinct geometry is loaded.
       try {
         if (precinctsEnabled && !shouldUseCentroidOnlyPrecinctMode() && map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5)) {
           ensurePrecinctSourceLoaded().catch(err => console.warn('Precinct load failed:', err?.message || err));
