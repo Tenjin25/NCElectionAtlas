@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-6';
-    const APP_BUILD_ID = '2026-07-15-6';
+    const DATA_CACHE_BUSTER = '2026-07-15-7';
+    const APP_BUILD_ID = '2026-07-15-7';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10976,6 +10976,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const precinctAdjustedRowCache = new Map(); // key -> Map<precinctNorm, adjustedRow> (only built when precinct detail is enabled)
     const countyColorExprCache = new Map(); // key -> { expr, countyFillColorByNorm }
     const precinctColorExprCache = new Map(); // key -> { expr, turnoutTotals }
+    const prevContestBundleCache = new Map(); // key -> prior county totals and optional precinct margins
+    const prevContestBundleInflight = new Map();
 
     function getContestSliceSourceSignature(contestType, year) {
       const ct = String(contestType || '').trim();
@@ -33463,7 +33465,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    async function getPreviousContestSlice(contestType, year) {
+    async function getPreviousContestSlice(contestType, year, options = {}) {
+      const includePrecinctMargins = !!options.includePrecinctMargins;
       const y = Number(year);
       const modeledDef = getModeledContestDefinition(contestType, y);
       if (modeledDef) {
@@ -33477,7 +33480,12 @@ document.addEventListener('DOMContentLoaded', function() {
         getAvailableContestYearsForType(contestType)
       );
       for (const cy of candidates) {
-        const rows = await tryLoadContestSliceStrict(contestType, cy);
+        // County hover/flip metadata only needs the compact 100-row county file.
+        // Load the full crosswalked precinct slice solely when Shift/Flips is
+        // actively coloring precinct geometry.
+        const rows = includePrecinctMargins
+          ? await tryLoadContestSliceStrict(contestType, cy)
+          : await loadCountyContestSlice(contestType, cy);
         if (rows && rows.length) return { year: cy, rows };
       }
       return null;
@@ -33486,25 +33494,27 @@ document.addEventListener('DOMContentLoaded', function() {
     async function ensurePrevContestCache(contestType, year, options = {}) {
       const includePrecinctMargins = !!options.includePrecinctMargins;
       const y = Number(year);
-      if (
-        vizPrevCache &&
-        vizPrevCache.contestType === contestType &&
-        Number(vizPrevCache.year) === y &&
-        (!includePrecinctMargins || vizPrevCache.hasPrecinctMargins)
-      ) return vizPrevCache;
-
-      const prevMeta = await getPreviousContestSlice(contestType, y);
-      if (!prevMeta) {
-        vizPrevCache = {
-          contestType,
-          year: y,
-          prevYear: null,
-          prevPrecinctMarginByNorm: new Map(),
-          prevCountyTotals: {},
-          hasPrecinctMargins: false
-        };
-        return vizPrevCache;
+      const baseKey = `${contestType}_${y}`;
+      const cacheKey = `${baseKey}|precinct:${includePrecinctMargins ? 1 : 0}`;
+      const detailedKey = `${baseKey}|precinct:1`;
+      if (!includePrecinctMargins && prevContestBundleCache.has(detailedKey)) {
+        return prevContestBundleCache.get(detailedKey);
       }
+      if (prevContestBundleCache.has(cacheKey)) return prevContestBundleCache.get(cacheKey);
+      if (prevContestBundleInflight.has(cacheKey)) return prevContestBundleInflight.get(cacheKey);
+
+      const buildPromise = (async () => {
+        const prevMeta = await getPreviousContestSlice(contestType, y, { includePrecinctMargins });
+        if (!prevMeta) {
+          return {
+            contestType,
+            year: y,
+            prevYear: null,
+            prevPrecinctMarginByNorm: new Map(),
+            prevCountyTotals: {},
+            hasPrecinctMargins: false
+          };
+        }
 
 	      const prevPrecinctMarginByNorm = new Map();
 	      const prevCountyTotals = {};
@@ -33685,7 +33695,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      vizPrevCache = {
+      return {
         contestType,
         year: y,
         prevYear: prevMeta.year,
@@ -33693,7 +33703,16 @@ document.addEventListener('DOMContentLoaded', function() {
         prevCountyTotals,
         hasPrecinctMargins: includePrecinctMargins
       };
-      return vizPrevCache;
+      })();
+
+      prevContestBundleInflight.set(cacheKey, buildPromise);
+      try {
+        const bundle = await buildPromise;
+        prevContestBundleCache.set(cacheKey, bundle);
+        return bundle;
+      } finally {
+        prevContestBundleInflight.delete(cacheKey);
+      }
     }
 
     async function tryLoadDistrictSliceStrict(scope, contestType, year, linesYear = currentDistrictLinesYear) {
@@ -34679,32 +34698,49 @@ document.addEventListener('DOMContentLoaded', function() {
       // even when the main map mode is not Shift/Flips.
       const needsPrevData = (mode === 'shift' || mode === 'flips' || currentView === 'counties');
       const needsPrevPrecinctMargins = needsPrecinctDetail && (mode === 'shift' || mode === 'flips');
+      const prevCacheBaseKey = `${contestType}_${Number(year)}`;
+      const emptyPrevCache = () => ({
+        contestType,
+        year: Number(year),
+        prevYear: null,
+        prevPrecinctMarginByNorm: new Map(),
+        prevCountyTotals: {},
+        hasPrecinctMargins: false
+      });
       if (staleCheck()) return;
-      if (needsPrevData) {
+      if (mode === 'shift' || mode === 'flips') {
         try {
           vizPrevCache = await ensurePrevContestCache(contestType, Number(year), {
             includePrecinctMargins: needsPrevPrecinctMargins
           });
           if (staleCheck()) return;
         } catch (_) {
-          vizPrevCache = {
-            contestType,
-            year: Number(year),
-            prevYear: null,
-            prevPrecinctMarginByNorm: new Map(),
-            prevCountyTotals: {},
-            hasPrecinctMargins: false
-          };
+          vizPrevCache = emptyPrevCache();
+        }
+      } else if (needsPrevData) {
+        // Margins/Winners do not use prior results to paint the map. Reuse an
+        // existing bundle when available; otherwise paint immediately and
+        // populate flip details for hover in the background.
+        const cachedPrev = prevContestBundleCache.get(`${prevCacheBaseKey}|precinct:1`)
+          || prevContestBundleCache.get(`${prevCacheBaseKey}|precinct:0`)
+          || null;
+        vizPrevCache = cachedPrev || emptyPrevCache();
+        if (!cachedPrev) {
+          const requestedMode = mode;
+          ensurePrevContestCache(contestType, Number(year), { includePrecinctMargins: false })
+            .then(bundle => {
+              if (staleCheck()) return;
+              if (currentView !== 'counties') return;
+              if (String(currentContestMeta?.contestType || '') !== String(contestType)) return;
+              if (Number(currentContestMeta?.year) !== Number(year)) return;
+              if (String(currentVizMode || 'margins') !== String(requestedMode)) return;
+              vizPrevCache = bundle;
+              try { refreshHoverAtPointer().catch(() => {}); } catch (_) {}
+            })
+            .catch(() => {});
         }
       } else {
-        vizPrevCache = {
-          contestType,
-          year: Number(year),
-          prevYear: null,
-          prevPrecinctMarginByNorm: new Map(),
-          prevCountyTotals: {},
-          hasPrecinctMargins: false
-        };
+        vizPrevCache = emptyPrevCache();
       }
       if (staleCheck()) return;
 
