@@ -13092,6 +13092,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function addLayerWithOptionalSourceLayer(layerDef) {
+      if (layerDef?.id && map.getLayer(layerDef.id)) return false;
       const src = map.getSource(layerDef.source);
       const isVectorSource = !!src && src.type === 'vector';
       const sourceLayer = isVectorSource ? getVectorSourceLayer(layerDef.source) : null;
@@ -13103,6 +13104,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         map.addLayer(layerDef);
       }
+      return true;
     }
 
 
