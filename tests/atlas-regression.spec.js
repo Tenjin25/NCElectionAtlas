@@ -93,6 +93,17 @@ test('compact county slices stay small and contain one row per county', async ({
   expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
 });
 
+test('ordinary county modes do not block on previous precinct results', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+
+  expect(source).toContain('const rows = includePrecinctMargins');
+  expect(source).toContain(': await loadCountyContestSlice(contestType, cy);');
+  expect(source).toContain("if (mode === 'shift' || mode === 'flips') {");
+  expect(source).toContain('populate flip details for hover in the background');
+});
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
