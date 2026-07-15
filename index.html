@@ -10252,7 +10252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-4';
+    const DATA_CACHE_BUSTER = '2026-07-15-5';
     const APP_BUILD_ID = '2026-07-15-4';
 
     function withCacheBuster(path) {
@@ -10340,6 +10340,7 @@ document.addEventListener('DOMContentLoaded', function() {
         crosswalks: {
           congressional: withBase('./data/crosswalks/precinct_to_cd118.csv'),
           congressional_2022: withBase('./data/crosswalks/precinct_to_cd118.csv'),
+          congressional_2024: withBase('./data/crosswalks/precinct_to_cd119.csv'),
           congressional_2026: withBase('./data/crosswalks/precinct_to_cd2026_sl2025_95.csv'),
           state_house_2022: withBase('./data/crosswalks/precinct_to_2022_state_house.csv'),
           state_house_2024: withBase('./data/crosswalks/precinct_to_2024_state_house.csv'),
@@ -10778,6 +10779,50 @@ document.addEventListener('DOMContentLoaded', function() {
     let candidateNameCache = new Map();
     let contestSliceCache = new Map();
     let districtSliceCache = new Map();
+
+    function attachOfficialCountyTotalsToRows(rows, payload) {
+      if (!Array.isArray(rows)) return rows;
+      const rawTotals = payload?.county_totals || payload?.countyTotals || null;
+      if (!rawTotals || (typeof rawTotals !== 'object')) return rows;
+
+      const entries = Array.isArray(rawTotals)
+        ? rawTotals.map(row => [row?.county || row?.county_name || '', row])
+        : Object.entries(rawTotals);
+      const normalized = {};
+      entries.forEach(([countyName, raw]) => {
+        const county = String(countyName || raw?.county || raw?.county_name || '').trim();
+        if (!county || !raw || typeof raw !== 'object') return;
+        const dem = Number(raw.dem_votes ?? raw.dem ?? 0);
+        const rep = Number(raw.rep_votes ?? raw.rep ?? 0);
+        const other = Number(raw.other_votes ?? raw.other ?? 0);
+        const providedTotal = Number(raw.total_votes ?? raw.total);
+        normalized[county] = {
+          county,
+          dem_votes: Number.isFinite(dem) ? dem : 0,
+          rep_votes: Number.isFinite(rep) ? rep : 0,
+          other_votes: Number.isFinite(other) ? other : 0,
+          total_votes: Number.isFinite(providedTotal) ? providedTotal : ((Number.isFinite(dem) ? dem : 0) + (Number.isFinite(rep) ? rep : 0) + (Number.isFinite(other) ? other : 0)),
+          dem_candidate: String(raw.dem_candidate || ''),
+          rep_candidate: String(raw.rep_candidate || '')
+        };
+      });
+      if (!Object.keys(normalized).length) return rows;
+      try {
+        Object.defineProperty(rows, '__officialCountyTotals', {
+          value: normalized,
+          enumerable: false,
+          configurable: false,
+          writable: false
+        });
+      } catch (_) {}
+      return rows;
+    }
+
+    function getOfficialCountyTotalsFromRows(rows) {
+      return (Array.isArray(rows) && rows.__officialCountyTotals && typeof rows.__officialCountyTotals === 'object')
+        ? rows.__officialCountyTotals
+        : null;
+    }
     // In-flight request dedupe (promise reuse) for atlas-wide loads.
     const jsonInflightByPath = new Map(); // requestPath -> Promise<any>
     const csvInflightByPath = new Map(); // requestPath -> Promise<string>
@@ -10840,6 +10885,30 @@ document.addEventListener('DOMContentLoaded', function() {
         stateOther += other;
         stateTotal += total;
       });
+
+      const officialCountyTotals = getOfficialCountyTotalsFromRows(rows);
+      if (officialCountyTotals) {
+        Object.entries(officialCountyTotals).forEach(([countyName, totals]) => {
+          const countyNorm = normalizeCountyToken(countyName);
+          if (!countyNorm) return;
+          totalsByCounty.set(countyNorm, {
+            dem: Number(totals?.dem_votes || 0),
+            rep: Number(totals?.rep_votes || 0),
+            other: Number(totals?.other_votes || 0),
+            total: Number(totals?.total_votes || 0)
+          });
+        });
+        stateDem = 0;
+        stateRep = 0;
+        stateOther = 0;
+        stateTotal = 0;
+        totalsByCounty.forEach(totals => {
+          stateDem += Number(totals?.dem || 0);
+          stateRep += Number(totals?.rep || 0);
+          stateOther += Number(totals?.other || 0);
+          stateTotal += Number(totals?.total || 0);
+        });
+      }
 
       const signedByCounty = new Map();
       totalsByCounty.forEach((totals, countyNorm) => {
@@ -13707,6 +13776,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
+      const groupSuffixMatch = p.match(/^(.+?)(?:[-\s]+G\d+[A-Z]?)$/);
+      if (groupSuffixMatch && /[A-Z]/.test(groupSuffixMatch[1] || '')) {
+        const stripped = (groupSuffixMatch[1] || '').toString().trim().toUpperCase();
+        if (stripped) {
+          aliases.add(stripped);
+          const strippedNorm = normalizePrecinctAliasToken(stripped);
+          if (strippedNorm) aliases.add(strippedNorm);
+          const strippedCompact = compactPrecinctAliasToken(stripped);
+          if (strippedCompact) aliases.add(strippedCompact);
+          if (strippedNorm) {
+            const strippedNormCompact = compactPrecinctAliasToken(strippedNorm);
+            if (strippedNormCompact) aliases.add(strippedNormCompact);
+          }
+        }
+      }
+
       const parts = (pn || '').split(' ').filter(Boolean);
       if (parts.length) {
         const first = parts[0];
@@ -13719,6 +13804,21 @@ document.addEventListener('DOMContentLoaded', function() {
             aliases.add(rest);
             const restCompact = compactPrecinctAliasToken(rest);
             if (restCompact) aliases.add(restCompact);
+          }
+        }
+      }
+
+      if (parts.length >= 2 && parts.length % 2 === 0) {
+        const midpoint = parts.length / 2;
+        const left = parts.slice(0, midpoint);
+        const right = parts.slice(midpoint);
+        if (left.join('\u0000') === right.join('\u0000')) {
+          const collapsed = left.join(' ').trim().toUpperCase();
+          if (collapsed) {
+            aliases.add(collapsed);
+            aliases.add(collapsed.replace(/\s+/g, '-'));
+            const collapsedCompact = compactPrecinctAliasToken(collapsed);
+            if (collapsedCompact) aliases.add(collapsedCompact);
           }
         }
       }
@@ -18998,6 +19098,7 @@ document.addEventListener('DOMContentLoaded', function() {
               [`${contestType}_winner`]: r.winner || '',
               [`${contestType}_color`]: r.color || ''
             }));
+	          attachOfficialCountyTotalsToRows(rows, payload);
 	          contestSliceCache.set(key, rows);
 	          return rows;
 	        } catch (_) {
@@ -34106,12 +34207,50 @@ document.addEventListener('DOMContentLoaded', function() {
               [`${contestType}_margin_pct`]: adjustedSigned,
               [`${contestType}_winner`]: adjustedWinner
             };
+            const addPrecinctResult = (norm, nextRow) => {
+              const key = (norm || '').toString().trim().toUpperCase();
+              if (!key || !nextRow) return;
+              const existing = currentPrecinctResults.get(key);
+              if (
+                !existing ||
+                existing.__apportionment_scope !== 'sbe2006_to_onemap_vap' ||
+                nextRow.__apportionment_scope !== 'sbe2006_to_onemap_vap'
+              ) {
+                currentPrecinctResults.set(key, nextRow);
+                return;
+              }
+
+              const demSum = Number(existing[`${contestType}_dem`] || 0) + Number(nextRow[`${contestType}_dem`] || 0);
+              const repSum = Number(existing[`${contestType}_rep`] || 0) + Number(nextRow[`${contestType}_rep`] || 0);
+              const otherSum = Number(existing[`${contestType}_other`] || 0) + Number(nextRow[`${contestType}_other`] || 0);
+              const totalSum = Number(existing[`${contestType}_total`] || 0) + Number(nextRow[`${contestType}_total`] || 0);
+              const signedSum = signedMarginPctFromVotes(demSum, repSum, totalSum);
+              const winnerSum = signedSum > 0 ? 'REPUBLICAN' : (signedSum < 0 ? 'DEMOCRAT' : 'TIE');
+              const sourceList = Array.isArray(existing.__apportionment_sources)
+                ? existing.__apportionment_sources.slice()
+                : (existing.__apportionment_source ? [existing.__apportionment_source] : []);
+              if (nextRow.__apportionment_source) sourceList.push(nextRow.__apportionment_source);
+              const uniqueSources = Array.from(new Set(sourceList));
+
+              currentPrecinctResults.set(key, {
+                ...existing,
+                county: key,
+                [`${contestType}_dem`]: demSum,
+                [`${contestType}_rep`]: repSum,
+                [`${contestType}_other`]: otherSum,
+                [`${contestType}_total`]: totalSum,
+                [`${contestType}_margin_pct`]: signedSum,
+                [`${contestType}_winner`]: winnerSum,
+                __apportionment_sources: uniqueSources,
+                __apportionment_source_count: uniqueSources.length
+              });
+            };
             if (weightedNorms.length) {
               weightedNorms.forEach(entry => {
                 const weight = Number(entry?.weight);
                 const norm = (entry?.norm || '').toString().trim().toUpperCase();
                 if (!norm || !Number.isFinite(weight) || weight <= 0) return;
-                currentPrecinctResults.set(norm, {
+                addPrecinctResult(norm, {
                   ...adjustedRow,
                   county: norm,
                   [`${contestType}_dem`]: demVotes * weight,
@@ -34239,6 +34378,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!cachedAggBundle) {
+          // County polygons and county-facing summaries use canonical totals when the
+          // slice provides them. Precinct matching above continues to use payload.rows
+          // unchanged, so crosswalked precinct values remain intact.
+          const officialCountyTotals = getOfficialCountyTotalsFromRows(contestData);
+          if (officialCountyTotals) {
+            Object.entries(officialCountyTotals).forEach(([countyName, totals]) => {
+              const countyNorm = normalizeCountyName(countyName);
+              if (!countyNorm) return;
+              const existing = countyAgg[countyNorm] || {};
+              const adjusted = applyScenarioShiftToVotes(
+                countyNorm,
+                Number(totals?.dem_votes || 0),
+                Number(totals?.rep_votes || 0),
+                Number(totals?.other_votes || 0),
+                Number(totals?.total_votes || 0)
+              );
+              countyAgg[countyNorm] = {
+                ...existing,
+                year: Number(year),
+                county: String(totals?.county || countyName),
+                [`${contestType}_dem`]: Number(adjusted.dem || 0),
+                [`${contestType}_rep`]: Number(adjusted.rep || 0),
+                [`${contestType}_other`]: Number(adjusted.other || 0),
+                [`${contestType}_total`]: Number(adjusted.total || 0),
+                [`${contestType}_dem_candidate`]: String(totals?.dem_candidate || existing[`${contestType}_dem_candidate`] || ''),
+                [`${contestType}_rep_candidate`]: String(totals?.rep_candidate || existing[`${contestType}_rep_candidate`] || '')
+              };
+            });
+
+            statewidedemVotes = 0;
+            statewidrepVotes = 0;
+            statewidotherVotes = 0;
+            statewidTotalVotes = 0;
+            Object.values(countyAgg).forEach(row => {
+              statewidedemVotes += Number(row?.[`${contestType}_dem`] || 0);
+              statewidrepVotes += Number(row?.[`${contestType}_rep`] || 0);
+              statewidotherVotes += Number(row?.[`${contestType}_other`] || 0);
+              statewidTotalVotes += Number(row?.[`${contestType}_total`] || 0);
+            });
+          }
+
           Object.keys(countyAgg).forEach(countyNorm => {
             countyTurnoutTotals[countyNorm] = Number(countyAgg[countyNorm]?.[`${contestType}_total`] || 0);
           });

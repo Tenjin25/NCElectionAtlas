@@ -51,6 +51,17 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--precinct-geojson", type=Path, default=Path("data/2025Voting_Precincts.geojson"))
     p.add_argument("--cd-shapefile", type=Path, default=Path("data/sl2025_95_shapefile/SL 2025-95.shp"))
     p.add_argument("--district-col", default="District")
+    p.add_argument(
+        "--precinct-crosswalk",
+        type=Path,
+        default=Path("data/crosswalks/precinct_to_cd2026_sl2025_95.csv"),
+        help="Prebuilt block-weighted precinct->district chain crosswalk. Used when present unless --rebuild-crosswalk is set.",
+    )
+    p.add_argument(
+        "--rebuild-crosswalk",
+        action="store_true",
+        help="Rebuild the precinct->district crosswalk from geometry instead of using an existing chain CSV.",
+    )
     p.add_argument("--aggregated", type=Path, default=Path("data/nc_elections_aggregated.json"))
     p.add_argument("--in-dir", type=Path, default=Path("data/district_contests_2024_lines"))
     p.add_argument("--out-dir", type=Path, default=Path("data/district_contests_2026_lines"))
@@ -104,6 +115,24 @@ def build_precinct_crosswalk(precinct_geojson: Path, cd_shp: Path, district_col:
     inter["district"] = inter["district"].str.lstrip("0")
     inter.loc[inter["district"] == "", "district"] = "0"
     return inter.sort_values(["precinct_key", "district"]).reset_index(drop=True)
+
+
+def load_precinct_crosswalk(path: Path) -> pd.DataFrame:
+    crosswalk = pd.read_csv(path, dtype=str)
+    needed = {"precinct_key", "district", "area_weight"}
+    missing = needed - set(crosswalk.columns)
+    if missing:
+        raise ValueError(f"Crosswalk file missing columns: {sorted(missing)}")
+
+    out = crosswalk[["precinct_key", "district", "area_weight"]].copy()
+    out["precinct_key"] = out["precinct_key"].astype(str).str.strip().str.upper()
+    out["district"] = out["district"].astype(str).str.strip().str.replace(r"\.0$", "", regex=True).str.lstrip("0")
+    out.loc[out["district"] == "", "district"] = "0"
+    out["area_weight"] = pd.to_numeric(out["area_weight"], errors="coerce").fillna(0.0)
+    out = out[(out["precinct_key"] != "") & (out["district"] != "") & (out["area_weight"] > 0)].copy()
+    sums = out.groupby("precinct_key")["area_weight"].transform("sum").replace(0, pd.NA)
+    out["area_weight"] = out["area_weight"] / sums
+    return out.sort_values(["precinct_key", "district"]).reset_index(drop=True)
 
 
 def load_aggregated(path: Path) -> dict:
@@ -314,11 +343,17 @@ def main() -> None:
     args = parse_args()
     target_districts = {d.strip().lstrip("0") or "0" for d in str(args.target_districts).split(",") if d.strip()}
 
-    crosswalk = build_precinct_crosswalk(args.precinct_geojson, args.cd_shapefile, args.district_col)
+    if args.rebuild_crosswalk or not args.precinct_crosswalk.exists():
+        crosswalk = build_precinct_crosswalk(args.precinct_geojson, args.cd_shapefile, args.district_col)
+        crosswalk_source = args.out_crosswalk
+    else:
+        crosswalk = load_precinct_crosswalk(args.precinct_crosswalk)
+        crosswalk_source = args.precinct_crosswalk
+
     target_counties = build_target_county_map(COUNTY_GEOJSON, args.cd_shapefile, args.district_col, target_districts)
     args.out_crosswalk.parent.mkdir(parents=True, exist_ok=True)
     crosswalk.to_csv(args.out_crosswalk, index=False)
-    print(f"Wrote crosswalk: {args.out_crosswalk} ({len(crosswalk):,} rows)")
+    print(f"Wrote crosswalk: {args.out_crosswalk} ({len(crosswalk):,} rows; source={crosswalk_source})")
 
     agg = load_aggregated(args.aggregated)
     results_by_year = agg.get("results_by_year", {})
@@ -357,6 +392,10 @@ def main() -> None:
             results[district] = patch_district_row(results[district], agg_votes[district])
         payload.setdefault("meta", {})
         payload["meta"]["source"] = "sl2025_95_precinct_area_weighted"
+        payload["meta"]["district_lines_year"] = 2026
+        payload["meta"]["district_lines_label"] = "2026 congressional lines"
+        payload["meta"]["target_crosswalk"] = args.out_crosswalk.as_posix()
+        payload["meta"]["line_set_output_dir"] = args.out_dir.as_posix()
         payload["meta"]["match_coverage_pct"] = round((matched / total * 100.0), 2) if total else 0.0
         payload["meta"]["matched_precinct_keys"] = int(matched)
         payload["meta"]["total_precinct_keys"] = int(total)
@@ -389,7 +428,15 @@ def main() -> None:
         except Exception:
             districts = 0
         manifest_rows.append(
-            {"year": year, "scope": scope, "contest_type": contest, "file": p.name, "districts": districts}
+            {
+                "year": year,
+                "scope": scope,
+                "contest_type": contest,
+                "file": p.name,
+                "districts": districts,
+                "district_lines_year": 2026,
+                "district_lines_label": "2026 congressional lines",
+            }
         )
     manifest_rows.sort(key=lambda r: (r["year"], r["scope"], r["contest_type"]))
     (args.out_dir / "manifest.json").write_text(json.dumps({"files": manifest_rows}, indent=2), encoding="utf-8")

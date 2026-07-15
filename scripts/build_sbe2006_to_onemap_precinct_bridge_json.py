@@ -14,16 +14,27 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from legacy_precinct_aliases import DEFAULT_MAPPING_CSV as DEFAULT_LEGACY_ABBREVIATION_ALIASES
+from legacy_precinct_aliases import legacy_abbreviation_aliases_for_name
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data" / "reports" / "centroid_sbe2006_nhgis_bridge_summary.csv"
 DEFAULT_OUTPUT = ROOT / "data" / "mappings" / "sbe2006_to_onemap_precinct_bridge.json"
 DEFAULT_SBE_BLOCK_MAP = ROOT / "data" / "crosswalks" / "block20_to_sbe_2006_via_block00_nhgis_filled.csv"
-DEFAULT_ONEMAP_BLOCK_MAP = ROOT / "data" / "crosswalks" / "block20_to_onemap_2025.csv"
+DEFAULT_ONEMAP_BLOCK_MAP = ROOT / "data" / "crosswalks" / "block20_to_onemap_2025_12.csv"
 DEFAULT_VAP_CSV = ROOT / "data" / "census" / "block_vap_2020_nc.csv"
 DEFAULT_WEIGHTS_OUTPUT = ROOT / "data" / "mappings" / "sbe2006_to_onemap_precinct_weights.json"
 
 COMMON_PRECINCT_WORDS = ("PRECINCT", "PCT", "WARD", "DISTRICT", "TOWNSHIP", "BOX", "VOTING", "LOCATION")
+
+
+def relative_or_path(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(ROOT)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
 
 
 def normalize_token(value: object) -> str:
@@ -47,6 +58,37 @@ def compact(value: object) -> str:
     return re.sub(r"[^A-Z0-9]+", "", normalize_token(value))
 
 
+def source_code_aliases(value: object) -> set[str]:
+    """Derive county-local code aliases from SBE2006 names like CAPE FEAR 3 -> CF03."""
+    text = normalize_alias(value)
+    parts = [part for part in text.split(" ") if part]
+    if len(parts) < 2:
+        return set()
+
+    words: list[str] = []
+    numbers: list[tuple[int, str]] = []
+    for part in parts:
+        number_match = re.fullmatch(r"0*(\d+)([A-Z]?)", part)
+        alpha_number_match = re.fullmatch(r"([A-Z]+)0*(\d+)([A-Z]?)", part)
+        if number_match:
+            numbers.append((int(number_match.group(1)), number_match.group(2)))
+        elif alpha_number_match:
+            words.append(alpha_number_match.group(1))
+            numbers.append((int(alpha_number_match.group(2)), alpha_number_match.group(3)))
+        elif re.fullmatch(r"[A-Z]+", part):
+            words.append(part)
+
+    initials = "".join(word[0] for word in words if word)
+    if not initials or not numbers:
+        return set()
+
+    aliases: set[str] = set()
+    for number, suffix in numbers:
+        aliases.add(f"{initials}{number}{suffix}")
+        aliases.add(f"{initials}{number:02d}{suffix}")
+    return aliases
+
+
 def split_precinct_key(value: object) -> tuple[str, str]:
     text = normalize_token(value)
     if " - " not in text:
@@ -68,6 +110,14 @@ def aliases_for(county: str, precinct: str) -> set[str]:
             aliases.add(alias)
         if packed:
             aliases.add(packed)
+    for alias in source_code_aliases(precinct):
+        aliases.add(alias)
+        aliases.add(compact(alias))
+    county_token = normalize_token(county)
+    for alias in legacy_abbreviation_aliases_for_name(county_token, precinct):
+        aliases.add(alias)
+        aliases.add(f"{county_token} - {alias}")
+        aliases.add(compact(alias))
     return {alias for alias in aliases if alias}
 
 
@@ -232,15 +282,50 @@ def build_weighted_bridge(sbe_block_map: Path, onemap_block_map: Path, vap_path:
     return {
         "version": 1,
         "generated_from": [
-            str(sbe_block_map.relative_to(ROOT)).replace("\\", "/"),
-            str(onemap_block_map.relative_to(ROOT)).replace("\\", "/"),
-            str(vap_path.relative_to(ROOT)).replace("\\", "/"),
-        ],
+            relative_or_path(sbe_block_map),
+            relative_or_path(onemap_block_map),
+            relative_or_path(vap_path),
+        ]
+        + ([relative_or_path(DEFAULT_LEGACY_ABBREVIATION_ALIASES)] if DEFAULT_LEGACY_ABBREVIATION_ALIASES.exists() else []),
         "description": "VAP-weighted county-scoped aliases from SBE 2006 precinct labels to current OneMap precinct IDs. Sources with zero joined VAP use block-count weights.",
         "joined_blocks": joined_blocks,
         "sbe2006_precincts": len(source_keys),
         "onemap_precincts": len(target_keys),
         "zero_vap_fallback_precincts": len(zero_vap_sources),
+        "counties": counties,
+    }
+
+
+def build_bridge_from_weights(weights_payload: dict[str, object]) -> dict[str, object]:
+    counties_in = weights_payload.get("counties", {})
+    counties: dict[str, dict[str, list[str]]] = {}
+    alias_rows = 0
+    target_keys: set[str] = set()
+
+    if isinstance(counties_in, dict):
+        for county, alias_map in sorted(counties_in.items()):
+            if not isinstance(alias_map, dict):
+                continue
+            out_aliases: dict[str, list[str]] = {}
+            for alias, entries in sorted(alias_map.items()):
+                if not isinstance(entries, list):
+                    continue
+                codes = sorted({str(item.get("code", "")).strip() for item in entries if isinstance(item, dict) and item.get("code")})
+                if not codes:
+                    continue
+                out_aliases[str(alias)] = codes
+                alias_rows += 1
+                target_keys.update(f"{county} - {code}" for code in codes)
+            if out_aliases:
+                counties[str(county)] = out_aliases
+
+    return {
+        "version": 1,
+        "generated_from": weights_payload.get("generated_from", []),
+        "description": "County-scoped aliases from SBE 2006 precinct labels to current OneMap precinct IDs, derived from the weighted block bridge.",
+        "rows": alias_rows,
+        "sbe2006_precincts": weights_payload.get("sbe2006_precincts", 0),
+        "onemap_precincts": len(target_keys),
         "counties": counties,
     }
 
@@ -258,10 +343,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    payload = build_bridge(args.summary_csv)
+    weights_payload = build_weighted_bridge(args.sbe_block_map, args.onemap_block_map, args.vap_csv)
+    payload = build_bridge_from_weights(weights_payload)
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_json.write_text(json.dumps(payload, separators=(",", ":"), sort_keys=True), encoding="utf-8")
-    weights_payload = build_weighted_bridge(args.sbe_block_map, args.onemap_block_map, args.vap_csv)
     args.out_weights_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_weights_json.write_text(json.dumps(weights_payload, separators=(",", ":"), sort_keys=True), encoding="utf-8")
     print(
