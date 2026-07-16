@@ -6561,6 +6561,15 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     line-height: 1.2;
     letter-spacing: -0.02em;
     color: #0f172a;
+    min-width: 0;
+    overflow: hidden;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   .desktop-statewide-sub,
@@ -10339,7 +10348,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-20';
+    const DATA_CACHE_BUSTER = '2026-07-16-21';
     const APP_BUILD_ID = '2026-07-16-20';
 
     function withCacheBuster(path) {
@@ -11282,12 +11291,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function pickPriorJudicialFamilyEntry(familyEntries, year) {
       const y = Number(year);
       if (!Number.isFinite(y) || !Array.isArray(familyEntries) || !familyEntries.length) return null;
+      // Nearest earlier election for this seat family (do not prefer y-8/y-16 over nearer years).
       const earlier = familyEntries
         .filter(e => Number(e.year) < y)
         .sort((a, b) => Number(b.year) - Number(a.year));
-      if (!earlier.length) return null;
-      const prefer8 = earlier.find(e => Number(e.year) === (y - 8));
-      return prefer8 || earlier[0];
+      return earlier[0] || null;
     }
 
     function resolveJudicialFamilyContestTypeForYear(contestType, year, priorYear, scope = '') {
@@ -11371,10 +11379,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
         return [...preferred, ...rest];
       }
+      // Judicial seat families (named + seat_NN): always prefer the most recent
+      // earlier election for that seat. Preferring y-8/y-16 first caused counties
+      // to compare e.g. 2018 seats to 2002 when a nearer family year existed.
       if (getJudicialSeatFamilyKey(ct, y)) {
-        const preferred = [y - 8, y - 16].filter(v => years.includes(v));
-        const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
-        return [...preferred, ...rest];
+        return years.slice().sort((a, b) => b - a);
       }
       return years.slice().sort((a, b) => b - a);
     }
