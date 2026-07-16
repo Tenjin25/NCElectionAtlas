@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-10';
-    const APP_BUILD_ID = '2026-07-15-10';
+    const DATA_CACHE_BUSTER = '2026-07-15-11';
+    const APP_BUILD_ID = '2026-07-15-11';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11473,7 +11473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         statewideRecenterStrength: 0.96,
         // Canonical county totals remove the old precinct-turnout aggregation bias. Preserve the
         // calibrated statewide environment explicitly instead of relying on that accidental bias.
-        statewideTargetAdjustmentPts: -0.90,
+        statewideTargetAdjustmentPts: -1.55,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         ruralGopOverperformanceWeight: 0.15,
         urbanDemElasticityWeight: 0.27,
@@ -11481,8 +11481,22 @@ document.addEventListener('DOMContentLoaded', function() {
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
         senateResidualElasticityEnabled: false,
-        demNomineeStrengthPts: 1.75,
-        repNomineeStrengthPts: 0.35,
+        // Statewide candidate-strength assumptions. Components are summed by nominee so credentials
+        // and endorsements remain auditable; the legacy scalar fields below are only fallbacks.
+        candidateStatewideStrengthComponentsPts: {
+          'Roy Cooper': {
+            'former governor and statewide experience': 0.90,
+            'repeat statewide electoral strength': 0.40,
+            'statewide name recognition': 0.60
+          },
+          'Michael Whatley': {
+            'former RNC chair and party infrastructure': 0.20,
+            'former NCGOP chair and state network': 0.10,
+            'Trump endorsement': 0.25
+          }
+        },
+        demNomineeStrengthPts: 1.90,
+        repNomineeStrengthPts: 0.55,
         trendNudgeMaxPts: 0.55,
         stableCountyBrakeMin: 0.44,
         safeCountyBrakeMargin: 16,
@@ -11575,7 +11589,16 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusTransitionPts: 0.32,
         candidateBonusSlowPts: 0.30,
         candidateBonusInstitutionalExtraPts: 0.15,
-        candidateBonusCountyFloorPts: { NASH: 2.25 },
+        // Candidate-local effects are additive to the historical crossover estimate and are applied
+        // after generic federalization/crossover caps. Positive values help the named candidate;
+        // the model converts Democratic boosts to +D swing and Republican boosts to -D swing.
+        candidateLocalCountyBoostsPts: {
+          'Roy Cooper': { NASH: 4.85, WILSON: 1.15 },
+          'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
+        },
+        candidateCountyTypeBoostsPts: {
+          'Roy Cooper': { rural: 0.20 }
+        },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
         // but allow chamber-specific damping so legislative layers do not overreact.
@@ -11588,6 +11611,11 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDistrictPtsCongressional: 0.26,
         candidateBonusDistrictPtsStateHouse: 0.24,
         candidateBonusDistrictPtsStateSenate: 0.25,
+        // Small scope-wide corrections keep independently allocated district slices near the
+        // canonical county statewide margin without flattening district-specific variation.
+        districtStatewideAlignmentPtsCongressional: 1.02,
+        districtStatewideAlignmentPtsStateHouse: 0.79,
+        districtStatewideAlignmentPtsStateSenate: 1.11,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -16056,6 +16084,12 @@ document.addEventListener('DOMContentLoaded', function() {
           row.__model_candidate_effect_personal_pts = Number.isFinite(Number(modelMeta.candidateEffectPersonalDemPts))
             ? Number(modelMeta.candidateEffectPersonalDemPts)
             : 0;
+          row.__model_candidate_effect_local_d_pts = Number.isFinite(Number(modelMeta.candidateEffectLocalDemPts))
+            ? Number(modelMeta.candidateEffectLocalDemPts)
+            : 0;
+          row.__model_candidate_effect_county_type_d_pts = Number.isFinite(Number(modelMeta.candidateEffectCountyTypeDemPts))
+            ? Number(modelMeta.candidateEffectCountyTypeDemPts)
+            : 0;
           row.__model_anchor_spread_pts = Number.isFinite(Number(modelMeta.anchorSpreadPts)) ? Number(modelMeta.anchorSpreadPts) : NaN;
           row.__model_input_disagreement = (modelMeta.inputDisagreement || '').toString();
           row.__model_anchors_aligned = Number(modelMeta.anchorsAligned || 0);
@@ -17315,8 +17349,21 @@ document.addEventListener('DOMContentLoaded', function() {
           const senateUrbanDemWeightRaw = Number(modeledDef?.urbanDemElasticityWeight);
           const senateAnomalyClampRaw = Number(modeledDef?.anomalySwingClampPts);
           const senateTrendCarryRaw = Number(modeledDef?.trendCarryoverWeight);
-          const senateDemNomineeStrengthRaw = Number(modeledDef?.demNomineeStrengthPts);
-          const senateRepNomineeStrengthRaw = Number(modeledDef?.repNomineeStrengthPts);
+          const candidateStrengthComponents = modeledDef?.candidateStatewideStrengthComponentsPts || null;
+          const sumCandidateStrengthComponents = (candidateName) => {
+            const components = candidateStrengthComponents?.[String(candidateName || '').trim()];
+            if (!components || typeof components !== 'object') return NaN;
+            const values = Object.values(components).map(Number).filter(Number.isFinite);
+            return values.length ? values.reduce((sum, value) => sum + Math.max(0, value), 0) : NaN;
+          };
+          const senateDemComponentStrength = sumCandidateStrengthComponents(modeledDef?.demCandidate);
+          const senateRepComponentStrength = sumCandidateStrengthComponents(modeledDef?.repCandidate);
+          const senateDemNomineeStrengthRaw = Number.isFinite(senateDemComponentStrength)
+            ? senateDemComponentStrength
+            : Number(modeledDef?.demNomineeStrengthPts);
+          const senateRepNomineeStrengthRaw = Number.isFinite(senateRepComponentStrength)
+            ? senateRepComponentStrength
+            : Number(modeledDef?.repNomineeStrengthPts);
           const senateLegacyNomineeStrengthRaw = Number(modeledDef?.nomineeStrengthPts);
           const senateLegacyNomineeStrengthParty = String(modeledDef?.nomineeStrengthParty || '').trim().toUpperCase();
           const senateAnomalyCountySet = new Set(
@@ -17630,6 +17677,8 @@ document.addEventListener('DOMContentLoaded', function() {
             let candidateBonusApplied = 0;
             let candidateBonusDurableApplied = 0;
             let candidateBonusPersonalApplied = 0;
+            let candidateLocalEffectDemPts = 0;
+            let candidateCountyTypeEffectDemPts = 0;
             if (useBlend) {
               if (isSenateDeviationModel) {
                 // Senate calibration: anchor each county to the presidential baseline, then apply a
@@ -18226,21 +18275,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 candidateBonusPersonalApplied = Math.max(0, personalApplied);
                 candidateBonusApplied = Math.max(0, candidateBonusDurableApplied + candidateBonusPersonalApplied);
 
-                const countyFloorPtsRaw = Number(modeledDef?.candidateBonusCountyFloorPts?.[county]);
-                if (Number.isFinite(countyFloorPtsRaw) && countyFloorPtsRaw > candidateBonusApplied) {
-                  const floorDelta = countyFloorPtsRaw - candidateBonusApplied;
-                  const totalCandidateApplied = candidateBonusDurableApplied + candidateBonusPersonalApplied;
-                  if (totalCandidateApplied > 0) {
-                    const durableWeight = candidateBonusDurableApplied / totalCandidateApplied;
-                    const personalWeight = candidateBonusPersonalApplied / totalCandidateApplied;
-                    candidateBonusDurableApplied += floorDelta * durableWeight;
-                    candidateBonusPersonalApplied += floorDelta * personalWeight;
-                  } else {
-                    candidateBonusDurableApplied += floorDelta;
-                  }
-                  candidateBonusApplied = countyFloorPtsRaw;
-                }
-
                 // (8) Volatility dampener applies to extra modeled movement only; candidate bonus is "extra".
                 if (Number.isFinite(disagreementDampener) && disagreementDampener < 0.999 && candidateBonusApplied > 0) {
                   candidateBonusDurableApplied *= disagreementDampener;
@@ -18274,6 +18308,40 @@ document.addEventListener('DOMContentLoaded', function() {
               }
             }
 
+            // Candidate-local effects are distinct from historical crossover. They can benefit either
+            // nominee and intentionally survive generic crossover caps (for example, a home county).
+            if (modeledDef?.candidateBonusEnabled && modeledDef?.candidateLocalCountyBoostsPts) {
+              const localBoosts = modeledDef.candidateLocalCountyBoostsPts;
+              const demCandidate = String(modeledDef?.demCandidate || '').trim();
+              const repCandidate = String(modeledDef?.repCandidate || '').trim();
+              const demBoostRaw = Number(localBoosts?.[demCandidate]?.[county]);
+              const repBoostRaw = Number(localBoosts?.[repCandidate]?.[county]);
+              const scaleRaw = Number(modeledDef?.candidateBonusScale);
+              const localScale = Number.isFinite(scaleRaw) ? Math.max(0, Math.min(2, scaleRaw)) : 1;
+              const demBoost = Number.isFinite(demBoostRaw) ? Math.max(0, demBoostRaw) * localScale : 0;
+              const repBoost = Number.isFinite(repBoostRaw) ? Math.max(0, repBoostRaw) * localScale : 0;
+              candidateLocalEffectDemPts = demBoost - repBoost;
+              swingPct += candidateLocalEffectDemPts;
+            }
+
+            // Small candidate-specific county-type effects (such as Cooper's rural familiarity) are
+            // separate from both the statewide résumé score and named home-county adjustments.
+            if (modeledDef?.candidateBonusEnabled && modeledDef?.candidateCountyTypeBoostsPts) {
+              const typeBoosts = modeledDef.candidateCountyTypeBoostsPts;
+              const demCandidate = String(modeledDef?.demCandidate || '').trim();
+              const repCandidate = String(modeledDef?.repCandidate || '').trim();
+              const demBoostRaw = Number(typeBoosts?.[demCandidate]?.[countyType]);
+              const repBoostRaw = Number(typeBoosts?.[repCandidate]?.[countyType]);
+              const scaleRaw = Number(modeledDef?.candidateBonusScale);
+              const typeScale = Number.isFinite(scaleRaw) ? Math.max(0, Math.min(2, scaleRaw)) : 1;
+              const demBoost = Number.isFinite(demBoostRaw) ? Math.max(0, demBoostRaw) * typeScale : 0;
+              const repBoost = Number.isFinite(repBoostRaw) ? Math.max(0, repBoostRaw) * typeScale : 0;
+              candidateCountyTypeEffectDemPts = demBoost - repBoost;
+              swingPct += candidateCountyTypeEffectDemPts;
+            }
+
+            const candidateEffectDemPts = candidateBonusApplied + candidateLocalEffectDemPts + candidateCountyTypeEffectDemPts;
+
             const desiredSignedFinal = clampSignedMargin(baseCountySignedRaw - swingPct);
             if (isSenateDeviationModel) senateAdjustedSigned = targetSigned;
             swingPct = baseCountySignedRaw - desiredSignedFinal;
@@ -18293,12 +18361,14 @@ document.addEventListener('DOMContentLoaded', function() {
                   realignmentAdjustmentApplied: Number.isFinite(realignmentAdjustmentApplied) ? Number(realignmentAdjustmentApplied.toFixed(3)) : null,
                   overPresCapApplied: Number.isFinite(overPresCapApplied) ? Number(overPresCapApplied.toFixed(3)) : null,
                   candidateBonusApplied: Number.isFinite(candidateBonusApplied) ? Number(candidateBonusApplied.toFixed(3)) : null,
+                  candidateLocalEffectDemPts: Number.isFinite(candidateLocalEffectDemPts) ? Number(candidateLocalEffectDemPts.toFixed(3)) : null,
+                  candidateCountyTypeEffectDemPts: Number.isFinite(candidateCountyTypeEffectDemPts) ? Number(candidateCountyTypeEffectDemPts.toFixed(3)) : null,
                   candidateBonusDurableApplied: Number.isFinite(candidateBonusDurableApplied) ? Number(candidateBonusDurableApplied.toFixed(3)) : null,
                   candidateBonusPersonalApplied: Number.isFinite(candidateBonusPersonalApplied) ? Number(candidateBonusPersonalApplied.toFixed(3)) : null
                 });
               } catch (_) {}
             }
-            const baselineNoCandidateSigned = clampSignedMargin(desiredSignedFinal + candidateBonusApplied);
+            const baselineNoCandidateSigned = clampSignedMargin(desiredSignedFinal + candidateEffectDemPts);
 
             // Lightweight explainability metadata (display-only; does not affect results).
             let influencePresidentialClimatePts = NaN;
@@ -18316,9 +18386,13 @@ document.addEventListener('DOMContentLoaded', function() {
               influenceExtraModeledMovementPts = Number.isFinite(senateAdjustedSigned) && Number.isFinite(baselineBlendSigned)
                 ? (Number(senateAdjustedSigned) - Number(baselineBlendSigned))
                 : NaN;
-              influenceCrossoverDemPts = Number(candidateBonusApplied);
+              influenceCrossoverDemPts = Number(candidateEffectDemPts);
 
               const tags = [];
+              if (candidateLocalEffectDemPts > 0.01) tags.push(`${String(modeledDef?.demCandidate || 'Democratic candidate')} local advantage`);
+              else if (candidateLocalEffectDemPts < -0.01) tags.push(`${String(modeledDef?.repCandidate || 'Republican candidate')} local advantage`);
+              if (candidateCountyTypeEffectDemPts > 0.01) tags.push(`${String(modeledDef?.demCandidate || 'Democratic candidate')} rural advantage`);
+              else if (candidateCountyTypeEffectDemPts < -0.01) tags.push(`${String(modeledDef?.repCandidate || 'Republican candidate')} rural advantage`);
               if (Number.isFinite(anchorSpreadPts) && anchorSpreadPts >= 14) tags.push('High-volatility county');
               else if (Number.isFinite(volatility) && volatility >= 6.5) tags.push('High-volatility county');
               if (Number.isFinite(candidateBonusApplied) && candidateBonusApplied >= 1.6) tags.push('Crossover-heavy county');
@@ -18341,9 +18415,11 @@ document.addEventListener('DOMContentLoaded', function() {
               swingPct,
               desiredSigned: desiredSignedFinal,
               baselineNoCandidateSigned,
-              candidateEffectDemPts: Number(candidateBonusApplied),
+              candidateEffectDemPts: Number(candidateEffectDemPts),
               candidateEffectDurableDemPts: Number(candidateBonusDurableApplied),
               candidateEffectPersonalDemPts: Number(candidateBonusPersonalApplied),
+              candidateEffectLocalDemPts: Number(candidateLocalEffectDemPts),
+              candidateEffectCountyTypeDemPts: Number(candidateCountyTypeEffectDemPts),
               anchorSpreadPts: Number(anchorSpreadPts),
               inputDisagreement: String(inputDisagreementFlag || anchorDisagreement || 'low'),
               anchorsAligned: anchorAligned ? 1 : 0,
@@ -18380,6 +18456,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 realignmentAdjustmentApplied: Number(realignmentAdjustmentApplied),
                 overPresCapApplied: Number(overPresCapApplied),
                 candidateBonusApplied: Number(candidateBonusApplied),
+                candidateLocalEffectDemPts: Number(candidateLocalEffectDemPts),
+                candidateCountyTypeEffectDemPts: Number(candidateCountyTypeEffectDemPts),
                 candidateBonusDurableApplied: Number(candidateBonusDurableApplied),
                 candidateBonusPersonalApplied: Number(candidateBonusPersonalApplied),
                 anchorSpreadPts: Number(anchorSpreadPts),
@@ -18846,6 +18924,36 @@ document.addEventListener('DOMContentLoaded', function() {
           return Number(modeledDef?.candidateBonusDistrictPts);
         })();
         const districtBonus = modeledDef?.candidateBonusEnabled ? (districtBonusBase * bonusScale) : 0;
+        const districtCandidateStrengthNetDemPts = (() => {
+          const components = modeledDef?.candidateStatewideStrengthComponentsPts || null;
+          const sumFor = (candidateName, fallback) => {
+            const values = Object.values(components?.[String(candidateName || '').trim()] || {})
+              .map(Number)
+              .filter(Number.isFinite);
+            if (values.length) return values.reduce((sum, value) => sum + Math.max(0, value), 0);
+            const fallbackNum = Number(fallback);
+            return Number.isFinite(fallbackNum) ? Math.max(0, fallbackNum) : 0;
+          };
+          const demStrength = sumFor(modeledDef?.demCandidate, modeledDef?.demNomineeStrengthPts);
+          const repStrength = sumFor(modeledDef?.repCandidate, modeledDef?.repNomineeStrengthPts);
+          return demStrength - repStrength;
+        })();
+        const districtStatewideAlignmentPts = (() => {
+          if (scopeKey === 'congressional') return Number(modeledDef?.districtStatewideAlignmentPtsCongressional || 0);
+          if (scopeKey === 'state_house') return Number(modeledDef?.districtStatewideAlignmentPtsStateHouse || 0);
+          if (scopeKey === 'state_senate') return Number(modeledDef?.districtStatewideAlignmentPtsStateSenate || 0);
+          return 0;
+        })();
+        const computeDistrictFederalizationBrake = (absMargin, brakeMargin, deepMargin, floor) => {
+          const abs = Math.abs(Number(absMargin || 0));
+          const start = Number(brakeMargin);
+          const deep = Number(deepMargin);
+          const minimum = Number(floor);
+          if (!Number.isFinite(abs) || !Number.isFinite(start) || !Number.isFinite(deep) || !(deep > start) || !Number.isFinite(minimum)) return 1;
+          if (abs <= start) return 1;
+          const progress = Math.max(0, Math.min(1, (abs - start) / Math.max(1e-6, deep - start)));
+          return 1 - ((1 - Math.max(0, Math.min(1, minimum))) * progress);
+        };
 
         const districtBlendMul = (() => {
           if (scopeKey === 'congressional' && Number.isFinite(Number(modeledDef?.districtBlendMulCongressional))) {
@@ -19044,6 +19152,16 @@ document.addEventListener('DOMContentLoaded', function() {
                   * (1 - (0.28 * anomalyScore));
                 rowSwingPct += scopedDistrictBonus;
               }
+              if (Math.abs(districtCandidateStrengthNetDemPts) > 1e-6) {
+                const polarizedScale = 0.45 + (0.55 * computeDistrictFederalizationBrake(Math.abs(baseRowSigned), 18, 36, 0.45));
+                const scopedCandidateStrength = districtCandidateStrengthNetDemPts
+                  * polarizedScale
+                  * districtReliability
+                  * (0.78 + (0.22 * repeatabilityScore))
+                  * (1 - (0.25 * anomalyScore));
+                rowSwingPct += scopedCandidateStrength;
+              }
+              if (Number.isFinite(districtStatewideAlignmentPts)) rowSwingPct += districtStatewideAlignmentPts;
             } else {
               let blendedBaseSigned = baseRowSigned;
               if (useBaseMix && baseMixResults && baseMixResults[districtId]) {
@@ -19110,6 +19228,12 @@ document.addEventListener('DOMContentLoaded', function() {
             model_bonus_mode: modeledDef?.candidateBonusEnabled ? String(modeledDef?.candidateBonusMode || '') : undefined,
             model_bonus_weight: (modeledDef?.candidateBonusEnabled && Number.isFinite(Number(modeledDef?.candidateBonusWeight)))
               ? Number(modeledDef.candidateBonusWeight)
+              : undefined,
+            model_candidate_strength_net_dem_pts: isSenateDeviationModel
+              ? Number(districtCandidateStrengthNetDemPts.toFixed(3))
+              : undefined,
+            model_statewide_alignment_pts: isSenateDeviationModel && Number.isFinite(districtStatewideAlignmentPts)
+              ? Number(districtStatewideAlignmentPts.toFixed(3))
               : undefined,
             model_bonus_source: (() => {
               if (!modeledDef?.candidateBonusEnabled) return undefined;
