@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-11';
-    const APP_BUILD_ID = '2026-07-16-11';
+    const DATA_CACHE_BUSTER = '2026-07-16-12';
+    const APP_BUILD_ID = '2026-07-16-12';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11473,14 +11473,17 @@ document.addEventListener('DOMContentLoaded', function() {
         statewideRecenterStrength: 0.96,
         // After county-clamped bridges, contest row sums match OE (no more cross-county inflation).
         // Retune so county official totals stay near Whatley +1.6 (aligned with district layers).
+        // Signed margins are R−D: higher adj → more Whatley; lower/negative adj → more Cooper.
         statewideTargetAdjustmentPts: 2.85,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        ruralGopOverperformanceWeight: 0.09,
-        urbanDemElasticityWeight: 0.38,
+        // Shape: residual elasticity lifts Cooper in urban/suburban counties that under-ran Pres,
+        // and softens rural Senate-over-Pres GOP overperformance (was a no-op while disabled).
+        ruralGopOverperformanceWeight: 0.0,
+        urbanDemElasticityWeight: 0.55,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
-        senateResidualElasticityEnabled: false,
+        senateResidualElasticityEnabled: true,
         // Statewide candidate-strength assumptions. Components are summed by nominee so credentials
         // and endorsements remain auditable; the legacy scalar fields below are only fallbacks.
         candidateStatewideStrengthComponentsPts: {
@@ -11599,7 +11602,9 @@ document.addEventListener('DOMContentLoaded', function() {
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
-          'Roy Cooper': { urban: 0.15, suburban: 0.20, rural: 0.28 }
+          // Prefer metros/suburbs for Cooper; keep a rural softener so deep R counties are less blowout-y.
+          // Exurban shares the suburban boost (growth-ring counties).
+          'Roy Cooper': { urban: 0.55, suburban: 0.50, exurban: 0.50, rural: 0.52 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -11615,9 +11620,10 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDistrictPtsStateSenate: 0.25,
         // Small scope-wide corrections keep independently allocated district slices near the
         // canonical county statewide margin without flattening district-specific variation.
-        districtStatewideAlignmentPtsCongressional: 1.02,
-        districtStatewideAlignmentPtsStateHouse: 0.79,
-        districtStatewideAlignmentPtsStateSenate: 1.11,
+        // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
+        districtStatewideAlignmentPtsCongressional: 1.15,
+        districtStatewideAlignmentPtsStateHouse: 0.92,
+        districtStatewideAlignmentPtsStateSenate: 1.24,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -16245,11 +16251,16 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const classifyCountyBehaviorType = (county, totals = null) => {
-          // Senate calibration: force Wake into metro-core routing even if a context label is missing/noisy.
-          if (isSenateDeviationModel && county === 'WAKE') return 'urban';
+          // Senate calibration: named metros often lack an "urban anchor" census pattern label,
+          // and population estimates may not be loaded yet when the model first builds.
+          if (isSenateDeviationModel) {
+            if (county === 'WAKE' || county === 'MECKLENBURG' || county === 'DURHAM') return 'urban';
+            if (county === 'GUILFORD' || county === 'FORSYTH' || county === 'BUNCOMBE') return 'suburban';
+          }
           const ctx = getCountyCensusContextSafe(county);
           const pattern = String(ctx?.patternLabel || '').toLowerCase();
-          const pop = Number(countyPopulationEstimatesByNorm?.get(county)?.population2025 || 0);
+          const popEstimate = countyPopulationEstimatesByNorm?.get(county) || null;
+          const pop = Number(popEstimate?.population2025 || popEstimate?.population2020 || 0);
           if (/urban anchor|urban county/.test(pattern) || pop >= 550000) return 'urban';
           if (/metro spillover|outer-suburban|suburban/.test(pattern) || pop >= 180000) return 'suburban';
           if (/small-metro|transition|coastal growth/.test(pattern) || pop >= 90000) return 'exurban';

@@ -642,7 +642,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.28, 2);
+    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.52, 2);
     expect(modeledSnapshot.countiesWithRuralCooperBoost).toBeGreaterThan(0);
     expect(modeledSnapshot.realignedSpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
     expect(modeledSnapshot.anomalySpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
@@ -659,7 +659,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtRepCandidate).toBe('Sarah Stevens');
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.11, 2);
+    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.15, 2);
     expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeGreaterThan(1.4);
     expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeLessThan(1.8);
     expect(Math.abs(modeledSnapshot.senateDistrictTwoPartyMargin - modeledSnapshot.senateStatewideTwoPartyMargin)).toBeLessThan(0.10);
