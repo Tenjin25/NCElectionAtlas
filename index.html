@@ -2572,17 +2572,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   margin-top: 2px;
   font-size: 12px;
   color: #6b7280;
-  line-height: 1.15;
+  line-height: 1.25;
   min-width: 0;
-  /* Same 2-line treatment as context-title (Mecklenburg / long seat labels). */
-  overflow: hidden;
   white-space: normal;
+  overflow: visible;
   overflow-wrap: anywhere;
   word-break: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
 }
 
 .vote-counter-context .context-actions {
@@ -4468,7 +4463,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-bar-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
+    align-items: start;
     gap: 8px;
     margin-bottom: 6px;
   }
@@ -4476,10 +4471,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-bar-label {
     font-size: 11px;
     font-weight: 800;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .focus-bar-label.dem {
@@ -7229,7 +7226,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
     margin-bottom: 14px;
     padding: 10px 12px;
@@ -7241,24 +7238,27 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .vote-total,
   .vote-lead {
     min-width: 0;
-    max-width: 100%;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.02em;
     line-height: 1.25;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
   }
 
   .vote-total {
     color: #0f172a;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .vote-lead {
     color: #475569;
+    flex: 0 1 auto;
     text-align: right;
     margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .vote-lead[data-party="dem"] { color: #1d4ed8; }
@@ -10355,8 +10355,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-25';
-    const APP_BUILD_ID = '2026-07-16-25';
+    const DATA_CACHE_BUSTER = '2026-07-16-28';
+    const APP_BUILD_ID = '2026-07-16-28';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
