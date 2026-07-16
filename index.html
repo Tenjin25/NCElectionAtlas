@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-3';
-    const APP_BUILD_ID = '2026-07-16-3';
+    const DATA_CACHE_BUSTER = '2026-07-16-6';
+    const APP_BUILD_ID = '2026-07-16-6';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11471,9 +11471,9 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityMaxVotes: 110000,
         baselineReliabilityFloor: 0.41,
         statewideRecenterStrength: 0.96,
-        // Canonical county totals remove the old precinct-turnout aggregation bias. Preserve the
-        // calibrated statewide environment explicitly instead of relying on that accidental bias.
-        statewideTargetAdjustmentPts: -1.55,
+        // After county-clamped bridges, contest row sums match OE (no more cross-county inflation).
+        // Retune so county official totals stay near Whatley +1.6 (aligned with district layers).
+        statewideTargetAdjustmentPts: 2.85,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         ruralGopOverperformanceWeight: 0.15,
         urbanDemElasticityWeight: 0.27,
@@ -11593,7 +11593,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // after generic federalization/crossover caps. Positive values help the named candidate;
         // the model converts Democratic boosts to +D swing and Republican boosts to -D swing.
         candidateLocalCountyBoostsPts: {
-          'Roy Cooper': { NASH: 4.85, WILSON: 1.15 },
+          // Extra Cooper home-region strength after clamp retune so Nash/Wilson stay D
+          // while the statewide official target sits near Whatley +1.6.
+          'Roy Cooper': { NASH: 9.15, WILSON: 5.45 },
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
@@ -18836,6 +18838,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         attachOfficialCountyTotalsToRows(modeledOut, { county_totals: modeledCountyTotals });
 
+        // County-mode callers (preferCountyInputs) need a compact 100-row slice so paint/hover
+        // and regression checks use county keys + authoritative totals, not precinct rows.
+        if (preferCountyInputs) {
+          const countyRows = Object.keys(modeledCountyTotals)
+            .sort((a, b) => a.localeCompare(b))
+            .map((county) => {
+              const totals = modeledCountyTotals[county] || {};
+              const dem = Number(totals.dem_votes || 0);
+              const rep = Number(totals.rep_votes || 0);
+              const other = Number(totals.other_votes || 0);
+              const total = Number(totals.total_votes || 0);
+              const signed = signedMarginPctFromVotes(dem, rep, total);
+              const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+              const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
+              const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
+              const row = {
+                year: Number(modeledDef.year),
+                county,
+                [`${modeledType}_dem`]: dem,
+                [`${modeledType}_rep`]: rep,
+                [`${modeledType}_other`]: other,
+                [`${modeledType}_total`]: total,
+                [`${modeledType}_dem_candidate`]: modeledDef.demCandidate || '',
+                [`${modeledType}_rep_candidate`]: modeledDef.repCandidate || '',
+                [`${modeledType}_margin`]: Math.round(rep - dem),
+                [`${modeledType}_margin_pct`]: signed,
+                [`${modeledType}_winner`]: winner,
+                [`${modeledType}_color`]: color
+              };
+              const modelMeta = countyModelByCounty?.get(county) || null;
+              if (modelMeta && Number.isFinite(Number(modelMeta.baselineNoCandidateSigned))) {
+                row.__model_baseline_margin_pct = Number(modelMeta.baselineNoCandidateSigned);
+                row.__model_with_candidates_margin_pct = Number.isFinite(Number(modelMeta.desiredSigned))
+                  ? Number(modelMeta.desiredSigned)
+                  : Number(signed);
+                row.__model_candidate_effect_d_pts = Number.isFinite(Number(modelMeta.candidateEffectDemPts))
+                  ? Number(modelMeta.candidateEffectDemPts)
+                  : 0;
+                row.__model_candidate_effect_durable_pts = Number.isFinite(Number(modelMeta.candidateEffectDurableDemPts))
+                  ? Number(modelMeta.candidateEffectDurableDemPts)
+                  : 0;
+                row.__model_candidate_effect_personal_pts = Number.isFinite(Number(modelMeta.candidateEffectPersonalDemPts))
+                  ? Number(modelMeta.candidateEffectPersonalDemPts)
+                  : 0;
+                row.__model_candidate_effect_local_d_pts = Number.isFinite(Number(modelMeta.candidateEffectLocalDemPts))
+                  ? Number(modelMeta.candidateEffectLocalDemPts)
+                  : 0;
+                row.__model_candidate_effect_county_type_d_pts = Number.isFinite(Number(modelMeta.candidateEffectCountyTypeDemPts))
+                  ? Number(modelMeta.candidateEffectCountyTypeDemPts)
+                  : 0;
+              }
+              return row;
+            });
+          attachOfficialCountyTotalsToRows(countyRows, { county_totals: modeledCountyTotals });
+          return countyRows;
+        }
+
         return modeledOut;
       }
 
@@ -19304,66 +19363,28 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function loadCountyContestSlice(contestType, year) {
+        // Pre-county_contests path: county mode uses full contest slices
+        // (plus county_totals when present). Compact data/county_contests/ is unused.
         const modeledDef = getModeledContestDefinition(contestType, year);
-        const modeledSignature = modeledDef ? getModeledDefSignature(modeledDef) : '';
-        const key = modeledDef && modeledSignature
-          ? `modeled:${modeledSignature}`
-          : `${contestType}_${year}`;
-        if (countyContestSliceCache.has(key)) return countyContestSliceCache.get(key);
-        if (countyContestSliceInflight.has(key)) return countyContestSliceInflight.get(key);
-
-        const p = atlasPerf(`slice.county:${key}`, async () => {
-          if (modeledDef) {
+        if (modeledDef) {
+          const modeledSignature = getModeledDefSignature(modeledDef);
+          const key = modeledSignature ? `modeled:${modeledSignature}` : `${contestType}_${year}`;
+          if (countyContestSliceCache.has(key)) return countyContestSliceCache.get(key);
+          if (countyContestSliceInflight.has(key)) return countyContestSliceInflight.get(key);
+          const p = atlasPerf(`slice.county:${key}`, async () => {
             const rows = await buildModeledContestSliceRows(modeledDef, { preferCountyInputs: true });
             if (!rows?.length) throw new Error('empty modeled county slice');
             countyContestSliceCache.set(key, rows);
             return rows;
-          }
-          const manifestEntry = (contestManifest || []).find(e => (
-            e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope
-          )) || null;
-          const manifestFile = String(manifestEntry?.file || '').trim();
-          if (!manifestFile || manifestFile.startsWith('open_elections_csv_')) {
-            return loadContestSlice(contestType, year);
-          }
+          });
+          countyContestSliceInflight.set(key, p);
           try {
-            const payload = await loadJSON(`${CONFIG.paths.county_contests_dir}/${manifestFile}`);
-            const rows = mapContestPayloadRows(payload, contestType, year);
-            if (!rows.length) throw new Error('empty county slice');
-            // Compact OE county slices carry canonical county_totals (or 100 county
-            // rows). Attach them so county paint/summaries never fall back to
-            // crosswalked precinct aggregation when precincts are later enabled.
-            attachOfficialCountyTotalsToRows(rows, payload);
-            if (!getOfficialCountyTotalsFromRows(rows) && Array.isArray(payload?.rows)) {
-              const synthesized = {};
-              payload.rows.forEach((row) => {
-                const county = String(row?.county || '').trim();
-                if (!county || county.includes(' - ')) return;
-                synthesized[county] = {
-                  county,
-                  dem_votes: Number(row?.dem_votes || 0),
-                  rep_votes: Number(row?.rep_votes || 0),
-                  other_votes: Number(row?.other_votes || 0),
-                  total_votes: Number(row?.total_votes || 0),
-                  dem_candidate: String(row?.dem_candidate || ''),
-                  rep_candidate: String(row?.rep_candidate || '')
-                };
-              });
-              attachOfficialCountyTotalsToRows(rows, { county_totals: synthesized });
-            }
-            countyContestSliceCache.set(key, rows);
-            return rows;
-          } catch (_) {
-            return loadContestSlice(contestType, year);
+            return await p;
+          } finally {
+            countyContestSliceInflight.delete(key);
           }
-        });
-
-        countyContestSliceInflight.set(key, p);
-        try {
-          return await p;
-        } finally {
-          countyContestSliceInflight.delete(key);
         }
+        return loadContestSlice(contestType, year);
       }
 
 	    async function loadContestSlice(contestType, year, opts = null) {
@@ -21712,15 +21733,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      const diff = Math.abs(repPctDisplay - demPctDisplay);
-      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
-      return diff;
+      // Use the true vote margin (then formatCountyMarginPctForDisplay rounds it).
+      // Rebuilding margin from rounded candidate shares drifts cases like Cabarrus
+      // 2024 President: 7.697% → share-diff 7.69 instead of the familiar 7.70.
+      return marginPctValue(repVotes, demVotes, totalVotes);
     }
 
 
