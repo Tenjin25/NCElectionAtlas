@@ -10348,7 +10348,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-21';
+    const DATA_CACHE_BUSTER = '2026-07-16-22';
     const APP_BUILD_ID = '2026-07-16-20';
 
     function withCacheBuster(path) {
@@ -11401,12 +11401,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // US Senate is a special case: same seat repeats every 6 years, but NC has two seats so
         // the generic series contains elections every 2 years. For deltas, prefer same-class y-6
         // when available, otherwise fall back to the most recent earlier year.
-        // Judicial seats prefer the 8-year cycle when available.
+        // Judicial seat families use the most recent earlier family year (not a fixed y-8 gap).
         if (ct === 'us_senate') {
           const preferred = y - 6;
-          if (years.includes(preferred)) prev = preferred;
-        } else if (getJudicialSeatFamilyKey(ct, y)) {
-          const preferred = y - 8;
           if (years.includes(preferred)) prev = preferred;
         }
         if (!Number.isFinite(prev)) {
@@ -11423,9 +11420,6 @@ document.addEventListener('DOMContentLoaded', function() {
           let prevPrev = null;
           if (ct === 'us_senate') {
             const preferredPrev = prev - 6;
-            if (years.includes(preferredPrev)) prevPrev = preferredPrev;
-          } else if (getJudicialSeatFamilyKey(ct, y)) {
-            const preferredPrev = prev - 8;
             if (years.includes(preferredPrev)) prevPrev = preferredPrev;
           }
           if (!Number.isFinite(prevPrev)) {
