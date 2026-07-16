@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-11';
-    const APP_BUILD_ID = '2026-07-15-11';
+    const DATA_CACHE_BUSTER = '2026-07-16-3';
+    const APP_BUILD_ID = '2026-07-16-3';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -19330,6 +19330,27 @@ document.addEventListener('DOMContentLoaded', function() {
             const payload = await loadJSON(`${CONFIG.paths.county_contests_dir}/${manifestFile}`);
             const rows = mapContestPayloadRows(payload, contestType, year);
             if (!rows.length) throw new Error('empty county slice');
+            // Compact OE county slices carry canonical county_totals (or 100 county
+            // rows). Attach them so county paint/summaries never fall back to
+            // crosswalked precinct aggregation when precincts are later enabled.
+            attachOfficialCountyTotalsToRows(rows, payload);
+            if (!getOfficialCountyTotalsFromRows(rows) && Array.isArray(payload?.rows)) {
+              const synthesized = {};
+              payload.rows.forEach((row) => {
+                const county = String(row?.county || '').trim();
+                if (!county || county.includes(' - ')) return;
+                synthesized[county] = {
+                  county,
+                  dem_votes: Number(row?.dem_votes || 0),
+                  rep_votes: Number(row?.rep_votes || 0),
+                  other_votes: Number(row?.other_votes || 0),
+                  total_votes: Number(row?.total_votes || 0),
+                  dem_candidate: String(row?.dem_candidate || ''),
+                  rep_candidate: String(row?.rep_candidate || '')
+                };
+              });
+              attachOfficialCountyTotalsToRows(rows, { county_totals: synthesized });
+            }
             countyContestSliceCache.set(key, rows);
             return rows;
           } catch (_) {

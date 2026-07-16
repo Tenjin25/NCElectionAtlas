@@ -46,7 +46,17 @@ def parse_args() -> argparse.Namespace:
         default="onemap_precinct_id",
         help="Output column name for the modern target precinct key.",
     )
+    p.add_argument(
+        "--allow-cross-county",
+        action="store_true",
+        help="Keep VAP shares that cross county lines (default: clamp to source county).",
+    )
     return p.parse_args()
+
+
+def _county_of(series: pd.Series) -> pd.Series:
+    parts = series.astype(str).str.split(" - ", n=1, expand=True)
+    return parts[0].fillna(series.astype(str)).str.strip().str.upper()
 
 
 def main() -> None:
@@ -87,6 +97,13 @@ def main() -> None:
     joined["vap_count"] = joined["vap_count"].fillna(0.0)
     src_col = args.source_key_name
     target_col = args.target_key_name
+
+    if not args.allow_cross_county:
+        same_county = _county_of(joined[src_col]) == _county_of(joined[target_col])
+        dropped = int((~same_county).sum())
+        joined = joined.loc[same_county].copy()
+        print(f"Clamped cross-county block rows dropped: {dropped:,}")
+
     grouped = (
         joined.groupby([src_col, target_col], as_index=False)
         .agg(vap_weight=("vap_count", "sum"), block_count=("block_geoid20", "nunique"))
