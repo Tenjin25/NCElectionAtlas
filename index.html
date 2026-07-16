@@ -4463,7 +4463,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-bar-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
+    align-items: start;
     gap: 8px;
     margin-bottom: 6px;
   }
@@ -4471,10 +4471,12 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-bar-label {
     font-size: 11px;
     font-weight: 800;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .focus-bar-label.dem {
@@ -10350,8 +10352,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-26';
-    const APP_BUILD_ID = '2026-07-16-26';
+    const DATA_CACHE_BUSTER = '2026-07-16-28';
+    const APP_BUILD_ID = '2026-07-16-28';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
