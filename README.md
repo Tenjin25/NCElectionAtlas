@@ -109,50 +109,6 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 **Last updated:** July 16, 2026
 
-### Early Comparable Judicial Seats 2000–2006 (July 16, 2026)
-
-- Added **25** create-only precinct contest slices under `data/contests/` for early Supreme Court / Court of Appeals races keyed by Wikipedia **seat numbers** (`…_seat_NN_YYYY.json`), so 2000–2006 races can be compared to later numbered seats without regenerating existing files.
-- Aggregated the same 25 races into **75** district overlays (`congressional` / `state_house` / `state_senate`) in `data/district_contests/` on the live 2022-lines / SBE2006 weight path.
-- Refreshed `data/contests/manifest.json` and `data/district_contests/manifest.json` (precinct manifest includes the 25 early seats; district manifest 415 → 490 entries).
-- Added `data/mappings/judicial_seat_crosswalk.csv` (OE office ↔ seat ↔ `contest_type`) and create-only builders:
-  - `node scripts/add_early_comparable_judicial_contests.js`
-  - `python scripts/add_early_comparable_judicial_district_contests.py`
-- Extended `scripts/rebuild_statewide_contests_from_sbe_bridge.js` with 2006 year config and seat-number OE office aliases (named-seat aliases retained for older files).
-- Expanded `data/mappings/judicial_candidate_party_overrides.csv` for early nonpartisan cycles, including the 2004 Orr 8-way plurality (track only Newby/Wynn as major-party).
-- Bumped front-end cache-buster / app build tokens to `2026-07-16-18`.
-
-### Canonical County Totals + Lazy Precinct Modeling (July 15, 2026)
-
-- **Root fix (July 16):** Dec 2025 OneMap VAP bridges are clamped so shares never cross county lines (`python scripts/clamp_precinct_bridge_to_source_county.py --write`; default in the SBE/VTD bridge builders). Rebuild statewide contests with `node scripts/rebuild_statewide_contests_from_sbe_bridge.js`. After that, precinct-row county sums match OE again — no separate `county_contests` accuracy workaround needed.
-- County mode loads full `data/contests/` slices (compact `data/county_contests/` is unused). `county_totals` on those payloads remain available as an optional paint override. Modeled county mode still emits a compact 100-county slice from calibrated county targets.
-- **2026 Senate model:** After the clamp rebuild, retuned `statewideTargetAdjustmentPts` to `2.85` so county official totals stay near Whatley +1.6 (with district layers). Regional shape uses stronger Cooper urban/suburban elasticity and type boosts (`urban` / `suburban` / `rural`), a softer rural GOP overperformance weight, and Nash/Wilson home-region locals near pre-clamp values (`5.10` / `1.60`).
-- **2024 congressional on 2022 lines:** Reallocate live `data/district_contests/congressional_*_2024.json` DEM/REP votes to `data/district_contests_existing_snapshot` margins while preserving each district's live `total_votes` via `python scripts/reallocate_live_district_votes_to_snapshot_margins.py --scope congressional --years 2024 --write`.
-- The newer December 2025 OneMap/SBE crosswalks drive precinct-level detail. Within-county precinct splits can still differ from pre–Dec 2025 layouts; county polygons should not.
-- Modeled contests follow the same contract. The model calculates and attaches authoritative 100-county totals from its calibrated county targets; full turnout-reweighted precinct rows are preserved separately for precinct mode.
-- County-mode model inputs and idle prefetches use compact county files. Full precinct JSON loading and precinct synthesis are deferred until precinct detail is enabled, reducing background transfer/parsing without sacrificing the newer crosswalk work.
-- The Senate model's 15% long-run presidential component uses the two most recent pre-2020 cycles (2012 and 2016), avoiding slower and less comparable 2004/2008 fallback sources while retaining a multi-cycle baseline.
-- The 2026 US Senate model now uses canonical county anchors, a `0.96` statewide recenter strength, and an explicit statewide calibration adjustment. The default county-layer result remains approximately `Whatley +1.9`, while Hoke follows the Democratic county target instead of being flipped by precinct turnout reweighting.
-- Regression coverage verifies that the compact modeled slice contains 100 counties, the full modeled slice retains precinct rows, and Hoke's county total remains Democratic even though the underlying crosswalked precinct aggregation is preserved.
-
-### December 2025 OneMap/SBE Crosswalk Chain (July 15, 2026)
-
-- Documented the current modern precinct target: `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp` plus `data/crosswalks/block20_to_onemap_2025_12.csv`.
-- The production bridge chain now includes SBE 2020/2022/2024 precinct vintages to the December 2025 OneMap basis, and early-era SBE 2006 via 2000 tabblocks plus the NHGIS 2000-to-2010-to-2020 chain.
-- Production bridge artifacts include `data/mappings/sbe2006_to_onemap_precinct_bridge.json`, `data/mappings/sbe2006_to_onemap_precinct_weights.json`, and `data/mappings/sbe2006_to_modern_district_weights.json`.
-- Early-year district/precinct outputs are documented as VAP-weighted shatter/apportionment estimates. For 2000-2006, rebuilt outputs stay as shatter estimates unless there is an explicit trusted calibration target.
-
-### Pre-2018 Judicial County/Precinct Layers + Nickname Labels (July 14, 2026)
-
-- Reaggregated contested NC Supreme Court and Court of Appeals seats for **2008–2016** into `data/contests/` (same precinct-row layout already used by Counties and Precincts), and refreshed `data/contests/manifest.json`.
-- Added `data/mappings/judicial_candidate_party_overrides.csv` and wired it through `scripts/build_district_contests_from_batch_shatter.py` so blank / nonpartisan OE party labels map to DEM/REP leans for displayable margins.
-- Added `scripts/reaggregate_pre2018_judicial_contests.py` to rebuild those judicial county/precinct slices for selected years, applying the override map and **skipping uncontested** seats (unopposed, same-party-only generals, or missing DEM/REP totals after overrides).
-- 25 contested pre-2018 judicial slices are now live in the Counties picker (plus existing 2016 Court of Appeals seats and the remapped 2016 Edmunds/Morgan Supreme Court race). Intentionally skipped examples include Stroud 2014 (unopposed), Martin 2008 (unopposed), Steelman 2010 (unopposed), Tyson 2008 (both general candidates Democratic), Elmore 2010 (both Republican), and the 2010 multi-candidate IRV vacancy.
-- Extended office-key inference for older OE labels (`NC … - Name Seat`, unseated 2016 Supreme Court associate justice) and named-seat display names in the contest picker.
-- Removed the front-end `year < 2018` judicial hide rule; Counties now filters judicial contests with the same `major_party_contested` gate used for Council of State.
-- Candidate tooltips / focus panels / vote-counter labels now prefer ballot nicknames from parentheses when OE provides them (`Michael R. (Mike) Morgan` → `Mike Morgan`, `Robert H. (Bob) Edmunds, Jr.` → `Bob Edmunds, Jr.`).
-- Switched the live atlas precinct geometry / choropleth remaps / VAP bridges onto `data/2025Voting_Precincts.geojson`, repaired selected 2020 precinct contest joins (including OE-backed county rebuilds), and pointed `scripts/build_precinct_friendly_names.js` at that geometry.
-- Regenerated `data/precinct_friendly_names.json` with fixes for mangled OneMap labels such as Cleveland `S E` / `S N` (`Shelby East` / `Shelby North`), Orange `HE` (`Hillsborough East`), and Iredell code-prefixed seats (`Sh A Shiloh A` → `Shiloh A`, `Ch A Chambersburg A` → `Chambersburg A`), while preserving already-good names (for example `McMannen`, `Scuppernong`, `H.J. Macdonald`, `Wittenburg`).
-- Bumped the front-end data cache-buster / app build tokens to `2026-07-14-4` so Pages clients fetch the new contest slices, friendly names, and nickname labeling promptly after deploy.
 ### Demographics + Accessibility (March 21, 2026)
 
 - Added a dedicated `Demographics` map mode across counties, congressional districts, state house, state senate, and precinct overlays.
@@ -165,7 +121,6 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - Increased baseline demographics visibility in map fills and hover chips for county + precinct contexts.
 - Improved county and precinct demographics chip/card readability in hover surfaces.
 - Fixed dark-tooltip-specific demographics contrast regressions so text/chips remain legible in pinned/hover cards.
-
 
 ### Desktop Controls, URL Share Flow, and Performance (March 21-22, 2026)
 
@@ -958,21 +913,6 @@ Implementation note:
 - Added a defensive front-end fallback for years before `2016`: older precinct-mode statewide contests now stay on centroids at all zoom levels rather than switching into a partially broken polygon view.
 - This keeps historical precinct mode usable while the remaining pre-2016 polygon-join edge cases are revisited more carefully.
 
-### Latest Index Sync (July 12, 2026)
-
-- Pulled the latest upstream `index.html` changes from `origin/main` into the local workspace.
-- Synced the hover/mobile tooltip work that followed the earlier NC/WI tooltip comparisons, including the newer upstream positioning and interaction cleanup now present in the live index source.
-- Carried forward the upstream cache-buster / app build token bumps that shipped with those tooltip updates, so the checked-in local index now matches the latest remote front-end file.
-- Followed up on the Columbus precinct drift fix after the first pass missed some frontend lookup paths: `P117`/`P245` now also resolve consistently as `P11`/`P24` in the variant overrides, demographics/CVAP tables, and 2024 district crosswalk files.
-- Rebuilt the 2024 Columbus county contest slices directly from the raw `20241105` precinct export after confirming the presidential slice had still dropped `COLUMBUS - P11` despite the earlier remap cleanup; the refreshed 2024 statewide contest JSONs now carry the raw Columbus precinct rows again.
-- Tightened the `SL 2025-95` congressional reaggregation pass for `NC-01` and `NC-03` so older `2026_lines` slices now use shapefile-derived county membership, recognize legacy `COUNTY - CODE_NAME` precinct aliases, preserve untouched years when no aggregate exists, and skip uncontested partisan outputs such as `congressional_attorney_general_2012.json`.
-- Removed the stale hardcoded Columbus `P117`/`P245` bridge from the live front end and added a geometry-aware guard to the stable-to-OneMap resolver so only precinct codes that actually exist in the loaded NCOneMap geometry are accepted during precinct lookup.
-- Rebuilt the targeted `data/district_contests_2026_lines/congressional_*.json` files plus `data/crosswalks/precinct_to_cd2026_sl2025_95.csv` with the updated reaggregator, adding county-level fallback weighting for unresolved absentee/provisional/one-stop style buckets instead of dropping those votes outright.
-- That follow-up rebuild pushed the targeted historical `NC-01` / `NC-03` congressional slices from roughly `70%` matched precinct coverage to `100%` matched keys in files such as `congressional_us_senate_2010.json` and `congressional_governor_2012.json`, with the refreshed files now recording `county_fallback_precinct_keys` in `meta` for auditability.
-- Bumped the front-end data cache-buster token again so browsers fetch the refreshed `2026_lines` congressional outputs and precinct-resolver fix immediately after deploy.
-- Corrected the follow-up Davie precinct naming regression so `North Mocks City` and `North Mocks County` no longer collapse into the same label: the front end now preserves `North Mocksville City` for the city precinct and `North Mocksville County` for the county precinct.
-- Bumped the front-end data cache-buster token once more so browsers stop serving the over-normalized Davie label pair after deploy.
-
 ### Mobile Precinct Pinning Restore + Smoke-Test Refresh (July 11, 2026)
 
 - Restored precinct click/search selection behavior to mirror the county tooltip-pinning flow instead of forcing the newer always-open desktop precinct tooltip behavior.
@@ -995,6 +935,66 @@ Implementation note:
 - Added county-aware display-name overrides for `Craven` and `Lincoln` precinct labels so `Van-EP Vanceboro`, `Lincolnton North`, and `Lincolnton South` render cleanly in the current front-end naming layer instead of keeping the raw compact/slash-coded forms.
 - Re-aligned the county and precinct mobile pin/tooltip flow toward the older `index (14).html` behavior by removing the newer pre-pinned tooltip-shell shortcut and restoring the older render-first, pin-second sequence for county/precinct selections.
 - Bumped the front-end data cache-buster again so browsers pull the latest tooltip-behavior and precinct-label refinements immediately after deploy.
+
+### Latest Index Sync (July 12, 2026)
+
+- Pulled the latest upstream `index.html` changes from `origin/main` into the local workspace.
+- Synced the hover/mobile tooltip work that followed the earlier NC/WI tooltip comparisons, including the newer upstream positioning and interaction cleanup now present in the live index source.
+- Carried forward the upstream cache-buster / app build token bumps that shipped with those tooltip updates, so the checked-in local index now matches the latest remote front-end file.
+- Followed up on the Columbus precinct drift fix after the first pass missed some frontend lookup paths: `P117`/`P245` now also resolve consistently as `P11`/`P24` in the variant overrides, demographics/CVAP tables, and 2024 district crosswalk files.
+- Rebuilt the 2024 Columbus county contest slices directly from the raw `20241105` precinct export after confirming the presidential slice had still dropped `COLUMBUS - P11` despite the earlier remap cleanup; the refreshed 2024 statewide contest JSONs now carry the raw Columbus precinct rows again.
+- Tightened the `SL 2025-95` congressional reaggregation pass for `NC-01` and `NC-03` so older `2026_lines` slices now use shapefile-derived county membership, recognize legacy `COUNTY - CODE_NAME` precinct aliases, preserve untouched years when no aggregate exists, and skip uncontested partisan outputs such as `congressional_attorney_general_2012.json`.
+- Removed the stale hardcoded Columbus `P117`/`P245` bridge from the live front end and added a geometry-aware guard to the stable-to-OneMap resolver so only precinct codes that actually exist in the loaded NCOneMap geometry are accepted during precinct lookup.
+- Rebuilt the targeted `data/district_contests_2026_lines/congressional_*.json` files plus `data/crosswalks/precinct_to_cd2026_sl2025_95.csv` with the updated reaggregator, adding county-level fallback weighting for unresolved absentee/provisional/one-stop style buckets instead of dropping those votes outright.
+- That follow-up rebuild pushed the targeted historical `NC-01` / `NC-03` congressional slices from roughly `70%` matched precinct coverage to `100%` matched keys in files such as `congressional_us_senate_2010.json` and `congressional_governor_2012.json`, with the refreshed files now recording `county_fallback_precinct_keys` in `meta` for auditability.
+- Bumped the front-end data cache-buster token again so browsers fetch the refreshed `2026_lines` congressional outputs and precinct-resolver fix immediately after deploy.
+- Corrected the follow-up Davie precinct naming regression so `North Mocks City` and `North Mocks County` no longer collapse into the same label: the front end now preserves `North Mocksville City` for the city precinct and `North Mocksville County` for the county precinct.
+- Bumped the front-end data cache-buster token once more so browsers stop serving the over-normalized Davie label pair after deploy.
+
+### Pre-2018 Judicial County/Precinct Layers + Nickname Labels (July 14, 2026)
+
+- Reaggregated contested NC Supreme Court and Court of Appeals seats for **2008–2016** into `data/contests/` (same precinct-row layout already used by Counties and Precincts), and refreshed `data/contests/manifest.json`.
+- Added `data/mappings/judicial_candidate_party_overrides.csv` and wired it through `scripts/build_district_contests_from_batch_shatter.py` so blank / nonpartisan OE party labels map to DEM/REP leans for displayable margins.
+- Added `scripts/reaggregate_pre2018_judicial_contests.py` to rebuild those judicial county/precinct slices for selected years, applying the override map and **skipping uncontested** seats (unopposed, same-party-only generals, or missing DEM/REP totals after overrides).
+- 25 contested pre-2018 judicial slices are now live in the Counties picker (plus existing 2016 Court of Appeals seats and the remapped 2016 Edmunds/Morgan Supreme Court race). Intentionally skipped examples include Stroud 2014 (unopposed), Martin 2008 (unopposed), Steelman 2010 (unopposed), Tyson 2008 (both general candidates Democratic), Elmore 2010 (both Republican), and the 2010 multi-candidate IRV vacancy.
+- Extended office-key inference for older OE labels (`NC … - Name Seat`, unseated 2016 Supreme Court associate justice) and named-seat display names in the contest picker.
+- Removed the front-end `year < 2018` judicial hide rule; Counties now filters judicial contests with the same `major_party_contested` gate used for Council of State.
+- Candidate tooltips / focus panels / vote-counter labels now prefer ballot nicknames from parentheses when OE provides them (`Michael R. (Mike) Morgan` → `Mike Morgan`, `Robert H. (Bob) Edmunds, Jr.` → `Bob Edmunds, Jr.`).
+- Switched the live atlas precinct geometry / choropleth remaps / VAP bridges onto `data/2025Voting_Precincts.geojson`, repaired selected 2020 precinct contest joins (including OE-backed county rebuilds), and pointed `scripts/build_precinct_friendly_names.js` at that geometry.
+- Regenerated `data/precinct_friendly_names.json` with fixes for mangled OneMap labels such as Cleveland `S E` / `S N` (`Shelby East` / `Shelby North`), Orange `HE` (`Hillsborough East`), and Iredell code-prefixed seats (`Sh A Shiloh A` → `Shiloh A`, `Ch A Chambersburg A` → `Chambersburg A`), while preserving already-good names (for example `McMannen`, `Scuppernong`, `H.J. Macdonald`, `Wittenburg`).
+- Bumped the front-end data cache-buster / app build tokens to `2026-07-14-4` so Pages clients fetch the new contest slices, friendly names, and nickname labeling promptly after deploy.
+
+### December 2025 OneMap/SBE Crosswalk Chain (July 15, 2026)
+
+- Documented the current modern precinct target: `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp` plus `data/crosswalks/block20_to_onemap_2025_12.csv`.
+- The production bridge chain now includes SBE 2020/2022/2024 precinct vintages to the December 2025 OneMap basis, and early-era SBE 2006 via 2000 tabblocks plus the NHGIS 2000-to-2010-to-2020 chain.
+- Production bridge artifacts include `data/mappings/sbe2006_to_onemap_precinct_bridge.json`, `data/mappings/sbe2006_to_onemap_precinct_weights.json`, and `data/mappings/sbe2006_to_modern_district_weights.json`.
+- Early-year district/precinct outputs are documented as VAP-weighted shatter/apportionment estimates. For 2000-2006, rebuilt outputs stay as shatter estimates unless there is an explicit trusted calibration target.
+
+### Canonical County Totals + Lazy Precinct Modeling (July 15, 2026)
+
+- **Root fix (July 16):** Dec 2025 OneMap VAP bridges are clamped so shares never cross county lines (`python scripts/clamp_precinct_bridge_to_source_county.py --write`; default in the SBE/VTD bridge builders). Rebuild statewide contests with `node scripts/rebuild_statewide_contests_from_sbe_bridge.js`. After that, precinct-row county sums match OE again — no separate `county_contests` accuracy workaround needed.
+- County mode loads full `data/contests/` slices (compact `data/county_contests/` is unused). `county_totals` on those payloads remain available as an optional paint override. Modeled county mode still emits a compact 100-county slice from calibrated county targets.
+- **2026 Senate model:** After the clamp rebuild, retuned `statewideTargetAdjustmentPts` to `2.85` so county official totals stay near Whatley +1.6 (with district layers). Regional shape uses stronger Cooper urban/suburban elasticity and type boosts (`urban` / `suburban` / `rural`), a softer rural GOP overperformance weight, and Nash/Wilson home-region locals near pre-clamp values (`5.10` / `1.60`).
+- **2024 congressional on 2022 lines:** Reallocate live `data/district_contests/congressional_*_2024.json` DEM/REP votes to `data/district_contests_existing_snapshot` margins while preserving each district's live `total_votes` via `python scripts/reallocate_live_district_votes_to_snapshot_margins.py --scope congressional --years 2024 --write`.
+- The newer December 2025 OneMap/SBE crosswalks drive precinct-level detail. Within-county precinct splits can still differ from pre–Dec 2025 layouts; county polygons should not.
+- Modeled contests follow the same contract. The model calculates and attaches authoritative 100-county totals from its calibrated county targets; full turnout-reweighted precinct rows are preserved separately for precinct mode.
+- County-mode model inputs and idle prefetches use compact county files. Full precinct JSON loading and precinct synthesis are deferred until precinct detail is enabled, reducing background transfer/parsing without sacrificing the newer crosswalk work.
+- The Senate model's 15% long-run presidential component uses the two most recent pre-2020 cycles (2012 and 2016), avoiding slower and less comparable 2004/2008 fallback sources while retaining a multi-cycle baseline.
+- The 2026 US Senate model now uses canonical county anchors, a `0.96` statewide recenter strength, and an explicit statewide calibration adjustment. The default county-layer result remains approximately `Whatley +1.9`, while Hoke follows the Democratic county target instead of being flipped by precinct turnout reweighting.
+- Regression coverage verifies that the compact modeled slice contains 100 counties, the full modeled slice retains precinct rows, and Hoke's county total remains Democratic even though the underlying crosswalked precinct aggregation is preserved.
+
+### Early Comparable Judicial Seats 2000–2006 (July 16, 2026)
+
+- Added **25** create-only precinct contest slices under `data/contests/` for early Supreme Court / Court of Appeals races keyed by Wikipedia **seat numbers** (`…_seat_NN_YYYY.json`), so 2000–2006 races can be compared to later numbered seats without regenerating existing files.
+- Aggregated the same 25 races into **75** district overlays (`congressional` / `state_house` / `state_senate`) in `data/district_contests/` on the live 2022-lines / SBE2006 weight path.
+- Refreshed `data/contests/manifest.json` and `data/district_contests/manifest.json` (precinct manifest includes the 25 early seats; district manifest 415 → 490 entries).
+- Added `data/mappings/judicial_seat_crosswalk.csv` (OE office ↔ seat ↔ `contest_type`) and create-only builders:
+  - `node scripts/add_early_comparable_judicial_contests.js`
+  - `python scripts/add_early_comparable_judicial_district_contests.py`
+- Extended `scripts/rebuild_statewide_contests_from_sbe_bridge.js` with 2006 year config and seat-number OE office aliases (named-seat aliases retained for older files).
+- Expanded `data/mappings/judicial_candidate_party_overrides.csv` for early nonpartisan cycles, including the 2004 Orr 8-way plurality (track only Newby/Wynn as major-party).
+- Bumped front-end cache-buster / app build tokens to `2026-07-16-18`.
 
 ### UI / UX
 
