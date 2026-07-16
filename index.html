@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-10';
-    const APP_BUILD_ID = '2026-07-16-10';
+    const DATA_CACHE_BUSTER = '2026-07-16-11';
+    const APP_BUILD_ID = '2026-07-16-11';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -21733,9 +21733,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      // Pre-July-15 style: print the true vote margin (7.697% → 7.70), not the
-      // rounded-share difference (53.03 − 45.34 = 7.69) that introduces 0.01-pt drift.
-      return marginPctValue(repVotes, demVotes, totalVotes);
+      // Match candidate % labels: margin = rounded Trump% − rounded Harris%.
+      // Raw vote margin (e.g. Scotland 6.925 → 6.93) drifts from the familiar share-diff (6.92).
+      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
+      const t = Number(totalVotes) || 0;
+      if (t <= 0) return 0;
+      const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
+      const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
+      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
+      const diff = Math.abs(repPctDisplay - demPctDisplay);
+      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
+      return diff;
     }
 
 
