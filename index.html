@@ -3602,7 +3602,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   :root {
     --topbar-h: 224px;
     --desktop-left-w: 356px;
-    --desktop-right-w: 332px;
+    --desktop-right-w: 360px;
   }
 
   .sr-only {
@@ -5760,7 +5760,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   @media (min-width: 769px) and (max-width: 1180px) {
     :root {
       --desktop-left-w: 344px;
-      --desktop-right-w: 304px;
+      --desktop-right-w: 336px;
     }
 
     .map-topbar {
@@ -7227,7 +7227,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     align-items: center;
     justify-content: space-between;
     flex-wrap: nowrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 14px;
     padding: 10px 12px;
     border-radius: 14px;
@@ -7237,7 +7237,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   .vote-total,
   .vote-lead {
-    min-width: 0;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -7248,17 +7247,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .vote-total {
     color: #0f172a;
     flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .vote-lead {
     color: #475569;
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     text-align: right;
     margin-left: auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
   }
 
   .vote-lead[data-party="dem"] { color: #1d4ed8; }
@@ -7529,7 +7528,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     :root {
       --topbar-h: 0px;
       --desktop-left-w: 500px;
-      --desktop-right-w: 340px;
+      --desktop-right-w: 372px;
       --desktop-right-gap: 14px;
       --desktop-vote-counter-h: 0px;
     }
@@ -7731,7 +7730,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       right: 24px !important;
       width: min(var(--desktop-right-w), calc(100vw - 48px)) !important;
       max-width: var(--desktop-right-w) !important;
-      min-width: 0 !important;
+      min-width: min(320px, 100%) !important;
       max-height: min(58vh, 620px) !important;
       overflow-x: hidden;
       overflow-y: auto;
@@ -10355,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-28';
-    const APP_BUILD_ID = '2026-07-16-28';
+    const DATA_CACHE_BUSTER = '2026-07-16-30';
+    const APP_BUILD_ID = '2026-07-16-30';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10604,23 +10603,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getRegionTrendSeries(contestType, regionKey) {
-      const entries = getVisibleManifestEntries(contestManifest)
-        .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
-        .slice()
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const entries = getTrendManifestEntriesForContestType(contestType);
 
       const out = [];
       const loaded = await mapWithConcurrency(entries, 4, async (e) => {
         const year = Number(e?.year);
+        const entryType = String(e?.contest_type || contestType).trim() || contestType;
         if (!Number.isFinite(year)) return null;
-        const rows = await loadContestSlice(contestType, year, { preferCounty: true });
-        return { year, rows };
+        const rows = await loadContestSlice(entryType, year, { preferCounty: true });
+        return { year, rows, contestType: entryType };
       });
       for (const bundle of loaded) {
         if (!bundle) continue;
         const year = Number(bundle.year);
+        const entryType = String(bundle.contestType || contestType).trim() || contestType;
         const rows = bundle.rows || [];
-        const totals = aggregateContestRowsForRegion(rows, contestType, regionKey);
+        const totals = aggregateContestRowsForRegion(rows, entryType, regionKey);
         if (!totals.total) continue;
         const margin = totals.rep - totals.dem;
         out.push({
@@ -11319,6 +11317,54 @@ document.addEventListener('DOMContentLoaded', function() {
         .filter(e => !scope || String(e.scope || '').trim() === String(scope).trim());
       if (entries.length) return String(entries[0].contest_type || ct).trim() || ct;
       return ct;
+    }
+
+    // Timeline / trend history: union named + numbered judicial seat years so
+    // Seat 4 2022 includes Beasley 2014 / Seat 4 2006, etc.
+    function getTrendManifestEntriesForContestType(contestType, yearHint = NaN, options = {}) {
+      const ct = String(contestType || '').trim();
+      if (!ct) return [];
+      const scope = String(options.scope || '').trim();
+      const manifest = scope
+        ? getVisibleManifestEntries(getActiveDistrictManifest(options.linesYear || currentDistrictLinesYear))
+        : getVisibleManifestEntries(contestManifest);
+      const familyKey = getJudicialSeatFamilyKey(ct, Number(yearHint));
+      const raw = [];
+      if (familyKey) {
+        listJudicialFamilyManifestEntries(familyKey, manifest).forEach(e => {
+          if (scope && String(e.scope || '').trim() !== scope) return;
+          raw.push(e);
+        });
+      } else {
+        (manifest || []).forEach(entry => {
+          if (!entry) return;
+          if (String(entry.contest_type || '').trim() !== ct) return;
+          if (scope && String(entry.scope || '').trim() !== scope) return;
+          const y = Number(entry.year);
+          if (!Number.isFinite(y) || y <= 0) return;
+          raw.push({
+            year: y,
+            contest_type: ct,
+            file: entry.file || '',
+            scope: entry.scope || ''
+          });
+        });
+      }
+      const byYear = new Map();
+      raw.forEach(e => {
+        const y = Number(e.year);
+        if (!Number.isFinite(y)) return;
+        const existing = byYear.get(y);
+        if (!existing) {
+          byYear.set(y, e);
+          return;
+        }
+        // Prefer the exact selected contest_type when both exist for a year.
+        if (String(existing.contest_type) !== ct && String(e.contest_type) === ct) {
+          byYear.set(y, e);
+        }
+      });
+      return Array.from(byYear.values()).sort((a, b) => Number(a.year) - Number(b.year));
     }
 
     function getAvailableContestYearsForType(contestType, year = NaN) {
@@ -15468,31 +15514,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getStatewideTrendSeries(contestType) {
-      const entries = getVisibleManifestEntries(contestManifest)
-        .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
-        .slice()
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const entries = getTrendManifestEntriesForContestType(contestType);
 
       const out = [];
       const loaded = await mapWithConcurrency(entries, 4, async (e) => {
         const year = Number(e?.year);
+        const entryType = String(e?.contest_type || contestType).trim() || contestType;
         if (!Number.isFinite(year)) return null;
-        const rows = await loadContestSlice(contestType, year);
-        return { year, rows };
+        const rows = await loadContestSlice(entryType, year);
+        return { year, rows, contestType: entryType };
       });
       for (const bundle of loaded) {
         if (!bundle) continue;
         const year = Number(bundle.year);
+        const entryType = String(bundle.contestType || contestType).trim() || contestType;
         const rows = bundle.rows || [];
         let dem = 0, rep = 0, oth = 0, tot = 0;
         let demCand = '', repCand = '';
         rows.forEach(r => {
-          dem += Number(r[`${contestType}_dem`]) || 0;
-          rep += Number(r[`${contestType}_rep`]) || 0;
-          oth += Number(r[`${contestType}_other`]) || 0;
-          tot += Number(r[`${contestType}_total`]) || 0;
-          if (!demCand) demCand = r[`${contestType}_dem_candidate`] || '';
-          if (!repCand) repCand = r[`${contestType}_rep_candidate`] || '';
+          dem += Number(r[`${entryType}_dem`]) || 0;
+          rep += Number(r[`${entryType}_rep`]) || 0;
+          oth += Number(r[`${entryType}_other`]) || 0;
+          tot += Number(r[`${entryType}_total`]) || 0;
+          if (!demCand) demCand = r[`${entryType}_dem_candidate`] || '';
+          if (!repCand) repCand = r[`${entryType}_rep_candidate`] || '';
         });
         if (tot <= 0) continue;
         const margin = rep - dem;
@@ -23201,15 +23246,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
 
-      const entries = (getActiveDistrictManifest() || [])
-        .filter(f => f && f.scope === scope && f.contest_type === contestType && Number.isFinite(Number(f.year)))
-        .slice()
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const entries = getTrendManifestEntriesForContestType(contestType, NaN, { scope });
 
       const out = [];
       for (const e of entries) {
         const year = Number(e.year);
-        const payload = await loadDistrictSlice(scope, contestType, year);
+        const entryType = String(e?.contest_type || contestType).trim() || contestType;
+        const payload = await loadDistrictSlice(scope, entryType, year);
         const results = payload?.general?.results || null;
         if (!results) continue;
         const keyA = String(districtNum);
@@ -23220,9 +23263,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Older statewide district slices may omit candidate labels; recover from contest slice.
         let demCand = (r.dem_candidate || '').toString().trim();
         let repCand = (r.rep_candidate || '').toString().trim();
-        if ((!(demCand && repCand)) && contestType !== 'us_house') {
+        if ((!(demCand && repCand)) && entryType !== 'us_house') {
           try {
-            const cand = await getContestCandidates(contestType, year);
+            const cand = await getContestCandidates(entryType, year);
             if (!demCand) demCand = cand.dem || '';
             if (!repCand) repCand = cand.rep || '';
           } catch (_) {}
@@ -23249,40 +23292,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getCountyTrendSeries(contestType, countyName) {
-      const cacheKey = `${String(contestType || '').trim()}|${String(countyName || '').trim().toUpperCase()}`;
+      const familyKey = getJudicialSeatFamilyKey(contestType);
+      const cacheKey = `${familyKey || String(contestType || '').trim()}|${String(countyName || '').trim().toUpperCase()}`;
       try {
         const cached = countyTrendSeriesCache && countyTrendSeriesCache.get ? countyTrendSeriesCache.get(cacheKey) : null;
         if (Array.isArray(cached)) return cached.slice();
       } catch (_) {}
 
-      const entries = getVisibleManifestEntries(contestManifest)
-        .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
-        .slice()
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const entries = getTrendManifestEntriesForContestType(contestType);
 
       const target = normalizeCountyToken(countyName);
       if (!target) return [];
       const out = [];
       const loaded = await mapWithConcurrency(entries, 4, async (e) => {
         const year = Number(e?.year);
+        const entryType = String(e?.contest_type || contestType).trim() || contestType;
         if (!Number.isFinite(year)) return null;
-        const bundle = await ensureCountyAggregateBundle(contestType, year);
+        const bundle = await ensureCountyAggregateBundle(entryType, year);
         let totals = (bundle && bundle.totalsByCounty) ? bundle.totalsByCounty.get(target) : null;
         if (!totals || !(Number(totals.total || 0) > 0)) {
           // Fallback (modeled / missing bundles): aggregate just this county from rows.
           try {
-            const rows = await loadContestSlice(contestType, year);
+            const rows = await loadContestSlice(entryType, year);
             let dem = 0, rep = 0, other = 0, total = 0;
             (rows || []).forEach(r => {
               const rowName = (r?.county || '').toString();
               const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
               const countyNorm = normalizeCountyToken(countyOnly);
               if (countyNorm !== target) return;
-              const d = Number(r?.[`${contestType}_dem`] || 0);
-              const rp = Number(r?.[`${contestType}_rep`] || 0);
-              const o = Number(r?.[`${contestType}_other`] || 0);
+              const d = Number(r?.[`${entryType}_dem`] || 0);
+              const rp = Number(r?.[`${entryType}_rep`] || 0);
+              const o = Number(r?.[`${entryType}_other`] || 0);
               const fallbackTotal = d + rp + o;
-              const t = Math.max(0, Number(r?.[`${contestType}_total`] || fallbackTotal));
+              const t = Math.max(0, Number(r?.[`${entryType}_total`] || fallbackTotal));
               dem += d; rep += rp; other += o; total += t;
             });
             totals = total > 0 ? { dem, rep, other, total } : null;
@@ -23292,7 +23334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!totals || !(Number(totals.total || 0) > 0)) return null;
         let candidates = null;
-        try { candidates = await getContestCandidates(contestType, year); } catch (_) { candidates = null; }
+        try { candidates = await getContestCandidates(entryType, year); } catch (_) { candidates = null; }
         return { year, totals, candidates };
       });
       for (const bundle of loaded) {
@@ -24885,10 +24927,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function getPrecinctTrendSeries(contestType, precinctNormRaw, countyNameRaw = '') {
-      const entries = getVisibleManifestEntries(contestManifest)
-        .filter(f => f && f.contest_type === contestType && Number.isFinite(Number(f.year)))
-        .slice()
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const entries = getTrendManifestEntriesForContestType(contestType);
 
       const normalizedInput = normalizeCountyToken(precinctNormRaw);
       const countyNormHint = normalizeCountyToken(countyNameRaw);
@@ -25038,13 +25077,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const out = [];
       const loaded = await mapWithConcurrency(entries, 4, async (e) => {
         const year = Number(e?.year);
+        const entryType = String(e?.contest_type || contestType).trim() || contestType;
         if (!Number.isFinite(year)) return null;
-        const rows = await loadContestSlice(contestType, year);
-        return { year, rows };
+        const rows = await loadContestSlice(entryType, year);
+        return { year, rows, contestType: entryType };
       });
       for (const bundle of loaded) {
         if (!bundle) continue;
         const year = Number(bundle.year);
+        const entryType = String(bundle.contestType || contestType).trim() || contestType;
         const rows = bundle.rows || [];
         let dem = 0;
         let rep = 0;
@@ -25059,12 +25100,12 @@ document.addEventListener('DOMContentLoaded', function() {
           if (!rowName.includes(' - ')) return;
           const [rowCounty, rowPrecinct] = rowName.split(' - ', 2);
           if (!rowMatchesTarget(rowCounty, rowPrecinct)) return;
-          dem += Number(r[`${contestType}_dem`] || 0);
-          rep += Number(r[`${contestType}_rep`] || 0);
-          oth += Number(r[`${contestType}_other`] || 0);
-          tot += Number(r[`${contestType}_total`] || 0);
-          if (!demCand) demCand = r[`${contestType}_dem_candidate`] || '';
-          if (!repCand) repCand = r[`${contestType}_rep_candidate`] || '';
+          dem += Number(r[`${entryType}_dem`] || 0);
+          rep += Number(r[`${entryType}_rep`] || 0);
+          oth += Number(r[`${entryType}_other`] || 0);
+          tot += Number(r[`${entryType}_total`] || 0);
+          if (!demCand) demCand = r[`${entryType}_dem_candidate`] || '';
+          if (!repCand) repCand = r[`${entryType}_rep_candidate`] || '';
           matchCount += 1;
         });
         if (tot <= 0 || matchCount <= 0) continue;
@@ -26270,12 +26311,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function getBellwetherCycleYears(contestType, year, count = 3) {
       const targetYear = Number(year);
       if (!contestType || !Number.isFinite(targetYear)) return [];
-      const years = Array.from(new Set(
-        getVisibleManifestEntries(contestManifest)
-          .filter(entry => entry && entry.contest_type === contestType && Number.isFinite(Number(entry.year)))
-          .map(entry => Number(entry.year))
-          .filter(y => y <= targetYear)
-      )).sort((a, b) => b - a);
+      const years = getTrendManifestEntriesForContestType(contestType, targetYear)
+        .map(entry => Number(entry.year))
+        .filter(y => Number.isFinite(y) && y <= targetYear)
+        .sort((a, b) => b - a);
       return years.slice(0, count);
     }
 
