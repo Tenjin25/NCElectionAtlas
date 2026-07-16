@@ -10348,8 +10348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-23';
-    const APP_BUILD_ID = '2026-07-16-23';
+    const DATA_CACHE_BUSTER = '2026-07-16-24';
+    const APP_BUILD_ID = '2026-07-16-24';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29932,10 +29932,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       const winnerPartyKey = String(winnerParty || '').toLowerCase();
-      const winnerShort = winnerPartyKey === 'rep' ? 'Trump' : (winnerPartyKey === 'dem' ? 'Harris' : 'Tie');
-      const winnerText = normalizeCandidateLabel(winnerName || winnerShort, winnerShort || 'Tie');
+      const winnerFullName = winnerPartyKey === 'rep'
+        ? normalizeCandidateLabel(repName, 'Republican')
+        : (winnerPartyKey === 'dem'
+          ? normalizeCandidateLabel(demName, 'Democratic')
+          : 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
-      const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
+      // Prefer full first+last next to the hover lead; keep Uncontested / Even specials from callers.
+      const winnerLineRaw = (winnerLineText || '').toString().trim();
+      const winnerDisplayText = (/^uncontested\b/i.test(winnerLineRaw) || /^even\b/i.test(winnerLineRaw))
+        ? winnerLineRaw
+        : (winnerPartyKey === 'tie'
+          ? (winnerLineRaw || 'Even')
+          : `${winnerFullName} +${marginFormatter(marginAbs)}%`);
       const voteLeadStyle = winnerToneClass === 'rep'
         ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
         : (winnerToneClass === 'dem'
