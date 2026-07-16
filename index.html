@@ -752,6 +752,15 @@ body.focus-active.hover-preview-active .vote-counter {
   font-weight: 800;
   color: #f8fafc;
   margin-bottom: 2px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-subtitle {
@@ -761,6 +770,16 @@ body.focus-active.hover-preview-active .vote-counter {
   letter-spacing: 0.06em;
   color: #94a3b8;
   margin-bottom: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.25;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-winner {
@@ -770,6 +789,29 @@ body.focus-active.hover-preview-active .vote-counter {
   margin-bottom: 8px;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(148,163,184,0.22);
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-winner-name {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+#hover-tooltip[data-context="votehub-results"] .vhr-raw-lead {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-winner.rep {
@@ -2523,10 +2565,17 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   margin-top: 2px;
   font-size: 12px;
   color: #6b7280;
-  line-height: 1.1;
-  white-space: nowrap;
+  line-height: 1.15;
+  min-width: 0;
+  /* Same 2-line treatment as context-title (Mecklenburg / long seat labels). */
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .vote-counter-context .context-actions {
@@ -4305,6 +4354,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .focus-pill {
+    min-width: 0;
     padding: 9px 11px;
     border-radius: 14px;
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -4327,14 +4377,22 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-weight: 900;
     color: #0f172a;
     line-height: 1.2;
+    min-width: 0;
+    max-width: 100%;
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
     word-break: break-word;
+  }
+
+  /* Winner stays half-grid beside Lead (Mecklenburg-style 2-line clamp, not full-width). */
+  #focus-winner.focus-pill-value {
+    font-size: 14px;
+    line-height: 1.2;
   }
 
   .focus-pill-value.dem {
@@ -5904,6 +5962,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       -webkit-line-clamp: 2;
       line-clamp: 2;
       -webkit-box-orient: vertical;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      min-width: 0;
       max-height: calc(1.2em * 2);
     }
 
@@ -6083,6 +6144,15 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: -0.01em;
+    min-width: 0;
+    overflow: hidden;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   .control-summary-pill {
@@ -7119,7 +7189,24 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     margin-top: 4px;
     color: #475569;
     font-size: 13px;
-    line-height: 1.3;
+    line-height: 1.25;
+  }
+
+  #contest-name {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    min-width: 0;
+    overflow: hidden;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.2;
   }
 
   .vote-counter-meta {
@@ -9683,7 +9770,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
     <div class="statewide-results" id="statewide-results" style="margin-top: 10px;">
-      <h4 id="contest-name" data-statewide-contest-name="true" style="margin:0 0 12px 0; font-size:14px; font-weight:800; color:#0f172a;"></h4>
+      <h4 id="contest-name" data-statewide-contest-name="true"></h4>
       <div id="statewide-content" data-statewide-content="true">
         <p>Select a contest to see statewide results and margin.</p>
         <div id="statewide-temperature-bar" style="width:100%;height:24px;margin:12px 0;display:none;"></div>
@@ -10252,8 +10339,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-18';
-    const APP_BUILD_ID = '2026-07-16-18';
+    const DATA_CACHE_BUSTER = '2026-07-16-20';
+    const APP_BUILD_ID = '2026-07-16-20';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11127,38 +11214,145 @@ document.addEventListener('DOMContentLoaded', function() {
       return (Array.isArray(entries) ? entries : []).filter(shouldIncludeManifestEntry);
     }
 
-    function getAvailableContestYearsForType(contestType) {
+    // Named pre-2018 judicial files → Wikipedia seat numbers (Hunter COA is year-aware).
+    const NAMED_JUDICIAL_SEAT_MAP = {
+      nc_supreme_court_associate_justice_brady_seat: '1',
+      nc_supreme_court_associate_justice_newby_seat: '2',
+      nc_supreme_court_associate_justice_hudson_seat: '3',
+      nc_supreme_court_associate_justice_beasley_seat: '4',
+      nc_supreme_court_associate_justice_martin_seat: '5',
+      nc_supreme_court_associate_justice_edmunds_seat: '6',
+      nc_supreme_court_chief_justice_parker_seat: '1',
+      nc_court_of_appeals_judge_wynn_seat: '1',
+      nc_court_of_appeals_judge_calabria_seat: '2',
+      nc_court_of_appeals_judge_mcgee_seat: '4',
+      nc_court_of_appeals_judge_bryant_seat: '5',
+      nc_court_of_appeals_judge_thigpen_seat: '6',
+      nc_court_of_appeals_judge_mccullough_seat: '7',
+      nc_court_of_appeals_judge_davis_seat: '7',
+      nc_court_of_appeals_judge_stephens_seat: '11',
+      nc_court_of_appeals_judge_arrowood_seat: '12',
+      nc_court_of_appeals_judge_dietz_seat: '12',
+      nc_court_of_appeals_judge_martin_seat: '10',
+      nc_court_of_appeals_judge_zachary_seat: '14',
+      nc_court_of_appeals_judge_geer_seat: '15'
+    };
+
+    function getJudicialSeatFamilyKey(contestType, year = NaN) {
+      const ct = String(contestType || '').trim();
+      if (!ct) return null;
+      let m = /^nc_supreme_court_associate_justice_seat_0*(\d+)$/i.exec(ct);
+      if (m) return `sc:${Number(m[1])}`;
+      m = /^nc_supreme_court_chief_justice_seat_0*(\d+)$/i.exec(ct);
+      if (m) return `cj:${Number(m[1])}`;
+      m = /^nc_court_of_appeals_judge_seat_0*(\d+)$/i.exec(ct);
+      if (m) return `coa:${Number(m[1])}`;
+      if (ct === 'nc_court_of_appeals_judge_hunter_seat') {
+        const y = Number(year);
+        return (y === 2016) ? 'coa:13' : 'coa:8';
+      }
+      if (ct === 'nc_supreme_court_chief_justice_parker_seat') return 'cj:1';
+      const namedSeat = NAMED_JUDICIAL_SEAT_MAP[ct];
+      if (!namedSeat) return null;
+      if (ct.startsWith('nc_supreme_court_chief_justice_')) return `cj:${Number(namedSeat)}`;
+      if (ct.startsWith('nc_supreme_court_associate_justice_')) return `sc:${Number(namedSeat)}`;
+      if (ct.startsWith('nc_court_of_appeals_judge_')) return `coa:${Number(namedSeat)}`;
+      return null;
+    }
+
+    function judicialContestTypeMatchesFamily(contestType, familyKey, year = NaN) {
+      const key = getJudicialSeatFamilyKey(contestType, year);
+      return !!(familyKey && key && key === familyKey);
+    }
+
+    function listJudicialFamilyManifestEntries(familyKey, manifestEntries) {
+      const out = [];
+      if (!familyKey || !Array.isArray(manifestEntries)) return out;
+      manifestEntries.forEach(entry => {
+        if (!entry) return;
+        const ct = String(entry.contest_type || '').trim();
+        const y = Number(entry.year);
+        if (!ct || !Number.isFinite(y) || y <= 0) return;
+        if (!judicialContestTypeMatchesFamily(ct, familyKey, y)) return;
+        out.push({ year: y, contest_type: ct, file: entry.file || '', scope: entry.scope || '' });
+      });
+      return out;
+    }
+
+    function pickPriorJudicialFamilyEntry(familyEntries, year) {
+      const y = Number(year);
+      if (!Number.isFinite(y) || !Array.isArray(familyEntries) || !familyEntries.length) return null;
+      const earlier = familyEntries
+        .filter(e => Number(e.year) < y)
+        .sort((a, b) => Number(b.year) - Number(a.year));
+      if (!earlier.length) return null;
+      const prefer8 = earlier.find(e => Number(e.year) === (y - 8));
+      return prefer8 || earlier[0];
+    }
+
+    function resolveJudicialFamilyContestTypeForYear(contestType, year, priorYear, scope = '') {
+      const y = Number(year);
+      const py = Number(priorYear);
+      const ct = String(contestType || '').trim();
+      const familyKey = getJudicialSeatFamilyKey(ct, y);
+      if (!familyKey || !Number.isFinite(py)) return ct;
+      const manifest = scope
+        ? getVisibleManifestEntries(getActiveDistrictManifest(currentDistrictLinesYear))
+        : getVisibleManifestEntries(contestManifest);
+      const entries = listJudicialFamilyManifestEntries(familyKey, manifest)
+        .filter(e => Number(e.year) === py)
+        .filter(e => !scope || String(e.scope || '').trim() === String(scope).trim());
+      if (entries.length) return String(entries[0].contest_type || ct).trim() || ct;
+      return ct;
+    }
+
+    function getAvailableContestYearsForType(contestType, year = NaN) {
       const ct = String(contestType || '').trim();
       if (!ct) return [];
-      if (contestYearsByTypeCache.has(ct)) return contestYearsByTypeCache.get(ct);
+      const yHint = Number(year);
+      const familyKey = getJudicialSeatFamilyKey(ct, yHint);
+      const cacheKey = familyKey ? `${familyKey}|from:${ct}|y:${Number.isFinite(yHint) ? yHint : ''}` : ct;
+      if (contestYearsByTypeCache.has(cacheKey)) return contestYearsByTypeCache.get(cacheKey);
       const years = new Set();
       try {
         getVisibleManifestEntries(contestManifest).forEach(entry => {
           if (!entry) return;
-          if (String(entry.contest_type || '') !== ct) return;
+          const entryType = String(entry.contest_type || '');
           const y = Number(entry.year);
           if (!Number.isFinite(y) || y <= 0) return;
+          if (familyKey) {
+            if (!judicialContestTypeMatchesFamily(entryType, familyKey, y)) return;
+          } else if (entryType !== ct) {
+            return;
+          }
           years.add(y);
         });
       } catch (_) {}
       const out = Array.from(years).filter(Number.isFinite).sort((a, b) => a - b);
-      contestYearsByTypeCache.set(ct, out);
+      contestYearsByTypeCache.set(cacheKey, out);
       return out;
     }
 
-    function getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear = currentDistrictLinesYear) {
+    function getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear = currentDistrictLinesYear, year = NaN) {
       const targetScope = String(scope || '').trim();
       const ct = String(contestType || '').trim();
       if (!targetScope || !ct) return [];
       const activeManifest = getActiveDistrictManifest(linesYear);
       const years = new Set();
+      const yHint = Number(year);
+      const familyKey = getJudicialSeatFamilyKey(ct, yHint);
       try {
         getVisibleManifestEntries(activeManifest).forEach(entry => {
           if (!entry) return;
           if (String(entry.scope || '').trim() !== targetScope) return;
-          if (String(entry.contest_type || '').trim() !== ct) return;
+          const entryType = String(entry.contest_type || '').trim();
           const y = Number(entry.year);
           if (!Number.isFinite(y) || y <= 0) return;
+          if (familyKey) {
+            if (!judicialContestTypeMatchesFamily(entryType, familyKey, y)) return;
+          } else if (entryType !== ct) {
+            return;
+          }
           years.add(y);
         });
       } catch (_) {}
@@ -11172,10 +11366,17 @@ document.addEventListener('DOMContentLoaded', function() {
         ? availableYears.map(Number).filter(v => Number.isFinite(v) && v < y).sort((a, b) => a - b)
         : [];
       if (!years.length) return [];
-      if (ct !== 'us_senate') return years.slice().sort((a, b) => b - a);
-      const preferred = [y - 6, y - 12].filter(v => years.includes(v));
-      const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
-      return [...preferred, ...rest];
+      if (ct === 'us_senate') {
+        const preferred = [y - 6, y - 12].filter(v => years.includes(v));
+        const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
+        return [...preferred, ...rest];
+      }
+      if (getJudicialSeatFamilyKey(ct, y)) {
+        const preferred = [y - 8, y - 16].filter(v => years.includes(v));
+        const rest = years.filter(v => !preferred.includes(v)).sort((a, b) => b - a);
+        return [...preferred, ...rest];
+      }
+      return years.slice().sort((a, b) => b - a);
     }
 
     function getVoteDeltaPairsForTooltip(contestType, toYear, maxPairs = 2) {
@@ -11184,15 +11385,19 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!ct || !Number.isFinite(y) || y <= 0) return [];
       const pairs = [];
 
-      const years = getAvailableContestYearsForType(ct);
+      const years = getAvailableContestYearsForType(ct, y);
       if (Array.isArray(years) && years.length) {
         let prev = null;
         // Prefer "last time this contest was up" when a seat/class cadence exists.
         // US Senate is a special case: same seat repeats every 6 years, but NC has two seats so
         // the generic series contains elections every 2 years. For deltas, prefer same-class y-6
         // when available, otherwise fall back to the most recent earlier year.
+        // Judicial seats prefer the 8-year cycle when available.
         if (ct === 'us_senate') {
           const preferred = y - 6;
+          if (years.includes(preferred)) prev = preferred;
+        } else if (getJudicialSeatFamilyKey(ct, y)) {
+          const preferred = y - 8;
           if (years.includes(preferred)) prev = preferred;
         }
         if (!Number.isFinite(prev)) {
@@ -11209,6 +11414,9 @@ document.addEventListener('DOMContentLoaded', function() {
           let prevPrev = null;
           if (ct === 'us_senate') {
             const preferredPrev = prev - 6;
+            if (years.includes(preferredPrev)) prevPrev = preferredPrev;
+          } else if (getJudicialSeatFamilyKey(ct, y)) {
+            const preferredPrev = prev - 8;
             if (years.includes(preferredPrev)) prevPrev = preferredPrev;
           }
           if (!Number.isFinite(prevPrev)) {
@@ -14362,18 +14570,9 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${full} (${partyCode})`;
     }
 
-    function shouldUseCompactVoteCounterWinnerLabel() {
-      try {
-        return !!(window.matchMedia && window.matchMedia('(max-width: 1180px)').matches);
-      } catch (_) {
-        return true;
-      }
-    }
-
     function formatVoteCounterWinnerLabel(name, partyCode, fallbackText) {
-      if (!shouldUseCompactVoteCounterWinnerLabel()) {
-        return formatVoteCounterCandidateLabel(name, partyCode, fallbackText);
-      }
+      // Winner pill shares a half-grid cell with Lead; prefer surname so long
+      // judicial names (e.g. Timmons-Goodson) wrap/clamp cleanly.
       const short = shortCandidateLabel(name, fallbackText);
       if (!short || short.toUpperCase() === partyCode.toUpperCase()) return fallbackText;
       return `${short} (${partyCode})`;
@@ -16329,7 +16528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const pickComparableYears = (contestType, recentYear) => {
           const ct = String(contestType || '').trim();
           const y = Number(recentYear);
-          const all = getAvailableContestYearsForType(ct).filter(v => Number.isFinite(v) && v <= y).sort((a, b) => b - a);
+          const all = getAvailableContestYearsForType(ct, y).filter(v => Number.isFinite(v) && v <= y).sort((a, b) => b - a);
           if (!all.length) return { recent: y, second: NaN, longRunYears: [] };
           const recent = all[0];
           const second = all.length > 1 ? all[1] : NaN;
@@ -19898,11 +20097,42 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `Judicial Retention ${contestType.toUpperCase()}`;
 	      }
 
+	      // Wikipedia seat numbers for pre-2018 named-seat files (and any seat_NN keys).
+	      // Hunter COA is year-aware: 2014 Robert C. = Seat 8; 2016 Hunter Jr. = Seat 13.
+	      const namedJudicialSeatMap = {
+	        nc_supreme_court_associate_justice_brady_seat: '1',
+	        nc_supreme_court_associate_justice_newby_seat: '2',
+	        nc_supreme_court_associate_justice_hudson_seat: '3',
+	        nc_supreme_court_associate_justice_beasley_seat: '4',
+	        nc_supreme_court_associate_justice_martin_seat: '5',
+	        nc_supreme_court_associate_justice_edmunds_seat: '6',
+	        nc_supreme_court_chief_justice_parker_seat: '1',
+	        nc_court_of_appeals_judge_wynn_seat: '1',
+	        nc_court_of_appeals_judge_calabria_seat: '2',
+	        nc_court_of_appeals_judge_mcgee_seat: '4',
+	        nc_court_of_appeals_judge_bryant_seat: '5',
+	        nc_court_of_appeals_judge_thigpen_seat: '6',
+	        nc_court_of_appeals_judge_mccullough_seat: '7',
+	        nc_court_of_appeals_judge_davis_seat: '7',
+	        nc_court_of_appeals_judge_stephens_seat: '11',
+	        nc_court_of_appeals_judge_arrowood_seat: '12',
+	        nc_court_of_appeals_judge_dietz_seat: '12',
+	        nc_court_of_appeals_judge_martin_seat: '10',
+	        nc_court_of_appeals_judge_zachary_seat: '14',
+	        nc_court_of_appeals_judge_geer_seat: '15'
+	      };
+
 	      if (contestType.startsWith('nc_court_of_appeals_judge_seat_')) {
 	        const seat = contestType.replace('nc_court_of_appeals_judge_seat_', '').replace(/^0+/, '');
 	        return `NC Court of Appeals Judge Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_court_of_appeals_judge_') && contestType.endsWith('_seat')) {
+	        let seat = namedJudicialSeatMap[contestType] || '';
+	        if (contestType === 'nc_court_of_appeals_judge_hunter_seat') {
+	          const y = Number(year);
+	          seat = (y === 2016) ? '13' : '8';
+	        }
+	        if (seat) return `NC Court of Appeals Judge Seat ${seat}`;
 	        const who = contestType.replace('nc_court_of_appeals_judge_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Court of Appeals Judge (${label})`;
@@ -19912,6 +20142,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `NC Supreme Court Associate Justice Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_supreme_court_associate_justice_') && contestType.endsWith('_seat')) {
+	        const seat = namedJudicialSeatMap[contestType] || '';
+	        if (seat) return `NC Supreme Court Associate Justice Seat ${seat}`;
 	        const who = contestType.replace('nc_supreme_court_associate_justice_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Supreme Court Associate Justice (${label})`;
@@ -19921,6 +20153,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `NC Supreme Court Chief Justice Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_supreme_court_chief_justice_') && contestType.endsWith('_seat')) {
+	        const seat = namedJudicialSeatMap[contestType] || '';
+	        if (seat) return `NC Supreme Court Chief Justice Seat ${seat}`;
 	        const who = contestType.replace('nc_supreme_court_chief_justice_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Supreme Court Chief Justice (${label})`;
@@ -29707,7 +29941,7 @@ document.addEventListener('DOMContentLoaded', function() {
           : 'font-size:12px;font-weight:800;opacity:0.92;color:#e2e8f0;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;');
       const winnerRawLeadDisplay = (winnerRawLeadText || '').toString().trim() || `${formatVotehubVotes(Math.abs(rVotes - dVotes))} votes`;
       const winnerLine = showWinnerLine
-        ? `<div class="vhr-winner ${winnerToneClass}" style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;"><span>${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
+        ? `<div class="vhr-winner ${winnerToneClass}"><span class="vhr-winner-name">${escapeHtml(winnerDisplayText)}</span><span class="vhr-raw-lead ${winnerToneClass}" style="${voteLeadStyle}">${escapeHtml(winnerRawLeadDisplay)}</span></div>`
         : '';
       const prevSigned = Number(prevSignedMarginPct);
       const curSigned = Number(currentSignedMarginPct);
@@ -33786,22 +34020,23 @@ document.addEventListener('DOMContentLoaded', function() {
       const modeledDef = getModeledContestDefinition(contestType, y);
       if (modeledDef) {
         const rows = await buildModeledBaselineContestSliceRows(modeledDef);
-        if (rows && rows.length) return { year: modeledDef.baseYear, rows };
+        if (rows && rows.length) return { year: modeledDef.baseYear, rows, contestType: modeledDef.baseContestType || contestType };
         return null;
       }
       const candidates = getPriorContestYearsFromAvailableYears(
         contestType,
         y,
-        getAvailableContestYearsForType(contestType)
+        getAvailableContestYearsForType(contestType, y)
       );
       for (const cy of candidates) {
+        const priorType = resolveJudicialFamilyContestTypeForYear(contestType, y, cy);
         // County hover/flip metadata only needs the compact 100-row county file.
         // Load the full crosswalked precinct slice solely when Shift/Flips is
         // actively coloring precinct geometry.
         const rows = includePrecinctMargins
-          ? await tryLoadContestSliceStrict(contestType, cy)
-          : await loadCountyContestSlice(contestType, cy);
-        if (rows && rows.length) return { year: cy, rows };
+          ? await tryLoadContestSliceStrict(priorType, cy)
+          : await loadCountyContestSlice(priorType, cy);
+        if (rows && rows.length) return { year: cy, rows, contestType: priorType };
       }
       return null;
     }
@@ -33996,16 +34231,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const countyOnly = rowName.includes(' - ') ? rowName.split(' - ')[0] : rowName;
         const countyNorm = (countyOnly || '').toString().replace(/[^a-z0-9 .\-]/gi, '').replace(/\s+/g, ' ').trim().toUpperCase();
         if (!countyNorm) return;
-        const dem = Number(r[`${contestType}_dem`] || 0);
-        const rep = Number(r[`${contestType}_rep`] || 0);
-        const total = Number(r[`${contestType}_total`] || 0);
+        const prevType = String(prevMeta.contestType || contestType).trim() || contestType;
+        const dem = Number(r[`${prevType}_dem`] ?? r.dem_votes ?? 0);
+        const rep = Number(r[`${prevType}_rep`] ?? r.rep_votes ?? 0);
+        const total = Number(r[`${prevType}_total`] ?? r.total_votes ?? 0);
         if (!prevCountyTotals[countyNorm]) prevCountyTotals[countyNorm] = { dem: 0, rep: 0, total: 0 };
         prevCountyTotals[countyNorm].dem += dem;
         prevCountyTotals[countyNorm].rep += rep;
         prevCountyTotals[countyNorm].total += total;
 
         if (includePrecinctMargins) {
-          const mPct = Number(r[`${contestType}_margin_pct`] || 0);
+          const mPct = Number(r[`${prevType}_margin_pct`] ?? r.margin_pct ?? 0);
           precinctNormVariantsLite(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
         }
       });
@@ -34046,18 +34282,21 @@ document.addEventListener('DOMContentLoaded', function() {
       if (modeledDef) {
         const node = await buildModeledBaselineDistrictSliceNode(scope, modeledDef, normalizeDistrictLinesYear(linesYear));
         const results = node?.general?.results || null;
-        if (results && Object.keys(results).length) return { year: modeledDef.baseYear, node };
+        if (results && Object.keys(results).length) {
+          return { year: modeledDef.baseYear, node, contestType: modeledDef.baseContestType || contestType };
+        }
         return null;
       }
       const candidates = getPriorContestYearsFromAvailableYears(
         contestType,
         y,
-        getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear)
+        getAvailableDistrictContestYearsForScopeType(scope, contestType, linesYear, y)
       );
       for (const cy of candidates) {
-        const node = await tryLoadDistrictSliceStrict(scope, contestType, cy, linesYear);
+        const priorType = resolveJudicialFamilyContestTypeForYear(contestType, y, cy, scope);
+        const node = await tryLoadDistrictSliceStrict(scope, priorType, cy, linesYear);
         const results = node?.general?.results || null;
-        if (results && Object.keys(results).length) return { year: cy, node };
+        if (results && Object.keys(results).length) return { year: cy, node, contestType: priorType };
       }
       return null;
     }
