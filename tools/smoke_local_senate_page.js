@@ -17,6 +17,7 @@ const overrideRealignedResidualFloor = process.env.MODEL_REALIGNED_RESIDUAL_FLOO
 const overrideRealignedDurableFloor = process.env.MODEL_REALIGNED_DURABLE_FLOOR;
 const overrideSuburbanDurableBoost = process.env.MODEL_SUBURBAN_DURABLE_BOOST;
 const overrideMetroPts = process.env.MODEL_METRO_PTS;
+const atlasPerfDebug = process.env.ATLAS_PERF_DEBUG === '1';
 const debugCounties = String(process.env.MODEL_DEBUG_COUNTIES || '')
   .split(',')
   .map((v) => v.trim().toUpperCase())
@@ -58,6 +59,10 @@ async function main() {
   try {
     await wait(1500);
     const page = await browser.newPage();
+    await page.addInitScript((enabled) => {
+      if (enabled) localStorage.setItem('atlasPerfDebug', '1');
+      else localStorage.removeItem('atlasPerfDebug');
+    }, atlasPerfDebug);
     page.setDefaultTimeout(240000);
     page.on('console', (msg) => console.log(`[page:${msg.type()}] ${msg.text()}`));
     page.on('pageerror', (err) => console.error('[pageerror]', err && err.stack ? err.stack : err));
@@ -114,11 +119,13 @@ async function main() {
         metroPts: overrideMetroPts ?? null
       });
     }
+    const modelSelectStartedAt = Date.now();
     await page.selectOption('#contestSelect', 'us_senate_model_2026');
     await page.waitForFunction(() => {
       const leadText = document.querySelector('.statewide-call')?.textContent || '';
       return /Whatley|Cooper|R\+|D\+/.test(leadText);
     }, { timeout: 240000 });
+    const countyModelReadyMs = Date.now() - modelSelectStartedAt;
 
     const result = await page.evaluate(async (countyDebugList) => {
       const pickStat = (label) => {
@@ -187,6 +194,10 @@ async function main() {
       };
     }, debugCounties);
 
+    result.timing = {
+      countyModelReadyMs,
+      fullModelReadyMs: Date.now() - modelSelectStartedAt
+    };
     console.log(JSON.stringify(result, null, 2));
   } finally {
     try { await browser.close(); } catch (_) {}

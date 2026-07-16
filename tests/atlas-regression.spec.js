@@ -546,16 +546,37 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         return acc;
       }, {});
 
+      const senateCountyRows = await loadCountyContestSlice('us_senate_model', 2026);
       const senateRows = await loadContestSlice('us_senate_model', 2026);
       const courtRows = await loadContestSlice('nc_supreme_court_model', 2026);
       const senateDistrictNode = await loadDistrictSlice('congressional', 'us_senate_model', 2026);
       const courtDistrictNode = await loadDistrictSlice('congressional', 'nc_supreme_court_model', 2026);
+      const senateCountyOfficial = getOfficialCountyTotalsFromRows(senateCountyRows) || {};
+      const senateOfficial = getOfficialCountyTotalsFromRows(senateRows) || {};
+      const hokeCountyOfficial = senateCountyOfficial.HOKE || null;
+      const hokeOfficial = senateOfficial.HOKE || null;
+      const hokeUnderlying = senateRows
+        .filter(row => String(row?.county || '').toUpperCase().startsWith('HOKE'))
+        .reduce((acc, row) => {
+          acc.dem += Number(row?.us_senate_model_dem || 0);
+          acc.rep += Number(row?.us_senate_model_rep || 0);
+          acc.total += Number(row?.us_senate_model_total || 0);
+          return acc;
+        }, { dem: 0, rep: 0, total: 0 });
+      const margin = (totals) => Number(totals?.total || totals?.total_votes || 0) > 0
+        ? ((Number(totals?.rep || totals?.rep_votes || 0) - Number(totals?.dem || totals?.dem_votes || 0)) / Number(totals?.total || totals?.total_votes || 0)) * 100
+        : 0;
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
         courtOptionText: options.nc_supreme_court_model_2026 || '',
         senateRows: senateRows.length,
+        senateCountyRows: senateCountyRows.length,
         courtRows: courtRows.length,
+        senateOfficialCount: Object.keys(senateOfficial).length,
+        hokeCountyOfficialMargin: margin(hokeCountyOfficial),
+        hokeOfficialMargin: margin(hokeOfficial),
+        hokeUnderlyingMargin: margin(hokeUnderlying),
         senateDemCandidate: String(senateRows[0]?.us_senate_model_dem_candidate || ''),
         senateRepCandidate: String(senateRows[0]?.us_senate_model_rep_candidate || ''),
         courtDemCandidate: String(courtRows[0]?.nc_supreme_court_model_dem_candidate || ''),
@@ -568,7 +589,13 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateOptionText).toBe('US Senate (2026) model');
     expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Associate Justice Seat 1 (2026) Model');
     expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
+    expect(modeledSnapshot.senateCountyRows).toBe(100);
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
+    expect(modeledSnapshot.senateOfficialCount).toBe(100);
+    expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(-5);
+    expect(modeledSnapshot.hokeOfficialMargin).toBeLessThan(-5);
+    expect(Math.abs(modeledSnapshot.hokeCountyOfficialMargin - modeledSnapshot.hokeOfficialMargin)).toBeLessThan(0.25);
+    expect(modeledSnapshot.hokeUnderlyingMargin).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
     expect(modeledSnapshot.senateRepCandidate).toBe('Michael Whatley');
     expect(modeledSnapshot.courtDemCandidate).toBe('Anita Earls');
