@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-15-9';
-    const APP_BUILD_ID = '2026-07-15-9';
+    const DATA_CACHE_BUSTER = '2026-07-15-10';
+    const APP_BUILD_ID = '2026-07-15-10';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11466,10 +11466,14 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineRecentWeight: 0.60,
         baselineSecondWeight: 0.25,
         baselineLongRunWeight: 0.15,
+        baselineLongRunMaxCycles: 2,
         baselineReliabilityMinVotes: 15000,
         baselineReliabilityMaxVotes: 110000,
         baselineReliabilityFloor: 0.41,
-        statewideRecenterStrength: 1.20,
+        statewideRecenterStrength: 0.96,
+        // Canonical county totals remove the old precinct-turnout aggregation bias. Preserve the
+        // calibrated statewide environment explicitly instead of relying on that accidental bias.
+        statewideTargetAdjustmentPts: -0.90,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         ruralGopOverperformanceWeight: 0.15,
         urbanDemElasticityWeight: 0.27,
@@ -12245,6 +12249,19 @@ document.addEventListener('DOMContentLoaded', function() {
         node.total += total;
         out.set(county, node);
       });
+      const officialCountyTotals = getOfficialCountyTotalsFromRows(rows);
+      if (officialCountyTotals) {
+        Object.entries(officialCountyTotals).forEach(([countyName, totals]) => {
+          const county = normalizeCountyToken(countyName);
+          if (!county) return;
+          out.set(county, {
+            dem: Number(totals?.dem_votes || 0),
+            rep: Number(totals?.rep_votes || 0),
+            other: Number(totals?.other_votes || 0),
+            total: Number(totals?.total_votes || 0)
+          });
+        });
+      }
       return out;
     }
 
@@ -12273,15 +12290,18 @@ document.addEventListener('DOMContentLoaded', function() {
       return acc;
     }
 
-    async function getModeledDerivedCountySlice(cache, inflight, contestType, year, label) {
+    async function getModeledDerivedCountySlice(cache, inflight, contestType, year, label, opts = null) {
       const ct = String(contestType || '').trim();
       const y = Number(year);
       if (!ct || !Number.isFinite(y)) return null;
-      const key = `${ct}_${y}`;
+      const preferCounty = !!opts?.preferCounty;
+      const key = `${ct}_${y}|${preferCounty ? 'county' : 'full'}`;
       if (cache.has(key)) return cache.get(key);
       if (inflight.has(key)) return inflight.get(key);
       const p = modeledPerf(label || `modeled.slice.${key}`, async () => {
-        const rows = await loadContestSlice(ct, y);
+        const rows = preferCounty
+          ? await loadCountyContestSlice(ct, y)
+          : await loadContestSlice(ct, y);
         const totalsByCounty = buildModeledCountyTotalsFromSliceRows(rows, ct);
         const signedByCounty = modeledCountySignedFromTotalsMap(totalsByCounty);
         const stateSignedFromRows = computeStatewideMarginPctFromSliceRows(rows, ct);
@@ -12324,14 +12344,17 @@ document.addEventListener('DOMContentLoaded', function() {
           const anchorYear = Number(modeledDef?.secondaryBaseYear);
           // Preload only county-mode ingredients; do not compute district-mode modeled slices here.
           if (baseType && Number.isFinite(baseYear)) {
-            await getModeledDerivedCountySlice(modeledBaseCountySliceCache, modeledBaseCountySliceInflight, baseType, baseYear, 'modeled.preload.base');
+            await getModeledDerivedCountySlice(modeledBaseCountySliceCache, modeledBaseCountySliceInflight, baseType, baseYear, 'modeled.preload.base', { preferCounty: true });
           }
           if (climateType && Number.isFinite(climateYear)) {
-            await getModeledDerivedCountySlice(modeledClimateCountySliceCache, modeledClimateCountySliceInflight, climateType, climateYear, 'modeled.preload.climate');
+            await getModeledDerivedCountySlice(modeledClimateCountySliceCache, modeledClimateCountySliceInflight, climateType, climateYear, 'modeled.preload.climate', { preferCounty: true });
           }
           if (anchorType && Number.isFinite(anchorYear)) {
-            await getModeledDerivedCountySlice(modeledSenateAnchorCountySliceCache, modeledSenateAnchorCountySliceInflight, anchorType, anchorYear, 'modeled.preload.anchor');
+            await getModeledDerivedCountySlice(modeledSenateAnchorCountySliceCache, modeledSenateAnchorCountySliceInflight, anchorType, anchorYear, 'modeled.preload.anchor', { preferCounty: true });
           }
+          // Finish the compact 100-county model while idle. Selecting the county layer can then
+          // reuse the completed promise/cache; full precinct synthesis remains lazy.
+          await loadCountyContestSlice('us_senate_model', 2026);
         } catch (_) {}
       };
       const kickoff = () => run().catch(() => {});
@@ -16049,11 +16072,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return row;
       }
 
-      async function buildModeledContestSliceRows(modeledDef) {
+      async function buildModeledContestSliceRows(modeledDef, opts = null) {
         const baseContestType = String(modeledDef?.baseContestType || '').trim();
         const climateContestType = String(modeledDef?.climateContestType || '').trim();
         const baseYear = Number(modeledDef?.baseYear);
         const climateYear = Number(modeledDef?.climateYear);
+        const preferCountyInputs = !!opts?.preferCountyInputs;
+        const derivedSliceOptions = preferCountyInputs ? { preferCounty: true } : null;
+        const loadModelInputSlice = (contestType, year) => preferCountyInputs
+          ? loadCountyContestSlice(contestType, year)
+          : loadContestSlice(contestType, year);
 
         // Performance change: split raw slice load from modeled build.
         // Derived county totals/signed maps are cached once per session per contest/year, and reused across rebuilds.
@@ -16062,19 +16090,25 @@ document.addEventListener('DOMContentLoaded', function() {
           modeledBaseCountySliceInflight,
           baseContestType,
           baseYear,
-          'modeled.slice.base'
+          'modeled.slice.base',
+          derivedSliceOptions
         );
         const climateSlice = await getModeledDerivedCountySlice(
           modeledClimateCountySliceCache,
           modeledClimateCountySliceInflight,
           climateContestType,
           climateYear,
-          'modeled.slice.climate'
+          'modeled.slice.climate',
+          derivedSliceOptions
         );
         const baseRows = baseSlice?.rows || [];
         const climateRows = climateSlice?.rows || [];
-        const baseSignedRaw = Number(baseSlice?.stateSignedFromRows);
-        const climateSigned = Number(climateSlice?.stateSignedFromRows);
+        const baseSignedRaw = Number.isFinite(Number(baseSlice?.stateSignedFromTotals))
+          ? Number(baseSlice.stateSignedFromTotals)
+          : Number(baseSlice?.stateSignedFromRows);
+        const climateSigned = Number.isFinite(Number(climateSlice?.stateSignedFromTotals))
+          ? Number(climateSlice.stateSignedFromTotals)
+          : Number(climateSlice?.stateSignedFromRows);
         const climateSwingPct = baseSignedRaw - climateSigned; // fallback when blendWeight isn't enabled
 
         const blendWeight = Number(modeledDef?.blendWeight);
@@ -16100,7 +16134,8 @@ document.addEventListener('DOMContentLoaded', function() {
               modeledSenateAnchorCountySliceInflight,
               secondaryBaseContestType,
               secondaryBaseYear,
-              'modeled.slice.senate_anchor'
+              'modeled.slice.senate_anchor',
+              derivedSliceOptions
             );
             secondaryBaseRows = secondarySlice?.rows || null;
           } catch (_) {
@@ -16138,6 +16173,19 @@ document.addEventListener('DOMContentLoaded', function() {
             node.total += total;
             out.set(county, node);
           });
+          const officialCountyTotals = getOfficialCountyTotalsFromRows(rows);
+          if (officialCountyTotals) {
+            Object.entries(officialCountyTotals).forEach(([countyName, totals]) => {
+              const county = normalizeCountyToken(countyName);
+              if (!county) return;
+              out.set(county, {
+                dem: Number(totals?.dem_votes || 0),
+                rep: Number(totals?.rep_votes || 0),
+                other: Number(totals?.other_votes || 0),
+                total: Number(totals?.total_votes || 0)
+              });
+            });
+          }
           return out;
         };
 
@@ -16261,7 +16309,8 @@ document.addEventListener('DOMContentLoaded', function() {
               modeledSenateAnchorCountySliceInflight,
               secondaryBaseContestType,
               secondaryBaseYear,
-              'modeled.slice.senate_anchor'
+              'modeled.slice.senate_anchor',
+              derivedSliceOptions
             );
             const secondaryCountyTotals = secondarySlice?.totalsByCounty || buildCountyTotals(secondaryBaseRows, secondaryBaseContestType);
             secondaryBaseSignedByCounty = secondarySlice?.signedByCounty || getCountySignedFromTotalsMap(secondaryCountyTotals);
@@ -16327,11 +16376,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 modeledAuxCountySliceInflight,
                 aType,
                 aYear,
-                'modeled.slice.partisan_a'
+                'modeled.slice.partisan_a',
+                derivedSliceOptions
               );
               mapA = sliceA?.signedByCounty || null;
               if (!mapA) {
-                const rowsA = await loadContestSlice(aType, aYear);
+                const rowsA = await loadModelInputSlice(aType, aYear);
                 mapA = getCountySignedFromTotalsMap(buildCountyTotals(rowsA, aType));
               }
             }
@@ -16341,11 +16391,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 modeledAuxCountySliceInflight,
                 bType,
                 bYear,
-                'modeled.slice.partisan_b'
+                'modeled.slice.partisan_b',
+                derivedSliceOptions
               );
               mapB = sliceB?.signedByCounty || null;
               if (!mapB) {
-                const rowsB = await loadContestSlice(bType, bYear);
+                const rowsB = await loadModelInputSlice(bType, bYear);
                 mapB = getCountySignedFromTotalsMap(buildCountyTotals(rowsB, bType));
               }
             }
@@ -16456,6 +16507,11 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const comparableYears = pickComparableYears(climateContestType, modeledDef?.climateYear);
+        const longRunMaxCyclesRaw = Number(modeledDef?.baselineLongRunMaxCycles);
+        const longRunMaxCycles = Number.isFinite(longRunMaxCyclesRaw)
+          ? Math.max(1, Math.min(4, Math.round(longRunMaxCyclesRaw)))
+          : 4;
+        const baselineLongRunYears = (comparableYears.longRunYears || []).slice(-longRunMaxCycles);
         const recentWeightRaw = Number(modeledDef?.baselineRecentWeight);
         const secondWeightRaw = Number(modeledDef?.baselineSecondWeight);
         const longWeightRaw = Number(modeledDef?.baselineLongRunWeight);
@@ -16471,9 +16527,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const historicalCountySignedByYear = new Map();
         const historicalStateSignedByYear = new Map();
-        const yearsToLoad = [comparableYears.recent, comparableYears.second, ...(comparableYears.longRunYears || [])]
+        const yearsToLoad = [comparableYears.recent, comparableYears.second, ...baselineLongRunYears]
           .filter(v => Number.isFinite(v));
-        for (const y of yearsToLoad) {
+        const historicalSlices = await Promise.all(yearsToLoad.map(async (y) => {
           try {
             const useClimateDirect = (Number(y) === Number(climateYear));
             const slice = useClimateDirect
@@ -16483,27 +16539,37 @@ document.addEventListener('DOMContentLoaded', function() {
                   modeledAuxCountySliceInflight,
                   climateContestType,
                   y,
-                  'modeled.slice.history'
+                  'modeled.slice.history',
+                  derivedSliceOptions
                 );
             if (slice?.signedByCounty) {
-              historicalCountySignedByYear.set(Number(y), slice.signedByCounty);
-              historicalStateSignedByYear.set(
-                Number(y),
-                Number.isFinite(Number(slice?.stateSignedFromTotals)) ? Number(slice.stateSignedFromTotals) : 0
-              );
-            } else {
-              const rows = useClimateDirect ? climateRows : await loadContestSlice(climateContestType, y);
-              const totals = buildCountyTotals(rows, climateContestType);
-              historicalCountySignedByYear.set(Number(y), getCountySignedFromTotalsMap(totals));
-              historicalStateSignedByYear.set(Number(y), getStateSignedFromTotalsMap(totals));
+              return {
+                year: Number(y),
+                signedByCounty: slice.signedByCounty,
+                stateSigned: Number.isFinite(Number(slice?.stateSignedFromTotals)) ? Number(slice.stateSignedFromTotals) : 0
+              };
             }
-          } catch (_) {}
-        }
+            const rows = useClimateDirect ? climateRows : await loadModelInputSlice(climateContestType, y);
+            const totals = buildCountyTotals(rows, climateContestType);
+            return {
+              year: Number(y),
+              signedByCounty: getCountySignedFromTotalsMap(totals),
+              stateSigned: getStateSignedFromTotalsMap(totals)
+            };
+          } catch (_) {
+            return null;
+          }
+        }));
+        historicalSlices.forEach((slice) => {
+          if (!slice || !Number.isFinite(slice.year) || !slice.signedByCounty) return;
+          historicalCountySignedByYear.set(slice.year, slice.signedByCounty);
+          historicalStateSignedByYear.set(slice.year, Number(slice.stateSigned || 0));
+        });
 
         const getCountySeriesSigned = (county) => {
           const recent = Number(historicalCountySignedByYear.get(Number(comparableYears.recent))?.get(county));
           const second = Number(historicalCountySignedByYear.get(Number(comparableYears.second))?.get(county));
-          const longVals = (comparableYears.longRunYears || [])
+          const longVals = baselineLongRunYears
             .map(y => Number(historicalCountySignedByYear.get(Number(y))?.get(county)))
             .filter(v => Number.isFinite(v));
           const long = longVals.length ? (longVals.reduce((acc, v) => acc + v, 0) / longVals.length) : NaN;
@@ -16513,7 +16579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const getStateSeriesSigned = () => {
           const recent = Number(historicalStateSignedByYear.get(Number(comparableYears.recent)));
           const second = Number(historicalStateSignedByYear.get(Number(comparableYears.second)));
-          const longVals = (comparableYears.longRunYears || [])
+          const longVals = baselineLongRunYears
             .map(y => Number(historicalStateSignedByYear.get(Number(y))))
             .filter(v => Number.isFinite(v));
           const long = longVals.length ? (longVals.reduce((acc, v) => acc + v, 0) / longVals.length) : NaN;
@@ -16540,12 +16606,15 @@ document.addEventListener('DOMContentLoaded', function() {
           return Math.max(-80, Math.min(80, v));
         };
         const statewideTargetSigned = (() => {
+          const targetAdjustment = Number.isFinite(Number(modeledDef?.statewideTargetAdjustmentPts))
+            ? Number(modeledDef.statewideTargetAdjustmentPts)
+            : 0;
           if (useBlend) {
             // Keep the county model anchored to a deterministic statewide target.
             const baseAnchor = isSenateDeviationModel ? senateAnchorStateSigned : baseSignedRaw;
-            return clampSignedMargin((blendWeight * baseAnchor) + ((1 - blendWeight) * statewideWeightedBaselineSigned));
+            return clampSignedMargin((blendWeight * baseAnchor) + ((1 - blendWeight) * statewideWeightedBaselineSigned) + targetAdjustment);
           }
-          return clampSignedMargin(climateSigned);
+          return clampSignedMargin(climateSigned + targetAdjustment);
         })();
 
         const getPresidentialBaselineMargin = (county) => {
@@ -16577,7 +16646,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           if (isSenateDeviationModel) {
             const devYear = pickClosestPresidentialYear(modeledDef?.baseYear);
-            const presRows = await loadContestSlice('president', devYear);
+            const presRows = await loadModelInputSlice('president', devYear);
             const presTotals = buildCountyTotals(presRows, 'president');
             const map = new Map();
             presTotals.forEach((totals, county) => {
@@ -16612,7 +16681,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const cached = historicalCountySignedByYear.get(y);
             if (cached && cached.size) return cached;
             try {
-              const presRows = await loadContestSlice('president', y);
+              const presRows = await loadModelInputSlice('president', y);
               const totals = buildCountyTotals(presRows, 'president');
               const map = getCountySignedFromTotalsMap(totals);
               historicalCountySignedByYear.set(y, map);
@@ -16632,7 +16701,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!Number.isFinite(year)) return null;
             let senateRows = null;
             try {
-              senateRows = (Number(year) === Number(modeledDef?.baseYear) && baseContestType === 'us_senate') ? baseRows : await loadContestSlice('us_senate', year);
+              senateRows = (Number(year) === Number(modeledDef?.baseYear) && baseContestType === 'us_senate') ? baseRows : await loadModelInputSlice('us_senate', year);
             } catch (_) {
               senateRows = null;
             }
@@ -16770,6 +16839,19 @@ document.addEventListener('DOMContentLoaded', function() {
               node.total += total;
               out.set(county, node);
             });
+            const officialCountyTotals = getOfficialCountyTotalsFromRows(rows);
+            if (officialCountyTotals) {
+              Object.entries(officialCountyTotals).forEach(([countyName, totals]) => {
+                const county = normalizeCountyToken(countyName);
+                if (!county) return;
+                out.set(county, {
+                  dem: Number(totals?.dem_votes || 0),
+                  rep: Number(totals?.rep_votes || 0),
+                  other: Number(totals?.other_votes || 0),
+                  total: Number(totals?.total_votes || 0)
+                });
+              });
+            }
             return out;
           };
 
@@ -16839,19 +16921,23 @@ document.addEventListener('DOMContentLoaded', function() {
               : 0.45;
 
             const deltasByCounty = new Map();
-            for (const yRaw of years) {
+            const historicalPairs = await Promise.all(years.map(async (yRaw) => {
               const y = Number(yRaw);
-              if (!Number.isFinite(y)) continue;
-              let bonusRows = null;
-              let baselineRows = null;
+              if (!Number.isFinite(y)) return null;
               try {
-                bonusRows = await loadContestSlice(bonusContestType, y);
-                baselineRows = await loadContestSlice(baselineContestType, y);
+                const [bonusRows, baselineRows] = await Promise.all([
+                  loadModelInputSlice(bonusContestType, y),
+                  loadModelInputSlice(baselineContestType, y)
+                ]);
+                return { y, bonusRows, baselineRows };
               } catch (_) {
-                bonusRows = null;
-                baselineRows = null;
+                return null;
               }
-              if (!bonusRows || !baselineRows) continue;
+            }));
+            historicalPairs.forEach((pair) => {
+              if (!pair) return;
+              const { y, bonusRows, baselineRows } = pair;
+              if (!bonusRows || !baselineRows) return;
 
               const bonusAgg = buildCountyTotalsCompact(bonusRows, bonusContestType);
               const baselineAgg = buildCountyTotalsCompact(baselineRows, baselineContestType);
@@ -16880,7 +16966,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 entryList.push({ delta, turnoutWeight, y });
                 deltasByCounty.set(county, entryList);
               });
-            }
+            });
 
             const out = new Map();
             const outDurable = new Map();
@@ -17150,7 +17236,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })() : null;
         if (useBaseMix) {
           try {
-            const mixRows = await loadContestSlice(modeledDef.baseMixContestType, modeledDef.baseMixYear);
+            const mixRows = await loadModelInputSlice(modeledDef.baseMixContestType, modeledDef.baseMixYear);
             const mixCountyTotals = buildCountyTotals(mixRows, modeledDef.baseMixContestType);
             mixCountyTotals.forEach((totals, county) => {
               const signed = signedMarginPctFromVotes(
@@ -17171,7 +17257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const turnoutFactor = Number(modeledDef?.turnoutFactor);
         if (turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0) {
           try {
-            const turnoutRows = await loadContestSlice(turnoutContestType, turnoutYear);
+            const turnoutRows = await loadModelInputSlice(turnoutContestType, turnoutYear);
             const map = new Map();
             const byCounty = new Map();
             let turnoutStateTotal = 0;
@@ -18631,6 +18717,47 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
 
+        // County-facing modeled results must follow the calibrated county target, not a second
+        // aggregation of turnout-reweighted precinct rows. Keep those precinct rows unchanged for
+        // precinct mode and attach an authoritative county-total sidecar for county mode.
+        const modeledCountyRowTotals = new Map();
+        modeledOut.forEach((row) => {
+          const county = countyFromRowKey(row?.county || '');
+          if (!county) return;
+          const node = modeledCountyRowTotals.get(county) || { dem: 0, rep: 0, other: 0, total: 0 };
+          node.dem += Number(row?.[`${modeledType}_dem`] || 0);
+          node.rep += Number(row?.[`${modeledType}_rep`] || 0);
+          node.other += Number(row?.[`${modeledType}_other`] || 0);
+          node.total += Number(row?.[`${modeledType}_total`] || 0);
+          modeledCountyRowTotals.set(county, node);
+        });
+
+        const modeledCountyTotals = {};
+        modeledCountyRowTotals.forEach((rowTotals, county) => {
+          const modelMeta = countyModelByCounty?.get(county) || null;
+          const desiredSigned = Number(modelMeta?.desiredSigned);
+          const total = Math.max(0, Math.round(Number(rowTotals?.total || 0)));
+          const other = Math.max(0, Math.min(total, Math.round(Number(rowTotals?.other || 0))));
+          const majorPartyTotal = Math.max(0, total - other);
+          let dem = Math.max(0, Math.round(Number(rowTotals?.dem || 0)));
+          let rep = Math.max(0, majorPartyTotal - dem);
+          if (Number.isFinite(desiredSigned) && total > 0) {
+            const desiredVoteDifference = (desiredSigned / 100) * total;
+            rep = Math.max(0, Math.min(majorPartyTotal, Math.round((majorPartyTotal + desiredVoteDifference) / 2)));
+            dem = majorPartyTotal - rep;
+          }
+          modeledCountyTotals[county] = {
+            county,
+            dem_votes: dem,
+            rep_votes: rep,
+            other_votes: other,
+            total_votes: total,
+            dem_candidate: String(modeledDef?.demCandidate || ''),
+            rep_candidate: String(modeledDef?.repCandidate || '')
+          };
+        });
+        attachOfficialCountyTotalsToRows(modeledOut, { county_totals: modeledCountyTotals });
+
         return modeledOut;
       }
 
@@ -19053,12 +19180,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       async function loadCountyContestSlice(contestType, year) {
-        if (getModeledContestDefinition(contestType, year)) return loadContestSlice(contestType, year);
-        const key = `${contestType}_${year}`;
+        const modeledDef = getModeledContestDefinition(contestType, year);
+        const modeledSignature = modeledDef ? getModeledDefSignature(modeledDef) : '';
+        const key = modeledDef && modeledSignature
+          ? `modeled:${modeledSignature}`
+          : `${contestType}_${year}`;
         if (countyContestSliceCache.has(key)) return countyContestSliceCache.get(key);
         if (countyContestSliceInflight.has(key)) return countyContestSliceInflight.get(key);
 
         const p = atlasPerf(`slice.county:${key}`, async () => {
+          if (modeledDef) {
+            const rows = await buildModeledContestSliceRows(modeledDef, { preferCountyInputs: true });
+            if (!rows?.length) throw new Error('empty modeled county slice');
+            countyContestSliceCache.set(key, rows);
+            return rows;
+          }
           const manifestEntry = (contestManifest || []).find(e => (
             e && e.contest_type === contestType && Number(e.year) === Number(year) && !e.scope
           )) || null;
@@ -33130,7 +33266,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const key = `${contestType}_${year}`;
           if (seen.has(key)) return;
           seen.add(key);
-          loadContestSlice(contestType, year).catch(() => {});
+          loadCountyContestSlice(contestType, year).catch(() => {});
           // Candidate label fallback lookups are cheap, but caching them here helps trend/hover panels later.
           try { getContestCandidates(contestType, year).catch(() => {}); } catch (_) {}
         };
