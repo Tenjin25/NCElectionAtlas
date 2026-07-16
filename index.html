@@ -10348,8 +10348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-24';
-    const APP_BUILD_ID = '2026-07-16-24';
+    const DATA_CACHE_BUSTER = '2026-07-16-25';
+    const APP_BUILD_ID = '2026-07-16-25';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -29938,7 +29938,8 @@ document.addEventListener('DOMContentLoaded', function() {
           ? normalizeCandidateLabel(demName, 'Democratic')
           : 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
-      // Prefer full first+last next to the hover lead; keep Uncontested / Even specials from callers.
+      // Clamped full first+last beside the hover lead (same idea as #focus-winner).
+      // Panel top #vote-lead stays surname-only via marginCall.text elsewhere.
       const winnerLineRaw = (winnerLineText || '').toString().trim();
       const winnerDisplayText = (/^uncontested\b/i.test(winnerLineRaw) || /^even\b/i.test(winnerLineRaw))
         ? winnerLineRaw
