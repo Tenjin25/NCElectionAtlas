@@ -28,6 +28,13 @@ const YEAR_CONFIG = {
     bridge: 'data/crosswalks/precinct_vtd00_to_onemap_2025_vap.csv',
     source: 'vtd00_to_onemap2025_vap_bridge',
   },
+  2006: {
+    // No dedicated 2006 VAP bridge; OE keys match the 2000/2004 style and pass through
+    // like other early statewide slices when unmapped.
+    csv: 'data/2006/20061107__nc__general__precinct.csv',
+    bridge: 'data/crosswalks/precinct_vtd00_to_onemap_2025_vap.csv',
+    source: 'vtd00_to_onemap2025_vap_bridge',
+  },
   2008: {
     csv: 'data/2008/20081104__nc__general__precinct.csv',
     bridge: 'data/crosswalks/precinct_vtd10_to_onemap_2025_vap.csv',
@@ -94,17 +101,108 @@ const CONTEST_TYPE_TO_OFFICE_ALIASES = {
   superintendent: ['NC SUPERINTENDENT OF PUBLIC INSTRUCTION', 'SUPERINTENDENT OF PUBLIC INSTRUCTION'],
   treasurer: ['NC TREASURER', 'TREASURER'],
   us_senate: ['US SENATE', 'U.S. SENATE', 'UNITED STATES SENATE'],
-  nc_supreme_court_chief_justice_seat_01: ['NC SUPREME COURT CHIEF JUSTICE SEAT 01', 'NC SUPREME COURT CHIEF JUSTICE (PARKER)', 'CHIEF JUSTICE NC SUPREME COURT'],
-  nc_supreme_court_associate_justice_seat_01: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 1', 'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 01'],
-  nc_supreme_court_associate_justice_seat_02: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 02'],
-  nc_supreme_court_associate_justice_seat_03: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 03'],
-  nc_supreme_court_associate_justice_seat_04: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 04'],
-  nc_supreme_court_associate_justice_seat_05: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 05'],
-  nc_supreme_court_associate_justice_seat_06: ['NC SUPREME COURT ASSOCIATE JUSTICE SEAT 06'],
+  nc_supreme_court_chief_justice_seat_01: [
+    'NC SUPREME COURT CHIEF JUSTICE SEAT 01',
+    'NC SUPREME COURT CHIEF JUSTICE (PARKER)',
+    'SUPREME COURT CHIEF JUSTICE',
+    'CHIEF JUSTICE NC SUPREME COURT',
+  ],
+  nc_supreme_court_associate_justice_seat_01: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 1',
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 01',
+    'SUPREME COURT (BUTTERFIELD)',
+  ],
+  nc_supreme_court_associate_justice_seat_02: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 02',
+    'SUPREME COURT (ORR)',
+    'SUPREME COURT ASSOCIATE JUSTICE (ORR)',
+  ],
+  nc_supreme_court_associate_justice_seat_03: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 03',
+    'SUPREME COURT ASSOCIATE JUSTICE (WAINWRIGHT)',
+  ],
+  nc_supreme_court_associate_justice_seat_04: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 04',
+    'SUPREME COURT ASSOCIATE JUSTICE (PARKER)',
+    'SUPREME COURT ASSOCIATE JUSTICE (TIMMONS-GOODSON)',
+  ],
+  nc_supreme_court_associate_justice_seat_05: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 05',
+    'SUPREME COURT ASSOCIATE JUSTICE (MARTIN)',
+  ],
+  nc_supreme_court_associate_justice_seat_06: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE SEAT 06',
+    'ASSOC JUSTICE NC SUPREME COURT',
+  ],
+  nc_court_of_appeals_judge_seat_01: [
+    'NC COURT OF APPEALS JUDGE SEAT 1',
+    'NC COURT OF APPEALS JUDGE SEAT 01',
+    'CT OF APPEALS JUDGE (WYNN)',
+  ],
+  nc_court_of_appeals_judge_seat_02: [
+    'NC COURT OF APPEALS JUDGE SEAT 2',
+    'NC COURT OF APPEALS JUDGE SEAT 02',
+    'CT OF APPEALS JUDGE (BRYANT)',
+  ],
+  nc_court_of_appeals_judge_seat_03: [
+    'NC COURT OF APPEALS JUDGE SEAT 3',
+    'NC COURT OF APPEALS JUDGE SEAT 03',
+    'CT OF APPEALS JUDGE (WALKER)',
+  ],
+  nc_court_of_appeals_judge_seat_04: [
+    'NC COURT OF APPEALS JUDGE SEAT 04',
+    'COURT OF APPEALS JUDGE (MCGEE)',
+  ],
+  nc_court_of_appeals_judge_seat_05: [
+    'NC COURT OF APPEALS JUDGE SEAT 05',
+    'COURT OF APPEALS JUDGE (BRYANT)',
+  ],
+  nc_court_of_appeals_judge_seat_06: [
+    'NC COURT OF APPEALS JUDGE SEAT 06',
+    'COURT OF APPEALS JUDGE (THORNBURG)',
+  ],
+  nc_court_of_appeals_judge_seat_07: [
+    'NC COURT OF APPEALS JUDGE SEAT 07',
+    'CT OF APPEALS JUDGE (HORTON)',
+  ],
+  nc_court_of_appeals_judge_seat_08: [
+    'NC COURT OF APPEALS JUDGE SEAT 08',
+    'COURT OF APPEALS JUDGE (HUNTER)',
+  ],
+  nc_court_of_appeals_judge_seat_09: [
+    'NC COURT OF APPEALS JUDGE SEAT 09',
+    'COURT OF APPEALS JUDGE (STEPHENS)',
+  ],
+  nc_court_of_appeals_judge_seat_10: [
+    'NC COURT OF APPEALS JUDGE SEAT 10',
+    'CT OF APPEALS JUDGE (MARTIN)',
+  ],
+  nc_court_of_appeals_judge_seat_11: [
+    'NC COURT OF APPEALS JUDGE SEAT 11',
+    'CT OF APPEALS JUDGE (LEWIS)',
+  ],
+  nc_court_of_appeals_judge_seat_12: [
+    'NC COURT OF APPEALS JUDGE SEAT 12',
+    'CT OF APPEALS JUDGE (CAMPBELL)',
+  ],
+  nc_court_of_appeals_judge_seat_13: [
+    'NC COURT OF APPEALS JUDGE SEAT 13',
+    'CT OF APPEALS JUDGE (JOHN)',
+  ],
+  nc_court_of_appeals_judge_seat_14: [
+    'NC COURT OF APPEALS JUDGE SEAT 14',
+    'CT OF APPEALS JUDGE (BIGGS)',
+  ],
+  nc_court_of_appeals_judge_seat_15: [
+    'NC COURT OF APPEALS JUDGE SEAT 15',
+    'CT OF APPEALS JUDGE (THOMAS)',
+  ],
+  // Existing named-seat slices (pre-2018 files); keep aliases for rebuild compatibility.
   nc_supreme_court_associate_justice_edmunds_seat: [
     'NC SUPREME COURT ASSOCIATE JUSTICE',
     'SUPREME COURT ASSOCIATE JUSTICE (EDMUNDS SEAT)',
     'NC SUPREME COURT ASSOCIATE JUSTICE - EDMUNDS SEAT',
+    'ASSOC JUSTICE NC SUPREME COURT',
   ],
   nc_supreme_court_associate_justice_brady_seat: [
     'SUPREME COURT ASSOCIATE JUSTICE - BRADY SEAT',
@@ -115,23 +213,38 @@ const CONTEST_TYPE_TO_OFFICE_ALIASES = {
   ],
   nc_supreme_court_associate_justice_beasley_seat: ['NC SUPREME COURT ASSOCIATE JUSTICE (BEASLEY)'],
   nc_supreme_court_associate_justice_hudson_seat: ['NC SUPREME COURT ASSOCIATE JUSTICE (HUDSON)'],
-  nc_supreme_court_associate_justice_martin_seat: ['NC SUPREME COURT ASSOCIATE JUSTICE (MARTIN)'],
-  nc_supreme_court_chief_justice_parker_seat: ['NC SUPREME COURT CHIEF JUSTICE (PARKER)'],
+  nc_supreme_court_associate_justice_martin_seat: [
+    'NC SUPREME COURT ASSOCIATE JUSTICE (MARTIN)',
+    'SUPREME COURT ASSOCIATE JUSTICE (MARTIN)',
+  ],
+  nc_supreme_court_chief_justice_parker_seat: [
+    'NC SUPREME COURT CHIEF JUSTICE (PARKER)',
+    'SUPREME COURT CHIEF JUSTICE',
+  ],
   nc_court_of_appeals_judge_dietz_seat: ['NC COURT OF APPEALS JUDGE (DIETZ)'],
   nc_court_of_appeals_judge_geer_seat: [
     'NC COURT OF APPEALS JUDGE (GEER)',
     'COURT OF APPEALS JUDGE - GEER SEAT',
   ],
-  nc_court_of_appeals_judge_hunter_seat: ['NC COURT OF APPEALS JUDGE (HUNTER)'],
+  nc_court_of_appeals_judge_hunter_seat: [
+    'NC COURT OF APPEALS JUDGE (HUNTER)',
+    'COURT OF APPEALS JUDGE (HUNTER)',
+  ],
   nc_court_of_appeals_judge_stephens_seat: [
     'NC COURT OF APPEALS JUDGE (STEPHENS)',
     'COURT OF APPEALS JUDGE (STEPHENS SEAT)',
   ],
   nc_court_of_appeals_judge_zachary_seat: ['NC COURT OF APPEALS JUDGE (ZACHARY)'],
-  nc_court_of_appeals_judge_calabria_seat: ['COURT OF APPEALS JUDGE - CALABRIA SEAT'],
+  nc_court_of_appeals_judge_calabria_seat: [
+    'COURT OF APPEALS JUDGE - CALABRIA SEAT',
+    'CT OF APPEALS JUDGE (BRYANT)',
+  ],
   nc_court_of_appeals_judge_arrowood_seat: ['COURT OF APPEALS JUDGE (ARROWOOD SEAT)'],
   nc_court_of_appeals_judge_mccullough_seat: ['COURT OF APPEALS JUDGE (MCCULLOUGH SEAT)'],
-  nc_court_of_appeals_judge_wynn_seat: ['COURT OF APPEALS JUDGE (WYNN SEAT)'],
+  nc_court_of_appeals_judge_wynn_seat: [
+    'COURT OF APPEALS JUDGE (WYNN SEAT)',
+    'CT OF APPEALS JUDGE (WYNN)',
+  ],
   nc_court_of_appeals_judge_bryant_seat: [
     'NC COURT OF APPEALS JUDGE - BRYANT SEAT',
     'COURT OF APPEALS JUDGE (BRYANT)',
@@ -143,21 +256,6 @@ const CONTEST_TYPE_TO_OFFICE_ALIASES = {
   nc_court_of_appeals_judge_thigpen_seat: ['NC COURT OF APPEALS JUDGE - THIGPEN SEAT'],
   nc_court_of_appeals_judge_davis_seat: ['NC COURT OF APPEALS JUDGE (DAVIS)'],
   nc_court_of_appeals_judge_martin_seat: ['NC COURT OF APPEALS JUDGE (MARTIN)'],
-  nc_court_of_appeals_judge_seat_01: ['NC COURT OF APPEALS JUDGE SEAT 1', 'NC COURT OF APPEALS JUDGE SEAT 01'],
-  nc_court_of_appeals_judge_seat_02: ['NC COURT OF APPEALS JUDGE SEAT 2', 'NC COURT OF APPEALS JUDGE SEAT 02'],
-  nc_court_of_appeals_judge_seat_03: ['NC COURT OF APPEALS JUDGE SEAT 3', 'NC COURT OF APPEALS JUDGE SEAT 03'],
-  nc_court_of_appeals_judge_seat_04: ['NC COURT OF APPEALS JUDGE SEAT 04'],
-  nc_court_of_appeals_judge_seat_05: ['NC COURT OF APPEALS JUDGE SEAT 05'],
-  nc_court_of_appeals_judge_seat_06: ['NC COURT OF APPEALS JUDGE SEAT 06'],
-  nc_court_of_appeals_judge_seat_07: ['NC COURT OF APPEALS JUDGE SEAT 07'],
-  nc_court_of_appeals_judge_seat_08: ['NC COURT OF APPEALS JUDGE SEAT 08'],
-  nc_court_of_appeals_judge_seat_09: ['NC COURT OF APPEALS JUDGE SEAT 09'],
-  nc_court_of_appeals_judge_seat_10: ['NC COURT OF APPEALS JUDGE SEAT 10'],
-  nc_court_of_appeals_judge_seat_11: ['NC COURT OF APPEALS JUDGE SEAT 11'],
-  nc_court_of_appeals_judge_seat_12: ['NC COURT OF APPEALS JUDGE SEAT 12'],
-  nc_court_of_appeals_judge_seat_13: ['NC COURT OF APPEALS JUDGE SEAT 13'],
-  nc_court_of_appeals_judge_seat_14: ['NC COURT OF APPEALS JUDGE SEAT 14'],
-  nc_court_of_appeals_judge_seat_15: ['NC COURT OF APPEALS JUDGE SEAT 15'],
 };
 
 // Back-compat single-string map used by older call sites / docs.
@@ -709,4 +807,14 @@ function main() {
   }, null, 2));
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  YEAR_CONFIG,
+  CONTEST_TYPE_TO_OFFICE_ALIASES,
+  rebuildYear,
+  parseArgs,
+  updateManifest,
+};
