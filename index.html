@@ -7226,7 +7226,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
     margin-bottom: 14px;
     padding: 10px 12px;
@@ -7238,24 +7238,27 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .vote-total,
   .vote-lead {
     min-width: 0;
-    max-width: 100%;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.02em;
     line-height: 1.25;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
   }
 
   .vote-total {
     color: #0f172a;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .vote-lead {
     color: #475569;
+    flex: 0 1 auto;
     text-align: right;
     margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .vote-lead[data-party="dem"] { color: #1d4ed8; }
