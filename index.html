@@ -10252,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-6';
-    const APP_BUILD_ID = '2026-07-16-6';
+    const DATA_CACHE_BUSTER = '2026-07-16-10';
+    const APP_BUILD_ID = '2026-07-16-10';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11475,8 +11475,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Retune so county official totals stay near Whatley +1.6 (aligned with district layers).
         statewideTargetAdjustmentPts: 2.85,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        ruralGopOverperformanceWeight: 0.15,
-        urbanDemElasticityWeight: 0.27,
+        ruralGopOverperformanceWeight: 0.09,
+        urbanDemElasticityWeight: 0.38,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
@@ -11576,15 +11576,15 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusRealignedFormerDemFederalPersonalCapPts: 0.26,
         candidateBonusRealignedFormerDemFederalResidualFloor: 0.34,
         candidateBonusRepeatableCrossoverBoost: 1.14,
-        candidateBonusSuburbanDurableBoost: 1.12,
+        candidateBonusSuburbanDurableBoost: 1.20,
         candidateBonusFederalizationBrakeMargin: 22,
         candidateBonusFederalizationDeepRedMargin: 34,
         candidateBonusFederalizationFloor: 0.15,
         candidateBonusDeepRedCapPts: 0.32,
         candidateBonusMaxPts: 0.78,
         candidateBonusBasePts: 0.25,
-        candidateBonusUrbanPts: 0.15,
-        candidateBonusMetroPts: 0.33,
+        candidateBonusUrbanPts: 0.22,
+        candidateBonusMetroPts: 0.40,
         candidateBonusCoastalPts: 0.25,
         candidateBonusTransitionPts: 0.32,
         candidateBonusSlowPts: 0.30,
@@ -11593,13 +11593,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // after generic federalization/crossover caps. Positive values help the named candidate;
         // the model converts Democratic boosts to +D swing and Republican boosts to -D swing.
         candidateLocalCountyBoostsPts: {
-          // Extra Cooper home-region strength after clamp retune so Nash/Wilson stay D
-          // while the statewide official target sits near Whatley +1.6.
-          'Roy Cooper': { NASH: 9.15, WILSON: 5.45 },
+          // Home-region locals near pre-clamp values; broader urban/suburban/rural
+          // type boosts carry most of the post-clamp regional shape.
+          'Roy Cooper': { NASH: 5.10, WILSON: 1.60 },
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
-          'Roy Cooper': { rural: 0.20 }
+          'Roy Cooper': { urban: 0.15, suburban: 0.20, rural: 0.28 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -21733,9 +21733,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      // Use the true vote margin (then formatCountyMarginPctForDisplay rounds it).
-      // Rebuilding margin from rounded candidate shares drifts cases like Cabarrus
-      // 2024 President: 7.697% → share-diff 7.69 instead of the familiar 7.70.
+      // Pre-July-15 style: print the true vote margin (7.697% → 7.70), not the
+      // rounded-share difference (53.03 − 45.34 = 7.69) that introduces 0.01-pt drift.
       return marginPctValue(repVotes, demVotes, totalVotes);
     }
 
