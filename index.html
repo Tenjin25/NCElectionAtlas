@@ -814,16 +814,9 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-name {
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
   font-weight: 800;
 }
 
@@ -6529,11 +6522,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     gap: 12px;
   }
 
-  .statewide-hero > div:first-child {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-
   .statewide-kicker {
     font-size: 11px;
     font-weight: 800;
@@ -6545,19 +6533,10 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .statewide-call {
     margin-top: 4px;
     font-size: clamp(28px, 3vw, 36px);
-    line-height: 1.05;
+    line-height: 1;
     font-weight: 900;
     letter-spacing: -0.03em;
     color: #0f172a;
-    min-width: 0;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
 
   .statewide-call[data-party="dem"] { color: #1d4ed8; }
@@ -6569,14 +6548,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     font-size: 13px;
     line-height: 1.45;
     color: #475569;
-    min-width: 0;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
 
   .statewide-race-alert {
@@ -6722,15 +6693,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #64748b;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
 
   .statewide-breakdown-value {
@@ -7266,14 +7231,9 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .vote-label.candidate {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    white-space: normal;
+    display: block;
+    white-space: nowrap;
     text-overflow: ellipsis;
-    overflow-wrap: anywhere;
-    word-break: break-word;
   }
 
   .vote-percent {
@@ -10292,8 +10252,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-19';
-    const APP_BUILD_ID = '2026-07-16-19';
+    const DATA_CACHE_BUSTER = '2026-07-16-18';
+    const APP_BUILD_ID = '2026-07-16-18';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -19938,42 +19898,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `Judicial Retention ${contestType.toUpperCase()}`;
 	      }
 
-	      // Wikipedia seat numbers for pre-2018 named-seat files (and any seat_NN keys).
-	      // Hunter COA is year-aware: 2014 Robert C. = Seat 8; 2016 Hunter Jr. = Seat 13.
-	      const namedJudicialSeatMap = {
-	        nc_supreme_court_associate_justice_brady_seat: '1',
-	        nc_supreme_court_associate_justice_newby_seat: '2',
-	        nc_supreme_court_associate_justice_hudson_seat: '3',
-	        nc_supreme_court_associate_justice_beasley_seat: '4',
-	        nc_supreme_court_associate_justice_martin_seat: '5',
-	        nc_supreme_court_associate_justice_edmunds_seat: '6',
-	        nc_supreme_court_chief_justice_parker_seat: '1',
-	        nc_court_of_appeals_judge_wynn_seat: '1',
-	        nc_court_of_appeals_judge_calabria_seat: '2',
-	        nc_court_of_appeals_judge_mcgee_seat: '4',
-	        nc_court_of_appeals_judge_bryant_seat: '5',
-	        nc_court_of_appeals_judge_thigpen_seat: '6',
-	        nc_court_of_appeals_judge_mccullough_seat: '7',
-	        nc_court_of_appeals_judge_davis_seat: '7',
-	        nc_court_of_appeals_judge_stephens_seat: '11',
-	        nc_court_of_appeals_judge_arrowood_seat: '12',
-	        nc_court_of_appeals_judge_dietz_seat: '12',
-	        nc_court_of_appeals_judge_martin_seat: '10',
-	        nc_court_of_appeals_judge_zachary_seat: '14',
-	        nc_court_of_appeals_judge_geer_seat: '15'
-	      };
-
 	      if (contestType.startsWith('nc_court_of_appeals_judge_seat_')) {
 	        const seat = contestType.replace('nc_court_of_appeals_judge_seat_', '').replace(/^0+/, '');
 	        return `NC Court of Appeals Judge Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_court_of_appeals_judge_') && contestType.endsWith('_seat')) {
-	        let seat = namedJudicialSeatMap[contestType] || '';
-	        if (contestType === 'nc_court_of_appeals_judge_hunter_seat') {
-	          const y = Number(year);
-	          seat = (y === 2016) ? '13' : '8';
-	        }
-	        if (seat) return `NC Court of Appeals Judge Seat ${seat}`;
 	        const who = contestType.replace('nc_court_of_appeals_judge_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Court of Appeals Judge (${label})`;
@@ -19983,8 +19912,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `NC Supreme Court Associate Justice Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_supreme_court_associate_justice_') && contestType.endsWith('_seat')) {
-	        const seat = namedJudicialSeatMap[contestType] || '';
-	        if (seat) return `NC Supreme Court Associate Justice Seat ${seat}`;
 	        const who = contestType.replace('nc_supreme_court_associate_justice_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Supreme Court Associate Justice (${label})`;
@@ -19994,8 +19921,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return `NC Supreme Court Chief Justice Seat ${seat || contestType}`;
 	      }
 	      if (contestType.startsWith('nc_supreme_court_chief_justice_') && contestType.endsWith('_seat')) {
-	        const seat = namedJudicialSeatMap[contestType] || '';
-	        if (seat) return `NC Supreme Court Chief Justice Seat ${seat}`;
 	        const who = contestType.replace('nc_supreme_court_chief_justice_', '').replace(/_seat$/i, '').replace(/_/g, ' ').trim();
 	        const label = who ? (typeof toTitleCaseName === 'function' ? toTitleCaseName(who) : who) : contestType;
 	        return `NC Supreme Court Chief Justice (${label})`;
