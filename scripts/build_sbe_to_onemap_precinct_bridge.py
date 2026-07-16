@@ -38,7 +38,17 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=ROOT / "data/crosswalks/precinct_sbe_2024_to_onemap_2025_12_vap.csv",
     )
+    p.add_argument(
+        "--allow-cross-county",
+        action="store_true",
+        help="Keep VAP shares that cross county lines (default: clamp to source county).",
+    )
     return p.parse_args()
+
+
+def _county_of(series: pd.Series) -> pd.Series:
+    parts = series.astype(str).str.split(" - ", n=1, expand=True)
+    return parts[0].fillna(series.astype(str)).str.strip().str.upper()
 
 
 def main() -> None:
@@ -62,6 +72,12 @@ def main() -> None:
 
     joined = sbe.merge(one, on="block_geoid20", how="inner").merge(vap, on="block_geoid20", how="left")
     joined["vap_count"] = joined["vap_count"].fillna(0.0)
+
+    if not args.allow_cross_county:
+        same_county = _county_of(joined["sbe_precinct_id"]) == _county_of(joined["onemap_precinct_id"])
+        dropped = int((~same_county).sum())
+        joined = joined.loc[same_county].copy()
+        print(f"Clamped cross-county block rows dropped: {dropped:,}")
 
     grouped = (
         joined.groupby(["sbe_precinct_id", "onemap_precinct_id"], as_index=False)
