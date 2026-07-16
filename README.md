@@ -102,12 +102,24 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
-- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts from **2008 onward** when contested two-party margins can be shown (pre-2018 ballots were nonpartisan; party leans come from `data/mappings/judicial_candidate_party_overrides.csv`). Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
+- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 15, 2026
+**Last updated:** July 16, 2026
+
+### Early Comparable Judicial Seats 2000–2006 (July 16, 2026)
+
+- Added **25** create-only precinct contest slices under `data/contests/` for early Supreme Court / Court of Appeals races keyed by Wikipedia **seat numbers** (`…_seat_NN_YYYY.json`), so 2000–2006 races can be compared to later numbered seats without regenerating existing files.
+- Aggregated the same 25 races into **75** district overlays (`congressional` / `state_house` / `state_senate`) in `data/district_contests/` on the live 2022-lines / SBE2006 weight path.
+- Refreshed `data/contests/manifest.json` and `data/district_contests/manifest.json` (precinct manifest includes the 25 early seats; district manifest 415 → 490 entries).
+- Added `data/mappings/judicial_seat_crosswalk.csv` (OE office ↔ seat ↔ `contest_type`) and create-only builders:
+  - `node scripts/add_early_comparable_judicial_contests.js`
+  - `python scripts/add_early_comparable_judicial_district_contests.py`
+- Extended `scripts/rebuild_statewide_contests_from_sbe_bridge.js` with 2006 year config and seat-number OE office aliases (named-seat aliases retained for older files).
+- Expanded `data/mappings/judicial_candidate_party_overrides.csv` for early nonpartisan cycles, including the 2004 Orr 8-way plurality (track only Newby/Wynn as major-party).
+- Bumped front-end cache-buster / app build tokens to `2026-07-16-18`.
 
 ### Canonical County Totals + Lazy Precinct Modeling (July 15, 2026)
 
@@ -1268,7 +1280,8 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
 - `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
 - `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show human-readable precinct names in hover/selection UI
-- `data/mappings/judicial_candidate_party_overrides.csv` — Pre-2018 (and selected blank-party) judicial candidate → DEM/REP/OTHER leans used when building county/precinct contest slices
+- `data/mappings/judicial_candidate_party_overrides.csv` — Nonpartisan / blank-party judicial candidate → DEM/REP/OTHER affiliations used when building county/precinct contest slices (2004–2016 and selected later blanks)
+- `data/mappings/judicial_seat_crosswalk.csv` — OE office labels for early appellate races ↔ Wikipedia seat number ↔ atlas `contest_type` (used by the create-only early judicial builders)
 
 To rebuild from the latest NCSBE shapefile:
 
@@ -1609,6 +1622,13 @@ To rebuild contested pre-2018 judicial county/precinct slices (overrides + uncon
 py scripts/reaggregate_pre2018_judicial_contests.py --years 2008,2010,2012,2014,2016
 ```
 
+To add missing early (2000–2006) seat-numbered judicial contests without overwriting existing files:
+
+```powershell
+node scripts/add_early_comparable_judicial_contests.js
+python scripts/add_early_comparable_judicial_district_contests.py
+```
+
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
@@ -1632,7 +1652,7 @@ Early-year district and precinct layers are approximate shatter/apportionment es
   - Counties view → `data/contests/manifest.json`
   - District views → `data/district_contests/manifest.json`
 - **A Council of State contest/year is missing in Counties view:** Check `major_party_contested` in `data/contests/manifest.json`. Unopposed contests are intentionally hidden.
-- **A pre-2018 judicial contest is missing in Counties view:** Confirm it exists in `data/contests/` and that `major_party_contested` is `true` after overrides. Rebuild with `scripts/reaggregate_pre2018_judicial_contests.py` if needed; uncontested / same-party seats are intentionally skipped.
+- **A pre-2018 judicial contest is missing in Counties view:** Confirm it exists in `data/contests/` and that `major_party_contested` is `true` after overrides. For **2008–2016** named seats, rebuild with `scripts/reaggregate_pre2018_judicial_contests.py` if needed; uncontested / same-party seats are intentionally skipped. For missing **2000–2006** seat-numbered slices, use the create-only scripts above (`add_early_comparable_judicial_contests.js` / `add_early_comparable_judicial_district_contests.py`) and confirm the OE office is listed in `data/mappings/judicial_seat_crosswalk.csv`.
 - **Controls panel is missing / you only see the map:** This is almost always a UI layering issue. Confirm `.main-controls` is `position: fixed` (or `absolute`) with a `z-index` above `#map`; hard refresh (`Ctrl+Shift+R`) after CSS edits.
 - **On desktop, hover feels “too thin” (no vote deltas / census line):** Hover previews are intentionally compact, but should still show a small `Votes Δ`/population line plus a single census context line. If you don’t see them, hard refresh (`Ctrl+Shift+R`) after pulling the latest `index.html`.
 - **Demographics chips are hard to read in hover cards:** Turn on `High contrast demographics` in controls, then hard refresh (`Ctrl+Shift+R`) to ensure latest CSS/JS assets are loaded.
