@@ -2572,17 +2572,10 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   margin-top: 2px;
   font-size: 12px;
   color: #6b7280;
-  line-height: 1.15;
-  min-width: 0;
-  /* Same 2-line treatment as context-title (Mecklenburg / long seat labels). */
+  line-height: 1.1;
+  white-space: nowrap;
   overflow: hidden;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  text-overflow: ellipsis;
 }
 
 .vote-counter-context .context-actions {
@@ -10355,8 +10348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-25';
-    const APP_BUILD_ID = '2026-07-16-25';
+    const DATA_CACHE_BUSTER = '2026-07-16-26';
+    const APP_BUILD_ID = '2026-07-16-26';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
