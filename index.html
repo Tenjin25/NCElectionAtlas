@@ -829,7 +829,7 @@ body.focus-active.hover-preview-active .vote-counter {
 #hover-tooltip[data-context="votehub-results"] .vhr-row {
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr) auto auto;
-  align-items: center;
+  align-items: start;
   gap: 8px;
   padding: 5px 0;
   font-size: 12.5px;
@@ -856,10 +856,17 @@ body.focus-active.hover-preview-active .vote-counter {
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-name {
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 #hover-tooltip[data-context="votehub-results"] .vhr-votes,
@@ -29932,20 +29939,11 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       const winnerPartyKey = String(winnerParty || '').toLowerCase();
-      const winnerFullName = winnerPartyKey === 'rep'
-        ? normalizeCandidateLabel(repName, 'Republican')
-        : (winnerPartyKey === 'dem'
-          ? normalizeCandidateLabel(demName, 'Democratic')
-          : 'Tie');
+      const winnerShort = winnerPartyKey === 'rep' ? 'Trump' : (winnerPartyKey === 'dem' ? 'Harris' : 'Tie');
+      const winnerText = normalizeCandidateLabel(winnerName || winnerShort, winnerShort || 'Tie');
       const winnerToneClass = winnerPartyKey === 'rep' ? 'rep' : (winnerPartyKey === 'dem' ? 'dem' : 'tie');
-      // Clamped full first+last beside the hover lead (same idea as #focus-winner).
-      // Panel top #vote-lead stays surname-only via marginCall.text elsewhere.
-      const winnerLineRaw = (winnerLineText || '').toString().trim();
-      const winnerDisplayText = (/^uncontested\b/i.test(winnerLineRaw) || /^even\b/i.test(winnerLineRaw))
-        ? winnerLineRaw
-        : (winnerPartyKey === 'tie'
-          ? (winnerLineRaw || 'Even')
-          : `${winnerFullName} +${marginFormatter(marginAbs)}%`);
+      // Match the panel top call (e.g. "Timmons-Goodson +16.58%"); full first+last live in the vote rows below.
+      const winnerDisplayText = (winnerLineText || '').toString().trim() || `${winnerText} +${marginFormatter(marginAbs)}%`;
       const voteLeadStyle = winnerToneClass === 'rep'
         ? 'font-size:12px;font-weight:800;opacity:0.96;color:#fecaca;font-family:"JetBrains Mono","Consolas","SFMono-Regular",monospace;'
         : (winnerToneClass === 'dem'
