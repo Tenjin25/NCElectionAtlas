@@ -87,6 +87,7 @@ def reaggregate_year(
     contests_manifest: Path,
     dry_run: bool,
     rewrite_existing: bool,
+    contest_types: set[str] | None = None,
 ) -> dict:
     results_csv = find_general_precinct_csv(year)
     print(f"\n=== {year} ===")
@@ -131,6 +132,8 @@ def reaggregate_year(
     entries: list[dict] = []
 
     for office, contest_type in judicial_offices(src):
+        if contest_types and contest_type not in contest_types:
+            continue
         contest_file = contests_dir / f"{contest_type}_{year}.json"
         if contest_file.exists() and not rewrite_existing:
             print(f"  skip existing {contest_file.name}")
@@ -193,7 +196,7 @@ def reaggregate_year(
 
     # Purge uncontested judicial entries for this year from the live manifest.
     if not dry_run:
-        purge_uncontested_judicial_manifest_year(contests_manifest, year)
+        purge_uncontested_judicial_manifest_year(contests_manifest, year, contest_types=contest_types)
 
     return {
         "year": year,
@@ -204,7 +207,12 @@ def reaggregate_year(
     }
 
 
-def purge_uncontested_judicial_manifest_year(manifest_path: Path, year: int) -> None:
+def purge_uncontested_judicial_manifest_year(
+    manifest_path: Path,
+    year: int,
+    *,
+    contest_types: set[str] | None = None,
+) -> None:
     if not manifest_path.exists():
         return
     try:
@@ -219,6 +227,9 @@ def purge_uncontested_judicial_manifest_year(manifest_path: Path, year: int) -> 
             y = int(e.get("year"))
             ct = str(e.get("contest_type") or "")
         except Exception:
+            kept.append(e)
+            continue
+        if contest_types and ct not in contest_types:
             kept.append(e)
             continue
         if y != int(year) or not JUDICIAL_KEY_RE.match(ct):
@@ -254,6 +265,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--contests-manifest", type=Path, default=ROOT / "data/contests/manifest.json")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument(
+        "--contest-types",
+        default="",
+        help="Optional comma-separated contest keys to rebuild within the selected years.",
+    )
+    p.add_argument(
         "--skip-existing",
         action="store_true",
         help="Do not overwrite contest JSON files that already exist.",
@@ -278,6 +294,7 @@ def main() -> int:
         raise FileNotFoundError(load_path)
 
     summaries = []
+    contest_types = {part.strip() for part in str(args.contest_types).split(",") if part.strip()} or None
     for year in years:
         summaries.append(
             reaggregate_year(
@@ -286,6 +303,7 @@ def main() -> int:
                 contests_manifest=Path(args.contests_manifest),
                 dry_run=bool(args.dry_run),
                 rewrite_existing=not bool(args.skip_existing),
+                contest_types=contest_types,
             )
         )
 

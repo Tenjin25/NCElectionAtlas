@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTEST_DIR = ROOT / "data" / "contests"
 COUNTY_CONTEST_DIR = ROOT / "data" / "county_contests"
+JUDICIAL_PARTY_OVERRIDES = ROOT / "data" / "mappings" / "judicial_candidate_party_overrides.csv"
 
 
 def norm(value: object) -> str:
@@ -50,7 +51,20 @@ def contest_year(path: Path, payload: dict) -> int | None:
 
 def raw_csv_for_year(year: int) -> Path | None:
     candidates = list((ROOT / "data" / str(year)).glob("*__general__precinct.csv"))
-    return max(candidates, key=lambda path: path.stat().st_size) if candidates else None
+    if not candidates:
+        return None
+
+    # OpenElections occasionally labels primary/runoff exports as "general"
+    # too (for example, 20020910 and 20040817). Statewide general elections
+    # used by the atlas are the November files; choosing only by size caused
+    # the 2002 U.S. Senate county layer to use primary totals.
+    november = [
+        path
+        for path in candidates
+        if (match := re.match(r"^(\d{4})(\d{2})(\d{2})__", path.name))
+        and int(match.group(2)) == 11
+    ]
+    return max(november or candidates, key=lambda path: path.stat().st_size)
 
 
 def load_csv_by_office(path: Path) -> dict[str, list[dict[str, str]]]:
@@ -73,6 +87,23 @@ def json_candidate_buckets(rows: list[dict]) -> dict[str, str]:
         if rep:
             buckets[rep] = "REP"
     return buckets
+
+
+def load_candidate_party_overrides(path: Path = JUDICIAL_PARTY_OVERRIDES) -> dict[int, dict[str, str]]:
+    overrides: dict[int, dict[str, str]] = defaultdict(dict)
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            try:
+                year = int(row.get("year") or 0)
+            except (TypeError, ValueError):
+                continue
+            candidate = norm(row.get("candidate"))
+            party = norm(row.get("party"))
+            if candidate and party in {"DEM", "REP", "OTHER"}:
+                overrides[year][candidate] = party
+    return dict(overrides)
 
 
 def choose_office(payload: dict, grouped: dict[str, list[dict[str, str]]]) -> tuple[str | None, str]:
@@ -99,8 +130,13 @@ def choose_office(payload: dict, grouped: dict[str, list[dict[str, str]]]) -> tu
     return best[2], "candidate_match"
 
 
-def aggregate_county_totals(payload: dict, raw_rows: list[dict[str, str]]) -> dict[str, dict]:
+def aggregate_county_totals(
+    payload: dict,
+    raw_rows: list[dict[str, str]],
+    party_overrides: dict[str, str] | None = None,
+) -> dict[str, dict]:
     candidate_buckets = json_candidate_buckets(payload.get("rows") or [])
+    party_overrides = party_overrides or {}
     dem_candidate = next((row.get("dem_candidate", "") for row in payload.get("rows") or [] if row.get("dem_candidate")), "")
     rep_candidate = next((row.get("rep_candidate", "") for row in payload.get("rows") or [] if row.get("rep_candidate")), "")
     totals: dict[str, dict] = {}
@@ -113,7 +149,8 @@ def aggregate_county_totals(payload: dict, raw_rows: list[dict[str, str]]) -> di
             votes = int(float(row.get("votes") or 0))
         except (TypeError, ValueError):
             votes = 0
-        party = candidate_buckets.get(norm(row.get("candidate")), norm(row.get("party")))
+        candidate = norm(row.get("candidate"))
+        party = party_overrides.get(candidate, candidate_buckets.get(candidate, norm(row.get("party"))))
         bucket = "dem_votes" if party.startswith("DEM") else ("rep_votes" if party.startswith("REP") else "other_votes")
         node = totals.setdefault(
             county,
@@ -166,6 +203,7 @@ def main() -> int:
     year_filter = {int(value) for value in args.years.split(",") if value.strip()} if args.years else None
 
     csv_cache: dict[int, tuple[Path, dict[str, list[dict[str, str]]]]] = {}
+    candidate_party_overrides = load_candidate_party_overrides()
     summary = {"matched": [], "skipped": [], "changed": []}
 
     for path in sorted(CONTEST_DIR.glob("*.json")):
@@ -190,7 +228,11 @@ def main() -> int:
         if not office:
             summary["skipped"].append({"file": path.name, "reason": method})
             continue
-        county_totals = aggregate_county_totals(payload, grouped[office])
+        county_totals = aggregate_county_totals(
+            payload,
+            grouped[office],
+            candidate_party_overrides.get(year) or {},
+        )
         if len(county_totals) != 100:
             summary["skipped"].append({"file": path.name, "reason": f"county_count_{len(county_totals)}", "office": office})
             continue

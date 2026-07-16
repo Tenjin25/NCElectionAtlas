@@ -104,6 +104,37 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain('populate flip details for hover in the background');
 });
 
+test('2018 Supreme Court county totals keep Anglin separate from Jackson', async ({ request }) => {
+  const response = await request.get('/data/county_contests/nc_supreme_court_associate_justice_seat_01_2018.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const totals = payload.rows.reduce((sum, row) => ({
+    dem: sum.dem + Number(row.dem_votes || 0),
+    rep: sum.rep + Number(row.rep_votes || 0),
+    other: sum.other + Number(row.other_votes || 0),
+    total: sum.total + Number(row.total_votes || 0)
+  }), { dem: 0, rep: 0, other: 0, total: 0 });
+
+  expect(payload.rows).toHaveLength(100);
+  expect(totals).toEqual({ dem: 1812751, rep: 1246263, other: 598753, total: 3657767 });
+  expect(payload.rows.every((row) => row.rep_candidate === 'Barbara Jackson')).toBeTruthy();
+});
+
+test('2002 US Senate county totals come from the November general election', async ({ request }) => {
+  const response = await request.get('/data/county_contests/us_senate_2002.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const totals = payload.rows.reduce((sum, row) => ({
+    dem: sum.dem + Number(row.dem_votes || 0),
+    rep: sum.rep + Number(row.rep_votes || 0),
+    other: sum.other + Number(row.other_votes || 0),
+    total: sum.total + Number(row.total_votes || 0)
+  }), { dem: 0, rep: 0, other: 0, total: 0 });
+
+  expect(payload.rows).toHaveLength(100);
+  expect(totals).toEqual({ dem: 1047983, rep: 1248664, other: 34534, total: 2331181 });
+});
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
