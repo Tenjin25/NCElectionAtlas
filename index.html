@@ -10348,8 +10348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-22';
-    const APP_BUILD_ID = '2026-07-16-22';
+    const DATA_CACHE_BUSTER = '2026-07-16-23';
+    const APP_BUILD_ID = '2026-07-16-23';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -14574,11 +14574,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatVoteCounterWinnerLabel(name, partyCode, fallbackText) {
-      // Winner pill shares a half-grid cell with Lead; prefer surname so long
-      // judicial names (e.g. Timmons-Goodson) wrap/clamp cleanly.
-      const short = shortCandidateLabel(name, fallbackText);
-      if (!short || short.toUpperCase() === partyCode.toUpperCase()) return fallbackText;
-      return `${short} (${partyCode})`;
+      // Keep first+last name beside Lead; half-grid CSS clamp wraps long labels.
+      const full = fullCandidateLabel(name, '');
+      if (!full || full.toUpperCase() === partyCode.toUpperCase()) return fallbackText;
+      return `${full} (${partyCode})`;
     }
 
     function formatFocusBarLabel(name, pct, fallbackText, marginPct = null) {
