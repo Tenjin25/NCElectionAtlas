@@ -1,0 +1,197 @@
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+const { chromium } = require('@playwright/test');
+
+const chromeCandidates = [
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+];
+let modelServer = null;
+let modelBrowser = null;
+
+function summarizeResults(results) {
+  const rows = Object.values(results || {});
+  const totals = rows.reduce((sum, row) => {
+    sum.dem += Number(row?.dem_votes || 0);
+    sum.rep += Number(row?.rep_votes || 0);
+    sum.total += Number(row?.total_votes || 0);
+    return sum;
+  }, { dem: 0, rep: 0, total: 0 });
+  const twoParty = totals.dem + totals.rep;
+  return {
+    districts: rows.length,
+    dem: Math.round(totals.dem),
+    rep: Math.round(totals.rep),
+    total: Math.round(totals.total),
+    marginPctRMinusD: twoParty > 0 ? ((totals.rep - totals.dem) / twoParty) * 100 : null
+  };
+}
+
+(async () => {
+  modelServer = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'static_server.js'), '--port', '4173', '--host', '127.0.0.1'], {
+    cwd: path.join(__dirname, '..'),
+    stdio: 'ignore',
+    windowsHide: true
+  });
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      const response = await fetch('http://127.0.0.1:4173/index.html');
+      if (response.ok) break;
+    } catch (_) {}
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  const executablePath = chromeCandidates.find(fs.existsSync);
+  modelBrowser = await chromium.launch(executablePath ? { executablePath } : {});
+  const page = await modelBrowser.newPage();
+  await page.addInitScript(() => {
+    let mapboxValue;
+    class DiagnosticMap {
+      constructor(options = {}) {
+        const container = typeof options.container === 'string'
+          ? document.getElementById(options.container)
+          : options.container;
+        this.canvas = document.createElement('canvas');
+        this.canvas.className = 'mapboxgl-canvas';
+        if (container) container.appendChild(this.canvas);
+        return new Proxy(this, {
+          get: (target, property) => {
+            if (property in target) return target[property];
+            return () => target;
+          }
+        });
+      }
+      on(event, layerOrCallback, maybeCallback) {
+        const callback = typeof layerOrCallback === 'function' ? layerOrCallback : maybeCallback;
+        if ((event === 'load' || event === 'style.load') && typeof callback === 'function') setTimeout(callback, 0);
+        return this;
+      }
+      once(event, callback) { return this.on(event, callback); }
+      loaded() { return true; }
+      isStyleLoaded() { return true; }
+      getCanvas() { return this.canvas; }
+      getContainer() { return this.canvas?.parentElement || null; }
+      getLayer() { return null; }
+      getSource() { return null; }
+      queryRenderedFeatures() { return []; }
+    }
+    Object.defineProperty(window, 'mapboxgl', {
+      configurable: true,
+      get: () => mapboxValue,
+      set: value => {
+        mapboxValue = value;
+        if (mapboxValue) mapboxValue.Map = DiagnosticMap;
+      }
+    });
+  });
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(String(error?.message || error)));
+  await page.route('**/*', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.hostname === '127.0.0.1') return route.continue();
+    if (request.resourceType() === 'script') {
+      if (url.hostname === 'api.mapbox.com') {
+        return route.fulfill({ contentType: 'application/javascript', body: `window.mapboxgl={Map:class{},NavigationControl:class{},Popup:class{},Marker:class{},setTelemetryEnabled(){}};` });
+      }
+      if (url.pathname.includes('papaparse')) {
+        return route.fulfill({ contentType: 'application/javascript', body: `window.Papa={parse(){return {data:[],errors:[]}}};` });
+      }
+      if (url.pathname.includes('turf')) {
+        return route.fulfill({ contentType: 'application/javascript', body: `window.turf=new Proxy({}, {get(){return ()=>null}});` });
+      }
+    }
+    return route.fulfill({ status: 204, body: '' });
+  });
+  await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  try {
+    await page.waitForFunction(() => {
+      try {
+        return typeof loadCountyContestSlice === 'function'
+          && typeof loadDistrictSlice === 'function'
+          && !!getModeledContestDefinition('us_senate_model', 2026);
+      } catch (_) {
+        return false;
+      }
+    }, null, { timeout: 20000 });
+  } catch (error) {
+    throw new Error(`${error.message}\nPage errors:\n${pageErrors.join('\n')}`);
+  }
+
+  const output = await page.evaluate(async () => {
+    const countyRows = await loadCountyContestSlice('us_senate_model', 2026);
+    const officialCountyTotals = getOfficialCountyTotalsFromRows(countyRows) || null;
+    const rawCountyTotals = countyRows.reduce((sum, row) => {
+      sum.dem += Number(row?.us_senate_model_dem || 0);
+      sum.rep += Number(row?.us_senate_model_rep || 0);
+      sum.total += Number(row?.us_senate_model_total || 0);
+      return sum;
+    }, { dem: 0, rep: 0, total: 0 });
+    const countyTotals = officialCountyTotals
+      ? Object.values(officialCountyTotals).reduce((sum, row) => {
+        sum.dem += Number(row?.dem_votes || 0);
+        sum.rep += Number(row?.rep_votes || 0);
+        sum.total += Number(row?.total_votes || 0);
+        return sum;
+      }, { dem: 0, rep: 0, total: 0 })
+      : rawCountyTotals;
+    const countyTwoParty = countyTotals.dem + countyTotals.rep;
+    const countyByName = {};
+    countyRows.forEach(row => {
+      const county = String(row?.county || '').toUpperCase().split(' - ')[0].trim();
+      const node = countyByName[county] || { dem: 0, rep: 0, localEffectD: 0, countyTypeEffectD: 0 };
+      node.dem += Number(row?.us_senate_model_dem || 0);
+      node.rep += Number(row?.us_senate_model_rep || 0);
+      node.localEffectD = Number(row?.__model_candidate_effect_local_d_pts || node.localEffectD || 0);
+      node.countyTypeEffectD = Number(row?.__model_candidate_effect_county_type_d_pts || node.countyTypeEffectD || 0);
+      countyByName[county] = node;
+    });
+    if (officialCountyTotals) Object.entries(officialCountyTotals).forEach(([county, row]) => {
+      const key = String(county || '').toUpperCase();
+      countyByName[key] = {
+        ...(countyByName[key] || {}),
+        dem: Number(row?.dem_votes || 0),
+        rep: Number(row?.rep_votes || 0)
+      };
+    });
+    const scopes = {};
+    for (const scope of ['congressional', 'state_house', 'state_senate']) {
+      const node = await loadDistrictSlice(scope, 'us_senate_model', 2026);
+      scopes[scope] = node?.general?.results || {};
+    }
+    return {
+      county: {
+        rows: countyRows.length,
+        officialCounties: officialCountyTotals ? Object.keys(officialCountyTotals).length : 0,
+        dem: countyTotals.dem,
+        rep: countyTotals.rep,
+        total: countyTotals.total,
+        marginPctRMinusD: countyTwoParty > 0 ? ((countyTotals.rep - countyTotals.dem) / countyTwoParty) * 100 : null
+      },
+      countyByName,
+      scopes
+    };
+  });
+
+  const result = {
+    county: output.county,
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND'].map(county => {
+      const row = output.countyByName[county] || {};
+      const twoParty = Number(row.dem || 0) + Number(row.rep || 0);
+      return [county, {
+        ...row,
+        marginPctRMinusD: twoParty > 0 ? ((Number(row.rep || 0) - Number(row.dem || 0)) / twoParty) * 100 : null
+      }];
+    })),
+    districts: Object.fromEntries(Object.entries(output.scopes).map(([scope, results]) => [scope, summarizeResults(results)])),
+    pageErrors
+  };
+  console.log(JSON.stringify(result, null, 2));
+  await modelBrowser.close();
+  modelServer.kill();
+})().catch(error => {
+  try { modelBrowser?.close(); } catch (_) {}
+  try { modelServer?.kill(); } catch (_) {}
+  console.error(error);
+  process.exitCode = 1;
+});
