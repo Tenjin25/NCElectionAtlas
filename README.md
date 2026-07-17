@@ -107,6 +107,8 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
+- **Exact precinct-key priority:** Prevented generated compatibility aliases from overwriting an exact precinct result already loaded for the same map key. This fixes Wake 01-25 incorrectly displaying Wake 19-25's Trump-leading 2020 presidential result even though the underlying Wake 01-25 data is Biden-leading.
+
 - **2020 early-vote precinct allocation:** Classified every leading `OS` voting-center code as non-geographic before applying the SBE 2020-to-December 2025 OneMap bridge. Rebuilt all 20 statewide 2020 contest files so 151 early-vote pseudo-rows across 17 counties—including Cabarrus, Wake, Durham, Orange, Pitt, and Watauga—are distributed into real precincts by the existing party-specific geographic-share method. All 100 official county totals and statewide contest totals remain unchanged.
 
 - **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties. The SBE 2006 bridge is now limited to elections through 2010, preventing modern Davidson precinct 36/38 rows (`Ward 4`/`Ward 6` in the old layer) from overwriting the exact 2024 `04`/`06` rows.
