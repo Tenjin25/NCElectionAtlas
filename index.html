@@ -10312,6 +10312,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="./js/atlas-classification.js"></script>
     <script src="./js/atlas-core.js"></script>
+    <script src="./js/atlas-data.js"></script>
     <script src="./js/atlas-display.js"></script>
     <script src="./js/atlas-election.js"></script>
     <script src="./js/atlas-manifest.js"></script>
@@ -10339,27 +10340,15 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (_) {}
 
     function detectBasePath() {
-      // GitHub Pages project sites are served under /<repo-name>/...
-      if (!window.location.hostname.endsWith('github.io')) return '';
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      return parts.length ? `/${parts[0]}` : '';
+      return window.AtlasData.detectBasePath(window.location);
     }
 
     function withBase(path) {
-      if (!path) return path;
-      if (/^https?:\/\//i.test(path)) return path;
-      const base = detectBasePath();
-      // Keep paths relative by default so the app works when served from a subfolder
-      // (e.g. `http://localhost:8000/NCPrecinctMap/index.html`) and in file-like previews.
-      // Only prefix an explicit GitHub Pages base when detected.
-      const cleaned = path.replace(/^\.\//, '').replace(/^\/+/, '');
-      return base ? `${base}/${cleaned}` : cleaned;
+      return window.AtlasData.withBase(path, window.location);
     }
 
     function toAbsoluteUrl(path) {
-      const p = (path || '').toString().trim();
-      if (!p) return p;
-      try { return new URL(p, window.location.href).toString(); } catch (_) { return p; }
+      return window.AtlasData.toAbsoluteUrl(path, window.location.href);
     }
 
     // Cache destroyer token for static data requests.
@@ -10368,12 +10357,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const APP_BUILD_ID = '2026-07-17-24';
 
     function withCacheBuster(path) {
-      const p = (path || '').toString().trim();
-      if (!p) return p;
-      if (/^mapbox:\/\//i.test(p)) return p;
-      if (/[?&]v=/.test(p)) return p;
-      const sep = p.includes('?') ? '&' : '?';
-      return `${p}${sep}v=${encodeURIComponent(DATA_CACHE_BUSTER)}`;
+      return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
     }
 
     const CONFIG = {
@@ -15793,44 +15777,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadJSON(path) {
       const requestPath = withCacheBuster(path);
-      if (jsonResultByPath.has(requestPath)) return jsonResultByPath.get(requestPath);
-      if (jsonInflightByPath.has(requestPath)) return jsonInflightByPath.get(requestPath);
-      const p = atlasPerf(`json:${requestPath}`, async () => {
-        const r = await fetch(requestPath, { cache: 'force-cache' });
-        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-        const data = await r.json();
-        jsonResultByPath.set(requestPath, data);
-        return data;
+      return window.AtlasData.loadCached(requestPath, {
+        resolvedCache: jsonResultByPath,
+        inflightCache: jsonInflightByPath,
+        load: () => atlasPerf(`json:${requestPath}`, async () => {
+          const response = await fetch(requestPath, { cache: 'force-cache' });
+          if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
+          return response.json();
+        })
       });
-      jsonInflightByPath.set(requestPath, p);
-      try {
-        return await p;
-      } finally {
-        jsonInflightByPath.delete(requestPath);
-      }
     }
 
 	    async function loadCSV(path) {
 	      const requestPath = withCacheBuster(path);
-	      if (csvTextByPath.has(requestPath)) return csvTextByPath.get(requestPath);
-	      if (csvInflightByPath.has(requestPath)) return csvInflightByPath.get(requestPath);
-	      const p = atlasPerf(`csv:${requestPath}`, async () => {
-	        const r = await fetch(requestPath, { cache: 'force-cache' });
-	        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-	        const text = await r.text();
-	        // Cache small/medium static CSVs to avoid repeated fetch + decode while not
-	        // pinning very large raw election files in memory after they are parsed.
-	        if (text.length <= 5 * 1024 * 1024) {
-	          csvTextByPath.set(requestPath, text);
-	        }
-	        return text;
+	      return window.AtlasData.loadCached(requestPath, {
+	        resolvedCache: csvTextByPath,
+	        inflightCache: csvInflightByPath,
+	        shouldCache: text => text.length <= 5 * 1024 * 1024,
+	        load: () => atlasPerf(`csv:${requestPath}`, async () => {
+	          const response = await fetch(requestPath, { cache: 'force-cache' });
+	          if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
+	          return response.text();
+	        })
 	      });
-	      csvInflightByPath.set(requestPath, p);
-	      try {
-	        return await p;
-	      } finally {
-	        csvInflightByPath.delete(requestPath);
-	      }
 	    }
 
 	    const PRESIDENT_OPEN_ELECTIONS_CSV = {
@@ -19564,20 +19533,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function mapContestPayloadRows(payload, contestType, year) {
-        return (payload?.rows || []).map(r => ({
-          year: Number(year),
-          county: r.county,
-          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-          [`${contestType}_other`]: Number(r.other_votes) || 0,
-          [`${contestType}_total`]: Number(r.total_votes) || 0,
-          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-          [`${contestType}_margin`]: Number(r.margin) || 0,
-          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-          [`${contestType}_winner`]: r.winner || '',
-          [`${contestType}_color`]: r.color || ''
-        }));
+        return window.AtlasData.mapContestPayloadRows(payload, contestType, year);
       }
 
       async function loadCountyContestSlice(contestType, year) {
