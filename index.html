@@ -10317,6 +10317,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="./js/atlas-manifest.js"></script>
     <script src="./js/atlas-modeling.js"></script>
     <script src="./js/atlas-regions.js"></script>
+    <script src="./js/atlas-trends.js"></script>
     <script src="./js/atlas-turnout.js"></script>
     <script src="./js/atlas-url-state.js"></script>
     <script>
@@ -24259,10 +24260,48 @@ document.addEventListener('DOMContentLoaded', function() {
         return window.AtlasClassification.formatWinnerLabel(row, signedMargin);
       }
 
-      const sorted = series
-        .slice()
-        .filter(row => row && Number.isFinite(Number(row.year)))
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const trendAnalysis = window.AtlasTrends.analyzeSeries(series, {
+        signedMargin: getSignedMarginTowardGop,
+        displaySignedMargin: getSignedDisplayMarginTowardGop
+      });
+      const {
+        sorted,
+        latest,
+        latestSigned,
+        first,
+        firstSigned,
+        electionCount,
+        yearSpan,
+        historySparse,
+        longShiftTowardGop,
+        row2008,
+        shiftSince2008,
+        row2020,
+        shiftSince2020,
+        row2000,
+        shiftSince2000,
+        previous,
+        previousSigned,
+        recentShiftTowardGop,
+        recentWindowStart,
+        recentWindowStartSigned,
+        recentWindowShiftTowardGop,
+        cycleShiftLabel,
+        rightwardSteps,
+        leftwardSteps,
+        absLatest,
+        absFirst,
+        sameSideLongTerm,
+        crossedParties,
+        towardCurrentSide,
+        towardCurrentSideLong,
+        towardCurrentSideWindow,
+        awayFromCurrentSide,
+        awayFromCurrentSideLong,
+        hasLongAnchor,
+        avgAbsSwing,
+        isElastic
+      } = trendAnalysis;
 
       if (!sorted.length) {
         return {
@@ -24276,78 +24315,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       }
 
-	      const latest = sorted[sorted.length - 1];
-	      const latestSigned = getSignedDisplayMarginTowardGop(latest);
-	      const first = sorted[0];
-	      const firstSigned = getSignedDisplayMarginTowardGop(first);
-      const electionCount = sorted.length;
-      const yearSpan = Number(latest?.year) - Number(first?.year);
-      const historySparse = electionCount < 4;
-	      const longShiftTowardGop = latestSigned - firstSigned;
-	      const row2008 = sorted.find(row => Number(row.year) === 2008);
-	      const shiftSince2008 = row2008 ? latestSigned - getSignedDisplayMarginTowardGop(row2008) : null;
-	      const row2020 = sorted.find(row => Number(row.year) === 2020);
-	      const shiftSince2020 = row2020 ? latestSigned - getSignedDisplayMarginTowardGop(row2020) : NaN;
-	      const row2000 = sorted.find(row => Number(row.year) === 2000);
-	      const shiftSince2000 = (row2000 || first) ? latestSigned - getSignedDisplayMarginTowardGop(row2000 || first) : NaN;
-	      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-	      const previousSigned = previous ? getSignedDisplayMarginTowardGop(previous) : null;
-	      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
-      const recentWindowStart = sorted.length >= 3 ? sorted[Math.max(0, sorted.length - 3)] : first;
-      const recentWindowStartSigned = recentWindowStart ? getSignedMarginTowardGop(recentWindowStart) : null;
-      const recentWindowShiftTowardGop = Number.isFinite(recentWindowStartSigned)
-        ? (latestSigned - recentWindowStartSigned)
-        : recentShiftTowardGop;
-      const cycleShiftLabel = previous
-        ? (Number(previous.year) === Number(first.year) ? 'Last Cycle' : `Since ${previous.year}`)
-        : '';
-
-      const recentSlice = sorted.slice(-3);
-      let rightwardSteps = 0;
-      let leftwardSteps = 0;
-      for (let i = 1; i < recentSlice.length; i += 1) {
-        const prev = getSignedMarginTowardGop(recentSlice[i - 1]);
-        const curr = getSignedMarginTowardGop(recentSlice[i]);
-        const deltaTowardGop = curr - prev;
-        if (deltaTowardGop > 0.5) rightwardSteps += 1;
-        if (deltaTowardGop < -0.5) leftwardSteps += 1;
-      }
-
-      const absLatest = Math.abs(latestSigned);
-      const absFirst = Math.abs(firstSigned);
-      const sameSideLongTerm =
-        (latestSigned > 0 && firstSigned > 0) ||
-        (latestSigned < 0 && firstSigned < 0);
-      const crossedParties =
-        (latestSigned > 0 && firstSigned < 0) ||
-        (latestSigned < 0 && firstSigned > 0);
-      const towardCurrentSide = Number.isFinite(recentShiftTowardGop)
-        ? (latestSigned > 0 ? recentShiftTowardGop : (latestSigned < 0 ? -recentShiftTowardGop : 0))
-        : 0;
-      const towardCurrentSideLong = Number.isFinite(longShiftTowardGop)
-        ? (latestSigned > 0 ? longShiftTowardGop : (latestSigned < 0 ? -longShiftTowardGop : 0))
-        : 0;
-      const towardCurrentSideWindow = Number.isFinite(recentWindowShiftTowardGop)
-        ? (latestSigned > 0 ? recentWindowShiftTowardGop : (latestSigned < 0 ? -recentWindowShiftTowardGop : 0))
-        : towardCurrentSide;
-      const awayFromCurrentSide = Number.isFinite(recentShiftTowardGop)
-        ? -towardCurrentSide
-        : 0;
-      const awayFromCurrentSideLong = Number.isFinite(towardCurrentSideLong)
-        ? -towardCurrentSideLong
-        : 0;
-
       let origin = 'Durable';
-      const hasLongAnchor = !!(row2000 || row2008 || (Number.isFinite(yearSpan) && yearSpan >= 16));
-      const avgAbsSwing = (() => {
-        if (electionCount < 3) return 0;
-        let sum = 0;
-        for (let i = 1; i < sorted.length; i += 1) {
-          sum += Math.abs(getSignedMarginTowardGop(sorted[i]) - getSignedMarginTowardGop(sorted[i - 1]));
-        }
-        return sum / Math.max(1, sorted.length - 1);
-      })();
-      const isElastic = electionCount >= 5 && avgAbsSwing >= 4.25 && absLatest < 12;
 
       if (!historySparse) {
         if (

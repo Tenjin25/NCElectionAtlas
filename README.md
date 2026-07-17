@@ -1276,6 +1276,7 @@ compatibility wrappers, so existing call sites can be migrated incrementally.
 - `js/atlas-manifest.js` — Shared contest visibility and historical judicial-seat family helpers
 - `js/atlas-modeling.js` — Shared modeled-contest signatures, county behavior labels, and confidence scoring
 - `js/atlas-regions.js` — Shared quick-jump county normalization and regional vote aggregation
+- `js/atlas-trends.js` — Shared historical-series normalization, anchor shifts, and volatility analysis
 - `js/atlas-turnout.js` — Shared turnout quantiles, opacity bands, and Mapbox expressions
 
 - `js/atlas-core.js` — Shared deterministic normalization, precinct-alias expansion, and vote-math helpers
