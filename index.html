@@ -10310,6 +10310,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
+    <script src="./js/atlas-classification.js"></script>
     <script src="./js/atlas-core.js"></script>
     <script src="./js/atlas-display.js"></script>
     <script src="./js/atlas-election.js"></script>
@@ -23933,35 +23934,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function classificationLabel(longDelta, recentDelta, flip) {
-        if (flip) {
-          if (tone === 'rep') return 'Recent flip to the GOP';
-          if (tone === 'dem') return 'Recent flip to Democrats';
-          return 'Recent flip';
-        }
-        const longSign = Number.isFinite(longDelta) ? (longDelta > SHIFT_DIR_LONG ? 'rep' : (longDelta < -SHIFT_DIR_LONG ? 'dem' : 'neutral')) : 'neutral';
-        const recentSign = Number.isFinite(recentDelta) ? (recentDelta > SHIFT_DIR_RECENT ? 'rep' : (recentDelta < -SHIFT_DIR_RECENT ? 'dem' : 'neutral')) : 'neutral';
-        if (longSign === 'rep' && recentSign === 'rep') return 'Moving right';
-        if (longSign === 'dem' && recentSign === 'dem') return 'Moving left';
-        if (longSign === 'rep' && recentSign === 'dem') {
-          if (marginTier?.party === 'rep') return 'Red-leaning, cooling';
-          if (marginTier?.party === 'dem') return 'Democrats pushing back';
-          return 'Mixed signals';
-        }
-        if (longSign === 'dem' && recentSign === 'rep') {
-          if (marginTier?.party === 'dem') return 'Blue-leaning, cooling';
-          if (marginTier?.party === 'rep') return 'GOP pushing back';
-          return 'Mixed signals';
-        }
-
-        // If one of the shift windows is neutral/missing, keep the label consistent with the current lean
-        // and the most recent clear movement (so the headline and Direction line don't contradict).
-        if (marginTier?.party === 'rep' && recentSign === 'dem') return 'Red-leaning, cooling';
-        if (marginTier?.party === 'dem' && recentSign === 'rep') return 'Blue-leaning, cooling';
-        if (marginTier?.party === 'rep' && recentSign === 'rep') return 'Moving right';
-        if (marginTier?.party === 'dem' && recentSign === 'dem') return 'Moving left';
-        if (marginTier?.party === 'rep') return 'Solidly Republican';
-        if (marginTier?.party === 'dem') return 'Solidly Democratic';
-        return 'Competitive';
+        return window.AtlasClassification.classifyLabel(longDelta, recentDelta, flip, {
+          tone,
+          marginParty: marginTier?.party,
+          longThreshold: SHIFT_DIR_LONG,
+          recentThreshold: SHIFT_DIR_RECENT
+        });
       }
 
       const classification = classificationLabel(longShift, recentShiftSince2020, isRecentFlip);
@@ -24248,29 +24226,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 
 	    function classifyGrowthType(countyName, growthRate) {
-	      const norm = String(countyName || '').trim().toUpperCase();
-	      if (!norm) return '🏭 Stable / Local Growth';
-
-	      const coastal = new Set([
-	        'BRUNSWICK', 'NEW HANOVER', 'PENDER', 'ONSLOW', 'CARTERET', 'CRAVEN',
-	        'PAMLICO', 'BEAUFORT', 'HYDE', 'DARE', 'TYRRELL', 'CURRITUCK',
-	        'PASQUOTANK', 'CAMDEN', 'CHOWAN', 'PERQUIMANS'
-	      ]);
-	      const charlotteMetro = new Set([
-	        'MECKLENBURG', 'UNION', 'CABARRUS', 'GASTON', 'IREDELL', 'ROWAN',
-	        'LINCOLN', 'STANLY', 'CLEVELAND', 'CATAWBA'
-	      ]);
-	      const i95Corridor = new Set([
-	        'NORTHAMPTON', 'HALIFAX', 'EDGECOMBE', 'NASH', 'WILSON', 'JOHNSTON',
-	        'HARNETT', 'CUMBERLAND', 'ROBESON', 'SAMPSON', 'WAYNE', 'DUPLIN'
-	      ]);
-
-	      if (coastal.has(norm)) return '🌊 Coastal Growth';
-	      if (charlotteMetro.has(norm)) return '🌆 Metro Spillover';
-	      if (i95Corridor.has(norm)) return '🛣️ Corridor Growth';
-
 	      void growthRate;
-	      return '🏭 Stable / Local Growth';
+	      return window.AtlasClassification.classifyGrowthType(countyName);
 	    }
 
     function classifyCountyTrajectory(dataOrSeries, unitNoun = 'county', censusContext = null) {
@@ -24283,82 +24240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	      // Structured snapshot classifier: accepts precomputed deltas.
 	      if (looksLikeShiftData) {
-	        const current_margin = Number(dataOrSeries?.current_margin);
-	        const shift_since_2020 = Number(dataOrSeries?.shift_since_2020);
-	        const shift_since_2008 = Number(dataOrSeries?.shift_since_2008);
-	        const shift_since_2000 = Number(dataOrSeries?.shift_since_2000);
-
-	        const deriveBaseFromMargin = (margin) => {
-	          const m = Number(margin);
-	          if (!Number.isFinite(m)) return 'Competitive';
-	          if (m >= 25) return 'Durable Republican Stronghold';
-	          if (m >= 15) return 'Durable Republican Lean';
-	          if (m >= 5) return 'Emerging Republican Edge';
-	          if (m >= 0) return 'Battleground';
-	          if (m <= -25) return 'Durable Democratic Stronghold';
-	          if (m <= -15) return 'Durable Democratic Lean';
-	          if (m <= -5) return 'Emerging Democratic Edge';
-	          return 'Battleground';
-	        };
-
-	        const base = String(dataOrSeries?.base || '').trim() || deriveBaseFromMargin(current_margin);
-	        let subtype = 'Stable / Mixed';
-	        let momentum = '↔ Mixed movement';
-
-	        // --- ACTIVE TRANSITION (Cabarrus-type)
-	        if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -20 && Number.isFinite(shift_since_2020) && shift_since_2020 <= -1.5 && current_margin > 5 && current_margin < 12) {
-	          subtype = 'Active Suburban Transition';
-	          momentum = '← Moving left faster';
-	        }
-	        // --- ACTIVE TRANSITION (reverse / D-hold narrowing)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 20 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 1.5 && current_margin < -5 && current_margin > -12) {
-	          subtype = 'Active Republican Transition';
-	          momentum = '→ Moving right faster';
-	        }
-	        // --- SUBURBANIZING (Union-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -5 && Number.isFinite(shift_since_2020) && shift_since_2020 > 0) {
-	          subtype = 'Suburbanizing (Lagging)';
-	          momentum = '↔ Long run left, short run right';
-	        }
-	        // --- SUBURBANIZING (reverse / long-run GOP, short-run Dem)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 5 && Number.isFinite(shift_since_2020) && shift_since_2020 < 0) {
-	          subtype = 'Counter-Suburbanizing (Lagging)';
-	          momentum = '↔ Long run right, short run left';
-	        }
-	        // --- SOFTENING RED (Brunswick-type)
-	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 <= -2 && current_margin > 10) {
-	          subtype = 'Red-leaning, cooling';
-	          momentum = '← Moving left';
-	        }
-	        // --- SOFTENING BLUE (reverse)
-	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 >= 2 && current_margin < -10) {
-	          subtype = 'Blue-leaning, cooling';
-	          momentum = '→ Moving right';
-	        }
-	        // --- REINFORCING REPUBLICAN (Randolph-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 10 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 1.25) {
-	          subtype = 'Moving right';
-	          momentum = '→ Moving right';
-	        }
-	        // --- REINFORCING DEMOCRATIC (reverse)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -10 && Number.isFinite(shift_since_2020) && shift_since_2020 <= -1.25) {
-	          subtype = 'Moving left';
-	          momentum = '← Moving left';
-	        }
-	        // --- REALIGNING REPUBLICAN (Caroline-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 18 && current_margin < 15) {
-	          subtype = 'Breaking right';
-	          momentum = '→ Strong move right';
-	        }
-	        // --- REALIGNING DEMOCRATIC (Chesterfield-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -18 && current_margin < 0) {
-	          subtype = 'Breaking left';
-	          momentum = '← Strong move left';
-	        }
-
-	        // Keep for optional downstream display / debugging.
-	        void shift_since_2008;
-	        return { base, subtype, momentum };
+	        return window.AtlasClassification.classifyTrajectorySnapshot(dataOrSeries);
 	      }
 
 	      const series = dataOrSeries;
@@ -24388,25 +24270,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban|Above-state growth county|Coastal growth/i.test(patternLabel);
 
       function getSignedMarginTowardGop(row) {
-        if (!row) return 0;
-        const explicit = Number(row.margin_pct);
-        const winnerRaw = (row.winner || '').toString().trim().toUpperCase();
-        const winnerNorm = winnerRaw === 'R' ? 'REP' : winnerRaw === 'D' ? 'DEM' : winnerRaw;
-        if (Number.isFinite(explicit) && explicit !== 0) {
-          if (winnerNorm === 'REP') return Math.abs(explicit);
-          if (winnerNorm === 'DEM') return -Math.abs(explicit);
-          // If the winner tag is missing/unknown but we have a signed margin, treat it as already
-          // encoded toward GOP (positive = R, negative = D). This avoids "0" fallbacks that can
-          // corrupt long-run shift deltas when vote totals aren't present on a precomputed row.
-          return explicit;
-        }
-        const repVotes = Number(row.rep_votes);
-        const demVotes = Number(row.dem_votes);
-        const totalVotes = Number(row.total_votes);
-        if (Number.isFinite(repVotes) && Number.isFinite(demVotes) && Number.isFinite(totalVotes) && totalVotes > 0) {
-          return ((repVotes - demVotes) / totalVotes) * 100;
-        }
-        return 0;
+        return window.AtlasClassification.getSignedMarginTowardGop(row);
       }
 
       function getSignedDisplayMarginTowardGop(row) {
@@ -24427,14 +24291,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return '↔ No clear shift';
-        return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}%`;
+        return window.AtlasClassification.formatShiftLabel(delta, TREND_SHIFT_NOISE_PTS);
       }
 
       function formatWinnerLabel(row, signedMargin) {
-        const absMargin = Math.abs(signedMargin);
-        if (absMargin < 0.005) return `${row.year}: Tie`;
-        return `${row.year}: ${signedMargin > 0 ? 'R' : 'D'}+${absMargin.toFixed(2)}%`;
+        return window.AtlasClassification.formatWinnerLabel(row, signedMargin);
       }
 
       const sorted = series
