@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-37';
-    const APP_BUILD_ID = '2026-07-16-37';
+    const DATA_CACHE_BUSTER = '2026-07-16-38';
+    const APP_BUILD_ID = '2026-07-16-38';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11722,13 +11722,11 @@ document.addEventListener('DOMContentLoaded', function() {
        senateAnchorSecondWeight: 0.34, // 0..1 share for 2020 inside the Senate anchor (rest is 2022)
        climateContestType: 'president',
        climateYear: 2024,
-        // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
-        // and tighter caps on county-specific ticket-splitting and "trend nudge" noise.
-        blendWeight: 0.74, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
-        // Slightly more Senate-anchor weight so soft-R rural counties (e.g. Pasquotank) stay nearer 2022 Senate
-        // rather than over-federalizing toward deep-red 2024 Pres climate.
-        presidentialBaselineWeight: 0.54,
-        senateBaselineWeight: 0.46,
+        // May 0505 / ffa restore (69fe6c0): Senate-first blend with lighter climate, then
+        // Jul soft-R locals + post-clamp statewide adj layered on top.
+        blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
+        presidentialBaselineWeight: 0.60,
+        senateBaselineWeight: 0.40,
         baselineRecentWeight: 0.60,
         baselineSecondWeight: 0.25,
         baselineLongRunWeight: 0.15,
@@ -11744,11 +11742,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Signed margins are R−D: higher adj → more Whatley; lower/negative adj → more Cooper.
         statewideTargetAdjustmentPts: 3.25,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        // Shape: Cooper's urban/suburban base is the growth coalition (metros replacing
-        // depopulating Black Belt residual Dem strength). Residual elasticity lifts those
-        // counties; rural GOP-over-Pres softener stays off.
-        ruralGopOverperformanceWeight: 0.0,
-        urbanDemElasticityWeight: 0.78,
+        // May shape: modest urban Dem elasticity + soft rural GOP-over-Pres; residual on so
+        // metro typing still receives the elasticity path (May had residual off + no metro force).
+        ruralGopOverperformanceWeight: 0.12,
+        urbanDemElasticityWeight: 0.35,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
@@ -11819,7 +11816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusContestType: 'governor', // for historical mode
         candidateBonusBaselineContestType: 'president', // for historical mode
         candidateBonusYears: [2016, 2020], // Cooper vs President same-year delta
-        candidateBonusWeight: 0.25,
+        candidateBonusWeight: 0.27,
         candidateBonusMinTwoPartyVotes: 20000, // damp small counties
         candidateBonusFallbackToHeuristic: true,
         candidateBonusConsistencyBoost: 1.20,
@@ -11855,8 +11852,9 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDeepRedCapPts: 0.32,
         candidateBonusMaxPts: 0.78,
         candidateBonusBasePts: 0.25,
-        candidateBonusUrbanPts: 0.22,
-        candidateBonusMetroPts: 0.40,
+        // May metro/urban bonus pts (0.30 / 0.15) with a light Jul lift for Cooper's metro base.
+        candidateBonusUrbanPts: 0.18,
+        candidateBonusMetroPts: 0.33,
         candidateBonusCoastalPts: 0.25,
         candidateBonusTransitionPts: 0.32,
         candidateBonusSlowPts: 0.30,
@@ -11890,10 +11888,9 @@ document.addEventListener('DOMContentLoaded', function() {
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
-          // Cooper's portable strength tracks the new Dem base: metros/suburbs first.
-          // Keep a meaningful rural softener so soft-R counties (Anson/Pasquotank-class)
-          // do not stay parked at midterm Budd margins after statewide recentering.
-          'Roy Cooper': { urban: 1.15, suburban: 0.92, exurban: 0.55, rural: 0.72 }
+          // Close May→Jul gap: pre-clamp only used rural 0.20; Jul overshot to urban 1.15.
+          // Keep metro-first portable strength, but closer to May-scale magnitudes.
+          'Roy Cooper': { urban: 0.55, suburban: 0.42, exurban: 0.28, rural: 0.45 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -11911,10 +11908,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // canonical county statewide margin without flattening district-specific variation.
         // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
         // Keep district layers near the county with-candidates statewide (~Whatley +1.9).
-        // Lower values = less Dem pull = higher R margin on district scopes.
-        districtStatewideAlignmentPtsCongressional: 0.72,
-        districtStatewideAlignmentPtsStateHouse: 0.55,
-        districtStatewideAlignmentPtsStateSenate: 0.80,
+        districtStatewideAlignmentPtsCongressional: 0.74,
+        districtStatewideAlignmentPtsStateHouse: 0.52,
+        districtStatewideAlignmentPtsStateSenate: 0.85,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -11923,12 +11919,10 @@ document.addEventListener('DOMContentLoaded', function() {
         realignedFormerDemFederalSenate2022Weight: 0.28,
         realignedFormerDemFederalSenate2020Weight: 0.20,
         realignedFormerDemFederalBlendWeight: 0.38,
-        // Turnout responsiveness by county class.
-        // Turnout responsiveness by county class: load more on urban/suburban Dem base;
-        // Black Belt residual turnout is less load-bearing as those counties federalize R.
-        turnoutUrbanCoreMul: 1.14,
-        turnoutBlackBeltMul: 1.02,
-        turnoutSuburbanMul: 1.06,
+        // May 0505 turnout class multipliers (urban/Black Belt/suburban).
+        turnoutUrbanCoreMul: 1.09,
+        turnoutBlackBeltMul: 1.07,
+        turnoutSuburbanMul: 1.035,
         turnoutGrowthExurbMul: 1.005,
         turnoutRealigningRuralMul: 1.02,
         turnoutRuralWhiteMul: 0.96,
