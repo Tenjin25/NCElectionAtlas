@@ -636,13 +636,13 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(7.85, 2);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeGreaterThan(-3);
-    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(4.10, 2);
+    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(4.85, 2);
     expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(-0.90, 2);
     expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(-0.60, 2);
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.48, 2);
+    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.72, 2);
     expect(modeledSnapshot.countiesWithRuralCooperBoost).toBeGreaterThan(0);
     expect(modeledSnapshot.realignedSpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
     expect(modeledSnapshot.anomalySpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
@@ -659,9 +659,9 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtRepCandidate).toBe('Sarah Stevens');
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.15, 2);
-    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeGreaterThan(1.4);
-    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeLessThan(1.8);
+    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(0.72, 2);
+    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeGreaterThan(1.7);
+    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeLessThan(2.05);
     expect(Math.abs(modeledSnapshot.senateDistrictTwoPartyMargin - modeledSnapshot.senateStatewideTwoPartyMargin)).toBeLessThan(0.10);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 

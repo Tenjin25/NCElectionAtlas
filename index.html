@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-34';
-    const APP_BUILD_ID = '2026-07-16-34';
+    const DATA_CACHE_BUSTER = '2026-07-16-37';
+    const APP_BUILD_ID = '2026-07-16-37';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11737,10 +11737,12 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityMaxVotes: 110000,
         baselineReliabilityFloor: 0.41,
         statewideRecenterStrength: 0.96,
-        // After county-clamped bridges, contest row sums match OE (no more cross-county inflation).
-        // Retune so county official totals stay near Whatley +1.6 (aligned with district layers).
+        // Historical calibration (Jul 12–16 commits / README): published with-candidates
+        // statewide lands just under Whatley +2 (~+1.9). Structural baseline without Cooper
+        // personal effects sits ~+1.5 pts redder (~R+3.5). Post-clamp backend uses a positive
+        // adj (pre-clamp used negative adj to offset precinct-aggregation R bias).
         // Signed margins are R−D: higher adj → more Whatley; lower/negative adj → more Cooper.
-        statewideTargetAdjustmentPts: 2.85,
+        statewideTargetAdjustmentPts: 3.25,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Shape: Cooper's urban/suburban base is the growth coalition (metros replacing
         // depopulating Black Belt residual Dem strength). Residual elasticity lifts those
@@ -11868,15 +11870,16 @@ document.addEventListener('DOMContentLoaded', function() {
           // and should not paint deep red after statewide recentering.
           'Roy Cooper': {
             NASH: 7.85,
-            WILSON: 4.10,
-            // Soft-R / barely-R 2022 Senate counties that recentering was overpainting.
-            PASQUOTANK: 2.10,
+            WILSON: 4.85,
+            // Soft-R / barely-R counties: pull toward Dem (Cooper crossover), not parked at Budd ~R+6.
+            ANSON: 7.20,
+            PASQUOTANK: 7.40,
             GATES: 2.80,
             MARTIN: 0.85,
-            SCOTLAND: 1.55,
-            GRANVILLE: 1.25,
-            JACKSON: 1.05,
-            // Coastal / NE peers still ~2 pts redder than 2022 Budd.
+            SCOTLAND: 2.80,
+            GRANVILLE: 2.40,
+            JACKSON: 1.80,
+            // Coastal / NE peers.
             HYDE: 1.80,
             PAMLICO: 1.80,
             DARE: 1.55,
@@ -11888,9 +11891,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         candidateCountyTypeBoostsPts: {
           // Cooper's portable strength tracks the new Dem base: metros/suburbs first.
-          // Exurban gets a moderate share; rural softener stays lighter because eastern
-          // Black Belt counties are depopulating and federalizing rightward.
-          'Roy Cooper': { urban: 1.15, suburban: 0.92, exurban: 0.55, rural: 0.48 }
+          // Keep a meaningful rural softener so soft-R counties (Anson/Pasquotank-class)
+          // do not stay parked at midterm Budd margins after statewide recentering.
+          'Roy Cooper': { urban: 1.15, suburban: 0.92, exurban: 0.55, rural: 0.72 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -11907,9 +11910,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Small scope-wide corrections keep independently allocated district slices near the
         // canonical county statewide margin without flattening district-specific variation.
         // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
-        districtStatewideAlignmentPtsCongressional: 1.15,
-        districtStatewideAlignmentPtsStateHouse: 0.92,
-        districtStatewideAlignmentPtsStateSenate: 1.24,
+        // Keep district layers near the county with-candidates statewide (~Whatley +1.9).
+        // Lower values = less Dem pull = higher R margin on district scopes.
+        districtStatewideAlignmentPtsCongressional: 0.72,
+        districtStatewideAlignmentPtsStateHouse: 0.55,
+        districtStatewideAlignmentPtsStateSenate: 0.80,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
