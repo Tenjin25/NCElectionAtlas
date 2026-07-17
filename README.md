@@ -1260,12 +1260,32 @@ npm test
 Optional commands:
 
 ```bash
+npm run test:core
 npm run test:headed
 npm run test:ui
 npm run test:report
 ```
 
+`test:core` runs fast Node regression tests for deterministic helpers extracted
+from the main page. The browser-facing function names remain in `index.html` as
+compatibility wrappers, so existing call sites can be migrated incrementally.
+
 ### Directory Structure
+
+- `js/atlas-classification.js` — Shared trajectory rules, growth archetypes, and election-shift labels
+- `js/atlas-data.js` — Shared resource paths, cache busting, request deduplication, and payload mapping
+- `js/atlas-manifest.js` — Shared contest visibility and historical judicial-seat family helpers
+- `js/atlas-modeling.js` — Shared modeled-contest signatures, county behavior labels, and confidence scoring
+- `js/atlas-regions.js` — Shared quick-jump county normalization and regional vote aggregation
+- `js/atlas-trends.js` — Shared historical-series normalization, anchor shifts, and volatility analysis
+- `js/atlas-turnout.js` — Shared turnout quantiles, opacity bands, and Mapbox expressions
+
+- `js/atlas-core.js` — Shared deterministic normalization, precinct-alias expansion, and vote-math helpers
+- `js/atlas-display.js` — Shared display rounding, close-race formatting, and HTML escaping
+- `js/atlas-election.js` — Shared vote-swing, quantile, contest parsing, and flip helpers
+- `js/atlas-url-state.js` — Shared URL token normalization and share-state parsing
+- `core-tests/` — Fast deterministic helper regression tests
+- `tests/` — Browser and data regression tests
 
 - `index.html`, `NCMap.html` — Main web app entry points
 - `data/` — All data files (see below)

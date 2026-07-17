@@ -10310,6 +10310,17 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
+    <script src="./js/atlas-classification.js"></script>
+    <script src="./js/atlas-core.js"></script>
+    <script src="./js/atlas-data.js"></script>
+    <script src="./js/atlas-display.js"></script>
+    <script src="./js/atlas-election.js"></script>
+    <script src="./js/atlas-manifest.js"></script>
+    <script src="./js/atlas-modeling.js"></script>
+    <script src="./js/atlas-regions.js"></script>
+    <script src="./js/atlas-trends.js"></script>
+    <script src="./js/atlas-turnout.js"></script>
+    <script src="./js/atlas-url-state.js"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10329,41 +10340,24 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (_) {}
 
     function detectBasePath() {
-      // GitHub Pages project sites are served under /<repo-name>/...
-      if (!window.location.hostname.endsWith('github.io')) return '';
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      return parts.length ? `/${parts[0]}` : '';
+      return window.AtlasData.detectBasePath(window.location);
     }
 
     function withBase(path) {
-      if (!path) return path;
-      if (/^https?:\/\//i.test(path)) return path;
-      const base = detectBasePath();
-      // Keep paths relative by default so the app works when served from a subfolder
-      // (e.g. `http://localhost:8000/NCPrecinctMap/index.html`) and in file-like previews.
-      // Only prefix an explicit GitHub Pages base when detected.
-      const cleaned = path.replace(/^\.\//, '').replace(/^\/+/, '');
-      return base ? `${base}/${cleaned}` : cleaned;
+      return window.AtlasData.withBase(path, window.location);
     }
 
     function toAbsoluteUrl(path) {
-      const p = (path || '').toString().trim();
-      if (!p) return p;
-      try { return new URL(p, window.location.href).toString(); } catch (_) { return p; }
+      return window.AtlasData.toAbsoluteUrl(path, window.location.href);
     }
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-33';
-    const APP_BUILD_ID = '2026-07-17-22';
+    const DATA_CACHE_BUSTER = '2026-07-17-35';
+    const APP_BUILD_ID = '2026-07-17-24';
 
     function withCacheBuster(path) {
-      const p = (path || '').toString().trim();
-      if (!p) return p;
-      if (/^mapbox:\/\//i.test(p)) return p;
-      if (/[?&]v=/.test(p)) return p;
-      const sep = p.includes('?') ? '&' : '?';
-      return `${p}${sep}v=${encodeURIComponent(DATA_CACHE_BUSTER)}`;
+      return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
     }
 
     const CONFIG = {
@@ -10543,54 +10537,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function normalizeRegionCountyName(name) {
-      return (name || '')
-        .toString()
-        .replace(/\s+COUNTY$/i, '')
-        .replace(/[^a-z0-9 .\-]/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toUpperCase();
+      return window.AtlasRegions.normalizeCountyName(name);
     }
 
     function getRegionCountySet(regionKey) {
       const counties = REGION_JUMPS[regionKey]?.counties || [];
-      return new Set(counties.map(normalizeRegionCountyName).filter(Boolean));
+      return window.AtlasRegions.getCountySet(counties);
     }
 
     function aggregateContestRowsForRegion(rows, contestType, regionKey) {
-      const countySet = getRegionCountySet(regionKey);
-      let dem = 0;
-      let rep = 0;
-      let other = 0;
-      let total = 0;
-      let demCandidate = '';
-      let repCandidate = '';
-      const matchedCounties = new Set();
-
-      (rows || []).forEach(row => {
-        const countyRaw = ((row?.county || '').toString().split(' - ')[0] || '').trim();
-        const countyNorm = normalizeRegionCountyName(countyRaw);
-        if (!countyNorm || !countySet.has(countyNorm)) return;
-
-        matchedCounties.add(countyNorm);
-        dem += Number(row?.[`${contestType}_dem`] || 0);
-        rep += Number(row?.[`${contestType}_rep`] || 0);
-        other += Number(row?.[`${contestType}_other`] || 0);
-        total += Number(row?.[`${contestType}_total`] || 0);
-        if (!demCandidate) demCandidate = (row?.[`${contestType}_dem_candidate`] || '').toString().trim();
-        if (!repCandidate) repCandidate = (row?.[`${contestType}_rep_candidate`] || '').toString().trim();
-      });
-
-      return {
-        dem,
-        rep,
-        other,
-        total,
-        demCandidate,
-        repCandidate,
-        matchedCounties: matchedCounties.size,
-        totalCounties: countySet.size
-      };
+      const counties = REGION_JUMPS[regionKey]?.counties || [];
+      return window.AtlasRegions.aggregateContestRows(rows, contestType, counties);
     }
 
     async function getRegionContestTotals(regionKey, contestType, year) {
@@ -11182,125 +11139,33 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${ct}__${fy}__${ty}`;
     }
 
-    const COUNCIL_OF_STATE_CONTEST_TYPES = new Set([
-      'governor',
-      'lieutenant_governor',
-      'attorney_general',
-      'auditor',
-      'secretary_of_state',
-      'treasurer',
-      'labor_commissioner',
-      'insurance_commissioner',
-      'agriculture_commissioner',
-      'superintendent'
-    ]);
-
     function parseMajorPartyContested(entry) {
-      const raw = entry?.major_party_contested;
-      if (typeof raw === 'boolean') return raw;
-      if (typeof raw === 'number') return raw !== 0;
-      if (typeof raw === 'string') {
-        const s = raw.trim().toLowerCase();
-        if (s === 'false' || s === '0' || s === 'no') return false;
-        if (s === 'true' || s === '1' || s === 'yes') return true;
-      }
-      const demTotal = Number(entry?.dem_total || 0);
-      const repTotal = Number(entry?.rep_total || 0);
-      if (demTotal > 0 || repTotal > 0) return demTotal > 0 && repTotal > 0;
-      return true;
+      return window.AtlasManifest.parseMajorPartyContested(entry);
     }
 
     function shouldIncludeManifestEntry(entry) {
-      if (!entry) return false;
-      const contestType = String(entry.contest_type || '').trim();
-      const year = Number(entry.year);
-      const rows = Number(entry.rows || entry.districts || 0) || 0;
-      if (!contestType || rows <= 0) return false;
-      const isJudicial = contestType.startsWith('nc_supreme_court_') || contestType.startsWith('nc_court_of_appeals_');
-      // Judicial (incl. pre-2018 nonpartisan ballot remaps) and Council of State:
-      // hide uncontested / same-party-only seats.
-      if (isJudicial && !parseMajorPartyContested(entry)) return false;
-      if (COUNCIL_OF_STATE_CONTEST_TYPES.has(contestType) && !parseMajorPartyContested(entry)) return false;
-      return true;
+      return window.AtlasManifest.shouldIncludeManifestEntry(entry);
     }
 
     function getVisibleManifestEntries(entries) {
-      return (Array.isArray(entries) ? entries : []).filter(shouldIncludeManifestEntry);
+      return window.AtlasManifest.getVisibleManifestEntries(entries);
     }
 
     // Named pre-2018 judicial files → Wikipedia seat numbers (Hunter COA is year-aware).
-    const NAMED_JUDICIAL_SEAT_MAP = {
-      nc_supreme_court_associate_justice_brady_seat: '1',
-      nc_supreme_court_associate_justice_newby_seat: '2',
-      nc_supreme_court_associate_justice_hudson_seat: '3',
-      nc_supreme_court_associate_justice_beasley_seat: '4',
-      nc_supreme_court_associate_justice_martin_seat: '5',
-      nc_supreme_court_associate_justice_edmunds_seat: '6',
-      nc_supreme_court_chief_justice_parker_seat: '1',
-      nc_court_of_appeals_judge_wynn_seat: '1',
-      nc_court_of_appeals_judge_calabria_seat: '2',
-      nc_court_of_appeals_judge_mcgee_seat: '4',
-      nc_court_of_appeals_judge_bryant_seat: '5',
-      nc_court_of_appeals_judge_thigpen_seat: '6',
-      nc_court_of_appeals_judge_mccullough_seat: '7',
-      nc_court_of_appeals_judge_davis_seat: '7',
-      nc_court_of_appeals_judge_stephens_seat: '11',
-      nc_court_of_appeals_judge_arrowood_seat: '12',
-      nc_court_of_appeals_judge_dietz_seat: '12',
-      nc_court_of_appeals_judge_martin_seat: '10',
-      nc_court_of_appeals_judge_zachary_seat: '14',
-      nc_court_of_appeals_judge_geer_seat: '15'
-    };
-
     function getJudicialSeatFamilyKey(contestType, year = NaN) {
-      const ct = String(contestType || '').trim();
-      if (!ct) return null;
-      let m = /^nc_supreme_court_associate_justice_seat_0*(\d+)$/i.exec(ct);
-      if (m) return `sc:${Number(m[1])}`;
-      m = /^nc_supreme_court_chief_justice_seat_0*(\d+)$/i.exec(ct);
-      if (m) return `cj:${Number(m[1])}`;
-      m = /^nc_court_of_appeals_judge_seat_0*(\d+)$/i.exec(ct);
-      if (m) return `coa:${Number(m[1])}`;
-      if (ct === 'nc_court_of_appeals_judge_hunter_seat') {
-        const y = Number(year);
-        return (y === 2016) ? 'coa:13' : 'coa:8';
-      }
-      if (ct === 'nc_supreme_court_chief_justice_parker_seat') return 'cj:1';
-      const namedSeat = NAMED_JUDICIAL_SEAT_MAP[ct];
-      if (!namedSeat) return null;
-      if (ct.startsWith('nc_supreme_court_chief_justice_')) return `cj:${Number(namedSeat)}`;
-      if (ct.startsWith('nc_supreme_court_associate_justice_')) return `sc:${Number(namedSeat)}`;
-      if (ct.startsWith('nc_court_of_appeals_judge_')) return `coa:${Number(namedSeat)}`;
-      return null;
+      return window.AtlasManifest.getJudicialSeatFamilyKey(contestType, year);
     }
 
     function judicialContestTypeMatchesFamily(contestType, familyKey, year = NaN) {
-      const key = getJudicialSeatFamilyKey(contestType, year);
-      return !!(familyKey && key && key === familyKey);
+      return window.AtlasManifest.judicialContestTypeMatchesFamily(contestType, familyKey, year);
     }
 
     function listJudicialFamilyManifestEntries(familyKey, manifestEntries) {
-      const out = [];
-      if (!familyKey || !Array.isArray(manifestEntries)) return out;
-      manifestEntries.forEach(entry => {
-        if (!entry) return;
-        const ct = String(entry.contest_type || '').trim();
-        const y = Number(entry.year);
-        if (!ct || !Number.isFinite(y) || y <= 0) return;
-        if (!judicialContestTypeMatchesFamily(ct, familyKey, y)) return;
-        out.push({ year: y, contest_type: ct, file: entry.file || '', scope: entry.scope || '' });
-      });
-      return out;
+      return window.AtlasManifest.listJudicialFamilyManifestEntries(familyKey, manifestEntries);
     }
 
     function pickPriorJudicialFamilyEntry(familyEntries, year) {
-      const y = Number(year);
-      if (!Number.isFinite(y) || !Array.isArray(familyEntries) || !familyEntries.length) return null;
-      // Nearest earlier election for this seat family (do not prefer y-8/y-16 over nearer years).
-      const earlier = familyEntries
-        .filter(e => Number(e.year) < y)
-        .sort((a, b) => Number(b.year) - Number(a.year));
-      return earlier[0] || null;
+      return window.AtlasManifest.pickPriorJudicialFamilyEntry(familyEntries, year);
     }
 
     function resolveJudicialFamilyContestTypeForYear(contestType, year, priorYear, scope = '') {
@@ -12277,63 +12142,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let urlPopstateSyncWired = false;
     let analyticsPanelsTimer = null;
     let analyticsPanelsRequestId = 0;
-    const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
-    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics', 'population_change']);
-
     function normalizeURLViewToken(raw) {
-      const token = String(raw || '').trim().toLowerCase();
-      return URL_VIEW_VALUES.has(token) ? token : '';
+      return window.AtlasURLState.normalizeViewToken(raw);
     }
 
     function normalizeURLModeToken(raw) {
-      const token = String(raw || '').trim().toLowerCase();
-      return URL_MODE_VALUES.has(token) ? token : '';
+      return window.AtlasURLState.normalizeModeToken(raw);
     }
 
     function parseURLStateFromLocation() {
-      const params = new URLSearchParams(window.location.search || '');
-      const view = normalizeURLViewToken(params.get('view'));
-      const contest = String(params.get('contest') || '').trim();
-      const mode = normalizeURLModeToken(params.get('mode'));
-      const focus = String(params.get('focus') || '').trim();
-      const linesRaw = String(params.get('lines') || '').trim();
-      const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
-      const swingRaw = String(params.get('swing') || '').trim();
-      const swing = swingRaw ? Number(swingRaw) : null;
-      const sscopeRaw = String(params.get('sscope') || '').trim().toLowerCase();
-      const sscope = sscopeRaw ? (sscopeRaw === 'wake' ? 'wake' : 'statewide') : null;
-      const barometerRaw = String(params.get('barometer') || params.get('bar') || '').trim().toLowerCase();
-      const barometerEnabled = barometerRaw
-        ? (barometerRaw === '1' || barometerRaw === 'true' || barometerRaw === 'on' || barometerRaw === 'yes')
-        : null;
-      const demoContrastRaw = String(params.get('democontrast') || params.get('demo_contrast') || '').trim().toLowerCase();
-      const demoContrastHigh = demoContrastRaw
-        ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
-        : null;
-      const popMetricRaw = String(params.get('popmetric') || '').trim().toLowerCase();
-      const popMetric = (popMetricRaw === 'abs' || popMetricRaw === 'pct') ? popMetricRaw : null;
-      const mBlendRaw = String(params.get('mblend') || '').trim();
-      const mTurnoutRaw = String(params.get('mturnout') || '').trim();
-      const mBonusRaw = String(params.get('mbonus') || '').trim();
-      const mBlend = mBlendRaw ? Number(mBlendRaw) : null;
-      const mTurnout = mTurnoutRaw ? Number(mTurnoutRaw) : null;
-      const mBonus = mBonusRaw ? Number(mBonusRaw) : null;
-      const hasAny = !!(
-        view ||
-        contest ||
-        mode ||
-        focus ||
-        lines !== null ||
-        swingRaw ||
-        sscopeRaw ||
-        barometerEnabled !== null ||
-        demoContrastHigh !== null ||
-        popMetric !== null ||
-        mBlendRaw ||
-        mTurnoutRaw ||
-        mBonusRaw
-      );
-      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, popMetric, mBlend, mTurnout, mBonus };
+      return window.AtlasURLState.parse(window.location.search || '');
     }
 
     function getFocusURLTokenFromState() {
@@ -12608,10 +12426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function normalizeDistrictLinesYear(raw) {
-      const y = Number(raw);
-      if (y === 2026) return 2026;
-      if (y === 2024) return 2024;
-      return 2022;
+      return window.AtlasURLState.normalizeDistrictLinesYear(raw);
     }
 
     function getDistrictLinesLabel(linesYear = currentDistrictLinesYear) {
@@ -12717,34 +12532,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Modeled contest signature + derived slice helpers ---
     // Signature is used to cache modeled results across contest switches and tuning changes.
     function modeledStableStringify(value) {
-      const seen = new WeakSet();
-      const recur = (v) => {
-        if (v === null || v === undefined) return v;
-        const t = typeof v;
-        if (t === 'number') return Number.isFinite(v) ? v : String(v);
-        if (t === 'string' || t === 'boolean') return v;
-        if (t !== 'object') return String(v);
-        if (seen.has(v)) return '[Circular]';
-        seen.add(v);
-        if (Array.isArray(v)) return v.map(recur);
-        const out = {};
-        Object.keys(v).sort().forEach(k => { out[k] = recur(v[k]); });
-        return out;
-      };
-      try { return JSON.stringify(recur(value)); } catch (_) { return String(value); }
+      return window.AtlasModeling.stableStringify(value);
     }
 
     function getModeledDefSignature(modeledDef) {
-      if (!modeledDef) return '';
-      const ct = String(modeledDef?.contestType || '').trim();
-      const y = Number(modeledDef?.year);
-      if (!ct || !Number.isFinite(y)) return '';
-      // Include the full definition (sorted keys) so any tuning input change yields a new cache key.
-      return `${ct}_${y}|${modeledStableStringify(modeledDef)}`;
+      return window.AtlasModeling.getDefinitionSignature(modeledDef);
     }
 
     function modeledNormalizeRowKey(raw) {
-      return (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+      return window.AtlasCore.normalizeRowKey(raw);
     }
 
     function modeledCountyFromRowKey(rawKey) {
@@ -13055,48 +12851,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getModelCountyBehaviorLabel(mode) {
-      const key = String(mode || 'balanced').trim().toLowerCase();
-      const labels = {
-        balanced: 'Balanced counties',
-        suburban_rebound: 'Suburban rebound',
-        rural_surge: 'Rural surge',
-        incumbent_friendly: 'Incumbent-friendly',
-        volatile: 'Volatile / low-confidence'
-      };
-      return labels[key] || labels.balanced;
+      return window.AtlasModeling.getCountyBehaviorLabel(mode);
     }
 
     function inferModelConfidence(modeled, baseModeled = null) {
-      if (!modeled) return { label: 'Low', range: '\u00b12.0 pts' };
-      const blend = Number(modeled?.blendWeight);
-      const bonus = Number(modeled?.candidateBonusScale);
-      const turnout = Number(modeled?.turnoutFactor);
-      const behavior = String(modeled?.countyBehaviorMode || 'balanced').trim().toLowerCase();
-      const uncertaintyBoost = Number(modeled?.uncertaintyBoost);
-      const blendDelta = (baseModeled && Number.isFinite(blend) && Number.isFinite(Number(baseModeled?.blendWeight)))
-        ? Math.abs(blend - Number(baseModeled.blendWeight))
-        : 0;
-      const turnoutDelta = (baseModeled && Number.isFinite(turnout) && Number.isFinite(Number(baseModeled?.turnoutFactor)))
-        ? Math.abs(turnout - Number(baseModeled.turnoutFactor))
-        : 0;
-      const bonusDelta = (baseModeled && Number.isFinite(bonus) && Number.isFinite(Number(baseModeled?.candidateBonusScale)))
-        ? Math.abs(bonus - Number(baseModeled.candidateBonusScale))
-        : 0;
-
-      let score = 0;
-      score += Math.max(0, 0.30 - (blendDelta * 0.65));
-      score += Math.max(0, 0.30 - (turnoutDelta * 0.80));
-      score += Math.max(0, 0.22 - (bonusDelta * 0.22));
-      if (behavior === 'balanced' || behavior === 'incumbent_friendly') score += 0.14;
-      if (behavior === 'suburban_rebound' || behavior === 'rural_surge') score += 0.05;
-      if (behavior === 'volatile') score -= 0.22;
-      if (Number.isFinite(uncertaintyBoost) && uncertaintyBoost > 1) score -= Math.min(0.18, (uncertaintyBoost - 1) * 0.28);
-
-      let label = 'Medium';
-      if (score >= 0.60) label = 'High';
-      else if (score < 0.36) label = 'Low';
-      const range = label === 'High' ? '\u00b11.4 pts' : (label === 'Medium' ? '\u00b12.0 pts' : '\u00b13.0 pts');
-      return { label, range };
+      return window.AtlasModeling.inferConfidence(modeled, baseModeled);
     }
 
     function updateModelScenarioSummary(modeled, baseModeled = null) {
@@ -13806,34 +13565,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function finalizeVoteSet(dIn, rIn, oIn, totalHint = 0) {
-      const d = Math.max(0, Math.round(Number(dIn) || 0));
-      const r = Math.max(0, Math.round(Number(rIn) || 0));
-      const o = Math.max(0, Math.round(Number(oIn) || 0));
-      const sum = d + r + o;
-      const hint = Math.max(0, Math.round(Number(totalHint) || 0));
-      return { dem: d, rep: r, other: o, total: sum > 0 ? sum : hint };
+      return window.AtlasElection.finalizeVoteSet(dIn, rIn, oIn, totalHint);
     }
 
     function shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swingPct = 0) {
-      const total = Number(totalVotes || 0);
-      let dem = Number(demVotes || 0);
-      let rep = Number(repVotes || 0);
-      const other = Number(otherVotes || 0);
-      if (!Number.isFinite(total) || total <= 0) return finalizeVoteSet(dem, rep, other, total);
-      const swing = Number(swingPct || 0);
-      if (Math.abs(swing) < 0.0001) return finalizeVoteSet(dem, rep, other, total);
-      const originalTwoParty = Math.max(0, dem + rep);
-      if (originalTwoParty <= 0) return finalizeVoteSet(dem, rep, other, total);
-      const deltaVotes = (swing / 200.0) * total; // +/-1 point margin shift == +/-0.5% vote transfer between D/R.
-      dem = Math.max(0, dem + deltaVotes);
-      rep = Math.max(0, rep - deltaVotes);
-      const adjustedTwoParty = dem + rep;
-      if (adjustedTwoParty > 0 && originalTwoParty > 0) {
-        const scale = originalTwoParty / adjustedTwoParty;
-        dem *= scale;
-        rep *= scale;
-      }
-      return finalizeVoteSet(dem, rep, other, total);
+      return window.AtlasElection.shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swingPct);
     }
 
     function applyScenarioShiftToVotes(countyNorm, demVotes, repVotes, otherVotes, totalVotes) {
@@ -13848,81 +13584,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function quantile(sortedValues, p) {
-      if (!sortedValues || !sortedValues.length) return 0;
-      const idx = Math.min(sortedValues.length - 1, Math.max(0, Math.floor((sortedValues.length - 1) * p)));
-      return Number(sortedValues[idx] || 0);
+      return window.AtlasElection.quantile(sortedValues, p);
     }
 
     function buildTurnoutOpacityMeta(totals) {
-      const values = (totals || [])
-        .map(v => Number(v || 0))
-        .filter(v => Number.isFinite(v) && v > 0)
-        .sort((a, b) => a - b);
-      if (!values.length) return null;
-      return {
-        q20: quantile(values, 0.20),
-        q40: quantile(values, 0.40),
-        q60: quantile(values, 0.60),
-        q80: quantile(values, 0.80)
-      };
+      return window.AtlasTurnout.buildOpacityMeta(totals);
     }
 
     function opacityFromTurnout(totalVotes, meta, baseOpacity) {
-      const t = Number(totalVotes || 0);
-      if (!meta || !Number.isFinite(t) || t <= 0) return baseOpacity;
-      if (t >= meta.q80) return Math.min(0.98, baseOpacity + 0.08);
-      if (t >= meta.q60) return Math.min(0.94, baseOpacity + 0.02);
-      if (t >= meta.q40) return Math.max(0.35, baseOpacity - 0.06);
-      if (t >= meta.q20) return Math.max(0.30, baseOpacity - 0.12);
-      return Math.max(0.24, baseOpacity - 0.18);
+      return window.AtlasTurnout.opacityFromTotal(totalVotes, meta, baseOpacity);
     }
 
     function buildCountyTurnoutOpacityExpression(baseOpacity) {
-      const entries = Object.entries(currentCountyTurnoutTotals || {});
-      if (!turnoutBivariateEnabled || !entries.length) return baseOpacity;
-      const meta = buildTurnoutOpacityMeta(entries.map(([, total]) => total));
-      if (!meta) return baseOpacity;
-      const expr = ['case'];
-      entries.forEach(([countyNorm, totalVotes]) => {
-        expr.push([
-          '==',
-          ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]],
-          countyNorm
-        ]);
-        expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
-      });
-      expr.push(Math.max(0.16, baseOpacity - 0.20));
-      return expr;
+      return window.AtlasTurnout.buildCountyExpression(
+        baseOpacity,
+        currentCountyTurnoutTotals,
+        turnoutBivariateEnabled
+      );
     }
 
     function buildDistrictTurnoutOpacityExpression(baseOpacity) {
-      const entries = Object.entries(currentDistrictTurnoutTotals || {});
-      if (!turnoutBivariateEnabled || !entries.length) return baseOpacity;
-      const meta = buildTurnoutOpacityMeta(entries.map(([, total]) => total));
-      if (!meta) return baseOpacity;
-      const expr = ['case'];
-      entries.forEach(([districtId, totalVotes]) => {
-        const districtNum = Number(districtId);
-        if (!Number.isFinite(districtNum)) return;
-        expr.push(['==', ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]], districtNum]);
-        expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
-      });
-      expr.push(Math.max(0.18, baseOpacity - 0.20));
-      return expr;
+      return window.AtlasTurnout.buildDistrictExpression(
+        baseOpacity,
+        currentDistrictTurnoutTotals,
+        turnoutBivariateEnabled
+      );
     }
 
     function buildPrecinctTurnoutOpacityExpression(baseOpacity) {
-      if (!turnoutBivariateEnabled || !currentPrecinctTurnoutTotals || !currentPrecinctTurnoutTotals.size) return baseOpacity;
-      const entries = Array.from(currentPrecinctTurnoutTotals.entries());
-      const meta = buildTurnoutOpacityMeta(entries.map(([, total]) => total));
-      if (!meta) return baseOpacity;
-      const expr = ['case'];
-      entries.forEach(([precinctNorm, totalVotes]) => {
-        expr.push(['==', ['get', 'precinct_norm'], precinctNorm]);
-        expr.push(opacityFromTurnout(totalVotes, meta, baseOpacity));
-      });
-      expr.push(Math.max(0.20, baseOpacity - 0.18));
-      return expr;
+      return window.AtlasTurnout.buildPrecinctExpression(
+        baseOpacity,
+        currentPrecinctTurnoutTotals,
+        turnoutBivariateEnabled
+      );
     }
 
     function getOverlayOpacityPresetConfig() {
@@ -14196,12 +13890,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // (saveUIState/restoreUIState defined above as no-ops)
 
     function normalizeCountyToken(name) {
-      return (name || '')
-        .toString()
-        .replace(/[^a-z0-9 .\-]/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toUpperCase();
+      return window.AtlasCore.normalizeCountyToken(name);
     }
 
     function backfillHistoricalPrecinctResultsWithCountyFallback(precinctResultsByNorm, countyAgg, contestType, year) {
@@ -14270,271 +13959,36 @@ document.addEventListener('DOMContentLoaded', function() {
       return filled;
     }
 
-    const PRECINCT_ALIAS_COMMON_WORDS = ['PRECINCT', 'PCT', 'WARD', 'DISTRICT', 'TOWNSHIP', 'BOX', 'VOTING', 'LOCATION'];
-
     function normalizePrecinctAliasToken(value) {
-      let t = (value || '').toString().trim().toUpperCase();
-      if (!t) return '';
-      PRECINCT_ALIAS_COMMON_WORDS.forEach(word => {
-        t = t.replace(new RegExp(word, 'g'), ' ');
-      });
-      t = t.replace(/[-_.]/g, ' ');
-      t = t.replace(/\s+/g, ' ').trim();
-      return t;
+      return window.AtlasCore.normalizePrecinctAliasToken(value);
     }
 
     function compactPrecinctAliasToken(value) {
-      return (value || '').toString().trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      return window.AtlasCore.compactPrecinctAliasToken(value);
     }
 
     function extractPrecinctAliasCandidates(rawPrecinctValue) {
-      const aliases = new Set();
-      const p = (rawPrecinctValue || '').toString().trim().toUpperCase();
-      if (!p) return aliases;
-      const pn = normalizePrecinctAliasToken(p);
-
-      aliases.add(p);
-      const pCompact = compactPrecinctAliasToken(p);
-      if (pCompact) aliases.add(pCompact);
-      if (pn) {
-        aliases.add(pn);
-        const pnCompact = compactPrecinctAliasToken(pn);
-        if (pnCompact) aliases.add(pnCompact);
-      }
-
-      // Normalize numbered name variants like "HUDSON #1" -> "HUDSON".
-      const noHash = p.replace(/#\s*\d+\b/g, ' ').replace(/\s+/g, ' ').trim();
-      if (noHash && noHash !== p) {
-        aliases.add(noHash);
-        const noHashCompact = compactPrecinctAliasToken(noHash);
-        if (noHashCompact) aliases.add(noHashCompact);
-        const noHashNorm = normalizePrecinctAliasToken(noHash);
-        if (noHashNorm) {
-          aliases.add(noHashNorm);
-          const noHashNormCompact = compactPrecinctAliasToken(noHashNorm);
-          if (noHashNormCompact) aliases.add(noHashNormCompact);
-        }
-      }
-
-      // Include slash-separated components for compound legacy labels.
-      if (p.includes('/')) {
-        p.split('/').forEach(part => {
-          const partTrim = (part || '').toString().trim().toUpperCase();
-          if (!partTrim) return;
-          aliases.add(partTrim);
-          const partCompact = compactPrecinctAliasToken(partTrim);
-          if (partCompact) aliases.add(partCompact);
-        });
-      }
-
-      if (p.includes('_')) {
-        const [left, ...restParts] = p.split('_');
-        const right = restParts.join('_').trim();
-        if (left && left.trim()) {
-          aliases.add(left.trim().toUpperCase());
-          const leftCompact = compactPrecinctAliasToken(left);
-          if (leftCompact) aliases.add(leftCompact);
-        }
-        if (right) {
-          aliases.add(right.toUpperCase());
-          const rightCompact = compactPrecinctAliasToken(right);
-          if (rightCompact) aliases.add(rightCompact);
-        }
-      }
-
-      const groupSuffixMatch = p.match(/^(.+?)(?:[-\s]+G\d+[A-Z]?)$/);
-      if (groupSuffixMatch && /[A-Z]/.test(groupSuffixMatch[1] || '')) {
-        const stripped = (groupSuffixMatch[1] || '').toString().trim().toUpperCase();
-        if (stripped) {
-          aliases.add(stripped);
-          const strippedNorm = normalizePrecinctAliasToken(stripped);
-          if (strippedNorm) aliases.add(strippedNorm);
-          const strippedCompact = compactPrecinctAliasToken(stripped);
-          if (strippedCompact) aliases.add(strippedCompact);
-          if (strippedNorm) {
-            const strippedNormCompact = compactPrecinctAliasToken(strippedNorm);
-            if (strippedNormCompact) aliases.add(strippedNormCompact);
-          }
-        }
-      }
-
-      const parts = (pn || '').split(' ').filter(Boolean);
-      if (parts.length) {
-        const first = parts[0];
-        if (/[0-9]/.test(first)) {
-          aliases.add(first);
-          const firstCompact = compactPrecinctAliasToken(first);
-          if (firstCompact) aliases.add(firstCompact);
-          const rest = parts.slice(1).join(' ').trim().toUpperCase();
-          if (rest) {
-            aliases.add(rest);
-            const restCompact = compactPrecinctAliasToken(rest);
-            if (restCompact) aliases.add(restCompact);
-          }
-        }
-      }
-
-      if (parts.length >= 2 && parts.length % 2 === 0) {
-        const midpoint = parts.length / 2;
-        const left = parts.slice(0, midpoint);
-        const right = parts.slice(midpoint);
-        if (left.join('\u0000') === right.join('\u0000')) {
-          const collapsed = left.join(' ').trim().toUpperCase();
-          if (collapsed) {
-            aliases.add(collapsed);
-            aliases.add(collapsed.replace(/\s+/g, '-'));
-            const collapsedCompact = compactPrecinctAliasToken(collapsed);
-            if (collapsedCompact) aliases.add(collapsedCompact);
-          }
-        }
-      }
-
-      const dotVariant = p.replace(/-/g, '.');
-      if (dotVariant.includes('.')) {
-        const [aRaw, bRaw] = dotVariant.split('.', 2);
-        if (/^\d+$/.test(aRaw || '') && /^\d+$/.test(bRaw || '')) {
-          const a = Number(aRaw);
-          const b = Number(bRaw);
-          const z2 = (n) => String(n).padStart(2, '0');
-          aliases.add(`${a}.${b}`);
-          aliases.add(`${z2(a)}.${b}`);
-          aliases.add(`${z2(a)}${b}`);
-          aliases.add(`${z2(a)}${z2(b)}`);
-        }
-      }
-
-      if (/^\d+$/.test(p)) {
-        aliases.add(String(Number(p)));
-        aliases.add(p.padStart(4, '0'));
-      }
-
-      return aliases;
+      return window.AtlasCore.extractPrecinctAliasCandidates(rawPrecinctValue);
     }
 
     function addNumericBaseVariantsFromAlphaSuffix(token, addVariantFn) {
-      const t = (token || '').toString().trim().toUpperCase();
-      const m = t.match(/^0*([0-9]{1,4})([A-Z]{1,2})$/);
-      if (!m) return;
-      const n = parseInt(m[1], 10);
-      if (isNaN(n)) return;
-      addVariantFn(String(n));
-      addVariantFn(String(n).padStart(2, '0'));
-      addVariantFn(String(n).padStart(3, '0'));
-      addVariantFn(String(n).padStart(4, '0'));
-      // Some counties (notably Gaston) use "-1" splits in geometry while
-      // historical result exports use "A" suffixes for the same precinct.
-      addVariantFn(`${String(n)}-1`);
-      addVariantFn(`${String(n).padStart(2, '0')}-1`);
-      addVariantFn(`${String(n).padStart(3, '0')}-1`);
-      addVariantFn(`${String(n).padStart(4, '0')}-1`);
+      return window.AtlasCore.addNumericBaseVariantsFromAlphaSuffix(token, addVariantFn);
     }
 
     function addEmbeddedPrecinctCodeVariants(rawToken, addVariantFn) {
-      const t = (rawToken || '').toString().trim().toUpperCase();
-      if (!t || typeof addVariantFn !== 'function') return;
-      const addSafe = (value) => {
-        const v = (value || '').toString().trim().toUpperCase();
-        if (v) addVariantFn(v);
-      };
-
-      // Wake-style legacy labels like "PRECINCT 01-14A".
-      const codeLike = t.match(/\b(\d{2}-\d{2}[A-Z]{0,2})\b/);
-      if (codeLike) {
-        const code = codeLike[1];
-        addSafe(code);
-        const base = code.match(/^(\d{2}-\d{2})[A-Z]{1,2}$/);
-        if (base) addSafe(base[1]);
-      }
-
-      // Caldwell/Harnett-style labels like "PR01 GAMEWELL #1".
-      const prLike = t.match(/\bPR\s*0*([0-9]{1,3})([A-Z]{0,2})\b/);
-      if (prLike) {
-        const n = parseInt(prLike[1], 10);
-        const suf = (prLike[2] || '').toUpperCase();
-        if (!isNaN(n)) {
-          addSafe(`PR${String(n)}${suf}`);
-          addSafe(`PR${String(n).padStart(2, '0')}${suf}`);
-          addSafe(`${String(n)}${suf}`);
-          addSafe(`${String(n).padStart(2, '0')}${suf}`);
-          addSafe(`${String(n).padStart(3, '0')}${suf}`);
-          addSafe(`${String(n).padStart(4, '0')}${suf}`);
-        }
-      }
+      return window.AtlasCore.addEmbeddedPrecinctCodeVariants(rawToken, addVariantFn);
     }
 
     function addClosestHyphenCodeVariants(rawToken, countyCodes, addVariantFn) {
-      if (!countyCodes || typeof addVariantFn !== 'function') return;
-      const t = (rawToken || '').toString().trim().toUpperCase();
-      const m = t.match(/\b(\d{2})-(\d{2})([A-Z]{0,2})\b/);
-      if (!m) return;
-      const exactCode = `${m[1]}-${m[2]}${m[3] || ''}`;
-      if (countyCodes.has(exactCode)) return;
-
-      const prefix = m[1];
-      const target = parseInt(m[2], 10);
-      if (isNaN(target)) return;
-
-      const candidates = [];
-      countyCodes.forEach(code => {
-        const c = (code || '').toString().trim().toUpperCase();
-        const cm = c.match(/^(\d{2})-(\d{2})([A-Z]{0,2})$/);
-        if (!cm || cm[1] !== prefix) return;
-        const num = parseInt(cm[2], 10);
-        if (isNaN(num)) return;
-        candidates.push({ code: c, num, diff: Math.abs(num - target) });
-      });
-      if (!candidates.length) return;
-
-      // Prefer exact numeric base with letter suffixes (e.g., 01-07 -> 01-07A/B).
-      const sameNum = candidates.filter(c => c.num === target);
-      if (sameNum.length && sameNum.length <= 3) {
-        sameNum.forEach(c => addVariantFn(c.code));
-        return;
-      }
-
-      candidates.sort((a, b) => (a.diff - b.diff) || a.code.localeCompare(b.code));
-      const bestDiff = candidates[0].diff;
-      candidates
-        .filter(c => c.diff === bestDiff)
-        .slice(0, 2)
-        .forEach(c => addVariantFn(c.code));
+      return window.AtlasCore.addClosestHyphenCodeVariants(rawToken, countyCodes, addVariantFn);
     }
 
     function addCompactCodeVariants(rawToken, countyCodes, addVariantFn) {
-      if (!countyCodes || typeof addVariantFn !== 'function') return;
-      const tokenCompact = compactPrecinctAliasToken(rawToken);
-      if (!tokenCompact) return;
-      const hits = [];
-      countyCodes.forEach(code => {
-        const c = (code || '').toString().trim().toUpperCase();
-        if (!c) return;
-        if (compactPrecinctAliasToken(c) === tokenCompact) hits.push(c);
-      });
-      if (hits.length === 1) addVariantFn(hits[0]);
+      return window.AtlasCore.addCompactCodeVariants(rawToken, countyCodes, addVariantFn);
     }
 
     function addPrefixStrippedNumericVariants(rawToken, countyCodes, addVariantFn) {
-      if (!countyCodes || typeof addVariantFn !== 'function') return;
-      const t = (rawToken || '').toString().trim().toUpperCase();
-      if (!t) return;
-      // Examples:
-      //   PR01 -> 01
-      //   P03  -> 03
-      //   W13  -> 13
-      //   N5   -> 5
-      const m = t.match(/^[A-Z]{1,3}0*([0-9]{1,4})([A-Z]{0,2})$/);
-      if (!m) return;
-      const n = parseInt(m[1], 10);
-      if (isNaN(n)) return;
-      const suffix = (m[2] || '').toUpperCase();
-      const candidates = Array.from(new Set([
-        `${n}${suffix}`,
-        `${String(n).padStart(2, '0')}${suffix}`,
-        `${String(n).padStart(3, '0')}${suffix}`,
-        `${String(n).padStart(4, '0')}${suffix}`,
-      ])).filter(Boolean);
-      const hits = candidates.filter(code => countyCodes.has(code));
-      if (hits.length === 1) addVariantFn(hits[0]);
+      return window.AtlasCore.addPrefixStrippedNumericVariants(rawToken, countyCodes, addVariantFn);
     }
 
     function addKnownLegacyCentroidBridges(countyNorm, rawToken, addVariantFn) {
@@ -14878,31 +14332,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatCompactVoteTotal(value) {
-      const votes = Number(value || 0);
-      if (!Number.isFinite(votes) || votes <= 0) return '0';
-      if (votes >= 1000000) {
-        const digits = votes >= 10000000 ? 1 : 2;
-        return `${(votes / 1000000).toFixed(digits)}M`;
-      }
-      if (votes >= 1000) {
-        const digits = votes >= 100000 ? 0 : 1;
-        return `${(votes / 1000).toFixed(digits)}K`;
-      }
-      return votes.toLocaleString();
+      return window.AtlasDisplay.formatCompactVoteTotal(value);
     }
 
     function formatCompactDeltaTotal(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n) || n <= 0) return '0';
-      if (n >= 1000000) {
-        const digits = n >= 10000000 ? 1 : 2;
-        return `${(n / 1000000).toFixed(digits)}M`;
-      }
-      if (n >= 1000) {
-        const digits = n >= 100000 ? 0 : 1;
-        return `${(n / 1000).toFixed(digits)}k`;
-      }
-      return n.toLocaleString();
+      return window.AtlasDisplay.formatCompactDeltaTotal(value);
     }
 
     function getTrendWinnerMeta(item, contestMeta = null) {
@@ -15292,27 +14726,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return window.AtlasDisplay.escapeHtml(text);
     }
 
     function formatSignedCompactDelta(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n) || n === 0) return '0';
-      const sign = n > 0 ? '+' : '-';
-      return `${sign}${formatCompactDeltaTotal(Math.abs(n))}`;
+      return window.AtlasDisplay.formatSignedCompactDelta(value);
     }
 
     function formatSignedPctDelta(value, digits = 1) {
-      const n = Number(value);
-      if (!Number.isFinite(n) || n === 0) return '0.0%';
-      const d = Math.max(0, Number(digits) || 0);
-      const sign = n > 0 ? '+' : '-';
-      return `${sign}${Math.abs(n).toFixed(d)}%`;
+      return window.AtlasDisplay.formatSignedPctDelta(value, digits);
     }
 
     function buildCountyDeltaBlockHTML(countyNorm, contestType, options = {}) {
@@ -16355,44 +15777,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadJSON(path) {
       const requestPath = withCacheBuster(path);
-      if (jsonResultByPath.has(requestPath)) return jsonResultByPath.get(requestPath);
-      if (jsonInflightByPath.has(requestPath)) return jsonInflightByPath.get(requestPath);
-      const p = atlasPerf(`json:${requestPath}`, async () => {
-        const r = await fetch(requestPath, { cache: 'force-cache' });
-        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-        const data = await r.json();
-        jsonResultByPath.set(requestPath, data);
-        return data;
+      return window.AtlasData.loadCached(requestPath, {
+        resolvedCache: jsonResultByPath,
+        inflightCache: jsonInflightByPath,
+        load: () => atlasPerf(`json:${requestPath}`, async () => {
+          const response = await fetch(requestPath, { cache: 'force-cache' });
+          if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
+          return response.json();
+        })
       });
-      jsonInflightByPath.set(requestPath, p);
-      try {
-        return await p;
-      } finally {
-        jsonInflightByPath.delete(requestPath);
-      }
     }
 
 	    async function loadCSV(path) {
 	      const requestPath = withCacheBuster(path);
-	      if (csvTextByPath.has(requestPath)) return csvTextByPath.get(requestPath);
-	      if (csvInflightByPath.has(requestPath)) return csvInflightByPath.get(requestPath);
-	      const p = atlasPerf(`csv:${requestPath}`, async () => {
-	        const r = await fetch(requestPath, { cache: 'force-cache' });
-	        if (!r.ok) throw new Error(`${requestPath} fetch failed: ${r.status}`);
-	        const text = await r.text();
-	        // Cache small/medium static CSVs to avoid repeated fetch + decode while not
-	        // pinning very large raw election files in memory after they are parsed.
-	        if (text.length <= 5 * 1024 * 1024) {
-	          csvTextByPath.set(requestPath, text);
-	        }
-	        return text;
+	      return window.AtlasData.loadCached(requestPath, {
+	        resolvedCache: csvTextByPath,
+	        inflightCache: csvInflightByPath,
+	        shouldCache: text => text.length <= 5 * 1024 * 1024,
+	        load: () => atlasPerf(`csv:${requestPath}`, async () => {
+	          const response = await fetch(requestPath, { cache: 'force-cache' });
+	          if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
+	          return response.text();
+	        })
 	      });
-	      csvInflightByPath.set(requestPath, p);
-	      try {
-	        return await p;
-	      } finally {
-	        csvInflightByPath.delete(requestPath);
-	      }
 	    }
 
 	    const PRESIDENT_OPEN_ELECTIONS_CSV = {
@@ -16508,101 +15915,29 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function computeStatewideMarginPctFromDistrictResults(results) {
-        const totals = Object.values(results || {}).reduce((acc, row) => {
-          acc.dem += Number(row?.dem_votes || 0);
-          acc.rep += Number(row?.rep_votes || 0);
-          acc.total += Number(row?.total_votes || 0);
-          return acc;
-        }, { dem: 0, rep: 0, total: 0 });
-        return signedMarginPctFromVotes(totals.dem, totals.rep, totals.total);
+        return window.AtlasModeling.computeStatewideMarginFromDistrictResults(
+          results,
+          signedMarginPctFromVotes
+        );
       }
 
       function rescaleVoteSetToTargetTotal(voteSet, targetTotal) {
-        const desired = Math.max(0, Math.round(Number(targetTotal) || 0));
-        const baseTotal = Math.max(0, Math.round(Number(voteSet?.total) || 0));
-        if (!Number.isFinite(desired) || desired <= 0 || baseTotal <= 0) return voteSet;
-
-        const scale = desired / baseTotal;
-        let dem = Math.max(0, Math.round((Number(voteSet?.dem) || 0) * scale));
-        let rep = Math.max(0, Math.round((Number(voteSet?.rep) || 0) * scale));
-        const twoParty = dem + rep;
-        if (twoParty > desired && twoParty > 0) {
-          const demShare = dem / twoParty;
-          dem = Math.max(0, Math.round(demShare * desired));
-          rep = Math.max(0, desired - dem);
-          return { dem, rep, other: 0, total: desired };
-        }
-        const other = Math.max(0, desired - twoParty);
-        return { dem, rep, other, total: desired };
+        return window.AtlasCore.rescaleVoteSetToTargetTotal(voteSet, targetTotal);
       }
 
       function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct, options = null) {
-        const baseContestType = modeledDef.baseContestType;
-        const contestType = modeledDef.contestType;
-        const shifted = shiftVotesBySwingPct(
-          Number(baseRow?.[`${baseContestType}_dem`] || 0),
-          Number(baseRow?.[`${baseContestType}_rep`] || 0),
-          Number(baseRow?.[`${baseContestType}_other`] || 0),
-          Number(baseRow?.[`${baseContestType}_total`] || 0),
-          climateSwingPct
+        return window.AtlasModeling.buildContestRow(
+          baseRow,
+          modeledDef,
+          climateSwingPct,
+          options,
+          {
+            shiftVotes: shiftVotesBySwingPct,
+            rescaleVotes: rescaleVoteSetToTargetTotal,
+            signedMargin: signedMarginPctFromVotes,
+            colorForMargin: colorForMarginMode
+          }
         );
-        const targetTotal = options && Number.isFinite(Number(options.targetTotal))
-          ? Number(options.targetTotal)
-          : null;
-        const scaled = targetTotal ? rescaleVoteSetToTargetTotal(shifted, targetTotal) : shifted;
-        const signed = signedMarginPctFromVotes(scaled.dem, scaled.rep, scaled.total);
-        const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
-        const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
-        const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
-        const row = {
-          year: Number(modeledDef.year),
-          county: baseRow?.county || '',
-          [`${contestType}_dem`]: scaled.dem,
-          [`${contestType}_rep`]: scaled.rep,
-          [`${contestType}_other`]: scaled.other,
-          [`${contestType}_total`]: scaled.total,
-          [`${contestType}_dem_candidate`]: modeledDef.demCandidate || '',
-          [`${contestType}_rep_candidate`]: modeledDef.repCandidate || '',
-          [`${contestType}_margin`]: Math.round(scaled.rep - scaled.dem),
-          [`${contestType}_margin_pct`]: signed,
-          [`${contestType}_winner`]: winner,
-          [`${contestType}_color`]: color
-        };
-        const modelMeta = options?.modelMeta || null;
-        if (modelMeta && Number.isFinite(Number(modelMeta.baselineNoCandidateSigned))) {
-          row.__model_baseline_margin_pct = Number(modelMeta.baselineNoCandidateSigned);
-          row.__model_with_candidates_margin_pct = Number.isFinite(Number(modelMeta.desiredSigned))
-            ? Number(modelMeta.desiredSigned)
-            : Number(signed);
-          row.__model_candidate_effect_d_pts = Number.isFinite(Number(modelMeta.candidateEffectDemPts))
-            ? Number(modelMeta.candidateEffectDemPts)
-            : 0;
-          row.__model_candidate_effect_durable_pts = Number.isFinite(Number(modelMeta.candidateEffectDurableDemPts))
-            ? Number(modelMeta.candidateEffectDurableDemPts)
-            : 0;
-          row.__model_candidate_effect_personal_pts = Number.isFinite(Number(modelMeta.candidateEffectPersonalDemPts))
-            ? Number(modelMeta.candidateEffectPersonalDemPts)
-            : 0;
-          row.__model_candidate_effect_local_d_pts = Number.isFinite(Number(modelMeta.candidateEffectLocalDemPts))
-            ? Number(modelMeta.candidateEffectLocalDemPts)
-            : 0;
-          row.__model_candidate_effect_county_type_d_pts = Number.isFinite(Number(modelMeta.candidateEffectCountyTypeDemPts))
-            ? Number(modelMeta.candidateEffectCountyTypeDemPts)
-            : 0;
-          row.__model_anchor_spread_pts = Number.isFinite(Number(modelMeta.anchorSpreadPts)) ? Number(modelMeta.anchorSpreadPts) : NaN;
-          row.__model_input_disagreement = (modelMeta.inputDisagreement || '').toString();
-          row.__model_anchors_aligned = Number(modelMeta.anchorsAligned || 0);
-          row.__model_confidence_label = (modelMeta.modelConfidenceLabel || '').toString();
-          row.__model_confidence_band = (modelMeta.modelConfidenceBand || '').toString();
-          row.__model_influence_presidential_climate_pts = Number.isFinite(Number(modelMeta.influencePresidentialClimatePts)) ? Number(modelMeta.influencePresidentialClimatePts) : NaN;
-          row.__model_influence_senate_baseline_pts = Number.isFinite(Number(modelMeta.influenceSenateBaselinePts)) ? Number(modelMeta.influenceSenateBaselinePts) : NaN;
-          row.__model_influence_extra_movement_pts = Number.isFinite(Number(modelMeta.influenceExtraModeledMovementPts)) ? Number(modelMeta.influenceExtraModeledMovementPts) : NaN;
-          row.__model_influence_crossover_dem_pts = Number.isFinite(Number(modelMeta.influenceCrossoverDemPts)) ? Number(modelMeta.influenceCrossoverDemPts) : NaN;
-          row.__model_explain_tags = Array.isArray(modelMeta.explanationTags)
-            ? modelMeta.explanationTags.map(v => String(v || '').trim()).filter(Boolean).join(' • ')
-            : '';
-        }
-        return row;
       }
 
       async function buildModeledContestSliceRows(modeledDef, opts = null) {
@@ -19791,37 +19126,18 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function buildModeledDistrictResultRow(baseRow, modeledDef, climateSwingPct, targetTotalOverride = null) {
-        const shifted = shiftVotesBySwingPct(
-          Number(baseRow?.dem_votes || 0),
-          Number(baseRow?.rep_votes || 0),
-          Number(baseRow?.other_votes || 0),
-          Number(baseRow?.total_votes || 0),
-          climateSwingPct
-        );
-        const desired = Number(targetTotalOverride);
-        const scaled = (Number.isFinite(desired) && desired > 0)
-          ? rescaleVoteSetToTargetTotal(shifted, desired)
-          : shifted;
-        const signed = signedMarginPctFromVotes(scaled.dem, scaled.rep, scaled.total);
-        const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
-        const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
-        const color = winnerKey === 'T' ? '#9ca3af' : colorForMarginMode(Math.abs(signed), winnerKey);
-        return {
-          ...baseRow,
-          dem_votes: scaled.dem,
-          rep_votes: scaled.rep,
-          other_votes: scaled.other,
-          total_votes: scaled.total,
-          dem_candidate: modeledDef.demCandidate || '',
-          rep_candidate: modeledDef.repCandidate || '',
-          margin: Math.round(scaled.rep - scaled.dem),
-          margin_pct: signed,
-          winner,
-          competitiveness: {
-            ...(baseRow?.competitiveness || {}),
-            color
+        return window.AtlasModeling.buildDistrictResultRow(
+          baseRow,
+          modeledDef,
+          climateSwingPct,
+          targetTotalOverride,
+          {
+            shiftVotes: shiftVotesBySwingPct,
+            rescaleVotes: rescaleVoteSetToTargetTotal,
+            signedMargin: signedMarginPctFromVotes,
+            colorForMargin: colorForMarginMode
           }
-        };
+        );
       }
 
       async function buildModeledDistrictSliceNode(scope, modeledDef, linesYear) {
@@ -20217,20 +19533,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function mapContestPayloadRows(payload, contestType, year) {
-        return (payload?.rows || []).map(r => ({
-          year: Number(year),
-          county: r.county,
-          [`${contestType}_dem`]: Number(r.dem_votes) || 0,
-          [`${contestType}_rep`]: Number(r.rep_votes) || 0,
-          [`${contestType}_other`]: Number(r.other_votes) || 0,
-          [`${contestType}_total`]: Number(r.total_votes) || 0,
-          [`${contestType}_dem_candidate`]: r.dem_candidate || '',
-          [`${contestType}_rep_candidate`]: r.rep_candidate || '',
-          [`${contestType}_margin`]: Number(r.margin) || 0,
-          [`${contestType}_margin_pct`]: Number(r.margin_pct) || 0,
-          [`${contestType}_winner`]: r.winner || '',
-          [`${contestType}_color`]: r.color || ''
-        }));
+        return window.AtlasData.mapContestPayloadRows(payload, contestType, year);
       }
 
       async function loadCountyContestSlice(contestType, year) {
@@ -22528,92 +21831,59 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function roundPct2(value) {
-      return roundForDisplay(value, 2);
+      return window.AtlasDisplay.roundPct2(value);
     }
 
     function roundForDisplay(value, digits = 2) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n)) return 0;
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      const factor = Math.pow(10, d);
-      const epsilonNudge = (Math.sign(n) || 1) * Number.EPSILON * 8;
-      return Math.round((n + epsilonNudge) * factor) / factor;
+      return window.AtlasDisplay.roundForDisplay(value, digits);
     }
 
     function toFixedForDisplay(value, digits = 2) {
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      return roundForDisplay(value, d).toFixed(d);
+      return window.AtlasDisplay.toFixedForDisplay(value, digits);
     }
 
     function formatVotehubPct(value, digits = 2) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return (0).toFixed(digits);
-      if (typeof roundForDisplay === 'function') {
-        return Number(roundForDisplay(n, digits)).toFixed(digits);
-      }
-      return Number(Math.round(Number(n + 'e' + digits)) + 'e-' + digits).toFixed(digits);
+      return window.AtlasDisplay.formatVotehubPct(value, digits);
     }
 
     function formatVotehubVotes(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n)) return '0';
-      return Math.round(n).toLocaleString();
+      return window.AtlasDisplay.formatVotehubVotes(value);
     }
 
     function partyPctValue(votes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return roundPct2((Number(votes || 0) / t) * 100.0);
+      return window.AtlasDisplay.partyPctValue(votes, totalVotes);
     }
 
     function marginPctValue(repVotes, demVotes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
+      return window.AtlasDisplay.marginPctValue(repVotes, demVotes, totalVotes);
     }
 
     function preservesTwoDecimalMargin(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return roundForDisplay(pct, 2) >= 0.02;
+      return window.AtlasDisplay.preservesTwoDecimalMargin(marginPct);
     }
 
     function closeRaceDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.closeRaceDisplayDigits(marginPct);
     }
 
     function formatPctForCloseRace(value, marginPct) {
-      const numeric = Number(value || 0);
-      const digits = closeRaceDisplayDigits(marginPct);
-      return toFixedForDisplay(numeric, digits);
+      return window.AtlasDisplay.formatPctForCloseRace(value, marginPct);
     }
 
     function formatPctForCountyCloseRace(value, marginPct) {
-      const numeric = Number(value || 0);
-      const digits = countyMarginDisplayDigits(marginPct);
-      return toFixedForDisplay(numeric, digits);
+      return window.AtlasDisplay.formatPctForCountyCloseRace(value, marginPct);
     }
 
     function marginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.marginDisplayDigits(marginPct);
     }
 
     function formatMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, marginDisplayDigits(pct));
+      return window.AtlasDisplay.formatMarginPctForDisplay(marginPct);
     }
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      const diff = Math.abs(repPctDisplay - demPctDisplay);
-      // If rounding causes both sides to display equal, fall back to the true margin so we don't
-      // incorrectly show a tie (or 0.000%) when there is a non-zero lead.
-      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
-      return diff;
+      return window.AtlasDisplay.marginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
@@ -22630,26 +21900,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.countyMarginDisplayDigits(marginPct);
     }
 
     function formatCountyMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, countyMarginDisplayDigits(pct));
+      return window.AtlasDisplay.formatCountyMarginPctForDisplay(marginPct);
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
       // Match candidate % labels: margin = rounded Trump% − rounded Harris%.
       // Raw vote margin (e.g. Scotland 6.925 → 6.93) drifts from the familiar share-diff (6.92).
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      const diff = Math.abs(repPctDisplay - demPctDisplay);
-      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
-      return diff;
+      return window.AtlasDisplay.countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
 
@@ -22809,10 +22070,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function parseContestValue(contestValue) {
-      const raw = String(contestValue || '');
-      const idx = raw.lastIndexOf('_');
-      if (idx <= 0) return [raw, ''];
-      return [raw.substring(0, idx), raw.substring(idx + 1)];
+      return window.AtlasElection.parseContestValue(contestValue);
     }
 
     function winnerMarginLabelShort(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
@@ -22824,17 +22082,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function winnerFromSignedMarginPct(signedPct) {
-      const v = Number(signedPct) || 0;
-      if (v > 0) return 'R';
-      if (v < 0) return 'D';
-      return 'T';
+      return window.AtlasElection.winnerFromSignedMarginPct(signedPct);
     }
 
     function flipInfo(prevSignedPct, curSignedPct) {
-      const from = winnerFromSignedMarginPct(prevSignedPct);
-      const to = winnerFromSignedMarginPct(curSignedPct);
-      const flipped = (from !== 'T' && to !== 'T' && from !== to);
-      return { flipped, from, to };
+      return window.AtlasElection.flipInfo(prevSignedPct, curSignedPct);
     }
 
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN, options = {}) {
@@ -24524,35 +23776,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function classificationLabel(longDelta, recentDelta, flip) {
-        if (flip) {
-          if (tone === 'rep') return 'Recent flip to the GOP';
-          if (tone === 'dem') return 'Recent flip to Democrats';
-          return 'Recent flip';
-        }
-        const longSign = Number.isFinite(longDelta) ? (longDelta > SHIFT_DIR_LONG ? 'rep' : (longDelta < -SHIFT_DIR_LONG ? 'dem' : 'neutral')) : 'neutral';
-        const recentSign = Number.isFinite(recentDelta) ? (recentDelta > SHIFT_DIR_RECENT ? 'rep' : (recentDelta < -SHIFT_DIR_RECENT ? 'dem' : 'neutral')) : 'neutral';
-        if (longSign === 'rep' && recentSign === 'rep') return 'Moving right';
-        if (longSign === 'dem' && recentSign === 'dem') return 'Moving left';
-        if (longSign === 'rep' && recentSign === 'dem') {
-          if (marginTier?.party === 'rep') return 'Red-leaning, cooling';
-          if (marginTier?.party === 'dem') return 'Democrats pushing back';
-          return 'Mixed signals';
-        }
-        if (longSign === 'dem' && recentSign === 'rep') {
-          if (marginTier?.party === 'dem') return 'Blue-leaning, cooling';
-          if (marginTier?.party === 'rep') return 'GOP pushing back';
-          return 'Mixed signals';
-        }
-
-        // If one of the shift windows is neutral/missing, keep the label consistent with the current lean
-        // and the most recent clear movement (so the headline and Direction line don't contradict).
-        if (marginTier?.party === 'rep' && recentSign === 'dem') return 'Red-leaning, cooling';
-        if (marginTier?.party === 'dem' && recentSign === 'rep') return 'Blue-leaning, cooling';
-        if (marginTier?.party === 'rep' && recentSign === 'rep') return 'Moving right';
-        if (marginTier?.party === 'dem' && recentSign === 'dem') return 'Moving left';
-        if (marginTier?.party === 'rep') return 'Solidly Republican';
-        if (marginTier?.party === 'dem') return 'Solidly Democratic';
-        return 'Competitive';
+        return window.AtlasClassification.classifyLabel(longDelta, recentDelta, flip, {
+          tone,
+          marginParty: marginTier?.party,
+          longThreshold: SHIFT_DIR_LONG,
+          recentThreshold: SHIFT_DIR_RECENT
+        });
       }
 
       const classification = classificationLabel(longShift, recentShiftSince2020, isRecentFlip);
@@ -24839,29 +24068,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	    }
 
 	    function classifyGrowthType(countyName, growthRate) {
-	      const norm = String(countyName || '').trim().toUpperCase();
-	      if (!norm) return '🏭 Stable / Local Growth';
-
-	      const coastal = new Set([
-	        'BRUNSWICK', 'NEW HANOVER', 'PENDER', 'ONSLOW', 'CARTERET', 'CRAVEN',
-	        'PAMLICO', 'BEAUFORT', 'HYDE', 'DARE', 'TYRRELL', 'CURRITUCK',
-	        'PASQUOTANK', 'CAMDEN', 'CHOWAN', 'PERQUIMANS'
-	      ]);
-	      const charlotteMetro = new Set([
-	        'MECKLENBURG', 'UNION', 'CABARRUS', 'GASTON', 'IREDELL', 'ROWAN',
-	        'LINCOLN', 'STANLY', 'CLEVELAND', 'CATAWBA'
-	      ]);
-	      const i95Corridor = new Set([
-	        'NORTHAMPTON', 'HALIFAX', 'EDGECOMBE', 'NASH', 'WILSON', 'JOHNSTON',
-	        'HARNETT', 'CUMBERLAND', 'ROBESON', 'SAMPSON', 'WAYNE', 'DUPLIN'
-	      ]);
-
-	      if (coastal.has(norm)) return '🌊 Coastal Growth';
-	      if (charlotteMetro.has(norm)) return '🌆 Metro Spillover';
-	      if (i95Corridor.has(norm)) return '🛣️ Corridor Growth';
-
 	      void growthRate;
-	      return '🏭 Stable / Local Growth';
+	      return window.AtlasClassification.classifyGrowthType(countyName);
 	    }
 
     function classifyCountyTrajectory(dataOrSeries, unitNoun = 'county', censusContext = null) {
@@ -24874,82 +24082,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	      // Structured snapshot classifier: accepts precomputed deltas.
 	      if (looksLikeShiftData) {
-	        const current_margin = Number(dataOrSeries?.current_margin);
-	        const shift_since_2020 = Number(dataOrSeries?.shift_since_2020);
-	        const shift_since_2008 = Number(dataOrSeries?.shift_since_2008);
-	        const shift_since_2000 = Number(dataOrSeries?.shift_since_2000);
-
-	        const deriveBaseFromMargin = (margin) => {
-	          const m = Number(margin);
-	          if (!Number.isFinite(m)) return 'Competitive';
-	          if (m >= 25) return 'Durable Republican Stronghold';
-	          if (m >= 15) return 'Durable Republican Lean';
-	          if (m >= 5) return 'Emerging Republican Edge';
-	          if (m >= 0) return 'Battleground';
-	          if (m <= -25) return 'Durable Democratic Stronghold';
-	          if (m <= -15) return 'Durable Democratic Lean';
-	          if (m <= -5) return 'Emerging Democratic Edge';
-	          return 'Battleground';
-	        };
-
-	        const base = String(dataOrSeries?.base || '').trim() || deriveBaseFromMargin(current_margin);
-	        let subtype = 'Stable / Mixed';
-	        let momentum = '↔ Mixed movement';
-
-	        // --- ACTIVE TRANSITION (Cabarrus-type)
-	        if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -20 && Number.isFinite(shift_since_2020) && shift_since_2020 <= -1.5 && current_margin > 5 && current_margin < 12) {
-	          subtype = 'Active Suburban Transition';
-	          momentum = '← Moving left faster';
-	        }
-	        // --- ACTIVE TRANSITION (reverse / D-hold narrowing)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 20 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 1.5 && current_margin < -5 && current_margin > -12) {
-	          subtype = 'Active Republican Transition';
-	          momentum = '→ Moving right faster';
-	        }
-	        // --- SUBURBANIZING (Union-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -5 && Number.isFinite(shift_since_2020) && shift_since_2020 > 0) {
-	          subtype = 'Suburbanizing (Lagging)';
-	          momentum = '↔ Long run left, short run right';
-	        }
-	        // --- SUBURBANIZING (reverse / long-run GOP, short-run Dem)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 5 && Number.isFinite(shift_since_2020) && shift_since_2020 < 0) {
-	          subtype = 'Counter-Suburbanizing (Lagging)';
-	          momentum = '↔ Long run right, short run left';
-	        }
-	        // --- SOFTENING RED (Brunswick-type)
-	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 <= -2 && current_margin > 10) {
-	          subtype = 'Red-leaning, cooling';
-	          momentum = '← Moving left';
-	        }
-	        // --- SOFTENING BLUE (reverse)
-	        else if (Number.isFinite(shift_since_2020) && shift_since_2020 >= 2 && current_margin < -10) {
-	          subtype = 'Blue-leaning, cooling';
-	          momentum = '→ Moving right';
-	        }
-	        // --- REINFORCING REPUBLICAN (Randolph-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 10 && Number.isFinite(shift_since_2020) && shift_since_2020 >= 1.25) {
-	          subtype = 'Moving right';
-	          momentum = '→ Moving right';
-	        }
-	        // --- REINFORCING DEMOCRATIC (reverse)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -10 && Number.isFinite(shift_since_2020) && shift_since_2020 <= -1.25) {
-	          subtype = 'Moving left';
-	          momentum = '← Moving left';
-	        }
-	        // --- REALIGNING REPUBLICAN (Caroline-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 >= 18 && current_margin < 15) {
-	          subtype = 'Breaking right';
-	          momentum = '→ Strong move right';
-	        }
-	        // --- REALIGNING DEMOCRATIC (Chesterfield-type)
-	        else if (Number.isFinite(shift_since_2000) && shift_since_2000 <= -18 && current_margin < 0) {
-	          subtype = 'Breaking left';
-	          momentum = '← Strong move left';
-	        }
-
-	        // Keep for optional downstream display / debugging.
-	        void shift_since_2008;
-	        return { base, subtype, momentum };
+	        return window.AtlasClassification.classifyTrajectorySnapshot(dataOrSeries);
 	      }
 
 	      const series = dataOrSeries;
@@ -24979,25 +24112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const demGrowthPattern = /Urban anchor|Metro spillover|outer-suburban|Above-state growth county|Coastal growth/i.test(patternLabel);
 
       function getSignedMarginTowardGop(row) {
-        if (!row) return 0;
-        const explicit = Number(row.margin_pct);
-        const winnerRaw = (row.winner || '').toString().trim().toUpperCase();
-        const winnerNorm = winnerRaw === 'R' ? 'REP' : winnerRaw === 'D' ? 'DEM' : winnerRaw;
-        if (Number.isFinite(explicit) && explicit !== 0) {
-          if (winnerNorm === 'REP') return Math.abs(explicit);
-          if (winnerNorm === 'DEM') return -Math.abs(explicit);
-          // If the winner tag is missing/unknown but we have a signed margin, treat it as already
-          // encoded toward GOP (positive = R, negative = D). This avoids "0" fallbacks that can
-          // corrupt long-run shift deltas when vote totals aren't present on a precomputed row.
-          return explicit;
-        }
-        const repVotes = Number(row.rep_votes);
-        const demVotes = Number(row.dem_votes);
-        const totalVotes = Number(row.total_votes);
-        if (Number.isFinite(repVotes) && Number.isFinite(demVotes) && Number.isFinite(totalVotes) && totalVotes > 0) {
-          return ((repVotes - demVotes) / totalVotes) * 100;
-        }
-        return 0;
+        return window.AtlasClassification.getSignedMarginTowardGop(row);
       }
 
       function getSignedDisplayMarginTowardGop(row) {
@@ -25018,20 +24133,55 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function formatShiftLabel(delta) {
-        if (!Number.isFinite(delta) || Math.abs(delta) < TREND_SHIFT_NOISE_PTS) return '↔ No clear shift';
-        return `${delta > 0 ? '→' : '←'} ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}%`;
+        return window.AtlasClassification.formatShiftLabel(delta, TREND_SHIFT_NOISE_PTS);
       }
 
       function formatWinnerLabel(row, signedMargin) {
-        const absMargin = Math.abs(signedMargin);
-        if (absMargin < 0.005) return `${row.year}: Tie`;
-        return `${row.year}: ${signedMargin > 0 ? 'R' : 'D'}+${absMargin.toFixed(2)}%`;
+        return window.AtlasClassification.formatWinnerLabel(row, signedMargin);
       }
 
-      const sorted = series
-        .slice()
-        .filter(row => row && Number.isFinite(Number(row.year)))
-        .sort((a, b) => Number(a.year) - Number(b.year));
+      const trendAnalysis = window.AtlasTrends.analyzeSeries(series, {
+        signedMargin: getSignedMarginTowardGop,
+        displaySignedMargin: getSignedDisplayMarginTowardGop
+      });
+      const {
+        sorted,
+        latest,
+        latestSigned,
+        first,
+        firstSigned,
+        electionCount,
+        yearSpan,
+        historySparse,
+        longShiftTowardGop,
+        row2008,
+        shiftSince2008,
+        row2020,
+        shiftSince2020,
+        row2000,
+        shiftSince2000,
+        previous,
+        previousSigned,
+        recentShiftTowardGop,
+        recentWindowStart,
+        recentWindowStartSigned,
+        recentWindowShiftTowardGop,
+        cycleShiftLabel,
+        rightwardSteps,
+        leftwardSteps,
+        absLatest,
+        absFirst,
+        sameSideLongTerm,
+        crossedParties,
+        towardCurrentSide,
+        towardCurrentSideLong,
+        towardCurrentSideWindow,
+        awayFromCurrentSide,
+        awayFromCurrentSideLong,
+        hasLongAnchor,
+        avgAbsSwing,
+        isElastic
+      } = trendAnalysis;
 
       if (!sorted.length) {
         return {
@@ -25045,78 +24195,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       }
 
-	      const latest = sorted[sorted.length - 1];
-	      const latestSigned = getSignedDisplayMarginTowardGop(latest);
-	      const first = sorted[0];
-	      const firstSigned = getSignedDisplayMarginTowardGop(first);
-      const electionCount = sorted.length;
-      const yearSpan = Number(latest?.year) - Number(first?.year);
-      const historySparse = electionCount < 4;
-	      const longShiftTowardGop = latestSigned - firstSigned;
-	      const row2008 = sorted.find(row => Number(row.year) === 2008);
-	      const shiftSince2008 = row2008 ? latestSigned - getSignedDisplayMarginTowardGop(row2008) : null;
-	      const row2020 = sorted.find(row => Number(row.year) === 2020);
-	      const shiftSince2020 = row2020 ? latestSigned - getSignedDisplayMarginTowardGop(row2020) : NaN;
-	      const row2000 = sorted.find(row => Number(row.year) === 2000);
-	      const shiftSince2000 = (row2000 || first) ? latestSigned - getSignedDisplayMarginTowardGop(row2000 || first) : NaN;
-	      const previous = sorted.length >= 2 ? sorted[sorted.length - 2] : null;
-	      const previousSigned = previous ? getSignedDisplayMarginTowardGop(previous) : null;
-	      const recentShiftTowardGop = previous ? (latestSigned - previousSigned) : null;
-      const recentWindowStart = sorted.length >= 3 ? sorted[Math.max(0, sorted.length - 3)] : first;
-      const recentWindowStartSigned = recentWindowStart ? getSignedMarginTowardGop(recentWindowStart) : null;
-      const recentWindowShiftTowardGop = Number.isFinite(recentWindowStartSigned)
-        ? (latestSigned - recentWindowStartSigned)
-        : recentShiftTowardGop;
-      const cycleShiftLabel = previous
-        ? (Number(previous.year) === Number(first.year) ? 'Last Cycle' : `Since ${previous.year}`)
-        : '';
-
-      const recentSlice = sorted.slice(-3);
-      let rightwardSteps = 0;
-      let leftwardSteps = 0;
-      for (let i = 1; i < recentSlice.length; i += 1) {
-        const prev = getSignedMarginTowardGop(recentSlice[i - 1]);
-        const curr = getSignedMarginTowardGop(recentSlice[i]);
-        const deltaTowardGop = curr - prev;
-        if (deltaTowardGop > 0.5) rightwardSteps += 1;
-        if (deltaTowardGop < -0.5) leftwardSteps += 1;
-      }
-
-      const absLatest = Math.abs(latestSigned);
-      const absFirst = Math.abs(firstSigned);
-      const sameSideLongTerm =
-        (latestSigned > 0 && firstSigned > 0) ||
-        (latestSigned < 0 && firstSigned < 0);
-      const crossedParties =
-        (latestSigned > 0 && firstSigned < 0) ||
-        (latestSigned < 0 && firstSigned > 0);
-      const towardCurrentSide = Number.isFinite(recentShiftTowardGop)
-        ? (latestSigned > 0 ? recentShiftTowardGop : (latestSigned < 0 ? -recentShiftTowardGop : 0))
-        : 0;
-      const towardCurrentSideLong = Number.isFinite(longShiftTowardGop)
-        ? (latestSigned > 0 ? longShiftTowardGop : (latestSigned < 0 ? -longShiftTowardGop : 0))
-        : 0;
-      const towardCurrentSideWindow = Number.isFinite(recentWindowShiftTowardGop)
-        ? (latestSigned > 0 ? recentWindowShiftTowardGop : (latestSigned < 0 ? -recentWindowShiftTowardGop : 0))
-        : towardCurrentSide;
-      const awayFromCurrentSide = Number.isFinite(recentShiftTowardGop)
-        ? -towardCurrentSide
-        : 0;
-      const awayFromCurrentSideLong = Number.isFinite(towardCurrentSideLong)
-        ? -towardCurrentSideLong
-        : 0;
-
       let origin = 'Durable';
-      const hasLongAnchor = !!(row2000 || row2008 || (Number.isFinite(yearSpan) && yearSpan >= 16));
-      const avgAbsSwing = (() => {
-        if (electionCount < 3) return 0;
-        let sum = 0;
-        for (let i = 1; i < sorted.length; i += 1) {
-          sum += Math.abs(getSignedMarginTowardGop(sorted[i]) - getSignedMarginTowardGop(sorted[i - 1]));
-        }
-        return sum / Math.max(1, sorted.length - 1);
-      })();
-      const isElastic = electionCount >= 5 && avgAbsSwing >= 4.25 && absLatest < 12;
 
       if (!historySparse) {
         if (
@@ -34531,9 +33610,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return ((Number(repVotes) - Number(demVotes)) / t) * 100;
+      return window.AtlasCore.signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
     }
 
     function colorForShiftMode(shiftPct) {
