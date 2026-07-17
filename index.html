@@ -10354,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-30';
+    const DATA_CACHE_BUSTER = '2026-07-17-31';
     const APP_BUILD_ID = '2026-07-17-20';
 
     function withCacheBuster(path) {
@@ -34730,8 +34730,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	        try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
           try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
           try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
-          try { await ensurePrecinctSbe2006ToOneMapIndex(); } catch (_) {}
-          try { await ensurePrecinctSbe2006ToOneMapWeightsIndex(); } catch (_) {}
+          if (Number(prevMeta?.year) <= 2010) {
+            try { await ensurePrecinctSbe2006ToOneMapIndex(); } catch (_) {}
+            try { await ensurePrecinctSbe2006ToOneMapWeightsIndex(); } catch (_) {}
+          }
           try { await ensurePrecinctVariantOverrides(); } catch (_) {}
 	      }
 	      function isNonGeographicPrecinctCode(code, countyNorm = '') {
@@ -34796,8 +34798,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
             addStableToOneMapCrosswalkBridges(countyNorm, precRaw, addKey);
             if (baseToken && baseToken !== precRaw) addStableToOneMapCrosswalkBridges(countyNorm, baseToken, addKey);
-            addSbe2006ToOneMapBridges(countyNorm, precRaw, addKey);
-            if (baseToken && baseToken !== precRaw) addSbe2006ToOneMapBridges(countyNorm, baseToken, addKey);
+            if (Number(prevMeta?.year) <= 2010) {
+              addSbe2006ToOneMapBridges(countyNorm, precRaw, addKey);
+              if (baseToken && baseToken !== precRaw) addSbe2006ToOneMapBridges(countyNorm, baseToken, addKey);
+            }
             if (codes) {
               addCompactCodeVariants(precRaw, codes, addKey);
               addPrefixStrippedNumericVariants(precRaw, codes, addKey);
@@ -35164,8 +35168,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try { precinctIdx = await ensurePrecinctCodeIndex(); } catch (_) { precinctIdx = null; }
         try { precinctAliasIdx = await ensurePrecinctAliasIndex(); } catch (_) { precinctAliasIdx = null; }
         try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
-        try { await ensurePrecinctSbe2006ToOneMapIndex(); } catch (_) {}
-        try { await ensurePrecinctSbe2006ToOneMapWeightsIndex(); } catch (_) {}
+        if (Number(year) <= 2010) {
+          try { await ensurePrecinctSbe2006ToOneMapIndex(); } catch (_) {}
+          try { await ensurePrecinctSbe2006ToOneMapWeightsIndex(); } catch (_) {}
+        }
         try { await ensurePrecinctVariantOverrides(); } catch (_) {}
       }
       if (staleCheck()) return;
@@ -35225,8 +35231,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	          if (baseToken && baseToken !== precRaw) addKnownLegacyCentroidBridges(countyNorm, baseToken, addKey);
             addStableToOneMapCrosswalkBridges(countyNorm, precRaw, addKey);
             if (baseToken && baseToken !== precRaw) addStableToOneMapCrosswalkBridges(countyNorm, baseToken, addKey);
-            addSbe2006ToOneMapBridges(countyNorm, precRaw, addKey);
-            if (baseToken && baseToken !== precRaw) addSbe2006ToOneMapBridges(countyNorm, baseToken, addKey);
+            if (Number(year) <= 2010) {
+              addSbe2006ToOneMapBridges(countyNorm, precRaw, addKey);
+              if (baseToken && baseToken !== precRaw) addSbe2006ToOneMapBridges(countyNorm, baseToken, addKey);
+            }
 	        } catch (_) {}
 
           // Many older exports use "CODE NAME" or "CODE_NAME ..." where the geometry key
@@ -35356,6 +35364,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	      }
 
       function sbe2006WeightedNormEntries(rowName) {
+        if (Number(year) > 2010) return [];
         const raw = (rowName || '').toString();
         if (!raw.includes(' - ')) return [];
         const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);

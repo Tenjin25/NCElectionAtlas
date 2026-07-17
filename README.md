@@ -107,7 +107,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
-- **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties.
+- **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties. The SBE 2006 bridge is now limited to elections through 2010, preventing modern Davidson precinct 36/38 rows (`Ward 4`/`Ward 6` in the old layer) from overwriting the exact 2024 `04`/`06` rows.
 
 **Last updated:** July 17, 2026
 

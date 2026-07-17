@@ -142,6 +142,28 @@ function summarizeResults(results) {
     };
   });
 
+  const davidson2024Precincts = await page.evaluate(async () => {
+    precinctsEnabled = true;
+    await applyContest('president_2024');
+    const read = (code) => {
+      const key = `DAVIDSON - ${code}`;
+      const row = currentPrecinctResults?.get(key) || null;
+      return row ? {
+        precinct: key,
+        source: String(row?.county || ''),
+        dem: Number(row?.president_dem || 0),
+        rep: Number(row?.president_rep || 0),
+        other: Number(row?.president_other || 0),
+        total: Number(row?.president_total || 0),
+        marginPctUiSigned: Number(row?.president_margin_pct || 0)
+      } : null;
+    };
+    return {
+      arcadia04: read('04'),
+      boone06: read('06')
+    };
+  });
+
   const output = await page.evaluate(async () => {
     const precinctRows = await loadContestSlice('us_senate_model', 2026);
     const senate2022Rows = await loadContestSlice('us_senate', 2022);
@@ -217,6 +239,16 @@ function summarizeResults(results) {
         rep: Number(row?.rep_votes || 0)
       };
     });
+    const scotlandPrecincts = precinctRows
+      .filter(row => String(row?.county || '').toUpperCase().startsWith('SCOTLAND - '))
+      .map(row => ({
+        precinct: String(row?.county || ''),
+        dem: Number(row?.us_senate_model_dem || 0),
+        rep: Number(row?.us_senate_model_rep || 0),
+        other: Number(row?.us_senate_model_other || 0),
+        total: Number(row?.us_senate_model_total || 0),
+        marginPctUiSigned: Number(row?.us_senate_model_margin_pct || 0)
+      }));
     const scopes = {};
     for (const scope of ['congressional', 'state_house', 'state_senate']) {
       const modeledNode = await loadDistrictSlice(scope, 'us_senate_model', 2026);
@@ -276,15 +308,18 @@ function summarizeResults(results) {
         groups[key] = group;
         return groups;
       }, {}),
+      scotlandPrecincts,
       scopes
     };
   });
 
   const result = {
     visibleStatewide,
+    davidson2024Precincts,
     precinct: output.precinct,
     county: output.county,
     countyTypeTotals: output.countyTypeTotals,
+    scotlandPrecincts: output.scotlandPrecincts,
     redderThanBothAnchors: Object.entries(output.countyByName)
       .map(([county, row]) => {
         const anchors = output.anchorsByCounty[county] || {};
@@ -340,6 +375,20 @@ function summarizeResults(results) {
       .sort((a, b) => Math.abs(Number(b.vsPresidentPts || 0)) - Math.abs(Number(a.vsPresidentPts || 0))),
     pageErrors
   };
+  const arcadia04 = result.davidson2024Precincts?.arcadia04;
+  const boone06 = result.davidson2024Precincts?.boone06;
+  if (
+    arcadia04?.source !== 'DAVIDSON - 04' ||
+    arcadia04?.dem !== 1526 ||
+    arcadia04?.rep !== 3721 ||
+    arcadia04?.total !== 5316 ||
+    boone06?.source !== 'DAVIDSON - 06' ||
+    boone06?.dem !== 404 ||
+    boone06?.rep !== 2135 ||
+    boone06?.total !== 2582
+  ) {
+    throw new Error(`Modern Davidson precinct collision detected: ${JSON.stringify(result.davidson2024Precincts)}`);
+  }
   console.log(JSON.stringify(result, null, 2));
   await modelBrowser.close();
   modelServer.kill();
