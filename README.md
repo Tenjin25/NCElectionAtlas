@@ -1274,7 +1274,7 @@ compatibility wrappers, so existing call sites can be migrated incrementally.
 
 - `js/atlas-manifest.js` — Shared contest visibility and historical judicial-seat family helpers
 
-- `js/atlas-core.js` — Shared, deterministic normalization and vote-math helpers
+- `js/atlas-core.js` — Shared deterministic normalization, precinct-alias expansion, and vote-math helpers
 - `js/atlas-display.js` — Shared display rounding, close-race formatting, and HTML escaping
 - `js/atlas-election.js` — Shared vote-swing, quantile, contest parsing, and flip helpers
 - `js/atlas-url-state.js` — Shared URL token normalization and share-state parsing
