@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-38';
-    const APP_BUILD_ID = '2026-07-16-38';
+    const DATA_CACHE_BUSTER = '2026-07-16-39';
+    const APP_BUILD_ID = '2026-07-16-39';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11722,8 +11722,10 @@ document.addEventListener('DOMContentLoaded', function() {
        senateAnchorSecondWeight: 0.34, // 0..1 share for 2020 inside the Senate anchor (rest is 2022)
        climateContestType: 'president',
        climateYear: 2024,
-        // May 0505 / ffa restore (69fe6c0): Senate-first blend with lighter climate, then
-        // Jul soft-R locals + post-clamp statewide adj layered on top.
+        // Post-clamp backend (eb9062c / county-clamped OneMap bridges): OE-matching precinct
+        // sums no longer need the old pre-clamp negative adj. Use May structural blend on the
+        // clamped inputs, then Jul soft-R locals + a positive adj so the *UI* statewide margin
+        // ((R−D)/total including other) lands at Whatley ~+1.9.
         blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
         presidentialBaselineWeight: 0.60,
         senateBaselineWeight: 0.40,
@@ -11735,21 +11737,18 @@ document.addEventListener('DOMContentLoaded', function() {
         baselineReliabilityMaxVotes: 110000,
         baselineReliabilityFloor: 0.41,
         statewideRecenterStrength: 0.96,
-        // Historical calibration (Jul 12–16 commits / README): published with-candidates
-        // statewide lands just under Whatley +2 (~+1.9). Structural baseline without Cooper
-        // personal effects sits ~+1.5 pts redder (~R+3.5). Post-clamp backend uses a positive
-        // adj (pre-clamp used negative adj to offset precinct-aggregation R bias).
-        // Signed margins are R−D: higher adj → more Whatley; lower/negative adj → more Cooper.
-        statewideTargetAdjustmentPts: 3.25,
+        // Signed margins in-model and in the statewide panel are (R−D)/total (other included).
+        // Two-party margins read ~0.04 pts redder; calibrate to the UI/total metric.
+        // Pre-clamp used ~-1.55 to offset cross-county leakage; post-clamp uses positive adj.
+        statewideTargetAdjustmentPts: 3.29,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        // May shape: modest urban Dem elasticity + soft rural GOP-over-Pres; residual on so
-        // metro typing still receives the elasticity path (May had residual off + no metro force).
-        ruralGopOverperformanceWeight: 0.12,
-        urbanDemElasticityWeight: 0.35,
+        // eb9062c May shape on clamped backend (residual off — elasticity knobs unused unless enabled).
+        ruralGopOverperformanceWeight: 0.15,
+        urbanDemElasticityWeight: 0.27,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
-        senateResidualElasticityEnabled: true,
+        senateResidualElasticityEnabled: false,
         // Statewide candidate-strength assumptions. Components are summed by nominee so credentials
         // and endorsements remain auditable; the legacy scalar fields below are only fallbacks.
         candidateStatewideStrengthComponentsPts: {
@@ -11852,9 +11851,9 @@ document.addEventListener('DOMContentLoaded', function() {
         candidateBonusDeepRedCapPts: 0.32,
         candidateBonusMaxPts: 0.78,
         candidateBonusBasePts: 0.25,
-        // May metro/urban bonus pts (0.30 / 0.15) with a light Jul lift for Cooper's metro base.
-        candidateBonusUrbanPts: 0.18,
-        candidateBonusMetroPts: 0.33,
+        // May metro/urban bonus pts on clamped backend (eb9062c).
+        candidateBonusUrbanPts: 0.15,
+        candidateBonusMetroPts: 0.30,
         candidateBonusCoastalPts: 0.25,
         candidateBonusTransitionPts: 0.32,
         candidateBonusSlowPts: 0.30,
@@ -11888,9 +11887,9 @@ document.addEventListener('DOMContentLoaded', function() {
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
-          // Close May→Jul gap: pre-clamp only used rural 0.20; Jul overshot to urban 1.15.
-          // Keep metro-first portable strength, but closer to May-scale magnitudes.
-          'Roy Cooper': { urban: 0.55, suburban: 0.42, exurban: 0.28, rural: 0.45 }
+          // Clamped-backend portable strength: metros/suburbs first (visible map shape),
+          // rural softener kept for soft-R eastern counties with Jul locals.
+          'Roy Cooper': { urban: 0.85, suburban: 0.65, exurban: 0.40, rural: 0.50 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -11907,10 +11906,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Small scope-wide corrections keep independently allocated district slices near the
         // canonical county statewide margin without flattening district-specific variation.
         // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
-        // Keep district layers near the county with-candidates statewide (~Whatley +1.9).
-        districtStatewideAlignmentPtsCongressional: 0.74,
-        districtStatewideAlignmentPtsStateHouse: 0.52,
-        districtStatewideAlignmentPtsStateSenate: 0.85,
+        // Align district UI margins to county UI Whatley ~+1.9 (retune after measuring).
+        districtStatewideAlignmentPtsCongressional: 0.71,
+        districtStatewideAlignmentPtsStateHouse: 0.49,
+        districtStatewideAlignmentPtsStateSenate: 0.82,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -11919,7 +11918,7 @@ document.addEventListener('DOMContentLoaded', function() {
         realignedFormerDemFederalSenate2022Weight: 0.28,
         realignedFormerDemFederalSenate2020Weight: 0.20,
         realignedFormerDemFederalBlendWeight: 0.38,
-        // May 0505 turnout class multipliers (urban/Black Belt/suburban).
+        // May 0505 / eb9062c turnout class multipliers.
         turnoutUrbanCoreMul: 1.09,
         turnoutBlackBeltMul: 1.07,
         turnoutSuburbanMul: 1.035,

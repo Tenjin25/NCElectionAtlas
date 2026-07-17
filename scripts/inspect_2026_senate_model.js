@@ -24,7 +24,9 @@ function summarizeResults(results) {
     dem: Math.round(totals.dem),
     rep: Math.round(totals.rep),
     total: Math.round(totals.total),
-    marginPctRMinusD: twoParty > 0 ? ((totals.rep - totals.dem) / twoParty) * 100 : null
+    marginPctRMinusD: twoParty > 0 ? ((totals.rep - totals.dem) / twoParty) * 100 : null,
+    // Live panel metric on post-clamp backend: (R−D)/total including other.
+    marginPctUiSigned: totals.total > 0 ? ((totals.rep - totals.dem) / totals.total) * 100 : null
   };
 }
 
@@ -136,6 +138,9 @@ function summarizeResults(results) {
       }, { dem: 0, rep: 0, total: 0 })
       : rawCountyTotals;
     const countyTwoParty = countyTotals.dem + countyTotals.rep;
+    const countyUiSigned = countyTotals.total > 0
+      ? ((countyTotals.rep - countyTotals.dem) / countyTotals.total) * 100
+      : null;
     const countyByName = {};
     countyRows.forEach(row => {
       const county = String(row?.county || '').toUpperCase().split(' - ')[0].trim();
@@ -166,7 +171,8 @@ function summarizeResults(results) {
         dem: countyTotals.dem,
         rep: countyTotals.rep,
         total: countyTotals.total,
-        marginPctRMinusD: countyTwoParty > 0 ? ((countyTotals.rep - countyTotals.dem) / countyTwoParty) * 100 : null
+        marginPctRMinusD: countyTwoParty > 0 ? ((countyTotals.rep - countyTotals.dem) / countyTwoParty) * 100 : null,
+        marginPctUiSigned: countyUiSigned
       },
       countyByName,
       scopes

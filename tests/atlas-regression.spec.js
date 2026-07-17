@@ -578,13 +578,21 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const aggregate = (rows) => Object.values(rows || {}).reduce((sum, row) => {
         sum.dem += Number(row?.dem || row?.dem_votes || 0);
         sum.rep += Number(row?.rep || row?.rep_votes || 0);
+        sum.total += Number(row?.total || row?.total_votes || 0);
         return sum;
-      }, { dem: 0, rep: 0 });
-      const twoPartyMargin = (totals) => (Number(totals?.dem || 0) + Number(totals?.rep || 0)) > 0
-        ? ((Number(totals.rep) - Number(totals.dem)) / (Number(totals.rep) + Number(totals.dem))) * 100
+      }, { dem: 0, rep: 0, total: 0 });
+      // Match the live statewide panel: (R−D)/total including other (post-clamp backend).
+      const uiSignedMargin = (totals) => Number(totals?.total || 0) > 0
+        ? ((Number(totals.rep) - Number(totals.dem)) / Number(totals.total)) * 100
         : 0;
-      const senateStatewideTwoPartyMargin = twoPartyMargin(aggregate(senateCountyOfficial));
-      const senateDistrictTwoPartyMargin = twoPartyMargin(aggregate(senateDistrictNode?.general?.results));
+      const withImpliedTotal = (totals) => {
+        const dem = Number(totals?.dem || 0);
+        const rep = Number(totals?.rep || 0);
+        const total = Number(totals?.total || 0);
+        return { dem, rep, total: total > 0 ? total : (dem + rep) };
+      };
+      const senateStatewideUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateCountyOfficial)));
+      const senateDistrictUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateDistrictNode?.general?.results)));
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
@@ -619,8 +627,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateDistricts: Object.keys(senateDistrictNode?.general?.results || {}).length,
         senateDistrictCandidateStrengthNetDem: Number(senateDistrictNode?.meta?.model_candidate_strength_net_dem_pts),
         senateDistrictStatewideAlignment: Number(senateDistrictNode?.meta?.model_statewide_alignment_pts),
-        senateStatewideTwoPartyMargin,
-        senateDistrictTwoPartyMargin,
+        senateStatewideUiMargin,
+        senateDistrictUiMargin,
         courtDistricts: Object.keys(courtDistrictNode?.general?.results || {}).length
       };
     });
@@ -642,7 +650,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.45, 2);
+    expect(modeledSnapshot.ruralCooperBoost).toBeCloseTo(0.50, 2);
     expect(modeledSnapshot.countiesWithRuralCooperBoost).toBeGreaterThan(0);
     expect(modeledSnapshot.realignedSpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
     expect(modeledSnapshot.anomalySpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
@@ -659,10 +667,11 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtRepCandidate).toBe('Sarah Stevens');
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(0.74, 2);
-    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeGreaterThan(1.7);
-    expect(modeledSnapshot.senateStatewideTwoPartyMargin).toBeLessThan(2.05);
-    expect(Math.abs(modeledSnapshot.senateDistrictTwoPartyMargin - modeledSnapshot.senateStatewideTwoPartyMargin)).toBeLessThan(0.10);
+    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(0.71, 2);
+    // UI/panel metric on post-clamp backend: (R−D)/total including other ≈ Whatley +1.9
+    expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.85);
+    expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.95);
+    expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senateStatewideUiMargin)).toBeLessThan(0.10);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 
     await page.selectOption('#contestSelect', 'us_senate_model_2026');
