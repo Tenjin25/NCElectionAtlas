@@ -594,6 +594,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const gastonModeledRow = countyModeledRow('GASTON');
       const buncombeCountyOfficial = senateCountyOfficial.BUNCOMBE || null;
       const ansonCountyOfficial = senateCountyOfficial.ANSON || null;
+      const alamanceCountyOfficial = senateCountyOfficial.ALAMANCE || null;
+      const cabarrusCountyOfficial = senateCountyOfficial.CABARRUS || null;
       const cumberlandCountyOfficial = senateCountyOfficial.CUMBERLAND || null;
       const granvilleCountyOfficial = senateCountyOfficial.GRANVILLE || null;
       const guilfordCountyOfficial = senateCountyOfficial.GUILFORD || null;
@@ -654,6 +656,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         gastonLocalCandidateEffect: Number(gastonModeledRow?.__model_candidate_effect_local_d_pts),
         buncombeCountyOfficialMargin: margin(buncombeCountyOfficial),
         ansonCountyOfficialMargin: margin(ansonCountyOfficial),
+        alamanceCountyOfficialMargin: margin(alamanceCountyOfficial),
+        cabarrusCountyOfficialMargin: margin(cabarrusCountyOfficial),
         cumberlandCountyOfficialMargin: margin(cumberlandCountyOfficial),
         granvilleCountyOfficialMargin: margin(granvilleCountyOfficial),
         guilfordCountyOfficialMargin: margin(guilfordCountyOfficial),
@@ -721,6 +725,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.buncombeCountyOfficialMargin).toBeLessThan(-15);
     expect(modeledSnapshot.ansonCountyOfficialMargin).toBeGreaterThan(3);
     expect(modeledSnapshot.ansonCountyOfficialMargin).toBeLessThan(5);
+    expect(modeledSnapshot.alamanceCountyOfficialMargin).toBeGreaterThan(5);
+    expect(modeledSnapshot.alamanceCountyOfficialMargin).toBeLessThan(7);
+    expect(modeledSnapshot.cabarrusCountyOfficialMargin).toBeGreaterThan(5);
+    expect(modeledSnapshot.cabarrusCountyOfficialMargin).toBeLessThan(6);
     expect(modeledSnapshot.cumberlandCountyOfficialMargin).toBeLessThan(-5);
     expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeGreaterThan(8);
     expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeLessThan(10);
