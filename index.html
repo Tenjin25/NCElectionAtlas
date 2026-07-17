@@ -10311,6 +10311,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <script src="./js/atlas-core.js"></script>
+    <script src="./js/atlas-display.js"></script>
+    <script src="./js/atlas-election.js"></script>
+    <script src="./js/atlas-url-state.js"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -12278,63 +12281,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let urlPopstateSyncWired = false;
     let analyticsPanelsTimer = null;
     let analyticsPanelsRequestId = 0;
-    const URL_VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
-    const URL_MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics', 'population_change']);
-
     function normalizeURLViewToken(raw) {
-      const token = String(raw || '').trim().toLowerCase();
-      return URL_VIEW_VALUES.has(token) ? token : '';
+      return window.AtlasURLState.normalizeViewToken(raw);
     }
 
     function normalizeURLModeToken(raw) {
-      const token = String(raw || '').trim().toLowerCase();
-      return URL_MODE_VALUES.has(token) ? token : '';
+      return window.AtlasURLState.normalizeModeToken(raw);
     }
 
     function parseURLStateFromLocation() {
-      const params = new URLSearchParams(window.location.search || '');
-      const view = normalizeURLViewToken(params.get('view'));
-      const contest = String(params.get('contest') || '').trim();
-      const mode = normalizeURLModeToken(params.get('mode'));
-      const focus = String(params.get('focus') || '').trim();
-      const linesRaw = String(params.get('lines') || '').trim();
-      const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
-      const swingRaw = String(params.get('swing') || '').trim();
-      const swing = swingRaw ? Number(swingRaw) : null;
-      const sscopeRaw = String(params.get('sscope') || '').trim().toLowerCase();
-      const sscope = sscopeRaw ? (sscopeRaw === 'wake' ? 'wake' : 'statewide') : null;
-      const barometerRaw = String(params.get('barometer') || params.get('bar') || '').trim().toLowerCase();
-      const barometerEnabled = barometerRaw
-        ? (barometerRaw === '1' || barometerRaw === 'true' || barometerRaw === 'on' || barometerRaw === 'yes')
-        : null;
-      const demoContrastRaw = String(params.get('democontrast') || params.get('demo_contrast') || '').trim().toLowerCase();
-      const demoContrastHigh = demoContrastRaw
-        ? (demoContrastRaw === 'high' || demoContrastRaw === '1' || demoContrastRaw === 'true' || demoContrastRaw === 'on' || demoContrastRaw === 'yes')
-        : null;
-      const popMetricRaw = String(params.get('popmetric') || '').trim().toLowerCase();
-      const popMetric = (popMetricRaw === 'abs' || popMetricRaw === 'pct') ? popMetricRaw : null;
-      const mBlendRaw = String(params.get('mblend') || '').trim();
-      const mTurnoutRaw = String(params.get('mturnout') || '').trim();
-      const mBonusRaw = String(params.get('mbonus') || '').trim();
-      const mBlend = mBlendRaw ? Number(mBlendRaw) : null;
-      const mTurnout = mTurnoutRaw ? Number(mTurnoutRaw) : null;
-      const mBonus = mBonusRaw ? Number(mBonusRaw) : null;
-      const hasAny = !!(
-        view ||
-        contest ||
-        mode ||
-        focus ||
-        lines !== null ||
-        swingRaw ||
-        sscopeRaw ||
-        barometerEnabled !== null ||
-        demoContrastHigh !== null ||
-        popMetric !== null ||
-        mBlendRaw ||
-        mTurnoutRaw ||
-        mBonusRaw
-      );
-      return { hasAny, view, contest, mode, focus, lines, swing, sscope, barometerEnabled, demoContrastHigh, popMetric, mBlend, mTurnout, mBonus };
+      return window.AtlasURLState.parse(window.location.search || '');
     }
 
     function getFocusURLTokenFromState() {
@@ -12609,10 +12565,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function normalizeDistrictLinesYear(raw) {
-      const y = Number(raw);
-      if (y === 2026) return 2026;
-      if (y === 2024) return 2024;
-      return 2022;
+      return window.AtlasURLState.normalizeDistrictLinesYear(raw);
     }
 
     function getDistrictLinesLabel(linesYear = currentDistrictLinesYear) {
@@ -13807,34 +13760,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function finalizeVoteSet(dIn, rIn, oIn, totalHint = 0) {
-      const d = Math.max(0, Math.round(Number(dIn) || 0));
-      const r = Math.max(0, Math.round(Number(rIn) || 0));
-      const o = Math.max(0, Math.round(Number(oIn) || 0));
-      const sum = d + r + o;
-      const hint = Math.max(0, Math.round(Number(totalHint) || 0));
-      return { dem: d, rep: r, other: o, total: sum > 0 ? sum : hint };
+      return window.AtlasElection.finalizeVoteSet(dIn, rIn, oIn, totalHint);
     }
 
     function shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swingPct = 0) {
-      const total = Number(totalVotes || 0);
-      let dem = Number(demVotes || 0);
-      let rep = Number(repVotes || 0);
-      const other = Number(otherVotes || 0);
-      if (!Number.isFinite(total) || total <= 0) return finalizeVoteSet(dem, rep, other, total);
-      const swing = Number(swingPct || 0);
-      if (Math.abs(swing) < 0.0001) return finalizeVoteSet(dem, rep, other, total);
-      const originalTwoParty = Math.max(0, dem + rep);
-      if (originalTwoParty <= 0) return finalizeVoteSet(dem, rep, other, total);
-      const deltaVotes = (swing / 200.0) * total; // +/-1 point margin shift == +/-0.5% vote transfer between D/R.
-      dem = Math.max(0, dem + deltaVotes);
-      rep = Math.max(0, rep - deltaVotes);
-      const adjustedTwoParty = dem + rep;
-      if (adjustedTwoParty > 0 && originalTwoParty > 0) {
-        const scale = originalTwoParty / adjustedTwoParty;
-        dem *= scale;
-        rep *= scale;
-      }
-      return finalizeVoteSet(dem, rep, other, total);
+      return window.AtlasElection.shiftVotesBySwingPct(demVotes, repVotes, otherVotes, totalVotes, swingPct);
     }
 
     function applyScenarioShiftToVotes(countyNorm, demVotes, repVotes, otherVotes, totalVotes) {
@@ -13849,9 +13779,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function quantile(sortedValues, p) {
-      if (!sortedValues || !sortedValues.length) return 0;
-      const idx = Math.min(sortedValues.length - 1, Math.max(0, Math.floor((sortedValues.length - 1) * p)));
-      return Number(sortedValues[idx] || 0);
+      return window.AtlasElection.quantile(sortedValues, p);
     }
 
     function buildTurnoutOpacityMeta(totals) {
@@ -14865,31 +14793,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatCompactVoteTotal(value) {
-      const votes = Number(value || 0);
-      if (!Number.isFinite(votes) || votes <= 0) return '0';
-      if (votes >= 1000000) {
-        const digits = votes >= 10000000 ? 1 : 2;
-        return `${(votes / 1000000).toFixed(digits)}M`;
-      }
-      if (votes >= 1000) {
-        const digits = votes >= 100000 ? 0 : 1;
-        return `${(votes / 1000).toFixed(digits)}K`;
-      }
-      return votes.toLocaleString();
+      return window.AtlasDisplay.formatCompactVoteTotal(value);
     }
 
     function formatCompactDeltaTotal(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n) || n <= 0) return '0';
-      if (n >= 1000000) {
-        const digits = n >= 10000000 ? 1 : 2;
-        return `${(n / 1000000).toFixed(digits)}M`;
-      }
-      if (n >= 1000) {
-        const digits = n >= 100000 ? 0 : 1;
-        return `${(n / 1000).toFixed(digits)}k`;
-      }
-      return n.toLocaleString();
+      return window.AtlasDisplay.formatCompactDeltaTotal(value);
     }
 
     function getTrendWinnerMeta(item, contestMeta = null) {
@@ -15279,27 +15187,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return window.AtlasDisplay.escapeHtml(text);
     }
 
     function formatSignedCompactDelta(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n) || n === 0) return '0';
-      const sign = n > 0 ? '+' : '-';
-      return `${sign}${formatCompactDeltaTotal(Math.abs(n))}`;
+      return window.AtlasDisplay.formatSignedCompactDelta(value);
     }
 
     function formatSignedPctDelta(value, digits = 1) {
-      const n = Number(value);
-      if (!Number.isFinite(n) || n === 0) return '0.0%';
-      const d = Math.max(0, Number(digits) || 0);
-      const sign = n > 0 ? '+' : '-';
-      return `${sign}${Math.abs(n).toFixed(d)}%`;
+      return window.AtlasDisplay.formatSignedPctDelta(value, digits);
     }
 
     function buildCountyDeltaBlockHTML(countyNorm, contestType, options = {}) {
@@ -22500,92 +22396,59 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function roundPct2(value) {
-      return roundForDisplay(value, 2);
+      return window.AtlasDisplay.roundPct2(value);
     }
 
     function roundForDisplay(value, digits = 2) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n)) return 0;
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      const factor = Math.pow(10, d);
-      const epsilonNudge = (Math.sign(n) || 1) * Number.EPSILON * 8;
-      return Math.round((n + epsilonNudge) * factor) / factor;
+      return window.AtlasDisplay.roundForDisplay(value, digits);
     }
 
     function toFixedForDisplay(value, digits = 2) {
-      const d = Math.max(0, Math.floor(Number(digits) || 0));
-      return roundForDisplay(value, d).toFixed(d);
+      return window.AtlasDisplay.toFixedForDisplay(value, digits);
     }
 
     function formatVotehubPct(value, digits = 2) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return (0).toFixed(digits);
-      if (typeof roundForDisplay === 'function') {
-        return Number(roundForDisplay(n, digits)).toFixed(digits);
-      }
-      return Number(Math.round(Number(n + 'e' + digits)) + 'e-' + digits).toFixed(digits);
+      return window.AtlasDisplay.formatVotehubPct(value, digits);
     }
 
     function formatVotehubVotes(value) {
-      const n = Number(value || 0);
-      if (!Number.isFinite(n)) return '0';
-      return Math.round(n).toLocaleString();
+      return window.AtlasDisplay.formatVotehubVotes(value);
     }
 
     function partyPctValue(votes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return roundPct2((Number(votes || 0) / t) * 100.0);
+      return window.AtlasDisplay.partyPctValue(votes, totalVotes);
     }
 
     function marginPctValue(repVotes, demVotes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return Math.abs((Number(repVotes || 0) - Number(demVotes || 0)) / t * 100.0);
+      return window.AtlasDisplay.marginPctValue(repVotes, demVotes, totalVotes);
     }
 
     function preservesTwoDecimalMargin(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return roundForDisplay(pct, 2) >= 0.02;
+      return window.AtlasDisplay.preservesTwoDecimalMargin(marginPct);
     }
 
     function closeRaceDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.closeRaceDisplayDigits(marginPct);
     }
 
     function formatPctForCloseRace(value, marginPct) {
-      const numeric = Number(value || 0);
-      const digits = closeRaceDisplayDigits(marginPct);
-      return toFixedForDisplay(numeric, digits);
+      return window.AtlasDisplay.formatPctForCloseRace(value, marginPct);
     }
 
     function formatPctForCountyCloseRace(value, marginPct) {
-      const numeric = Number(value || 0);
-      const digits = countyMarginDisplayDigits(marginPct);
-      return toFixedForDisplay(numeric, digits);
+      return window.AtlasDisplay.formatPctForCountyCloseRace(value, marginPct);
     }
 
     function marginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.marginDisplayDigits(marginPct);
     }
 
     function formatMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, marginDisplayDigits(pct));
+      return window.AtlasDisplay.formatMarginPctForDisplay(marginPct);
     }
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      const diff = Math.abs(repPctDisplay - demPctDisplay);
-      // If rounding causes both sides to display equal, fall back to the true margin so we don't
-      // incorrectly show a tie (or 0.000%) when there is a non-zero lead.
-      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
-      return diff;
+      return window.AtlasDisplay.marginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
     function leadMarginPctLabel(repVotes, demVotes, totalVotes) {
@@ -22602,26 +22465,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginDisplayDigits(marginPct) {
-      return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+      return window.AtlasDisplay.countyMarginDisplayDigits(marginPct);
     }
 
     function formatCountyMarginPctForDisplay(marginPct) {
-      const pct = Math.abs(Number(marginPct) || 0);
-      return toFixedForDisplay(pct, countyMarginDisplayDigits(pct));
+      return window.AtlasDisplay.formatCountyMarginPctForDisplay(marginPct);
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
       // Match candidate % labels: margin = rounded Trump% − rounded Harris%.
       // Raw vote margin (e.g. Scotland 6.925 → 6.93) drifts from the familiar share-diff (6.92).
-      const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / t) * 100, rawMarginPct));
-      const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / t) * 100, rawMarginPct));
-      if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-      const diff = Math.abs(repPctDisplay - demPctDisplay);
-      if (diff === 0 && rawMarginPct > 0) return rawMarginPct;
-      return diff;
+      return window.AtlasDisplay.countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
 
@@ -22781,10 +22635,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function parseContestValue(contestValue) {
-      const raw = String(contestValue || '');
-      const idx = raw.lastIndexOf('_');
-      if (idx <= 0) return [raw, ''];
-      return [raw.substring(0, idx), raw.substring(idx + 1)];
+      return window.AtlasElection.parseContestValue(contestValue);
     }
 
     function winnerMarginLabelShort(repVotes, demVotes, totalVotes, repCandidate, demCandidate) {
@@ -22796,17 +22647,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function winnerFromSignedMarginPct(signedPct) {
-      const v = Number(signedPct) || 0;
-      if (v > 0) return 'R';
-      if (v < 0) return 'D';
-      return 'T';
+      return window.AtlasElection.winnerFromSignedMarginPct(signedPct);
     }
 
     function flipInfo(prevSignedPct, curSignedPct) {
-      const from = winnerFromSignedMarginPct(prevSignedPct);
-      const to = winnerFromSignedMarginPct(curSignedPct);
-      const flipped = (from !== 'T' && to !== 'T' && from !== to);
-      return { flipped, from, to };
+      return window.AtlasElection.flipInfo(prevSignedPct, curSignedPct);
     }
 
     function winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate, signedPctOverride = NaN, options = {}) {
