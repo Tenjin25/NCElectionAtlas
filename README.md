@@ -1270,6 +1270,8 @@ compatibility wrappers, so existing call sites can be migrated incrementally.
 
 ### Directory Structure
 
+- `js/atlas-manifest.js` — Shared contest visibility and historical judicial-seat family helpers
+
 - `js/atlas-core.js` — Shared, deterministic normalization and vote-math helpers
 - `js/atlas-display.js` — Shared display rounding, close-race formatting, and HTML escaping
 - `js/atlas-election.js` — Shared vote-swing, quantile, contest parsing, and flip helpers
