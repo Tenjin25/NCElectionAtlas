@@ -569,6 +569,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const senateRows = await loadContestSlice('us_senate_model', 2026);
       const courtRows = await loadContestSlice('nc_supreme_court_model', 2026);
       const senateDistrictNode = await loadDistrictSlice('congressional', 'us_senate_model', 2026);
+      const senateStateHouseNode = await loadDistrictSlice('state_house', 'us_senate_model', 2026);
       const courtDistrictNode = await loadDistrictSlice('congressional', 'nc_supreme_court_model', 2026);
       const senateDefinition = getModeledContestDefinition('us_senate_model', 2026);
       const candidateStrengthTotal = (name) => Object.values(senateDefinition?.candidateStatewideStrengthComponentsPts?.[name] || {})
@@ -640,6 +641,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         return sum;
       }, { dem: 0, rep: 0, total: 0 })));
       const senateDistrictUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateDistrictNode?.general?.results)));
+      const senateStateHouseUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateStateHouseNode?.general?.results)));
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
@@ -701,9 +703,11 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateDistricts: Object.keys(senateDistrictNode?.general?.results || {}).length,
         senateDistrictCandidateStrengthNetDem: Number(senateDistrictNode?.meta?.model_candidate_strength_net_dem_pts),
         senateDistrictStatewideAlignment: Number(senateDistrictNode?.meta?.model_statewide_alignment_pts),
+        senateStateHouseStatewideAlignment: Number(senateStateHouseNode?.meta?.model_statewide_alignment_pts),
         senateStatewideUiMargin,
         senatePrecinctUiMargin,
         senateDistrictUiMargin,
+        senateStateHouseUiMargin,
         courtDistricts: Object.keys(courtDistrictNode?.general?.results || {}).length
       };
     });
@@ -779,12 +783,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
     expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.09, 2);
+    expect(modeledSnapshot.senateStateHouseStatewideAlignment).toBeCloseTo(0.75, 2);
     // Turnout composition restores an R+1.5–1.9 topline without changing county margins.
     expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);
     expect(modeledSnapshot.senatePrecinctUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senatePrecinctUiMargin).toBeLessThan(1.90);
     expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.10);
+    expect(Math.abs(modeledSnapshot.senateStateHouseUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.02);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 
     await page.selectOption('#contestSelect', 'us_senate_model_2026');

@@ -219,8 +219,14 @@ function summarizeResults(results) {
     });
     const scopes = {};
     for (const scope of ['congressional', 'state_house', 'state_senate']) {
-      const node = await loadDistrictSlice(scope, 'us_senate_model', 2026);
-      scopes[scope] = node?.general?.results || {};
+      const modeledNode = await loadDistrictSlice(scope, 'us_senate_model', 2026);
+      const senate2022Node = await loadDistrictSlice(scope, 'us_senate', 2022);
+      const president2024Node = await loadDistrictSlice(scope, 'president', 2024);
+      scopes[scope] = {
+        modeled: modeledNode?.general?.results || {},
+        senate2022: senate2022Node?.general?.results || {},
+        president2024: president2024Node?.general?.results || {}
+      };
     }
     return {
       precinct: {
@@ -309,7 +315,29 @@ function summarizeResults(results) {
         marginPctRMinusD: twoParty > 0 ? ((Number(row.rep || 0) - Number(row.dem || 0)) / twoParty) * 100 : null
       }];
     })),
-    districts: Object.fromEntries(Object.entries(output.scopes).map(([scope, results]) => [scope, summarizeResults(results)])),
+    districts: Object.fromEntries(Object.entries(output.scopes).map(([scope, nodes]) => [scope, summarizeResults(nodes.modeled)])),
+    stateHouseDiagnostics: Object.entries(output.scopes.state_house?.modeled || {})
+      .map(([district, modeled]) => {
+        const signed = (row) => Number(row?.total_votes || 0) > 0
+          ? ((Number(row?.rep_votes || 0) - Number(row?.dem_votes || 0)) / Number(row.total_votes)) * 100
+          : null;
+        const modeledMargin = signed(modeled);
+        const senate2022Margin = signed(output.scopes.state_house?.senate2022?.[district]);
+        const president2024Margin = signed(output.scopes.state_house?.president2024?.[district]);
+        return {
+          district,
+          modeledMarginPctUiSigned: modeledMargin,
+          senate2022MarginPctUiSigned: senate2022Margin,
+          president2024MarginPctUiSigned: president2024Margin,
+          vsPresidentPts: Number.isFinite(modeledMargin) && Number.isFinite(president2024Margin)
+            ? modeledMargin - president2024Margin
+            : null,
+          vsSenate2022Pts: Number.isFinite(modeledMargin) && Number.isFinite(senate2022Margin)
+            ? modeledMargin - senate2022Margin
+            : null
+        };
+      })
+      .sort((a, b) => Math.abs(Number(b.vsPresidentPts || 0)) - Math.abs(Number(a.vsPresidentPts || 0))),
     pageErrors
   };
   console.log(JSON.stringify(result, null, 2));

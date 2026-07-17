@@ -123,6 +123,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - Routed modeled county view through `loadContestSlice` so statewide and county cards follow the rebuilt precinct rows and model controls even when the precinct overlay is off; the compact modeled county path is no longer a frontend authority.
 - Reconciled modeled precinct rows to their calibrated county targets, correcting the broad red drift in counties such as Pitt and Northampton while retaining precinct-level ordering.
 - Set restrained Cooper-over-Harris targets in Guilford, App State-centered Watauga, Fayetteville/Fort Bragg bedroom-community Hoke, the growing Harnett corridor, and the Alamance/Cabarrus suburban belt; kept realigning Anson between its 2022 Senate and 2024 presidential margins; then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
+- Retuned the State House model alignment by one-tenth so its 120-district aggregate matches the precinct/county statewide result without flattening district-level variation.
 - Added explicit raw-precinct regression diagnostics so an unused county sidecar cannot silently become the statewide calibration target again.
 
 ### Demographics + Accessibility (March 21, 2026)
