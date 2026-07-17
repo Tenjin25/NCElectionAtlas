@@ -10354,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-23';
+    const DATA_CACHE_BUSTER = '2026-07-17-24';
     const APP_BUILD_ID = '2026-07-17-20';
 
     function withCacheBuster(path) {
@@ -11851,22 +11851,26 @@ document.addEventListener('DOMContentLoaded', function() {
           MECKLENBURG: -35.31,
           DURHAM: -62.55,
           ORANGE: -52.01,
-          GUILFORD: -31.00,
+          GUILFORD: -24.00,
           FORSYTH: -14.08,
           BUNCOMBE: -24.23,
           CUMBERLAND: -14.66,
           NEW_HANOVER: -2.03,
           PITT: -6.40
         },
-        // Final county-shape anchors applied after coalition floors/ceilings. Watauga
-        // remains a narrowly Republican college county instead of inheriting a broad
-        // Cooper-local floor intended for more conventional metros.
+        // Final county-shape anchors applied after coalition floors/ceilings. Cooper
+        // modestly outruns Harris in Guilford and in App State-centered Watauga.
         senateFinalTargetMarginByCountyPts: {
-          WATAUGA: 1.25
+          GUILFORD: -24.00,
+          WATAUGA: -6.75
         },
         // Keep the rebuilt precinct layer authoritative without allowing its internal
         // turnout distribution to drift away from the calibrated county targets.
         senateReconcilePrecinctsToCountyTargets: true,
+        // Calibrate the topline through rural turnout composition rather than making
+        // every county margin redder. County margins remain on their anchor targets.
+        senateFinalStatewideMarginPts: 1.70,
+        senateFinalStatewideTurnoutCountyTypes: ['rural'],
         senateRuralMaxOverPresPts: 4.00,
         // Statewide composition calibration. Keep county margins intact and alter only
         // their relative turnout weights; these factors are approximately total-neutral
@@ -19506,6 +19510,77 @@ document.addEventListener('DOMContentLoaded', function() {
             ));
           });
         });
+
+        // Hit the final statewide band through turnout composition, not a blanket
+        // margin shift. Scale only the configured county types (rural by default);
+        // the reconciliation below then preserves every county's desired margin.
+        if (isSenateDeviationModel && Number.isFinite(Number(modeledDef?.senateFinalStatewideMarginPts))) {
+          const targetSigned = clampSignedMargin(Number(modeledDef.senateFinalStatewideMarginPts));
+          const eligibleTypes = new Set(
+            (Array.isArray(modeledDef?.senateFinalStatewideTurnoutCountyTypes)
+              ? modeledDef.senateFinalStatewideTurnoutCountyTypes
+              : ['rural'])
+              .map(value => String(value || '').trim().toLowerCase())
+              .filter(Boolean)
+          );
+          const countyTotalsForComposition = new Map();
+          modeledOut.forEach(row => {
+            const county = countyFromRowKey(row?.county || '');
+            if (!county) return;
+            const node = countyTotalsForComposition.get(county) || { total: 0 };
+            node.total += Math.max(0, Number(row?.[`${modeledType}_total`] || 0));
+            countyTotalsForComposition.set(county, node);
+          });
+
+          let eligibleTotal = 0;
+          let eligibleDifference = 0;
+          let fixedTotal = 0;
+          let fixedDifference = 0;
+          countyTotalsForComposition.forEach((totals, county) => {
+            const total = Math.max(0, Number(totals?.total || 0));
+            const modelNode = countyModelByCounty?.get(county) || null;
+            const desiredSigned = Number(modelNode?.desiredSigned);
+            if (!(total > 0) || !Number.isFinite(desiredSigned)) return;
+            const difference = (clampSignedMargin(desiredSigned) / 100) * total;
+            const countyType = String(modelNode?.countyType || '').trim().toLowerCase();
+            if (eligibleTypes.has(countyType)) {
+              eligibleTotal += total;
+              eligibleDifference += difference;
+            } else {
+              fixedTotal += total;
+              fixedDifference += difference;
+            }
+          });
+
+          const targetFraction = targetSigned / 100;
+          const denominator = (targetFraction * eligibleTotal) - eligibleDifference;
+          const numerator = fixedDifference - (targetFraction * fixedTotal);
+          const rawMultiplier = Math.abs(denominator) > 1e-9 ? numerator / denominator : 1;
+          const multiplier = Number.isFinite(rawMultiplier)
+            ? Math.max(0.50, Math.min(2.00, rawMultiplier))
+            : 1;
+
+          if (Math.abs(multiplier - 1) > 1e-6) {
+            modeledOut.forEach(row => {
+              const county = countyFromRowKey(row?.county || '');
+              const modelNode = countyModelByCounty?.get(county) || null;
+              const countyType = String(modelNode?.countyType || '').trim().toLowerCase();
+              if (!eligibleTypes.has(countyType)) return;
+              const current = {
+                dem: Number(row?.[`${modeledType}_dem`] || 0),
+                rep: Number(row?.[`${modeledType}_rep`] || 0),
+                other: Number(row?.[`${modeledType}_other`] || 0),
+                total: Number(row?.[`${modeledType}_total`] || 0)
+              };
+              const targetTotal = Math.max(0, Math.round(current.total * multiplier));
+              const scaled = rescaleVoteSetToTargetTotal(current, targetTotal);
+              row[`${modeledType}_dem`] = scaled.dem;
+              row[`${modeledType}_rep`] = scaled.rep;
+              row[`${modeledType}_other`] = scaled.other;
+              row[`${modeledType}_total`] = scaled.total;
+            });
+          }
+        }
 
         // Reconcile the modeled precinct rows to the calibrated county margins. Turnout
         // apportionment can otherwise move a county several points away from desiredSigned
