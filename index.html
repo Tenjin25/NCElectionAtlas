@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-48';
-    const APP_BUILD_ID = '2026-07-16-48';
+    const DATA_CACHE_BUSTER = '2026-07-16-55';
+    const APP_BUILD_ID = '2026-07-16-55';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11741,8 +11741,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Two-party margins read ~0.04 pts redder; calibrate to the UI/total metric.
         // Pre-clamp used ~-1.55 to offset cross-county leakage; post-clamp uses positive adj.
         // Retune after suburban Cooper lift so published UI stays near Whatley +1.9.
-        // Retune after Farley-class under-Trump caps + home-region/Pitt Dem restores.
-        statewideTargetAdjustmentPts: 3.78,
+        // Retune after dampened protected-county recenter (no amplify).
+        // Calibrate against the live app path (Playwright); the inspect script's CDN mocks can skew county totals.
+        statewideTargetAdjustmentPts: 5.36,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Modest residual elasticity on so suburban/urban Dem underperformance vs Pres lifts.
         ruralGopOverperformanceWeight: 0.10,
@@ -11807,7 +11808,15 @@ document.addEventListener('DOMContentLoaded', function() {
         senateMaxOverPresRobesonCapPts: -0.75,
         senateMaxOverPresBladenCapPts: -0.50,
         senateMaxOverPresScotlandCapPts: -0.25,
-        // Explicit per-county ceilings (pts over 2024 Pres). 0 = cannot outrun Trump.
+        // Soft global ceiling off — named under-Trump caps still apply after recenter.
+        senateMaxOverPresGlobalCapPts: 0.35,
+        senateMaxOverPresGlobalEnabled: false,
+        // During R-ward recentering, named/local protected counties only take a fraction of the
+        // step so Dem locals are not washed out. No amplify (that blew county vs district).
+        // Raise statewideTargetAdjustmentPts to make up the skipped R on protected mass.
+        senateRecenterExemptNamedCounties: true,
+        senateRecenterProtectedLeak: 0.22,
+        // Explicit per-county ceilings (pts over 2024 Pres). Negative = must under-run Trump.
         senateMaxOverPresByCountyPts: {
           ROBESON: -0.75,
           BLADEN: -0.50,
@@ -11899,41 +11908,37 @@ document.addEventListener('DOMContentLoaded', function() {
           // Soft NE softener: Pasquotank-class counties were barely R in 2022 Senate (~R+6)
           // and should not paint deep red after statewide recentering.
           'Roy Cooper': {
-            // Home-region: keep clearly Dem after suburban/Farley-class Dem pulls recenter R-ward.
-            NASH: 9.60,
-            WILSON: 7.10,
-            // Soft-R / barely-R counties: pull toward Dem (Cooper crossover), not parked at Budd ~R+6.
-            ANSON: 9.40,
-            PASQUOTANK: 7.80,
-            GATES: 2.80,
-            MARTIN: 0.85,
-            SCOTLAND: 2.80,
-            GRANVILLE: 2.80,
-            JACKSON: 4.20,
-            PITT: 3.60,
-            // Outer-suburb / metro-spillover ring: Cooper should run ahead of generic D here.
-            CABARRUS: 5.20,
-            UNION: 4.10,
-            JOHNSTON: 3.20,
-            ALAMANCE: 4.40,
-            IREDELL: 2.40,
-            GASTON: 3.40,
-            LINCOLN: 3.40,
-            CATAWBA: 4.25,
-            ROWAN: 2.00,
-            DAVIDSON: 1.80,
-            CHATHAM: 1.80,
-            HARNETT: 1.60,
-            // College mountain / Sandhills: drop the old Whatley Watauga local; Cooper softens both.
-            WATAUGA: 5.40,
-            MOORE: 3.80,
-            // Coastal / NE peers.
-            HYDE: 1.80,
-            PAMLICO: 1.80,
-            DARE: 1.55,
-            CHOWAN: 1.35,
-            RICHMOND: 1.70,
-            'NEW HANOVER': 1.35
+            // Locals sized for dampened R-recenter (protectedLeak) — not the old full-wash survival stack.
+            NASH: 5.20,
+            WILSON: 3.40,
+            ANSON: 5.20,
+            PASQUOTANK: 4.20,
+            GATES: 1.80,
+            MARTIN: 0.55,
+            SCOTLAND: 2.00,
+            GRANVILLE: 1.80,
+            JACKSON: 2.40,
+            PITT: 2.20,
+            CABARRUS: 3.20,
+            UNION: 2.60,
+            JOHNSTON: 2.00,
+            ALAMANCE: 2.80,
+            IREDELL: 1.50,
+            GASTON: 2.20,
+            LINCOLN: 2.20,
+            CATAWBA: 2.70,
+            ROWAN: 1.30,
+            DAVIDSON: 1.20,
+            CHATHAM: 1.20,
+            HARNETT: 1.10,
+            WATAUGA: 3.40,
+            MOORE: 2.40,
+            HYDE: 1.20,
+            PAMLICO: 1.20,
+            DARE: 1.00,
+            CHOWAN: 0.90,
+            RICHMOND: 1.10,
+            'NEW HANOVER': 0.90
           },
           // No county Whatley locals — Watauga was stacking R and parking the college county too red.
           'Michael Whatley': {}
@@ -18890,13 +18895,35 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (weightedTotal > 0) {
               const currentStateSigned = weightedSigned / weightedTotal;
-              const recenterStep = (statewideTargetSigned - currentStateSigned) * Math.max(0, Math.min(1.25, statewideRecenterStrength));
-              if (Math.abs(recenterStep) >= 0.02) {
-                map.forEach((node) => {
+              const rawRecenterStep = (statewideTargetSigned - currentStateSigned) * Math.max(0, Math.min(1.25, statewideRecenterStrength));
+              if (Math.abs(rawRecenterStep) >= 0.02) {
+                // Protected counties (named Trump ceilings and/or Cooper locals) are frozen so
+                // targeted Dem pulls do not wash red on the next statewide recenter pass.
+                const byCountyCaps = (modeledDef?.senateMaxOverPresByCountyPts && typeof modeledDef.senateMaxOverPresByCountyPts === 'object')
+                  ? modeledDef.senateMaxOverPresByCountyPts
+                  : null;
+                const cooperLocals = modeledDef?.candidateLocalCountyBoostsPts?.[String(modeledDef?.demCandidate || '').trim()] || null;
+                const exemptNamed = !!modeledDef?.senateRecenterExemptNamedCounties && isSenateDeviationModel;
+                const isExempt = (county) => {
+                  if (!exemptNamed || !county) return false;
+                  if (byCountyCaps && Object.prototype.hasOwnProperty.call(byCountyCaps, county)) return true;
+                  if (cooperLocals && Number.isFinite(Number(cooperLocals[county])) && Number(cooperLocals[county]) > 0) return true;
+                  return false;
+                };
+                const leakRaw = Number(modeledDef?.senateRecenterProtectedLeak);
+                const protectedLeak = Number.isFinite(leakRaw) ? Math.max(0, Math.min(0.5, leakRaw)) : 0.22;
+                // Only damp R-ward recentering on protected counties (the wash that undoes Dem locals).
+                // Dem-ward steps still apply everywhere. No amplify onto unprotected — retune adj instead.
+                const dampProtected = exemptNamed && rawRecenterStep > 0;
+                map.forEach((node, county) => {
                   if (!node) return;
                   const baseSignedNode = Number(node.baseSigned);
                   if (!Number.isFinite(baseSignedNode)) return;
-                  const shiftedDesired = clampSignedMargin(Number(node.desiredSigned || 0) + recenterStep);
+                  let step = rawRecenterStep;
+                  if (dampProtected && isExempt(county)) {
+                    step = rawRecenterStep * protectedLeak;
+                  }
+                  const shiftedDesired = clampSignedMargin(Number(node.desiredSigned || 0) + step);
                   node.desiredSigned = shiftedDesired;
                   node.swingPct = baseSignedNode - shiftedDesired;
                 });
@@ -18904,31 +18931,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
 
-          // Correction role 6: re-apply named Trump ceilings after statewide recentering
-          // (recenter can otherwise push Farley-only / realigning counties back over Pres).
+          // Correction role 6: Trump ceilings after recentering — named caps first, then a soft global ceiling.
           if (isSenateDeviationModel && !!modeledDef?.senateMaxOverPresEnabled && map.size) {
             const byCountyCaps = (modeledDef?.senateMaxOverPresByCountyPts && typeof modeledDef.senateMaxOverPresByCountyPts === 'object')
               ? modeledDef.senateMaxOverPresByCountyPts
               : null;
-            if (byCountyCaps) {
-              map.forEach((node, county) => {
-                if (!node || !Object.prototype.hasOwnProperty.call(byCountyCaps, county)) return;
-                const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county))) ? Number(climateSignedByCounty.get(county)) : NaN;
-                const baseSignedNode = Number(node.baseSigned);
-                const desired = Number(node.desiredSigned);
-                const capPts = Number(byCountyCaps[county]);
-                if (!Number.isFinite(pres24) || !Number.isFinite(desired) || !Number.isFinite(baseSignedNode)) return;
-                const cap = pres24 + (Number.isFinite(capPts) ? capPts : 0);
-                if (desired > cap) {
-                  node.desiredSigned = clampSignedMargin(cap);
-                  node.swingPct = baseSignedNode - node.desiredSigned;
-                  const prev = Number(node?.diagnostics?.overPresCapApplied);
-                  if (node.diagnostics) {
-                    node.diagnostics.overPresCapApplied = Math.max(Number.isFinite(prev) ? prev : 0, desired - cap);
-                  }
+            const globalEnabled = !!modeledDef?.senateMaxOverPresGlobalEnabled;
+            const globalCapRaw = Number(modeledDef?.senateMaxOverPresGlobalCapPts);
+            const globalCapPts = Number.isFinite(globalCapRaw) ? globalCapRaw : 0.35;
+            map.forEach((node, county) => {
+              if (!node) return;
+              const pres24 = Number.isFinite(Number(climateSignedByCounty?.get(county))) ? Number(climateSignedByCounty.get(county)) : NaN;
+              const baseSignedNode = Number(node.baseSigned);
+              const desired = Number(node.desiredSigned);
+              if (!Number.isFinite(pres24) || !Number.isFinite(desired) || !Number.isFinite(baseSignedNode)) return;
+              let capPts = globalEnabled ? globalCapPts : Infinity;
+              if (byCountyCaps && Object.prototype.hasOwnProperty.call(byCountyCaps, county) && Number.isFinite(Number(byCountyCaps[county]))) {
+                capPts = Number(byCountyCaps[county]);
+              }
+              if (!Number.isFinite(capPts)) return;
+              const cap = pres24 + capPts;
+              if (desired > cap) {
+                node.desiredSigned = clampSignedMargin(cap);
+                node.swingPct = baseSignedNode - node.desiredSigned;
+                const prev = Number(node?.diagnostics?.overPresCapApplied);
+                if (node.diagnostics) {
+                  node.diagnostics.overPresCapApplied = Math.max(Number.isFinite(prev) ? prev : 0, desired - cap);
                 }
-              });
-            }
+              }
+            });
           }
 
           // Internal-only diagnostics: `diagnostics`, `cluster`, and the Senate/judicial brakes can be used later

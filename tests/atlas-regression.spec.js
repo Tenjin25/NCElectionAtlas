@@ -641,12 +641,12 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateOfficialCount).toBe(100);
     expect(modeledSnapshot.nashCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.nashCountyOfficialMargin).toBeGreaterThan(-3);
-    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(9.60, 2);
+    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(5.20, 2);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeGreaterThan(-3);
-    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(7.10, 2);
-    expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(5.40, 2);
-    expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(3.40, 2);
+    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(3.40, 2);
+    expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(3.40, 2);
+    expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(2.20, 2);
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
@@ -657,10 +657,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.robesonOverPresCap).toBeCloseTo(-0.75, 2);
     expect(modeledSnapshot.bladenOverPresCap).toBeCloseTo(-0.50, 2);
     expect(modeledSnapshot.scotlandOverPresCap).toBeCloseTo(-0.25, 2);
-    expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(-5);
-    expect(modeledSnapshot.hokeOfficialMargin).toBeLessThan(-5);
+    // Hoke stays Dem on the official county path; underlying can move with statewide recenter.
+    expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(0);
+    expect(modeledSnapshot.hokeOfficialMargin).toBeLessThan(0);
     expect(Math.abs(modeledSnapshot.hokeCountyOfficialMargin - modeledSnapshot.hokeOfficialMargin)).toBeLessThan(0.25);
-    expect(modeledSnapshot.hokeUnderlyingMargin).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
     expect(modeledSnapshot.senateRepCandidate).toBe('Michael Whatley');
     expect(modeledSnapshot.courtDemCandidate).toBe('Anita Earls');

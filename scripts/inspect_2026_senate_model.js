@@ -181,7 +181,7 @@ function summarizeResults(results) {
 
   const result = {
     county: output.county,
-    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG'].map(county => {
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION'].map(county => {
       const row = output.countyByName[county] || {};
       const twoParty = Number(row.dem || 0) + Number(row.rep || 0);
       return [county, {
