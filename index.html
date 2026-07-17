@@ -10310,6 +10310,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
+    <script src="./js/atlas-core.js"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -12744,7 +12745,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function modeledNormalizeRowKey(raw) {
-      return (raw || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+      return window.AtlasCore.normalizeRowKey(raw);
     }
 
     function modeledCountyFromRowKey(rawKey) {
@@ -14196,12 +14197,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // (saveUIState/restoreUIState defined above as no-ops)
 
     function normalizeCountyToken(name) {
-      return (name || '')
-        .toString()
-        .replace(/[^a-z0-9 .\-]/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toUpperCase();
+      return window.AtlasCore.normalizeCountyToken(name);
     }
 
     function backfillHistoricalPrecinctResultsWithCountyFallback(precinctResultsByNorm, countyAgg, contestType, year) {
@@ -14270,21 +14266,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return filled;
     }
 
-    const PRECINCT_ALIAS_COMMON_WORDS = ['PRECINCT', 'PCT', 'WARD', 'DISTRICT', 'TOWNSHIP', 'BOX', 'VOTING', 'LOCATION'];
-
     function normalizePrecinctAliasToken(value) {
-      let t = (value || '').toString().trim().toUpperCase();
-      if (!t) return '';
-      PRECINCT_ALIAS_COMMON_WORDS.forEach(word => {
-        t = t.replace(new RegExp(word, 'g'), ' ');
-      });
-      t = t.replace(/[-_.]/g, ' ');
-      t = t.replace(/\s+/g, ' ').trim();
-      return t;
+      return window.AtlasCore.normalizePrecinctAliasToken(value);
     }
 
     function compactPrecinctAliasToken(value) {
-      return (value || '').toString().trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      return window.AtlasCore.compactPrecinctAliasToken(value);
     }
 
     function extractPrecinctAliasCandidates(rawPrecinctValue) {
@@ -16518,22 +16505,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function rescaleVoteSetToTargetTotal(voteSet, targetTotal) {
-        const desired = Math.max(0, Math.round(Number(targetTotal) || 0));
-        const baseTotal = Math.max(0, Math.round(Number(voteSet?.total) || 0));
-        if (!Number.isFinite(desired) || desired <= 0 || baseTotal <= 0) return voteSet;
-
-        const scale = desired / baseTotal;
-        let dem = Math.max(0, Math.round((Number(voteSet?.dem) || 0) * scale));
-        let rep = Math.max(0, Math.round((Number(voteSet?.rep) || 0) * scale));
-        const twoParty = dem + rep;
-        if (twoParty > desired && twoParty > 0) {
-          const demShare = dem / twoParty;
-          dem = Math.max(0, Math.round(demShare * desired));
-          rep = Math.max(0, desired - dem);
-          return { dem, rep, other: 0, total: desired };
-        }
-        const other = Math.max(0, desired - twoParty);
-        return { dem, rep, other, total: desired };
+        return window.AtlasCore.rescaleVoteSetToTargetTotal(voteSet, targetTotal);
       }
 
       function buildModeledContestRowFromBaseRow(baseRow, modeledDef, climateSwingPct, options = null) {
@@ -34531,9 +34503,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
-      const t = Number(totalVotes) || 0;
-      if (t <= 0) return 0;
-      return ((Number(repVotes) - Number(demVotes)) / t) * 100;
+      return window.AtlasCore.signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
     }
 
     function colorForShiftMode(shiftPct) {

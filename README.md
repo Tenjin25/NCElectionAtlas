@@ -1256,12 +1256,21 @@ npm test
 Optional commands:
 
 ```bash
+npm run test:core
 npm run test:headed
 npm run test:ui
 npm run test:report
 ```
 
+`test:core` runs fast Node regression tests for deterministic helpers extracted
+from the main page. The browser-facing function names remain in `index.html` as
+compatibility wrappers, so existing call sites can be migrated incrementally.
+
 ### Directory Structure
+
+- `js/atlas-core.js` — Shared, deterministic normalization and vote-math helpers
+- `core-tests/` — Fast deterministic helper regression tests
+- `tests/` — Browser and data regression tests
 
 - `index.html`, `NCMap.html` — Main web app entry points
 - `data/` — All data files (see below)
