@@ -10314,6 +10314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="./js/atlas-display.js"></script>
     <script src="./js/atlas-election.js"></script>
     <script src="./js/atlas-manifest.js"></script>
+    <script src="./js/atlas-modeling.js"></script>
     <script src="./js/atlas-regions.js"></script>
     <script src="./js/atlas-url-state.js"></script>
     <script>
@@ -12544,30 +12545,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Modeled contest signature + derived slice helpers ---
     // Signature is used to cache modeled results across contest switches and tuning changes.
     function modeledStableStringify(value) {
-      const seen = new WeakSet();
-      const recur = (v) => {
-        if (v === null || v === undefined) return v;
-        const t = typeof v;
-        if (t === 'number') return Number.isFinite(v) ? v : String(v);
-        if (t === 'string' || t === 'boolean') return v;
-        if (t !== 'object') return String(v);
-        if (seen.has(v)) return '[Circular]';
-        seen.add(v);
-        if (Array.isArray(v)) return v.map(recur);
-        const out = {};
-        Object.keys(v).sort().forEach(k => { out[k] = recur(v[k]); });
-        return out;
-      };
-      try { return JSON.stringify(recur(value)); } catch (_) { return String(value); }
+      return window.AtlasModeling.stableStringify(value);
     }
 
     function getModeledDefSignature(modeledDef) {
-      if (!modeledDef) return '';
-      const ct = String(modeledDef?.contestType || '').trim();
-      const y = Number(modeledDef?.year);
-      if (!ct || !Number.isFinite(y)) return '';
-      // Include the full definition (sorted keys) so any tuning input change yields a new cache key.
-      return `${ct}_${y}|${modeledStableStringify(modeledDef)}`;
+      return window.AtlasModeling.getDefinitionSignature(modeledDef);
     }
 
     function modeledNormalizeRowKey(raw) {
@@ -12882,48 +12864,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getModelCountyBehaviorLabel(mode) {
-      const key = String(mode || 'balanced').trim().toLowerCase();
-      const labels = {
-        balanced: 'Balanced counties',
-        suburban_rebound: 'Suburban rebound',
-        rural_surge: 'Rural surge',
-        incumbent_friendly: 'Incumbent-friendly',
-        volatile: 'Volatile / low-confidence'
-      };
-      return labels[key] || labels.balanced;
+      return window.AtlasModeling.getCountyBehaviorLabel(mode);
     }
 
     function inferModelConfidence(modeled, baseModeled = null) {
-      if (!modeled) return { label: 'Low', range: '\u00b12.0 pts' };
-      const blend = Number(modeled?.blendWeight);
-      const bonus = Number(modeled?.candidateBonusScale);
-      const turnout = Number(modeled?.turnoutFactor);
-      const behavior = String(modeled?.countyBehaviorMode || 'balanced').trim().toLowerCase();
-      const uncertaintyBoost = Number(modeled?.uncertaintyBoost);
-      const blendDelta = (baseModeled && Number.isFinite(blend) && Number.isFinite(Number(baseModeled?.blendWeight)))
-        ? Math.abs(blend - Number(baseModeled.blendWeight))
-        : 0;
-      const turnoutDelta = (baseModeled && Number.isFinite(turnout) && Number.isFinite(Number(baseModeled?.turnoutFactor)))
-        ? Math.abs(turnout - Number(baseModeled.turnoutFactor))
-        : 0;
-      const bonusDelta = (baseModeled && Number.isFinite(bonus) && Number.isFinite(Number(baseModeled?.candidateBonusScale)))
-        ? Math.abs(bonus - Number(baseModeled.candidateBonusScale))
-        : 0;
-
-      let score = 0;
-      score += Math.max(0, 0.30 - (blendDelta * 0.65));
-      score += Math.max(0, 0.30 - (turnoutDelta * 0.80));
-      score += Math.max(0, 0.22 - (bonusDelta * 0.22));
-      if (behavior === 'balanced' || behavior === 'incumbent_friendly') score += 0.14;
-      if (behavior === 'suburban_rebound' || behavior === 'rural_surge') score += 0.05;
-      if (behavior === 'volatile') score -= 0.22;
-      if (Number.isFinite(uncertaintyBoost) && uncertaintyBoost > 1) score -= Math.min(0.18, (uncertaintyBoost - 1) * 0.28);
-
-      let label = 'Medium';
-      if (score >= 0.60) label = 'High';
-      else if (score < 0.36) label = 'Low';
-      const range = label === 'High' ? '\u00b11.4 pts' : (label === 'Medium' ? '\u00b12.0 pts' : '\u00b13.0 pts');
-      return { label, range };
+      return window.AtlasModeling.inferConfidence(modeled, baseModeled);
     }
 
     function updateModelScenarioSummary(modeled, baseModeled = null) {

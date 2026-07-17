@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "test:core": "node --test core-tests/atlas-core.test.js core-tests/atlas-display.test.js core-tests/atlas-election.test.js core-tests/atlas-manifest.test.js core-tests/atlas-regions.test.js core-tests/atlas-url-state.test.js",
+    "test:core": "node --test core-tests/atlas-core.test.js core-tests/atlas-display.test.js core-tests/atlas-election.test.js core-tests/atlas-manifest.test.js core-tests/atlas-modeling.test.js core-tests/atlas-regions.test.js core-tests/atlas-url-state.test.js",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:report": "playwright show-report"

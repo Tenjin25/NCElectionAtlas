@@ -1273,6 +1273,7 @@ compatibility wrappers, so existing call sites can be migrated incrementally.
 ### Directory Structure
 
 - `js/atlas-manifest.js` — Shared contest visibility and historical judicial-seat family helpers
+- `js/atlas-modeling.js` — Shared modeled-contest signatures, county behavior labels, and confidence scoring
 - `js/atlas-regions.js` — Shared quick-jump county normalization and regional vote aggregation
 
 - `js/atlas-core.js` — Shared deterministic normalization, precinct-alias expansion, and vote-math helpers
