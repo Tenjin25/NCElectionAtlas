@@ -64,3 +64,81 @@ test('classifies model confidence from tuning distance and behavior', () => {
     { label: 'Low', range: '\u00b12.0 pts' }
   );
 });
+
+const dependencies = {
+  shiftVotes(dem, rep, other, total, swing) {
+    return { dem: dem + swing, rep: rep - swing, other, total };
+  },
+  rescaleVotes(votes, total) {
+    return { ...votes, total };
+  },
+  signedMargin(dem, rep, total) {
+    return total > 0 ? ((rep - dem) / total) * 100 : 0;
+  },
+  colorForMargin(margin, winner) {
+    return `${winner}:${margin.toFixed(1)}`;
+  }
+};
+
+test('aggregates statewide margins from modeled district results', () => {
+  assert.equal(
+    AtlasModeling.computeStatewideMarginFromDistrictResults({
+      1: { dem_votes: 40, rep_votes: 60, total_votes: 100 },
+      2: { dem_votes: 55, rep_votes: 45, total_votes: 100 }
+    }, dependencies.signedMargin),
+    5
+  );
+});
+
+test('builds modeled contest rows with candidate metadata', () => {
+  const row = AtlasModeling.buildContestRow({
+    county: 'WAKE - 01',
+    president_dem: 40,
+    president_rep: 50,
+    president_other: 10,
+    president_total: 100
+  }, {
+    year: 2026,
+    baseContestType: 'president',
+    contestType: 'us_senate_model',
+    demCandidate: 'Dem Candidate',
+    repCandidate: 'Rep Candidate'
+  }, 5, {
+    targetTotal: 120,
+    modelMeta: {
+      baselineNoCandidateSigned: 8,
+      desiredSigned: 2,
+      candidateEffectDemPts: 6,
+      explanationTags: ['candidate strength', '', 'turnout']
+    }
+  }, dependencies);
+
+  assert.equal(row.us_senate_model_dem, 45);
+  assert.equal(row.us_senate_model_rep, 45);
+  assert.equal(row.us_senate_model_total, 120);
+  assert.equal(row.us_senate_model_winner, 'TIE');
+  assert.equal(row.us_senate_model_color, '#9ca3af');
+  assert.equal(row.__model_candidate_effect_d_pts, 6);
+  assert.equal(row.__model_explain_tags, 'candidate strength \u2022 turnout');
+});
+
+test('builds modeled district rows while retaining source metadata', () => {
+  const row = AtlasModeling.buildDistrictResultRow({
+    district: 4,
+    dem_votes: 40,
+    rep_votes: 60,
+    other_votes: 0,
+    total_votes: 100,
+    competitiveness: { label: 'old' }
+  }, {
+    demCandidate: 'D',
+    repCandidate: 'R'
+  }, 5, 100, dependencies);
+
+  assert.equal(row.district, 4);
+  assert.equal(row.dem_votes, 45);
+  assert.equal(row.rep_votes, 55);
+  assert.equal(row.winner, 'REP');
+  assert.equal(row.competitiveness.label, 'old');
+  assert.equal(row.competitiveness.color, 'R:10.0');
+});
