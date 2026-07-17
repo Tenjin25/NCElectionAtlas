@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-75';
-    const APP_BUILD_ID = '2026-07-16-75';
+    const DATA_CACHE_BUSTER = '2026-07-17-20';
+    const APP_BUILD_ID = '2026-07-17-20';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11743,7 +11743,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Retune after suburban Cooper lift so published UI stays near Whatley +1.9.
         // Retune after dampened protected-county recenter + Brunswick/Pasquotank/Henderson pulls.
         // Calibrate against Playwright live path (CDN-mocked inspect can skew county totals).
-        statewideTargetAdjustmentPts: 7.65,
+        // Retune after urban metro + Hoke bedroom Cooper restores.
+        // Retune after urban metro Cooper>Harris restores (protected from R-recenter).
+        statewideTargetAdjustmentPts: 41.00,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Modest residual elasticity on so suburban/urban Dem underperformance vs Pres lifts.
         ruralGopOverperformanceWeight: 0.10,
@@ -11814,7 +11816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // During R-ward recentering, only Cooper-local counties are dampened (so Dem locals stick).
         // Under-Trump caps still apply AFTER recenter — they must not skip the wash or counties park too blue.
         senateRecenterExemptNamedCounties: true,
-        senateRecenterProtectedLeak: 0.18,
+        senateRecenterProtectedLeak: 0.12,
         // Explicit per-county ceilings (pts over 2024 Pres). Negative = must under-run Trump.
         senateMaxOverPresByCountyPts: {
           ROBESON: -0.75,
@@ -11966,8 +11968,8 @@ document.addEventListener('DOMContentLoaded', function() {
           // and should not paint deep red after statewide recentering.
           'Roy Cooper': {
             // Locals sized for dampened R-recenter (protectedLeak) — not the old full-wash survival stack.
-            NASH: 5.80,
-            WILSON: 4.60,
+            NASH: 6.95,
+            WILSON: 5.50,
             ANSON: 5.40,
             PASQUOTANK: 3.00,
             GATES: 1.20,
@@ -12008,7 +12010,14 @@ document.addEventListener('DOMContentLoaded', function() {
             VANCE: 1.30,
             HERTFORD: 1.30,
             WARREN: 1.30,
-            HYDE: 1.20,
+            // Major metros: Cooper should modestly clear Harris (target ~−0.5 to −1.5 vs Pres two-party).
+            WAKE: 1.95,
+            MECKLENBURG: 3.30,
+            GUILFORD: 5.00,
+            DURHAM: 2.15,
+            // Winston-Salem metro: Cooper should modestly clear Harris (AG since 90s, two-term gov).
+            FORSYTH: 2.70,
+            HYDE: 1.00,
             PAMLICO: 1.20,
             DARE: 1.00,
             CHOWAN: 0.90,
@@ -12019,8 +12028,8 @@ document.addEventListener('DOMContentLoaded', function() {
           'Michael Whatley': {}
         },
         candidateCountyTypeBoostsPts: {
-          // Suburban-first Cooper portable strength (outer rings were too red on clamped backend).
-          'Roy Cooper': { urban: 1.05, suburban: 1.35, exurban: 0.75, rural: 0.45 }
+          // Modest metro/suburban Cooper lift — type boosts only; avoid stacking large locals that break statewide.
+          'Roy Cooper': { urban: 1.15, suburban: 1.45, exurban: 0.80, rural: 0.45 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -16668,6 +16677,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // College / secondary metros + outer rings track the Cooper suburban base.
             if (county === 'GUILFORD' || county === 'FORSYTH' || county === 'BUNCOMBE' || county === 'ORANGE') return 'suburban';
             if (county === 'NEW HANOVER' || county === 'PITT') return 'suburban';
+            // Fort Bragg / Fayetteville hub + Hoke bedroom community.
+            if (county === 'CUMBERLAND' || county === 'HOKE') return 'suburban';
             if (
               county === 'CABARRUS' || county === 'UNION' || county === 'JOHNSTON'
               || county === 'ALAMANCE' || county === 'IREDELL' || county === 'GASTON'
