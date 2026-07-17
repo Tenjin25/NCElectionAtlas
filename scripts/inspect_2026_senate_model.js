@@ -128,9 +128,37 @@ function summarizeResults(results) {
     throw new Error(`${error.message}\nPage errors:\n${pageErrors.join('\n')}`);
   }
 
+  const visibleStatewide = await page.evaluate(async () => {
+    const key = 'us_senate_model_2026';
+    const select = document.getElementById('contestSelect');
+    if (select) select.value = key;
+    await applyContest(key);
+    const cards = Array.from(document.querySelectorAll('[data-statewide-content]'))
+      .map(node => String(node?.innerText || '').trim())
+      .filter(Boolean);
+    return {
+      cardText: cards[0] || '',
+      selectedContest: String(select?.value || '')
+    };
+  });
+
   const output = await page.evaluate(async () => {
     const precinctRows = await loadContestSlice('us_senate_model', 2026);
+    const senate2022Rows = await loadContestSlice('us_senate', 2022);
+    const president2024Rows = await loadContestSlice('president', 2024);
     const countyRows = precinctRows;
+    const aggregateContestByCounty = (rows, contestType) => rows.reduce((counties, row) => {
+      const county = String(row?.county || '').toUpperCase().split(' - ')[0].trim();
+      if (!county) return counties;
+      const totals = counties[county] || { dem: 0, rep: 0, total: 0 };
+      totals.dem += Number(row?.[`${contestType}_dem`] || 0);
+      totals.rep += Number(row?.[`${contestType}_rep`] || 0);
+      totals.total += Number(row?.[`${contestType}_total`] || 0);
+      counties[county] = totals;
+      return counties;
+    }, {});
+    const senate2022ByCounty = aggregateContestByCounty(senate2022Rows, 'us_senate');
+    const president2024ByCounty = aggregateContestByCounty(president2024Rows, 'president');
     const precinctTotals = precinctRows.reduce((sum, row) => {
       sum.dem += Number(row?.us_senate_model_dem || 0);
       sum.rep += Number(row?.us_senate_model_rep || 0);
@@ -218,6 +246,20 @@ function summarizeResults(results) {
         targetMarginTotal: modeledTargetMoment.total
       },
       countyByName,
+      anchorsByCounty: Object.fromEntries(
+        Array.from(new Set([
+          ...Object.keys(senate2022ByCounty),
+          ...Object.keys(president2024ByCounty)
+        ])).map(county => {
+          const signed = (totals) => Number(totals?.total || 0) > 0
+            ? ((Number(totals?.rep || 0) - Number(totals?.dem || 0)) / Number(totals.total)) * 100
+            : null;
+          return [county, {
+            senate2022MarginPctUiSigned: signed(senate2022ByCounty[county]),
+            president2024MarginPctUiSigned: signed(president2024ByCounty[county])
+          }];
+        })
+      ),
       countyTypeTotals: Object.values(countyByName).reduce((groups, row) => {
         const key = String(row?.countyType || 'unknown').toLowerCase() || 'unknown';
         const group = groups[key] || { dem: 0, rep: 0, total: 0, counties: 0 };
@@ -233,14 +275,17 @@ function summarizeResults(results) {
   });
 
   const result = {
+    visibleStatewide,
     precinct: output.precinct,
     county: output.county,
     countyTypeTotals: output.countyTypeTotals,
-    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'CHATHAM', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'CHATHAM', 'GRANVILLE', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
       const row = output.countyByName[county] || {};
+      const anchors = output.anchorsByCounty[county] || {};
       const twoParty = Number(row.dem || 0) + Number(row.rep || 0);
       return [county, {
         ...row,
+        ...anchors,
         marginPctRMinusD: twoParty > 0 ? ((Number(row.rep || 0) - Number(row.dem || 0)) / twoParty) * 100 : null
       }];
     })),

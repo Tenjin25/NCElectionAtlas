@@ -574,6 +574,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const gastonModeledRow = countyModeledRow('GASTON');
       const buncombeCountyOfficial = senateCountyOfficial.BUNCOMBE || null;
       const cumberlandCountyOfficial = senateCountyOfficial.CUMBERLAND || null;
+      const granvilleCountyOfficial = senateCountyOfficial.GRANVILLE || null;
       const hokeCountyOfficial = senateCountyOfficial.HOKE || null;
       const hokeOfficial = senateOfficial.HOKE || null;
       const hokeUnderlying = senateRows
@@ -627,6 +628,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         gastonLocalCandidateEffect: Number(gastonModeledRow?.__model_candidate_effect_local_d_pts),
         buncombeCountyOfficialMargin: margin(buncombeCountyOfficial),
         cumberlandCountyOfficialMargin: margin(cumberlandCountyOfficial),
+        granvilleCountyOfficialMargin: margin(granvilleCountyOfficial),
         cooperStatewideStrength: candidateStrengthTotal('Roy Cooper'),
         whatleyStatewideStrength: candidateStrengthTotal('Michael Whatley'),
         districtCandidateStrengthNetDem: candidateStrengthTotal('Roy Cooper') - candidateStrengthTotal('Michael Whatley'),
@@ -639,6 +641,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         urbanMinDemOverPres: Number(senateDefinition?.senateUrbanMinDemOverPresPts),
         urbanMinDemOverSenate2022: Number(senateDefinition?.senateUrbanMinDemOverSenate2022Pts),
         chathamMinDemOverPres: Number(senateDefinition?.senateMetroAdjacentMinDemOverPresByCountyPts?.CHATHAM),
+        granvilleMinDemOverPres: Number(senateDefinition?.senateMetroAdjacentMinDemOverPresByCountyPts?.GRANVILLE),
         urbanReferenceWake: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.WAKE),
         urbanReferenceMecklenburg: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.MECKLENBURG),
         urbanReferenceGuilford: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.GUILFORD),
@@ -683,6 +686,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(1.60, 2);
     expect(modeledSnapshot.buncombeCountyOfficialMargin).toBeLessThan(-15);
     expect(modeledSnapshot.cumberlandCountyOfficialMargin).toBeLessThan(-5);
+    expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeGreaterThan(8);
+    expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeLessThan(10);
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
@@ -695,6 +700,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.urbanMinDemOverPres).toBeCloseTo(0.25, 2);
     expect(modeledSnapshot.urbanMinDemOverSenate2022).toBeCloseTo(0.35, 2);
     expect(modeledSnapshot.chathamMinDemOverPres).toBeCloseTo(2.00, 2);
+    expect(modeledSnapshot.granvilleMinDemOverPres).toBeCloseTo(0.75, 2);
     expect(modeledSnapshot.urbanReferenceWake).toBeCloseTo(-26.43, 2);
     expect(modeledSnapshot.urbanReferenceMecklenburg).toBeCloseTo(-35.31, 2);
     expect(modeledSnapshot.urbanReferenceGuilford).toBeCloseTo(-27.02, 2);

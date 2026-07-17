@@ -10354,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-21';
+    const DATA_CACHE_BUSTER = '2026-07-17-22';
     const APP_BUILD_ID = '2026-07-17-20';
 
     function withCacheBuster(path) {
@@ -11837,10 +11837,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Cooper should also improve on Beasley's 2022 Senate margin in every major
         // metro; the 2022 base is already available in the county model.
         senateUrbanMinDemOverSenate2022Pts: 0.35,
-        // Chatham is Triangle-adjacent but retains a more rural electorate than the
-        // core metros, so give it a softer Cooper-over-Harris floor.
+        // Chatham and Granville are Triangle-adjacent but retain more rural electorates
+        // than the core metros, so give them softer Cooper-over-Harris floors.
         senateMetroAdjacentMinDemOverPresByCountyPts: {
-          CHATHAM: 2.00
+          CHATHAM: 2.00,
+          GRANVILLE: 0.75
         },
         // Compatibility floors derived from the displayed county margins at 69fe6c0.
         // Values are signed R-D target margins, compensated for the rebuilt precinct
@@ -19480,9 +19481,9 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
 
-        // County-facing modeled results must follow the calibrated county target, not a second
-        // aggregation of turnout-reweighted precinct rows. Keep those precinct rows unchanged for
-        // precinct mode and attach an authoritative county-total sidecar for county mode.
+        // Derive compact county targets for legacy/internal county-input callers. The normal
+        // frontend path remains precinct-first and must aggregate modeledOut directly; attaching
+        // this target map to modeledOut would make the statewide card ignore the modeled precincts.
         const modeledCountyRowTotals = new Map();
         modeledOut.forEach((row) => {
           const county = countyFromRowKey(row?.county || '');
@@ -19519,8 +19520,6 @@ document.addEventListener('DOMContentLoaded', function() {
             rep_candidate: String(modeledDef?.repCandidate || '')
           };
         });
-
-        attachOfficialCountyTotalsToRows(modeledOut, { county_totals: modeledCountyTotals });
 
         // County-mode callers (preferCountyInputs) need a compact 100-row slice so paint/hover
         // and regression checks use county keys + authoritative totals, not precinct rows.
@@ -34941,13 +34940,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (staleCheck()) return;
 
-      // Keep county mode on the compact 100-row payload. The full crosswalked
-      // precinct slice is only needed when the precinct overlay is active.
+      // Historical county mode may use compact county totals, but modeled contests
+      // stay precinct-first even with the precinct overlay off. This keeps the
+      // statewide/county cards on the same rebuilt rows as model tuning and districts.
       let needsPrecinctDetail = !!precinctsEnabled;
       if (needsPrecinctDetail && shouldDeferPrecinctDetail()) {
         needsPrecinctDetail = false;
       }
-      const contestData = needsPrecinctDetail
+      const modeledCountyContest = !!getModeledContestDefinition(contestType, Number(year));
+      const contestData = (needsPrecinctDetail || modeledCountyContest)
         ? await loadContestSlice(contestType, year)
         : await loadCountyContestSlice(contestType, year);
       if (staleCheck()) return;
