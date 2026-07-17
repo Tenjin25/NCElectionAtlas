@@ -573,6 +573,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const wataugaModeledRow = countyModeledRow('WATAUGA');
       const gastonModeledRow = countyModeledRow('GASTON');
       const buncombeCountyOfficial = senateCountyOfficial.BUNCOMBE || null;
+      const ansonCountyOfficial = senateCountyOfficial.ANSON || null;
       const cumberlandCountyOfficial = senateCountyOfficial.CUMBERLAND || null;
       const granvilleCountyOfficial = senateCountyOfficial.GRANVILLE || null;
       const guilfordCountyOfficial = senateCountyOfficial.GUILFORD || null;
@@ -631,6 +632,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         wataugaLocalCandidateEffect: Number(wataugaModeledRow?.__model_candidate_effect_local_d_pts),
         gastonLocalCandidateEffect: Number(gastonModeledRow?.__model_candidate_effect_local_d_pts),
         buncombeCountyOfficialMargin: margin(buncombeCountyOfficial),
+        ansonCountyOfficialMargin: margin(ansonCountyOfficial),
         cumberlandCountyOfficialMargin: margin(cumberlandCountyOfficial),
         granvilleCountyOfficialMargin: margin(granvilleCountyOfficial),
         guilfordCountyOfficialMargin: margin(guilfordCountyOfficial),
@@ -695,6 +697,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(0.60, 2);
     expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(1.60, 2);
     expect(modeledSnapshot.buncombeCountyOfficialMargin).toBeLessThan(-15);
+    expect(modeledSnapshot.ansonCountyOfficialMargin).toBeGreaterThan(3);
+    expect(modeledSnapshot.ansonCountyOfficialMargin).toBeLessThan(5);
     expect(modeledSnapshot.cumberlandCountyOfficialMargin).toBeLessThan(-5);
     expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeGreaterThan(8);
     expect(modeledSnapshot.granvilleCountyOfficialMargin).toBeLessThan(10);

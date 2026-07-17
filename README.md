@@ -117,7 +117,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - Added softer Chatham- and Granville-specific Triangle-adjacent floors, keeping both between a core-metro treatment and a generic rural/suburban county.
 - Routed modeled county view through `loadContestSlice` so statewide and county cards follow the rebuilt precinct rows and model controls even when the precinct overlay is off; the compact modeled county path is no longer a frontend authority.
 - Reconciled modeled precinct rows to their calibrated county targets, correcting the broad red drift in counties such as Pitt and Northampton while retaining precinct-level ordering.
-- Set restrained Cooper-over-Harris targets in Guilford and App State-centered Watauga, then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
+- Set restrained Cooper-over-Harris targets in Guilford and App State-centered Watauga, kept realigning Anson between its 2022 Senate and 2024 presidential margins, then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
 - Added explicit raw-precinct regression diagnostics so an unused county sidecar cannot silently become the statewide calibration target again.
 
 ### Demographics + Accessibility (March 21, 2026)
