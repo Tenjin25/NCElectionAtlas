@@ -279,7 +279,27 @@ function summarizeResults(results) {
     precinct: output.precinct,
     county: output.county,
     countyTypeTotals: output.countyTypeTotals,
-    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'CHATHAM', 'GRANVILLE', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
+    redderThanBothAnchors: Object.entries(output.countyByName)
+      .map(([county, row]) => {
+        const anchors = output.anchorsByCounty[county] || {};
+        const total = Number(row?.total || 0);
+        const modeled = total > 0
+          ? ((Number(row?.rep || 0) - Number(row?.dem || 0)) / total) * 100
+          : null;
+        const senate2022 = Number(anchors.senate2022MarginPctUiSigned);
+        const president2024 = Number(anchors.president2024MarginPctUiSigned);
+        const reddestAnchor = Math.max(senate2022, president2024);
+        return {
+          county,
+          modeledMarginPctUiSigned: modeled,
+          senate2022MarginPctUiSigned: senate2022,
+          president2024MarginPctUiSigned: president2024,
+          redDriftBeyondBothPts: Number.isFinite(modeled) ? modeled - reddestAnchor : null
+        };
+      })
+      .filter(row => Number.isFinite(row.redDriftBeyondBothPts) && row.redDriftBeyondBothPts > 0.50)
+      .sort((a, b) => b.redDriftBeyondBothPts - a.redDriftBeyondBothPts),
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'NORTHAMPTON', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'CHATHAM', 'GRANVILLE', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
       const row = output.countyByName[county] || {};
       const anchors = output.anchorsByCounty[county] || {};
       const twoParty = Number(row.dem || 0) + Number(row.rep || 0);

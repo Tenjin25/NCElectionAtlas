@@ -10354,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-22';
+    const DATA_CACHE_BUSTER = '2026-07-17-23';
     const APP_BUILD_ID = '2026-07-17-20';
 
     function withCacheBuster(path) {
@@ -11726,7 +11726,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // sums no longer need the old pre-clamp negative adj. Use May structural blend on the
         // clamped inputs, then Jul soft-R locals + a positive adj so the *UI* statewide margin
         // ((R−D)/total including other) lands at Whatley ~+1.9.
-        blendWeight: 0.72, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
+        blendWeight: 0.75, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
         presidentialBaselineWeight: 0.60,
         senateBaselineWeight: 0.40,
         baselineRecentWeight: 0.60,
@@ -11851,13 +11851,22 @@ document.addEventListener('DOMContentLoaded', function() {
           MECKLENBURG: -35.31,
           DURHAM: -62.55,
           ORANGE: -52.01,
-          GUILFORD: -27.02,
+          GUILFORD: -31.00,
           FORSYTH: -14.08,
           BUNCOMBE: -24.23,
           CUMBERLAND: -14.66,
           NEW_HANOVER: -2.03,
           PITT: -6.40
         },
+        // Final county-shape anchors applied after coalition floors/ceilings. Watauga
+        // remains a narrowly Republican college county instead of inheriting a broad
+        // Cooper-local floor intended for more conventional metros.
+        senateFinalTargetMarginByCountyPts: {
+          WATAUGA: 1.25
+        },
+        // Keep the rebuilt precinct layer authoritative without allowing its internal
+        // turnout distribution to drift away from the calibrated county targets.
+        senateReconcilePrecinctsToCountyTargets: true,
         senateRuralMaxOverPresPts: 4.00,
         // Statewide composition calibration. Keep county margins intact and alter only
         // their relative turnout weights; these factors are approximately total-neutral
@@ -12040,7 +12049,7 @@ document.addEventListener('DOMContentLoaded', function() {
             DAVIDSON: 0.90,
             CHATHAM: 0.90,
             HARNETT: 0.80,
-            WATAUGA: 2.20,
+            WATAUGA: 0.75,
             MOORE: 1.40,
             HENDERSON: 1.70,
             BRUNSWICK: 1.70,
@@ -12097,9 +12106,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // canonical county statewide margin without flattening district-specific variation.
         // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
         // Align district UI margins to the post-coalition-guardrail county result.
-        districtStatewideAlignmentPtsCongressional: 1.08,
+        districtStatewideAlignmentPtsCongressional: 1.09,
         districtStatewideAlignmentPtsStateHouse: 0.85,
-        districtStatewideAlignmentPtsStateSenate: 1.18,
+        districtStatewideAlignmentPtsStateSenate: 1.19,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -12118,6 +12127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         turnoutContestType: 'president',
         turnoutYear: 2024,
         turnoutFactor: 0.575,
+        candidateBonusScale: 0.80,
         demCandidate: 'Roy Cooper',
         repCandidate: 'Michael Whatley',
         description: 'Blended 2022 + 2020 Senate anchors with a 2024 President climate and calibrated 55–60% turnout'
@@ -12213,7 +12223,7 @@ document.addEventListener('DOMContentLoaded', function() {
           id: 'neutral_baseline',
           label: 'Neutral',
           // Keep in sync with the calibrated default.
-          patch: { blendWeight: 0.72, turnoutFactor: 0.575, bonusScale: 1.0, countyBehaviorMode: 'balanced' }
+          patch: { blendWeight: 0.75, turnoutFactor: 0.575, bonusScale: 0.80, countyBehaviorMode: 'balanced' }
         },
         {
           id: 'dem_high_turnout',
@@ -19192,6 +19202,22 @@ document.addEventListener('DOMContentLoaded', function() {
               node.desiredSigned = clampSignedMargin(capped);
               node.swingPct = baseSignedNode - node.desiredSigned;
             });
+
+            const finalCountyTargets = (
+              modeledDef?.senateFinalTargetMarginByCountyPts
+              && typeof modeledDef.senateFinalTargetMarginByCountyPts === 'object'
+            ) ? modeledDef.senateFinalTargetMarginByCountyPts : null;
+            if (finalCountyTargets) {
+              Object.entries(finalCountyTargets).forEach(([countyRaw, targetRaw]) => {
+                const county = normalizeCountyToken(countyRaw);
+                const node = map.get(county);
+                const target = Number(targetRaw);
+                const baseSignedNode = Number(node?.baseSigned);
+                if (!node || !Number.isFinite(target) || !Number.isFinite(baseSignedNode)) return;
+                node.desiredSigned = clampSignedMargin(target);
+                node.swingPct = baseSignedNode - node.desiredSigned;
+              });
+            }
           }
 
           // Internal-only diagnostics: `diagnostics`, `cluster`, and the Senate/judicial brakes can be used later
@@ -19480,6 +19506,87 @@ document.addEventListener('DOMContentLoaded', function() {
             ));
           });
         });
+
+        // Reconcile the modeled precinct rows to the calibrated county margins. Turnout
+        // apportionment can otherwise move a county several points away from desiredSigned
+        // when its precinct mix differs sharply from the turnout anchor. A county-wide
+        // logit shift preserves precinct ordering and each row's total/other vote while
+        // making the precinct aggregate itself authoritative.
+        if (isSenateDeviationModel && !!modeledDef?.senateReconcilePrecinctsToCountyTargets) {
+          const modeledRowsByCounty = new Map();
+          modeledOut.forEach((row, index) => {
+            const county = countyFromRowKey(row?.county || '');
+            if (!county) return;
+            const items = modeledRowsByCounty.get(county) || [];
+            items.push({ row, index });
+            modeledRowsByCounty.set(county, items);
+          });
+
+          modeledRowsByCounty.forEach((items, county) => {
+            const desiredSigned = Number(countyModelByCounty?.get(county)?.desiredSigned);
+            if (!Number.isFinite(desiredSigned) || !items.length) return;
+
+            const rowNodes = items.map(({ row, index }) => {
+              const dem = Math.max(0, Number(row?.[`${modeledType}_dem`] || 0));
+              const rep = Math.max(0, Number(row?.[`${modeledType}_rep`] || 0));
+              const other = Math.max(0, Number(row?.[`${modeledType}_other`] || 0));
+              const total = Math.max(0, Number(row?.[`${modeledType}_total`] || (dem + rep + other)));
+              const major = Math.max(0, total - other);
+              const share = major > 0 ? Math.max(1e-6, Math.min(1 - 1e-6, dem / major)) : 0.5;
+              return { row, index, total, other, major, share };
+            });
+            const countyTotal = rowNodes.reduce((sum, node) => sum + node.total, 0);
+            const countyMajor = rowNodes.reduce((sum, node) => sum + node.major, 0);
+            if (!(countyTotal > 0) || !(countyMajor > 0)) return;
+
+            const desiredDifference = (clampSignedMargin(desiredSigned) / 100) * countyTotal;
+            const desiredDem = Math.max(0, Math.min(
+              Math.round(countyMajor),
+              Math.round((countyMajor - desiredDifference) / 2)
+            ));
+
+            const shiftedDemTotal = (delta) => rowNodes.reduce((sum, node) => {
+              const logit = Math.log(node.share / (1 - node.share));
+              const shiftedShare = 1 / (1 + Math.exp(-(logit + delta)));
+              return sum + (node.major * shiftedShare);
+            }, 0);
+            let low = -16;
+            let high = 16;
+            for (let iter = 0; iter < 48; iter += 1) {
+              const mid = (low + high) / 2;
+              if (shiftedDemTotal(mid) < desiredDem) low = mid;
+              else high = mid;
+            }
+            const delta = (low + high) / 2;
+            const floatDemTargets = rowNodes.map(node => {
+              const logit = Math.log(node.share / (1 - node.share));
+              return node.major / (1 + Math.exp(-(logit + delta)));
+            });
+            const stableKeys = rowNodes.map(node => normalizeRowKey(node.row?.county || '') || String(node.index));
+            const demTargets = distributeIntegerTargets(floatDemTargets, desiredDem, stableKeys);
+
+            rowNodes.forEach((node, idx) => {
+              const major = Math.max(0, Math.round(node.major));
+              const dem = Math.max(0, Math.min(major, Math.round(Number(demTargets[idx] || 0))));
+              const rep = major - dem;
+              const total = Math.max(0, Math.round(node.total));
+              const other = Math.max(0, total - major);
+              const signed = signedMarginPctFromVotes(dem, rep, total);
+              const winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+              const winnerKey = winner === 'REP' ? 'R' : (winner === 'DEM' ? 'D' : 'T');
+              node.row[`${modeledType}_dem`] = dem;
+              node.row[`${modeledType}_rep`] = rep;
+              node.row[`${modeledType}_other`] = other;
+              node.row[`${modeledType}_total`] = total;
+              node.row[`${modeledType}_margin`] = rep - dem;
+              node.row[`${modeledType}_margin_pct`] = signed;
+              node.row[`${modeledType}_winner`] = winner;
+              node.row[`${modeledType}_color`] = winnerKey === 'T'
+                ? '#9ca3af'
+                : colorForMarginMode(Math.abs(signed), winnerKey);
+            });
+          });
+        }
 
         // Derive compact county targets for legacy/internal county-input callers. The normal
         // frontend path remains precinct-first and must aggregate modeledOut directly; attaching
