@@ -319,7 +319,11 @@ function normCandidate(value) {
 function isDefinitelyNonGeo(precinct) {
   const token = norm(precinct);
   if (!token) return true;
-  if (token === 'EV' || token.startsWith('EV') || token.startsWith('OS-')) return true;
+  if (
+    token === 'EV' ||
+    token.startsWith('EV') ||
+    token.startsWith('OS')
+  ) return true;
   if (token.endsWith(' EV') || token.includes(' EV ')) return true;
   if (/^(ABSEN|PROVI|TRANS)\s+\d+/i.test(token)) return true;
   return NON_GEO_FLAGS.some((flag) => token === flag || token.includes(flag));
@@ -593,10 +597,7 @@ function buildCountyTotals(rawRows, office, judicialOverrides) {
   return out;
 }
 
-function updateManifest(repoRoot, fileName, year, contestType, rowCount) {
-  const manifestPath = path.join(repoRoot, 'data', 'contests', 'manifest.json');
-  if (!fs.existsSync(manifestPath)) return;
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+function updateManifestEntry(manifest, fileName, year, contestType, rowCount) {
   const files = Array.isArray(manifest.files) ? manifest.files : [];
   const entry = files.find((row) => row && row.file === fileName);
   if (entry) {
@@ -605,7 +606,23 @@ function updateManifest(repoRoot, fileName, year, contestType, rowCount) {
     files.push({ year, contest_type: contestType, file: fileName, rows: rowCount });
     manifest.files = files;
   }
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
+function writeTextFileWithRetry(filePath, content, attempts = 12) {
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      fs.writeFileSync(filePath, content, 'utf8');
+      return;
+    } catch (error) {
+      lastError = error;
+      const retryable = error && ['UNKNOWN', 'EBUSY', 'EPERM', 'EACCES'].includes(error.code);
+      if (!retryable || attempt === attempts - 1) throw error;
+      const delayMs = 100 * (attempt + 1);
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs);
+    }
+  }
+  throw lastError;
 }
 
 function officeVariants(office) {
@@ -779,8 +796,8 @@ function rebuildYear(repoRoot, year, requestedFiles) {
       county_totals: countyTotals,
       rows: oneMapRows,
     };
-    fs.writeFileSync(outPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
-    updateManifest(repoRoot, fileName, year, contestType, oneMapRows.length);
+    writeTextFileWithRetry(outPath, `${JSON.stringify(payload, null, 2)}\n`);
+    updateManifestEntry(manifest, fileName, year, contestType, oneMapRows.length);
     summary.rebuilt.push({
       file: fileName,
       office,
@@ -788,6 +805,13 @@ function rebuildYear(repoRoot, year, requestedFiles) {
       counties: Object.keys(countyTotals).length,
       totals: rawTotals,
     });
+  }
+
+  if (summary.rebuilt.length) {
+    writeTextFileWithRetry(
+      path.join(contestDir, 'manifest.json'),
+      `${JSON.stringify(manifest, null, 2)}\n`
+    );
   }
 
   return summary;
@@ -816,5 +840,5 @@ module.exports = {
   CONTEST_TYPE_TO_OFFICE_ALIASES,
   rebuildYear,
   parseArgs,
-  updateManifest,
+  updateManifestEntry,
 };

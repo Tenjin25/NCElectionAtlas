@@ -1,4 +1,8 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const repoRoot = path.resolve(__dirname, '..');
 
 const APP_READY_TIMEOUT = 180_000;
 
@@ -122,6 +126,46 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain(': await loadCountyContestSlice(priorType, cy);');
   expect(source).toContain("if (mode === 'shift' || mode === 'flips') {");
   expect(source).toContain('populate flip details for hover in the background');
+});
+
+test('2020 president allocates OS early-vote centers into geographic precincts', async () => {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'data', 'contests', 'manifest.json'), 'utf8')
+  );
+  const contestFiles2020 = (manifest.files || [])
+    .filter((entry) => Number(entry.year) === 2020 && !entry.scope)
+    .map((entry) => String(entry.file || ''))
+    .filter(Boolean);
+  const residualEarlyVoteCenters = [];
+  contestFiles2020.forEach((fileName) => {
+    const contestPayload = JSON.parse(
+      fs.readFileSync(path.join(repoRoot, 'data', 'contests', fileName), 'utf8')
+    );
+    (contestPayload.rows || []).forEach((row) => {
+      if (/^[A-Z .'-]+ - OS/i.test(String(row.county || ''))) {
+        residualEarlyVoteCenters.push(`${fileName}:${row.county}`);
+      }
+    });
+  });
+
+  const payload = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'data', 'contests', 'president_2020.json'), 'utf8')
+  );
+  const rows = (payload.rows || []).filter((row) => String(row.county || '').startsWith('CABARRUS - '));
+  const totals = rows.reduce((sum, row) => ({
+    dem: sum.dem + Number(row.dem_votes || 0),
+    rep: sum.rep + Number(row.rep_votes || 0),
+    other: sum.other + Number(row.other_votes || 0),
+    total: sum.total + Number(row.total_votes || 0)
+  }), { dem: 0, rep: 0, other: 0, total: 0 });
+
+  expect(residualEarlyVoteCenters).toEqual([]);
+  expect(totals).toEqual({
+    dem: 52162,
+    rep: 63237,
+    other: 1828,
+    total: 117227
+  });
 });
 
 test('Davidson Arcadia 04 and Boone 06 aliases resolve to OneMap precinct codes', async ({ request }) => {
