@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-55';
-    const APP_BUILD_ID = '2026-07-16-55';
+    const DATA_CACHE_BUSTER = '2026-07-16-72';
+    const APP_BUILD_ID = '2026-07-16-72';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11741,9 +11741,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Two-party margins read ~0.04 pts redder; calibrate to the UI/total metric.
         // Pre-clamp used ~-1.55 to offset cross-county leakage; post-clamp uses positive adj.
         // Retune after suburban Cooper lift so published UI stays near Whatley +1.9.
-        // Retune after dampened protected-county recenter (no amplify).
-        // Calibrate against the live app path (Playwright); the inspect script's CDN mocks can skew county totals.
-        statewideTargetAdjustmentPts: 5.36,
+        // Retune after dampened protected-county recenter + Brunswick/Pasquotank/Henderson pulls.
+        // Calibrate against Playwright live path (CDN-mocked inspect can skew county totals).
+        statewideTargetAdjustmentPts: 8.90,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Modest residual elasticity on so suburban/urban Dem underperformance vs Pres lifts.
         ruralGopOverperformanceWeight: 0.10,
@@ -11815,7 +11815,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // step so Dem locals are not washed out. No amplify (that blew county vs district).
         // Raise statewideTargetAdjustmentPts to make up the skipped R on protected mass.
         senateRecenterExemptNamedCounties: true,
-        senateRecenterProtectedLeak: 0.22,
+        senateRecenterProtectedLeak: 0.12,
         // Explicit per-county ceilings (pts over 2024 Pres). Negative = must under-run Trump.
         senateMaxOverPresByCountyPts: {
           ROBESON: -0.75,
@@ -11837,15 +11837,73 @@ document.addEventListener('DOMContentLoaded', function() {
           UNION: -1.00,
           ROWAN: -0.35,
           DAVIDSON: -0.35,
-          CABARRUS: -0.85,
-          ALAMANCE: -0.85,
-          // Eastern college / soft-R: Cooper should not park redder than Trump.
+          CABARRUS: -1.50,
+          ALAMANCE: -1.50,
+          // Eastern college / soft-R / NE softener: Cooper should not park redder than Trump.
           PITT: -0.50,
           JACKSON: -0.75,
           ANSON: -0.50,
-          // College mountain + Sandhills: Whatley should not outrun Trump (Watauga is Dem under Pres).
+          PASQUOTANK: -0.75,
+          // College mountain + Sandhills / mountain resort: Whatley should not outrun Trump.
           WATAUGA: -0.85,
-          MOORE: -0.85
+          MOORE: -0.85,
+          HENDERSON: -1.25,
+          // Coastal growth: Whatley must under-run Trump (Brunswick was ~+5.7 over Pres).
+          BRUNSWICK: -1.25,
+          CARTERET: -1.25,
+          CURRITUCK: -1.25,
+          CRAVEN: -1.00,
+          BEAUFORT: -1.00,
+          // Soft-R / metro-spillover / mountain peers still outrunning Trump after clamp rebuild.
+          LEE: -1.00,
+          TRANSYLVANIA: -1.00,
+          FRANKLIN: -1.00,
+          HAYWOOD: -0.85,
+          PERSON: -0.85,
+          CLEVELAND: -1.00,
+          BURKE: -0.85,
+          ASHE: -0.85,
+          MACON: -1.00,
+          ROCKINGHAM: -1.00,
+          // NE Dem that was flipping R vs Harris.
+          WASHINGTON: -0.50,
+          PERQUIMANS: -0.75,
+          CAMDEN: -0.75,
+          TYRRELL: -0.75,
+          // Deep-R counties with large Senate-over-Pres gaps (cap only).
+          STANLY: -1.00,
+          RUTHERFORD: -1.00,
+          DAVIE: -1.00,
+          RANDOLPH: -1.00,
+          YADKIN: -1.00,
+          SWAIN: -0.85,
+          MCDOWELL: -0.85,
+          MITCHELL: -0.85,
+          CHEROKEE: -0.85,
+          WILKES: -1.00,
+          CLAY: -1.00,
+          CALDWELL: -1.00,
+          AVERY: -1.00,
+          MONTGOMERY: -1.00,
+          ALEXANDER: -1.00,
+          SURRY: -1.00,
+          GRAHAM: -1.00,
+          CASWELL: -0.85,
+          YANCEY: -0.85,
+          STOKES: -1.00,
+          // NE Dem belt: keep clearly Dem vs Harris wash (Washington-class).
+          BERTIE: -0.50,
+          NORTHAMPTON: -0.50,
+          HALIFAX: -0.50,
+          EDGECOMBE: -0.50,
+          VANCE: -0.50,
+          HERTFORD: -0.50,
+          WARREN: -0.50,
+          HOKE: -0.75,
+          POLK: -1.00,
+          ALLEGHANY: -1.00,
+          MADISON: -0.85,
+          IREDELL: -0.85
         },
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
         senateDeviationOutlierBrakeEnabled: true,
@@ -11909,21 +11967,21 @@ document.addEventListener('DOMContentLoaded', function() {
           // and should not paint deep red after statewide recentering.
           'Roy Cooper': {
             // Locals sized for dampened R-recenter (protectedLeak) — not the old full-wash survival stack.
-            NASH: 5.20,
-            WILSON: 3.40,
-            ANSON: 5.20,
-            PASQUOTANK: 4.20,
+            NASH: 5.80,
+            WILSON: 4.60,
+            ANSON: 5.40,
+            PASQUOTANK: 5.60,
             GATES: 1.80,
             MARTIN: 0.55,
             SCOTLAND: 2.00,
             GRANVILLE: 1.80,
             JACKSON: 2.40,
             PITT: 2.20,
-            CABARRUS: 3.20,
+            CABARRUS: 4.40,
             UNION: 2.60,
             JOHNSTON: 2.00,
-            ALAMANCE: 2.80,
-            IREDELL: 1.50,
+            ALAMANCE: 4.00,
+            IREDELL: 2.20,
             GASTON: 2.20,
             LINCOLN: 2.20,
             CATAWBA: 2.70,
@@ -11933,6 +11991,24 @@ document.addEventListener('DOMContentLoaded', function() {
             HARNETT: 1.10,
             WATAUGA: 3.40,
             MOORE: 2.40,
+            HENDERSON: 3.60,
+            BRUNSWICK: 3.40,
+            // Soft-R / coastal / NE outliers from post-clamp scan.
+            WASHINGTON: 4.50,
+            LEE: 2.80,
+            TRANSYLVANIA: 2.60,
+            FRANKLIN: 2.20,
+            CRAVEN: 2.40,
+            BEAUFORT: 2.00,
+            CARTERET: 2.20,
+            CURRITUCK: 2.00,
+            BERTIE: 2.80,
+            NORTHAMPTON: 2.60,
+            HALIFAX: 2.40,
+            EDGECOMBE: 2.40,
+            VANCE: 2.20,
+            HERTFORD: 2.20,
+            WARREN: 2.20,
             HYDE: 1.20,
             PAMLICO: 1.20,
             DARE: 1.00,

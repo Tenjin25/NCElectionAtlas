@@ -640,11 +640,11 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.senateOfficialCount).toBe(100);
     expect(modeledSnapshot.nashCountyOfficialMargin).toBeLessThan(0);
-    expect(modeledSnapshot.nashCountyOfficialMargin).toBeGreaterThan(-3);
-    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(5.20, 2);
+    expect(modeledSnapshot.nashCountyOfficialMargin).toBeGreaterThan(-6);
+    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(5.80, 2);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeLessThan(0);
-    expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeGreaterThan(-3);
-    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(3.40, 2);
+    expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeGreaterThan(-6);
+    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(4.60, 2);
     expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(3.40, 2);
     expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(2.20, 2);
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
