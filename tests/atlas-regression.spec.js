@@ -546,7 +546,6 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         return acc;
       }, {});
 
-      const senateCountyRows = await loadCountyContestSlice('us_senate_model', 2026);
       const senateRows = await loadContestSlice('us_senate_model', 2026);
       const courtRows = await loadContestSlice('nc_supreme_court_model', 2026);
       const senateDistrictNode = await loadDistrictSlice('congressional', 'us_senate_model', 2026);
@@ -555,9 +554,20 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const candidateStrengthTotal = (name) => Object.values(senateDefinition?.candidateStatewideStrengthComponentsPts?.[name] || {})
         .reduce((sum, value) => sum + Number(value || 0), 0);
       const ruralCooperBoost = Number(senateDefinition?.candidateCountyTypeBoostsPts?.['Roy Cooper']?.rural);
-      const senateCountyOfficial = getOfficialCountyTotalsFromRows(senateCountyRows) || {};
-      const senateOfficial = getOfficialCountyTotalsFromRows(senateRows) || {};
-      const countyModeledRow = (county) => senateCountyRows.find(row => String(row?.county || '').toUpperCase() === county) || null;
+      const senateCountyOfficial = senateRows.reduce((counties, row) => {
+        const county = String(row?.county || '').toUpperCase().split(' - ')[0].trim();
+        if (!county) return counties;
+        const totals = counties[county] || { dem: 0, rep: 0, total: 0 };
+        totals.dem += Number(row?.us_senate_model_dem || 0);
+        totals.rep += Number(row?.us_senate_model_rep || 0);
+        totals.total += Number(row?.us_senate_model_total || 0);
+        counties[county] = totals;
+        return counties;
+      }, {});
+      const senateOfficial = senateCountyOfficial;
+      const countyModeledRow = (county) => senateRows.find(
+        row => String(row?.county || '').toUpperCase().split(' - ')[0].trim() === county
+      ) || null;
       const nashModeledRow = countyModeledRow('NASH');
       const wilsonModeledRow = countyModeledRow('WILSON');
       const wataugaModeledRow = countyModeledRow('WATAUGA');
@@ -594,13 +604,19 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         return { dem, rep, total: total > 0 ? total : (dem + rep) };
       };
       const senateStatewideUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateCountyOfficial)));
+      const senatePrecinctUiMargin = uiSignedMargin(withImpliedTotal(senateRows.reduce((sum, row) => {
+        sum.dem += Number(row?.us_senate_model_dem || 0);
+        sum.rep += Number(row?.us_senate_model_rep || 0);
+        sum.total += Number(row?.us_senate_model_total || 0);
+        return sum;
+      }, { dem: 0, rep: 0, total: 0 })));
       const senateDistrictUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateDistrictNode?.general?.results)));
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
         courtOptionText: options.nc_supreme_court_model_2026 || '',
         senateRows: senateRows.length,
-        senateCountyRows: senateCountyRows.length,
+        senateCountyRows: Object.keys(senateCountyOfficial).length,
         courtRows: courtRows.length,
         senateOfficialCount: Object.keys(senateOfficial).length,
         nashCountyOfficialMargin: margin(senateCountyOfficial.NASH),
@@ -615,12 +631,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         whatleyStatewideStrength: candidateStrengthTotal('Michael Whatley'),
         districtCandidateStrengthNetDem: candidateStrengthTotal('Roy Cooper') - candidateStrengthTotal('Michael Whatley'),
         ruralCooperBoost,
-        countiesWithRuralCooperBoost: senateCountyRows.filter(row => Number(row?.__model_candidate_effect_county_type_d_pts) > 0).length,
+        countiesWithRuralCooperBoost: senateRows.filter(row => Number(row?.__model_candidate_effect_county_type_d_pts) > 0).length,
         realignedSpecialCounties: Array.from(senateDefinition?.candidateBonusRealignedFormerDemFederalCounties || []),
         anomalySpecialCounties: Array.from(senateDefinition?.anomalyClampCounties || []),
         urbanConsensusGuardrailEnabled: !!senateDefinition?.senateUrbanAnchorConsensusGuardrailEnabled,
         urbanConsensusGuardrailMaxMargin: Number(senateDefinition?.senateUrbanAnchorConsensusMaxMarginPts),
         urbanMinDemOverPres: Number(senateDefinition?.senateUrbanMinDemOverPresPts),
+        urbanMinDemOverSenate2022: Number(senateDefinition?.senateUrbanMinDemOverSenate2022Pts),
+        chathamMinDemOverPres: Number(senateDefinition?.senateMetroAdjacentMinDemOverPresByCountyPts?.CHATHAM),
         urbanReferenceWake: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.WAKE),
         urbanReferenceMecklenburg: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.MECKLENBURG),
         urbanReferenceGuilford: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.GUILFORD),
@@ -643,6 +661,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateDistrictCandidateStrengthNetDem: Number(senateDistrictNode?.meta?.model_candidate_strength_net_dem_pts),
         senateDistrictStatewideAlignment: Number(senateDistrictNode?.meta?.model_statewide_alignment_pts),
         senateStatewideUiMargin,
+        senatePrecinctUiMargin,
         senateDistrictUiMargin,
         courtDistricts: Object.keys(courtDistrictNode?.general?.results || {}).length
       };
@@ -674,13 +693,15 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.urbanConsensusGuardrailEnabled).toBe(true);
     expect(modeledSnapshot.urbanConsensusGuardrailMaxMargin).toBeCloseTo(-0.50, 2);
     expect(modeledSnapshot.urbanMinDemOverPres).toBeCloseTo(0.25, 2);
+    expect(modeledSnapshot.urbanMinDemOverSenate2022).toBeCloseTo(0.35, 2);
+    expect(modeledSnapshot.chathamMinDemOverPres).toBeCloseTo(2.00, 2);
     expect(modeledSnapshot.urbanReferenceWake).toBeCloseTo(-26.43, 2);
     expect(modeledSnapshot.urbanReferenceMecklenburg).toBeCloseTo(-35.31, 2);
     expect(modeledSnapshot.urbanReferenceGuilford).toBeCloseTo(-27.02, 2);
     expect(modeledSnapshot.urbanReferenceCumberland).toBeCloseTo(-14.66, 2);
-    expect(modeledSnapshot.turnoutWeightUrban).toBeCloseTo(0.782, 3);
-    expect(modeledSnapshot.turnoutWeightSuburban).toBeCloseTo(0.942, 3);
-    expect(modeledSnapshot.turnoutWeightRural).toBeCloseTo(1.291, 3);
+    expect(modeledSnapshot.turnoutWeightUrban).toBeCloseTo(0.775, 3);
+    expect(modeledSnapshot.turnoutWeightSuburban).toBeCloseTo(0.934, 3);
+    expect(modeledSnapshot.turnoutWeightRural).toBeCloseTo(1.345, 3);
     expect(modeledSnapshot.ruralMaxOverPres).toBeCloseTo(4.00, 2);
     expect(modeledSnapshot.robesonOverPresCap).toBeCloseTo(-0.75, 2);
     expect(modeledSnapshot.bladenOverPresCap).toBeCloseTo(-0.50, 2);
@@ -699,7 +720,9 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     // Turnout composition restores an R+1.5–1.9 topline without changing county margins.
     expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);
-    expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senateStatewideUiMargin)).toBeLessThan(0.10);
+    expect(modeledSnapshot.senatePrecinctUiMargin).toBeGreaterThan(1.50);
+    expect(modeledSnapshot.senatePrecinctUiMargin).toBeLessThan(1.90);
+    expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.10);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 
     await page.selectOption('#contestSelect', 'us_senate_model_2026');

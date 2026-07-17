@@ -117,7 +117,7 @@ function summarizeResults(results) {
   try {
     await page.waitForFunction(() => {
       try {
-        return (typeof loadCountyContestSlice === 'function' || typeof loadContestSlice === 'function')
+        return typeof loadContestSlice === 'function'
           && typeof loadDistrictSlice === 'function'
           && !!getModeledContestDefinition('us_senate_model', 2026);
       } catch (_) {
@@ -129,12 +129,15 @@ function summarizeResults(results) {
   }
 
   const output = await page.evaluate(async () => {
-    const countyRows = typeof loadCountyContestSlice === 'function'
-      ? await loadCountyContestSlice('us_senate_model', 2026)
-      : await loadContestSlice('us_senate_model', 2026);
-    const officialCountyTotals = typeof getOfficialCountyTotalsFromRows === 'function'
-      ? (getOfficialCountyTotalsFromRows(countyRows) || null)
-      : null;
+    const precinctRows = await loadContestSlice('us_senate_model', 2026);
+    const countyRows = precinctRows;
+    const precinctTotals = precinctRows.reduce((sum, row) => {
+      sum.dem += Number(row?.us_senate_model_dem || 0);
+      sum.rep += Number(row?.us_senate_model_rep || 0);
+      sum.total += Number(row?.us_senate_model_total || 0);
+      return sum;
+    }, { dem: 0, rep: 0, total: 0 });
+    const officialCountyTotals = null;
     const rawCountyTotals = countyRows.reduce((sum, row) => {
       sum.dem += Number(row?.us_senate_model_dem || 0);
       sum.rep += Number(row?.us_senate_model_rep || 0);
@@ -192,6 +195,15 @@ function summarizeResults(results) {
       scopes[scope] = node?.general?.results || {};
     }
     return {
+      precinct: {
+        rows: precinctRows.length,
+        dem: precinctTotals.dem,
+        rep: precinctTotals.rep,
+        total: precinctTotals.total,
+        marginPctUiSigned: precinctTotals.total > 0
+          ? ((precinctTotals.rep - precinctTotals.dem) / precinctTotals.total) * 100
+          : null
+      },
       county: {
         rows: countyRows.length,
         officialCounties: officialCountyTotals ? Object.keys(officialCountyTotals).length : 0,
@@ -221,9 +233,10 @@ function summarizeResults(results) {
   });
 
   const result = {
+    precinct: output.precinct,
     county: output.county,
     countyTypeTotals: output.countyTypeTotals,
-    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'CHATHAM', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
       const row = output.countyByName[county] || {};
       const twoParty = Number(row.dem || 0) + Number(row.rep || 0);
       return [county, {
