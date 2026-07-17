@@ -109,6 +109,11 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 **Last updated:** July 17, 2026
 
+### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
+
+- Corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to the trusted snapshot margin of `R+2.34`.
+- Preserved the existing `325,627` total and `14,033` other votes; only the Democratic/Republican split was reallocated (`151,987 D` / `159,607 R`).
+
 ### Precinct-First US Senate Calibration (July 17, 2026)
 
 - Removed `data/county_contests/` from the 2026 Senate calibration and validation path; county-level comparisons are now aggregated directly from `loadContestSlice` precinct rows.
@@ -117,7 +122,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - Added softer Chatham- and Granville-specific Triangle-adjacent floors, keeping both between a core-metro treatment and a generic rural/suburban county.
 - Routed modeled county view through `loadContestSlice` so statewide and county cards follow the rebuilt precinct rows and model controls even when the precinct overlay is off; the compact modeled county path is no longer a frontend authority.
 - Reconciled modeled precinct rows to their calibrated county targets, correcting the broad red drift in counties such as Pitt and Northampton while retaining precinct-level ordering.
-- Set restrained Cooper-over-Harris targets in Guilford and App State-centered Watauga, kept realigning Anson between its 2022 Senate and 2024 presidential margins, then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
+- Set restrained Cooper-over-Harris targets in Guilford, App State-centered Watauga, and Fayetteville/Fort Bragg bedroom-community Hoke; kept realigning Anson between its 2022 Senate and 2024 presidential margins; then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
 - Added explicit raw-precinct regression diagnostics so an unused county sidecar cannot silently become the statewide calibration target again.
 
 ### Demographics + Accessibility (March 21, 2026)

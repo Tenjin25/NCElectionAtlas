@@ -93,6 +93,26 @@ test('compact county slices stay small and contain one row per county', async ({
   expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
 });
 
+test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
+  const response = await request.get('/data/district_contests/congressional_president_2016.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const row = payload?.general?.results?.['13'];
+
+  expect(row).toBeTruthy();
+  expect(row).toMatchObject({
+    dem_votes: 151987,
+    rep_votes: 159607,
+    other_votes: 14033,
+    total_votes: 325627,
+    margin: 7620,
+    margin_pct: 2.34,
+    winner: 'REP'
+  });
+  expect(row.dem_votes + row.rep_votes + row.other_votes).toBe(row.total_votes);
+  expect(((row.rep_votes - row.dem_votes) / row.total_votes) * 100).toBeCloseTo(2.34, 2);
+});
+
 test('ordinary county modes do not block on previous precinct results', async ({ request }) => {
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();
@@ -736,6 +756,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.scotlandOverPresCap).toBeCloseTo(-0.25, 2);
     // Hoke stays Dem on the official county path; underlying can move with statewide recenter.
     expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(0);
+    expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(-8);
+    expect(modeledSnapshot.hokeCountyOfficialMargin).toBeGreaterThan(-10);
     expect(modeledSnapshot.hokeOfficialMargin).toBeLessThan(0);
     expect(Math.abs(modeledSnapshot.hokeCountyOfficialMargin - modeledSnapshot.hokeOfficialMargin)).toBeLessThan(0.25);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
