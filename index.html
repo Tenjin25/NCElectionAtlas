@@ -10314,6 +10314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="./js/atlas-display.js"></script>
     <script src="./js/atlas-election.js"></script>
     <script src="./js/atlas-manifest.js"></script>
+    <script src="./js/atlas-regions.js"></script>
     <script src="./js/atlas-url-state.js"></script>
     <script>
     // --- CONFIG ---
@@ -10359,8 +10360,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-34';
-    const APP_BUILD_ID = '2026-07-17-23';
+    const DATA_CACHE_BUSTER = '2026-07-17-35';
+    const APP_BUILD_ID = '2026-07-17-24';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -10548,54 +10549,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function normalizeRegionCountyName(name) {
-      return (name || '')
-        .toString()
-        .replace(/\s+COUNTY$/i, '')
-        .replace(/[^a-z0-9 .\-]/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toUpperCase();
+      return window.AtlasRegions.normalizeCountyName(name);
     }
 
     function getRegionCountySet(regionKey) {
       const counties = REGION_JUMPS[regionKey]?.counties || [];
-      return new Set(counties.map(normalizeRegionCountyName).filter(Boolean));
+      return window.AtlasRegions.getCountySet(counties);
     }
 
     function aggregateContestRowsForRegion(rows, contestType, regionKey) {
-      const countySet = getRegionCountySet(regionKey);
-      let dem = 0;
-      let rep = 0;
-      let other = 0;
-      let total = 0;
-      let demCandidate = '';
-      let repCandidate = '';
-      const matchedCounties = new Set();
-
-      (rows || []).forEach(row => {
-        const countyRaw = ((row?.county || '').toString().split(' - ')[0] || '').trim();
-        const countyNorm = normalizeRegionCountyName(countyRaw);
-        if (!countyNorm || !countySet.has(countyNorm)) return;
-
-        matchedCounties.add(countyNorm);
-        dem += Number(row?.[`${contestType}_dem`] || 0);
-        rep += Number(row?.[`${contestType}_rep`] || 0);
-        other += Number(row?.[`${contestType}_other`] || 0);
-        total += Number(row?.[`${contestType}_total`] || 0);
-        if (!demCandidate) demCandidate = (row?.[`${contestType}_dem_candidate`] || '').toString().trim();
-        if (!repCandidate) repCandidate = (row?.[`${contestType}_rep_candidate`] || '').toString().trim();
-      });
-
-      return {
-        dem,
-        rep,
-        other,
-        total,
-        demCandidate,
-        repCandidate,
-        matchedCounties: matchedCounties.size,
-        totalCounties: countySet.size
-      };
+      const counties = REGION_JUMPS[regionKey]?.counties || [];
+      return window.AtlasRegions.aggregateContestRows(rows, contestType, counties);
     }
 
     async function getRegionContestTotals(regionKey, contestType, year) {
