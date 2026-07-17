@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-46';
-    const APP_BUILD_ID = '2026-07-16-46';
+    const DATA_CACHE_BUSTER = '2026-07-16-47';
+    const APP_BUILD_ID = '2026-07-16-47';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11742,7 +11742,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pre-clamp used ~-1.55 to offset cross-county leakage; post-clamp uses positive adj.
         // Retune after suburban Cooper lift so published UI stays near Whatley +1.9.
         // Retune after Farley-class under-Trump caps + home-region/Pitt Dem restores.
-        statewideTargetAdjustmentPts: 3.72,
+        statewideTargetAdjustmentPts: 3.70,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Modest residual elasticity on so suburban/urban Dem underperformance vs Pres lifts.
         ruralGopOverperformanceWeight: 0.10,
@@ -11828,9 +11828,12 @@ document.addEventListener('DOMContentLoaded', function() {
           UNION: -1.00,
           ROWAN: -0.35,
           DAVIDSON: -0.35,
+          CABARRUS: -0.85,
+          ALAMANCE: -0.85,
           // Eastern college / soft-R: Cooper should not park redder than Trump.
           PITT: -0.50,
-          JACKSON: -0.75
+          JACKSON: -0.75,
+          ANSON: -0.50
         },
         // Outlier-cycle brake: shrink unusual 2022 Senate behavior toward the blended climate baseline.
         senateDeviationOutlierBrakeEnabled: true,
@@ -11897,7 +11900,7 @@ document.addEventListener('DOMContentLoaded', function() {
             NASH: 9.60,
             WILSON: 7.10,
             // Soft-R / barely-R counties: pull toward Dem (Cooper crossover), not parked at Budd ~R+6.
-            ANSON: 7.80,
+            ANSON: 9.40,
             PASQUOTANK: 7.80,
             GATES: 2.80,
             MARTIN: 0.85,
@@ -11906,10 +11909,10 @@ document.addEventListener('DOMContentLoaded', function() {
             JACKSON: 4.20,
             PITT: 3.60,
             // Outer-suburb / metro-spillover ring: Cooper should run ahead of generic D here.
-            CABARRUS: 3.40,
+            CABARRUS: 5.20,
             UNION: 4.10,
             JOHNSTON: 3.20,
-            ALAMANCE: 2.60,
+            ALAMANCE: 4.40,
             IREDELL: 2.40,
             GASTON: 3.40,
             LINCOLN: 3.40,
