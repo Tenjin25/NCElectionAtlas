@@ -124,6 +124,21 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain('populate flip details for hover in the background');
 });
 
+test('Davidson Arcadia 04 and Boone 06 aliases resolve to OneMap precinct codes', async ({ request }) => {
+  const response = await request.get('/data/mappings/precinct_variant_overrides.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const aliases = payload?.counties?.DAVIDSON;
+
+  expect(aliases).toBeTruthy();
+  expect(aliases['04 ARCADIA #04']).toEqual(['04']);
+  expect(aliases['04_ARCADIA #04']).toEqual(['04']);
+  expect(aliases['ARCADIA 04']).toEqual(['04']);
+  expect(aliases['06 BOONE #06']).toEqual(['06']);
+  expect(aliases['06_BOONE #06']).toEqual(['06']);
+  expect(aliases['BOONE 06']).toEqual(['06']);
+});
+
 test('2018 Supreme Court county totals keep Anglin separate from Jackson', async ({ request }) => {
   const response = await request.get('/data/county_contests/nc_supreme_court_associate_justice_seat_01_2018.json');
   expect(response.ok()).toBeTruthy();

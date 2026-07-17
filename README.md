@@ -107,6 +107,8 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
+- **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties.
+
 **Last updated:** July 17, 2026
 
 ### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
