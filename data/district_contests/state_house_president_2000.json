@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_president_2000.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,17 +1525,17 @@
         }
       },
       "108": {
-        "dem_votes": 5960,
-        "rep_votes": 14214,
-        "other_votes": 146,
+        "dem_votes": 6620,
+        "rep_votes": 13547,
+        "other_votes": 153,
         "total_votes": 20320,
         "dem_candidate": "A. Gore",
         "rep_candidate": "G. W. Bush",
-        "margin": 8254,
-        "margin_pct": 40.62,
+        "margin": 6927,
+        "margin_pct": 34.09,
         "winner": "REP",
         "competitiveness": {
-          "color": "#67000d"
+          "color": "#a50f15"
         }
       },
       "109": {
@@ -1545,14 +1553,14 @@
         }
       },
       "110": {
-        "dem_votes": 10252,
-        "rep_votes": 15890,
-        "other_votes": 198,
+        "dem_votes": 9723,
+        "rep_votes": 16427,
+        "other_votes": 190,
         "total_votes": 26340,
         "dem_candidate": "A. Gore",
         "rep_candidate": "G. W. Bush",
-        "margin": 5638,
-        "margin_pct": 21.4,
+        "margin": 6704,
+        "margin_pct": 25.45,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"

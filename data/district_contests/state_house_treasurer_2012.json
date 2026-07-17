@@ -12,7 +12,15 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2012_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_treasurer_2012.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1515,42 +1523,42 @@
         }
       },
       "108": {
-        "dem_votes": 14315,
-        "rep_votes": 19406,
-        "other_votes": 0,
+        "dem_votes": 13970,
+        "rep_votes": 19750,
+        "other_votes": 1,
         "total_votes": 33721,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Steve Royal",
-        "margin": 5091,
-        "margin_pct": 15.1,
+        "margin": 5780,
+        "margin_pct": 17.14,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "109": {
-        "dem_votes": 13416,
-        "rep_votes": 18188,
-        "other_votes": 0,
+        "dem_votes": 13959,
+        "rep_votes": 17644,
+        "other_votes": 1,
         "total_votes": 31604,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Steve Royal",
-        "margin": 4772,
-        "margin_pct": 15.1,
+        "margin": 3685,
+        "margin_pct": 11.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "110": {
-        "dem_votes": 16126,
-        "rep_votes": 19685,
-        "other_votes": 0,
+        "dem_votes": 16555,
+        "rep_votes": 19255,
+        "other_votes": 1,
         "total_votes": 35811,
         "dem_candidate": "Janet Cowell",
         "rep_candidate": "Steve Royal",
-        "margin": 3559,
-        "margin_pct": 9.94,
+        "margin": 2700,
+        "margin_pct": 7.54,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"

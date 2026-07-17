@@ -12,7 +12,15 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_nc_court_of_appeals_judge_hunter_seat_2016.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1515,45 +1523,45 @@
         }
       },
       "108": {
-        "dem_votes": 9904,
-        "rep_votes": 23149,
-        "other_votes": 0,
+        "dem_votes": 10074,
+        "rep_votes": 22978,
+        "other_votes": 1,
         "total_votes": 33053,
         "dem_candidate": "Abe Jones",
         "rep_candidate": "Bob Hunter",
-        "margin": 13245,
-        "margin_pct": 40.07,
+        "margin": 12904,
+        "margin_pct": 39.04,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "109": {
+        "dem_votes": 9831,
+        "rep_votes": 24859,
+        "other_votes": 0,
+        "total_votes": 34690,
+        "dem_candidate": "Abe Jones",
+        "rep_candidate": "Bob Hunter",
+        "margin": 15028,
+        "margin_pct": 43.32,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
-      "109": {
-        "dem_votes": 12044,
-        "rep_votes": 22646,
-        "other_votes": 0,
-        "total_votes": 34690,
-        "dem_candidate": "Abe Jones",
-        "rep_candidate": "Bob Hunter",
-        "margin": 10602,
-        "margin_pct": 30.56,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#a50f15"
-        }
-      },
       "110": {
-        "dem_votes": 12427,
-        "rep_votes": 24085,
+        "dem_votes": 15797,
+        "rep_votes": 20715,
         "other_votes": 0,
         "total_votes": 36512,
         "dem_candidate": "Abe Jones",
         "rep_candidate": "Bob Hunter",
-        "margin": 11658,
-        "margin_pct": 31.93,
+        "margin": 4918,
+        "margin_pct": 13.47,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#ef3b2c"
         }
       },
       "111": {

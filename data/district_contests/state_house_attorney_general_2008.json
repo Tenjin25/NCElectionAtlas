@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_attorney_general_2008.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1545,17 +1553,17 @@
         }
       },
       "110": {
-        "dem_votes": 20426,
-        "rep_votes": 18563,
+        "dem_votes": 20602,
+        "rep_votes": 18387,
         "other_votes": 0,
         "total_votes": 38989,
         "dem_candidate": "Roy Cooper",
         "rep_candidate": "Bob Crumley",
-        "margin": -1863,
-        "margin_pct": -4.78,
+        "margin": -2215,
+        "margin_pct": -5.68,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "111": {

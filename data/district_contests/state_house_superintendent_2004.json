@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_superintendent_2004.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,17 +1525,17 @@
         }
       },
       "108": {
-        "dem_votes": 7041,
-        "rep_votes": 13715,
-        "other_votes": 0,
+        "dem_votes": 7788,
+        "rep_votes": 12967,
+        "other_votes": 1,
         "total_votes": 20756,
         "dem_candidate": "June S. Atkinson",
         "rep_candidate": "Bill Fletcher",
-        "margin": 6674,
-        "margin_pct": 32.15,
+        "margin": 5179,
+        "margin_pct": 24.95,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "109": {
@@ -1545,14 +1553,14 @@
         }
       },
       "110": {
-        "dem_votes": 12264,
-        "rep_votes": 15197,
-        "other_votes": 0,
+        "dem_votes": 11824,
+        "rep_votes": 15636,
+        "other_votes": 1,
         "total_votes": 27461,
         "dem_candidate": "June S. Atkinson",
         "rep_candidate": "Bill Fletcher",
-        "margin": 2933,
-        "margin_pct": 10.68,
+        "margin": 3812,
+        "margin_pct": 13.88,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

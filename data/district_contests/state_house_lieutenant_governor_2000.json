@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_lieutenant_governor_2000.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,14 +1525,14 @@
         }
       },
       "108": {
-        "dem_votes": 7833,
-        "rep_votes": 11848,
-        "other_votes": 486,
+        "dem_votes": 8520,
+        "rep_votes": 11182,
+        "other_votes": 465,
         "total_votes": 20167,
         "dem_candidate": "Beverly Perdue",
         "rep_candidate": "Betsy Cochrane",
-        "margin": 4015,
-        "margin_pct": 19.91,
+        "margin": 2662,
+        "margin_pct": 13.2,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -1545,17 +1553,17 @@
         }
       },
       "110": {
-        "dem_votes": 12986,
-        "rep_votes": 12363,
-        "other_votes": 546,
+        "dem_votes": 12507,
+        "rep_votes": 12857,
+        "other_votes": 531,
         "total_votes": 25895,
         "dem_candidate": "Beverly Perdue",
         "rep_candidate": "Betsy Cochrane",
-        "margin": -623,
-        "margin_pct": -2.41,
-        "winner": "DEM",
+        "margin": 350,
+        "margin_pct": 1.35,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fcae91"
         }
       },
       "111": {

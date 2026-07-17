@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_lieutenant_governor_2004.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,14 +1525,14 @@
         }
       },
       "108": {
-        "dem_votes": 8523,
-        "rep_votes": 12474,
-        "other_votes": 361,
+        "dem_votes": 9292,
+        "rep_votes": 11699,
+        "other_votes": 367,
         "total_votes": 21358,
         "dem_candidate": "Beverly Eaves Perdue",
         "rep_candidate": "Jim Snyder",
-        "margin": 3951,
-        "margin_pct": 18.5,
+        "margin": 2407,
+        "margin_pct": 11.27,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -1545,17 +1553,17 @@
         }
       },
       "110": {
-        "dem_votes": 14316,
-        "rep_votes": 13552,
-        "other_votes": 496,
+        "dem_votes": 13812,
+        "rep_votes": 14093,
+        "other_votes": 459,
         "total_votes": 28364,
         "dem_candidate": "Beverly Eaves Perdue",
         "rep_candidate": "Jim Snyder",
-        "margin": -764,
-        "margin_pct": -2.69,
-        "winner": "DEM",
+        "margin": 281,
+        "margin_pct": 0.99,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fee8c8"
         }
       },
       "111": {

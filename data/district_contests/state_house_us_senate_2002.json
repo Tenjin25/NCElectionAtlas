@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_us_senate_2002.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,45 +1525,45 @@
         }
       },
       "108": {
-        "dem_votes": 5075,
-        "rep_votes": 10360,
-        "other_votes": 255,
+        "dem_votes": 7252,
+        "rep_votes": 8437,
+        "other_votes": 1,
         "total_votes": 15690,
         "dem_candidate": "Erskine B. Bowles",
         "rep_candidate": "Elizabeth H. Dole",
-        "margin": 5285,
-        "margin_pct": 33.68,
+        "margin": 1185,
+        "margin_pct": 7.55,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#fb6a4a"
         }
       },
       "109": {
-        "dem_votes": 5786,
-        "rep_votes": 11267,
-        "other_votes": 261,
+        "dem_votes": 8002,
+        "rep_votes": 9311,
+        "other_votes": 1,
         "total_votes": 17314,
         "dem_candidate": "Erskine B. Bowles",
         "rep_candidate": "Elizabeth H. Dole",
-        "margin": 5481,
-        "margin_pct": 31.66,
+        "margin": 1309,
+        "margin_pct": 7.56,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#fb6a4a"
         }
       },
       "110": {
-        "dem_votes": 7981,
-        "rep_votes": 10318,
-        "other_votes": 324,
+        "dem_votes": 12008,
+        "rep_votes": 6615,
+        "other_votes": 0,
         "total_votes": 18623,
         "dem_candidate": "Erskine B. Bowles",
         "rep_candidate": "Elizabeth H. Dole",
-        "margin": 2337,
-        "margin_pct": 12.55,
-        "winner": "REP",
+        "margin": -5393,
+        "margin_pct": -28.96,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#3182bd"
         }
       },
       "111": {

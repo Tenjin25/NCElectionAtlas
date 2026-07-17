@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_agriculture_commissioner_2000.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,45 +1525,45 @@
         }
       },
       "108": {
-        "dem_votes": 7816,
-        "rep_votes": 11678,
-        "other_votes": 0,
+        "dem_votes": 8456,
+        "rep_votes": 11037,
+        "other_votes": 1,
         "total_votes": 19494,
         "dem_candidate": "Meg Scott Phipps",
         "rep_candidate": "Steve Troxler",
-        "margin": 3862,
-        "margin_pct": 19.81,
+        "margin": 2581,
+        "margin_pct": 13.24,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "109": {
-        "dem_votes": 9564,
-        "rep_votes": 12823,
-        "other_votes": 0,
+        "dem_votes": 9711,
+        "rep_votes": 12675,
+        "other_votes": 1,
         "total_votes": 22387,
         "dem_candidate": "Meg Scott Phipps",
         "rep_candidate": "Steve Troxler",
-        "margin": 3259,
-        "margin_pct": 14.56,
+        "margin": 2964,
+        "margin_pct": 13.24,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "110": {
-        "dem_votes": 13033,
-        "rep_votes": 12059,
-        "other_votes": 0,
+        "dem_votes": 12484,
+        "rep_votes": 12607,
+        "other_votes": 1,
         "total_votes": 25092,
         "dem_candidate": "Meg Scott Phipps",
         "rep_candidate": "Steve Troxler",
-        "margin": -974,
-        "margin_pct": -3.88,
-        "winner": "DEM",
+        "margin": 123,
+        "margin_pct": 0.49,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#f7f7f7"
         }
       },
       "111": {

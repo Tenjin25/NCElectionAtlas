@@ -14,7 +14,15 @@
     "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_treasurer_2004.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1517,17 +1525,17 @@
         }
       },
       "108": {
-        "dem_votes": 8241,
-        "rep_votes": 12786,
+        "dem_votes": 9011,
+        "rep_votes": 12016,
         "other_votes": 0,
         "total_votes": 21027,
         "dem_candidate": "Richard H. Moore",
         "rep_candidate": "Edward A. Meyer",
-        "margin": 4545,
-        "margin_pct": 21.62,
+        "margin": 3005,
+        "margin_pct": 14.29,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#ef3b2c"
         }
       },
       "109": {
@@ -1545,17 +1553,17 @@
         }
       },
       "110": {
-        "dem_votes": 14270,
-        "rep_votes": 13611,
-        "other_votes": 0,
+        "dem_votes": 13837,
+        "rep_votes": 14043,
+        "other_votes": 1,
         "total_votes": 27881,
         "dem_candidate": "Richard H. Moore",
         "rep_candidate": "Edward A. Meyer",
-        "margin": -659,
-        "margin_pct": -2.36,
-        "winner": "DEM",
+        "margin": 206,
+        "margin_pct": 0.74,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fee8c8"
         }
       },
       "111": {

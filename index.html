@@ -10354,8 +10354,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-16-31';
-    const APP_BUILD_ID = '2026-07-16-30';
+    const DATA_CACHE_BUSTER = '2026-07-16-34';
+    const APP_BUILD_ID = '2026-07-16-34';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -11724,9 +11724,11 @@ document.addEventListener('DOMContentLoaded', function() {
        climateYear: 2024,
         // Calibration refinement (2026-04): keep a Senate-first baseline (2022 + 2020) with a lighter climate blend,
         // and tighter caps on county-specific ticket-splitting and "trend nudge" noise.
-        blendWeight: 0.71, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
-        presidentialBaselineWeight: 0.60,
-        senateBaselineWeight: 0.40,
+        blendWeight: 0.74, // 0 => pure climate (2024 Pres), 1 => pure Senate anchors (2022 + 2020)
+        // Slightly more Senate-anchor weight so soft-R rural counties (e.g. Pasquotank) stay nearer 2022 Senate
+        // rather than over-federalizing toward deep-red 2024 Pres climate.
+        presidentialBaselineWeight: 0.54,
+        senateBaselineWeight: 0.46,
         baselineRecentWeight: 0.60,
         baselineSecondWeight: 0.25,
         baselineLongRunWeight: 0.15,
@@ -11740,10 +11742,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Signed margins are R−D: higher adj → more Whatley; lower/negative adj → more Cooper.
         statewideTargetAdjustmentPts: 2.85,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
-        // Shape: residual elasticity lifts Cooper in urban/suburban counties that under-ran Pres,
-        // and softens rural Senate-over-Pres GOP overperformance (was a no-op while disabled).
+        // Shape: Cooper's urban/suburban base is the growth coalition (metros replacing
+        // depopulating Black Belt residual Dem strength). Residual elasticity lifts those
+        // counties; rural GOP-over-Pres softener stays off.
         ruralGopOverperformanceWeight: 0.0,
-        urbanDemElasticityWeight: 0.55,
+        urbanDemElasticityWeight: 0.78,
         anomalySwingClampPts: 12,
         anomalyClampCounties: ['ROBESON', 'BLADEN', 'SCOTLAND'],
         trendCarryoverWeight: 0.32,
@@ -11860,15 +11863,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // after generic federalization/crossover caps. Positive values help the named candidate;
         // the model converts Democratic boosts to +D swing and Republican boosts to -D swing.
         candidateLocalCountyBoostsPts: {
-          // Home-region locals near pre-clamp values; broader urban/suburban/rural
-          // type boosts carry most of the post-clamp regional shape.
-          'Roy Cooper': { NASH: 5.10, WILSON: 1.60 },
+          // Home-region locals: keep Nash/Wilson clearly Democratic for Cooper.
+          // Soft NE softener: Pasquotank-class counties were barely R in 2022 Senate (~R+6)
+          // and should not paint deep red after statewide recentering.
+          'Roy Cooper': {
+            NASH: 7.85,
+            WILSON: 4.10,
+            // Soft-R / barely-R 2022 Senate counties that recentering was overpainting.
+            PASQUOTANK: 2.10,
+            GATES: 2.80,
+            MARTIN: 0.85,
+            SCOTLAND: 1.55,
+            GRANVILLE: 1.25,
+            JACKSON: 1.05,
+            // Coastal / NE peers still ~2 pts redder than 2022 Budd.
+            HYDE: 1.80,
+            PAMLICO: 1.80,
+            DARE: 1.55,
+            CHOWAN: 1.35,
+            RICHMOND: 1.70,
+            'NEW HANOVER': 1.35
+          },
           'Michael Whatley': { WATAUGA: 0.90, GASTON: 0.60 }
         },
         candidateCountyTypeBoostsPts: {
-          // Prefer metros/suburbs for Cooper; keep a rural softener so deep R counties are less blowout-y.
-          // Exurban shares the suburban boost (growth-ring counties).
-          'Roy Cooper': { urban: 0.55, suburban: 0.50, exurban: 0.50, rural: 0.52 }
+          // Cooper's portable strength tracks the new Dem base: metros/suburbs first.
+          // Exurban gets a moderate share; rural softener stays lighter because eastern
+          // Black Belt counties are depopulating and federalizing rightward.
+          'Roy Cooper': { urban: 1.15, suburban: 0.92, exurban: 0.55, rural: 0.48 }
         },
         candidateBonusDistrictPts: 0.28,
         // District-layer calibration: keep modeled district views aligned with county-mode tuning,
@@ -11897,9 +11919,11 @@ document.addEventListener('DOMContentLoaded', function() {
         realignedFormerDemFederalSenate2020Weight: 0.20,
         realignedFormerDemFederalBlendWeight: 0.38,
         // Turnout responsiveness by county class.
-        turnoutUrbanCoreMul: 1.09,
-        turnoutBlackBeltMul: 1.07,
-        turnoutSuburbanMul: 1.035,
+        // Turnout responsiveness by county class: load more on urban/suburban Dem base;
+        // Black Belt residual turnout is less load-bearing as those counties federalize R.
+        turnoutUrbanCoreMul: 1.14,
+        turnoutBlackBeltMul: 1.02,
+        turnoutSuburbanMul: 1.06,
         turnoutGrowthExurbMul: 1.005,
         turnoutRealigningRuralMul: 1.02,
         turnoutRuralWhiteMul: 0.96,
@@ -16508,7 +16532,9 @@ document.addEventListener('DOMContentLoaded', function() {
           // and population estimates may not be loaded yet when the model first builds.
           if (isSenateDeviationModel) {
             if (county === 'WAKE' || county === 'MECKLENBURG' || county === 'DURHAM') return 'urban';
-            if (county === 'GUILFORD' || county === 'FORSYTH' || county === 'BUNCOMBE') return 'suburban';
+            // College / secondary metros track the Cooper urban-suburban base, not rural typing.
+            if (county === 'GUILFORD' || county === 'FORSYTH' || county === 'BUNCOMBE' || county === 'ORANGE') return 'suburban';
+            if (county === 'NEW HANOVER' || county === 'PITT') return 'suburban';
           }
           const ctx = getCountyCensusContextSafe(county);
           const pattern = String(ctx?.patternLabel || '').toLowerCase();
@@ -16786,9 +16812,12 @@ document.addEventListener('DOMContentLoaded', function() {
           };
           const senateTable = {
             ...genericTable,
-            inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.05, personalBonusMul: 1.08 },
+            urban_core: { elasticityMul: 0.90, turnoutBiasDelta: -0.055, candidateBonusMul: 1.08, personalBonusMul: 1.05 },
+            inner_suburb: { elasticityMul: 0.99, turnoutBiasDelta: -0.03, candidateBonusMul: 1.10, personalBonusMul: 1.12 },
             appalachian_rural_white: { elasticityMul: 1.00, turnoutBiasDelta: 0.032, candidateBonusMul: 0.85, personalBonusMul: 0.82 },
-            rural_white: { elasticityMul: 1.04, turnoutBiasDelta: 0.045, candidateBonusMul: 0.90, personalBonusMul: 0.86 }
+            rural_white: { elasticityMul: 1.04, turnoutBiasDelta: 0.045, candidateBonusMul: 0.92, personalBonusMul: 0.88 },
+            coastal: { elasticityMul: 0.99, turnoutBiasDelta: -0.005, candidateBonusMul: 1.04, personalBonusMul: 1.00 },
+            black_belt: { elasticityMul: 0.98, turnoutBiasDelta: -0.01, candidateBonusMul: 0.96, personalBonusMul: 0.88 }
           };
           const table = isJudicial ? judicialTable : (isSenate ? senateTable : genericTable);
           const hit = table[key] || null;

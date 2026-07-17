@@ -12,7 +12,15 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_agriculture_commissioner_2016.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1515,42 +1523,42 @@
         }
       },
       "108": {
-        "dem_votes": 10513,
-        "rep_votes": 23443,
-        "other_votes": 0,
+        "dem_votes": 10913,
+        "rep_votes": 23042,
+        "other_votes": 1,
         "total_votes": 33956,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 12930,
-        "margin_pct": 38.08,
+        "margin": 12129,
+        "margin_pct": 35.72,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 10574,
-        "rep_votes": 24950,
+        "dem_votes": 12492,
+        "rep_votes": 23032,
         "other_votes": 0,
         "total_votes": 35524,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 14376,
-        "margin_pct": 40.47,
+        "margin": 10540,
+        "margin_pct": 29.67,
         "winner": "REP",
         "competitiveness": {
-          "color": "#67000d"
+          "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 14807,
-        "rep_votes": 22500,
-        "other_votes": 0,
+        "dem_votes": 13719,
+        "rep_votes": 23587,
+        "other_votes": 1,
         "total_votes": 37307,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 7693,
-        "margin_pct": 20.62,
+        "margin": 9868,
+        "margin_pct": 26.45,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"

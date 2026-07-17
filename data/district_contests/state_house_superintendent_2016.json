@@ -12,7 +12,15 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "margin_calibration_mode": "preserve_live_total_votes",
+    "margin_calibration_target_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_superintendent_2016.json",
+    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
   },
   "general": {
     "results": {
@@ -1515,45 +1523,45 @@
         }
       },
       "108": {
-        "dem_votes": 11237,
-        "rep_votes": 22685,
-        "other_votes": 0,
+        "dem_votes": 11375,
+        "rep_votes": 22546,
+        "other_votes": 1,
         "total_votes": 33922,
         "dem_candidate": "June Atkinson",
         "rep_candidate": "Mark Johnson",
-        "margin": 11448,
-        "margin_pct": 33.75,
+        "margin": 11171,
+        "margin_pct": 32.93,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 11079,
-        "rep_votes": 24381,
+        "dem_votes": 13333,
+        "rep_votes": 22127,
         "other_votes": 0,
         "total_votes": 35460,
         "dem_candidate": "June Atkinson",
         "rep_candidate": "Mark Johnson",
-        "margin": 13302,
-        "margin_pct": 37.51,
+        "margin": 8794,
+        "margin_pct": 24.8,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 15421,
-        "rep_votes": 21733,
-        "other_votes": 0,
+        "dem_votes": 14354,
+        "rep_votes": 22799,
+        "other_votes": 1,
         "total_votes": 37154,
         "dem_candidate": "June Atkinson",
         "rep_candidate": "Mark Johnson",
-        "margin": 6312,
-        "margin_pct": 16.99,
+        "margin": 8445,
+        "margin_pct": 22.73,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "111": {
