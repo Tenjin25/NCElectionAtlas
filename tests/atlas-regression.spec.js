@@ -601,6 +601,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const pittCountyOfficial = senateCountyOfficial.PITT || null;
       const wataugaCountyOfficial = senateCountyOfficial.WATAUGA || null;
       const hokeCountyOfficial = senateCountyOfficial.HOKE || null;
+      const harnettCountyOfficial = senateCountyOfficial.HARNETT || null;
       const hokeOfficial = senateOfficial.HOKE || null;
       const hokeUnderlying = senateRows
         .filter(row => String(row?.county || '').toUpperCase().startsWith('HOKE'))
@@ -686,6 +687,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         bladenOverPresCap: Number(senateDefinition?.senateMaxOverPresBladenCapPts),
         scotlandOverPresCap: Number(senateDefinition?.senateMaxOverPresScotlandCapPts),
         hokeCountyOfficialMargin: margin(hokeCountyOfficial),
+        harnettCountyOfficialMargin: margin(harnettCountyOfficial),
         hokeOfficialMargin: margin(hokeOfficial),
         hokeUnderlyingMargin: margin(hokeUnderlying),
         senateDemCandidate: String(senateRows[0]?.us_senate_model_dem_candidate || ''),
@@ -758,6 +760,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.hokeCountyOfficialMargin).toBeLessThan(-8);
     expect(modeledSnapshot.hokeCountyOfficialMargin).toBeGreaterThan(-10);
+    expect(modeledSnapshot.harnettCountyOfficialMargin).toBeGreaterThan(23);
+    expect(modeledSnapshot.harnettCountyOfficialMargin).toBeLessThan(25);
     expect(modeledSnapshot.hokeOfficialMargin).toBeLessThan(0);
     expect(Math.abs(modeledSnapshot.hokeCountyOfficialMargin - modeledSnapshot.hokeOfficialMargin)).toBeLessThan(0.25);
     expect(modeledSnapshot.senateDemCandidate).toBe('Roy Cooper');
