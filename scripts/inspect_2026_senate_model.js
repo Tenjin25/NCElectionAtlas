@@ -9,6 +9,11 @@ const chromeCandidates = [
 ];
 let modelServer = null;
 let modelBrowser = null;
+const modelRoot = process.env.MODEL_ROOT
+  ? path.resolve(process.env.MODEL_ROOT)
+  : path.join(__dirname, '..');
+const modelPort = Number(process.env.MODEL_PORT || 4173);
+const modelOrigin = `http://127.0.0.1:${modelPort}`;
 
 function summarizeResults(results) {
   const rows = Object.values(results || {});
@@ -31,14 +36,14 @@ function summarizeResults(results) {
 }
 
 (async () => {
-  modelServer = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'static_server.js'), '--port', '4173', '--host', '127.0.0.1'], {
-    cwd: path.join(__dirname, '..'),
+  modelServer = spawn(process.execPath, [path.join(__dirname, '..', 'tools', 'static_server.js'), '--port', String(modelPort), '--host', '127.0.0.1'], {
+    cwd: modelRoot,
     stdio: 'ignore',
     windowsHide: true
   });
   for (let attempt = 0; attempt < 50; attempt += 1) {
     try {
-      const response = await fetch('http://127.0.0.1:4173/index.html');
+      const response = await fetch(`${modelOrigin}/index.html`);
       if (response.ok) break;
     } catch (_) {}
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -73,6 +78,9 @@ function summarizeResults(results) {
       isStyleLoaded() { return true; }
       getCanvas() { return this.canvas; }
       getContainer() { return this.canvas?.parentElement || null; }
+      getBounds() {
+        return { getWest: () => -85, getSouth: () => 33, getEast: () => -75, getNorth: () => 37 };
+      }
       getLayer() { return null; }
       getSource() { return null; }
       queryRenderedFeatures() { return []; }
@@ -105,11 +113,11 @@ function summarizeResults(results) {
     }
     return route.fulfill({ status: 204, body: '' });
   });
-  await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.goto(`${modelOrigin}/index.html`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   try {
     await page.waitForFunction(() => {
       try {
-        return typeof loadCountyContestSlice === 'function'
+        return (typeof loadCountyContestSlice === 'function' || typeof loadContestSlice === 'function')
           && typeof loadDistrictSlice === 'function'
           && !!getModeledContestDefinition('us_senate_model', 2026);
       } catch (_) {
@@ -121,8 +129,12 @@ function summarizeResults(results) {
   }
 
   const output = await page.evaluate(async () => {
-    const countyRows = await loadCountyContestSlice('us_senate_model', 2026);
-    const officialCountyTotals = getOfficialCountyTotalsFromRows(countyRows) || null;
+    const countyRows = typeof loadCountyContestSlice === 'function'
+      ? await loadCountyContestSlice('us_senate_model', 2026)
+      : await loadContestSlice('us_senate_model', 2026);
+    const officialCountyTotals = typeof getOfficialCountyTotalsFromRows === 'function'
+      ? (getOfficialCountyTotalsFromRows(countyRows) || null)
+      : null;
     const rawCountyTotals = countyRows.reduce((sum, row) => {
       sum.dem += Number(row?.us_senate_model_dem || 0);
       sum.rep += Number(row?.us_senate_model_rep || 0);
@@ -141,6 +153,15 @@ function summarizeResults(results) {
     const countyUiSigned = countyTotals.total > 0
       ? ((countyTotals.rep - countyTotals.dem) / countyTotals.total) * 100
       : null;
+    const modeledTargetMoment = countyRows.reduce((sum, row) => {
+      const total = Number(row?.us_senate_model_total || 0);
+      const target = Number(row?.__model_with_candidates_margin_pct);
+      if (total > 0 && Number.isFinite(target)) {
+        sum.moment += target * total;
+        sum.total += total;
+      }
+      return sum;
+    }, { moment: 0, total: 0 });
     const countyByName = {};
     countyRows.forEach(row => {
       const county = String(row?.county || '').toUpperCase().split(' - ')[0].trim();
@@ -149,6 +170,12 @@ function summarizeResults(results) {
       node.rep += Number(row?.us_senate_model_rep || 0);
       node.localEffectD = Number(row?.__model_candidate_effect_local_d_pts || node.localEffectD || 0);
       node.countyTypeEffectD = Number(row?.__model_candidate_effect_county_type_d_pts || node.countyTypeEffectD || 0);
+      node.baselineMargin = Number(row?.__model_baseline_margin_pct ?? node.baselineMargin);
+      node.targetMargin = Number(row?.__model_with_candidates_margin_pct ?? node.targetMargin);
+      node.candidateEffectD = Number(row?.__model_candidate_effect_d_pts ?? node.candidateEffectD);
+      node.anchorSpread = Number(row?.__model_anchor_spread_pts ?? node.anchorSpread);
+      node.inputDisagreement = String(row?.__model_input_disagreement || node.inputDisagreement || '');
+      node.countyType = String(row?.__model_county_type || node.countyType || '');
       countyByName[county] = node;
     });
     if (officialCountyTotals) Object.entries(officialCountyTotals).forEach(([county, row]) => {
@@ -172,16 +199,31 @@ function summarizeResults(results) {
         rep: countyTotals.rep,
         total: countyTotals.total,
         marginPctRMinusD: countyTwoParty > 0 ? ((countyTotals.rep - countyTotals.dem) / countyTwoParty) * 100 : null,
-        marginPctUiSigned: countyUiSigned
+        marginPctUiSigned: countyUiSigned,
+        targetMarginPctUiSigned: modeledTargetMoment.total > 0
+          ? modeledTargetMoment.moment / modeledTargetMoment.total
+          : null,
+        targetMarginTotal: modeledTargetMoment.total
       },
       countyByName,
+      countyTypeTotals: Object.values(countyByName).reduce((groups, row) => {
+        const key = String(row?.countyType || 'unknown').toLowerCase() || 'unknown';
+        const group = groups[key] || { dem: 0, rep: 0, total: 0, counties: 0 };
+        group.dem += Number(row?.dem || 0);
+        group.rep += Number(row?.rep || 0);
+        group.total += Number(row?.dem || 0) + Number(row?.rep || 0);
+        group.counties += 1;
+        groups[key] = group;
+        return groups;
+      }, {}),
       scopes
     };
   });
 
   const result = {
     county: output.county,
-    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION'].map(county => {
+    countyTypeTotals: output.countyTypeTotals,
+    focusCounties: Object.fromEntries(['NASH', 'WILSON', 'ANSON', 'PASQUOTANK', 'HOKE', 'ROBESON', 'BLADEN', 'SCOTLAND', 'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE', 'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'WATAUGA', 'MOORE', 'GASTON', 'CABARRUS', 'ALAMANCE', 'CATAWBA', 'PITT', 'JACKSON', 'LINCOLN', 'UNION', 'JOHNSTON'].map(county => {
       const row = output.countyByName[county] || {};
       const twoParty = Number(row.dem || 0) + Number(row.rep || 0);
       return [county, {

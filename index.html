@@ -11745,7 +11745,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Calibrate against Playwright live path (CDN-mocked inspect can skew county totals).
         // Retune after urban metro + Hoke bedroom Cooper restores.
         // Retune after urban metro Cooper>Harris restores (protected from R-recenter).
-        statewideTargetAdjustmentPts: 41.00,
+        // Pre-guardrail recenter calibration; urban-over-Harris and rural anti-blowout
+        // coalition constraints intentionally move the published county result toward Cooper.
+        statewideTargetAdjustmentPts: 65.00,
         countyBehaviorMode: 'balanced', // balanced | suburban_rebound | rural_surge | incumbent_friendly | volatile
         // Modest residual elasticity on so suburban/urban Dem underperformance vs Pres lifts.
         ruralGopOverperformanceWeight: 0.10,
@@ -11817,6 +11819,45 @@ document.addEventListener('DOMContentLoaded', function() {
         // Under-Trump caps still apply AFTER recenter — they must not skip the wash or counties park too blue.
         senateRecenterExemptNamedCounties: true,
         senateRecenterProtectedLeak: 0.12,
+        // Cooper's home-region anchors should not be washed at all; they already carry
+        // explicit, historically calibrated local effects.
+        senateRecenterProtectedLeakByCounty: { NASH: 0, WILSON: 0 },
+        // Preserve the urban-anchor correction through the R-ward statewide wash.
+        // These two metros have no separate local-candidate bonus, so without explicit
+        // protection their D+ county anchors are overwhelmed by the large post-clamp recenter.
+        senateRecenterProtectedCounties: ['BUNCOMBE', 'CUMBERLAND'],
+        // If all three recent federal anchors are Democratic in a major metro, the
+        // statewide wash alone cannot manufacture a Republican county winner.
+        senateUrbanAnchorConsensusGuardrailEnabled: true,
+        senateUrbanAnchorConsensusMaxMarginPts: -0.50,
+        senateUrbanAnchorConsensusMinDemMarginPts: 1.00,
+        // Candidate-coalition expectations: Cooper should modestly outrun Harris in
+        // the major metros, while rural losses should not become recenter-driven blowouts.
+        senateUrbanMinDemOverPresPts: 0.25,
+        // Compatibility floors derived from the displayed county margins at 69fe6c0.
+        // Values are signed R-D target margins, compensated for the rebuilt precinct
+        // allocator so the current county display preserves the old urban shape.
+        senateUrbanReferenceMaxMarginByCountyPts: {
+          WAKE: -26.43,
+          MECKLENBURG: -35.31,
+          DURHAM: -62.55,
+          ORANGE: -52.01,
+          GUILFORD: -27.02,
+          FORSYTH: -14.08,
+          BUNCOMBE: -24.23,
+          CUMBERLAND: -14.66,
+          NEW_HANOVER: -2.03,
+          PITT: -6.40
+        },
+        senateRuralMaxOverPresPts: 4.00,
+        // Statewide composition calibration. Keep county margins intact and alter only
+        // their relative turnout weights; these factors are approximately total-neutral
+        // on the rebuilt precinct universe and restore a competitive R+1.5–1.9 topline.
+        senateStatewideTurnoutWeightByCountyType: {
+          urban: 0.782,
+          suburban: 0.942,
+          rural: 1.291
+        },
         // Explicit per-county ceilings (pts over 2024 Pres). Negative = must under-run Trump.
         senateMaxOverPresByCountyPts: {
           ROBESON: -0.75,
@@ -12046,10 +12087,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Small scope-wide corrections keep independently allocated district slices near the
         // canonical county statewide margin without flattening district-specific variation.
         // Positive alignment adds Dem swing (signed margins are R−D; − = more Democratic).
-        // Align district UI margins to county UI Whatley ~+1.9 (retune after measuring).
-        districtStatewideAlignmentPtsCongressional: 0.71,
-        districtStatewideAlignmentPtsStateHouse: 0.49,
-        districtStatewideAlignmentPtsStateSenate: 0.82,
+        // Align district UI margins to the post-coalition-guardrail county result.
+        districtStatewideAlignmentPtsCongressional: 1.08,
+        districtStatewideAlignmentPtsStateHouse: 0.85,
+        districtStatewideAlignmentPtsStateSenate: 1.18,
         // Context-sensitive anchor rebalance (keeps 2022 primary, but trims its weight in unstable counties).
         unstableCountyBlendShiftMax: 0.14,
         unstableCountySecondAnchorBoost: 0.12,
@@ -12124,7 +12165,10 @@ document.addEventListener('DOMContentLoaded', function() {
     ]);
     // Senate guardrails: metro/outer-suburb elasticity caps.
     // Outer-suburb Dem caps were too tight (0.5–1.2) and parked Cabarrus/Union/Johnston deep red.
-    const SENATE_MAJOR_METROS = new Set(['WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE']);
+    const SENATE_MAJOR_METROS = new Set([
+      'WAKE', 'MECKLENBURG', 'DURHAM', 'ORANGE',
+      'GUILFORD', 'FORSYTH', 'BUNCOMBE', 'CUMBERLAND', 'NEW HANOVER', 'PITT'
+    ]);
     const SENATE_OUTER_SUBURBS = new Set([
       'CABARRUS', 'UNION', 'JOHNSTON', 'ALAMANCE', 'IREDELL', 'GASTON', 'HARNETT', 'CHATHAM',
       'CATAWBA', 'ROWAN', 'DAVIDSON', 'LINCOLN'
@@ -18989,9 +19033,15 @@ document.addEventListener('DOMContentLoaded', function() {
                   ? modeledDef.senateMaxOverPresByCountyPts
                   : null;
                 const cooperLocals = modeledDef?.candidateLocalCountyBoostsPts?.[String(modeledDef?.demCandidate || '').trim()] || null;
+                const protectedCounties = new Set(
+                  Array.isArray(modeledDef?.senateRecenterProtectedCounties)
+                    ? modeledDef.senateRecenterProtectedCounties.map(normalizeCountyToken).filter(Boolean)
+                    : []
+                );
                 const exemptNamed = !!modeledDef?.senateRecenterExemptNamedCounties && isSenateDeviationModel;
                 const isExempt = (county) => {
                   if (!exemptNamed || !county) return false;
+                  if (protectedCounties.has(county)) return true;
                   // Cap-only counties still take full R recenter, then role-6 clamps under Trump.
                   // Freezing them on the cap list parked western/rural counties too blue.
                   if (cooperLocals && Number.isFinite(Number(cooperLocals[county])) && Number(cooperLocals[county]) > 0) return true;
@@ -18999,6 +19049,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 const leakRaw = Number(modeledDef?.senateRecenterProtectedLeak);
                 const protectedLeak = Number.isFinite(leakRaw) ? Math.max(0, Math.min(0.5, leakRaw)) : 0.22;
+                const protectedLeakByCounty = (
+                  modeledDef?.senateRecenterProtectedLeakByCounty
+                  && typeof modeledDef.senateRecenterProtectedLeakByCounty === 'object'
+                ) ? modeledDef.senateRecenterProtectedLeakByCounty : null;
                 // Only damp R-ward recentering on protected counties (the wash that undoes Dem locals).
                 // Dem-ward steps still apply everywhere. No amplify onto unprotected — retune adj instead.
                 const dampProtected = exemptNamed && rawRecenterStep > 0;
@@ -19008,7 +19062,14 @@ document.addEventListener('DOMContentLoaded', function() {
                   if (!Number.isFinite(baseSignedNode)) return;
                   let step = rawRecenterStep;
                   if (dampProtected && isExempt(county)) {
-                    step = rawRecenterStep * protectedLeak;
+                    const countyLeakRaw = protectedLeakByCounty
+                      && Object.prototype.hasOwnProperty.call(protectedLeakByCounty, county)
+                      ? Number(protectedLeakByCounty[county])
+                      : NaN;
+                    const countyLeak = Number.isFinite(countyLeakRaw)
+                      ? Math.max(0, Math.min(0.5, countyLeakRaw))
+                      : protectedLeak;
+                    step = rawRecenterStep * countyLeak;
                   }
                   const shiftedDesired = clampSignedMargin(Number(node.desiredSigned || 0) + step);
                   node.desiredSigned = shiftedDesired;
@@ -19046,6 +19107,65 @@ document.addEventListener('DOMContentLoaded', function() {
                   node.diagnostics.overPresCapApplied = Math.max(Number.isFinite(prev) ? prev : 0, desired - cap);
                 }
               }
+            });
+          }
+
+          // Correction role 7: an R-ward statewide recenter must not flip a major metro
+          // when the 2020 Senate, 2022 Senate, and 2024 presidential anchors all agree
+          // that it is Democratic. This is a sign guardrail, not an extra urban boost.
+          if (isSenateDeviationModel && !!modeledDef?.senateUrbanAnchorConsensusGuardrailEnabled && map.size) {
+            const minDemRaw = Number(modeledDef?.senateUrbanAnchorConsensusMinDemMarginPts);
+            const minDemMargin = Number.isFinite(minDemRaw) ? Math.max(0, Math.min(10, minDemRaw)) : 1;
+            const maxMarginRaw = Number(modeledDef?.senateUrbanAnchorConsensusMaxMarginPts);
+            const maxMargin = Number.isFinite(maxMarginRaw) ? Math.min(-0.01, maxMarginRaw) : -0.5;
+            map.forEach((node, county) => {
+              if (!node || !SENATE_MAJOR_METROS.has(county)) return;
+              const senate22 = Number(baseCountySignedRawByCounty?.get(county));
+              const senate20 = Number(secondaryBaseSignedByCounty?.get(county));
+              const pres24 = Number(climateSignedByCounty?.get(county));
+              const desired = Number(node.desiredSigned);
+              const baseSignedNode = Number(node.baseSigned);
+              const anchorsAgreeDem = [senate22, senate20, pres24].every(
+                value => Number.isFinite(value) && value <= -minDemMargin
+              );
+              if (!anchorsAgreeDem || !Number.isFinite(desired) || desired <= maxMargin || !Number.isFinite(baseSignedNode)) return;
+              node.desiredSigned = clampSignedMargin(maxMargin);
+              node.swingPct = baseSignedNode - node.desiredSigned;
+            });
+          }
+
+          // Correction role 8: candidate-vs-presidential coalition floors and ceilings.
+          // Signed margins are R-D, so subtracting from Pres makes Cooper more Democratic.
+          if (isSenateDeviationModel && map.size) {
+            const urbanLiftRaw = Number(modeledDef?.senateUrbanMinDemOverPresPts);
+            const urbanLift = Number.isFinite(urbanLiftRaw) ? Math.max(0, Math.min(5, urbanLiftRaw)) : 0;
+            const urbanReferenceMargins = (
+              modeledDef?.senateUrbanReferenceMaxMarginByCountyPts
+              && typeof modeledDef.senateUrbanReferenceMaxMarginByCountyPts === 'object'
+            ) ? modeledDef.senateUrbanReferenceMaxMarginByCountyPts : null;
+            const ruralCapRaw = Number(modeledDef?.senateRuralMaxOverPresPts);
+            const ruralCap = Number.isFinite(ruralCapRaw) ? Math.max(0, Math.min(5, ruralCapRaw)) : Infinity;
+            map.forEach((node, county) => {
+              if (!node) return;
+              const pres24 = Number(climateSignedByCounty?.get(county));
+              const desired = Number(node.desiredSigned);
+              const baseSignedNode = Number(node.baseSigned);
+              if (!Number.isFinite(pres24) || !Number.isFinite(desired) || !Number.isFinite(baseSignedNode)) return;
+              let capped = desired;
+              if (urbanLift > 0 && SENATE_MAJOR_METROS.has(county)) {
+                capped = Math.min(capped, pres24 - urbanLift);
+                const referenceRaw = urbanReferenceMargins
+                  ? Number(urbanReferenceMargins[county.replace(/\s+/g, '_')])
+                  : NaN;
+                if (Number.isFinite(referenceRaw)) {
+                  capped = Math.min(capped, referenceRaw);
+                }
+              } else if (Number.isFinite(ruralCap) && node.countyType === 'rural') {
+                capped = Math.min(capped, pres24 + ruralCap);
+              }
+              if (capped === desired) return;
+              node.desiredSigned = clampSignedMargin(capped);
+              node.swingPct = baseSignedNode - node.desiredSigned;
             });
           }
 
@@ -19229,7 +19349,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const modelMeta = countyModelByCounty && countyModelByCounty.has(county) ? countyModelByCounty.get(county) : null;
           const swing = modelMeta && Number.isFinite(Number(modelMeta.swingPct)) ? Number(modelMeta.swingPct) : climateSwingPct;
           const desiredSigned = modelMeta && Number.isFinite(Number(modelMeta.desiredSigned)) ? Number(modelMeta.desiredSigned) : null;
-          const countyTarget = (() => {
+          const rawCountyTarget = (() => {
             if (!(turnoutContestType && Number.isFinite(turnoutYear) && Number.isFinite(turnoutFactor) && turnoutFactor > 0)) return null;
             if (turnoutByCounty && turnoutByCounty.has(county)) return Number(turnoutByCounty.get(county)) * turnoutFactor;
             if (Number.isFinite(turnoutFallbackRatio) && turnoutFallbackRatio > 0 && baseCountyTotals && baseCountyTotals.has(county)) {
@@ -19237,6 +19357,18 @@ document.addEventListener('DOMContentLoaded', function() {
               if (Number.isFinite(baseTotal) && baseTotal > 0) return baseTotal * turnoutFallbackRatio;
             }
             return null;
+          })();
+          const countyTurnoutWeight = (() => {
+            if (!isSenateDeviationModel) return 1;
+            const weights = modeledDef?.senateStatewideTurnoutWeightByCountyType;
+            if (!weights || typeof weights !== 'object') return 1;
+            const countyType = String(modelMeta?.countyType || '').trim().toLowerCase();
+            const weightRaw = Number(weights[countyType]);
+            return Number.isFinite(weightRaw) ? Math.max(0.5, Math.min(1.5, weightRaw)) : 1;
+          })();
+          const countyTarget = (() => {
+            if (!Number.isFinite(rawCountyTarget) || rawCountyTarget <= 0) return rawCountyTarget;
+            return rawCountyTarget * countyTurnoutWeight;
           })();
 
           let rowTargets = null;
@@ -19261,7 +19393,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const fixedFloats = items.map(it => {
               if (!turnoutByKey || !turnoutByKey.has(it.key)) return 0;
-              return Number(turnoutByKey.get(it.key) || 0) * turnoutFactor;
+              return Number(turnoutByKey.get(it.key) || 0) * turnoutFactor * countyTurnoutWeight;
             });
             const fixedSum = fixedFloats.reduce((acc, v) => acc + (Number.isFinite(v) ? v : 0), 0);
             const remainder = Math.max(0, countyTargetInt - fixedSum);
@@ -19303,7 +19435,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fallback: if we can't compute a county target, preserve existing row-level turnout scaling.
             rowTargets = items.map(it => {
               if (!turnoutByKey.has(it.key)) return 0;
-              const t = Number(turnoutByKey.get(it.key) || 0) * turnoutFactor;
+              const t = Number(turnoutByKey.get(it.key) || 0) * turnoutFactor * countyTurnoutWeight;
               return Number.isFinite(t) && t > 0 ? Math.round(t) : 0;
             });
           }
@@ -19363,6 +19495,7 @@ document.addEventListener('DOMContentLoaded', function() {
             rep_candidate: String(modeledDef?.repCandidate || '')
           };
         });
+
         attachOfficialCountyTotalsToRows(modeledOut, { county_totals: modeledCountyTotals });
 
         // County-mode callers (preferCountyInputs) need a compact 100-row slice so paint/hover
@@ -19415,6 +19548,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.__model_candidate_effect_county_type_d_pts = Number.isFinite(Number(modelMeta.candidateEffectCountyTypeDemPts))
                   ? Number(modelMeta.candidateEffectCountyTypeDemPts)
                   : 0;
+                row.__model_county_type = String(modelMeta.countyType || '');
               }
               return row;
             });

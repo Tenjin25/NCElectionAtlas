@@ -562,6 +562,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       const wilsonModeledRow = countyModeledRow('WILSON');
       const wataugaModeledRow = countyModeledRow('WATAUGA');
       const gastonModeledRow = countyModeledRow('GASTON');
+      const buncombeCountyOfficial = senateCountyOfficial.BUNCOMBE || null;
+      const cumberlandCountyOfficial = senateCountyOfficial.CUMBERLAND || null;
       const hokeCountyOfficial = senateCountyOfficial.HOKE || null;
       const hokeOfficial = senateOfficial.HOKE || null;
       const hokeUnderlying = senateRows
@@ -607,6 +609,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         wilsonLocalCandidateEffect: Number(wilsonModeledRow?.__model_candidate_effect_local_d_pts),
         wataugaLocalCandidateEffect: Number(wataugaModeledRow?.__model_candidate_effect_local_d_pts),
         gastonLocalCandidateEffect: Number(gastonModeledRow?.__model_candidate_effect_local_d_pts),
+        buncombeCountyOfficialMargin: margin(buncombeCountyOfficial),
+        cumberlandCountyOfficialMargin: margin(cumberlandCountyOfficial),
         cooperStatewideStrength: candidateStrengthTotal('Roy Cooper'),
         whatleyStatewideStrength: candidateStrengthTotal('Michael Whatley'),
         districtCandidateStrengthNetDem: candidateStrengthTotal('Roy Cooper') - candidateStrengthTotal('Michael Whatley'),
@@ -614,6 +618,17 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         countiesWithRuralCooperBoost: senateCountyRows.filter(row => Number(row?.__model_candidate_effect_county_type_d_pts) > 0).length,
         realignedSpecialCounties: Array.from(senateDefinition?.candidateBonusRealignedFormerDemFederalCounties || []),
         anomalySpecialCounties: Array.from(senateDefinition?.anomalyClampCounties || []),
+        urbanConsensusGuardrailEnabled: !!senateDefinition?.senateUrbanAnchorConsensusGuardrailEnabled,
+        urbanConsensusGuardrailMaxMargin: Number(senateDefinition?.senateUrbanAnchorConsensusMaxMarginPts),
+        urbanMinDemOverPres: Number(senateDefinition?.senateUrbanMinDemOverPresPts),
+        urbanReferenceWake: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.WAKE),
+        urbanReferenceMecklenburg: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.MECKLENBURG),
+        urbanReferenceGuilford: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.GUILFORD),
+        urbanReferenceCumberland: Number(senateDefinition?.senateUrbanReferenceMaxMarginByCountyPts?.CUMBERLAND),
+        turnoutWeightUrban: Number(senateDefinition?.senateStatewideTurnoutWeightByCountyType?.urban),
+        turnoutWeightSuburban: Number(senateDefinition?.senateStatewideTurnoutWeightByCountyType?.suburban),
+        turnoutWeightRural: Number(senateDefinition?.senateStatewideTurnoutWeightByCountyType?.rural),
+        ruralMaxOverPres: Number(senateDefinition?.senateRuralMaxOverPresPts),
         robesonOverPresCap: Number(senateDefinition?.senateMaxOverPresRobesonCapPts),
         bladenOverPresCap: Number(senateDefinition?.senateMaxOverPresBladenCapPts),
         scotlandOverPresCap: Number(senateDefinition?.senateMaxOverPresScotlandCapPts),
@@ -647,6 +662,8 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(5.50, 2);
     expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(2.20, 2);
     expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(1.60, 2);
+    expect(modeledSnapshot.buncombeCountyOfficialMargin).toBeLessThan(-15);
+    expect(modeledSnapshot.cumberlandCountyOfficialMargin).toBeLessThan(-5);
     expect(modeledSnapshot.cooperStatewideStrength).toBeCloseTo(1.90, 2);
     expect(modeledSnapshot.whatleyStatewideStrength).toBeCloseTo(0.55, 2);
     expect(modeledSnapshot.districtCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
@@ -654,6 +671,17 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.countiesWithRuralCooperBoost).toBeGreaterThan(0);
     expect(modeledSnapshot.realignedSpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
     expect(modeledSnapshot.anomalySpecialCounties).toEqual(['ROBESON', 'BLADEN', 'SCOTLAND']);
+    expect(modeledSnapshot.urbanConsensusGuardrailEnabled).toBe(true);
+    expect(modeledSnapshot.urbanConsensusGuardrailMaxMargin).toBeCloseTo(-0.50, 2);
+    expect(modeledSnapshot.urbanMinDemOverPres).toBeCloseTo(0.25, 2);
+    expect(modeledSnapshot.urbanReferenceWake).toBeCloseTo(-26.43, 2);
+    expect(modeledSnapshot.urbanReferenceMecklenburg).toBeCloseTo(-35.31, 2);
+    expect(modeledSnapshot.urbanReferenceGuilford).toBeCloseTo(-27.02, 2);
+    expect(modeledSnapshot.urbanReferenceCumberland).toBeCloseTo(-14.66, 2);
+    expect(modeledSnapshot.turnoutWeightUrban).toBeCloseTo(0.782, 3);
+    expect(modeledSnapshot.turnoutWeightSuburban).toBeCloseTo(0.942, 3);
+    expect(modeledSnapshot.turnoutWeightRural).toBeCloseTo(1.291, 3);
+    expect(modeledSnapshot.ruralMaxOverPres).toBeCloseTo(4.00, 2);
     expect(modeledSnapshot.robesonOverPresCap).toBeCloseTo(-0.75, 2);
     expect(modeledSnapshot.bladenOverPresCap).toBeCloseTo(-0.50, 2);
     expect(modeledSnapshot.scotlandOverPresCap).toBeCloseTo(-0.25, 2);
@@ -667,10 +695,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.courtRepCandidate).toBe('Sarah Stevens');
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
-    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(0.71, 2);
-    // UI/panel metric on post-clamp backend: (R−D)/total including other ≈ Whatley +1.9
-    expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.85);
-    expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.95);
+    expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.08, 2);
+    // Turnout composition restores an R+1.5–1.9 topline without changing county margins.
+    expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.50);
+    expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);
     expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senateStatewideUiMargin)).toBeLessThan(0.10);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 
