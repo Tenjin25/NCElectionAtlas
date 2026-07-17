@@ -452,6 +452,43 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }, { timeout: APP_READY_TIMEOUT });
   });
 
+  test('exact Wake precinct result outranks a colliding generated alias', async ({ page }) => {
+    await page.selectOption('#contestSelect', 'president_2020');
+    await page.waitForFunction(
+      () => (
+        document.getElementById('contestSelect')?.value === 'president_2020' &&
+        typeof lastCompletedContestSelection !== 'undefined' &&
+        lastCompletedContestSelection === 'president_2020'
+      ),
+      { timeout: APP_READY_TIMEOUT }
+    );
+
+    await flyToPrecinct(page, 'Wake 01-25');
+    await page.waitForFunction(() => {
+      try {
+        const pinned = typeof voteCounterPinned !== 'undefined' ? voteCounterPinned : null;
+        return pinned?.meta?.kind === 'precinct' &&
+          String(pinned?.meta?.precinctNorm || '').toUpperCase() === 'WAKE - 01-25';
+      } catch (_) {
+        return false;
+      }
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const pinnedVotes = await page.evaluate(() => ({
+      dem: Number(voteCounterPinned?.demVotes || 0),
+      rep: Number(voteCounterPinned?.repVotes || 0),
+      other: Number(voteCounterPinned?.otherVotes || 0),
+      precinctNorm: String(voteCounterPinned?.meta?.precinctNorm || '')
+    }));
+
+    expect(pinnedVotes).toEqual({
+      dem: 792,
+      rep: 51,
+      other: 10,
+      precinctNorm: 'WAKE - 01-25'
+    });
+  });
+
   test('pinned precinct side trend stays in sync after contest switch', async ({ page }) => {
     const firstContestKey = await pickContestKey(page);
     expect(firstContestKey).toBeTruthy();

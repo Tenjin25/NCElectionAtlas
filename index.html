@@ -10359,8 +10359,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-32';
-    const APP_BUILD_ID = '2026-07-17-21';
+    const DATA_CACHE_BUSTER = '2026-07-17-33';
+    const APP_BUILD_ID = '2026-07-17-22';
 
     function withCacheBuster(path) {
       const p = (path || '').toString().trim();
@@ -34626,7 +34626,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (includePrecinctMargins) {
           const mPct = Number(r[`${prevType}_margin_pct`] ?? r.margin_pct ?? 0);
-          precinctNormVariantsLite(rowName).forEach(n => prevPrecinctMarginByNorm.set(n, mPct));
+          const primaryNorm = normalizeCountyName(rowName);
+          precinctNormVariantsLite(rowName).forEach(n => {
+            const key = (n || '').toString().trim().toUpperCase();
+            if (!key) return;
+            // Exact result keys outrank compatibility aliases from other precincts.
+            if (key === primaryNorm || !prevPrecinctMarginByNorm.has(key)) {
+              prevPrecinctMarginByNorm.set(key, mPct);
+            }
+          });
         }
       });
 
@@ -35271,7 +35279,14 @@ document.addEventListener('DOMContentLoaded', function() {
               });
             } else {
               norms.forEach(n => {
-                currentPrecinctResults.set(n, adjustedRow);
+                const key = (n || '').toString().trim().toUpperCase();
+                if (!key) return;
+                const primaryNorm = normalizeCountyName(rowName);
+                // Never let a later generated alias replace an exact precinct row.
+                // Wake 19-25 previously overwrote exact Wake 01-25 through this path.
+                if (key === primaryNorm || !currentPrecinctResults.has(key)) {
+                  currentPrecinctResults.set(key, adjustedRow);
+                }
               });
             }
           }
