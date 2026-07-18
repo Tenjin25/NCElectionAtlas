@@ -240,11 +240,6 @@
   body.colorblind-mode .legend-scale-caption .dem {
     color: #1d4ed8 !important;
   }
-  /* Match the softened appearance of DRA fills over a light basemap. */
-  body.dra-palette:not(.colorblind-mode) .legend-content .legend-color {
-    opacity: 0.55;
-  }
-
   @media (min-width: 769px) {
     .main-controls {
       overflow: visible !important; /* Allows dropdowns to pop out of the container */
@@ -9233,6 +9228,24 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 <body>
 <!-- Move JS to script block -->
 <script>
+const DRA_PARTISAN_COLORS = Object.freeze({
+  r40: '#701126',
+  r30: '#8e2437',
+  r20: '#ad3c4d',
+  r10: '#d85f67',
+  r5_5: '#e98a8f',
+  r1: '#f3b7ba',
+  r0_5: '#f8d6d8',
+  tie: '#f5f3f5',
+  d0_5: '#dadaf7',
+  d1: '#bbbbf0',
+  d5_5: '#9292e5',
+  d10: '#6969d8',
+  d20: '#4d4db4',
+  d30: '#383894',
+  d40: '#272774'
+});
+
 // Accessibility: Color Blind Mode Toggle
 document.addEventListener('DOMContentLoaded', function() {
   var accBtn = document.getElementById('accessibility-toggle');
@@ -13811,26 +13824,6 @@ document.addEventListener('DOMContentLoaded', function() {
       let senateBaseOpacity = preset.senate;
       let precinctFillBaseOpacity = preset.precinctFill;
       let precinctDotBaseOpacity = preset.precinctDot;
-
-      // DRA's published map appearance comes from its raw partisan colors
-      // blended over a light basemap. Keep this alternate palette near that
-      // softer rendered treatment instead of letting Data Focus make the
-      // saturated blue/red anchors appear almost opaque.
-      const draPartisanMode =
-        isDraPaletteActive() &&
-        (
-          currentVizMode === 'margins' ||
-          currentVizMode === 'winners' ||
-          currentVizMode === 'shift' ||
-          currentVizMode === 'flips'
-        );
-      if (contestIsActive && draPartisanMode) {
-        if (!precinctsActuallyVisible) countyBaseOpacity = Math.min(countyBaseOpacity, 0.55);
-        districtBaseOpacity = Math.min(districtBaseOpacity, 0.55);
-        houseBaseOpacity = Math.min(houseBaseOpacity, 0.55);
-        senateBaseOpacity = Math.min(senateBaseOpacity, 0.55);
-        precinctFillBaseOpacity = Math.min(precinctFillBaseOpacity, 0.55);
-      }
 
       if (!contestIsActive) {
         countyBaseOpacity = precinctsActuallyVisible ? 0.04 : 0.08;
@@ -33719,18 +33712,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function draColorForMargin(marginPct, winner) {
-      // DRA's 40/45/50/55/60% Democratic-share anchors equal margins of
-      // R+20/R+10/tied/D+10/D+20. Extend its packed anchors for the two
-      // additional top tiers and sample its competitive ramps below Safe:
-      // 40, 30, 20, 10, 5.5, 1, 0.5, tied, then the mirrored D tiers.
-      if (marginPct >= 40) return winner === 'R' ? '#5a000e' : '#000055';
-      if (marginPct >= 30) return winner === 'R' ? '#780013' : '#000070';
-      if (marginPct >= 20) return winner === 'R' ? '#960018' : '#00008b';
-      if (marginPct >= 10) return winner === 'R' ? '#ff2020' : '#2020ff';
-      if (marginPct >= 5.5) return winner === 'R' ? '#ff9999' : '#9999ff';
-      if (marginPct >= 1.0) return winner === 'R' ? '#ffd1d1' : '#d1d1ff';
-      if (marginPct >= 0.5) return winner === 'R' ? '#ffd8d8' : '#d8d8ff';
-      return '#f7f7f7';
+      // Smooth DRA-inspired ramp adapted to the atlas's 15 margin tiers.
+      // Keeping the colors centralized ensures margins, winners, shifts,
+      // flips, map fills, and legends all use the same partisan anchors.
+      if (marginPct >= 40) return winner === 'R' ? DRA_PARTISAN_COLORS.r40 : DRA_PARTISAN_COLORS.d40;
+      if (marginPct >= 30) return winner === 'R' ? DRA_PARTISAN_COLORS.r30 : DRA_PARTISAN_COLORS.d30;
+      if (marginPct >= 20) return winner === 'R' ? DRA_PARTISAN_COLORS.r20 : DRA_PARTISAN_COLORS.d20;
+      if (marginPct >= 10) return winner === 'R' ? DRA_PARTISAN_COLORS.r10 : DRA_PARTISAN_COLORS.d10;
+      if (marginPct >= 5.5) return winner === 'R' ? DRA_PARTISAN_COLORS.r5_5 : DRA_PARTISAN_COLORS.d5_5;
+      if (marginPct >= 1.0) return winner === 'R' ? DRA_PARTISAN_COLORS.r1 : DRA_PARTISAN_COLORS.d1;
+      if (marginPct >= 0.5) return winner === 'R' ? DRA_PARTISAN_COLORS.r0_5 : DRA_PARTISAN_COLORS.d0_5;
+      return DRA_PARTISAN_COLORS.tie;
     }
 
     function accessibilityMarginColor(marginPct, winner) {
@@ -33754,16 +33746,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function colorForWinnerMode(winner) {
       // winner: 'R' | 'D' | 'T'
       const cb = isColorblindModeActive();
-      if (winner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? '#ff2020' : '#dc2626');
-      if (winner === 'D') return cb ? '#2563eb' : (isDraPaletteActive() ? '#2020ff' : '#2563eb');
-      return '#9ca3af';
+      if (winner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r10 : '#dc2626');
+      if (winner === 'D') return cb ? '#2563eb' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.d10 : '#2563eb');
+      return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.tie : '#9ca3af';
     }
 
     function colorForFlipMode(toWinner) {
       // toWinner: 'R' | 'D' | 'T'
-      if (toWinner === 'R') return isColorblindModeActive() ? '#d97706' : (isDraPaletteActive() ? '#ff2020' : '#dc2626');
-      if (toWinner === 'D') return isDraPaletteActive() && !isColorblindModeActive() ? '#2020ff' : '#2563eb';
-      return '#e2e8f0';
+      const cb = isColorblindModeActive();
+      if (toWinner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r10 : '#dc2626');
+      if (toWinner === 'D') return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.d10 : '#2563eb';
+      return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.tie : '#e2e8f0';
     }
 
     function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
@@ -33776,12 +33769,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const a = Math.abs(s);
       const cb = isColorblindModeActive();
       const dir = s >= 0 ? 'R' : 'D';
-      if (a < 0.5) return '#f8fafc';
+      if (a < 0.5) return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.tie : '#f8fafc';
       if (isDraPaletteActive() && !cb) {
-        if (a >= 15) return dir === 'R' ? '#960018' : '#00008b';
-        if (a >= 10) return dir === 'R' ? '#ff2020' : '#2020ff';
-        if (a >= 5) return dir === 'R' ? '#ff9999' : '#9999ff';
-        return dir === 'R' ? '#ffd1d1' : '#d1d1ff';
+        if (a >= 15) return dir === 'R' ? DRA_PARTISAN_COLORS.r20 : DRA_PARTISAN_COLORS.d20;
+        if (a >= 10) return dir === 'R' ? DRA_PARTISAN_COLORS.r10 : DRA_PARTISAN_COLORS.d10;
+        if (a >= 5) return dir === 'R' ? DRA_PARTISAN_COLORS.r5_5 : DRA_PARTISAN_COLORS.d5_5;
+        return dir === 'R' ? DRA_PARTISAN_COLORS.r1 : DRA_PARTISAN_COLORS.d1;
       }
       // Bins tuned for readability; "strong" kicks in at 10.
       const bin = a >= 15 ? 4 : a >= 10 ? 3 : a >= 5 ? 2 : 1;

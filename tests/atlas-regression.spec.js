@@ -111,41 +111,61 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(255, 32, 32)');
+  expect(draColor).toBe('rgb(216, 95, 103)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draScale).toEqual([
-    'rgb(90, 0, 14)',
-    'rgb(120, 0, 19)',
-    'rgb(150, 0, 24)',
-    'rgb(255, 32, 32)',
-    'rgb(255, 153, 153)',
-    'rgb(255, 209, 209)',
-    'rgb(255, 216, 216)',
-    'rgb(247, 247, 247)',
-    'rgb(216, 216, 255)',
-    'rgb(209, 209, 255)',
-    'rgb(153, 153, 255)',
-    'rgb(32, 32, 255)',
-    'rgb(0, 0, 139)',
-    'rgb(0, 0, 112)',
-    'rgb(0, 0, 85)'
+    'rgb(112, 17, 38)',
+    'rgb(142, 36, 55)',
+    'rgb(173, 60, 77)',
+    'rgb(216, 95, 103)',
+    'rgb(233, 138, 143)',
+    'rgb(243, 183, 186)',
+    'rgb(248, 214, 216)',
+    'rgb(245, 243, 245)',
+    'rgb(218, 218, 247)',
+    'rgb(187, 187, 240)',
+    'rgb(146, 146, 229)',
+    'rgb(105, 105, 216)',
+    'rgb(77, 77, 180)',
+    'rgb(56, 56, 148)',
+    'rgb(39, 39, 116)'
   ]);
-  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '0.55');
+  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
 
   await page.evaluate(() => window.updateLegendColors('shift'));
   const draShiftScale = await page.locator('.legend-spectrum.shift .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(0, 0, 139)',
-    'rgb(32, 32, 255)',
-    'rgb(153, 153, 255)',
-    'rgb(248, 250, 252)',
-    'rgb(255, 153, 153)',
-    'rgb(255, 32, 32)',
-    'rgb(150, 0, 24)'
+    'rgb(77, 77, 180)',
+    'rgb(105, 105, 216)',
+    'rgb(146, 146, 229)',
+    'rgb(245, 243, 245)',
+    'rgb(233, 138, 143)',
+    'rgb(216, 95, 103)',
+    'rgb(173, 60, 77)'
+  ]);
+
+  await page.evaluate(() => window.updateLegendColors('winners'));
+  const draWinnerScale = await page.locator('.legend-swatch-grid .legend-color').evaluateAll(
+    (segments) => segments.map((el) => el.style.background)
+  );
+  expect(draWinnerScale).toEqual([
+    'rgb(105, 105, 216)',
+    'rgb(216, 95, 103)',
+    'rgb(245, 243, 245)'
+  ]);
+
+  await page.evaluate(() => window.updateLegendColors('flips'));
+  const draFlipScale = await page.locator('.legend-swatch-grid .legend-color').evaluateAll(
+    (segments) => segments.map((el) => el.style.background)
+  );
+  expect(draFlipScale).toEqual([
+    'rgb(105, 105, 216)',
+    'rgb(216, 95, 103)',
+    'rgb(245, 243, 245)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
 
