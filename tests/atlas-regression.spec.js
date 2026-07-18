@@ -103,7 +103,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     window.localStorage.setItem('nc-atlas-partisan-palette-v2', 'atlas');
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-22');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-23');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
@@ -119,17 +119,17 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draScale).toEqual([
-    'rgb(118, 0, 15)',
+    'rgb(104, 0, 12)',
     'rgb(148, 0, 22)',
     'rgb(185, 18, 39)',
     'rgb(216, 63, 80)',
-    'rgb(239, 89, 101)',
-    'rgb(244, 135, 142)',
+    'rgb(241, 102, 114)',
+    'rgb(245, 143, 150)',
     'rgb(248, 190, 194)',
     'rgb(247, 247, 247)',
     'rgb(182, 213, 245)',
     'rgb(120, 175, 233)',
-    'rgb(54, 143, 223)',
+    'rgb(70, 153, 229)',
     'rgb(35, 127, 197)',
     'rgb(8, 99, 168)',
     'rgb(6, 74, 128)',
@@ -144,9 +144,9 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
   expect(draShiftScale).toEqual([
     'rgb(8, 99, 168)',
     'rgb(35, 127, 197)',
-    'rgb(54, 143, 223)',
+    'rgb(70, 153, 229)',
     'rgb(247, 247, 247)',
-    'rgb(239, 89, 101)',
+    'rgb(241, 102, 114)',
     'rgb(216, 63, 80)',
     'rgb(185, 18, 39)'
   ]);
