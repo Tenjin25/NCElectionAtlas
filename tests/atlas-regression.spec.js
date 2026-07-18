@@ -99,7 +99,7 @@ test('compact county slices stay small and contain one row per county', async ({
 
 test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-13');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-16');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await page.locator('.contest-tools-more > summary').click();
@@ -118,19 +118,19 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   );
   expect(draScale).toEqual([
     'rgb(87, 0, 11)',
-    'rgb(144, 13, 18)',
-    'rgb(185, 22, 26)',
+    'rgb(165, 17, 22)',
+    'rgb(208, 24, 28)',
     'rgb(255, 32, 32)',
-    'rgb(255, 80, 80)',
-    'rgb(255, 144, 144)',
-    'rgb(255, 204, 204)',
+    'rgb(255, 91, 91)',
+    'rgb(255, 150, 150)',
+    'rgb(255, 208, 208)',
     'rgb(247, 247, 247)',
-    'rgb(199, 225, 255)',
-    'rgb(130, 188, 255)',
-    'rgb(59, 144, 245)',
+    'rgb(194, 221, 255)',
+    'rgb(130, 186, 255)',
+    'rgb(65, 148, 242)',
     'rgb(0, 110, 230)',
-    'rgb(42, 112, 165)',
-    'rgb(7, 70, 134)',
+    'rgb(7, 95, 189)',
+    'rgb(7, 76, 153)',
     'rgb(6, 38, 83)'
   ]);
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
@@ -140,13 +140,13 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(42, 112, 165)',
+    'rgb(7, 95, 189)',
     'rgb(0, 110, 230)',
-    'rgb(59, 144, 245)',
+    'rgb(65, 148, 242)',
     'rgb(247, 247, 247)',
-    'rgb(255, 80, 80)',
+    'rgb(255, 91, 91)',
     'rgb(255, 32, 32)',
-    'rgb(185, 22, 26)'
+    'rgb(208, 24, 28)'
   ]);
 
   await page.evaluate(() => window.updateLegendColors('winners'));

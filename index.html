@@ -9230,19 +9230,19 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 <script>
 const DRA_PARTISAN_COLORS = Object.freeze({
   r40: '#57000b',
-  r30: '#900d12',
-  r20: '#b9161a',
+  r30: '#a51116',
+  r20: '#d0181c',
   r10: '#ff2020',
-  r5_5: '#ff5050',
-  r1: '#ff9090',
-  r0_5: '#ffcccc',
+  r5_5: '#ff5b5b',
+  r1: '#ff9696',
+  r0_5: '#ffd0d0',
   tie: '#f7f7f7',
-  d0_5: '#c7e1ff',
-  d1: '#82bcff',
-  d5_5: '#3b90f5',
+  d0_5: '#c2ddff',
+  d1: '#82baff',
+  d5_5: '#4194f2',
   d10: '#006ee6',
-  d20: '#2a70a5',
-  d30: '#074686',
+  d20: '#075fbd',
+  d30: '#074c99',
   d40: '#062653'
 });
 
@@ -10412,8 +10412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-46';
-    const APP_BUILD_ID = '2026-07-18-13';
+    const DATA_CACHE_BUSTER = '2026-07-18-49';
+    const APP_BUILD_ID = '2026-07-18-16';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
