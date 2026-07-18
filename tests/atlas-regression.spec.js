@@ -101,15 +101,39 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
   await page.addInitScript(() => {
     window.localStorage.setItem('nc-atlas-partisan-palette', 'dra');
     window.localStorage.setItem('nc-atlas-partisan-palette-v2', 'atlas');
+    window.__firstMarginLegendColors = null;
+    const observer = new MutationObserver(() => {
+      const segments = document.querySelectorAll('.legend-spectrum.margins .legend-segment');
+      if (segments.length !== 15 || window.__firstMarginLegendColors) return;
+      window.__firstMarginLegendColors = Array.from(segments).map((el) => getComputedStyle(el).backgroundColor);
+      observer.disconnect();
+    });
+    observer.observe(document, { childList: true, subtree: true });
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-23');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-24');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette'))).toBeNull();
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBeNull();
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v3'))).toBeNull();
+  const firstMarginLegendColors = await page.evaluate(() => window.__firstMarginLegendColors);
+  expect(firstMarginLegendColors).toHaveLength(15);
+  expect(firstMarginLegendColors.slice(0, 5)).toEqual([
+    'rgb(104, 0, 12)',
+    'rgb(148, 0, 22)',
+    'rgb(185, 18, 39)',
+    'rgb(216, 63, 80)',
+    'rgb(241, 102, 114)'
+  ]);
+  expect(firstMarginLegendColors.slice(10, 15)).toEqual([
+    'rgb(70, 153, 229)',
+    'rgb(35, 127, 197)',
+    'rgb(8, 99, 168)',
+    'rgb(6, 74, 128)',
+    'rgb(4, 52, 92)'
+  ]);
   await page.locator('.contest-tools-more > summary').click();
 
   const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
@@ -230,6 +254,8 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain("activePartisanPaletteKey() === 'dra'");
   expect(source).toContain('countyBaseOpacity = districtBaseOpacity;');
   expect(source).toContain("id: 'county-stroke-casing'");
+  expect(source).toContain("data-initial-partisan-palette', initialPalette");
+  expect(source).toContain('background: var(--initial-margin-1)');
 });
 
 test('2020 president allocates OS early-vote centers into geographic precincts', async () => {
