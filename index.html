@@ -9229,21 +9229,21 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 <!-- Move JS to script block -->
 <script>
 const DRA_PARTISAN_COLORS = Object.freeze({
-  r40: '#6f0000',
-  r30: '#930000',
-  r20: '#c40000',
-  r10: '#f00000',
-  r5_5: '#f43f3f',
-  r1: '#f77676',
-  r0_5: '#f9aaaa',
+  r40: '#57000b',
+  r30: '#900d12',
+  r20: '#b9161a',
+  r10: '#ff2020',
+  r5_5: '#ff5050',
+  r1: '#ff9090',
+  r0_5: '#ffcccc',
   tie: '#f7f7f7',
-  d0_5: '#aed7f7',
-  d1: '#69b5f1',
-  d5_5: '#248eea',
+  d0_5: '#c7e1ff',
+  d1: '#82bcff',
+  d5_5: '#3b90f5',
   d10: '#006ee6',
-  d20: '#005fc9',
-  d30: '#00438f',
-  d40: '#002f66'
+  d20: '#2a70a5',
+  d30: '#074686',
+  d40: '#062653'
 });
 
 // Accessibility: Color Blind Mode Toggle
@@ -10412,8 +10412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-38';
-    const APP_BUILD_ID = '2026-07-18-5';
+    const DATA_CACHE_BUSTER = '2026-07-18-46';
+    const APP_BUILD_ID = '2026-07-18-13';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -20283,7 +20283,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const precinctGeom = (typeof getDesiredPrecinctGeometryMode === 'function') ? String(getDesiredPrecinctGeometryMode() || '') : '';
       const overlays = `split:${splitTicketOverlayEnabled ? 1 : 0}|baro:${barometerOverlayEnabled ? 1 : 0}|turnout:${turnoutBivariateEnabled ? 1 : 0}|opacity:${String(overlayOpacityPreset || '')}`;
       const precinct = `precincts:${precinctsEnabled ? 1 : 0}|geom:${precinctGeom}`;
-      return `k:${key}|ct:${ct}|y:${Number.isFinite(y) ? y : ''}|v:${view}|m:${mode}|lines:${linesYear}|${precinct}|${overlays}|scenario:${scenarioSignature()}`;
+      const palette = (typeof activePartisanPaletteKey === 'function')
+        ? activePartisanPaletteKey()
+        : (document.body.classList.contains('colorblind-mode') ? 'colorblind' : (document.body.classList.contains('dra-palette') ? 'dra' : 'atlas'));
+      return `k:${key}|ct:${ct}|y:${Number.isFinite(y) ? y : ''}|v:${view}|m:${mode}|palette:${palette}|lines:${linesYear}|${precinct}|${overlays}|scenario:${scenarioSignature()}`;
     }
 
     function wireContestSelectHandlers(sel) {

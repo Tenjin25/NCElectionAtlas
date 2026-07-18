@@ -99,7 +99,7 @@ test('compact county slices stay small and contain one row per county', async ({
 
 test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-5');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-13');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await page.locator('.contest-tools-more > summary').click();
@@ -112,26 +112,26 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(240, 0, 0)');
+  expect(draColor).toBe('rgb(255, 32, 32)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draScale).toEqual([
-    'rgb(111, 0, 0)',
-    'rgb(147, 0, 0)',
-    'rgb(196, 0, 0)',
-    'rgb(240, 0, 0)',
-    'rgb(244, 63, 63)',
-    'rgb(247, 118, 118)',
-    'rgb(249, 170, 170)',
+    'rgb(87, 0, 11)',
+    'rgb(144, 13, 18)',
+    'rgb(185, 22, 26)',
+    'rgb(255, 32, 32)',
+    'rgb(255, 80, 80)',
+    'rgb(255, 144, 144)',
+    'rgb(255, 204, 204)',
     'rgb(247, 247, 247)',
-    'rgb(174, 215, 247)',
-    'rgb(105, 181, 241)',
-    'rgb(36, 142, 234)',
+    'rgb(199, 225, 255)',
+    'rgb(130, 188, 255)',
+    'rgb(59, 144, 245)',
     'rgb(0, 110, 230)',
-    'rgb(0, 95, 201)',
-    'rgb(0, 67, 143)',
-    'rgb(0, 47, 102)'
+    'rgb(42, 112, 165)',
+    'rgb(7, 70, 134)',
+    'rgb(6, 38, 83)'
   ]);
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
 
@@ -140,13 +140,13 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(0, 95, 201)',
+    'rgb(42, 112, 165)',
     'rgb(0, 110, 230)',
-    'rgb(36, 142, 234)',
+    'rgb(59, 144, 245)',
     'rgb(247, 247, 247)',
-    'rgb(244, 63, 63)',
-    'rgb(240, 0, 0)',
-    'rgb(196, 0, 0)'
+    'rgb(255, 80, 80)',
+    'rgb(255, 32, 32)',
+    'rgb(185, 22, 26)'
   ]);
 
   await page.evaluate(() => window.updateLegendColors('winners'));
@@ -155,7 +155,7 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   );
   expect(draWinnerScale).toEqual([
     'rgb(0, 110, 230)',
-    'rgb(240, 0, 0)',
+    'rgb(255, 32, 32)',
     'rgb(247, 247, 247)'
   ]);
 
@@ -165,7 +165,7 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   );
   expect(draFlipScale).toEqual([
     'rgb(0, 110, 230)',
-    'rgb(240, 0, 0)',
+    'rgb(255, 32, 32)',
     'rgb(247, 247, 247)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
@@ -214,6 +214,7 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain(': await loadCountyContestSlice(priorType, cy);');
   expect(source).toContain("if (mode === 'shift' || mode === 'flips') {");
   expect(source).toContain('populate flip details for hover in the background');
+  expect(source).toContain('|m:${mode}|palette:${palette}|lines:');
 });
 
 test('2020 president allocates OS early-vote centers into geographic precincts', async () => {
