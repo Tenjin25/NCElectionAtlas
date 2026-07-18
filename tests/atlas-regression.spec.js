@@ -97,28 +97,24 @@ test('compact county slices stay small and contain one row per county', async ({
   expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
 });
 
-test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
+test('DRA colors are the default while Atlas remains a persisted option', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem('nc-atlas-partisan-palette', 'dra');
+    window.localStorage.setItem('nc-atlas-partisan-palette-v2', 'atlas');
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-20');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-22');
   const toggle = page.locator('#dra-palette-toggle');
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toHaveClass(/dra-palette/);
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette'))).toBeNull();
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBeNull();
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v3'))).toBeNull();
   await page.locator('.contest-tools-more > summary').click();
 
   const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
-  const originalColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(originalColor).toBe('rgb(239, 59, 44)');
-
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('body')).toHaveClass(/dra-palette/);
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBe('dra');
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(220, 49, 66)');
+  expect(draColor).toBe('rgb(216, 63, 80)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
@@ -126,15 +122,15 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     'rgb(118, 0, 15)',
     'rgb(148, 0, 22)',
     'rgb(185, 18, 39)',
-    'rgb(220, 49, 66)',
-    'rgb(237, 103, 112)',
-    'rgb(244, 155, 160)',
-    'rgb(248, 203, 205)',
+    'rgb(216, 63, 80)',
+    'rgb(239, 89, 101)',
+    'rgb(244, 135, 142)',
+    'rgb(248, 190, 194)',
     'rgb(247, 247, 247)',
-    'rgb(197, 220, 246)',
-    'rgb(143, 188, 237)',
-    'rgb(75, 155, 229)',
-    'rgb(23, 127, 206)',
+    'rgb(182, 213, 245)',
+    'rgb(120, 175, 233)',
+    'rgb(54, 143, 223)',
+    'rgb(35, 127, 197)',
     'rgb(8, 99, 168)',
     'rgb(6, 74, 128)',
     'rgb(4, 52, 92)'
@@ -147,11 +143,11 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   );
   expect(draShiftScale).toEqual([
     'rgb(8, 99, 168)',
-    'rgb(23, 127, 206)',
-    'rgb(75, 155, 229)',
+    'rgb(35, 127, 197)',
+    'rgb(54, 143, 223)',
     'rgb(247, 247, 247)',
-    'rgb(237, 103, 112)',
-    'rgb(220, 49, 66)',
+    'rgb(239, 89, 101)',
+    'rgb(216, 63, 80)',
     'rgb(185, 18, 39)'
   ]);
 
@@ -160,8 +156,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draWinnerScale).toEqual([
-    'rgb(23, 127, 206)',
-    'rgb(220, 49, 66)',
+    'rgb(35, 127, 197)',
+    'rgb(216, 63, 80)',
     'rgb(247, 247, 247)'
   ]);
 
@@ -170,8 +166,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draFlipScale).toEqual([
-    'rgb(23, 127, 206)',
-    'rgb(220, 49, 66)',
+    'rgb(35, 127, 197)',
+    'rgb(216, 63, 80)',
     'rgb(247, 247, 247)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
@@ -184,11 +180,21 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await page.locator('#dra-palette-toggle').click();
   await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('body')).not.toHaveClass(/dra-palette/);
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v3'))).toBe('atlas');
   const restoredSafeColor = await page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)').evaluate(
     (el) => el.style.background
   );
   expect(restoredSafeColor).toBe('rgb(239, 59, 44)');
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
+
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('body')).not.toHaveClass(/dra-palette/);
+  await page.locator('.contest-tools-more > summary').click();
+  const persistedAtlasColor = await page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)').evaluate(
+    (el) => el.style.background
+  );
+  expect(persistedAtlasColor).toBe('rgb(239, 59, 44)');
 });
 
 test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {

@@ -9232,15 +9232,15 @@ const DRA_PARTISAN_COLORS = Object.freeze({
   r40: '#76000f',
   r30: '#940016',
   r20: '#b91227',
-  r10: '#dc3142',
-  r5_5: '#ed6770',
-  r1: '#f49ba0',
-  r0_5: '#f8cbcd',
+  r10: '#d83f50',
+  r5_5: '#ef5965',
+  r1: '#f4878e',
+  r0_5: '#f8bec2',
   tie: '#f7f7f7',
-  d0_5: '#c5dcf6',
-  d1: '#8fbced',
-  d5_5: '#4b9be5',
-  d10: '#177fce',
+  d0_5: '#b6d5f5',
+  d1: '#78afe9',
+  d5_5: '#368fdf',
+  d10: '#237fc5',
   d20: '#0863a8',
   d30: '#064a80',
   d40: '#04345c'
@@ -9289,18 +9289,20 @@ document.addEventListener('DOMContentLoaded', function() {
       ? 'Use the original atlas colors'
       : 'Use DRA-inspired colors with the existing 15 margin tiers';
   }
-  const DRA_PALETTE_STORAGE_KEY = 'nc-atlas-partisan-palette-v2';
+  const DRA_PALETTE_STORAGE_KEY = 'nc-atlas-partisan-palette-v3';
   try {
     if (window.localStorage) {
-      // Retire the original preference once so existing browsers return to
-      // Atlas colors by default. Future explicit DRA choices still persist.
+      // Retire older preference versions once so DRA becomes the new default.
+      // Atlas remains available, and a new explicit Atlas choice persists.
       window.localStorage.removeItem('nc-atlas-partisan-palette');
-      if (window.localStorage.getItem(DRA_PALETTE_STORAGE_KEY) === 'dra') {
+      window.localStorage.removeItem('nc-atlas-partisan-palette-v2');
+      if (window.localStorage.getItem(DRA_PALETTE_STORAGE_KEY) !== 'atlas') {
         document.body.classList.add('dra-palette');
       }
     }
   } catch (_) {}
   syncDraPaletteToggle();
+  updateLegendColors();
   if (draPaletteBtn) {
     draPaletteBtn.onclick = function() {
       const enabled = document.body.classList.toggle('dra-palette');
@@ -10418,8 +10420,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-53';
-    const APP_BUILD_ID = '2026-07-18-20';
+    const DATA_CACHE_BUSTER = '2026-07-18-55';
+    const APP_BUILD_ID = '2026-07-18-22';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
