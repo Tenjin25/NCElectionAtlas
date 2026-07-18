@@ -9289,9 +9289,15 @@ document.addEventListener('DOMContentLoaded', function() {
       ? 'Use the original atlas colors'
       : 'Use DRA-inspired colors with the existing 15 margin tiers';
   }
+  const DRA_PALETTE_STORAGE_KEY = 'nc-atlas-partisan-palette-v2';
   try {
-    if (window.localStorage && window.localStorage.getItem('nc-atlas-partisan-palette') === 'dra') {
-      document.body.classList.add('dra-palette');
+    if (window.localStorage) {
+      // Retire the original preference once so existing browsers return to
+      // Atlas colors by default. Future explicit DRA choices still persist.
+      window.localStorage.removeItem('nc-atlas-partisan-palette');
+      if (window.localStorage.getItem(DRA_PALETTE_STORAGE_KEY) === 'dra') {
+        document.body.classList.add('dra-palette');
+      }
     }
   } catch (_) {}
   syncDraPaletteToggle();
@@ -9300,7 +9306,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const enabled = document.body.classList.toggle('dra-palette');
       try {
         if (window.localStorage) {
-          window.localStorage.setItem('nc-atlas-partisan-palette', enabled ? 'dra' : 'atlas');
+          window.localStorage.setItem(DRA_PALETTE_STORAGE_KEY, enabled ? 'dra' : 'atlas');
         }
       } catch (_) {}
       syncDraPaletteToggle();
@@ -10412,8 +10418,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-52';
-    const APP_BUILD_ID = '2026-07-18-19';
+    const DATA_CACHE_BUSTER = '2026-07-18-53';
+    const APP_BUILD_ID = '2026-07-18-20';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -13849,6 +13855,16 @@ document.addEventListener('DOMContentLoaded', function() {
           precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.97);
         }
       }
+      const draCountyPresentationActive =
+        activePartisanPaletteKey() === 'dra' &&
+        currentView === 'counties' &&
+        contestIsActive &&
+        !demographicsModeActive;
+      if (draCountyPresentationActive && !precinctsActuallyVisible) {
+        // Use the same color-to-basemap blend as districts so the shared DRA
+        // table has the same perceived weight in both views.
+        countyBaseOpacity = districtBaseOpacity;
+      }
 
       if (map.getLayer('county-fill')) {
         if (!contestIsActive) {
@@ -13860,6 +13876,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           map.setPaintProperty('county-fill', 'fill-opacity', countyOpacity);
           updateCountyLabelHaloForFillOpacity(countyBaseOpacity);
+        } catch (_) {}
+      }
+      if (map.getLayer('county-stroke-casing')) {
+        try {
+          map.setPaintProperty('county-stroke-casing', 'line-opacity', draCountyPresentationActive
+            ? ['interpolate', ['linear'], ['zoom'], 4, 0.30, 6, 0.38, 8, 0.50, 10, 0.62, 12, 0.76]
+            : 0);
         } catch (_) {}
       }
       if (map.getLayer('district-fill')) {
@@ -29409,6 +29432,19 @@ document.addEventListener('DOMContentLoaded', function() {
           // This lets precinct/block/district coloring read cleanly while still
           // showing county outlines.
           paint: { 'fill-color': '#d9e3ef', 'fill-opacity': 0.0 }
+        });
+        addLayerWithOptionalSourceLayer({
+          id: 'county-stroke-casing',
+          type: 'line',
+          source: 'counties',
+          beforeId: baseSymbolLayerId,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': 'rgba(248, 250, 252, 0.94)',
+            'line-opacity': 0,
+            'line-width': ['interpolate', ['linear'], ['zoom'], 4, 1.5, 6, 1.8, 8, 2.2, 10, 2.7, 12, 3.2],
+            'line-blur': ['interpolate', ['linear'], ['zoom'], 4, 0.48, 7, 0.30, 10, 0.10, 12, 0]
+          }
         });
         addLayerWithOptionalSourceLayer({
           id: 'county-stroke',

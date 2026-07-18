@@ -98,10 +98,15 @@ test('compact county slices stay small and contain one row per county', async ({
 });
 
 test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('nc-atlas-partisan-palette', 'dra');
+  });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-19');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-20');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette'))).toBeNull();
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBeNull();
   await page.locator('.contest-tools-more > summary').click();
 
   const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
@@ -111,6 +116,7 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBe('dra');
   const draColor = await safeSegment.evaluate((el) => el.style.background);
   expect(draColor).toBe('rgb(220, 49, 66)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
@@ -215,6 +221,9 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain("if (mode === 'shift' || mode === 'flips') {");
   expect(source).toContain('populate flip details for hover in the background');
   expect(source).toContain('|m:${mode}|palette:${palette}|lines:');
+  expect(source).toContain("activePartisanPaletteKey() === 'dra'");
+  expect(source).toContain('countyBaseOpacity = districtBaseOpacity;');
+  expect(source).toContain("id: 'county-stroke-casing'");
 });
 
 test('2020 president allocates OS early-vote centers into geographic precincts', async () => {
