@@ -12,8 +12,8 @@ The live app is now presented as **North Carolina Election Atlas**, which is the
 
 ## Screenshots
 
-**Counties view — 2024 Presidential**
-![Counties view](Screenshots/AtlasLatest2024PresCounty.png)
+**Counties view — 2024 Presidential New Color Pallate**
+![Counties view](Screenshots/2024PresNewColors.png)
 
 **Congressional Districts — 2020 Presidential**
 ![Congressional Districts view](Screenshots/Latest2020PresCongress.png)
