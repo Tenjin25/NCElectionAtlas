@@ -240,6 +240,10 @@
   body.colorblind-mode .legend-scale-caption .dem {
     color: #1d4ed8 !important;
   }
+  /* Match the softened appearance of DRA fills over a light basemap. */
+  body.dra-palette:not(.colorblind-mode) .legend-content .legend-color {
+    opacity: 0.55;
+  }
 
   @media (min-width: 769px) {
     .main-controls {
@@ -13802,6 +13806,21 @@ document.addEventListener('DOMContentLoaded', function() {
       let senateBaseOpacity = preset.senate;
       let precinctFillBaseOpacity = preset.precinctFill;
       let precinctDotBaseOpacity = preset.precinctDot;
+
+      // DRA's published map appearance comes from its raw partisan colors
+      // blended over a light basemap. Keep this alternate palette near that
+      // softer rendered treatment instead of letting Data Focus make the
+      // saturated blue/red anchors appear almost opaque.
+      const draPartisanMode =
+        isDraPaletteActive() &&
+        (currentVizMode === 'margins' || currentVizMode === 'winners' || currentVizMode === 'flips');
+      if (contestIsActive && draPartisanMode) {
+        if (!precinctsActuallyVisible) countyBaseOpacity = Math.min(countyBaseOpacity, 0.55);
+        districtBaseOpacity = Math.min(districtBaseOpacity, 0.55);
+        houseBaseOpacity = Math.min(houseBaseOpacity, 0.55);
+        senateBaseOpacity = Math.min(senateBaseOpacity, 0.55);
+        precinctFillBaseOpacity = Math.min(precinctFillBaseOpacity, 0.55);
+      }
 
       if (!contestIsActive) {
         countyBaseOpacity = precinctsActuallyVisible ? 0.04 : 0.08;
@@ -33685,11 +33704,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function draColorForMargin(marginPct, winner) {
       // DRA's 40/45/50/55/60% Democratic-share anchors equal margins of
-      // R+20/R+10/tied/D+10/D+20. Keep the atlas's original dark top
-      // tiers, then bring in DRA at Safe and sample its competitive ramps.
-      if (marginPct >= 40) return winner === 'R' ? '#67000d' : '#08306b';
-      if (marginPct >= 30) return winner === 'R' ? '#a50f15' : '#08519c';
-      if (marginPct >= 20) return winner === 'R' ? '#cb181d' : '#3182bd';
+      // R+20/R+10/tied/D+10/D+20. Extend its packed anchors for the two
+      // additional top tiers and sample its competitive ramps below Safe:
+      // 40, 30, 20, 10, 5.5, 1, 0.5, tied, then the mirrored D tiers.
+      if (marginPct >= 40) return winner === 'R' ? '#5a000e' : '#000055';
+      if (marginPct >= 30) return winner === 'R' ? '#780013' : '#000070';
+      if (marginPct >= 20) return winner === 'R' ? '#960018' : '#00008b';
       if (marginPct >= 10) return winner === 'R' ? '#ff2020' : '#2020ff';
       if (marginPct >= 5.5) return winner === 'R' ? '#ff9999' : '#9999ff';
       if (marginPct >= 1.0) return winner === 'R' ? '#ffd1d1' : '#d1d1ff';

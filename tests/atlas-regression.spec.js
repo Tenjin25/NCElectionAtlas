@@ -112,6 +112,27 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   const draColor = await safeSegment.evaluate((el) => el.style.background);
   expect(draColor).toBe('rgb(255, 32, 32)');
+  const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
+    (segments) => segments.map((el) => el.style.background)
+  );
+  expect(draScale).toEqual([
+    'rgb(90, 0, 14)',
+    'rgb(120, 0, 19)',
+    'rgb(150, 0, 24)',
+    'rgb(255, 32, 32)',
+    'rgb(255, 153, 153)',
+    'rgb(255, 209, 209)',
+    'rgb(255, 216, 216)',
+    'rgb(247, 247, 247)',
+    'rgb(216, 216, 255)',
+    'rgb(209, 209, 255)',
+    'rgb(153, 153, 255)',
+    'rgb(32, 32, 255)',
+    'rgb(0, 0, 139)',
+    'rgb(0, 0, 112)',
+    'rgb(0, 0, 85)'
+  ]);
+  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '0.55');
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'true');
