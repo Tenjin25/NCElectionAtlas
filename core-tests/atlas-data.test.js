@@ -32,6 +32,32 @@ test('builds absolute and cache-busted resource URLs', () => {
   assert.equal(AtlasData.withCacheBuster('data/file.json?v=old', '2'), 'data/file.json?v=old');
 });
 
+test('retries transient fetch failures without retrying permanent responses', async () => {
+  const transientCalls = [];
+  const transientResponse = await AtlasData.fetchWithRetry('/data/file.json', { cache: 'force-cache' }, {
+    retryDelayMs: 0,
+    fetcher: async (_input, init) => {
+      transientCalls.push(init.cache);
+      return transientCalls.length < 3
+        ? { ok: false, status: 503 }
+        : { ok: true, status: 200 };
+    }
+  });
+  assert.equal(transientResponse.status, 200);
+  assert.deepEqual(transientCalls, ['force-cache', 'reload', 'reload']);
+
+  let permanentCalls = 0;
+  const permanentResponse = await AtlasData.fetchWithRetry('/data/missing.json', {}, {
+    retryDelayMs: 0,
+    fetcher: async () => {
+      permanentCalls += 1;
+      return { ok: false, status: 404 };
+    }
+  });
+  assert.equal(permanentResponse.status, 404);
+  assert.equal(permanentCalls, 1);
+});
+
 test('deduplicates in-flight loads and retains resolved values', async () => {
   const resolvedCache = new Map();
   const inflightCache = new Map();

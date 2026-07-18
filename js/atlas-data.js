@@ -37,6 +37,37 @@
     return `${normalized}${separator}v=${encodeURIComponent(token)}`;
   }
 
+  async function fetchWithRetry(input, init = {}, options = {}) {
+    const fetcher = options.fetcher || globalThis.fetch;
+    if (typeof fetcher !== 'function') throw new TypeError('fetchWithRetry requires fetch');
+
+    const configuredAttempts = Number(options.attempts);
+    const configuredDelay = Number(options.retryDelayMs);
+    const attempts = Math.max(1, Math.floor(Number.isFinite(configuredAttempts) ? configuredAttempts : 3));
+    const retryDelayMs = Math.max(0, Number.isFinite(configuredDelay) ? configuredDelay : 250);
+    const retryStatuses = new Set(options.retryStatuses || [408, 429, 500, 502, 503, 504]);
+
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        const requestInit = attempt === 0
+          ? init
+          : { ...init, cache: options.retryCache || 'reload' };
+        const response = await fetcher(input, requestInit);
+        if (!retryStatuses.has(Number(response?.status)) || attempt === attempts - 1) {
+          return response;
+        }
+      } catch (error) {
+        if (attempt === attempts - 1) throw error;
+      }
+
+      if (retryDelayMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs * (attempt + 1)));
+      }
+    }
+
+    throw new Error('fetchWithRetry exhausted without a response');
+  }
+
   async function loadCached(key, options = {}) {
     const resolvedCache = options.resolvedCache;
     const inflightCache = options.inflightCache;
@@ -81,6 +112,7 @@
     withBase,
     toAbsoluteUrl,
     withCacheBuster,
+    fetchWithRetry,
     loadCached,
     mapContestPayloadRows
   };

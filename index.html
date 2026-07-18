@@ -10371,7 +10371,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="./js/atlas-classification.js"></script>
     <script src="./js/atlas-core.js"></script>
-    <script src="./js/atlas-data.js"></script>
+    <script src="./js/atlas-data.js?v=2026-07-18-19"></script>
     <script src="./js/atlas-display.js"></script>
     <script src="./js/atlas-election.js"></script>
     <script src="./js/atlas-manifest.js"></script>
@@ -10412,8 +10412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-51';
-    const APP_BUILD_ID = '2026-07-18-18';
+    const DATA_CACHE_BUSTER = '2026-07-18-52';
+    const APP_BUILD_ID = '2026-07-18-19';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -15840,7 +15840,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resolvedCache: jsonResultByPath,
         inflightCache: jsonInflightByPath,
         load: () => atlasPerf(`json:${requestPath}`, async () => {
-          const response = await fetch(requestPath, { cache: 'force-cache' });
+          const response = await window.AtlasData.fetchWithRetry(requestPath, { cache: 'force-cache' });
           if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
           return response.json();
         })
@@ -15854,7 +15854,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	        inflightCache: csvInflightByPath,
 	        shouldCache: text => text.length <= 5 * 1024 * 1024,
 	        load: () => atlasPerf(`csv:${requestPath}`, async () => {
-	          const response = await fetch(requestPath, { cache: 'force-cache' });
+	          const response = await window.AtlasData.fetchWithRetry(requestPath, { cache: 'force-cache' });
 	          if (!response.ok) throw new Error(`${requestPath} fetch failed: ${response.status}`);
 	          return response.text();
 	        })
@@ -19733,9 +19733,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	          attachOfficialCountyTotalsToRows(rows, payload);
 	          contestSliceCache.set(key, rows);
 	          return rows;
-	        } catch (_) {
+	        } catch (error) {
+	          console.warn('Contest slice request failed; returning an uncached fallback for', key, error?.message || error);
 	          const fallback = (electionData || []).filter(row => row.year == year);
-	          contestSliceCache.set(key, fallback);
 	          return fallback;
 	        }
         });
