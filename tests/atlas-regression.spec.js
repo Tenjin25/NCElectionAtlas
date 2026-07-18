@@ -97,6 +97,27 @@ test('compact county slices stay small and contain one row per county', async ({
   expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
 });
 
+test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  const toggle = page.locator('#dra-palette-toggle');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await page.locator('.contest-tools-more > summary').click();
+
+  const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
+  const originalColor = await safeSegment.evaluate((el) => el.style.background);
+  expect(originalColor).toBe('rgb(239, 59, 44)');
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toHaveClass(/dra-palette/);
+  const draColor = await safeSegment.evaluate((el) => el.style.background);
+  expect(draColor).toBe('rgb(255, 32, 32)');
+
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('body')).toHaveClass(/dra-palette/);
+});
+
 test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
   const response = await request.get('/data/district_contests/congressional_president_2016.json');
   expect(response.ok()).toBeTruthy();
