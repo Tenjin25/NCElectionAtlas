@@ -10466,8 +10466,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-58';
-    const APP_BUILD_ID = '2026-07-18-25';
+    const DATA_CACHE_BUSTER = '2026-07-18-59';
+    const APP_BUILD_ID = '2026-07-18-26';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -13903,14 +13903,21 @@ document.addEventListener('DOMContentLoaded', function() {
           precinctDotBaseOpacity = Math.max(precinctDotBaseOpacity, 0.97);
         }
       }
-      const draCountyPresentationActive =
+      const draPartisanPresentationActive =
         activePartisanPaletteKey() === 'dra' &&
-        currentView === 'counties' &&
         contestIsActive &&
         !demographicsModeActive;
+      const draCountyPresentationActive =
+        draPartisanPresentationActive &&
+        currentView === 'counties';
+      if (draPartisanPresentationActive) {
+        // Keep the shared DRA table at the same perceived weight across
+        // congressional and state legislative district views.
+        houseBaseOpacity = districtBaseOpacity;
+        senateBaseOpacity = districtBaseOpacity;
+      }
       if (draCountyPresentationActive && !precinctsActuallyVisible) {
-        // Use the same color-to-basemap blend as districts so the shared DRA
-        // table has the same perceived weight in both views.
+        // Counties use that same blend unless precincts need to remain primary.
         countyBaseOpacity = districtBaseOpacity;
       }
 

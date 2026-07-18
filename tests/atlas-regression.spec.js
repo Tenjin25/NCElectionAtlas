@@ -111,7 +111,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     observer.observe(document, { childList: true, subtree: true });
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-25');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-26');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
@@ -253,6 +253,8 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain('|m:${mode}|palette:${palette}|lines:');
   expect(source).toContain("activePartisanPaletteKey() === 'dra'");
   expect(source).toContain('countyBaseOpacity = districtBaseOpacity;');
+  expect(source).toContain('houseBaseOpacity = districtBaseOpacity;');
+  expect(source).toContain('senateBaseOpacity = districtBaseOpacity;');
   expect(source).toContain("id: 'county-stroke-casing'");
   expect(source).toContain("data-initial-partisan-palette', initialPalette");
   expect(source).toContain('background: var(--initial-margin-1)');
