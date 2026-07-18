@@ -111,26 +111,26 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(216, 95, 103)');
+  expect(draColor).toBe('rgb(217, 101, 103)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draScale).toEqual([
-    'rgb(112, 17, 38)',
-    'rgb(142, 36, 55)',
-    'rgb(173, 60, 77)',
-    'rgb(216, 95, 103)',
-    'rgb(233, 138, 143)',
-    'rgb(243, 183, 186)',
-    'rgb(248, 214, 216)',
+    'rgb(116, 28, 32)',
+    'rgb(148, 48, 52)',
+    'rgb(183, 71, 73)',
+    'rgb(217, 101, 103)',
+    'rgb(233, 143, 144)',
+    'rgb(243, 186, 187)',
+    'rgb(248, 215, 216)',
     'rgb(245, 243, 245)',
-    'rgb(218, 218, 247)',
-    'rgb(187, 187, 240)',
-    'rgb(146, 146, 229)',
-    'rgb(105, 105, 216)',
-    'rgb(77, 77, 180)',
-    'rgb(56, 56, 148)',
-    'rgb(39, 39, 116)'
+    'rgb(217, 227, 247)',
+    'rgb(186, 203, 240)',
+    'rgb(145, 171, 229)',
+    'rgb(99, 134, 216)',
+    'rgb(69, 104, 180)',
+    'rgb(49, 81, 148)',
+    'rgb(34, 63, 116)'
   ]);
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
 
@@ -139,13 +139,13 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(77, 77, 180)',
-    'rgb(105, 105, 216)',
-    'rgb(146, 146, 229)',
+    'rgb(69, 104, 180)',
+    'rgb(99, 134, 216)',
+    'rgb(145, 171, 229)',
     'rgb(245, 243, 245)',
-    'rgb(233, 138, 143)',
-    'rgb(216, 95, 103)',
-    'rgb(173, 60, 77)'
+    'rgb(233, 143, 144)',
+    'rgb(217, 101, 103)',
+    'rgb(183, 71, 73)'
   ]);
 
   await page.evaluate(() => window.updateLegendColors('winners'));
@@ -153,8 +153,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draWinnerScale).toEqual([
-    'rgb(105, 105, 216)',
-    'rgb(216, 95, 103)',
+    'rgb(99, 134, 216)',
+    'rgb(217, 101, 103)',
     'rgb(245, 243, 245)'
   ]);
 
@@ -163,8 +163,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draFlipScale).toEqual([
-    'rgb(105, 105, 216)',
-    'rgb(216, 95, 103)',
+    'rgb(99, 134, 216)',
+    'rgb(217, 101, 103)',
     'rgb(245, 243, 245)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
