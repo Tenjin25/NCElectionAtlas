@@ -9229,21 +9229,21 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 <!-- Move JS to script block -->
 <script>
 const DRA_PARTISAN_COLORS = Object.freeze({
-  r40: '#741c20',
-  r30: '#943034',
-  r20: '#b74749',
-  r10: '#d96567',
-  r5_5: '#e98f90',
-  r1: '#f3babb',
-  r0_5: '#f8d7d8',
+  r40: '#7f0000',
+  r30: '#a41414',
+  r20: '#c92b2b',
+  r10: '#e34a4a',
+  r5_5: '#ef7777',
+  r1: '#f6abab',
+  r0_5: '#fbd0d0',
   tie: '#f5f3f5',
-  d0_5: '#d9e3f7',
-  d1: '#bacbf0',
-  d5_5: '#91abe5',
-  d10: '#6386d8',
-  d20: '#4568b4',
-  d30: '#315194',
-  d40: '#223f74'
+  d0_5: '#d2e0fb',
+  d1: '#aec7f7',
+  d5_5: '#7fa6f0',
+  d10: '#4f82e3',
+  d20: '#2861c4',
+  d30: '#16479e',
+  d40: '#0b3278'
 });
 
 // Accessibility: Color Blind Mode Toggle
@@ -10412,8 +10412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-35';
-    const APP_BUILD_ID = '2026-07-18-2';
+    const DATA_CACHE_BUSTER = '2026-07-18-36';
+    const APP_BUILD_ID = '2026-07-18-3';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
