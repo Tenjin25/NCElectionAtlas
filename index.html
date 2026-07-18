@@ -9247,11 +9247,16 @@ document.addEventListener('DOMContentLoaded', function() {
       buildEl.title = `HTML/data cache token ${APP_BUILD_ID}`;
     }
   } catch (_) {}
-  function updateLegendColors() {
+  function updateLegendColors(modeOverride = '') {
     // Keep legend swatches aligned with the same color functions used by map fills.
     if (typeof renderLegendForVizMode === 'function') {
       const activeModeBtn = document.querySelector('.viz-mode-btn.active[data-mode]');
-      const mode = (activeModeBtn && activeModeBtn.dataset && activeModeBtn.dataset.mode) ? activeModeBtn.dataset.mode : 'margins';
+      const requestedMode = String(modeOverride || '').trim();
+      const mode = requestedMode || (
+        (activeModeBtn && activeModeBtn.dataset && activeModeBtn.dataset.mode)
+          ? activeModeBtn.dataset.mode
+          : 'margins'
+      );
       renderLegendForVizMode(mode);
     }
   }
@@ -13813,7 +13818,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // saturated blue/red anchors appear almost opaque.
       const draPartisanMode =
         isDraPaletteActive() &&
-        (currentVizMode === 'margins' || currentVizMode === 'winners' || currentVizMode === 'flips');
+        (
+          currentVizMode === 'margins' ||
+          currentVizMode === 'winners' ||
+          currentVizMode === 'shift' ||
+          currentVizMode === 'flips'
+        );
       if (contestIsActive && draPartisanMode) {
         if (!precinctsActuallyVisible) countyBaseOpacity = Math.min(countyBaseOpacity, 0.55);
         districtBaseOpacity = Math.min(districtBaseOpacity, 0.55);
@@ -33702,6 +33712,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return document.body.classList.contains('dra-palette');
     }
 
+    function activePartisanPaletteKey() {
+      if (isColorblindModeActive()) return 'colorblind';
+      if (isDraPaletteActive()) return 'dra';
+      return 'atlas';
+    }
+
     function draColorForMargin(marginPct, winner) {
       // DRA's 40/45/50/55/60% Democratic-share anchors equal margins of
       // R+20/R+10/tied/D+10/D+20. Extend its packed anchors for the two
@@ -33761,6 +33777,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const cb = isColorblindModeActive();
       const dir = s >= 0 ? 'R' : 'D';
       if (a < 0.5) return '#f8fafc';
+      if (isDraPaletteActive() && !cb) {
+        if (a >= 15) return dir === 'R' ? '#960018' : '#00008b';
+        if (a >= 10) return dir === 'R' ? '#ff2020' : '#2020ff';
+        if (a >= 5) return dir === 'R' ? '#ff9999' : '#9999ff';
+        return dir === 'R' ? '#ffd1d1' : '#d1d1ff';
+      }
       // Bins tuned for readability; "strong" kicks in at 10.
       const bin = a >= 15 ? 4 : a >= 10 ? 3 : a >= 5 ? 2 : 1;
       if (cb) {
@@ -35221,7 +35243,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const prevYearKey = Number(vizPrevCache?.prevYear || 0) || 0;
-      const countyExprKey = `${aggCacheKey}|countyExpr|mode:${mode}|prev:${prevYearKey}`;
+      // Color expressions are palette-specific. Without this token, turning
+      // DRA off can retrieve the cached DRA expression instead of rebuilding
+      // the original atlas colors.
+      const paletteKey = activePartisanPaletteKey();
+      const countyExprKey = `${aggCacheKey}|countyExpr|mode:${mode}|prev:${prevYearKey}|palette:${paletteKey}`;
       const cachedCountyExpr = countyColorExprCache.get(countyExprKey) || null;
       let countyFillColorByNorm = cachedCountyExpr?.countyFillColorByNorm || new Map();
       const expr = cachedCountyExpr?.expr || (() => {

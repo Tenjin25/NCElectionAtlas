@@ -134,9 +134,34 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   ]);
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '0.55');
 
+  await page.evaluate(() => window.updateLegendColors('shift'));
+  const draShiftScale = await page.locator('.legend-spectrum.shift .legend-segment').evaluateAll(
+    (segments) => segments.map((el) => el.style.background)
+  );
+  expect(draShiftScale).toEqual([
+    'rgb(0, 0, 139)',
+    'rgb(32, 32, 255)',
+    'rgb(153, 153, 255)',
+    'rgb(248, 250, 252)',
+    'rgb(255, 153, 153)',
+    'rgb(255, 32, 32)',
+    'rgb(150, 0, 24)'
+  ]);
+  await page.evaluate(() => window.updateLegendColors('margins'));
+
   await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
+
+  await page.locator('.contest-tools-more > summary').click();
+  await page.locator('#dra-palette-toggle').click();
+  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('body')).not.toHaveClass(/dra-palette/);
+  const restoredSafeColor = await page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)').evaluate(
+    (el) => el.style.background
+  );
+  expect(restoredSafeColor).toBe('rgb(239, 59, 44)');
+  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
 });
 
 test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
