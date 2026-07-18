@@ -738,6 +738,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       }, { dem: 0, rep: 0, total: 0 })));
       const senateDistrictUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateDistrictNode?.general?.results)));
       const senateStateHouseUiMargin = uiSignedMargin(withImpliedTotal(aggregate(senateStateHouseNode?.general?.results)));
+      const senateStateHouseResults = senateStateHouseNode?.general?.results || {};
+      const senateStateHouseSeats = Object.values(senateStateHouseResults).reduce((seats, row) => {
+        const signed = margin(row);
+        if (signed > 0) seats.rep += 1;
+        else if (signed < 0) seats.dem += 1;
+        else seats.tie += 1;
+        return seats;
+      }, { dem: 0, rep: 0, tie: 0 });
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
@@ -799,7 +807,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateDistricts: Object.keys(senateDistrictNode?.general?.results || {}).length,
         senateDistrictCandidateStrengthNetDem: Number(senateDistrictNode?.meta?.model_candidate_strength_net_dem_pts),
         senateDistrictStatewideAlignment: Number(senateDistrictNode?.meta?.model_statewide_alignment_pts),
-        senateStateHouseStatewideAlignment: Number(senateStateHouseNode?.meta?.model_statewide_alignment_pts),
+        senateStateHouseSource: String(senateStateHouseNode?.meta?.source || ''),
+        senateStateHouseCoverage: Number(senateStateHouseNode?.meta?.match_coverage_pct),
+        senateStateHouseDistricts: Object.keys(senateStateHouseResults).length,
+        senateStateHouseSeats,
         senateStatewideUiMargin,
         senatePrecinctUiMargin,
         senateDistrictUiMargin,
@@ -879,7 +890,10 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateDistricts).toBeGreaterThan(0);
     expect(modeledSnapshot.senateDistrictCandidateStrengthNetDem).toBeCloseTo(1.35, 2);
     expect(modeledSnapshot.senateDistrictStatewideAlignment).toBeCloseTo(1.09, 2);
-    expect(modeledSnapshot.senateStateHouseStatewideAlignment).toBeCloseTo(0.75, 2);
+    expect(modeledSnapshot.senateStateHouseSource).toBe('modeled_precinct_crosswalk');
+    expect(modeledSnapshot.senateStateHouseCoverage).toBeGreaterThan(99.99);
+    expect(modeledSnapshot.senateStateHouseDistricts).toBe(120);
+    expect(modeledSnapshot.senateStateHouseSeats).toEqual({ dem: 58, rep: 62, tie: 0 });
     // Turnout composition restores an R+1.5–1.9 topline without changing county margins.
     expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);

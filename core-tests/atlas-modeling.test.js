@@ -142,3 +142,53 @@ test('builds modeled district rows while retaining source metadata', () => {
   assert.equal(row.competitiveness.label, 'old');
   assert.equal(row.competitiveness.color, 'R:10.0');
 });
+
+test('reaggregates modeled precincts and allocates non-geographic votes by party', () => {
+  const contestType = 'us_senate_model';
+  const row = (county, dem, rep) => ({
+    county,
+    [`${contestType}_dem`]: dem,
+    [`${contestType}_rep`]: rep,
+    [`${contestType}_other`]: 0,
+    [`${contestType}_total`]: dem + rep
+  });
+  const crosswalk = new Map([
+    ['ALPHA - 01', [{ districtNum: '1', weight: 1 }]],
+    ['ALPHA - 02', [{ districtNum: '2', weight: 1 }]],
+    ['BETA - OLD 1', [{ districtNum: '3', weight: 1 }]],
+    ['BETA - OLD 2', [{ districtNum: '4', weight: 1 }]]
+  ]);
+
+  const aggregate = AtlasModeling.aggregatePrecinctRowsToDistricts([
+    row('ALPHA - 01', 80, 20),
+    row('ALPHA - 02', 20, 80),
+    row('ALPHA - ONESTOP', 10, 10),
+    row('BETA - NEW', 40, 60)
+  ], crosswalk, {
+    contestType,
+    demCandidate: 'D',
+    repCandidate: 'R',
+    referenceResults: {
+      3: { dem_votes: 30, rep_votes: 70 },
+      4: { dem_votes: 70, rep_votes: 30 }
+    }
+  });
+
+  assert.ok(aggregate);
+  assert.equal(aggregate.results['1'].dem_votes, 88);
+  assert.equal(aggregate.results['1'].rep_votes, 22);
+  assert.equal(aggregate.results['2'].dem_votes, 22);
+  assert.equal(aggregate.results['2'].rep_votes, 88);
+  assert.equal(aggregate.results['3'].dem_votes, 12);
+  assert.equal(aggregate.results['3'].rep_votes, 42);
+  assert.equal(aggregate.results['4'].dem_votes, 28);
+  assert.equal(aggregate.results['4'].rep_votes, 18);
+  assert.equal(aggregate.results['4'].winner, 'DEM');
+  assert.deepEqual(aggregate.diagnostics, {
+    matchedPrecinctRows: 2,
+    allocatedNongeographicRows: 2,
+    referenceFallbackCounties: ['BETA'],
+    totalPrecinctRows: 4,
+    matchCoveragePct: 100
+  });
+});

@@ -10354,7 +10354,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-07-17-35';
-    const APP_BUILD_ID = '2026-07-17-24';
+    const APP_BUILD_ID = '2026-07-18-1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -19140,7 +19140,61 @@ document.addEventListener('DOMContentLoaded', function() {
         );
       }
 
+      async function buildModeledStateHouseSliceFromPrecincts(modeledDef, linesYear) {
+        const modeledRows = await loadContestSlice(modeledDef.contestType, modeledDef.year);
+        const crosswalk = await loadDistrictCarryCrosswalkForLines('state_house', linesYear);
+        if (!Array.isArray(modeledRows) || !modeledRows.length || !crosswalk?.byPrecinct?.size) return null;
+        const climateNode = await loadDistrictSlice(
+          'state_house',
+          modeledDef.climateContestType,
+          modeledDef.climateYear,
+          linesYear
+        );
+        const aggregate = window.AtlasModeling.aggregatePrecinctRowsToDistricts(
+          modeledRows,
+          crosswalk.byPrecinct,
+          {
+            contestType: modeledDef.contestType,
+            demCandidate: modeledDef.demCandidate,
+            repCandidate: modeledDef.repCandidate,
+            referenceResults: climateNode?.general?.results || {},
+            normalizePrecinctKey: normalizeCarryoverPrecinctKey,
+            normalizeDistrictNumber: normalizeCarryoverDistrictNumber
+          }
+        );
+        if (!aggregate) return null;
+        const diagnostics = aggregate.diagnostics || {};
+        return {
+          year: Number(modeledDef.year),
+          scope: 'state_house',
+          contest_type: String(modeledDef.contestType || '').trim(),
+          meta: {
+            source: 'modeled_precinct_crosswalk',
+            office: modeledDef.displayName,
+            modeled: true,
+            model_base: `${formatContestName(modeledDef.baseContestType, modeledDef.baseYear)} ${modeledDef.baseYear}`,
+            model_climate: `${formatContestName(modeledDef.climateContestType, modeledDef.climateYear)} ${modeledDef.climateYear}`,
+            model_reaggregation: 'modeled precinct results allocated through the state House crosswalk',
+            model_lines_year: Number(linesYear),
+            matched_precinct_rows: Number(diagnostics.matchedPrecinctRows || 0),
+            allocated_nongeographic_rows: Number(diagnostics.allocatedNongeographicRows || 0),
+            reference_fallback_counties: diagnostics.referenceFallbackCounties || [],
+            total_precinct_rows: Number(diagnostics.totalPrecinctRows || 0),
+            match_coverage_pct: Number(diagnostics.matchCoveragePct || 0)
+          },
+          general: { results: aggregate.results }
+        };
+      }
+
       async function buildModeledDistrictSliceNode(scope, modeledDef, linesYear) {
+        if (
+          String(scope || '').trim().toLowerCase() === 'state_house' &&
+          String(modeledDef?.contestType || '').trim() === 'us_senate_model'
+        ) {
+          const precinctReaggregation = await buildModeledStateHouseSliceFromPrecincts(modeledDef, linesYear);
+          if (precinctReaggregation) return precinctReaggregation;
+        }
+
         const baseNode = await loadDistrictSlice(scope, modeledDef.baseContestType, modeledDef.baseYear, linesYear);
         const climateNode = await loadDistrictSlice(scope, modeledDef.climateContestType, modeledDef.climateYear, linesYear);
         const baseResults = baseNode?.general?.results || null;
@@ -19847,11 +19901,12 @@ document.addEventListener('DOMContentLoaded', function() {
             dynamicTyping: true,
             skipEmptyLines: true
           });
-          if (result.errors.length) {
+          if (Array.isArray(result?.errors) && result.errors.length) {
             setStatus('CSV Parse Error: ' + result.errors.map(e => e.message).join('; '));
             console.error(result.errors);
           }
-          return result.data;
+          if (Array.isArray(result?.data) && result.data.length) return result.data;
+          return parseCSVFallback(csvText);
         }
         return parseCSVFallback(csvText);
       } catch (err) {
@@ -20867,8 +20922,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getCarryoverCrosswalkPath(scope, year = null) {
+      return getCarryoverCrosswalkPathForLines(scope, currentDistrictLinesYear);
+    }
+
+    function getCarryoverCrosswalkPathForLines(scope, linesYearOverride = currentDistrictLinesYear) {
       const crosswalks = CONFIG.paths?.crosswalks || {};
-      const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
+      const linesYear = normalizeDistrictLinesYear(linesYearOverride);
       if (scope === 'congressional') {
         if (linesYear === 2026) {
           return (crosswalks.congressional_2026 || crosswalks.congressional_2024 || crosswalks.congressional_2022 || crosswalks.congressional) || '';
@@ -20887,7 +20946,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function loadDistrictCarryCrosswalk(scope, year = null) {
-      const path = getCarryoverCrosswalkPath(scope, year);
+      return loadDistrictCarryCrosswalkForLines(scope, currentDistrictLinesYear);
+    }
+
+    async function loadDistrictCarryCrosswalkForLines(scope, linesYearOverride = currentDistrictLinesYear) {
+      const path = getCarryoverCrosswalkPathForLines(scope, linesYearOverride);
       if (!path) return null;
       const cacheKey = `${scope}:${path}`;
       if (districtCarryCrosswalkCache.has(cacheKey)) return districtCarryCrosswalkCache.get(cacheKey);

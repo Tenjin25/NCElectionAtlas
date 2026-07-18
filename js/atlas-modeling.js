@@ -207,6 +207,166 @@
     };
   }
 
+  function aggregatePrecinctRowsToDistricts(modeledRows, crosswalkByPrecinct, options = {}) {
+    if (!Array.isArray(modeledRows) || !modeledRows.length || !(crosswalkByPrecinct instanceof Map) || !crosswalkByPrecinct.size) {
+      return null;
+    }
+
+    const contestType = String(options.contestType || '').trim();
+    if (!contestType) return null;
+    const normalizePrecinctKey = typeof options.normalizePrecinctKey === 'function'
+      ? options.normalizePrecinctKey
+      : value => String(value || '').replace(/\s+/g, ' ').trim().toUpperCase();
+    const normalizeDistrictNumber = typeof options.normalizeDistrictNumber === 'function'
+      ? options.normalizeDistrictNumber
+      : value => String(value || '').replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+    const referenceResults = options.referenceResults || {};
+    const demCandidate = String(options.demCandidate || '');
+    const repCandidate = String(options.repCandidate || '');
+    const results = {};
+    const countyDistrictVotes = new Map();
+    const unmatchedRows = [];
+    const referenceFallbackCounties = new Set();
+    let matchedRows = 0;
+    let matchedVotes = 0;
+    let allocatedUnmatchedVotes = 0;
+    let sourceVotes = 0;
+
+    const addDistrictVotes = (districtId, dem, rep, other) => {
+      const district = results[districtId] || {
+        dem_votes: 0,
+        rep_votes: 0,
+        other_votes: 0,
+        total_votes: 0,
+        dem_candidate: demCandidate,
+        rep_candidate: repCandidate
+      };
+      district.dem_votes += dem;
+      district.rep_votes += rep;
+      district.other_votes += other;
+      district.total_votes += dem + rep + other;
+      results[districtId] = district;
+    };
+
+    modeledRows.forEach(row => {
+      const precinctKey = normalizePrecinctKey(
+        row?.precinct || row?.precinct_key || row?.county || row?.name || ''
+      );
+      const dem = Number(row?.[`${contestType}_dem`] || 0);
+      const rep = Number(row?.[`${contestType}_rep`] || 0);
+      const other = Number(row?.[`${contestType}_other`] || 0);
+      const explicitTotal = Number(row?.[`${contestType}_total`] || 0);
+      const total = explicitTotal > 0 ? explicitTotal : (dem + rep + other);
+      sourceVotes += total;
+
+      const entries = crosswalkByPrecinct.get(precinctKey) || [];
+      const weightTotal = entries.reduce((sum, entry) => sum + Number(entry?.weight || 0), 0);
+      if (!entries.length || !(weightTotal > 0)) {
+        unmatchedRows.push({ precinctKey, dem, rep, other });
+        return;
+      }
+
+      matchedRows += 1;
+      matchedVotes += total;
+      const county = precinctKey.split(' - ')[0].trim();
+      if (!countyDistrictVotes.has(county)) countyDistrictVotes.set(county, {});
+      const countyDistricts = countyDistrictVotes.get(county);
+      entries.forEach(entry => {
+        const districtId = normalizeDistrictNumber(entry?.districtNum);
+        const weight = Number(entry?.weight || 0) / weightTotal;
+        if (!districtId || !(weight > 0)) return;
+        const allocatedDem = dem * weight;
+        const allocatedRep = rep * weight;
+        const allocatedOther = other * weight;
+        addDistrictVotes(districtId, allocatedDem, allocatedRep, allocatedOther);
+        const countyDistrict = countyDistricts[districtId] || { dem: 0, rep: 0, other: 0 };
+        countyDistrict.dem += allocatedDem;
+        countyDistrict.rep += allocatedRep;
+        countyDistrict.other += allocatedOther;
+        countyDistricts[districtId] = countyDistrict;
+      });
+    });
+
+    // Non-geographic rows follow the matched party distribution within their county.
+    // If a county's precinct names changed wholesale, use the reference district slice
+    // to retain its district footprint while preserving the new modeled county totals.
+    unmatchedRows.forEach(row => {
+      const county = row.precinctKey.split(' - ')[0].trim();
+      let countyDistricts = countyDistrictVotes.get(county) || {};
+      if (!Object.keys(countyDistricts).length) {
+        const candidateDistrictIds = new Set();
+        crosswalkByPrecinct.forEach((entries, precinctKey) => {
+          if (!String(precinctKey || '').startsWith(`${county} - `)) return;
+          (entries || []).forEach(entry => {
+            const districtId = normalizeDistrictNumber(entry?.districtNum);
+            if (districtId) candidateDistrictIds.add(districtId);
+          });
+        });
+        countyDistricts = {};
+        candidateDistrictIds.forEach(districtId => {
+          const reference = referenceResults[districtId] || {};
+          countyDistricts[districtId] = {
+            dem: Number(reference.dem_votes || 0),
+            rep: Number(reference.rep_votes || 0),
+            other: Number(reference.other_votes || 0)
+          };
+        });
+        if (Object.keys(countyDistricts).length) referenceFallbackCounties.add(county);
+      }
+
+      const districtIds = Object.keys(countyDistricts);
+      if (!districtIds.length) return;
+      const componentTotal = component => districtIds.reduce(
+        (sum, districtId) => sum + Number(countyDistricts[districtId]?.[component] || 0),
+        0
+      );
+      const fallbackTotal = districtIds.reduce((sum, districtId) => {
+        const node = countyDistricts[districtId] || {};
+        return sum + Number(node.dem || 0) + Number(node.rep || 0) + Number(node.other || 0);
+      }, 0);
+      const allocate = (votes, component, districtId) => {
+        const componentDenom = componentTotal(component);
+        const node = countyDistricts[districtId] || {};
+        const numerator = componentDenom > 0
+          ? Number(node[component] || 0)
+          : (Number(node.dem || 0) + Number(node.rep || 0) + Number(node.other || 0));
+        const denominator = componentDenom > 0 ? componentDenom : fallbackTotal;
+        return denominator > 0 ? Number(votes || 0) * (numerator / denominator) : 0;
+      };
+      districtIds.forEach(districtId => {
+        addDistrictVotes(
+          districtId,
+          allocate(row.dem, 'dem', districtId),
+          allocate(row.rep, 'rep', districtId),
+          allocate(row.other, 'other', districtId)
+        );
+      });
+      allocatedUnmatchedVotes += row.dem + row.rep + row.other;
+    });
+
+    Object.values(results).forEach(row => {
+      const signed = row.total_votes > 0
+        ? ((row.rep_votes - row.dem_votes) / row.total_votes) * 100
+        : 0;
+      row.margin_pct = Math.abs(signed);
+      row.winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
+    });
+
+    if (!Object.keys(results).length) return null;
+    return {
+      results,
+      diagnostics: {
+        matchedPrecinctRows: matchedRows,
+        allocatedNongeographicRows: unmatchedRows.length,
+        referenceFallbackCounties: Array.from(referenceFallbackCounties).sort(),
+        totalPrecinctRows: modeledRows.length,
+        matchCoveragePct: sourceVotes > 0
+          ? ((matchedVotes + allocatedUnmatchedVotes) / sourceVotes) * 100
+          : 0
+      }
+    };
+  }
+
   return {
     stableStringify,
     getDefinitionSignature,
@@ -214,6 +374,7 @@
     inferConfidence,
     computeStatewideMarginFromDistrictResults,
     buildContestRow,
-    buildDistrictResultRow
+    buildDistrictResultRow,
+    aggregatePrecinctRowsToDistricts
   };
 }));
