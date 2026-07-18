@@ -348,7 +348,8 @@
       const signed = row.total_votes > 0
         ? ((row.rep_votes - row.dem_votes) / row.total_votes) * 100
         : 0;
-      row.margin_pct = Math.abs(signed);
+      row.margin = row.rep_votes - row.dem_votes;
+      row.margin_pct = signed;
       row.winner = signed > 0 ? 'REP' : (signed < 0 ? 'DEM' : 'TIE');
     });
 

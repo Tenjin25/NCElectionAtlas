@@ -746,6 +746,13 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         else seats.tie += 1;
         return seats;
       }, { dem: 0, rep: 0, tie: 0 });
+      const senateStateHouseSignedMarginsMatchWinners = Object.values(senateStateHouseResults).every(row => {
+        const signed = Number(row?.margin_pct);
+        const winner = String(row?.winner || '').toUpperCase();
+        return (winner === 'DEM' && signed < 0)
+          || (winner === 'REP' && signed > 0)
+          || (winner === 'TIE' && signed === 0);
+      });
 
       return {
         senateOptionText: options.us_senate_model_2026 || '',
@@ -811,6 +818,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
         senateStateHouseCoverage: Number(senateStateHouseNode?.meta?.match_coverage_pct),
         senateStateHouseDistricts: Object.keys(senateStateHouseResults).length,
         senateStateHouseSeats,
+        senateStateHouseSignedMarginsMatchWinners,
         senateStatewideUiMargin,
         senatePrecinctUiMargin,
         senateDistrictUiMargin,
@@ -894,6 +902,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateStateHouseCoverage).toBeGreaterThan(99.99);
     expect(modeledSnapshot.senateStateHouseDistricts).toBe(120);
     expect(modeledSnapshot.senateStateHouseSeats).toEqual({ dem: 58, rep: 62, tie: 0 });
+    expect(modeledSnapshot.senateStateHouseSignedMarginsMatchWinners).toBe(true);
     // Turnout composition restores an R+1.5–1.9 topline without changing county margins.
     expect(modeledSnapshot.senateStatewideUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);

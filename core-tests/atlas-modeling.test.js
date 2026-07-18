@@ -183,6 +183,8 @@ test('reaggregates modeled precincts and allocates non-geographic votes by party
   assert.equal(aggregate.results['3'].rep_votes, 42);
   assert.equal(aggregate.results['4'].dem_votes, 28);
   assert.equal(aggregate.results['4'].rep_votes, 18);
+  assert.ok(aggregate.results['4'].margin_pct < 0);
+  assert.equal(aggregate.results['4'].margin, -10);
   assert.equal(aggregate.results['4'].winner, 'DEM');
   assert.deepEqual(aggregate.diagnostics, {
     matchedPrecinctRows: 2,
