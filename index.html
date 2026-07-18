@@ -9231,7 +9231,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 const DRA_PARTISAN_COLORS = Object.freeze({
   r40: '#6f0000',
   r30: '#930000',
-  r20: '#b80000',
+  r20: '#c40000',
   r10: '#f00000',
   r5_5: '#f43f3f',
   r1: '#f77676',
@@ -9241,7 +9241,7 @@ const DRA_PARTISAN_COLORS = Object.freeze({
   d1: '#69b5f1',
   d5_5: '#248eea',
   d10: '#006ee6',
-  d20: '#0057b8',
+  d20: '#005fc9',
   d30: '#00438f',
   d40: '#002f66'
 });
@@ -10412,8 +10412,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-37';
-    const APP_BUILD_ID = '2026-07-18-4';
+    const DATA_CACHE_BUSTER = '2026-07-18-38';
+    const APP_BUILD_ID = '2026-07-18-5';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);

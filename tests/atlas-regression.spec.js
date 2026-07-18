@@ -99,7 +99,7 @@ test('compact county slices stay small and contain one row per county', async ({
 
 test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-4');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-5');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await page.locator('.contest-tools-more > summary').click();
@@ -119,7 +119,7 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   expect(draScale).toEqual([
     'rgb(111, 0, 0)',
     'rgb(147, 0, 0)',
-    'rgb(184, 0, 0)',
+    'rgb(196, 0, 0)',
     'rgb(240, 0, 0)',
     'rgb(244, 63, 63)',
     'rgb(247, 118, 118)',
@@ -129,7 +129,7 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     'rgb(105, 181, 241)',
     'rgb(36, 142, 234)',
     'rgb(0, 110, 230)',
-    'rgb(0, 87, 184)',
+    'rgb(0, 95, 201)',
     'rgb(0, 67, 143)',
     'rgb(0, 47, 102)'
   ]);
@@ -140,13 +140,13 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(0, 87, 184)',
+    'rgb(0, 95, 201)',
     'rgb(0, 110, 230)',
     'rgb(36, 142, 234)',
     'rgb(247, 247, 247)',
     'rgb(244, 63, 63)',
     'rgb(240, 0, 0)',
-    'rgb(184, 0, 0)'
+    'rgb(196, 0, 0)'
   ]);
 
   await page.evaluate(() => window.updateLegendColors('winners'));
