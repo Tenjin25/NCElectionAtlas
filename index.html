@@ -5,7 +5,7 @@
     // Resolve the initial legend palette before first paint. The full palette
     // initializer below still owns persistence and interactive switching.
     try {
-      const initialPalette = window.localStorage?.getItem('nc-atlas-partisan-palette-v3') === 'atlas'
+      const initialPalette = window.localStorage?.getItem('nc-atlas-partisan-palette-v4') === 'atlas'
         ? 'atlas'
         : 'dra';
       document.documentElement.setAttribute('data-initial-partisan-palette', initialPalette);
@@ -32,21 +32,22 @@
     --initial-margin-15: #08306b;
   }
   html[data-initial-partisan-palette="dra"] {
-    --initial-margin-1: #68000c;
-    --initial-margin-2: #940016;
-    --initial-margin-3: #b91227;
-    --initial-margin-4: #d52b3f;
-    --initial-margin-5: #f16672;
-    --initial-margin-6: #f58f96;
-    --initial-margin-7: #f8bec2;
-    --initial-margin-8: #f7f7f7;
-    --initial-margin-9: #b6d5f5;
-    --initial-margin-10: #78afe9;
-    --initial-margin-11: #4699e5;
-    --initial-margin-12: #1f75bd;
-    --initial-margin-13: #0863a8;
-    --initial-margin-14: #064a80;
-    --initial-margin-15: #04345c;
+    /* v15 light end + wider Safe→Stronghold gap (esp. Dem). */
+    --initial-margin-1: #922020;
+    --initial-margin-2: #BA3030;
+    --initial-margin-3: #C83838;
+    --initial-margin-4: #E06060;
+    --initial-margin-5: #E88888;
+    --initial-margin-6: #E4A8A8;
+    --initial-margin-7: #EAC0C0;
+    --initial-margin-8: #F5F5F5;
+    --initial-margin-9: #BCD8F0;
+    --initial-margin-10: #A0C4E8;
+    --initial-margin-11: #7EB0E0;
+    --initial-margin-12: #4A88D0;
+    --initial-margin-13: #2A60B0;
+    --initial-margin-14: #1E4C90;
+    --initial-margin-15: #1C4078;
   }
   /* Mobile Styles - Enhanced for touch and small screens */
   @media (max-width: 768px) {
@@ -9274,22 +9275,24 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 <body>
 <!-- Move JS to script block -->
 <script>
+// Light end from v15; Safe lighter and Stronghold deeper so they don't collide
+// (Dem Safe/Stronghold were especially close).
 const DRA_PARTISAN_COLORS = Object.freeze({
-  r40: '#68000c',
-  r30: '#940016',
-  r20: '#b91227',
-  r10: '#d52b3f',
-  r5_5: '#f16672',
-  r1: '#f58f96',
-  r0_5: '#f8bec2',
-  tie: '#f7f7f7',
-  d0_5: '#b6d5f5',
-  d1: '#78afe9',
-  d5_5: '#4699e5',
-  d10: '#1f75bd',
-  d20: '#0863a8',
-  d30: '#064a80',
-  d40: '#04345c'
+  r40: '#922020',
+  r30: '#BA3030',
+  r20: '#C83838',
+  r10: '#E06060',
+  r5_5: '#E88888',
+  r1: '#E4A8A8',
+  r0_5: '#EAC0C0',
+  tie: '#F5F5F5',
+  d0_5: '#BCD8F0',
+  d1: '#A0C4E8',
+  d5_5: '#7EB0E0',
+  d10: '#4A88D0',
+  d20: '#2A60B0',
+  d30: '#1E4C90',
+  d40: '#1C4078'
 });
 
 // Accessibility: Color Blind Mode Toggle
@@ -9335,13 +9338,13 @@ document.addEventListener('DOMContentLoaded', function() {
       ? 'Use the original atlas colors'
       : 'Use DRA-inspired colors with the existing 15 margin tiers';
   }
-  const DRA_PALETTE_STORAGE_KEY = 'nc-atlas-partisan-palette-v3';
+  const DRA_PALETTE_STORAGE_KEY = 'nc-atlas-partisan-palette-v4';
   try {
     if (window.localStorage) {
-      // Retire older preference versions once so DRA becomes the new default.
-      // Atlas remains available, and a new explicit Atlas choice persists.
+      // Retire older preference versions once so the new hybrid palette is picked up.
       window.localStorage.removeItem('nc-atlas-partisan-palette');
       window.localStorage.removeItem('nc-atlas-partisan-palette-v2');
+      window.localStorage.removeItem('nc-atlas-partisan-palette-v3');
       if (window.localStorage.getItem(DRA_PALETTE_STORAGE_KEY) !== 'atlas') {
         document.body.classList.add('dra-palette');
       }
@@ -10467,7 +10470,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-07-18-59';
-    const APP_BUILD_ID = '2026-07-18-26';
+    const APP_BUILD_ID = '2026-07-18-palette-v16';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -13911,14 +13914,13 @@ document.addEventListener('DOMContentLoaded', function() {
         draPartisanPresentationActive &&
         currentView === 'counties';
       if (draPartisanPresentationActive) {
-        // Keep the shared DRA table at the same perceived weight across
-        // congressional and state legislative district views.
-        houseBaseOpacity = districtBaseOpacity;
-        senateBaseOpacity = districtBaseOpacity;
+        // Opaque fills: translucent reds brown-out over the gray basemap.
+        districtBaseOpacity = 1;
+        houseBaseOpacity = 1;
+        senateBaseOpacity = 1;
       }
       if (draCountyPresentationActive && !precinctsActuallyVisible) {
-        // Counties use that same blend unless precincts need to remain primary.
-        countyBaseOpacity = districtBaseOpacity;
+        countyBaseOpacity = 1;
       }
 
       if (map.getLayer('county-fill')) {
@@ -13935,9 +13937,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (map.getLayer('county-stroke-casing')) {
         try {
-          map.setPaintProperty('county-stroke-casing', 'line-opacity', draCountyPresentationActive
-            ? ['interpolate', ['linear'], ['zoom'], 4, 0.30, 6, 0.38, 8, 0.50, 10, 0.62, 12, 0.76]
-            : 0);
+          // Do not use the pale DRA casing halo — it washes scarlet fills into muddy pink/brown
+          // at statewide zoom where casing width is large relative to county area.
+          map.setPaintProperty('county-stroke-casing', 'line-opacity', 0);
         } catch (_) {}
       }
       if (map.getLayer('district-fill')) {
@@ -33840,16 +33842,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function colorForWinnerMode(winner) {
       // winner: 'R' | 'D' | 'T'
       const cb = isColorblindModeActive();
-      if (winner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r10 : '#dc2626');
-      if (winner === 'D') return cb ? '#2563eb' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.d10 : '#2563eb');
+      // Solid winners use the dark partisan anchors so fills stay readable
+      // after the margin ramp was softened toward DRA-style RWB.
+      if (winner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r40 : '#dc2626');
+      if (winner === 'D') return cb ? '#2563eb' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.d40 : '#2563eb');
       return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.tie : '#9ca3af';
     }
 
     function colorForFlipMode(toWinner) {
       // toWinner: 'R' | 'D' | 'T'
       const cb = isColorblindModeActive();
-      if (toWinner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r10 : '#dc2626');
-      if (toWinner === 'D') return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.d10 : '#2563eb';
+      if (toWinner === 'R') return cb ? '#d97706' : (isDraPaletteActive() ? DRA_PARTISAN_COLORS.r40 : '#dc2626');
+      if (toWinner === 'D') return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.d40 : '#2563eb';
       return isDraPaletteActive() && !cb ? DRA_PARTISAN_COLORS.tie : '#e2e8f0';
     }
 
