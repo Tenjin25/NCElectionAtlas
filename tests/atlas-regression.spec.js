@@ -99,7 +99,7 @@ test('compact county slices stay small and contain one row per county', async ({
 
 test('DRA colors are an optional persisted rendering palette', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-17');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-18');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await page.locator('.contest-tools-more > summary').click();
@@ -112,26 +112,26 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(230, 24, 44)');
+  expect(draColor).toBe('rgb(220, 49, 66)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draScale).toEqual([
-    'rgb(96, 2, 10)',
-    'rgb(138, 0, 19)',
-    'rgb(182, 1, 28)',
-    'rgb(230, 24, 44)',
-    'rgb(247, 101, 96)',
-    'rgb(252, 157, 149)',
-    'rgb(253, 205, 201)',
+    'rgb(118, 0, 15)',
+    'rgb(148, 0, 22)',
+    'rgb(185, 18, 39)',
+    'rgb(220, 49, 66)',
+    'rgb(237, 103, 112)',
+    'rgb(244, 155, 160)',
+    'rgb(248, 203, 205)',
     'rgb(247, 247, 247)',
-    'rgb(192, 222, 255)',
-    'rgb(131, 192, 254)',
-    'rgb(55, 159, 254)',
-    'rgb(3, 128, 219)',
-    'rgb(2, 98, 171)',
-    'rgb(2, 73, 129)',
-    'rgb(2, 49, 89)'
+    'rgb(197, 220, 246)',
+    'rgb(143, 188, 237)',
+    'rgb(75, 155, 229)',
+    'rgb(23, 127, 206)',
+    'rgb(8, 99, 168)',
+    'rgb(6, 74, 128)',
+    'rgb(4, 52, 92)'
   ]);
   await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
 
@@ -140,13 +140,13 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draShiftScale).toEqual([
-    'rgb(2, 98, 171)',
-    'rgb(3, 128, 219)',
-    'rgb(55, 159, 254)',
+    'rgb(8, 99, 168)',
+    'rgb(23, 127, 206)',
+    'rgb(75, 155, 229)',
     'rgb(247, 247, 247)',
-    'rgb(247, 101, 96)',
-    'rgb(230, 24, 44)',
-    'rgb(182, 1, 28)'
+    'rgb(237, 103, 112)',
+    'rgb(220, 49, 66)',
+    'rgb(185, 18, 39)'
   ]);
 
   await page.evaluate(() => window.updateLegendColors('winners'));
@@ -154,8 +154,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draWinnerScale).toEqual([
-    'rgb(3, 128, 219)',
-    'rgb(230, 24, 44)',
+    'rgb(23, 127, 206)',
+    'rgb(220, 49, 66)',
     'rgb(247, 247, 247)'
   ]);
 
@@ -164,8 +164,8 @@ test('DRA colors are an optional persisted rendering palette', async ({ page }) 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draFlipScale).toEqual([
-    'rgb(3, 128, 219)',
-    'rgb(230, 24, 44)',
+    'rgb(23, 127, 206)',
+    'rgb(220, 49, 66)',
     'rgb(247, 247, 247)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
