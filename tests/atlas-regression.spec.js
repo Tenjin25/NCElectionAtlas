@@ -111,7 +111,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     observer.observe(document, { childList: true, subtree: true });
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-24');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-18-25');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);
@@ -124,12 +124,12 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     'rgb(104, 0, 12)',
     'rgb(148, 0, 22)',
     'rgb(185, 18, 39)',
-    'rgb(216, 63, 80)',
+    'rgb(213, 43, 63)',
     'rgb(241, 102, 114)'
   ]);
   expect(firstMarginLegendColors.slice(10, 15)).toEqual([
     'rgb(70, 153, 229)',
-    'rgb(35, 127, 197)',
+    'rgb(31, 117, 189)',
     'rgb(8, 99, 168)',
     'rgb(6, 74, 128)',
     'rgb(4, 52, 92)'
@@ -138,7 +138,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
 
   const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
   const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(216, 63, 80)');
+  expect(draColor).toBe('rgb(213, 43, 63)');
   const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
     (segments) => segments.map((el) => el.style.background)
   );
@@ -146,7 +146,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     'rgb(104, 0, 12)',
     'rgb(148, 0, 22)',
     'rgb(185, 18, 39)',
-    'rgb(216, 63, 80)',
+    'rgb(213, 43, 63)',
     'rgb(241, 102, 114)',
     'rgb(245, 143, 150)',
     'rgb(248, 190, 194)',
@@ -154,7 +154,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     'rgb(182, 213, 245)',
     'rgb(120, 175, 233)',
     'rgb(70, 153, 229)',
-    'rgb(35, 127, 197)',
+    'rgb(31, 117, 189)',
     'rgb(8, 99, 168)',
     'rgb(6, 74, 128)',
     'rgb(4, 52, 92)'
@@ -167,11 +167,11 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
   );
   expect(draShiftScale).toEqual([
     'rgb(8, 99, 168)',
-    'rgb(35, 127, 197)',
+    'rgb(31, 117, 189)',
     'rgb(70, 153, 229)',
     'rgb(247, 247, 247)',
     'rgb(241, 102, 114)',
-    'rgb(216, 63, 80)',
+    'rgb(213, 43, 63)',
     'rgb(185, 18, 39)'
   ]);
 
@@ -180,8 +180,8 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draWinnerScale).toEqual([
-    'rgb(35, 127, 197)',
-    'rgb(216, 63, 80)',
+    'rgb(31, 117, 189)',
+    'rgb(213, 43, 63)',
     'rgb(247, 247, 247)'
   ]);
 
@@ -190,8 +190,8 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     (segments) => segments.map((el) => el.style.background)
   );
   expect(draFlipScale).toEqual([
-    'rgb(35, 127, 197)',
-    'rgb(216, 63, 80)',
+    'rgb(31, 117, 189)',
+    'rgb(213, 43, 63)',
     'rgb(247, 247, 247)'
   ]);
   await page.evaluate(() => window.updateLegendColors('margins'));
