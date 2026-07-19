@@ -10137,7 +10137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #8bbde0;"></span>
                 <span class="legend-segment legend-color" style="background: #6baed6;"></span>
                 <span class="legend-segment legend-color" style="background: #3f8fd0;"></span>
-                <span class="legend-segment legend-color" style="background: #3182bd;"></span>
+                <span class="legend-segment legend-color" style="background: #1f6aad;"></span>
                 <span class="legend-segment legend-color" style="background: #08519c;"></span>
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
@@ -10398,8 +10398,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-19-dra-hybrid-25';
-    const APP_BUILD_ID = '2026-07-19-dra-hybrid-25';
+    const DATA_CACHE_BUSTER = '2026-07-19-dra-hybrid-27';
+    const APP_BUILD_ID = '2026-07-19-dra-hybrid-27';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33671,9 +33671,9 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 30) {
         return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#cb181d' : '#3182bd'; // OG Stronghold
+        return winner === 'R' ? '#cb181d' : '#1f6aad'; // Stronghold — OG Dem nudged darker
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#de3030' : '#3f8fd0'; // Safe — Dem eased off Stronghold
+        return winner === 'R' ? '#de3030' : '#3f8fd0'; // Safe — restored Dem
       } else if (marginPct >= 5.5) {
         return winner === 'R' ? '#e05450' : '#6baed6'; // Likely — compromise mid red
       } else if (marginPct >= 1.0) {
