@@ -7100,6 +7100,51 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     color: #1d4ed8;
   }
 
+  .legend-tier-list {
+    display: grid;
+    gap: 4px;
+    max-height: min(42vh, 320px);
+    overflow: auto;
+    padding-right: 2px;
+  }
+
+  .legend-tier-row {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 28px;
+    padding: 4px 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .legend-tier-row .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+  }
+
+  .legend-tier-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: 0.01em;
+  }
+
+  .legend-tier-label.rep { color: #b91c1c; }
+  .legend-tier-label.dem { color: #1d4ed8; }
+  .legend-tier-label.tie { color: #64748b; }
+
+  .legend-tier-range {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
   .legend-chip-row {
     display: flex;
     flex-wrap: wrap;
@@ -10080,21 +10125,21 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-content" id="legend-content">
             <div class="legend-scale-shell">
               <div class="legend-spectrum margins">
-                <span class="legend-segment legend-color" style="background: #821818;"></span>
-                <span class="legend-segment legend-color" style="background: #9a1c1c;"></span>
-                <span class="legend-segment legend-color" style="background: #c82c2c;"></span>
-                <span class="legend-segment legend-color" style="background: #e23230;"></span>
-                <span class="legend-segment legend-color" style="background: #fb6a4a;"></span>
-                <span class="legend-segment legend-color" style="background: #fcae91;"></span>
+                <span class="legend-segment legend-color" style="background: #67000d;"></span>
+                <span class="legend-segment legend-color" style="background: #a50f15;"></span>
+                <span class="legend-segment legend-color" style="background: #cb181d;"></span>
+                <span class="legend-segment legend-color" style="background: #d6362e;"></span>
+                <span class="legend-segment legend-color" style="background: #ed4e46;"></span>
+                <span class="legend-segment legend-color" style="background: #fb9875;"></span>
                 <span class="legend-segment legend-color" style="background: #f5d6c4;"></span>
                 <span class="legend-segment legend-color" style="background: #f7f7f7; border-left: 1px solid rgba(15,23,42,0.12); border-right: 1px solid rgba(15,23,42,0.12);"></span>
-                <span class="legend-segment legend-color" style="background: #cfe4f5;"></span>
-                <span class="legend-segment legend-color" style="background: #c6dbef;"></span>
-                <span class="legend-segment legend-color" style="background: #9ecae1;"></span>
-                <span class="legend-segment legend-color" style="background: #4684cc;"></span>
-                <span class="legend-segment legend-color" style="background: #2e66ae;"></span>
-                <span class="legend-segment legend-color" style="background: #164e96;"></span>
-                <span class="legend-segment legend-color" style="background: #123060;"></span>
+                <span class="legend-segment legend-color" style="background: #b8d4ec;"></span>
+                <span class="legend-segment legend-color" style="background: #8bbde0;"></span>
+                <span class="legend-segment legend-color" style="background: #6baed6;"></span>
+                <span class="legend-segment legend-color" style="background: #4e9ad4;"></span>
+                <span class="legend-segment legend-color" style="background: #3182bd;"></span>
+                <span class="legend-segment legend-color" style="background: #08519c;"></span>
+                <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
               <div class="legend-scale-caption">
                 <span class="rep">Republican Annihilation</span>
@@ -10353,8 +10398,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-18-hybrid-14';
-    const APP_BUILD_ID = '2026-07-18-hybrid-14';
+    const DATA_CACHE_BUSTER = '2026-07-19-dra-hybrid-11';
+    const APP_BUILD_ID = '2026-07-19-dra-hybrid-11';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -22341,7 +22386,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function buildMarginsLegendHTML() {
-      const colors = [
+      const tiers = [
+        { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'R'), party: 'rep' },
+        { label: 'Dominant', range: '30–39.9', color: colorForMarginMode(30, 'R'), party: 'rep' },
+        { label: 'Stronghold', range: '20–29.9', color: colorForMarginMode(20, 'R'), party: 'rep' },
+        { label: 'Safe', range: '10–19.9', color: colorForMarginMode(10, 'R'), party: 'rep' },
+        { label: 'Likely', range: '5.5–9.9', color: colorForMarginMode(5.5, 'R'), party: 'rep' },
+        { label: 'Lean', range: '1–5.49', color: colorForMarginMode(1, 'R'), party: 'rep' },
+        { label: 'Tilt', range: '0.5–0.99', color: colorForMarginMode(0.5, 'R'), party: 'rep' },
+        { label: 'Tossup', range: '<0.5', color: colorForMarginMode(0, 'R'), party: 'tie' },
+        { label: 'Tilt', range: '0.5–0.99', color: colorForMarginMode(0.5, 'D'), party: 'dem' },
+        { label: 'Lean', range: '1–5.49', color: colorForMarginMode(1, 'D'), party: 'dem' },
+        { label: 'Likely', range: '5.5–9.9', color: colorForMarginMode(5.5, 'D'), party: 'dem' },
+        { label: 'Safe', range: '10–19.9', color: colorForMarginMode(10, 'D'), party: 'dem' },
+        { label: 'Stronghold', range: '20–29.9', color: colorForMarginMode(20, 'D'), party: 'dem' },
+        { label: 'Dominant', range: '30–39.9', color: colorForMarginMode(30, 'D'), party: 'dem' },
+        { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'D'), party: 'dem' }
+      ];
+      const spectrum = [
         colorForMarginMode(40, 'R'),
         colorForMarginMode(30, 'R'),
         colorForMarginMode(20, 'R'),
@@ -22360,30 +22422,15 @@ document.addEventListener('DOMContentLoaded', function() {
       ];
       return `
         <div class="legend-scale-shell">
-          ${buildLegendSpectrum(colors, 'margins')}
-          <div class="legend-scale-caption">
-            <span class="rep">Republican Annihilation</span>
-            <span>Tossup</span>
-            <span class="dem">Democratic Annihilation</span>
-          </div>
-          <div class="legend-axis margins">
-            <span class="rep">R +40</span>
-            <span class="rep">R +10</span>
-            <span class="rep">R +1</span>
-            <span>Tie</span>
-            <span class="dem">D +1</span>
-            <span class="dem">D +10</span>
-            <span class="dem">D +40</span>
-          </div>
-          <div class="legend-chip-row">
-            <span class="legend-chip">Annihilation 40+</span>
-            <span class="legend-chip">Dominant 30+</span>
-            <span class="legend-chip">Stronghold 20+</span>
-            <span class="legend-chip">Safe 10+</span>
-            <span class="legend-chip">Likely 5.5+</span>
-            <span class="legend-chip">Lean 1+</span>
-            <span class="legend-chip">Tilt 0.5+</span>
-            <span class="legend-chip">Tossup &lt;0.5</span>
+          ${buildLegendSpectrum(spectrum, 'margins')}
+          <div class="legend-tier-list" role="list">
+            ${tiers.map(t => `
+              <div class="legend-tier-row" role="listitem">
+                <span class="legend-color" style="background: ${t.color};${t.party === 'tie' ? ' border: 1px solid rgba(15,23,42,0.18);' : ''}"></span>
+                <span class="legend-tier-label ${t.party}">${t.label}</span>
+                <span class="legend-tier-range">${t.range}</span>
+              </div>
+            `).join('')}
           </div>
         </div>
       `;
@@ -22554,7 +22601,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (header) header.textContent = 'Margin Categories';
         if (subtitle) subtitle.textContent = 'Buckets by two-party margin (Rep% − Dem%). Red = Republican lead; blue = Democratic lead.';
         if (badge) badge.textContent = 'Margins';
-        if (footer) footer.textContent = 'Darker shades mean a larger lead; category chips are the absolute margin thresholds.';
+        if (footer) footer.textContent = 'Darker shades mean a larger lead. Ranges are absolute two-party margin (|Rep% − Dem%|).';
+        content.dataset.marginsHtml = buildMarginsLegendHTML();
         content.innerHTML = content.dataset.marginsHtml;
       }
 
@@ -33616,21 +33664,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function categoryColorForMargin(marginPct, winner) {
-      // Dark-end hybrid: classic ColorBrewer Tilt→Likely; DRA-inspired Safe→Annihilation.
+      // DRA-hybrid mid tiers; OG Stronghold + OG Dominant/Annihilation.
+      // Safe sits clearly above Stronghold (wider mid→deep gap).
       if (marginPct >= 40) {
-        return winner === 'R' ? '#821818' : '#123060';
+        return winner === 'R' ? '#67000d' : '#08306b'; // OG Annihilation
       } else if (marginPct >= 30) {
-        return winner === 'R' ? '#9a1c1c' : '#164e96';
+        return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#c82c2c' : '#2e66ae';
+        return winner === 'R' ? '#cb181d' : '#3182bd'; // OG Stronghold
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#e23230' : '#4684cc';
+        return winner === 'R' ? '#d6362e' : '#4e9ad4'; // Safe — slight warm, not pink/orange
       } else if (marginPct >= 5.5) {
-        return winner === 'R' ? '#fb6a4a' : '#9ecae1';
+        return winner === 'R' ? '#ed4e46' : '#6baed6'; // Likely — matched slight warm
       } else if (marginPct >= 1.0) {
-        return winner === 'R' ? '#fcae91' : '#c6dbef';
+        return winner === 'R' ? '#fb9875' : '#8bbde0'; // Lean — slightly darker
       } else if (marginPct >= 0.5) {
-        return winner === 'R' ? '#f5d6c4' : '#cfe4f5';
+        return winner === 'R' ? '#f5d6c4' : '#b8d4ec'; // Dem Tilt less white, still under Lean
       } else {
         return '#f7f7f7';
       }
