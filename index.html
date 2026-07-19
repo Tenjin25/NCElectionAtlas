@@ -10080,21 +10080,21 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-content" id="legend-content">
             <div class="legend-scale-shell">
               <div class="legend-spectrum margins">
-                <span class="legend-segment legend-color" style="background: #67000d;"></span>
-                <span class="legend-segment legend-color" style="background: #a50f15;"></span>
-                <span class="legend-segment legend-color" style="background: #cb181d;"></span>
-                <span class="legend-segment legend-color" style="background: #ef3b2c;"></span>
+                <span class="legend-segment legend-color" style="background: #821818;"></span>
+                <span class="legend-segment legend-color" style="background: #9a1c1c;"></span>
+                <span class="legend-segment legend-color" style="background: #c82c2c;"></span>
+                <span class="legend-segment legend-color" style="background: #e23230;"></span>
                 <span class="legend-segment legend-color" style="background: #fb6a4a;"></span>
                 <span class="legend-segment legend-color" style="background: #fcae91;"></span>
-                <span class="legend-segment legend-color" style="background: #fee8c8;"></span>
+                <span class="legend-segment legend-color" style="background: #f5d6c4;"></span>
                 <span class="legend-segment legend-color" style="background: #f7f7f7; border-left: 1px solid rgba(15,23,42,0.12); border-right: 1px solid rgba(15,23,42,0.12);"></span>
-                <span class="legend-segment legend-color" style="background: #e1f5fe;"></span>
+                <span class="legend-segment legend-color" style="background: #cfe4f5;"></span>
                 <span class="legend-segment legend-color" style="background: #c6dbef;"></span>
                 <span class="legend-segment legend-color" style="background: #9ecae1;"></span>
-                <span class="legend-segment legend-color" style="background: #6baed6;"></span>
-                <span class="legend-segment legend-color" style="background: #3182bd;"></span>
-                <span class="legend-segment legend-color" style="background: #08519c;"></span>
-                <span class="legend-segment legend-color" style="background: #08306b;"></span>
+                <span class="legend-segment legend-color" style="background: #4684cc;"></span>
+                <span class="legend-segment legend-color" style="background: #2e66ae;"></span>
+                <span class="legend-segment legend-color" style="background: #164e96;"></span>
+                <span class="legend-segment legend-color" style="background: #123060;"></span>
               </div>
               <div class="legend-scale-caption">
                 <span class="rep">Republican Annihilation</span>
@@ -10353,8 +10353,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-17-35';
-    const APP_BUILD_ID = '2026-07-18-2';
+    const DATA_CACHE_BUSTER = '2026-07-18-hybrid-14';
+    const APP_BUILD_ID = '2026-07-18-hybrid-14';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33616,20 +33616,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function categoryColorForMargin(marginPct, winner) {
+      // Dark-end hybrid: classic ColorBrewer Tilt→Likely; DRA-inspired Safe→Annihilation.
       if (marginPct >= 40) {
-        return winner === 'R' ? '#67000d' : '#08306b';
+        return winner === 'R' ? '#821818' : '#123060';
       } else if (marginPct >= 30) {
-        return winner === 'R' ? '#a50f15' : '#08519c';
+        return winner === 'R' ? '#9a1c1c' : '#164e96';
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#cb181d' : '#3182bd';
+        return winner === 'R' ? '#c82c2c' : '#2e66ae';
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#ef3b2c' : '#6baed6';
+        return winner === 'R' ? '#e23230' : '#4684cc';
       } else if (marginPct >= 5.5) {
         return winner === 'R' ? '#fb6a4a' : '#9ecae1';
       } else if (marginPct >= 1.0) {
         return winner === 'R' ? '#fcae91' : '#c6dbef';
       } else if (marginPct >= 0.5) {
-        return winner === 'R' ? '#fee8c8' : '#e1f5fe';
+        return winner === 'R' ? '#f5d6c4' : '#cfe4f5';
       } else {
         return '#f7f7f7';
       }
@@ -35959,4 +35960,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.onload = init;
 </script>
 </body>
-</html
+</html>
