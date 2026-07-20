@@ -10128,8 +10128,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #67000d;"></span>
                 <span class="legend-segment legend-color" style="background: #a50f15;"></span>
                 <span class="legend-segment legend-color" style="background: #cb181d;"></span>
-                <span class="legend-segment legend-color" style="background: #de3030;"></span>
-                <span class="legend-segment legend-color" style="background: #e05450;"></span>
+                <span class="legend-segment legend-color" style="background: #e03a32;"></span>
+                <span class="legend-segment legend-color" style="background: #e85a52;"></span>
                 <span class="legend-segment legend-color" style="background: #f99a90;"></span>
                 <span class="legend-segment legend-color" style="background: #f5d6c4;"></span>
                 <span class="legend-segment legend-color" style="background: #f7f7f7; border-left: 1px solid rgba(15,23,42,0.12); border-right: 1px solid rgba(15,23,42,0.12);"></span>
@@ -10398,8 +10398,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-19-dra-hybrid-27';
-    const APP_BUILD_ID = '2026-07-19-dra-hybrid-27';
+    const DATA_CACHE_BUSTER = '2026-07-19-dra-hybrid-32';
+    const APP_BUILD_ID = '2026-07-19-dra-hybrid-32';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33673,9 +33673,9 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 20) {
         return winner === 'R' ? '#cb181d' : '#1f6aad'; // Stronghold — OG Dem nudged darker
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#de3030' : '#3f8fd0'; // Safe — restored Dem
+        return winner === 'R' ? '#e03a32' : '#3f8fd0'; // Safe — toward OG brightness, still above Stronghold
       } else if (marginPct >= 5.5) {
-        return winner === 'R' ? '#e05450' : '#6baed6'; // Likely — compromise mid red
+        return winner === 'R' ? '#e85a52' : '#6baed6'; // Likely — option A (locked)
       } else if (marginPct >= 1.0) {
         return winner === 'R' ? '#f99a90' : '#8bbde0'; // Lean — cooler red, less orange
       } else if (marginPct >= 0.5) {
