@@ -108,6 +108,8 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
+- **Uncontested 2012 Attorney General cleanup:** Removed the uncontested 2012 Attorney General result from precinct, county, congressional, State House, and State Senate manifests and deleted the corresponding derived JSON slices. The archival raw election CSV remains unchanged.
+
 - **Exact precinct-key priority:** Prevented generated compatibility aliases from overwriting an exact precinct result already loaded for the same map key. This fixes Wake 01-25 incorrectly displaying Wake 19-25's Trump-leading 2020 presidential result even though the underlying Wake 01-25 data is Biden-leading.
 
 - **2020 early-vote precinct allocation:** Classified every leading `OS` voting-center code as non-geographic before applying the SBE 2020-to-December 2025 OneMap bridge. Rebuilt all 20 statewide 2020 contest files so 151 early-vote pseudo-rows across 17 counties—including Cabarrus, Wake, Durham, Orange, Pitt, and Watauga—are distributed into real precincts by the existing party-specific geographic-share method. All 100 official county totals and statewide contest totals remain unchanged.
@@ -115,7 +117,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 - **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties. The SBE 2006 bridge is now limited to elections through 2010, preventing modern Davidson precinct 36/38 rows (`Ward 4`/`Ward 6` in the old layer) from overwriting the exact 2024 `04`/`06` rows.
 - **Scotland merged-precinct correction:** The same modern-year bridge guard prevents combined Scotland codes from absorbing other current precinct rows. In particular, `01-16` no longer double-counts `06-89`. Verified 2024 presidential results now remain distinct for `01-16` (`D+42.88`, 1,833 votes), `02-25` (`R+6.04`, 2,120), `05-10` (`R+29.05`, 1,356), and `06-89` (`R+38.07`, 2,246); the 2026 Senate model also preserves the strongly Democratic character of `01-16`.
 
-**Last updated:** July 18, 2026
+**Last updated:** July 21, 2026
 
 ### Default DRA Color Table Refresh (July 18, 2026)
 
