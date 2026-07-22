@@ -83,7 +83,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 	- **County Census Context:** County sidebar panels add qualitative Census-style growth context (`Urban anchor`, `Metro spillover`, `Coastal growth`, `Rural slowdown`, `Mixed growth`) to frame why local trajectories may be changing, and can now surface a supporting `Census check` inside the trajectory card when population growth clearly reinforces the electoral direction
 	- **County Census Insight Growth Type Chip:** The in-popup `County Census Insight` block now appends a small growth-type chip (`🌊 Coastal Growth`, `🌆 Metro Spillover`, `🛣️ Corridor Growth`, `🏭 Stable / Local Growth`) derived from county heuristics
 	- **Dynamic Competitiveness Tier Labels:** Focus headers and hover cards show tier labels (for example, `Safe Republican` / `Stronghold Democratic`) derived from the same margin thresholds used for map styling
-	- **Default Smooth DRA 15-Tier Palette:** The balanced DRA-inspired table is now the default across Margins, Winners, Shift, and Flips in county, precinct, and district views. It maps directly to the atlas's 40/30/20/10/5.5/1/0.5-point margin thresholds, with darker strongholds and smoother competitive transitions. `DRA Colors On` under `More` can be switched off to use the original Atlas palette; the choice is remembered. Demographics, Population Change, and colorblind mode retain their own semantic palettes.
+	- **Default Atlas/DRA Compromise 15-Tier Palette:** The active table blends the original Atlas colors with a modified version of the DRA color table across Margins, Winners, Shift, and Flips in county, precinct, and district views. It maps directly to the atlas's 40/30/20/10/5.5/1/0.5-point margin thresholds, with darker strongholds and smoother competitive transitions. `DRA Colors On` under `More` can be switched off to use the unchanged original Atlas palette; the choice is remembered. Demographics, Population Change, and colorblind mode retain their own semantic palettes.
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
 - **Modeled 2026 Statewide Races:** Synthetic `US Senate (2026) model` and `NC Supreme Court Associate Justice Seat 1 (2026) Model` entries use recent statewide baselines and respond to the same swing controls as real contests. The Senate model uses `2022 + 2020 US Senate` anchors and the `2024 President` climate, all loaded from the production precinct slices. County and statewide comparisons are derived in memory from those precinct rows; files in `data/county_contests/` and attached county-total sidecars are not frontend authorities for modeled output. Reliability, repeatability, anomaly, federalization, and candidate-coalition brakes allow realistic ticket splitting without turning the race into a presidential clone. A precinct reconciliation step preserves each calibrated county target without flattening precinct ordering. The current calibration gives Cooper stronger Guilford, Pitt, Northampton, and App State-centered Watauga performance, gives Chatham and Granville softer Triangle-adjacent treatment, and allows Whatley to approach Budd-like margins in selected rural areas. A Senate-only turnout-composition layer keeps the raw precinct and **Congressional / State House / State Senate** statewide aggregates near one another. In modeled mode, the statewide summary includes a compact methodology indicator, while **What-if & overlays** exposes light model-tuning sliders and `Copy Link` preserves non-default tuning.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
@@ -108,7 +108,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
-- **Compromise margin-color update:** Refined the default DRA-inspired palette with balanced middle-tier reds and blues while retaining the established dark-end colors. The legend and map fills now use the same live colors across every geography layer.
+- **Compromise margin-color update:** The active palette now combines the original Atlas colors with a modified version of the DRA color table, using balanced middle-tier reds and blues while retaining selected original dark-end colors. The legend and map fills use the same live colors across every geography layer.
 
 - **HD-80/81 presidential data correction:** Fixed reversed Thomasville and Lexington rows in the 2022-lines State House data. The corrected 2016 margins are `R+51.45` in HD-80 and `R+45.07` in HD-81; the corrected 2024 margins are `R+50.20` in HD-80 and `R+43.58` in HD-81.
 
@@ -123,9 +123,9 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 **Last updated:** July 21, 2026
 
-### Default DRA Color Table Refresh (July 18, 2026)
+### Default Atlas/DRA Compromise Color Table (July 18–21, 2026)
 
-- Made the refined DRA-inspired 15-tier table the default partisan palette, while retaining the original Atlas colors as a persisted option under `More`.
+- Made a 15-tier compromise between the original Atlas palette and a modified DRA color table the default partisan palette, while retaining the unchanged original Atlas colors as a persisted option under `More`.
 - Synchronized the first-painted legend with the active palette so the Map Key no longer briefly shows stale Atlas colors while the app initializes.
 - Applied the same table to county, precinct, congressional, State House, and State Senate fills and aligned county/district opacity so identical colors have consistent visual weight over the basemap.
 - Refined the safe-to-stronghold steps and competitive transitions, with neutral tossups centered on `#f7f7f7`:
