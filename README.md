@@ -12,7 +12,7 @@ The live app is now presented as **North Carolina Election Atlas**, which is the
 
 ## Screenshots
 
-**Counties view — 2024 Presidential New Color Pallate**
+**Counties view — 2024 Presidential Compromise Color Palette**
 ![Counties view](Screenshots/2024PresCompColors.png)
 
 **Congressional Districts — 2020 Presidential**
@@ -108,55 +108,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
-- **Compromise margin-color update:** The active palette now combines the original Atlas colors with a modified version of the DRA color table, using balanced middle-tier reds and blues while retaining selected original dark-end colors. The legend and map fills use the same live colors across every geography layer.
-
-- **HD-80/81 presidential data correction:** Fixed reversed Thomasville and Lexington rows in the 2022-lines State House data. The corrected 2016 margins are `R+51.45` in HD-80 and `R+45.07` in HD-81; the corrected 2024 margins are `R+50.20` in HD-80 and `R+43.58` in HD-81.
-
-- **Uncontested 2012 Attorney General cleanup:** Removed the uncontested 2012 Attorney General result from precinct, county, congressional, State House, and State Senate manifests and deleted the corresponding derived JSON slices. The archival raw election CSV remains unchanged.
-
-- **Exact precinct-key priority:** Prevented generated compatibility aliases from overwriting an exact precinct result already loaded for the same map key. This fixes Wake 01-25 incorrectly displaying Wake 19-25's Trump-leading 2020 presidential result even though the underlying Wake 01-25 data is Biden-leading.
-
-- **2020 early-vote precinct allocation:** Classified every leading `OS` voting-center code as non-geographic before applying the SBE 2020-to-December 2025 OneMap bridge. Rebuilt all 20 statewide 2020 contest files so 151 early-vote pseudo-rows across 17 counties—including Cabarrus, Wake, Durham, Orange, Pitt, and Watauga—are distributed into real precincts by the existing party-specific geographic-share method. All 100 official county totals and statewide contest totals remain unchanged.
-
-- **Davidson precinct-name recovery:** Added county-scoped aliases for Arcadia 04 and Boone 06 so modern OneMap precinct geometry resolves historical Davidson result labels such as `04_ARCADIA #04` and `06_BOONE #06` without conflating similarly named precincts in other counties. The SBE 2006 bridge is now limited to elections through 2010, preventing modern Davidson precinct 36/38 rows (`Ward 4`/`Ward 6` in the old layer) from overwriting the exact 2024 `04`/`06` rows.
-- **Scotland merged-precinct correction:** The same modern-year bridge guard prevents combined Scotland codes from absorbing other current precinct rows. In particular, `01-16` no longer double-counts `06-89`. Verified 2024 presidential results now remain distinct for `01-16` (`D+42.88`, 1,833 votes), `02-25` (`R+6.04`, 2,120), `05-10` (`R+29.05`, 1,356), and `06-89` (`R+38.07`, 2,246); the 2026 Senate model also preserves the strongly Democratic character of `01-16`.
-
 **Last updated:** July 21, 2026
-
-### Default Atlas/DRA Compromise Color Table (July 18–21, 2026)
-
-- Made a 15-tier compromise between the original Atlas palette and a modified DRA color table the default partisan palette, while retaining the unchanged original Atlas colors as a persisted option under `More`.
-- Synchronized the first-painted legend with the active palette so the Map Key no longer briefly shows stale Atlas colors while the app initializes.
-- Applied the same table to county, precinct, congressional, State House, and State Senate fills and aligned county/district opacity so identical colors have consistent visual weight over the basemap.
-- Refined the safe-to-stronghold steps and competitive transitions, with neutral tossups centered on `#f7f7f7`:
-
-| Margin tier | Threshold | Republican | Democratic |
-| --- | ---: | --- | --- |
-| Annihilation | 40+ | `#67000d` | `#08306b` |
-| Dominant | 30+ | `#a50f15` | `#08519c` |
-| Stronghold | 20+ | `#cb181d` | `#2876b5` |
-| Safe | 10+ | `#db3830` | `#4795d2` |
-| Likely | 5.5+ | `#eb544c` | `#6baed6` |
-| Lean | 1+ | `#fa9983` | `#8bbde0` |
-| Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
-| Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
-
-### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
-
-- Corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to the trusted snapshot margin of `R+2.34`.
-- Preserved the existing `325,627` total and `14,033` other votes; only the Democratic/Republican split was reallocated (`151,987 D` / `159,607 R`).
-
-### Precinct-First US Senate Calibration (July 17, 2026)
-
-- Removed `data/county_contests/` from the 2026 Senate calibration and validation path; county-level comparisons are now aggregated directly from `loadContestSlice` precinct rows.
-- Calibrated the production precinct aggregate and all three district scopes to a competitive Whatley lead in the `R+1.5–1.9` range.
-- Added metro coalition floors so Cooper improves on Harris and Beasley's urban benchmarks without washing out Whatley's rural strength.
-- Added softer Chatham- and Granville-specific Triangle-adjacent floors, keeping both between a core-metro treatment and a generic rural/suburban county.
-- Routed modeled county view through `loadContestSlice` so statewide and county cards follow the rebuilt precinct rows and model controls even when the precinct overlay is off; the compact modeled county path is no longer a frontend authority.
-- Reconciled modeled precinct rows to their calibrated county targets, correcting the broad red drift in counties such as Pitt and Northampton while retaining precinct-level ordering.
-- Set restrained Cooper-over-Harris targets in Guilford, App State-centered Watauga, Fayetteville/Fort Bragg bedroom-community Hoke, the growing Harnett corridor, and the Alamance/Cabarrus suburban belt; kept realigning Anson between its 2022 Senate and 2024 presidential margins; then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
-- Retuned the State House model alignment by one-tenth so its 120-district aggregate matches the precinct/county statewide result without flattening district-level variation.
-- Added explicit raw-precinct regression diagnostics so an unused county sidecar cannot silently become the statewide calibration target again.
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -1121,6 +1073,65 @@ Implementation note:
   - `data/reports/precinct_match_year_summary_fresh_2026-03-19.csv`
   - `data/reports/precinct_match_pre2020_county_outliers_fresh_2026-03-19.csv`
   - `data/reports/precinct_match_focus_counties_by_year_fresh_2026-03-19.csv`
+
+### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
+
+- Corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to the trusted snapshot margin of `R+2.34`.
+- Preserved the existing `325,627` total and `14,033` other votes; only the Democratic/Republican split was reallocated (`151,987 D` / `159,607 R`).
+
+### Precinct-First US Senate Calibration (July 17, 2026)
+
+- Removed `data/county_contests/` from the 2026 Senate calibration and validation path; county-level comparisons are now aggregated directly from `loadContestSlice` precinct rows.
+- Calibrated the production precinct aggregate and all three district scopes to a competitive Whatley lead in the `R+1.5–1.9` range.
+- Added metro coalition floors so Cooper improves on Harris and Beasley's urban benchmarks without washing out Whatley's rural strength.
+- Added softer Chatham- and Granville-specific Triangle-adjacent floors, keeping both between a core-metro treatment and a generic rural/suburban county.
+- Routed modeled county view through `loadContestSlice` so statewide and county cards follow the rebuilt precinct rows and model controls even when the precinct overlay is off; the compact modeled county path is no longer a frontend authority.
+- Reconciled modeled precinct rows to their calibrated county targets, correcting the broad red drift in counties such as Pitt and Northampton while retaining precinct-level ordering.
+- Set restrained Cooper-over-Harris targets in Guilford, App State-centered Watauga, Fayetteville/Fort Bragg bedroom-community Hoke, the growing Harnett corridor, and the Alamance/Cabarrus suburban belt; kept realigning Anson between its 2022 Senate and 2024 presidential margins; then aligned the default statewide result near the `R+1.5–1.9` band through rural turnout composition rather than redder county margins.
+- Retuned the State House model alignment by one-tenth so its 120-district aggregate matches the precinct/county statewide result without flattening district-level variation.
+- Added explicit raw-precinct regression diagnostics so an unused county sidecar cannot silently become the statewide calibration target again.
+
+### Davidson and Scotland Precinct Corrections (July 17, 2026)
+
+- Added county-scoped aliases for Davidson's Arcadia 04 and Boone 06 so modern OneMap geometry resolves historical labels without conflating similarly named precincts in other counties.
+- Limited the SBE 2006 bridge to elections through 2010 so modern Davidson precinct 36/38 rows cannot overwrite exact 2024 rows.
+- Prevented combined Scotland codes from absorbing other current precinct rows, including the prior `01-16` and `06-89` double count.
+
+### 2020 Early-Vote Allocation and Exact-Key Priority (July 17, 2026)
+
+- Classified every leading `OS` voting-center code as non-geographic before applying the SBE 2020-to-December 2025 OneMap bridge.
+- Rebuilt all 20 statewide 2020 contest files so 151 early-vote pseudo-rows across 17 counties are distributed into real precincts while preserving all official county and statewide totals.
+- Prevented generated compatibility aliases from overwriting exact precinct results, including Wake 01-25 with Wake 19-25 data.
+
+### HD-80/81 Presidential Data Correction (July 19, 2026)
+
+- Corrected reversed Thomasville and Lexington rows in the 2022-lines State House presidential data.
+- Restored the 2016 margins to `R+51.45` in HD-80 and `R+45.07` in HD-81.
+- Restored the 2024 margins to `R+50.20` in HD-80 and `R+43.58` in HD-81.
+
+### Default Atlas/DRA Compromise Color Table (July 21, 2026)
+
+- Made a 15-tier compromise between the original Atlas palette and a modified DRA color table the default partisan palette, while retaining the unchanged original Atlas colors as a persisted option under `More`.
+- Synchronized the first-painted legend with the active palette so the Map Key no longer briefly shows stale Atlas colors while the app initializes.
+- Applied the same table to county, precinct, congressional, State House, and State Senate fills and aligned county/district opacity so identical colors have consistent visual weight over the basemap.
+- Refined the safe-to-stronghold steps and competitive transitions, with neutral tossups centered on `#f7f7f7`:
+
+| Margin tier | Threshold | Republican | Democratic |
+| --- | ---: | --- | --- |
+| Annihilation | 40+ | `#67000d` | `#08306b` |
+| Dominant | 30+ | `#a50f15` | `#08519c` |
+| Stronghold | 20+ | `#cb181d` | `#2876b5` |
+| Safe | 10+ | `#db3830` | `#4795d2` |
+| Likely | 5.5+ | `#eb544c` | `#6baed6` |
+| Lean | 1+ | `#fa9983` | `#8bbde0` |
+| Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
+| Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
+
+### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
+
+- Removed the uncontested 2012 Attorney General contest from the precinct and county manifests and deleted both derived result slices.
+- Removed the corresponding congressional, State House, and State Senate slices and manifest entries for the 2022-lines, 2024-lines, and DRA-review district datasets.
+- Retained the archival raw 2012 election CSV as an unchanged source record.
 
 ## UI Performance Enhancements
 
