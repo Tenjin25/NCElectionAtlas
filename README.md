@@ -108,6 +108,10 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
+- **Compromise margin-color update:** Refined the default DRA-inspired palette with balanced middle-tier reds and blues while retaining the established dark-end colors. The legend and map fills now use the same live colors across every geography layer.
+
+- **HD-80/81 presidential data correction:** Fixed reversed Thomasville and Lexington rows in the 2022-lines State House data. The corrected 2016 margins are `R+51.45` in HD-80 and `R+45.07` in HD-81; the corrected 2024 margins are `R+50.20` in HD-80 and `R+43.58` in HD-81.
+
 - **Uncontested 2012 Attorney General cleanup:** Removed the uncontested 2012 Attorney General result from precinct, county, congressional, State House, and State Senate manifests and deleted the corresponding derived JSON slices. The archival raw election CSV remains unchanged.
 
 - **Exact precinct-key priority:** Prevented generated compatibility aliases from overwriting an exact precinct result already loaded for the same map key. This fixes Wake 01-25 incorrectly displaying Wake 19-25's Trump-leading 2020 presidential result even though the underlying Wake 01-25 data is Biden-leading.
@@ -128,13 +132,13 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 | Margin tier | Threshold | Republican | Democratic |
 | --- | ---: | --- | --- |
-| Annihilation | 40+ | `#68000c` | `#04345c` |
-| Dominant | 30+ | `#940016` | `#064a80` |
-| Stronghold | 20+ | `#b91227` | `#0863a8` |
-| Safe | 10+ | `#d52b3f` | `#1f75bd` |
-| Likely | 5.5+ | `#f16672` | `#4699e5` |
-| Lean | 1+ | `#f58f96` | `#78afe9` |
-| Tilt | 0.5+ | `#f8bec2` | `#b6d5f5` |
+| Annihilation | 40+ | `#67000d` | `#08306b` |
+| Dominant | 30+ | `#a50f15` | `#08519c` |
+| Stronghold | 20+ | `#cb181d` | `#2876b5` |
+| Safe | 10+ | `#db3830` | `#4795d2` |
+| Likely | 5.5+ | `#eb544c` | `#6baed6` |
+| Lean | 1+ | `#fa9983` | `#8bbde0` |
+| Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 
 ### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
