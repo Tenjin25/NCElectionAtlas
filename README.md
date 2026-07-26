@@ -1123,7 +1123,7 @@ Implementation note:
 | Stronghold | 20+ | `#cb181d` | `#2876b5` |
 | Safe | 10+ | `#e93a2d` | `#4795d2` |
 | Likely | 5.5+ | `#f7634b` | `#6baed6` |
-| Lean | 1+ | `#fca98e` | `#8bbde0` |
+| Lean | 1+ | `#fca793` | `#8bbde0` |
 | Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 
