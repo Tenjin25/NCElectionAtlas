@@ -89,6 +89,13 @@ SCOPE_CONFIG = (
         2,
         "Congressional District {number}",
     ),
+    (
+        "2026_congressional_sl2025_95",
+        ROOT / "data/tmp/block_assign_extract_2026/NC_CD2026.csv",
+        "CD",
+        2,
+        "Congressional District {number}",
+    ),
 )
 PLAN_ARCHIVES = {
     2002: {
@@ -276,7 +283,11 @@ def load_fractional_bridge(
     return chained
 
 
-def collect_2000_precincts(path: Path, target_counties: set[str]) -> pd.DataFrame:
+def collect_2000_precincts(
+    path: Path,
+    target_counties: set[str],
+    sf_vtds: set[tuple[str, str]],
+) -> pd.DataFrame:
     assignments: dict[tuple[str, str], dict[str, set[str]]] = defaultdict(
         lambda: {"house": set(), "senate": set(), "congressional": set()}
     )
@@ -300,29 +311,71 @@ def collect_2000_precincts(path: Path, target_counties: set[str]) -> pd.DataFram
         unique = {name: len(values) == 1 for name, values in chambers.items()}
         if not unique["congressional"]:
             continue
+        vtd_token = code_norm(prefix_token(raw))
+        vtd_prefix = (
+            f"{county}|VTD{vtd_token}|"
+            if vtd_token and (county, vtd_token) in sf_vtds
+            else f"{county}|"
+        )
+        precise_vtd = vtd_prefix != f"{county}|"
         cd = next(iter(chambers["congressional"]))
         if unique["house"] and unique["senate"]:
             house = next(iter(chambers["house"]))
             senate = next(iter(chambers["senate"]))
-            group_id = f"{county}|HSC|H{house}|S{senate}|C{cd}"
-            strategy = "election_district_cell_hsc"
+            fallback_group_id = f"{county}|HSC|H{house}|S{senate}|C{cd}"
+            group_id = (
+                f"{vtd_prefix}HSC|H{house}|S{senate}|C{cd}"
+                if precise_vtd
+                else fallback_group_id
+            )
+            strategy = (
+                "direct_sf1_vtd_election_district_cell_hsc"
+                if precise_vtd
+                else "election_district_cell_hsc"
+            )
         elif unique["senate"]:
             senate = next(iter(chambers["senate"]))
-            group_id = f"{county}|SC|S{senate}|C{cd}"
-            strategy = "election_district_cell_sc"
+            fallback_group_id = f"{county}|SC|S{senate}|C{cd}"
+            group_id = (
+                f"{vtd_prefix}SC|S{senate}|C{cd}"
+                if precise_vtd
+                else fallback_group_id
+            )
+            strategy = (
+                "direct_sf1_vtd_election_district_cell_sc"
+                if precise_vtd
+                else "election_district_cell_sc"
+            )
         elif unique["house"]:
             house = next(iter(chambers["house"]))
-            group_id = f"{county}|HC|H{house}|C{cd}"
-            strategy = "election_district_cell_hc"
+            fallback_group_id = f"{county}|HC|H{house}|C{cd}"
+            group_id = (
+                f"{vtd_prefix}HC|H{house}|C{cd}"
+                if precise_vtd
+                else fallback_group_id
+            )
+            strategy = (
+                "direct_sf1_vtd_election_district_cell_hc"
+                if precise_vtd
+                else "election_district_cell_hc"
+            )
         else:
-            group_id = f"{county}|C|C{cd}"
-            strategy = "election_district_cell_c"
+            fallback_group_id = f"{county}|C|C{cd}"
+            group_id = (
+                f"{vtd_prefix}C|C{cd}" if precise_vtd else fallback_group_id
+            )
+            strategy = (
+                "direct_sf1_vtd_election_district_cell_c"
+                if precise_vtd
+                else "election_district_cell_c"
+            )
         rows.append(
             {
                 "year": 2000,
                 "county": county,
                 "raw_precinct": raw,
                 "group_id": group_id,
+                "fallback_group_id": fallback_group_id,
                 "strategy": strategy,
             }
         )
@@ -559,22 +612,24 @@ def make_block_groups(
         house = vap["sldl_2000"].map(clean_district)
         senate = vap["sldu_2000"].map(clean_district)
         cd = vap["cd106_2000"].map(clean_district)
+        vtd = vap["vtd_code_2000"].map(code_norm)
         frames = []
-        for signature, group in (
-            ("HSC", county + "|HSC|H" + house + "|S" + senate + "|C" + cd),
-            ("SC", county + "|SC|S" + senate + "|C" + cd),
-            ("HC", county + "|HC|H" + house + "|C" + cd),
-            ("C", county + "|C|C" + cd),
+        for signature, suffix in (
+            ("HSC", "H" + house + "|S" + senate + "|C" + cd),
+            ("SC", "S" + senate + "|C" + cd),
+            ("HC", "H" + house + "|C" + cd),
+            ("C", "C" + cd),
         ):
-            frames.append(
-                pd.DataFrame(
-                    {
-                        "blk2000ge": vap["blk2000ge"],
-                        "precinct_id": group,
-                        "cell_signature": signature,
-                    }
+            for prefix in (county + "|", county + "|VTD" + vtd + "|"):
+                frames.append(
+                    pd.DataFrame(
+                        {
+                            "blk2000ge": vap["blk2000ge"],
+                            "precinct_id": prefix + signature + "|" + suffix,
+                            "cell_signature": signature,
+                        }
+                    )
                 )
-            )
         return pd.concat(frames, ignore_index=True)
     vtd = pd.DataFrame(
         {
@@ -717,7 +772,11 @@ def main() -> None:
         for year in (2002, 2004)
     }
 
-    mapping_parts = [collect_2000_precincts(RESULTS[2000], target_counties[2000])]
+    mapping_parts = [
+        collect_2000_precincts(
+            RESULTS[2000], target_counties[2000], sf_vtds
+        )
+    ]
     direct_rejected: list[dict[str, str]] = []
     rejected: list[dict[str, str]] = []
     rescue_parts: list[pd.DataFrame] = []
@@ -819,12 +878,29 @@ def main() -> None:
                 width=width,
                 name_template=template,
             )
-            entries, detail = expand_groups(cell_entries, detail, year_map)
+            if year == 2000:
+                precise = year_map[year_map["group_id"].isin(cell_entries)].copy()
+                fallback = year_map[
+                    ~year_map["synthetic_key"].isin(precise["synthetic_key"])
+                ].copy()
+                fallback["group_id"] = fallback["fallback_group_id"]
+                precise_entries, precise_detail = expand_groups(
+                    cell_entries, detail, precise
+                )
+                fallback_entries, fallback_detail = expand_groups(
+                    cell_entries, detail, fallback
+                )
+                entries = {**fallback_entries, **precise_entries}
+                detail = pd.concat(
+                    [precise_detail, fallback_detail], ignore_index=True
+                )
+            else:
+                entries, detail = expand_groups(cell_entries, detail, year_map)
             precincts = dict(output["scopes"][scope_name]["precincts"])
             if year == 2000:
-                # Every geographic source precinct in the evidence-backed 2000
-                # county set has a district-cell link. Remove later SBE keys so
-                # they cannot win lookup precedence over the historical raw key.
+                # Exact VTD+historical-cell matches take precedence. Precincts
+                # without that intersection use the evidence-backed historical
+                # cell rather than an unrelated later-vintage precinct geometry.
                 precincts = {
                     key: value
                     for key, value in precincts.items()
@@ -845,7 +921,7 @@ def main() -> None:
             precincts.update(entries)
             output["scopes"][scope_name]["precincts"] = dict(sorted(precincts.items()))
             output["scopes"][scope_name]["urban_sf1_weight_source"] = (
-                "election_district_cell"
+                "exact_vtd_historical_cell_plus_cell_fallback"
                 if year == 2000
                 else "direct_sf1_vtd_plus_historical_plan_cell"
             )
@@ -858,7 +934,7 @@ def main() -> None:
         output["historical_urban_sf1_pilot"] = {
             "year": year,
             "strategy": (
-                "election_district_cell"
+                "exact_vtd_historical_cell_plus_cell_fallback"
                 if year == 2000
                 else "direct_sf1_vtd_plus_historical_plan_cell"
             ),

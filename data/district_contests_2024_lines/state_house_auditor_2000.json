@@ -3,66 +3,72 @@
   "scope": "state_house",
   "contest_type": "auditor",
   "meta": {
-    "match_coverage_pct": 62.26,
-    "matched_precinct_keys": 1676,
+    "match_coverage_pct": 69.61,
+    "matched_precinct_keys": 1874,
     "total_precinct_keys": 2692,
     "source": "batch_shatter_vap_party_split",
     "office": "AUDITOR",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
+    "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
+    "district_weights_json": "data/reports/urban_sf1_historical/district_weights_2000.json",
+    "district_weight_plan": "tiger_line_2024",
+    "district_lines_year": 2024,
+    "district_lines_label": "2024 lines Census 2000 exact-VTD historical-cell hybrid"
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 14234,
-        "rep_votes": 10808,
+        "dem_votes": 14406,
+        "rep_votes": 10503,
         "other_votes": 0,
-        "total_votes": 25042,
+        "total_votes": 24909,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -3426,
-        "margin_pct": -13.68,
+        "margin": -3903,
+        "margin_pct": -15.67,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "2": {
-        "dem_votes": 14590,
-        "rep_votes": 12076,
+        "dem_votes": 12898,
+        "rep_votes": 11291,
         "other_votes": 0,
-        "total_votes": 26666,
+        "total_votes": 24189,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2514,
-        "margin_pct": -9.43,
+        "margin": -1607,
+        "margin_pct": -6.64,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "3": {
-        "dem_votes": 11905,
-        "rep_votes": 13684,
+        "dem_votes": 11642,
+        "rep_votes": 12727,
         "other_votes": 0,
-        "total_votes": 25589,
+        "total_votes": 24369,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1779,
-        "margin_pct": 6.95,
+        "margin": 1085,
+        "margin_pct": 4.45,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "4": {
-        "dem_votes": 12485,
-        "rep_votes": 9113,
+        "dem_votes": 13115,
+        "rep_votes": 9600,
         "other_votes": 0,
-        "total_votes": 21598,
+        "total_votes": 22715,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -3372,
-        "margin_pct": -15.61,
+        "margin": -3515,
+        "margin_pct": -15.47,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -83,94 +89,94 @@
         }
       },
       "6": {
-        "dem_votes": 7235,
-        "rep_votes": 6900,
+        "dem_votes": 8670,
+        "rep_votes": 8024,
         "other_votes": 0,
-        "total_votes": 14135,
+        "total_votes": 16694,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -335,
-        "margin_pct": -2.37,
+        "margin": -646,
+        "margin_pct": -3.87,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "7": {
-        "dem_votes": 11945,
-        "rep_votes": 7942,
+        "dem_votes": 10563,
+        "rep_votes": 7430,
         "other_votes": 0,
-        "total_votes": 19887,
+        "total_votes": 17993,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4003,
-        "margin_pct": -20.13,
+        "margin": -3133,
+        "margin_pct": -17.41,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "8": {
-        "dem_votes": 11300,
-        "rep_votes": 6999,
+        "dem_votes": 11470,
+        "rep_votes": 6578,
         "other_votes": 0,
-        "total_votes": 18299,
+        "total_votes": 18048,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4301,
-        "margin_pct": -23.5,
+        "margin": -4892,
+        "margin_pct": -27.11,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "9": {
-        "dem_votes": 10595,
-        "rep_votes": 10810,
+        "dem_votes": 10424,
+        "rep_votes": 11230,
         "other_votes": 0,
-        "total_votes": 21405,
+        "total_votes": 21654,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 215,
-        "margin_pct": 1,
+        "margin": 806,
+        "margin_pct": 3.72,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "10": {
-        "dem_votes": 11971,
-        "rep_votes": 12808,
+        "dem_votes": 11335,
+        "rep_votes": 12319,
         "other_votes": 0,
-        "total_votes": 24779,
+        "total_votes": 23654,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 837,
-        "margin_pct": 3.38,
+        "margin": 984,
+        "margin_pct": 4.16,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "11": {
-        "dem_votes": 15916,
-        "rep_votes": 16941,
+        "dem_votes": 15046,
+        "rep_votes": 17251,
         "other_votes": 0,
-        "total_votes": 32857,
+        "total_votes": 32297,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1025,
-        "margin_pct": 3.12,
+        "margin": 2205,
+        "margin_pct": 6.83,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fb6a4a"
         }
       },
       "12": {
-        "dem_votes": 17366,
-        "rep_votes": 11624,
+        "dem_votes": 17364,
+        "rep_votes": 11622,
         "other_votes": 0,
-        "total_votes": 28990,
+        "total_votes": 28986,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
         "margin": -5742,
@@ -181,196 +187,196 @@
         }
       },
       "13": {
-        "dem_votes": 11111,
-        "rep_votes": 13717,
+        "dem_votes": 11372,
+        "rep_votes": 14670,
         "other_votes": 0,
-        "total_votes": 24828,
+        "total_votes": 26042,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2606,
-        "margin_pct": 10.5,
+        "margin": 3298,
+        "margin_pct": 12.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "14": {
-        "dem_votes": 4844,
-        "rep_votes": 5558,
+        "dem_votes": 4852,
+        "rep_votes": 5575,
         "other_votes": 0,
-        "total_votes": 10402,
+        "total_votes": 10427,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 714,
-        "margin_pct": 6.86,
+        "margin": 723,
+        "margin_pct": 6.93,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "15": {
-        "dem_votes": 6122,
-        "rep_votes": 7696,
+        "dem_votes": 6298,
+        "rep_votes": 7871,
         "other_votes": 0,
-        "total_votes": 13818,
+        "total_votes": 14169,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1574,
-        "margin_pct": 11.39,
+        "margin": 1573,
+        "margin_pct": 11.1,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "16": {
-        "dem_votes": 8326,
-        "rep_votes": 8371,
+        "dem_votes": 8146,
+        "rep_votes": 8176,
         "other_votes": 0,
-        "total_votes": 16697,
+        "total_votes": 16322,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 45,
-        "margin_pct": 0.27,
+        "margin": 30,
+        "margin_pct": 0.18,
         "winner": "REP",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
       "17": {
-        "dem_votes": 8824,
-        "rep_votes": 8414,
+        "dem_votes": 8497,
+        "rep_votes": 7555,
         "other_votes": 0,
-        "total_votes": 17238,
+        "total_votes": 16052,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -410,
-        "margin_pct": -2.38,
+        "margin": -942,
+        "margin_pct": -5.87,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "18": {
-        "dem_votes": 12561,
-        "rep_votes": 11776,
+        "dem_votes": 13854,
+        "rep_votes": 10111,
         "other_votes": 0,
-        "total_votes": 24337,
+        "total_votes": 23965,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -785,
-        "margin_pct": -3.23,
+        "margin": -3743,
+        "margin_pct": -15.62,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#6baed6"
         }
       },
       "19": {
-        "dem_votes": 9721,
-        "rep_votes": 10323,
+        "dem_votes": 9933,
+        "rep_votes": 12203,
         "other_votes": 0,
-        "total_votes": 20044,
+        "total_votes": 22136,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 602,
-        "margin_pct": 3,
+        "margin": 2270,
+        "margin_pct": 10.25,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "20": {
-        "dem_votes": 11926,
-        "rep_votes": 14354,
+        "dem_votes": 10751,
+        "rep_votes": 15005,
         "other_votes": 0,
-        "total_votes": 26280,
+        "total_votes": 25756,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2428,
-        "margin_pct": 9.24,
+        "margin": 4254,
+        "margin_pct": 16.52,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "21": {
-        "dem_votes": 1227,
-        "rep_votes": 1491,
+        "dem_votes": 4434,
+        "rep_votes": 5647,
         "other_votes": 0,
-        "total_votes": 2718,
+        "total_votes": 10081,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 264,
-        "margin_pct": 9.71,
+        "margin": 1213,
+        "margin_pct": 12.03,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "22": {
-        "dem_votes": 16910,
-        "rep_votes": 11762,
+        "dem_votes": 16918,
+        "rep_votes": 11770,
         "other_votes": 0,
-        "total_votes": 28672,
+        "total_votes": 28688,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
         "margin": -5148,
-        "margin_pct": -17.95,
+        "margin_pct": -17.94,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "23": {
-        "dem_votes": 24301,
-        "rep_votes": 8788,
+        "dem_votes": 24300,
+        "rep_votes": 8791,
         "other_votes": 0,
-        "total_votes": 33089,
+        "total_votes": 33091,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -15513,
-        "margin_pct": -46.88,
+        "margin": -15509,
+        "margin_pct": -46.87,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "24": {
-        "dem_votes": 14504,
-        "rep_votes": 10692,
+        "dem_votes": 14339,
+        "rep_votes": 10888,
         "other_votes": 0,
-        "total_votes": 25196,
+        "total_votes": 25227,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -3812,
-        "margin_pct": -15.13,
+        "margin": -3451,
+        "margin_pct": -13.68,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "25": {
-        "dem_votes": 15080,
-        "rep_votes": 13379,
+        "dem_votes": 15216,
+        "rep_votes": 13153,
         "other_votes": 0,
-        "total_votes": 28459,
+        "total_votes": 28369,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1701,
-        "margin_pct": -5.98,
+        "margin": -2063,
+        "margin_pct": -7.27,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "26": {
-        "dem_votes": 6644,
-        "rep_votes": 8275,
+        "dem_votes": 5370,
+        "rep_votes": 6636,
         "other_votes": 0,
-        "total_votes": 14919,
+        "total_votes": 12006,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1631,
-        "margin_pct": 10.93,
+        "margin": 1266,
+        "margin_pct": 10.54,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -391,836 +397,836 @@
         }
       },
       "28": {
-        "dem_votes": 10327,
-        "rep_votes": 10426,
+        "dem_votes": 11657,
+        "rep_votes": 11590,
         "other_votes": 0,
-        "total_votes": 20753,
+        "total_votes": 23247,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 99,
-        "margin_pct": 0.48,
-        "winner": "REP",
+        "margin": -67,
+        "margin_pct": -0.29,
+        "winner": "DEM",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
       "29": {
-        "dem_votes": 11465,
-        "rep_votes": 4884,
+        "dem_votes": 15667,
+        "rep_votes": 7148,
         "other_votes": 0,
-        "total_votes": 16349,
+        "total_votes": 22815,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6581,
-        "margin_pct": -40.25,
+        "margin": -8519,
+        "margin_pct": -37.34,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#08306b"
+          "color": "#08519c"
         }
       },
       "30": {
-        "dem_votes": 18218,
-        "rep_votes": 7210,
+        "dem_votes": 15094,
+        "rep_votes": 5759,
         "other_votes": 0,
-        "total_votes": 25428,
+        "total_votes": 20853,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -11008,
-        "margin_pct": -43.29,
+        "margin": -9335,
+        "margin_pct": -44.77,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 10259,
-        "rep_votes": 3274,
+        "dem_votes": 10887,
+        "rep_votes": 3253,
         "other_votes": 0,
-        "total_votes": 13533,
+        "total_votes": 14140,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6985,
-        "margin_pct": -51.61,
+        "margin": -7634,
+        "margin_pct": -53.99,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "32": {
-        "dem_votes": 15059,
-        "rep_votes": 7579,
+        "dem_votes": 16389,
+        "rep_votes": 8062,
         "other_votes": 0,
-        "total_votes": 22638,
+        "total_votes": 24451,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -7480,
-        "margin_pct": -33.04,
+        "margin": -8327,
+        "margin_pct": -34.06,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "33": {
-        "dem_votes": 12681,
-        "rep_votes": 12168,
+        "dem_votes": 9635,
+        "rep_votes": 7639,
         "other_votes": 0,
-        "total_votes": 24849,
+        "total_votes": 17274,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -513,
-        "margin_pct": -2.06,
+        "margin": -1996,
+        "margin_pct": -11.55,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#6baed6"
         }
       },
       "34": {
-        "dem_votes": 23540,
-        "rep_votes": 13895,
+        "dem_votes": 20217,
+        "rep_votes": 13240,
         "other_votes": 0,
-        "total_votes": 37435,
+        "total_votes": 33457,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -9645,
-        "margin_pct": -25.76,
+        "margin": -6977,
+        "margin_pct": -20.85,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "35": {
-        "dem_votes": 8799,
-        "rep_votes": 9662,
+        "dem_votes": 6927,
+        "rep_votes": 9989,
         "other_votes": 0,
-        "total_votes": 18461,
+        "total_votes": 16916,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 863,
-        "margin_pct": 4.67,
+        "margin": 3062,
+        "margin_pct": 18.1,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "36": {
-        "dem_votes": 3807,
-        "rep_votes": 5204,
+        "dem_votes": 6893,
+        "rep_votes": 8793,
         "other_votes": 0,
-        "total_votes": 9011,
+        "total_votes": 15686,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1397,
-        "margin_pct": 15.5,
+        "margin": 1900,
+        "margin_pct": 12.11,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "37": {
-        "dem_votes": 8402,
-        "rep_votes": 7849,
+        "dem_votes": 8298,
+        "rep_votes": 10124,
         "other_votes": 0,
-        "total_votes": 16251,
+        "total_votes": 18422,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -553,
-        "margin_pct": -3.4,
-        "winner": "DEM",
+        "margin": 1826,
+        "margin_pct": 9.91,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#fb6a4a"
         }
       },
       "38": {
-        "dem_votes": 16191,
-        "rep_votes": 11568,
+        "dem_votes": 15472,
+        "rep_votes": 5186,
         "other_votes": 0,
-        "total_votes": 27759,
+        "total_votes": 20658,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4623,
-        "margin_pct": -16.65,
+        "margin": -10286,
+        "margin_pct": -49.79,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 7012,
-        "rep_votes": 7651,
+        "dem_votes": 9935,
+        "rep_votes": 9975,
         "other_votes": 0,
-        "total_votes": 14663,
+        "total_votes": 19910,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 639,
-        "margin_pct": 4.36,
+        "margin": 40,
+        "margin_pct": 0.2,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "40": {
-        "dem_votes": 17444,
-        "rep_votes": 19584,
+        "dem_votes": 13814,
+        "rep_votes": 15579,
         "other_votes": 0,
-        "total_votes": 37028,
+        "total_votes": 29393,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2140,
-        "margin_pct": 5.78,
+        "margin": 1765,
+        "margin_pct": 6.0,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "41": {
-        "dem_votes": 5461,
-        "rep_votes": 6201,
+        "dem_votes": 4347,
+        "rep_votes": 5492,
         "other_votes": 0,
-        "total_votes": 11662,
+        "total_votes": 9839,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 740,
-        "margin_pct": 6.35,
+        "margin": 1145,
+        "margin_pct": 11.64,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "42": {
-        "dem_votes": 9291,
-        "rep_votes": 5712,
+        "dem_votes": 10006,
+        "rep_votes": 4645,
         "other_votes": 0,
-        "total_votes": 15003,
+        "total_votes": 14651,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -3579,
-        "margin_pct": -23.86,
+        "margin": -5361,
+        "margin_pct": -36.59,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08519c"
         }
       },
       "43": {
-        "dem_votes": 7489,
-        "rep_votes": 5919,
+        "dem_votes": 11907,
+        "rep_votes": 10670,
         "other_votes": 0,
-        "total_votes": 13408,
+        "total_votes": 22577,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1570,
-        "margin_pct": -11.71,
+        "margin": -1237,
+        "margin_pct": -5.48,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#c6dbef"
         }
       },
       "44": {
-        "dem_votes": 19773,
-        "rep_votes": 14181,
+        "dem_votes": 15670,
+        "rep_votes": 10479,
         "other_votes": 0,
-        "total_votes": 33954,
+        "total_votes": 26149,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -5592,
-        "margin_pct": -16.47,
+        "margin": -5191,
+        "margin_pct": -19.85,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "45": {
-        "dem_votes": 7435,
-        "rep_votes": 5509,
+        "dem_votes": 6421,
+        "rep_votes": 5538,
         "other_votes": 0,
-        "total_votes": 12944,
+        "total_votes": 11959,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1926,
-        "margin_pct": -14.88,
+        "margin": -883,
+        "margin_pct": -7.38,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "46": {
-        "dem_votes": 16977,
-        "rep_votes": 7673,
+        "dem_votes": 17044,
+        "rep_votes": 7960,
         "other_votes": 0,
-        "total_votes": 24650,
+        "total_votes": 25004,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -9304,
-        "margin_pct": -37.74,
+        "margin": -9084,
+        "margin_pct": -36.33,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
         }
       },
       "47": {
-        "dem_votes": 17158,
-        "rep_votes": 4907,
+        "dem_votes": 17088,
+        "rep_votes": 4617,
         "other_votes": 0,
-        "total_votes": 22065,
+        "total_votes": 21705,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -12251,
-        "margin_pct": -55.52,
+        "margin": -12471,
+        "margin_pct": -57.46,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "48": {
-        "dem_votes": 11120,
-        "rep_votes": 4687,
+        "dem_votes": 11103,
+        "rep_votes": 4677,
         "other_votes": 0,
-        "total_votes": 15807,
+        "total_votes": 15780,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -6433,
-        "margin_pct": -40.7,
+        "margin": -6426,
+        "margin_pct": -40.72,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "49": {
-        "dem_votes": 11121,
-        "rep_votes": 8855,
+        "dem_votes": 13965,
+        "rep_votes": 10327,
         "other_votes": 0,
-        "total_votes": 19976,
+        "total_votes": 24292,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2266,
-        "margin_pct": -11.34,
+        "margin": -3638,
+        "margin_pct": -14.98,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "50": {
-        "dem_votes": 19970,
-        "rep_votes": 12730,
+        "dem_votes": 17640,
+        "rep_votes": 9738,
         "other_votes": 0,
-        "total_votes": 32700,
+        "total_votes": 27378,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -7240,
-        "margin_pct": -22.14,
+        "margin": -7902,
+        "margin_pct": -28.86,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "51": {
-        "dem_votes": 9412,
-        "rep_votes": 10150,
+        "dem_votes": 9085,
+        "rep_votes": 10227,
         "other_votes": 0,
-        "total_votes": 19562,
+        "total_votes": 19312,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 738,
-        "margin_pct": 3.77,
+        "margin": 1142,
+        "margin_pct": 5.91,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#fb6a4a"
         }
       },
       "52": {
-        "dem_votes": 14620,
-        "rep_votes": 10504,
+        "dem_votes": 14384,
+        "rep_votes": 11559,
         "other_votes": 0,
-        "total_votes": 25124,
+        "total_votes": 25943,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4116,
-        "margin_pct": -16.38,
+        "margin": -2825,
+        "margin_pct": -10.89,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "53": {
-        "dem_votes": 6974,
-        "rep_votes": 7490,
+        "dem_votes": 5527,
+        "rep_votes": 6890,
         "other_votes": 0,
-        "total_votes": 14464,
+        "total_votes": 12417,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 516,
-        "margin_pct": 3.57,
+        "margin": 1363,
+        "margin_pct": 10.98,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "54": {
-        "dem_votes": 12438,
-        "rep_votes": 10125,
+        "dem_votes": 12462,
+        "rep_votes": 10176,
         "other_votes": 0,
-        "total_votes": 22563,
+        "total_votes": 22638,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2313,
-        "margin_pct": -10.25,
+        "margin": -2286,
+        "margin_pct": -10.1,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "55": {
-        "dem_votes": 13530,
-        "rep_votes": 11991,
+        "dem_votes": 12420,
+        "rep_votes": 9640,
         "other_votes": 0,
-        "total_votes": 25521,
+        "total_votes": 22060,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1539,
-        "margin_pct": -6.03,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "56": {
-        "dem_votes": 16242,
-        "rep_votes": 6311,
-        "other_votes": 0,
-        "total_votes": 22553,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -9931,
-        "margin_pct": -44.03,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#08306b"
-        }
-      },
-      "57": {
-        "dem_votes": 17963,
-        "rep_votes": 9896,
-        "other_votes": 0,
-        "total_votes": 27859,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -8067,
-        "margin_pct": -28.96,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "58": {
-        "dem_votes": 15974,
-        "rep_votes": 12508,
-        "other_votes": 0,
-        "total_votes": 28482,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -3466,
-        "margin_pct": -12.17,
+        "margin": -2780,
+        "margin_pct": -12.6,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
-      "59": {
-        "dem_votes": 9131,
-        "rep_votes": 14019,
+      "56": {
+        "dem_votes": 18522,
+        "rep_votes": 9279,
         "other_votes": 0,
-        "total_votes": 23150,
+        "total_votes": 27801,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4888,
-        "margin_pct": 21.11,
-        "winner": "REP",
+        "margin": -9243,
+        "margin_pct": -33.25,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#08519c"
+        }
+      },
+      "57": {
+        "dem_votes": 13743,
+        "rep_votes": 11673,
+        "other_votes": 0,
+        "total_votes": 25416,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -2070,
+        "margin_pct": -8.14,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "58": {
+        "dem_votes": 13650,
+        "rep_votes": 11595,
+        "other_votes": 0,
+        "total_votes": 25245,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -2055,
+        "margin_pct": -8.14,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "59": {
+        "dem_votes": 14028,
+        "rep_votes": 11927,
+        "other_votes": 0,
+        "total_votes": 25955,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -2101,
+        "margin_pct": -8.09,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
         }
       },
       "60": {
-        "dem_votes": 12059,
-        "rep_votes": 10516,
+        "dem_votes": 13856,
+        "rep_votes": 11775,
         "other_votes": 0,
-        "total_votes": 22575,
+        "total_votes": 25631,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1543,
-        "margin_pct": -6.83,
+        "margin": -2081,
+        "margin_pct": -8.12,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "61": {
-        "dem_votes": 20586,
-        "rep_votes": 12995,
+        "dem_votes": 14776,
+        "rep_votes": 12551,
         "other_votes": 0,
-        "total_votes": 33581,
+        "total_votes": 27327,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -7591,
-        "margin_pct": -22.61,
+        "margin": -2225,
+        "margin_pct": -8.14,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#9ecae1"
         }
       },
       "62": {
-        "dem_votes": 7891,
-        "rep_votes": 11080,
+        "dem_votes": 13558,
+        "rep_votes": 11519,
         "other_votes": 0,
-        "total_votes": 18971,
+        "total_votes": 25077,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3189,
-        "margin_pct": 16.81,
-        "winner": "REP",
+        "margin": -2039,
+        "margin_pct": -8.13,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#9ecae1"
         }
       },
       "63": {
-        "dem_votes": 10280,
-        "rep_votes": 11911,
+        "dem_votes": 10146,
+        "rep_votes": 11857,
         "other_votes": 0,
-        "total_votes": 22191,
+        "total_votes": 22003,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1631,
-        "margin_pct": 7.35,
+        "margin": 1711,
+        "margin_pct": 7.78,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "64": {
-        "dem_votes": 9425,
-        "rep_votes": 12066,
+        "dem_votes": 9586,
+        "rep_votes": 12119,
         "other_votes": 0,
-        "total_votes": 21491,
+        "total_votes": 21705,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2641,
-        "margin_pct": 12.29,
+        "margin": 2533,
+        "margin_pct": 11.67,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "65": {
-        "dem_votes": 15673,
-        "rep_votes": 14658,
+        "dem_votes": 15696,
+        "rep_votes": 14662,
         "other_votes": 0,
-        "total_votes": 30331,
+        "total_votes": 30358,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1015,
-        "margin_pct": -3.35,
+        "margin": -1034,
+        "margin_pct": -3.41,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "66": {
-        "dem_votes": 2718,
-        "rep_votes": 3801,
+        "dem_votes": 5643,
+        "rep_votes": 5842,
         "other_votes": 0,
-        "total_votes": 6519,
+        "total_votes": 11485,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1083,
-        "margin_pct": 16.61,
+        "margin": 199,
+        "margin_pct": 1.73,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fcae91"
         }
       },
       "67": {
         "dem_votes": 13186,
-        "rep_votes": 16364,
+        "rep_votes": 16365,
         "other_votes": 0,
-        "total_votes": 29550,
+        "total_votes": 29551,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3178,
-        "margin_pct": 10.75,
+        "margin": 3179,
+        "margin_pct": 10.76,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "68": {
-        "dem_votes": 3001,
-        "rep_votes": 7130,
+        "dem_votes": 3302,
+        "rep_votes": 8224,
         "other_votes": 0,
-        "total_votes": 10131,
+        "total_votes": 11526,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4129,
-        "margin_pct": 40.76,
+        "margin": 4922,
+        "margin_pct": 42.7,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
         }
       },
       "69": {
-        "dem_votes": 4423,
-        "rep_votes": 10217,
+        "dem_votes": 5238,
+        "rep_votes": 11485,
         "other_votes": 0,
-        "total_votes": 14640,
+        "total_votes": 16723,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 5794,
-        "margin_pct": 39.58,
+        "margin": 6247,
+        "margin_pct": 37.36,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "70": {
-        "dem_votes": 8272,
-        "rep_votes": 17267,
+        "dem_votes": 8559,
+        "rep_votes": 17747,
         "other_votes": 0,
-        "total_votes": 25539,
+        "total_votes": 26306,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 8995,
-        "margin_pct": 35.22,
+        "margin": 9188,
+        "margin_pct": 34.93,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "71": {
-        "dem_votes": 14365,
-        "rep_votes": 15047,
+        "dem_votes": 12811,
+        "rep_votes": 10793,
         "other_votes": 0,
-        "total_votes": 29412,
+        "total_votes": 23604,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 682,
-        "margin_pct": 2.32,
-        "winner": "REP",
+        "margin": -2018,
+        "margin_pct": -8.55,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#9ecae1"
         }
       },
       "72": {
-        "dem_votes": 16578,
-        "rep_votes": 17606,
+        "dem_votes": 16616,
+        "rep_votes": 8547,
         "other_votes": 0,
-        "total_votes": 34184,
+        "total_votes": 25163,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1028,
-        "margin_pct": 3.01,
-        "winner": "REP",
+        "margin": -8069,
+        "margin_pct": -32.07,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#08519c"
         }
       },
       "73": {
-        "dem_votes": 7536,
-        "rep_votes": 11300,
+        "dem_votes": 8554,
+        "rep_votes": 11974,
         "other_votes": 0,
-        "total_votes": 18836,
+        "total_votes": 20528,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3764,
-        "margin_pct": 19.98,
+        "margin": 3420,
+        "margin_pct": 16.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "74": {
-        "dem_votes": 10909,
-        "rep_votes": 12946,
+        "dem_votes": 12272,
+        "rep_votes": 19407,
         "other_votes": 0,
-        "total_votes": 23855,
+        "total_votes": 31679,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2037,
-        "margin_pct": 8.54,
+        "margin": 7135,
+        "margin_pct": 22.52,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#cb181d"
         }
       },
       "75": {
-        "dem_votes": 9879,
-        "rep_votes": 7586,
+        "dem_votes": 9364,
+        "rep_votes": 13072,
         "other_votes": 0,
-        "total_votes": 17465,
+        "total_votes": 22436,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2293,
-        "margin_pct": -13.13,
-        "winner": "DEM",
+        "margin": 3708,
+        "margin_pct": 16.53,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "76": {
-        "dem_votes": 11764,
-        "rep_votes": 14884,
+        "dem_votes": 11098,
+        "rep_votes": 13588,
         "other_votes": 0,
-        "total_votes": 26648,
+        "total_votes": 24686,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3120,
-        "margin_pct": 11.71,
+        "margin": 2490,
+        "margin_pct": 10.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "77": {
-        "dem_votes": 10090,
-        "rep_votes": 20021,
+        "dem_votes": 9965,
+        "rep_votes": 19767,
         "other_votes": 0,
-        "total_votes": 30111,
+        "total_votes": 29732,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 9931,
-        "margin_pct": 32.98,
+        "margin": 9802,
+        "margin_pct": 32.97,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "78": {
-        "dem_votes": 8706,
-        "rep_votes": 17456,
+        "dem_votes": 8707,
+        "rep_votes": 15616,
         "other_votes": 0,
-        "total_votes": 26162,
+        "total_votes": 24323,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 8750,
-        "margin_pct": 33.45,
+        "margin": 6909,
+        "margin_pct": 28.41,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "79": {
-        "dem_votes": 16056,
-        "rep_votes": 14792,
+        "dem_votes": 15884,
+        "rep_votes": 15095,
         "other_votes": 0,
-        "total_votes": 30848,
+        "total_votes": 30979,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1264,
-        "margin_pct": -4.1,
+        "margin": -789,
+        "margin_pct": -2.55,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "80": {
-        "dem_votes": 7922,
-        "rep_votes": 14795,
+        "dem_votes": 8353,
+        "rep_votes": 16091,
         "other_votes": 0,
-        "total_votes": 22717,
+        "total_votes": 24444,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6873,
-        "margin_pct": 30.25,
+        "margin": 7738,
+        "margin_pct": 31.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "81": {
-        "dem_votes": 11240,
-        "rep_votes": 15308,
+        "dem_votes": 10788,
+        "rep_votes": 13953,
         "other_votes": 0,
-        "total_votes": 26548,
+        "total_votes": 24741,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4068,
-        "margin_pct": 15.32,
+        "margin": 3165,
+        "margin_pct": 12.79,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "82": {
-        "dem_votes": 7396,
-        "rep_votes": 11091,
+        "dem_votes": 4939,
+        "rep_votes": 9301,
         "other_votes": 0,
-        "total_votes": 18487,
+        "total_votes": 14240,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3695,
-        "margin_pct": 19.99,
+        "margin": 4362,
+        "margin_pct": 30.63,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#a50f15"
         }
       },
       "83": {
-        "dem_votes": 7423,
-        "rep_votes": 13222,
+        "dem_votes": 9642,
+        "rep_votes": 15866,
         "other_votes": 0,
-        "total_votes": 20645,
+        "total_votes": 25508,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 5799,
-        "margin_pct": 28.09,
+        "margin": 6224,
+        "margin_pct": 24.4,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "84": {
-        "dem_votes": 9886,
-        "rep_votes": 13121,
+        "dem_votes": 9305,
+        "rep_votes": 12110,
         "other_votes": 0,
-        "total_votes": 23007,
+        "total_votes": 21415,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3235,
-        "margin_pct": 14.06,
+        "margin": 2805,
+        "margin_pct": 13.1,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "85": {
-        "dem_votes": 12602,
-        "rep_votes": 18709,
+        "dem_votes": 12826,
+        "rep_votes": 19138,
         "other_votes": 0,
-        "total_votes": 31311,
+        "total_votes": 31964,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6107,
-        "margin_pct": 19.5,
+        "margin": 6312,
+        "margin_pct": 19.75,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "86": {
-        "dem_votes": 13012,
-        "rep_votes": 15075,
+        "dem_votes": 13000,
+        "rep_votes": 15049,
         "other_votes": 0,
-        "total_votes": 28087,
+        "total_votes": 28049,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2063,
-        "margin_pct": 7.35,
+        "margin": 2049,
+        "margin_pct": 7.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "87": {
-        "dem_votes": 10895,
-        "rep_votes": 16040,
+        "dem_votes": 10897,
+        "rep_votes": 16042,
         "other_votes": 0,
-        "total_votes": 26935,
+        "total_votes": 26939,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
         "margin": 5145,
@@ -1231,433 +1237,433 @@
         }
       },
       "88": {
-        "dem_votes": 5790,
-        "rep_votes": 6147,
+        "dem_votes": 12365,
+        "rep_votes": 9299,
         "other_votes": 0,
-        "total_votes": 11937,
+        "total_votes": 21664,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 357,
-        "margin_pct": 2.99,
-        "winner": "REP",
+        "margin": -3066,
+        "margin_pct": -14.15,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#6baed6"
         }
       },
       "89": {
-        "dem_votes": 8438,
-        "rep_votes": 15154,
+        "dem_votes": 8303,
+        "rep_votes": 14916,
         "other_votes": 0,
-        "total_votes": 23592,
+        "total_votes": 23219,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 6716,
-        "margin_pct": 28.47,
+        "margin": 6613,
+        "margin_pct": 28.48,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "90": {
-        "dem_votes": 11102,
-        "rep_votes": 16088,
+        "dem_votes": 11844,
+        "rep_votes": 18109,
         "other_votes": 0,
-        "total_votes": 27190,
+        "total_votes": 29953,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4986,
-        "margin_pct": 18.34,
+        "margin": 6265,
+        "margin_pct": 20.92,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "91": {
-        "dem_votes": 11209,
-        "rep_votes": 14849,
+        "dem_votes": 11866,
+        "rep_votes": 16236,
         "other_votes": 0,
-        "total_votes": 26058,
+        "total_votes": 28102,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3640,
-        "margin_pct": 13.97,
+        "margin": 4370,
+        "margin_pct": 15.55,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "92": {
-        "dem_votes": 10153,
-        "rep_votes": 10777,
+        "dem_votes": 6568,
+        "rep_votes": 6159,
         "other_votes": 0,
-        "total_votes": 20930,
+        "total_votes": 12727,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 624,
-        "margin_pct": 2.98,
-        "winner": "REP",
+        "margin": -409,
+        "margin_pct": -3.21,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#c6dbef"
         }
       },
       "93": {
-        "dem_votes": 13948,
-        "rep_votes": 15662,
+        "dem_votes": 13965,
+        "rep_votes": 15698,
         "other_votes": 0,
-        "total_votes": 29610,
+        "total_votes": 29663,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1714,
-        "margin_pct": 5.79,
+        "margin": 1733,
+        "margin_pct": 5.84,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "94": {
-        "dem_votes": 12043,
-        "rep_votes": 19989,
+        "dem_votes": 11283,
+        "rep_votes": 17933,
         "other_votes": 0,
-        "total_votes": 32032,
+        "total_votes": 29216,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 7946,
-        "margin_pct": 24.81,
+        "margin": 6650,
+        "margin_pct": 22.76,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "95": {
-        "dem_votes": 6903,
-        "rep_votes": 11218,
+        "dem_votes": 7586,
+        "rep_votes": 12405,
         "other_votes": 0,
-        "total_votes": 18121,
+        "total_votes": 19991,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4315,
-        "margin_pct": 23.81,
+        "margin": 4819,
+        "margin_pct": 24.11,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "96": {
-        "dem_votes": 10338,
-        "rep_votes": 17989,
+        "dem_votes": 10430,
+        "rep_votes": 18163,
         "other_votes": 0,
-        "total_votes": 28327,
+        "total_votes": 28593,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 7651,
-        "margin_pct": 27.01,
+        "margin": 7733,
+        "margin_pct": 27.05,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "97": {
-        "dem_votes": 9899,
-        "rep_votes": 13498,
+        "dem_votes": 9851,
+        "rep_votes": 13411,
         "other_votes": 0,
-        "total_votes": 23397,
+        "total_votes": 23262,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 3599,
-        "margin_pct": 15.38,
+        "margin": 3560,
+        "margin_pct": 15.3,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "98": {
-        "dem_votes": 10686,
-        "rep_votes": 10608,
+        "dem_votes": 5817,
+        "rep_votes": 7995,
         "other_votes": 0,
-        "total_votes": 21294,
+        "total_votes": 13812,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -78,
-        "margin_pct": -0.37,
-        "winner": "DEM",
+        "margin": 2178,
+        "margin_pct": 15.77,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#ef3b2c"
         }
       },
       "99": {
-        "dem_votes": 6842,
-        "rep_votes": 9645,
+        "dem_votes": 7946,
+        "rep_votes": 6604,
         "other_votes": 0,
-        "total_votes": 16487,
+        "total_votes": 14550,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2803,
-        "margin_pct": 17,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "100": {
-        "dem_votes": 13040,
-        "rep_votes": 9563,
-        "other_votes": 0,
-        "total_votes": 22603,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -3477,
-        "margin_pct": -15.38,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "101": {
-        "dem_votes": 6544,
-        "rep_votes": 8842,
-        "other_votes": 0,
-        "total_votes": 15386,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 2298,
-        "margin_pct": 14.94,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "102": {
-        "dem_votes": 6767,
-        "rep_votes": 6436,
-        "other_votes": 0,
-        "total_votes": 13203,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -331,
-        "margin_pct": -2.51,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "103": {
-        "dem_votes": 10072,
-        "rep_votes": 11773,
-        "other_votes": 0,
-        "total_votes": 21845,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": 1701,
-        "margin_pct": 7.79,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "104": {
-        "dem_votes": 9764,
-        "rep_votes": 8622,
-        "other_votes": 0,
-        "total_votes": 18386,
-        "dem_candidate": "Ralph Campbell",
-        "rep_candidate": "Leslie Merritt",
-        "margin": -1142,
-        "margin_pct": -6.21,
+        "margin": -1342,
+        "margin_pct": -9.22,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
-      "105": {
-        "dem_votes": 16873,
-        "rep_votes": 12314,
+      "100": {
+        "dem_votes": 10799,
+        "rep_votes": 15732,
         "other_votes": 0,
-        "total_votes": 29187,
+        "total_votes": 26531,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -4559,
-        "margin_pct": -15.62,
+        "margin": 4933,
+        "margin_pct": 18.59,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "101": {
+        "dem_votes": 6054,
+        "rep_votes": 7365,
+        "other_votes": 0,
+        "total_votes": 13419,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 1311,
+        "margin_pct": 9.77,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
+        }
+      },
+      "102": {
+        "dem_votes": 14391,
+        "rep_votes": 5443,
+        "other_votes": 0,
+        "total_votes": 19834,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": -8948,
+        "margin_pct": -45.11,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
+        }
+      },
+      "103": {
+        "dem_votes": 5793,
+        "rep_votes": 10668,
+        "other_votes": 0,
+        "total_votes": 16461,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 4875,
+        "margin_pct": 29.62,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "104": {
+        "dem_votes": 11295,
+        "rep_votes": 17453,
+        "other_votes": 0,
+        "total_votes": 28748,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 6158,
+        "margin_pct": 21.42,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "105": {
+        "dem_votes": 9377,
+        "rep_votes": 17201,
+        "other_votes": 0,
+        "total_votes": 26578,
+        "dem_candidate": "Ralph Campbell",
+        "rep_candidate": "Leslie Merritt",
+        "margin": 7824,
+        "margin_pct": 29.44,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
         }
       },
       "106": {
-        "dem_votes": 10331,
-        "rep_votes": 9104,
+        "dem_votes": 7083,
+        "rep_votes": 6076,
         "other_votes": 0,
-        "total_votes": 19435,
+        "total_votes": 13159,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -1227,
-        "margin_pct": -6.31,
+        "margin": -1007,
+        "margin_pct": -7.65,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "107": {
-        "dem_votes": 6497,
-        "rep_votes": 8270,
+        "dem_votes": 14084,
+        "rep_votes": 3744,
         "other_votes": 0,
-        "total_votes": 14767,
+        "total_votes": 17828,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 1773,
-        "margin_pct": 12.01,
-        "winner": "REP",
+        "margin": -10340,
+        "margin_pct": -58.0,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#08306b"
         }
       },
       "108": {
-        "dem_votes": 8585,
-        "rep_votes": 13429,
+        "dem_votes": 7704,
+        "rep_votes": 13041,
         "other_votes": 0,
-        "total_votes": 22014,
+        "total_votes": 20745,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4844,
-        "margin_pct": 22,
+        "margin": 5337,
+        "margin_pct": 25.73,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "109": {
-        "dem_votes": 8517,
-        "rep_votes": 13322,
+        "dem_votes": 8638,
+        "rep_votes": 14026,
         "other_votes": 0,
-        "total_votes": 21839,
+        "total_votes": 22664,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4805,
-        "margin_pct": 22,
+        "margin": 5388,
+        "margin_pct": 23.77,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 10964,
-        "rep_votes": 13277,
+        "dem_votes": 11901,
+        "rep_votes": 13123,
         "other_votes": 0,
-        "total_votes": 24241,
+        "total_votes": 25024,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 2313,
-        "margin_pct": 9.54,
+        "margin": 1222,
+        "margin_pct": 4.88,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "111": {
-        "dem_votes": 12215,
-        "rep_votes": 12301,
+        "dem_votes": 12749,
+        "rep_votes": 13123,
         "other_votes": 0,
-        "total_votes": 24516,
+        "total_votes": 25872,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 86,
-        "margin_pct": 0.35,
+        "margin": 374,
+        "margin_pct": 1.45,
         "winner": "REP",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#fcae91"
         }
       },
       "112": {
-        "dem_votes": 9943,
-        "rep_votes": 9468,
+        "dem_votes": 11729,
+        "rep_votes": 7838,
         "other_votes": 0,
-        "total_votes": 19411,
+        "total_votes": 19567,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -475,
-        "margin_pct": -2.45,
+        "margin": -3891,
+        "margin_pct": -19.89,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#6baed6"
         }
       },
       "113": {
-        "dem_votes": 12691,
-        "rep_votes": 17837,
+        "dem_votes": 11801,
+        "rep_votes": 16049,
         "other_votes": 0,
-        "total_votes": 30528,
+        "total_votes": 27850,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 5146,
-        "margin_pct": 16.86,
+        "margin": 4248,
+        "margin_pct": 15.25,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "114": {
-        "dem_votes": 13407,
-        "rep_votes": 13466,
+        "dem_votes": 12325,
+        "rep_votes": 13993,
         "other_votes": 0,
-        "total_votes": 26873,
+        "total_votes": 26318,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 59,
-        "margin_pct": 0.22,
+        "margin": 1668,
+        "margin_pct": 6.34,
         "winner": "REP",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#fb6a4a"
         }
       },
       "115": {
-        "dem_votes": 12882,
-        "rep_votes": 12938,
+        "dem_votes": 12515,
+        "rep_votes": 12393,
         "other_votes": 0,
-        "total_votes": 25820,
+        "total_votes": 24908,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 56,
-        "margin_pct": 0.22,
-        "winner": "REP",
+        "margin": -122,
+        "margin_pct": -0.49,
+        "winner": "DEM",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
       "116": {
-        "dem_votes": 13394,
-        "rep_votes": 13453,
+        "dem_votes": 14858,
+        "rep_votes": 13490,
         "other_votes": 0,
-        "total_votes": 26847,
+        "total_votes": 28348,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 59,
-        "margin_pct": 0.22,
-        "winner": "REP",
+        "margin": -1368,
+        "margin_pct": -4.83,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#c6dbef"
         }
       },
       "117": {
-        "dem_votes": 9318,
-        "rep_votes": 16550,
+        "dem_votes": 9261,
+        "rep_votes": 16907,
         "other_votes": 0,
-        "total_votes": 25868,
+        "total_votes": 26168,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 7232,
-        "margin_pct": 27.96,
+        "margin": 7646,
+        "margin_pct": 29.22,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "118": {
-        "dem_votes": 15473,
-        "rep_votes": 12820,
+        "dem_votes": 15469,
+        "rep_votes": 12817,
         "other_votes": 0,
-        "total_votes": 28293,
+        "total_votes": 28286,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": -2653,
+        "margin": -2652,
         "margin_pct": -9.38,
         "winner": "DEM",
         "competitiveness": {
@@ -1665,10 +1671,10 @@
         }
       },
       "119": {
-        "dem_votes": 14040,
-        "rep_votes": 14748,
+        "dem_votes": 14038,
+        "rep_votes": 14746,
         "other_votes": 0,
-        "total_votes": 28788,
+        "total_votes": 28784,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
         "margin": 708,
@@ -1679,14 +1685,14 @@
         }
       },
       "120": {
-        "dem_votes": 11905,
-        "rep_votes": 16748,
+        "dem_votes": 11909,
+        "rep_votes": 16751,
         "other_votes": 0,
-        "total_votes": 28653,
+        "total_votes": 28660,
         "dem_candidate": "Ralph Campbell",
         "rep_candidate": "Leslie Merritt",
-        "margin": 4843,
-        "margin_pct": 16.9,
+        "margin": 4842,
+        "margin_pct": 16.89,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

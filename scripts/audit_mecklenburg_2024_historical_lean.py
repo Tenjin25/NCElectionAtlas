@@ -132,6 +132,12 @@ def main() -> None:
         if not intersection.is_empty and intersection.area > 1e-8:
             clipped[district] = intersection
 
+    president_2000 = result_map(
+        args.line_year, f"{args.chamber}_president_2000.json"
+    )
+    governor_2000 = result_map(
+        args.line_year, f"{args.chamber}_governor_2000.json"
+    )
     senate_2002 = result_map(
         args.line_year, f"{args.chamber}_us_senate_2002.json"
     )
@@ -178,6 +184,10 @@ def main() -> None:
             "south_suburbs_2000_share_pct": round(south_suburban_share, 2),
             "remainder_2000_share_pct": round(remainder_share, 2),
             "top_2000_places": place_summary,
+            "president_2000_margin_pct": president_2000[district]["margin_pct"],
+            "president_2000_winner": president_2000[district]["winner"],
+            "governor_2000_margin_pct": governor_2000[district]["margin_pct"],
+            "governor_2000_winner": governor_2000[district]["winner"],
             "senate_2002_margin_pct": senate_2002[district]["margin_pct"],
             "senate_2002_winner": senate_2002[district]["winner"],
             "president_2004_margin_pct": president_2004[district]["margin_pct"],
