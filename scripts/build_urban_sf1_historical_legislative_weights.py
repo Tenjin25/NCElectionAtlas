@@ -288,8 +288,12 @@ def collect_2000_precincts(
     target_counties: set[str],
     sf_vtds: set[tuple[str, str]],
 ) -> pd.DataFrame:
-    assignments: dict[tuple[str, str], dict[str, set[str]]] = defaultdict(
-        lambda: {"house": set(), "senate": set(), "congressional": set()}
+    assignments: dict[tuple[str, str], dict[str, dict[str, int]]] = defaultdict(
+        lambda: {
+            "house": defaultdict(int),
+            "senate": defaultdict(int),
+            "congressional": defaultdict(int),
+        }
     )
     with path.open(newline="", encoding="utf-8-sig") as fh:
         for row in csv.DictReader(fh):
@@ -299,15 +303,30 @@ def collect_2000_precincts(
             raw = str(row.get("precinct") or "").strip()
             office = norm(row.get("office"))
             district = clean_district(row.get("district"))
+            votes = int(float(row.get("votes") or 0))
             key = (county, raw)
             if office.startswith("HOUSE DISTRICT "):
-                assignments[key]["house"].add(district)
+                assignments[key]["house"][district] += votes
             elif office.startswith("SENATE DISTRICT "):
-                assignments[key]["senate"].add(district)
+                assignments[key]["senate"][district] += votes
             elif office.startswith("US HOUSE OF REP. DISTRICT "):
-                assignments[key]["congressional"].add(district)
+                assignments[key]["congressional"][district] += votes
     rows: list[dict[str, Any]] = []
-    for (county, raw), chambers in assignments.items():
+    for (county, raw), chamber_totals in assignments.items():
+        chambers = {
+            name: {
+                district
+                for district, votes in totals.items()
+                if district and votes > 0
+            }
+            for name, totals in chamber_totals.items()
+        }
+        # Preserve a uniquely listed zero-turnout district, but ignore
+        # zero-filled rows for contests that did not cover the precinct.
+        for name, totals in chamber_totals.items():
+            listed = {district for district in totals if district}
+            if not chambers[name] and len(listed) == 1:
+                chambers[name] = listed
         unique = {name: len(values) == 1 for name, values in chambers.items()}
         if not unique["congressional"]:
             continue
