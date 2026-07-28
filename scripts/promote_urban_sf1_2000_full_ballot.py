@@ -48,7 +48,8 @@ def main() -> None:
         [
             row
             for row in audit["file_summaries"]
-            if row["disposition"] == "promotion_candidate"
+            if row["line_year"] in STAGING
+            and row["disposition"] == "promotion_candidate"
         ],
         key=lambda row: (row["line_year"], row["scope"], row["file"]),
     )
