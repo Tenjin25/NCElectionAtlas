@@ -12,6 +12,7 @@ Pipeline:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 from decimal import Decimal
@@ -544,6 +545,34 @@ def infer_office_key(office: str) -> str | None:
         return None
 
     return None
+
+
+def load_judicial_office_keys(path: Path, year: int) -> dict[str, str]:
+    """Load year-specific legacy judicial office labels from the canonical seat crosswalk."""
+    if not path.exists():
+        return {}
+
+    output: dict[str, str] = {}
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        for row in csv.DictReader(fh):
+            try:
+                row_year = int(str(row.get("year") or "").strip())
+            except ValueError:
+                continue
+            if row_year != int(year):
+                continue
+            office = re.sub(r"\s+", " ", str(row.get("oe_office") or "").strip().upper())
+            contest_type = str(row.get("contest_type") or "").strip()
+            if not office or not contest_type:
+                continue
+            prior = output.get(office)
+            if prior and prior != contest_type:
+                raise ValueError(
+                    f"Conflicting judicial seat mappings for {year} {office}: "
+                    f"{prior} vs {contest_type}"
+                )
+            output[office] = contest_type
+    return output
 
 
 def is_non_geographic_precinct(name: str, county: str | None = None) -> bool:
@@ -2065,6 +2094,12 @@ def main() -> None:
         help="Use batch summary office->key mapping, or infer from results CSV using KNOWN_OFFICE_KEYS.",
     )
     parser.add_argument(
+        "--judicial-seat-crosswalk-csv",
+        type=Path,
+        default=Path("data/mappings/judicial_seat_crosswalk.csv"),
+        help="Year-specific legacy judicial office label -> stable seat contest key mapping.",
+    )
+    parser.add_argument(
         "--contest-type-regex",
         type=str,
         default="",
@@ -2191,8 +2226,12 @@ def main() -> None:
                 offices_to_run.append((office, contest_type))
     else:
         seen = set()
+        judicial_office_keys = load_judicial_office_keys(
+            args.judicial_seat_crosswalk_csv, args.year
+        )
         for office in sorted(src["office"].dropna().astype(str).unique()):
-            key = infer_office_key(office)
+            normalized_office = re.sub(r"\s+", " ", str(office).strip().upper())
+            key = judicial_office_keys.get(normalized_office) or infer_office_key(office)
             if key and key not in seen:
                 offices_to_run.append((office.strip(), key))
                 seen.add(key)
