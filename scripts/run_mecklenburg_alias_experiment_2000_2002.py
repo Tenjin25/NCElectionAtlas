@@ -22,7 +22,10 @@ ROOT = Path(__file__).resolve().parent.parent
 
 PRODUCTION_OVERRIDES = ROOT / "data/mappings/precinct_key_overrides.csv"
 STAGED_OVERRIDES = ROOT / "data/reports/mecklenburg_2000_2002_alias_experiment_precinct_overrides.csv"
-SOURCE_CD_CROSSWALK = ROOT / "data/crosswalks/block20_to_cd118.csv"
+SOURCE_CD_CROSSWALK_CANDIDATES = (
+    ROOT / "data/crosswalks/block20_to_cd118.csv",
+    ROOT / "data/tmp/block_assign_extract/NC_CD118.csv",
+)
 STAGED_CD_FILE = ROOT / "data/reports/mecklenburg_2000_2002_alias_experiment_cd118_builder_input.csv"
 PRODUCTION_DIR = ROOT / "data/district_contests"
 COUNTY_WEIGHTS_DIR = ROOT / "data/district_contests_mecklenburg_alloc_experiment_county_weights"
@@ -226,21 +229,26 @@ def write_staged_overrides() -> dict[str, Any]:
 
 def write_staged_cd_file() -> dict[str, Any]:
     """Create the CD118 input shape expected by the builder without touching source data."""
+    source = next((path for path in SOURCE_CD_CROSSWALK_CANDIDATES if path.exists()), None)
+    if source is None:
+        tried = ", ".join(rel(path) for path in SOURCE_CD_CROSSWALK_CANDIDATES)
+        raise FileNotFoundError(f"Missing CD118 block assignment; tried: {tried}")
+
     rows = 0
-    with SOURCE_CD_CROSSWALK.open(newline="", encoding="utf-8") as src, STAGED_CD_FILE.open(
+    with source.open(newline="", encoding="utf-8") as src, STAGED_CD_FILE.open(
         "w", newline="", encoding="utf-8"
     ) as dst:
         reader = csv.DictReader(src)
         writer = csv.DictWriter(dst, fieldnames=["GEOID", "CDFP"], lineterminator="\n")
         writer.writeheader()
         for row in reader:
-            geoid = str(row.get("block_geoid20", "")).strip()
-            district = str(row.get("district", "")).strip()
+            geoid = str(row.get("block_geoid20") or row.get("GEOID") or "").strip()
+            district = str(row.get("district") or row.get("CDFP") or "").strip()
             if not geoid or not district:
                 continue
             writer.writerow({"GEOID": geoid, "CDFP": district})
             rows += 1
-    return {"source": rel(SOURCE_CD_CROSSWALK), "staged_cd_file": rel(STAGED_CD_FILE), "rows": rows}
+    return {"source": rel(source), "staged_cd_file": rel(STAGED_CD_FILE), "rows": rows}
 
 
 def run_builds() -> list[dict[str, Any]]:
