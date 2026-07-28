@@ -3,26 +3,18 @@
   "scope": "state_house",
   "contest_type": "labor_commissioner",
   "meta": {
-    "match_coverage_pct": 73.76,
-    "matched_precinct_keys": 1985,
+    "match_coverage_pct": 69.64,
+    "matched_precinct_keys": 1874,
     "total_precinct_keys": 2691,
     "source": "batch_shatter_vap_party_split",
     "office": "COMMISSIONER OF LABOR",
     "nongeo_allocation_mode": "precinct_candidate",
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
-    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weights_json": "data/reports/urban_sf1_historical/district_weights_2000.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines",
-    "margin_calibration_mode": "preserve_live_total_votes",
-    "margin_calibration_target_districts": [
-      "108",
-      "109",
-      "110"
-    ],
-    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_labor_commissioner_2000.json",
-    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
+    "district_lines_label": "2022 lines Census 2000 exact-VTD historical-cell hybrid"
   },
   "general": {
     "results": {
@@ -41,14 +33,14 @@
         }
       },
       "2": {
-        "dem_votes": 13023,
-        "rep_votes": 10823,
+        "dem_votes": 12308,
+        "rep_votes": 10501,
         "other_votes": 0,
-        "total_votes": 23846,
+        "total_votes": 22809,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2200,
-        "margin_pct": -9.23,
+        "margin": -1807,
+        "margin_pct": -7.92,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
@@ -97,14 +89,14 @@
         }
       },
       "6": {
-        "dem_votes": 8294,
-        "rep_votes": 7631,
+        "dem_votes": 8267,
+        "rep_votes": 7597,
         "other_votes": 0,
-        "total_votes": 15925,
+        "total_votes": 15864,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -663,
-        "margin_pct": -4.16,
+        "margin": -670,
+        "margin_pct": -4.22,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
@@ -167,17 +159,17 @@
         }
       },
       "11": {
-        "dem_votes": 9049,
-        "rep_votes": 7779,
+        "dem_votes": 11010,
+        "rep_votes": 10142,
         "other_votes": 0,
-        "total_votes": 16828,
+        "total_votes": 21152,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1270,
-        "margin_pct": -7.55,
+        "margin": -868,
+        "margin_pct": -4.1,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#c6dbef"
         }
       },
       "12": {
@@ -265,59 +257,59 @@
         }
       },
       "18": {
-        "dem_votes": 11780,
-        "rep_votes": 9006,
+        "dem_votes": 12433,
+        "rep_votes": 10371,
         "other_votes": 0,
-        "total_votes": 20786,
+        "total_votes": 22804,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2774,
-        "margin_pct": -13.35,
+        "margin": -2062,
+        "margin_pct": -9.04,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "19": {
-        "dem_votes": 9938,
-        "rep_votes": 12285,
+        "dem_votes": 9306,
+        "rep_votes": 11180,
         "other_votes": 0,
-        "total_votes": 22223,
+        "total_votes": 20486,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 2347,
-        "margin_pct": 10.56,
+        "margin": 1874,
+        "margin_pct": 9.15,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "20": {
-        "dem_votes": 12413,
-        "rep_votes": 16713,
+        "dem_votes": 12392,
+        "rep_votes": 16453,
         "other_votes": 0,
-        "total_votes": 29126,
+        "total_votes": 28845,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 4300,
-        "margin_pct": 14.76,
+        "margin": 4061,
+        "margin_pct": 14.08,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "21": {
-        "dem_votes": 2325,
-        "rep_votes": 2253,
+        "dem_votes": 2812,
+        "rep_votes": 3979,
         "other_votes": 0,
-        "total_votes": 4578,
+        "total_votes": 6791,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -72,
-        "margin_pct": -1.57,
-        "winner": "DEM",
+        "margin": 1167,
+        "margin_pct": 17.18,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#ef3b2c"
         }
       },
       "22": {
@@ -419,42 +411,42 @@
         }
       },
       "29": {
-        "dem_votes": 16880,
-        "rep_votes": 6584,
+        "dem_votes": 18133,
+        "rep_votes": 7407,
         "other_votes": 0,
-        "total_votes": 23464,
+        "total_votes": 25540,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -10296,
-        "margin_pct": -43.88,
+        "margin": -10726,
+        "margin_pct": -42.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 16400,
-        "rep_votes": 6827,
+        "dem_votes": 14466,
+        "rep_votes": 5953,
         "other_votes": 0,
-        "total_votes": 23227,
+        "total_votes": 20419,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -9573,
-        "margin_pct": -41.21,
+        "margin": -8513,
+        "margin_pct": -41.69,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 7501,
-        "rep_votes": 2918,
+        "dem_votes": 8890,
+        "rep_votes": 3279,
         "other_votes": 0,
-        "total_votes": 10419,
+        "total_votes": 12169,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -4583,
-        "margin_pct": -43.99,
+        "margin": -5611,
+        "margin_pct": -46.11,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -475,185 +467,185 @@
         }
       },
       "33": {
-        "dem_votes": 13255,
-        "rep_votes": 11774,
+        "dem_votes": 8704,
+        "rep_votes": 8503,
         "other_votes": 0,
-        "total_votes": 25029,
+        "total_votes": 17207,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1481,
-        "margin_pct": -5.92,
+        "margin": -201,
+        "margin_pct": -1.17,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#c6dbef"
         }
       },
       "34": {
-        "dem_votes": 21242,
-        "rep_votes": 16626,
+        "dem_votes": 16672,
+        "rep_votes": 13640,
         "other_votes": 0,
-        "total_votes": 37868,
+        "total_votes": 30312,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -4616,
-        "margin_pct": -12.19,
+        "margin": -3032,
+        "margin_pct": -10.0,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "35": {
-        "dem_votes": 4215,
-        "rep_votes": 5874,
+        "dem_votes": 3873,
+        "rep_votes": 5082,
         "other_votes": 0,
-        "total_votes": 10089,
+        "total_votes": 8955,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1659,
-        "margin_pct": 16.44,
+        "margin": 1209,
+        "margin_pct": 13.5,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "36": {
-        "dem_votes": 3035,
-        "rep_votes": 4367,
+        "dem_votes": 5805,
+        "rep_votes": 7193,
         "other_votes": 0,
-        "total_votes": 7402,
+        "total_votes": 12998,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1332,
-        "margin_pct": 18.0,
+        "margin": 1388,
+        "margin_pct": 10.68,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "37": {
-        "dem_votes": 6375,
-        "rep_votes": 7489,
+        "dem_votes": 7446,
+        "rep_votes": 9996,
         "other_votes": 0,
-        "total_votes": 13864,
+        "total_votes": 17442,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1114,
-        "margin_pct": 8.04,
+        "margin": 2550,
+        "margin_pct": 14.62,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "38": {
-        "dem_votes": 15834,
-        "rep_votes": 10706,
+        "dem_votes": 14894,
+        "rep_votes": 5265,
         "other_votes": 0,
-        "total_votes": 26540,
+        "total_votes": 20159,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -5128,
-        "margin_pct": -19.32,
+        "margin": -9629,
+        "margin_pct": -47.77,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 9765,
-        "rep_votes": 9797,
+        "dem_votes": 11165,
+        "rep_votes": 10411,
         "other_votes": 0,
-        "total_votes": 19562,
+        "total_votes": 21576,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 32,
-        "margin_pct": 0.16,
-        "winner": "REP",
+        "margin": -754,
+        "margin_pct": -3.49,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#c6dbef"
         }
       },
       "40": {
-        "dem_votes": 12473,
-        "rep_votes": 13816,
+        "dem_votes": 11028,
+        "rep_votes": 15257,
         "other_votes": 0,
-        "total_votes": 26289,
+        "total_votes": 26285,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1343,
-        "margin_pct": 5.11,
+        "margin": 4229,
+        "margin_pct": 16.09,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#ef3b2c"
         }
       },
       "41": {
-        "dem_votes": 10386,
-        "rep_votes": 13171,
+        "dem_votes": 13013,
+        "rep_votes": 16373,
         "other_votes": 0,
-        "total_votes": 23557,
+        "total_votes": 29386,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 2785,
-        "margin_pct": 11.82,
+        "margin": 3360,
+        "margin_pct": 11.43,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "42": {
-        "dem_votes": 9013,
-        "rep_votes": 6005,
+        "dem_votes": 9307,
+        "rep_votes": 5694,
         "other_votes": 0,
-        "total_votes": 15018,
+        "total_votes": 15001,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -3008,
-        "margin_pct": -20.03,
+        "margin": -3613,
+        "margin_pct": -24.09,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "43": {
-        "dem_votes": 11568,
-        "rep_votes": 9154,
+        "dem_votes": 12345,
+        "rep_votes": 10464,
         "other_votes": 0,
-        "total_votes": 20722,
+        "total_votes": 22809,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2414,
-        "margin_pct": -11.65,
+        "margin": -1881,
+        "margin_pct": -8.25,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "44": {
-        "dem_votes": 16506,
-        "rep_votes": 12364,
+        "dem_votes": 15902,
+        "rep_votes": 11113,
         "other_votes": 0,
-        "total_votes": 28870,
+        "total_votes": 27015,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -4142,
-        "margin_pct": -14.35,
+        "margin": -4789,
+        "margin_pct": -17.73,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "45": {
-        "dem_votes": 5831,
-        "rep_votes": 4465,
+        "dem_votes": 5390,
+        "rep_votes": 4751,
         "other_votes": 0,
-        "total_votes": 10296,
+        "total_votes": 10141,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1366,
-        "margin_pct": -13.27,
+        "margin": -639,
+        "margin_pct": -6.3,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "46": {
@@ -699,24 +691,24 @@
         }
       },
       "49": {
-        "dem_votes": 9661,
-        "rep_votes": 9993,
+        "dem_votes": 11489,
+        "rep_votes": 10267,
         "other_votes": 0,
-        "total_votes": 19654,
+        "total_votes": 21756,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 332,
-        "margin_pct": 1.69,
-        "winner": "REP",
+        "margin": -1222,
+        "margin_pct": -5.62,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#9ecae1"
         }
       },
       "50": {
-        "dem_votes": 17500,
-        "rep_votes": 9557,
+        "dem_votes": 17499,
+        "rep_votes": 9556,
         "other_votes": 0,
-        "total_votes": 27057,
+        "total_votes": 27055,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
         "margin": -7943,
@@ -755,14 +747,14 @@
         }
       },
       "53": {
-        "dem_votes": 5616,
-        "rep_votes": 7183,
+        "dem_votes": 5587,
+        "rep_votes": 7147,
         "other_votes": 0,
-        "total_votes": 12799,
+        "total_votes": 12734,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1567,
-        "margin_pct": 12.24,
+        "margin": 1560,
+        "margin_pct": 12.25,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
@@ -783,27 +775,27 @@
         }
       },
       "55": {
-        "dem_votes": 12762,
-        "rep_votes": 11477,
+        "dem_votes": 12555,
+        "rep_votes": 10996,
         "other_votes": 0,
-        "total_votes": 24239,
+        "total_votes": 23551,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1285,
-        "margin_pct": -5.3,
+        "margin": -1559,
+        "margin_pct": -6.62,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "56": {
-        "dem_votes": 18664,
-        "rep_votes": 9350,
+        "dem_votes": 18659,
+        "rep_votes": 9347,
         "other_votes": 0,
-        "total_votes": 28014,
+        "total_votes": 28006,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -9314,
+        "margin": -9312,
         "margin_pct": -33.25,
         "winner": "DEM",
         "competitiveness": {
@@ -811,87 +803,87 @@
         }
       },
       "57": {
-        "dem_votes": 15991,
-        "rep_votes": 10884,
+        "dem_votes": 13649,
+        "rep_votes": 11983,
         "other_votes": 0,
-        "total_votes": 26875,
+        "total_votes": 25632,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -5107,
-        "margin_pct": -19.0,
+        "margin": -1666,
+        "margin_pct": -6.5,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "58": {
-        "dem_votes": 14629,
-        "rep_votes": 12857,
+        "dem_votes": 13673,
+        "rep_votes": 12004,
         "other_votes": 0,
-        "total_votes": 27486,
+        "total_votes": 25677,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1772,
-        "margin_pct": -6.45,
+        "margin": -1669,
+        "margin_pct": -6.5,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "59": {
-        "dem_votes": 8054,
-        "rep_votes": 12461,
+        "dem_votes": 13735,
+        "rep_votes": 12069,
         "other_votes": 0,
-        "total_votes": 20515,
+        "total_votes": 25804,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 4407,
-        "margin_pct": 21.48,
-        "winner": "REP",
+        "margin": -1666,
+        "margin_pct": -6.46,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#9ecae1"
         }
       },
       "60": {
-        "dem_votes": 12243,
-        "rep_votes": 11070,
+        "dem_votes": 13709,
+        "rep_votes": 12041,
         "other_votes": 0,
-        "total_votes": 23313,
+        "total_votes": 25750,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1173,
-        "margin_pct": -5.03,
+        "margin": -1668,
+        "margin_pct": -6.48,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "61": {
-        "dem_votes": 20012,
-        "rep_votes": 12796,
+        "dem_votes": 13673,
+        "rep_votes": 12004,
         "other_votes": 0,
-        "total_votes": 32808,
+        "total_votes": 25677,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -7216,
-        "margin_pct": -21.99,
+        "margin": -1669,
+        "margin_pct": -6.5,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#9ecae1"
         }
       },
       "62": {
-        "dem_votes": 11245,
-        "rep_votes": 12072,
+        "dem_votes": 13699,
+        "rep_votes": 12029,
         "other_votes": 0,
-        "total_votes": 23317,
+        "total_votes": 25728,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 827,
-        "margin_pct": 3.55,
-        "winner": "REP",
+        "margin": -1670,
+        "margin_pct": -6.49,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#9ecae1"
         }
       },
       "63": {
@@ -937,24 +929,24 @@
         }
       },
       "66": {
-        "dem_votes": 17093,
-        "rep_votes": 14454,
+        "dem_votes": 16839,
+        "rep_votes": 12043,
         "other_votes": 0,
-        "total_votes": 31547,
+        "total_votes": 28882,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2639,
-        "margin_pct": -8.37,
+        "margin": -4796,
+        "margin_pct": -16.61,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "67": {
-        "dem_votes": 12656,
-        "rep_votes": 16877,
+        "dem_votes": 12655,
+        "rep_votes": 16876,
         "other_votes": 0,
-        "total_votes": 29533,
+        "total_votes": 29531,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
         "margin": 4221,
@@ -965,41 +957,41 @@
         }
       },
       "68": {
-        "dem_votes": 2938,
-        "rep_votes": 6819,
+        "dem_votes": 2956,
+        "rep_votes": 7020,
         "other_votes": 0,
-        "total_votes": 9757,
+        "total_votes": 9976,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 3881,
-        "margin_pct": 39.78,
+        "margin": 4064,
+        "margin_pct": 40.74,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#67000d"
         }
       },
       "69": {
-        "dem_votes": 5181,
-        "rep_votes": 11248,
+        "dem_votes": 5371,
+        "rep_votes": 11537,
         "other_votes": 0,
-        "total_votes": 16429,
+        "total_votes": 16908,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 6067,
-        "margin_pct": 36.93,
+        "margin": 6166,
+        "margin_pct": 36.47,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "70": {
-        "dem_votes": 8600,
-        "rep_votes": 17724,
+        "dem_votes": 8598,
+        "rep_votes": 17720,
         "other_votes": 0,
-        "total_votes": 26324,
+        "total_votes": 26318,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 9124,
+        "margin": 9122,
         "margin_pct": 34.66,
         "winner": "REP",
         "competitiveness": {
@@ -1007,73 +999,73 @@
         }
       },
       "71": {
-        "dem_votes": 12326,
-        "rep_votes": 14784,
+        "dem_votes": 12058,
+        "rep_votes": 9459,
         "other_votes": 0,
-        "total_votes": 27110,
+        "total_votes": 21517,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 2458,
-        "margin_pct": 9.07,
-        "winner": "REP",
+        "margin": -2599,
+        "margin_pct": -12.08,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#6baed6"
         }
       },
       "72": {
-        "dem_votes": 15179,
-        "rep_votes": 18427,
+        "dem_votes": 15789,
+        "rep_votes": 8677,
         "other_votes": 0,
-        "total_votes": 33606,
+        "total_votes": 24466,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 3248,
-        "margin_pct": 9.66,
-        "winner": "REP",
+        "margin": -7112,
+        "margin_pct": -29.07,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#3182bd"
         }
       },
       "73": {
-        "dem_votes": 5616,
-        "rep_votes": 7799,
+        "dem_votes": 5863,
+        "rep_votes": 8446,
         "other_votes": 0,
-        "total_votes": 13415,
+        "total_votes": 14309,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 2183,
-        "margin_pct": 16.27,
+        "margin": 2583,
+        "margin_pct": 18.05,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "74": {
-        "dem_votes": 11419,
-        "rep_votes": 11586,
+        "dem_votes": 10881,
+        "rep_votes": 17565,
         "other_votes": 0,
-        "total_votes": 23005,
+        "total_votes": 28446,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 167,
-        "margin_pct": 0.73,
+        "margin": 6684,
+        "margin_pct": 23.5,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fee8c8"
+          "color": "#cb181d"
         }
       },
       "75": {
-        "dem_votes": 9519,
-        "rep_votes": 6723,
+        "dem_votes": 9419,
+        "rep_votes": 12481,
         "other_votes": 0,
-        "total_votes": 16242,
+        "total_votes": 21900,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2796,
-        "margin_pct": -17.21,
-        "winner": "DEM",
+        "margin": 3062,
+        "margin_pct": 13.98,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "76": {
@@ -1133,27 +1125,27 @@
         }
       },
       "80": {
-        "dem_votes": 8841,
-        "rep_votes": 16394,
+        "dem_votes": 8835,
+        "rep_votes": 16391,
         "other_votes": 0,
-        "total_votes": 25235,
+        "total_votes": 25226,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 7553,
-        "margin_pct": 29.93,
+        "margin": 7556,
+        "margin_pct": 29.95,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "81": {
-        "dem_votes": 10427,
-        "rep_votes": 13666,
+        "dem_votes": 10425,
+        "rep_votes": 13661,
         "other_votes": 0,
-        "total_votes": 24093,
+        "total_votes": 24086,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 3239,
+        "margin": 3236,
         "margin_pct": 13.44,
         "winner": "REP",
         "competitiveness": {
@@ -1161,28 +1153,28 @@
         }
       },
       "82": {
-        "dem_votes": 7445,
-        "rep_votes": 11685,
+        "dem_votes": 7314,
+        "rep_votes": 11322,
         "other_votes": 0,
-        "total_votes": 19130,
+        "total_votes": 18636,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 4240,
-        "margin_pct": 22.16,
+        "margin": 4008,
+        "margin_pct": 21.51,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "83": {
-        "dem_votes": 9224,
-        "rep_votes": 18297,
+        "dem_votes": 9105,
+        "rep_votes": 18006,
         "other_votes": 0,
-        "total_votes": 27521,
+        "total_votes": 27111,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 9073,
-        "margin_pct": 32.97,
+        "margin": 8901,
+        "margin_pct": 32.83,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -1245,17 +1237,17 @@
         }
       },
       "88": {
-        "dem_votes": 9903,
-        "rep_votes": 12359,
+        "dem_votes": 13226,
+        "rep_votes": 8540,
         "other_votes": 0,
-        "total_votes": 22262,
+        "total_votes": 21766,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 2456,
-        "margin_pct": 11.03,
-        "winner": "REP",
+        "margin": -4686,
+        "margin_pct": -21.53,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#3182bd"
         }
       },
       "89": {
@@ -1287,31 +1279,31 @@
         }
       },
       "91": {
-        "dem_votes": 12724,
-        "rep_votes": 17549,
+        "dem_votes": 13067,
+        "rep_votes": 20907,
         "other_votes": 0,
-        "total_votes": 30273,
+        "total_votes": 33974,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 4825,
-        "margin_pct": 15.94,
+        "margin": 7840,
+        "margin_pct": 23.08,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "92": {
-        "dem_votes": 5715,
-        "rep_votes": 7088,
+        "dem_votes": 5642,
+        "rep_votes": 6120,
         "other_votes": 0,
-        "total_votes": 12803,
+        "total_votes": 11762,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1373,
-        "margin_pct": 10.72,
+        "margin": 478,
+        "margin_pct": 4.06,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fcae91"
         }
       },
       "93": {
@@ -1371,234 +1363,234 @@
         }
       },
       "97": {
-        "dem_votes": 8989,
-        "rep_votes": 14681,
+        "dem_votes": 8987,
+        "rep_votes": 14677,
         "other_votes": 0,
-        "total_votes": 23670,
+        "total_votes": 23664,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 5692,
-        "margin_pct": 24.05,
+        "margin": 5690,
+        "margin_pct": 24.04,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "98": {
-        "dem_votes": 6518,
-        "rep_votes": 4786,
+        "dem_votes": 5507,
+        "rep_votes": 8355,
         "other_votes": 0,
-        "total_votes": 11304,
+        "total_votes": 13862,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1732,
-        "margin_pct": -15.32,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "99": {
-        "dem_votes": 4834,
-        "rep_votes": 6989,
-        "other_votes": 0,
-        "total_votes": 11823,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 2155,
-        "margin_pct": 18.23,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "100": {
-        "dem_votes": 12842,
-        "rep_votes": 13561,
-        "other_votes": 0,
-        "total_votes": 26403,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 719,
-        "margin_pct": 2.72,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "101": {
-        "dem_votes": 7432,
-        "rep_votes": 9768,
-        "other_votes": 0,
-        "total_votes": 17200,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 2336,
-        "margin_pct": 13.58,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "102": {
-        "dem_votes": 12145,
-        "rep_votes": 12771,
-        "other_votes": 0,
-        "total_votes": 24916,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 626,
-        "margin_pct": 2.51,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "103": {
-        "dem_votes": 14947,
-        "rep_votes": 9992,
-        "other_votes": 0,
-        "total_votes": 24939,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": -4955,
-        "margin_pct": -19.87,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "104": {
-        "dem_votes": 17034,
-        "rep_votes": 16676,
-        "other_votes": 0,
-        "total_votes": 33710,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": -358,
-        "margin_pct": -1.06,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "105": {
-        "dem_votes": 6919,
-        "rep_votes": 8910,
-        "other_votes": 0,
-        "total_votes": 15829,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 1991,
-        "margin_pct": 12.58,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "106": {
-        "dem_votes": 6062,
-        "rep_votes": 4309,
-        "other_votes": 0,
-        "total_votes": 10371,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": -1753,
-        "margin_pct": -16.9,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "107": {
-        "dem_votes": 6414,
-        "rep_votes": 5795,
-        "other_votes": 0,
-        "total_votes": 12209,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": -619,
-        "margin_pct": -5.07,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "108": {
-        "dem_votes": 7192,
-        "rep_votes": 12206,
-        "other_votes": 0,
-        "total_votes": 19398,
-        "dem_candidate": "Doug Berger",
-        "rep_candidate": "Cherie Killian Berry",
-        "margin": 5014,
-        "margin_pct": 25.85,
+        "margin": 2848,
+        "margin_pct": 20.55,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
-      "109": {
-        "dem_votes": 8191,
-        "rep_votes": 14052,
+      "99": {
+        "dem_votes": 10118,
+        "rep_votes": 7418,
         "other_votes": 0,
-        "total_votes": 22243,
+        "total_votes": 17536,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 5861,
-        "margin_pct": 26.35,
+        "margin": -2700,
+        "margin_pct": -15.4,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "100": {
+        "dem_votes": 11953,
+        "rep_votes": 9000,
+        "other_votes": 0,
+        "total_votes": 20953,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": -2953,
+        "margin_pct": -14.09,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "101": {
+        "dem_votes": 9659,
+        "rep_votes": 7190,
+        "other_votes": 0,
+        "total_votes": 16849,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": -2469,
+        "margin_pct": -14.65,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "102": {
+        "dem_votes": 16446,
+        "rep_votes": 4596,
+        "other_votes": 0,
+        "total_votes": 21042,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": -11850,
+        "margin_pct": -56.32,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "103": {
+        "dem_votes": 8852,
+        "rep_votes": 17181,
+        "other_votes": 0,
+        "total_votes": 26033,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": 8329,
+        "margin_pct": 31.99,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "104": {
+        "dem_votes": 10112,
+        "rep_votes": 16994,
+        "other_votes": 0,
+        "total_votes": 27106,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": 6882,
+        "margin_pct": 25.39,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "105": {
+        "dem_votes": 7600,
+        "rep_votes": 13726,
+        "other_votes": 0,
+        "total_votes": 21326,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": 6126,
+        "margin_pct": 28.73,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "106": {
+        "dem_votes": 6044,
+        "rep_votes": 5379,
+        "other_votes": 0,
+        "total_votes": 11423,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": -665,
+        "margin_pct": -5.82,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "107": {
+        "dem_votes": 8405,
+        "rep_votes": 4901,
+        "other_votes": 0,
+        "total_votes": 13306,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": -3504,
+        "margin_pct": -26.33,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "108": {
+        "dem_votes": 6461,
+        "rep_votes": 12933,
+        "other_votes": 0,
+        "total_votes": 19394,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": 6472,
+        "margin_pct": 33.37,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "109": {
+        "dem_votes": 8187,
+        "rep_votes": 14055,
+        "other_votes": 0,
+        "total_votes": 22242,
+        "dem_candidate": "Doug Berger",
+        "rep_candidate": "Cherie Killian Berry",
+        "margin": 5868,
+        "margin_pct": 26.38,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 10956,
-        "rep_votes": 14049,
-        "other_votes": 1,
-        "total_votes": 25006,
+        "dem_votes": 11485,
+        "rep_votes": 13539,
+        "other_votes": 0,
+        "total_votes": 25024,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 3093,
-        "margin_pct": 12.37,
+        "margin": 2054,
+        "margin_pct": 8.21,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "111": {
-        "dem_votes": 13396,
-        "rep_votes": 14442,
+        "dem_votes": 13394,
+        "rep_votes": 14438,
         "other_votes": 0,
-        "total_votes": 27838,
+        "total_votes": 27832,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1046,
-        "margin_pct": 3.76,
+        "margin": 1044,
+        "margin_pct": 3.75,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "112": {
-        "dem_votes": 11272,
-        "rep_votes": 8803,
+        "dem_votes": 8474,
+        "rep_votes": 12407,
         "other_votes": 0,
-        "total_votes": 20075,
+        "total_votes": 20881,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -2469,
-        "margin_pct": -12.3,
-        "winner": "DEM",
+        "margin": 3933,
+        "margin_pct": 18.84,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "113": {
-        "dem_votes": 11726,
-        "rep_votes": 16600,
+        "dem_votes": 11725,
+        "rep_votes": 16599,
         "other_votes": 0,
-        "total_votes": 28326,
+        "total_votes": 28324,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
         "margin": 4874,
@@ -1609,69 +1601,69 @@
         }
       },
       "114": {
-        "dem_votes": 15093,
-        "rep_votes": 11292,
+        "dem_votes": 15818,
+        "rep_votes": 14676,
         "other_votes": 0,
-        "total_votes": 26385,
+        "total_votes": 30494,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -3801,
-        "margin_pct": -14.41,
+        "margin": -1142,
+        "margin_pct": -3.74,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#c6dbef"
         }
       },
       "115": {
-        "dem_votes": 10239,
-        "rep_votes": 13699,
+        "dem_votes": 10654,
+        "rep_votes": 12444,
         "other_votes": 0,
-        "total_votes": 23938,
+        "total_votes": 23098,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 3460,
-        "margin_pct": 14.45,
+        "margin": 1790,
+        "margin_pct": 7.75,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#fb6a4a"
         }
       },
       "116": {
-        "dem_votes": 13972,
-        "rep_votes": 14992,
+        "dem_votes": 12843,
+        "rep_votes": 12878,
         "other_votes": 0,
-        "total_votes": 28964,
+        "total_votes": 25721,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 1020,
-        "margin_pct": 3.52,
+        "margin": 35,
+        "margin_pct": 0.14,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#f7f7f7"
         }
       },
       "117": {
-        "dem_votes": 9216,
-        "rep_votes": 16909,
+        "dem_votes": 9208,
+        "rep_votes": 16898,
         "other_votes": 0,
-        "total_votes": 26125,
+        "total_votes": 26106,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": 7693,
-        "margin_pct": 29.45,
+        "margin": 7690,
+        "margin_pct": 29.46,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "118": {
-        "dem_votes": 14938,
-        "rep_votes": 13226,
+        "dem_votes": 14936,
+        "rep_votes": 13223,
         "other_votes": 0,
-        "total_votes": 28164,
+        "total_votes": 28159,
         "dem_candidate": "Doug Berger",
         "rep_candidate": "Cherie Killian Berry",
-        "margin": -1712,
+        "margin": -1713,
         "margin_pct": -6.08,
         "winner": "DEM",
         "competitiveness": {

@@ -3,26 +3,18 @@
   "scope": "state_house",
   "contest_type": "superintendent",
   "meta": {
-    "match_coverage_pct": 73.75,
-    "matched_precinct_keys": 1984,
+    "match_coverage_pct": 69.67,
+    "matched_precinct_keys": 1874,
     "total_precinct_keys": 2690,
     "source": "batch_shatter_vap_party_split",
     "office": "SUPER. OF PUBLIC INSTRUCTION",
     "nongeo_allocation_mode": "precinct_candidate",
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
-    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weights_json": "data/reports/urban_sf1_historical/district_weights_2000.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines",
-    "margin_calibration_mode": "preserve_live_total_votes",
-    "margin_calibration_target_districts": [
-      "108",
-      "109",
-      "110"
-    ],
-    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_superintendent_2000.json",
-    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
+    "district_lines_label": "2022 lines Census 2000 exact-VTD historical-cell hybrid"
   },
   "general": {
     "results": {
@@ -41,14 +33,14 @@
         }
       },
       "2": {
-        "dem_votes": 15133,
-        "rep_votes": 10175,
+        "dem_votes": 14382,
+        "rep_votes": 9907,
         "other_votes": 0,
-        "total_votes": 25308,
+        "total_votes": 24289,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -4958,
-        "margin_pct": -19.59,
+        "margin": -4475,
+        "margin_pct": -18.42,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -97,14 +89,14 @@
         }
       },
       "6": {
-        "dem_votes": 8865,
-        "rep_votes": 7202,
+        "dem_votes": 8836,
+        "rep_votes": 7170,
         "other_votes": 0,
-        "total_votes": 16067,
+        "total_votes": 16006,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1663,
-        "margin_pct": -10.35,
+        "margin": -1666,
+        "margin_pct": -10.41,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -167,14 +159,14 @@
         }
       },
       "11": {
-        "dem_votes": 9806,
-        "rep_votes": 7181,
+        "dem_votes": 12230,
+        "rep_votes": 9241,
         "other_votes": 0,
-        "total_votes": 16987,
+        "total_votes": 21471,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -2625,
-        "margin_pct": -15.45,
+        "margin": -2989,
+        "margin_pct": -13.92,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -265,59 +257,59 @@
         }
       },
       "18": {
-        "dem_votes": 12694,
-        "rep_votes": 8099,
+        "dem_votes": 13457,
+        "rep_votes": 9367,
         "other_votes": 0,
-        "total_votes": 20793,
+        "total_votes": 22824,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -4595,
-        "margin_pct": -22.1,
+        "margin": -4090,
+        "margin_pct": -17.92,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "19": {
-        "dem_votes": 11123,
-        "rep_votes": 11306,
+        "dem_votes": 10409,
+        "rep_votes": 10266,
         "other_votes": 0,
-        "total_votes": 22429,
+        "total_votes": 20675,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 183,
-        "margin_pct": 0.82,
-        "winner": "REP",
+        "margin": -143,
+        "margin_pct": -0.69,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fee8c8"
+          "color": "#e1f5fe"
         }
       },
       "20": {
-        "dem_votes": 13883,
-        "rep_votes": 15353,
+        "dem_votes": 13833,
+        "rep_votes": 15125,
         "other_votes": 0,
-        "total_votes": 29236,
+        "total_votes": 28958,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 1470,
-        "margin_pct": 5.03,
+        "margin": 1292,
+        "margin_pct": 4.46,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "21": {
-        "dem_votes": 2551,
-        "rep_votes": 2069,
+        "dem_votes": 3244,
+        "rep_votes": 3643,
         "other_votes": 0,
-        "total_votes": 4620,
+        "total_votes": 6887,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -482,
-        "margin_pct": -10.43,
-        "winner": "DEM",
+        "margin": 399,
+        "margin_pct": 5.79,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#fb6a4a"
         }
       },
       "22": {
@@ -419,42 +411,42 @@
         }
       },
       "29": {
-        "dem_votes": 15254,
-        "rep_votes": 5539,
+        "dem_votes": 16589,
+        "rep_votes": 6256,
         "other_votes": 0,
-        "total_votes": 20793,
+        "total_votes": 22845,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -9715,
-        "margin_pct": -46.72,
+        "margin": -10333,
+        "margin_pct": -45.23,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 18017,
-        "rep_votes": 5693,
+        "dem_votes": 15990,
+        "rep_votes": 4963,
         "other_votes": 0,
-        "total_votes": 23710,
+        "total_votes": 20953,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -12324,
-        "margin_pct": -51.98,
+        "margin": -11027,
+        "margin_pct": -52.63,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 9757,
-        "rep_votes": 2700,
+        "dem_votes": 11196,
+        "rep_votes": 2973,
         "other_votes": 0,
-        "total_votes": 12457,
+        "total_votes": 14169,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -7057,
-        "margin_pct": -56.65,
+        "margin": -8223,
+        "margin_pct": -58.04,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -475,185 +467,185 @@
         }
       },
       "33": {
-        "dem_votes": 14168,
-        "rep_votes": 11067,
+        "dem_votes": 9462,
+        "rep_votes": 7897,
         "other_votes": 0,
-        "total_votes": 25235,
+        "total_votes": 17359,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -3101,
-        "margin_pct": -12.29,
+        "margin": -1565,
+        "margin_pct": -9.02,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "34": {
-        "dem_votes": 23403,
-        "rep_votes": 14963,
+        "dem_votes": 18471,
+        "rep_votes": 12228,
         "other_votes": 0,
-        "total_votes": 38366,
+        "total_votes": 30699,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -8440,
-        "margin_pct": -22.0,
+        "margin": -6243,
+        "margin_pct": -20.34,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "35": {
-        "dem_votes": 4841,
-        "rep_votes": 5382,
+        "dem_votes": 4301,
+        "rep_votes": 4744,
         "other_votes": 0,
-        "total_votes": 10223,
+        "total_votes": 9045,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 541,
-        "margin_pct": 5.29,
+        "margin": 443,
+        "margin_pct": 4.9,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "36": {
-        "dem_votes": 3513,
-        "rep_votes": 4026,
+        "dem_votes": 6549,
+        "rep_votes": 6613,
         "other_votes": 0,
-        "total_votes": 7539,
+        "total_votes": 13162,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 513,
-        "margin_pct": 6.8,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "37": {
-        "dem_votes": 6972,
-        "rep_votes": 7018,
-        "other_votes": 0,
-        "total_votes": 13990,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": 46,
-        "margin_pct": 0.33,
+        "margin": 64,
+        "margin_pct": 0.49,
         "winner": "REP",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
-      "38": {
-        "dem_votes": 17186,
-        "rep_votes": 9656,
+      "37": {
+        "dem_votes": 8401,
+        "rep_votes": 9245,
         "other_votes": 0,
-        "total_votes": 26842,
+        "total_votes": 17646,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -7530,
-        "margin_pct": -28.05,
+        "margin": 844,
+        "margin_pct": 4.78,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fcae91"
+        }
+      },
+      "38": {
+        "dem_votes": 15349,
+        "rep_votes": 4908,
+        "other_votes": 0,
+        "total_votes": 20257,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": -10441,
+        "margin_pct": -51.54,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 10691,
-        "rep_votes": 9092,
+        "dem_votes": 11951,
+        "rep_votes": 9775,
         "other_votes": 0,
-        "total_votes": 19783,
+        "total_votes": 21726,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1599,
-        "margin_pct": -8.08,
+        "margin": -2176,
+        "margin_pct": -10.02,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "40": {
-        "dem_votes": 14126,
-        "rep_votes": 12512,
+        "dem_votes": 12874,
+        "rep_votes": 13867,
         "other_votes": 0,
-        "total_votes": 26638,
+        "total_votes": 26741,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1614,
-        "margin_pct": -6.06,
-        "winner": "DEM",
+        "margin": 993,
+        "margin_pct": 3.71,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#fcae91"
         }
       },
       "41": {
-        "dem_votes": 11914,
-        "rep_votes": 11964,
+        "dem_votes": 14932,
+        "rep_votes": 14926,
         "other_votes": 0,
-        "total_votes": 23878,
+        "total_votes": 29858,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 50,
-        "margin_pct": 0.21,
-        "winner": "REP",
+        "margin": -6,
+        "margin_pct": -0.02,
+        "winner": "DEM",
         "competitiveness": {
           "color": "#f7f7f7"
         }
       },
       "42": {
-        "dem_votes": 9492,
-        "rep_votes": 5570,
+        "dem_votes": 9760,
+        "rep_votes": 5289,
         "other_votes": 0,
-        "total_votes": 15062,
+        "total_votes": 15049,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -3922,
-        "margin_pct": -26.04,
+        "margin": -4471,
+        "margin_pct": -29.71,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "43": {
-        "dem_votes": 12430,
-        "rep_votes": 8359,
+        "dem_votes": 13366,
+        "rep_votes": 9533,
         "other_votes": 0,
-        "total_votes": 20789,
+        "total_votes": 22899,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -4071,
-        "margin_pct": -19.58,
+        "margin": -3833,
+        "margin_pct": -16.74,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "44": {
-        "dem_votes": 17760,
-        "rep_votes": 11383,
+        "dem_votes": 16986,
+        "rep_votes": 10271,
         "other_votes": 0,
-        "total_votes": 29143,
+        "total_votes": 27257,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -6377,
-        "margin_pct": -21.88,
+        "margin": -6715,
+        "margin_pct": -24.64,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "45": {
-        "dem_votes": 6275,
-        "rep_votes": 4057,
+        "dem_votes": 5874,
+        "rep_votes": 4308,
         "other_votes": 0,
-        "total_votes": 10332,
+        "total_votes": 10182,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -2218,
-        "margin_pct": -21.47,
+        "margin": -1566,
+        "margin_pct": -15.38,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "46": {
@@ -699,28 +691,28 @@
         }
       },
       "49": {
-        "dem_votes": 10871,
-        "rep_votes": 9065,
+        "dem_votes": 12832,
+        "rep_votes": 9172,
         "other_votes": 0,
-        "total_votes": 19936,
+        "total_votes": 22004,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1806,
-        "margin_pct": -9.06,
+        "margin": -3660,
+        "margin_pct": -16.63,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "50": {
-        "dem_votes": 18423,
-        "rep_votes": 8896,
+        "dem_votes": 18422,
+        "rep_votes": 8895,
         "other_votes": 0,
-        "total_votes": 27319,
+        "total_votes": 27317,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
         "margin": -9527,
-        "margin_pct": -34.87,
+        "margin_pct": -34.88,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08519c"
@@ -755,14 +747,14 @@
         }
       },
       "53": {
-        "dem_votes": 6119,
-        "rep_votes": 6788,
+        "dem_votes": 6088,
+        "rep_votes": 6755,
         "other_votes": 0,
-        "total_votes": 12907,
+        "total_votes": 12843,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 669,
-        "margin_pct": 5.18,
+        "margin": 667,
+        "margin_pct": 5.19,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
@@ -783,27 +775,27 @@
         }
       },
       "55": {
-        "dem_votes": 13575,
-        "rep_votes": 10623,
+        "dem_votes": 13324,
+        "rep_votes": 10196,
         "other_votes": 0,
-        "total_votes": 24198,
+        "total_votes": 23520,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -2952,
-        "margin_pct": -12.2,
+        "margin": -3128,
+        "margin_pct": -13.3,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "56": {
-        "dem_votes": 19790,
-        "rep_votes": 8547,
+        "dem_votes": 19781,
+        "rep_votes": 8542,
         "other_votes": 0,
-        "total_votes": 28337,
+        "total_votes": 28323,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -11243,
+        "margin": -11239,
         "margin_pct": -39.68,
         "winner": "DEM",
         "competitiveness": {
@@ -811,87 +803,87 @@
         }
       },
       "57": {
-        "dem_votes": 16856,
-        "rep_votes": 10125,
+        "dem_votes": 14513,
+        "rep_votes": 11264,
         "other_votes": 0,
-        "total_votes": 26981,
+        "total_votes": 25777,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -6731,
-        "margin_pct": -24.95,
+        "margin": -3249,
+        "margin_pct": -12.6,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "58": {
-        "dem_votes": 15621,
-        "rep_votes": 12067,
+        "dem_votes": 14539,
+        "rep_votes": 11285,
         "other_votes": 0,
-        "total_votes": 27688,
+        "total_votes": 25824,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -3554,
-        "margin_pct": -12.84,
+        "margin": -3254,
+        "margin_pct": -12.6,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "59": {
-        "dem_votes": 8700,
-        "rep_votes": 11933,
+        "dem_votes": 14605,
+        "rep_votes": 11346,
         "other_votes": 0,
-        "total_votes": 20633,
+        "total_votes": 25951,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 3233,
-        "margin_pct": 15.67,
-        "winner": "REP",
+        "margin": -3259,
+        "margin_pct": -12.56,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#6baed6"
         }
       },
       "60": {
-        "dem_votes": 12946,
-        "rep_votes": 10472,
+        "dem_votes": 14577,
+        "rep_votes": 11319,
         "other_votes": 0,
-        "total_votes": 23418,
+        "total_votes": 25896,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -2474,
-        "margin_pct": -10.56,
+        "margin": -3258,
+        "margin_pct": -12.58,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "61": {
-        "dem_votes": 21187,
-        "rep_votes": 11820,
+        "dem_votes": 14539,
+        "rep_votes": 11285,
         "other_votes": 0,
-        "total_votes": 33007,
+        "total_votes": 25824,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -9367,
-        "margin_pct": -28.38,
+        "margin": -3254,
+        "margin_pct": -12.6,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "62": {
-        "dem_votes": 12069,
-        "rep_votes": 11396,
+        "dem_votes": 14567,
+        "rep_votes": 11308,
         "other_votes": 0,
-        "total_votes": 23465,
+        "total_votes": 25875,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -673,
-        "margin_pct": -2.87,
+        "margin": -3259,
+        "margin_pct": -12.6,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#6baed6"
         }
       },
       "63": {
@@ -937,24 +929,24 @@
         }
       },
       "66": {
-        "dem_votes": 18576,
-        "rep_votes": 13263,
+        "dem_votes": 18068,
+        "rep_votes": 11047,
         "other_votes": 0,
-        "total_votes": 31839,
+        "total_votes": 29115,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -5313,
-        "margin_pct": -16.69,
+        "margin": -7021,
+        "margin_pct": -24.11,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "67": {
-        "dem_votes": 14099,
-        "rep_votes": 15744,
+        "dem_votes": 14098,
+        "rep_votes": 15743,
         "other_votes": 0,
-        "total_votes": 29843,
+        "total_votes": 29841,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
         "margin": 1645,
@@ -965,41 +957,41 @@
         }
       },
       "68": {
-        "dem_votes": 3220,
-        "rep_votes": 6558,
+        "dem_votes": 3234,
+        "rep_votes": 6765,
         "other_votes": 0,
-        "total_votes": 9778,
+        "total_votes": 9999,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 3338,
-        "margin_pct": 34.14,
+        "margin": 3531,
+        "margin_pct": 35.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "69": {
-        "dem_votes": 5668,
-        "rep_votes": 10723,
+        "dem_votes": 5908,
+        "rep_votes": 10950,
         "other_votes": 0,
-        "total_votes": 16391,
+        "total_votes": 16858,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 5055,
-        "margin_pct": 30.84,
+        "margin": 5042,
+        "margin_pct": 29.91,
         "winner": "REP",
         "competitiveness": {
-          "color": "#a50f15"
+          "color": "#cb181d"
         }
       },
       "70": {
-        "dem_votes": 9196,
-        "rep_votes": 17141,
+        "dem_votes": 9194,
+        "rep_votes": 17138,
         "other_votes": 0,
-        "total_votes": 26337,
+        "total_votes": 26332,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 7945,
+        "margin": 7944,
         "margin_pct": 30.17,
         "winner": "REP",
         "competitiveness": {
@@ -1007,73 +999,73 @@
         }
       },
       "71": {
-        "dem_votes": 14028,
-        "rep_votes": 13379,
+        "dem_votes": 13255,
+        "rep_votes": 8441,
         "other_votes": 0,
-        "total_votes": 27407,
+        "total_votes": 21696,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -649,
-        "margin_pct": -2.37,
+        "margin": -4814,
+        "margin_pct": -22.19,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#3182bd"
         }
       },
       "72": {
-        "dem_votes": 17176,
-        "rep_votes": 16777,
+        "dem_votes": 16973,
+        "rep_votes": 7712,
         "other_votes": 0,
-        "total_votes": 33953,
+        "total_votes": 24685,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -399,
-        "margin_pct": -1.18,
+        "margin": -9261,
+        "margin_pct": -37.52,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#08519c"
         }
       },
       "73": {
-        "dem_votes": 6093,
-        "rep_votes": 7319,
+        "dem_votes": 6390,
+        "rep_votes": 7929,
         "other_votes": 0,
-        "total_votes": 13412,
+        "total_votes": 14319,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 1226,
-        "margin_pct": 9.14,
+        "margin": 1539,
+        "margin_pct": 10.75,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
+        }
+      },
+      "74": {
+        "dem_votes": 13022,
+        "rep_votes": 15866,
+        "other_votes": 0,
+        "total_votes": 28888,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": 2844,
+        "margin_pct": 9.84,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
-      "74": {
-        "dem_votes": 12879,
-        "rep_votes": 10476,
-        "other_votes": 0,
-        "total_votes": 23355,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -2403,
-        "margin_pct": -10.29,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
       "75": {
-        "dem_votes": 10283,
-        "rep_votes": 6122,
+        "dem_votes": 10670,
+        "rep_votes": 11479,
         "other_votes": 0,
-        "total_votes": 16405,
+        "total_votes": 22149,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -4161,
-        "margin_pct": -25.36,
-        "winner": "DEM",
+        "margin": 809,
+        "margin_pct": 3.65,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#fcae91"
         }
       },
       "76": {
@@ -1133,56 +1125,56 @@
         }
       },
       "80": {
-        "dem_votes": 9341,
-        "rep_votes": 15990,
+        "dem_votes": 9335,
+        "rep_votes": 15987,
         "other_votes": 0,
-        "total_votes": 25331,
+        "total_votes": 25322,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 6649,
-        "margin_pct": 26.25,
+        "margin": 6652,
+        "margin_pct": 26.27,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "81": {
-        "dem_votes": 11075,
-        "rep_votes": 13183,
+        "dem_votes": 11072,
+        "rep_votes": 13178,
         "other_votes": 0,
-        "total_votes": 24258,
+        "total_votes": 24250,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 2108,
-        "margin_pct": 8.69,
+        "margin": 2106,
+        "margin_pct": 8.68,
         "winner": "REP",
         "competitiveness": {
           "color": "#fb6a4a"
         }
       },
       "82": {
-        "dem_votes": 8337,
-        "rep_votes": 10888,
+        "dem_votes": 8175,
+        "rep_votes": 10544,
         "other_votes": 0,
-        "total_votes": 19225,
+        "total_votes": 18719,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 2551,
-        "margin_pct": 13.27,
+        "margin": 2369,
+        "margin_pct": 12.66,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "83": {
-        "dem_votes": 10404,
-        "rep_votes": 17147,
+        "dem_votes": 10264,
+        "rep_votes": 16875,
         "other_votes": 0,
-        "total_votes": 27551,
+        "total_votes": 27139,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 6743,
-        "margin_pct": 24.47,
+        "margin": 6611,
+        "margin_pct": 24.36,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -1245,17 +1237,17 @@
         }
       },
       "88": {
-        "dem_votes": 10580,
-        "rep_votes": 11781,
+        "dem_votes": 13904,
+        "rep_votes": 7919,
         "other_votes": 0,
-        "total_votes": 22361,
+        "total_votes": 21823,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 1201,
-        "margin_pct": 5.37,
-        "winner": "REP",
+        "margin": -5985,
+        "margin_pct": -27.43,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#3182bd"
         }
       },
       "89": {
@@ -1287,31 +1279,31 @@
         }
       },
       "91": {
-        "dem_votes": 14007,
-        "rep_votes": 16390,
+        "dem_votes": 14504,
+        "rep_votes": 19664,
         "other_votes": 0,
-        "total_votes": 30397,
+        "total_votes": 34168,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 2383,
-        "margin_pct": 7.84,
+        "margin": 5160,
+        "margin_pct": 15.1,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#ef3b2c"
         }
       },
       "92": {
-        "dem_votes": 6038,
-        "rep_votes": 6785,
+        "dem_votes": 5984,
+        "rep_votes": 5793,
         "other_votes": 0,
-        "total_votes": 12823,
+        "total_votes": 11777,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 747,
-        "margin_pct": 5.83,
-        "winner": "REP",
+        "margin": -191,
+        "margin_pct": -1.62,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#c6dbef"
         }
       },
       "93": {
@@ -1371,209 +1363,209 @@
         }
       },
       "97": {
-        "dem_votes": 10474,
-        "rep_votes": 12847,
+        "dem_votes": 10471,
+        "rep_votes": 12843,
         "other_votes": 0,
-        "total_votes": 23321,
+        "total_votes": 23314,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 2373,
-        "margin_pct": 10.18,
+        "margin": 2372,
+        "margin_pct": 10.17,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "98": {
-        "dem_votes": 6919,
-        "rep_votes": 4455,
+        "dem_votes": 5867,
+        "rep_votes": 8055,
         "other_votes": 0,
-        "total_votes": 11374,
+        "total_votes": 13922,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -2464,
-        "margin_pct": -21.66,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "99": {
-        "dem_votes": 5262,
-        "rep_votes": 6660,
-        "other_votes": 0,
-        "total_votes": 11922,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": 1398,
-        "margin_pct": 11.73,
+        "margin": 2188,
+        "margin_pct": 15.72,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "100": {
-        "dem_votes": 13589,
-        "rep_votes": 12907,
+      "99": {
+        "dem_votes": 10491,
+        "rep_votes": 7081,
         "other_votes": 0,
-        "total_votes": 26496,
+        "total_votes": 17572,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -682,
-        "margin_pct": -2.57,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "101": {
-        "dem_votes": 7918,
-        "rep_votes": 9431,
-        "other_votes": 0,
-        "total_votes": 17349,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": 1513,
-        "margin_pct": 8.72,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "102": {
-        "dem_votes": 12848,
-        "rep_votes": 12150,
-        "other_votes": 0,
-        "total_votes": 24998,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -698,
-        "margin_pct": -2.79,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "103": {
-        "dem_votes": 15470,
-        "rep_votes": 9497,
-        "other_votes": 0,
-        "total_votes": 24967,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -5973,
-        "margin_pct": -23.92,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "104": {
-        "dem_votes": 17801,
-        "rep_votes": 15967,
-        "other_votes": 0,
-        "total_votes": 33768,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -1834,
-        "margin_pct": -5.43,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "105": {
-        "dem_votes": 7478,
-        "rep_votes": 8449,
-        "other_votes": 0,
-        "total_votes": 15927,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": 971,
-        "margin_pct": 6.1,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "106": {
-        "dem_votes": 6287,
-        "rep_votes": 4093,
-        "other_votes": 0,
-        "total_votes": 10380,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -2194,
-        "margin_pct": -21.14,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#3182bd"
-        }
-      },
-      "107": {
-        "dem_votes": 6828,
-        "rep_votes": 5462,
-        "other_votes": 0,
-        "total_votes": 12290,
-        "dem_candidate": "Mike Ward",
-        "rep_candidate": "Michael Barrick",
-        "margin": -1366,
-        "margin_pct": -11.11,
+        "margin": -3410,
+        "margin_pct": -19.41,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
-      "108": {
-        "dem_votes": 8092,
-        "rep_votes": 11212,
-        "other_votes": 1,
-        "total_votes": 19305,
+      "100": {
+        "dem_votes": 12571,
+        "rep_votes": 8448,
+        "other_votes": 0,
+        "total_votes": 21019,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 3120,
-        "margin_pct": 16.16,
+        "margin": -4123,
+        "margin_pct": -19.62,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "101": {
+        "dem_votes": 10012,
+        "rep_votes": 6842,
+        "other_votes": 0,
+        "total_votes": 16854,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": -3170,
+        "margin_pct": -18.81,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "102": {
+        "dem_votes": 16753,
+        "rep_votes": 4205,
+        "other_votes": 0,
+        "total_votes": 20958,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": -12548,
+        "margin_pct": -59.87,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "103": {
+        "dem_votes": 9689,
+        "rep_votes": 16537,
+        "other_votes": 0,
+        "total_votes": 26226,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": 6848,
+        "margin_pct": 26.11,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "104": {
+        "dem_votes": 11209,
+        "rep_votes": 16114,
+        "other_votes": 0,
+        "total_votes": 27323,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": 4905,
+        "margin_pct": 17.95,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "109": {
-        "dem_votes": 9240,
-        "rep_votes": 12986,
+      "105": {
+        "dem_votes": 8331,
+        "rep_votes": 13134,
         "other_votes": 0,
-        "total_votes": 22226,
+        "total_votes": 21465,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 3746,
-        "margin_pct": 16.85,
+        "margin": 4803,
+        "margin_pct": 22.38,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "106": {
+        "dem_votes": 6335,
+        "rep_votes": 5137,
+        "other_votes": 0,
+        "total_votes": 11472,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": -1198,
+        "margin_pct": -10.44,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
+        }
+      },
+      "107": {
+        "dem_votes": 8655,
+        "rep_votes": 4672,
+        "other_votes": 0,
+        "total_votes": 13327,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": -3983,
+        "margin_pct": -29.89,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "108": {
+        "dem_votes": 7403,
+        "rep_votes": 11897,
+        "other_votes": 0,
+        "total_votes": 19300,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": 4494,
+        "margin_pct": 23.28,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "109": {
+        "dem_votes": 9236,
+        "rep_votes": 12989,
+        "other_votes": 0,
+        "total_votes": 22225,
+        "dem_candidate": "Mike Ward",
+        "rep_candidate": "Michael Barrick",
+        "margin": 3753,
+        "margin_pct": 16.89,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "110": {
-        "dem_votes": 12122,
-        "rep_votes": 12678,
+        "dem_votes": 12638,
+        "rep_votes": 12179,
         "other_votes": 0,
-        "total_votes": 24800,
+        "total_votes": 24817,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 556,
-        "margin_pct": 2.24,
-        "winner": "REP",
+        "margin": -459,
+        "margin_pct": -1.85,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fcae91"
+          "color": "#c6dbef"
         }
       },
       "111": {
-        "dem_votes": 14932,
-        "rep_votes": 13147,
+        "dem_votes": 14930,
+        "rep_votes": 13144,
         "other_votes": 0,
-        "total_votes": 28079,
+        "total_votes": 28074,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1785,
+        "margin": -1786,
         "margin_pct": -6.36,
         "winner": "DEM",
         "competitiveness": {
@@ -1581,24 +1573,24 @@
         }
       },
       "112": {
-        "dem_votes": 11813,
-        "rep_votes": 8281,
+        "dem_votes": 9033,
+        "rep_votes": 11981,
         "other_votes": 0,
-        "total_votes": 20094,
+        "total_votes": 21014,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -3532,
-        "margin_pct": -17.58,
-        "winner": "DEM",
+        "margin": 2948,
+        "margin_pct": 14.03,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#ef3b2c"
         }
       },
       "113": {
-        "dem_votes": 13066,
-        "rep_votes": 15563,
+        "dem_votes": 13065,
+        "rep_votes": 15562,
         "other_votes": 0,
-        "total_votes": 28629,
+        "total_votes": 28627,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
         "margin": 2497,
@@ -1609,66 +1601,66 @@
         }
       },
       "114": {
-        "dem_votes": 16011,
-        "rep_votes": 10483,
+        "dem_votes": 16925,
+        "rep_votes": 13713,
         "other_votes": 0,
-        "total_votes": 26494,
+        "total_votes": 30638,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -5528,
-        "margin_pct": -20.87,
+        "margin": -3212,
+        "margin_pct": -10.48,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "115": {
-        "dem_votes": 11325,
-        "rep_votes": 12728,
+        "dem_votes": 11695,
+        "rep_votes": 11529,
         "other_votes": 0,
-        "total_votes": 24053,
+        "total_votes": 23224,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 1403,
-        "margin_pct": 5.83,
-        "winner": "REP",
+        "margin": -166,
+        "margin_pct": -0.71,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#e1f5fe"
         }
       },
       "116": {
-        "dem_votes": 15098,
-        "rep_votes": 14023,
+        "dem_votes": 13826,
+        "rep_votes": 12006,
         "other_votes": 0,
-        "total_votes": 29121,
+        "total_votes": 25832,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": -1075,
-        "margin_pct": -3.69,
+        "margin": -1820,
+        "margin_pct": -7.05,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#c6dbef"
+          "color": "#9ecae1"
         }
       },
       "117": {
-        "dem_votes": 9935,
-        "rep_votes": 16219,
+        "dem_votes": 9926,
+        "rep_votes": 16208,
         "other_votes": 0,
-        "total_votes": 26154,
+        "total_votes": 26134,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
-        "margin": 6284,
-        "margin_pct": 24.03,
+        "margin": 6282,
+        "margin_pct": 24.04,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "118": {
-        "dem_votes": 15999,
-        "rep_votes": 12270,
+        "dem_votes": 15996,
+        "rep_votes": 12267,
         "other_votes": 0,
-        "total_votes": 28269,
+        "total_votes": 28263,
         "dem_candidate": "Mike Ward",
         "rep_candidate": "Michael Barrick",
         "margin": -3729,

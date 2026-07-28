@@ -15,10 +15,12 @@ REPORT_DIR = ROOT / "data/reports/urban_sf1_historical"
 STAGING = {
     2022: ROOT / "data/district_contests_urban_sf1_2022_lines",
     2024: ROOT / "data/district_contests_urban_sf1_2024_lines",
+    2026: ROOT / "data/district_contests_urban_sf1_2026_lines",
 }
 PRODUCTION = {
     2022: ROOT / "data/district_contests",
     2024: ROOT / "data/district_contests_2024_lines",
+    2026: ROOT / "data/district_contests_2026_lines",
 }
 
 
@@ -41,6 +43,43 @@ def raw_office_totals() -> dict[str, int]:
                 float(row.get("votes") or 0)
             )
     return dict(totals)
+
+
+def geographic_sanity_checks() -> list[dict]:
+    """Check well-understood 2000 partisan anchors against modern geography."""
+    anchors = [
+        (2022, "state_house", "98", "REP", "northern Mecklenburg"),
+        (2022, "state_house", "102", "DEM", "central Charlotte"),
+        (2022, "state_house", "103", "REP", "south Mecklenburg"),
+        (2024, "state_house", "98", "REP", "northern Mecklenburg"),
+        (2024, "state_house", "102", "DEM", "central Charlotte"),
+        (2024, "state_house", "103", "REP", "south Mecklenburg"),
+        (2024, "congressional", "1", "DEM", "northeastern Black Belt"),
+        (2024, "congressional", "4", "DEM", "Triangle core"),
+        (2024, "congressional", "12", "DEM", "Charlotte core"),
+        (2024, "congressional", "14", "REP", "western Charlotte suburbs"),
+        (2026, "congressional", "1", "REP", "Craven-Nash coastal plain"),
+        (2026, "congressional", "4", "DEM", "Durham-Orange-Wake core"),
+        (2026, "congressional", "12", "DEM", "Mecklenburg core"),
+        (2026, "congressional", "14", "REP", "western Mecklenburg-Gaston"),
+    ]
+    checks = []
+    for line_year, scope, district, expected, description in anchors:
+        path = STAGING[line_year] / f"{scope}_president_2000.json"
+        row = load(path)["general"]["results"][district]
+        checks.append(
+            {
+                "line_year": line_year,
+                "scope": scope,
+                "district": district,
+                "description": description,
+                "expected_winner": expected,
+                "actual_winner": row["winner"],
+                "margin_pct": row["margin_pct"],
+                "passed": row["winner"] == expected,
+            }
+        )
+    return checks
 
 
 def main() -> None:
@@ -155,6 +194,13 @@ def main() -> None:
                 }
             )
 
+    sanity_checks = geographic_sanity_checks()
+    geography_passed = all(row["passed"] for row in sanity_checks)
+    if geography_passed:
+        for row in summaries:
+            if row["candidate_complete"]:
+                row["disposition"] = "promotion_candidate"
+
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     detail_path = REPORT_DIR / "full_ballot_2000_district_audit.csv"
     summary_path = REPORT_DIR / "full_ballot_2000_audit.json"
@@ -170,9 +216,15 @@ def main() -> None:
         "schema": "urban_sf1_historical_2000_full_ballot_audit.v1",
         "production_modified": False,
         "contest_count": len({row["contest_type"] for row in summaries}),
-        "expected_files_per_line_set": 54,
+        "expected_files_by_line_set": {
+            "2022": 54,
+            "2024": 54,
+            "2026": 18,
+        },
         "file_summaries": summaries,
         "disposition_counts": dict(sorted(disposition_counts.items())),
+        "geographic_sanity_passed": geography_passed,
+        "geographic_sanity_checks": sanity_checks,
         "detail_csv": detail_path.relative_to(ROOT).as_posix(),
     }
     summary_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

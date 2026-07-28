@@ -3,26 +3,18 @@
   "scope": "state_house",
   "contest_type": "governor",
   "meta": {
-    "match_coverage_pct": 73.73,
-    "matched_precinct_keys": 1984,
+    "match_coverage_pct": 69.64,
+    "matched_precinct_keys": 1874,
     "total_precinct_keys": 2691,
     "source": "batch_shatter_vap_party_split",
     "office": "GOVERNOR",
     "nongeo_allocation_mode": "precinct_candidate",
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2006_via_block00_nhgis_filled.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
-    "district_weights_json": "data/mappings/sbe2006_to_modern_district_weights.json",
+    "district_weights_json": "data/reports/urban_sf1_historical/district_weights_2000.json",
     "district_weight_plan": "sl_2022_mqp",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines",
-    "margin_calibration_mode": "preserve_live_total_votes",
-    "margin_calibration_target_districts": [
-      "108",
-      "109",
-      "110"
-    ],
-    "margin_calibration_snapshot": "C:/Users/Shama/OneDrive/Documents/Side_Projects/Side_Projects/NCPrecinctMap/data/district_contests_dra_review/state_house_governor_2000.json",
-    "margin_calibrated_to": "dra_review_or_2024_lines_hd108_110"
+    "district_lines_label": "2022 lines Census 2000 exact-VTD historical-cell hybrid"
   },
   "general": {
     "results": {
@@ -41,14 +33,14 @@
         }
       },
       "2": {
-        "dem_votes": 15285,
-        "rep_votes": 11413,
-        "other_votes": 370,
-        "total_votes": 27068,
+        "dem_votes": 14524,
+        "rep_votes": 11125,
+        "other_votes": 360,
+        "total_votes": 26009,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -3872,
-        "margin_pct": -14.3,
+        "margin": -3399,
+        "margin_pct": -13.07,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -97,14 +89,14 @@
         }
       },
       "6": {
-        "dem_votes": 9000,
-        "rep_votes": 7552,
-        "other_votes": 228,
-        "total_votes": 16780,
+        "dem_votes": 8972,
+        "rep_votes": 7519,
+        "other_votes": 227,
+        "total_votes": 16718,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -1448,
-        "margin_pct": -8.63,
+        "margin": -1453,
+        "margin_pct": -8.69,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
@@ -167,14 +159,14 @@
         }
       },
       "11": {
-        "dem_votes": 10048,
-        "rep_votes": 7367,
-        "other_votes": 281,
-        "total_votes": 17696,
+        "dem_votes": 12876,
+        "rep_votes": 9376,
+        "other_votes": 639,
+        "total_votes": 22891,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2681,
-        "margin_pct": -15.15,
+        "margin": -3500,
+        "margin_pct": -15.29,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -265,59 +257,59 @@
         }
       },
       "18": {
-        "dem_votes": 14077,
-        "rep_votes": 7611,
-        "other_votes": 533,
-        "total_votes": 22221,
+        "dem_votes": 15026,
+        "rep_votes": 8828,
+        "other_votes": 563,
+        "total_votes": 24417,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -6466,
-        "margin_pct": -29.1,
+        "margin": -6198,
+        "margin_pct": -25.38,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "19": {
-        "dem_votes": 13053,
-        "rep_votes": 10462,
-        "other_votes": 541,
-        "total_votes": 24056,
+        "dem_votes": 12182,
+        "rep_votes": 9459,
+        "other_votes": 508,
+        "total_votes": 22149,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2591,
-        "margin_pct": -10.77,
+        "margin": -2723,
+        "margin_pct": -12.29,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "20": {
-        "dem_votes": 16534,
-        "rep_votes": 14695,
-        "other_votes": 694,
-        "total_votes": 31923,
+        "dem_votes": 16456,
+        "rep_votes": 14481,
+        "other_votes": 696,
+        "total_votes": 31633,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -1839,
-        "margin_pct": -5.76,
+        "margin": -1975,
+        "margin_pct": -6.24,
         "winner": "DEM",
         "competitiveness": {
           "color": "#9ecae1"
         }
       },
       "21": {
-        "dem_votes": 2718,
-        "rep_votes": 2116,
-        "other_votes": 108,
-        "total_votes": 4942,
+        "dem_votes": 3535,
+        "rep_votes": 3703,
+        "other_votes": 129,
+        "total_votes": 7367,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -602,
-        "margin_pct": -12.18,
-        "winner": "DEM",
+        "margin": 168,
+        "margin_pct": 2.28,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#fcae91"
         }
       },
       "22": {
@@ -419,42 +411,42 @@
         }
       },
       "29": {
-        "dem_votes": 15462,
-        "rep_votes": 6020,
-        "other_votes": 373,
-        "total_votes": 21855,
+        "dem_votes": 16872,
+        "rep_votes": 6783,
+        "other_votes": 402,
+        "total_votes": 24057,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -9442,
-        "margin_pct": -43.2,
+        "margin": -10089,
+        "margin_pct": -41.94,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "30": {
-        "dem_votes": 17968,
-        "rep_votes": 6407,
-        "other_votes": 466,
-        "total_votes": 24841,
+        "dem_votes": 15913,
+        "rep_votes": 5624,
+        "other_votes": 438,
+        "total_votes": 21975,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -11561,
-        "margin_pct": -46.54,
+        "margin": -10289,
+        "margin_pct": -46.82,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
         }
       },
       "31": {
-        "dem_votes": 9757,
-        "rep_votes": 2896,
-        "other_votes": 135,
-        "total_votes": 12788,
+        "dem_votes": 11157,
+        "rep_votes": 3196,
+        "other_votes": 144,
+        "total_votes": 14497,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -6861,
-        "margin_pct": -53.65,
+        "margin": -7961,
+        "margin_pct": -54.91,
         "winner": "DEM",
         "competitiveness": {
           "color": "#08306b"
@@ -475,182 +467,182 @@
         }
       },
       "33": {
-        "dem_votes": 14852,
-        "rep_votes": 11194,
-        "other_votes": 367,
-        "total_votes": 26413,
+        "dem_votes": 9876,
+        "rep_votes": 8021,
+        "other_votes": 292,
+        "total_votes": 18189,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -3658,
-        "margin_pct": -13.85,
+        "margin": -1855,
+        "margin_pct": -10.2,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "34": {
-        "dem_votes": 23919,
-        "rep_votes": 15827,
-        "other_votes": 793,
-        "total_votes": 40539,
+        "dem_votes": 18657,
+        "rep_votes": 13187,
+        "other_votes": 609,
+        "total_votes": 32453,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -8092,
-        "margin_pct": -19.96,
+        "margin": -5470,
+        "margin_pct": -16.86,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "35": {
-        "dem_votes": 5349,
-        "rep_votes": 5396,
-        "other_votes": 204,
-        "total_votes": 10949,
+        "dem_votes": 4555,
+        "rep_votes": 4771,
+        "other_votes": 135,
+        "total_votes": 9461,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 47,
-        "margin_pct": 0.43,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#f7f7f7"
-        }
-      },
-      "36": {
-        "dem_votes": 3808,
-        "rep_votes": 4098,
-        "other_votes": 144,
-        "total_votes": 8050,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 290,
-        "margin_pct": 3.6,
+        "margin": 216,
+        "margin_pct": 2.28,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
-      "37": {
-        "dem_votes": 7388,
-        "rep_votes": 6955,
-        "other_votes": 244,
-        "total_votes": 14587,
+      "36": {
+        "dem_votes": 7108,
+        "rep_votes": 6619,
+        "other_votes": 289,
+        "total_votes": 14016,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -433,
-        "margin_pct": -2.97,
+        "margin": -489,
+        "margin_pct": -3.49,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
-      "38": {
-        "dem_votes": 17514,
-        "rep_votes": 10278,
-        "other_votes": 568,
-        "total_votes": 28360,
+      "37": {
+        "dem_votes": 8981,
+        "rep_votes": 9163,
+        "other_votes": 332,
+        "total_votes": 18476,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -7236,
-        "margin_pct": -25.51,
+        "margin": 182,
+        "margin_pct": 0.99,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fee8c8"
+        }
+      },
+      "38": {
+        "dem_votes": 15706,
+        "rep_votes": 4983,
+        "other_votes": 264,
+        "total_votes": 20953,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": -10723,
+        "margin_pct": -51.18,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#08306b"
         }
       },
       "39": {
-        "dem_votes": 11418,
-        "rep_votes": 9057,
-        "other_votes": 351,
-        "total_votes": 20826,
+        "dem_votes": 12680,
+        "rep_votes": 9719,
+        "other_votes": 295,
+        "total_votes": 22694,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2361,
-        "margin_pct": -11.34,
+        "margin": -2961,
+        "margin_pct": -13.05,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "40": {
-        "dem_votes": 14950,
-        "rep_votes": 12767,
-        "other_votes": 508,
-        "total_votes": 28225,
+        "dem_votes": 13474,
+        "rep_votes": 14423,
+        "other_votes": 479,
+        "total_votes": 28376,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2183,
-        "margin_pct": -7.73,
-        "winner": "DEM",
+        "margin": 949,
+        "margin_pct": 3.34,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#fcae91"
         }
       },
       "41": {
-        "dem_votes": 12756,
-        "rep_votes": 12187,
-        "other_votes": 460,
-        "total_votes": 25403,
+        "dem_votes": 16229,
+        "rep_votes": 15116,
+        "other_votes": 605,
+        "total_votes": 31950,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -569,
-        "margin_pct": -2.24,
+        "margin": -1113,
+        "margin_pct": -3.48,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "42": {
-        "dem_votes": 9567,
-        "rep_votes": 5681,
-        "other_votes": 251,
-        "total_votes": 15499,
+        "dem_votes": 9795,
+        "rep_votes": 5402,
+        "other_votes": 260,
+        "total_votes": 15457,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -3886,
-        "margin_pct": -25.07,
+        "margin": -4393,
+        "margin_pct": -28.42,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
         }
       },
       "43": {
-        "dem_votes": 12644,
-        "rep_votes": 8763,
-        "other_votes": 277,
-        "total_votes": 21684,
+        "dem_votes": 13618,
+        "rep_votes": 10074,
+        "other_votes": 311,
+        "total_votes": 24003,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -3881,
-        "margin_pct": -17.9,
+        "margin": -3544,
+        "margin_pct": -14.76,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "44": {
-        "dem_votes": 17871,
-        "rep_votes": 12269,
-        "other_votes": 435,
-        "total_votes": 30575,
+        "dem_votes": 17095,
+        "rep_votes": 10985,
+        "other_votes": 399,
+        "total_votes": 28479,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -5602,
-        "margin_pct": -18.32,
+        "margin": -6110,
+        "margin_pct": -21.45,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "45": {
-        "dem_votes": 6293,
-        "rep_votes": 4215,
-        "other_votes": 177,
-        "total_votes": 10685,
+        "dem_votes": 5895,
+        "rep_votes": 4500,
+        "other_votes": 171,
+        "total_votes": 10566,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2078,
-        "margin_pct": -19.45,
+        "margin": -1395,
+        "margin_pct": -13.2,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
@@ -699,24 +691,24 @@
         }
       },
       "49": {
-        "dem_votes": 11416,
-        "rep_votes": 9379,
-        "other_votes": 438,
-        "total_votes": 21233,
+        "dem_votes": 13226,
+        "rep_votes": 9792,
+        "other_votes": 473,
+        "total_votes": 23491,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2037,
-        "margin_pct": -9.59,
+        "margin": -3434,
+        "margin_pct": -14.62,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "50": {
-        "dem_votes": 18771,
-        "rep_votes": 9686,
+        "dem_votes": 18770,
+        "rep_votes": 9685,
         "other_votes": 560,
-        "total_votes": 29017,
+        "total_votes": 29015,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
         "margin": -9085,
@@ -755,14 +747,14 @@
         }
       },
       "53": {
-        "dem_votes": 6495,
-        "rep_votes": 6748,
-        "other_votes": 229,
-        "total_votes": 13472,
+        "dem_votes": 6460,
+        "rep_votes": 6715,
+        "other_votes": 227,
+        "total_votes": 13402,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 253,
-        "margin_pct": 1.88,
+        "margin": 255,
+        "margin_pct": 1.9,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
@@ -783,27 +775,27 @@
         }
       },
       "55": {
-        "dem_votes": 13334,
-        "rep_votes": 12386,
-        "other_votes": 445,
-        "total_votes": 26165,
+        "dem_votes": 13080,
+        "rep_votes": 11926,
+        "other_votes": 431,
+        "total_votes": 25437,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -948,
-        "margin_pct": -3.62,
+        "margin": -1154,
+        "margin_pct": -4.54,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "56": {
-        "dem_votes": 19991,
-        "rep_votes": 9175,
-        "other_votes": 675,
-        "total_votes": 29841,
+        "dem_votes": 19981,
+        "rep_votes": 9169,
+        "other_votes": 674,
+        "total_votes": 29824,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -10816,
+        "margin": -10812,
         "margin_pct": -36.25,
         "winner": "DEM",
         "competitiveness": {
@@ -811,87 +803,87 @@
         }
       },
       "57": {
-        "dem_votes": 17845,
-        "rep_votes": 10313,
-        "other_votes": 591,
-        "total_votes": 28749,
+        "dem_votes": 15501,
+        "rep_votes": 11469,
+        "other_votes": 458,
+        "total_votes": 27428,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -7532,
-        "margin_pct": -26.2,
+        "margin": -4032,
+        "margin_pct": -14.7,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "58": {
-        "dem_votes": 16575,
-        "rep_votes": 12405,
-        "other_votes": 476,
-        "total_votes": 29456,
+        "dem_votes": 15529,
+        "rep_votes": 11489,
+        "other_votes": 459,
+        "total_votes": 27477,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -4170,
-        "margin_pct": -14.16,
+        "margin": -4040,
+        "margin_pct": -14.7,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "59": {
-        "dem_votes": 9678,
-        "rep_votes": 12041,
-        "other_votes": 363,
-        "total_votes": 22082,
+        "dem_votes": 15599,
+        "rep_votes": 11552,
+        "other_votes": 461,
+        "total_votes": 27612,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2363,
-        "margin_pct": 10.7,
-        "winner": "REP",
+        "margin": -4047,
+        "margin_pct": -14.66,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#6baed6"
         }
       },
       "60": {
-        "dem_votes": 13732,
-        "rep_votes": 10599,
-        "other_votes": 374,
-        "total_votes": 24705,
+        "dem_votes": 15570,
+        "rep_votes": 11524,
+        "other_votes": 461,
+        "total_votes": 27555,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -3133,
-        "margin_pct": -12.68,
+        "margin": -4046,
+        "margin_pct": -14.68,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "61": {
-        "dem_votes": 22282,
-        "rep_votes": 12219,
-        "other_votes": 574,
-        "total_votes": 35075,
+        "dem_votes": 15529,
+        "rep_votes": 11489,
+        "other_votes": 459,
+        "total_votes": 27477,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -10063,
-        "margin_pct": -28.69,
+        "margin": -4040,
+        "margin_pct": -14.7,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#6baed6"
         }
       },
       "62": {
-        "dem_votes": 13213,
-        "rep_votes": 11467,
-        "other_votes": 382,
-        "total_votes": 25062,
+        "dem_votes": 15558,
+        "rep_votes": 11513,
+        "other_votes": 460,
+        "total_votes": 27531,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -1746,
-        "margin_pct": -6.97,
+        "margin": -4045,
+        "margin_pct": -14.69,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#6baed6"
         }
       },
       "63": {
@@ -937,27 +929,27 @@
         }
       },
       "66": {
-        "dem_votes": 19179,
-        "rep_votes": 13686,
-        "other_votes": 569,
-        "total_votes": 33434,
+        "dem_votes": 18464,
+        "rep_votes": 11479,
+        "other_votes": 496,
+        "total_votes": 30439,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -5493,
-        "margin_pct": -16.43,
+        "margin": -6985,
+        "margin_pct": -22.95,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#3182bd"
         }
       },
       "67": {
-        "dem_votes": 14392,
-        "rep_votes": 16879,
+        "dem_votes": 14391,
+        "rep_votes": 16877,
         "other_votes": 492,
-        "total_votes": 31763,
+        "total_votes": 31760,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2487,
+        "margin": 2486,
         "margin_pct": 7.83,
         "winner": "REP",
         "competitiveness": {
@@ -965,41 +957,41 @@
         }
       },
       "68": {
-        "dem_votes": 3244,
-        "rep_votes": 7133,
-        "other_votes": 206,
-        "total_votes": 10583,
+        "dem_votes": 3274,
+        "rep_votes": 7372,
+        "other_votes": 200,
+        "total_votes": 10846,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 3889,
-        "margin_pct": 36.75,
+        "margin": 4098,
+        "margin_pct": 37.78,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "69": {
-        "dem_votes": 5886,
-        "rep_votes": 11858,
-        "other_votes": 289,
-        "total_votes": 18033,
+        "dem_votes": 6112,
+        "rep_votes": 12088,
+        "other_votes": 309,
+        "total_votes": 18509,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 5972,
-        "margin_pct": 33.12,
+        "margin": 5976,
+        "margin_pct": 32.29,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "70": {
-        "dem_votes": 10573,
-        "rep_votes": 16558,
-        "other_votes": 447,
-        "total_votes": 27578,
+        "dem_votes": 10571,
+        "rep_votes": 16554,
+        "other_votes": 446,
+        "total_votes": 27571,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 5985,
+        "margin": 5983,
         "margin_pct": 21.7,
         "winner": "REP",
         "competitiveness": {
@@ -1007,73 +999,73 @@
         }
       },
       "71": {
-        "dem_votes": 14254,
-        "rep_votes": 14286,
-        "other_votes": 539,
-        "total_votes": 29079,
+        "dem_votes": 13405,
+        "rep_votes": 9031,
+        "other_votes": 462,
+        "total_votes": 22898,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 32,
-        "margin_pct": 0.11,
-        "winner": "REP",
+        "margin": -4374,
+        "margin_pct": -19.1,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#f7f7f7"
+          "color": "#6baed6"
         }
       },
       "72": {
-        "dem_votes": 17489,
-        "rep_votes": 17708,
-        "other_votes": 708,
-        "total_votes": 35905,
+        "dem_votes": 17164,
+        "rep_votes": 8289,
+        "other_votes": 425,
+        "total_votes": 25878,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 219,
-        "margin_pct": 0.61,
-        "winner": "REP",
+        "margin": -8875,
+        "margin_pct": -34.3,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fee8c8"
+          "color": "#08519c"
         }
       },
       "73": {
-        "dem_votes": 6112,
-        "rep_votes": 8128,
-        "other_votes": 267,
-        "total_votes": 14507,
+        "dem_votes": 6419,
+        "rep_votes": 8791,
+        "other_votes": 287,
+        "total_votes": 15497,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2016,
-        "margin_pct": 13.9,
+        "margin": 2372,
+        "margin_pct": 15.31,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "74": {
-        "dem_votes": 13220,
-        "rep_votes": 11124,
-        "other_votes": 403,
-        "total_votes": 24747,
+        "dem_votes": 13384,
+        "rep_votes": 16905,
+        "other_votes": 570,
+        "total_votes": 30859,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2096,
-        "margin_pct": -8.47,
-        "winner": "DEM",
+        "margin": 3521,
+        "margin_pct": 11.41,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#ef3b2c"
         }
       },
       "75": {
-        "dem_votes": 10542,
-        "rep_votes": 6380,
-        "other_votes": 312,
-        "total_votes": 17234,
+        "dem_votes": 10983,
+        "rep_votes": 11985,
+        "other_votes": 418,
+        "total_votes": 23386,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -4162,
-        "margin_pct": -24.15,
-        "winner": "DEM",
+        "margin": 1002,
+        "margin_pct": 4.28,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#3182bd"
+          "color": "#fcae91"
         }
       },
       "76": {
@@ -1133,56 +1125,56 @@
         }
       },
       "80": {
-        "dem_votes": 10573,
-        "rep_votes": 15462,
-        "other_votes": 422,
-        "total_votes": 26457,
+        "dem_votes": 10566,
+        "rep_votes": 15458,
+        "other_votes": 421,
+        "total_votes": 26445,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 4889,
-        "margin_pct": 18.48,
+        "margin": 4892,
+        "margin_pct": 18.5,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "81": {
-        "dem_votes": 11908,
-        "rep_votes": 13069,
+        "dem_votes": 11905,
+        "rep_votes": 13064,
         "other_votes": 427,
-        "total_votes": 25404,
+        "total_votes": 25396,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 1161,
-        "margin_pct": 4.57,
+        "margin": 1159,
+        "margin_pct": 4.56,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
       "82": {
-        "dem_votes": 8089,
-        "rep_votes": 12207,
-        "other_votes": 380,
-        "total_votes": 20676,
+        "dem_votes": 7917,
+        "rep_votes": 11836,
+        "other_votes": 370,
+        "total_votes": 20123,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 4118,
-        "margin_pct": 19.92,
+        "margin": 3919,
+        "margin_pct": 19.48,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "83": {
-        "dem_votes": 10152,
-        "rep_votes": 18693,
-        "other_votes": 604,
-        "total_votes": 29449,
+        "dem_votes": 10013,
+        "rep_votes": 18393,
+        "other_votes": 594,
+        "total_votes": 29000,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 8541,
-        "margin_pct": 29.0,
+        "margin": 8380,
+        "margin_pct": 28.9,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -1245,17 +1237,17 @@
         }
       },
       "88": {
-        "dem_votes": 10293,
-        "rep_votes": 13463,
-        "other_votes": 376,
-        "total_votes": 24132,
+        "dem_votes": 13491,
+        "rep_votes": 9790,
+        "other_votes": 342,
+        "total_votes": 23623,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 3170,
-        "margin_pct": 13.14,
-        "winner": "REP",
+        "margin": -3701,
+        "margin_pct": -15.67,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#6baed6"
         }
       },
       "89": {
@@ -1287,31 +1279,31 @@
         }
       },
       "91": {
-        "dem_votes": 14599,
-        "rep_votes": 16715,
-        "other_votes": 549,
-        "total_votes": 31863,
+        "dem_votes": 15219,
+        "rep_votes": 20023,
+        "other_votes": 638,
+        "total_votes": 35880,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2116,
-        "margin_pct": 6.64,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
-      "92": {
-        "dem_votes": 5932,
-        "rep_votes": 7711,
-        "other_votes": 208,
-        "total_votes": 13851,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 1779,
-        "margin_pct": 12.84,
+        "margin": 4804,
+        "margin_pct": 13.39,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
+        }
+      },
+      "92": {
+        "dem_votes": 5863,
+        "rep_votes": 6559,
+        "other_votes": 200,
+        "total_votes": 12622,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 696,
+        "margin_pct": 5.51,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#fb6a4a"
         }
       },
       "93": {
@@ -1371,13 +1363,13 @@
         }
       },
       "97": {
-        "dem_votes": 10416,
-        "rep_votes": 13920,
+        "dem_votes": 10413,
+        "rep_votes": 13915,
         "other_votes": 440,
-        "total_votes": 24776,
+        "total_votes": 24768,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 3504,
+        "margin": 3502,
         "margin_pct": 14.14,
         "winner": "REP",
         "competitiveness": {
@@ -1385,223 +1377,223 @@
         }
       },
       "98": {
-        "dem_votes": 6656,
-        "rep_votes": 5454,
-        "other_votes": 175,
-        "total_votes": 12285,
+        "dem_votes": 5902,
+        "rep_votes": 8977,
+        "other_votes": 247,
+        "total_votes": 15126,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -1202,
-        "margin_pct": -9.78,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#9ecae1"
-        }
-      },
-      "99": {
-        "dem_votes": 4939,
-        "rep_votes": 7921,
-        "other_votes": 196,
-        "total_votes": 13056,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 2982,
-        "margin_pct": 22.84,
+        "margin": 3075,
+        "margin_pct": 20.33,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
-      "100": {
-        "dem_votes": 13378,
-        "rep_votes": 14973,
-        "other_votes": 509,
-        "total_votes": 28860,
+      "99": {
+        "dem_votes": 10524,
+        "rep_votes": 8012,
+        "other_votes": 290,
+        "total_votes": 18826,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 1595,
-        "margin_pct": 5.53,
-        "winner": "REP",
+        "margin": -2512,
+        "margin_pct": -13.34,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#6baed6"
+        }
+      },
+      "100": {
+        "dem_votes": 12256,
+        "rep_votes": 9954,
+        "other_votes": 390,
+        "total_votes": 22600,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": -2302,
+        "margin_pct": -10.19,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#6baed6"
         }
       },
       "101": {
-        "dem_votes": 7733,
-        "rep_votes": 10619,
-        "other_votes": 280,
-        "total_votes": 18632,
+        "dem_votes": 10003,
+        "rep_votes": 7850,
+        "other_votes": 241,
+        "total_votes": 18094,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2886,
-        "margin_pct": 15.49,
-        "winner": "REP",
+        "margin": -2153,
+        "margin_pct": -11.9,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#6baed6"
         }
       },
       "102": {
-        "dem_votes": 12508,
-        "rep_votes": 13914,
-        "other_votes": 425,
-        "total_votes": 26847,
+        "dem_votes": 16590,
+        "rep_votes": 5312,
+        "other_votes": 316,
+        "total_votes": 22218,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 1406,
-        "margin_pct": 5.24,
+        "margin": -11278,
+        "margin_pct": -50.76,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#08306b"
+        }
+      },
+      "103": {
+        "dem_votes": 9431,
+        "rep_votes": 18639,
+        "other_votes": 433,
+        "total_votes": 28503,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 9208,
+        "margin_pct": 32.31,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "104": {
+        "dem_votes": 10432,
+        "rep_votes": 19213,
+        "other_votes": 434,
+        "total_votes": 30079,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 8781,
+        "margin_pct": 29.19,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "105": {
+        "dem_votes": 8009,
+        "rep_votes": 15054,
+        "other_votes": 356,
+        "total_votes": 23419,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 7045,
+        "margin_pct": 30.08,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#a50f15"
+        }
+      },
+      "106": {
+        "dem_votes": 6392,
+        "rep_votes": 5701,
+        "other_votes": 214,
+        "total_votes": 12307,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": -691,
+        "margin_pct": -5.61,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#9ecae1"
+        }
+      },
+      "107": {
+        "dem_votes": 8731,
+        "rep_votes": 5223,
+        "other_votes": 177,
+        "total_votes": 14131,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": -3508,
+        "margin_pct": -24.82,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "108": {
+        "dem_votes": 7490,
+        "rep_votes": 12728,
+        "other_votes": 374,
+        "total_votes": 20592,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 5238,
+        "margin_pct": 25.44,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "109": {
+        "dem_votes": 9258,
+        "rep_votes": 14210,
+        "other_votes": 390,
+        "total_votes": 23858,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 4952,
+        "margin_pct": 20.76,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#cb181d"
+        }
+      },
+      "110": {
+        "dem_votes": 12703,
+        "rep_votes": 13485,
+        "other_votes": 415,
+        "total_votes": 26603,
+        "dem_candidate": "Mike Easley",
+        "rep_candidate": "Richard Vinroot",
+        "margin": 782,
+        "margin_pct": 2.94,
         "winner": "REP",
         "competitiveness": {
           "color": "#fcae91"
         }
       },
-      "103": {
-        "dem_votes": 15506,
-        "rep_votes": 10895,
-        "other_votes": 294,
-        "total_votes": 26695,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": -4611,
-        "margin_pct": -17.27,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "104": {
-        "dem_votes": 17777,
-        "rep_votes": 18056,
-        "other_votes": 568,
-        "total_votes": 36401,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 279,
-        "margin_pct": 0.77,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fee8c8"
-        }
-      },
-      "105": {
-        "dem_votes": 7251,
-        "rep_votes": 9866,
-        "other_votes": 283,
-        "total_votes": 17400,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 2615,
-        "margin_pct": 15.03,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "106": {
-        "dem_votes": 6196,
-        "rep_votes": 4785,
-        "other_votes": 142,
-        "total_votes": 11123,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": -1411,
-        "margin_pct": -12.69,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#6baed6"
-        }
-      },
-      "107": {
-        "dem_votes": 6647,
-        "rep_votes": 6457,
-        "other_votes": 214,
-        "total_votes": 13318,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": -190,
-        "margin_pct": -1.43,
-        "winner": "DEM",
-        "competitiveness": {
-          "color": "#c6dbef"
-        }
-      },
-      "108": {
-        "dem_votes": 8132,
-        "rep_votes": 12109,
-        "other_votes": 355,
-        "total_votes": 20596,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 3977,
-        "margin_pct": 19.31,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "109": {
-        "dem_votes": 9421,
-        "rep_votes": 14028,
-        "other_votes": 410,
-        "total_votes": 23859,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 4607,
-        "margin_pct": 19.31,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "110": {
-        "dem_votes": 12143,
-        "rep_votes": 14036,
-        "other_votes": 406,
-        "total_votes": 26585,
-        "dem_candidate": "Mike Easley",
-        "rep_candidate": "Richard Vinroot",
-        "margin": 1893,
-        "margin_pct": 7.12,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fb6a4a"
-        }
-      },
       "111": {
-        "dem_votes": 15077,
-        "rep_votes": 14546,
+        "dem_votes": 15075,
+        "rep_votes": 14543,
         "other_votes": 462,
-        "total_votes": 30085,
+        "total_votes": 30080,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -531,
-        "margin_pct": -1.76,
+        "margin": -532,
+        "margin_pct": -1.77,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "112": {
-        "dem_votes": 11663,
-        "rep_votes": 9618,
-        "other_votes": 296,
-        "total_votes": 21577,
+        "dem_votes": 8858,
+        "rep_votes": 13446,
+        "other_votes": 325,
+        "total_votes": 22629,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -2045,
-        "margin_pct": -9.48,
-        "winner": "DEM",
+        "margin": 4588,
+        "margin_pct": 20.27,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#cb181d"
         }
       },
       "113": {
         "dem_votes": 13631,
-        "rep_votes": 16217,
+        "rep_votes": 16216,
         "other_votes": 714,
-        "total_votes": 30562,
+        "total_votes": 30561,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 2586,
+        "margin": 2585,
         "margin_pct": 8.46,
         "winner": "REP",
         "competitiveness": {
@@ -1609,55 +1601,55 @@
         }
       },
       "114": {
-        "dem_votes": 16205,
-        "rep_votes": 11177,
-        "other_votes": 1068,
-        "total_votes": 28450,
+        "dem_votes": 17212,
+        "rep_votes": 14618,
+        "other_votes": 1148,
+        "total_votes": 32978,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -5028,
-        "margin_pct": -17.67,
+        "margin": -2594,
+        "margin_pct": -7.87,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#6baed6"
+          "color": "#9ecae1"
         }
       },
       "115": {
-        "dem_votes": 11653,
-        "rep_votes": 13626,
-        "other_votes": 639,
-        "total_votes": 25918,
+        "dem_votes": 12076,
+        "rep_votes": 12354,
+        "other_votes": 723,
+        "total_votes": 25153,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 1973,
-        "margin_pct": 7.61,
+        "margin": 278,
+        "margin_pct": 1.11,
         "winner": "REP",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#fcae91"
         }
       },
       "116": {
-        "dem_votes": 15578,
-        "rep_votes": 15003,
-        "other_votes": 1016,
-        "total_votes": 31597,
+        "dem_votes": 14161,
+        "rep_votes": 12849,
+        "other_votes": 853,
+        "total_votes": 27863,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": -575,
-        "margin_pct": -1.82,
+        "margin": -1312,
+        "margin_pct": -4.71,
         "winner": "DEM",
         "competitiveness": {
           "color": "#c6dbef"
         }
       },
       "117": {
-        "dem_votes": 11067,
-        "rep_votes": 16627,
+        "dem_votes": 11058,
+        "rep_votes": 16615,
         "other_votes": 520,
-        "total_votes": 28214,
+        "total_votes": 28193,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
-        "margin": 5560,
+        "margin": 5557,
         "margin_pct": 19.71,
         "winner": "REP",
         "competitiveness": {
@@ -1665,10 +1657,10 @@
         }
       },
       "118": {
-        "dem_votes": 16400,
-        "rep_votes": 13190,
+        "dem_votes": 16397,
+        "rep_votes": 13187,
         "other_votes": 666,
-        "total_votes": 30256,
+        "total_votes": 30250,
         "dem_candidate": "Mike Easley",
         "rep_candidate": "Richard Vinroot",
         "margin": -3210,
