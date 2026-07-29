@@ -25,8 +25,14 @@ from calibrate_district_slices_to_stats_margins import (  # noqa: E402
     StatsRow,
     calculate_competitiveness,
     calibrate_slice,
+    load_stats,
     normalize_district_id,
     solve_votes_for_margin,
+)
+from enforce_whole_county_district_totals import (  # noqa: E402
+    aggregate_county_contest_totals_from_raw_csv,
+    build_whole_county_map,
+    enforce_county_totals,
 )
 
 # Explicit DRA district-statistics paths (2022 lines unless noted).
@@ -76,6 +82,143 @@ STATS_CSV_BY_KEY: dict[tuple[int, str, str], Path] = {
     (2024, "congressional", "president"): Path("data/district-statistics 2024 Pres Congress.csv"),
     (2024, "state_house", "governor"): Path("data/district-statistics 2024 gov.csv"),
 }
+
+WHOLE_COUNTY_POST_CALIBRATION = {
+    (2004, "state_house", "president"): {
+        "crosswalk": Path("data/crosswalks/precinct_to_2022_state_house.csv"),
+        "raw_results": Path("data/2004/20041102__nc__general__precinct.csv"),
+        "office": "PRESIDENT",
+    },
+    (2004, "state_senate", "president"): {
+        "crosswalk": Path("data/crosswalks/precinct_to_2022_state_senate.csv"),
+        "raw_results": Path("data/2004/20041102__nc__general__precinct.csv"),
+        "office": "PRESIDENT",
+    }
+}
+
+
+def is_2022_line_directory(path: Path) -> bool:
+    name = path.name.lower()
+    return name == "district_contests" or "2022" in name
+
+
+def apply_whole_county_post_calibration(
+    target_json: Path,
+    stats_csv: Path,
+    *,
+    key: tuple[int, str, str],
+) -> dict[str, Any] | None:
+    config = WHOLE_COUNTY_POST_CALIBRATION.get(key)
+    if config is None:
+        return None
+
+    before_text = target_json.read_text(encoding="utf-8")
+    before_payload = json.loads(before_text)
+    before_results = before_payload.get("general", {}).get("results", {})
+    pre_override_total = sum(
+        int(row.get("total_votes") or 0)
+        for row in before_results.values()
+        if isinstance(row, dict)
+    )
+
+    district_to_county = build_whole_county_map(config["crosswalk"], threshold=0.999)
+    county_totals = aggregate_county_contest_totals_from_raw_csv(
+        config["raw_results"], office_name=config["office"]
+    )
+    raw_statewide_total = sum(
+        int(totals["total_votes"]) for totals in county_totals.values()
+    )
+    override = enforce_county_totals(target_json, district_to_county, county_totals)
+
+    payload = json.loads(target_json.read_text(encoding="utf-8"))
+    results = payload.get("general", {}).get("results", {})
+    post_override_total = sum(
+        int(row.get("total_votes") or 0)
+        for row in results.values()
+        if isinstance(row, dict)
+    )
+    residual = raw_statewide_total - post_override_total
+    stats_rows = load_stats(stats_csv, margin_basis="total", precision=2)
+    eligible = [
+        district
+        for district, row in results.items()
+        if district not in district_to_county
+        and district in stats_rows
+        and isinstance(row, dict)
+        and int(row.get("total_votes") or 0) > 0
+    ]
+    adjustments = {district: 0 for district in eligible}
+    if residual and eligible:
+        amount = abs(residual)
+        sign = 1 if residual > 0 else -1
+        weight_total = sum(int(results[d]["total_votes"]) for d in eligible)
+        quotas = {
+            district: amount * int(results[district]["total_votes"]) / weight_total
+            for district in eligible
+        }
+        for district, quota in quotas.items():
+            adjustments[district] = sign * int(quota)
+        assigned = sum(abs(value) for value in adjustments.values())
+        remainder_order = sorted(
+            eligible,
+            key=lambda district: (
+                -(quotas[district] - int(quotas[district])),
+                int(district),
+            ),
+        )
+        for district in remainder_order[: amount - assigned]:
+            adjustments[district] += sign
+
+    adjusted_districts = []
+    for district, adjustment in adjustments.items():
+        if not adjustment:
+            continue
+        row = results[district]
+        new_total = int(row["total_votes"]) + adjustment
+        solved = solve_votes_for_margin(
+            total_votes=new_total,
+            stats=stats_rows[district],
+            precision=2,
+            margin_basis="total",
+            exact_rounded_margin=True,
+            other_search_radius=50,
+            margin_search_radius=500,
+        )
+        row["dem_votes"] = solved.dem_votes
+        row["rep_votes"] = solved.rep_votes
+        row["other_votes"] = solved.other_votes
+        row["total_votes"] = new_total
+        row["margin"] = solved.margin
+        row["margin_pct"] = solved.margin_pct
+        row["winner"] = (
+            "REP" if solved.rep_votes > solved.dem_votes
+            else ("DEM" if solved.dem_votes > solved.rep_votes else "TIE")
+        )
+        row["competitiveness"] = {"color": calculate_competitiveness(solved.margin_pct)}
+        adjusted_districts.append({"district": district, "total_adjustment": adjustment})
+
+    final_total = sum(
+        int(row.get("total_votes") or 0)
+        for row in results.values()
+        if isinstance(row, dict)
+    )
+    was_pretty = "\n" in before_text.strip()
+    target_json.write_text(
+        (json.dumps(payload, indent=2) + "\n")
+        if was_pretty
+        else json.dumps(payload, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    return {
+        "whole_county_overrides": override["updated"],
+        "statewide_total_before": pre_override_total,
+        "raw_statewide_total_target": raw_statewide_total,
+        "statewide_total_after_direct_override": post_override_total,
+        "statewide_reconciliation_residual": residual,
+        "reconciled_districts": adjusted_districts,
+        "statewide_total_final": final_total,
+    }
+
 
 # DRA Downloads short labels -> contest_type (State House / 2022 lines).
 DRA_DOWNLOAD_ALIAS_TO_CONTEST: dict[str, str] = {
@@ -576,6 +719,12 @@ def calibrate_agg_dir(
             )
             summary["source"] = f"{year}_csv"
             summary["file"] = agg_path.name
+            if not audit_only and is_2022_line_directory(agg_dir):
+                whole_county = apply_whole_county_post_calibration(
+                    agg_path, stats_csv, key=key
+                )
+                if whole_county is not None:
+                    summary["whole_county_post_calibration"] = whole_county
             summaries.append(summary)
             continue
 

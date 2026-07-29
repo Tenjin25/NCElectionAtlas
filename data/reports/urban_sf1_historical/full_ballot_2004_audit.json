@@ -449,8 +449,8 @@
       "file": "state_house_president_2004.json",
       "districts": 120,
       "raw_statewide_votes": 3501007,
-      "staged_statewide_votes": 3500999,
-      "staged_minus_raw_votes": -8,
+      "staged_statewide_votes": 3501007,
+      "staged_minus_raw_votes": 0,
       "candidate_complete": true,
       "production_exists": true,
       "winner_flips": 0,
@@ -704,8 +704,8 @@
       "file": "state_senate_president_2004.json",
       "districts": 50,
       "raw_statewide_votes": 3501007,
-      "staged_statewide_votes": 3501010,
-      "staged_minus_raw_votes": 3,
+      "staged_statewide_votes": 3501007,
+      "staged_minus_raw_votes": 0,
       "candidate_complete": true,
       "production_exists": true,
       "winner_flips": 0,
@@ -1641,6 +1641,106 @@
       "expected_winner": "DEM",
       "actual_winner": "DEM",
       "margin_pct": -68.56,
+      "passed": true
+    },
+    {
+      "line_year": 2022,
+      "scope": "state_house",
+      "district": "65",
+      "description": "exact whole-county result: ROCKINGHAM",
+      "expected_county": "ROCKINGHAM",
+      "expected_votes": {
+        "dem_votes": 14430,
+        "rep_votes": 22840,
+        "other_votes": 118,
+        "total_votes": 37388
+      },
+      "actual_votes": {
+        "dem_votes": 14430,
+        "rep_votes": 22840,
+        "other_votes": 118,
+        "total_votes": 37388
+      },
+      "passed": true
+    },
+    {
+      "line_year": 2022,
+      "scope": "state_house",
+      "district": "86",
+      "description": "exact whole-county result: BURKE",
+      "expected_county": "BURKE",
+      "expected_votes": {
+        "dem_votes": 11728,
+        "rep_votes": 18922,
+        "other_votes": 112,
+        "total_votes": 30762
+      },
+      "actual_votes": {
+        "dem_votes": 11728,
+        "rep_votes": 18922,
+        "other_votes": 112,
+        "total_votes": 30762
+      },
+      "passed": true
+    },
+    {
+      "line_year": 2022,
+      "scope": "state_house",
+      "district": "97",
+      "description": "exact whole-county result: LINCOLN",
+      "expected_county": "LINCOLN",
+      "expected_votes": {
+        "dem_votes": 9434,
+        "rep_votes": 20052,
+        "other_votes": 93,
+        "total_votes": 29579
+      },
+      "actual_votes": {
+        "dem_votes": 9434,
+        "rep_votes": 20052,
+        "other_votes": 93,
+        "total_votes": 29579
+      },
+      "passed": true
+    },
+    {
+      "line_year": 2022,
+      "scope": "state_senate",
+      "district": "6",
+      "description": "exact whole-county result: ONSLOW",
+      "expected_county": "ONSLOW",
+      "expected_votes": {
+        "dem_votes": 11250,
+        "rep_votes": 25890,
+        "other_votes": 137,
+        "total_votes": 37277
+      },
+      "actual_votes": {
+        "dem_votes": 11250,
+        "rep_votes": 25890,
+        "other_votes": 137,
+        "total_votes": 37277
+      },
+      "passed": true
+    },
+    {
+      "line_year": 2022,
+      "scope": "state_senate",
+      "district": "10",
+      "description": "exact whole-county result: JOHNSTON",
+      "expected_county": "JOHNSTON",
+      "expected_votes": {
+        "dem_votes": 17266,
+        "rep_votes": 36903,
+        "other_votes": 188,
+        "total_votes": 54357
+      },
+      "actual_votes": {
+        "dem_votes": 17266,
+        "rep_votes": 36903,
+        "other_votes": 188,
+        "total_votes": 54357
+      },
       "passed": true
     }
   ],

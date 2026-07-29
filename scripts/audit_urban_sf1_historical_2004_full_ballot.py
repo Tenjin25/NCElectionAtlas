@@ -72,6 +72,47 @@ def geographic_sanity_checks() -> list[dict]:
                 "passed": row["winner"] == expected,
             }
         )
+    county_totals: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"dem_votes": 0, "rep_votes": 0, "other_votes": 0, "total_votes": 0}
+    )
+    with RAW_RESULTS.open(newline="", encoding="utf-8-sig") as fh:
+        for raw in csv.DictReader(fh):
+            if str(raw.get("office") or "").strip() != "PRESIDENT":
+                continue
+            county = str(raw.get("county") or "").strip().upper()
+            party = str(raw.get("party") or "").strip().upper()
+            votes = int(float(raw.get("votes") or 0))
+            bucket = county_totals[county]
+            field = "dem_votes" if party == "DEM" else (
+                "rep_votes" if party == "REP" else "other_votes"
+            )
+            bucket[field] += votes
+            bucket["total_votes"] += votes
+
+    whole_county_anchors = [
+        ("state_house", "65", "ROCKINGHAM"),
+        ("state_house", "86", "BURKE"),
+        ("state_house", "97", "LINCOLN"),
+        ("state_senate", "6", "ONSLOW"),
+        ("state_senate", "10", "JOHNSTON"),
+    ]
+    for scope, district, county in whole_county_anchors:
+        path = STAGING[2022] / f"{scope}_president_2004.json"
+        row = load(path)["general"]["results"][district]
+        expected = county_totals[county]
+        fields = ("dem_votes", "rep_votes", "other_votes", "total_votes")
+        checks.append(
+            {
+                "line_year": 2022,
+                "scope": scope,
+                "district": district,
+                "description": f"exact whole-county result: {county}",
+                "expected_county": county,
+                "expected_votes": {field: expected[field] for field in fields},
+                "actual_votes": {field: int(row.get(field) or 0) for field in fields},
+                "passed": all(int(row.get(field) or 0) == expected[field] for field in fields),
+            }
+        )
     return checks
 
 
