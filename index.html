@@ -9263,131 +9263,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     }
   }
 
-  .legislative-history-launch {
-    background:
-      radial-gradient(circle at 92% 8%, rgba(245, 158, 11, 0.18), transparent 38%),
-      linear-gradient(145deg, rgba(255, 251, 235, 0.96), rgba(248, 250, 252, 0.98));
-    border-color: rgba(180, 83, 9, 0.26) !important;
-  }
-
-  .legislative-history-launch p {
-    margin: 5px 0 10px;
-    color: #5b6472;
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
-  .legislative-history-open {
-    width: 100%;
-    border: 1px solid rgba(146, 64, 14, 0.34);
-    border-radius: 12px;
-    padding: 9px 11px;
-    background: #78350f;
-    color: #fff;
-    font-weight: 850;
-    cursor: pointer;
-  }
-
-  .legislative-history-panel {
-    border: 1px solid rgba(146, 64, 14, 0.32) !important;
-    background: linear-gradient(160deg, #fffbeb 0%, #fff 72%) !important;
-  }
-
-  .legislative-history-panel[hidden] {
-    display: none !important;
-  }
-
-  .legislative-history-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .legislative-history-head h3 {
-    margin: 1px 0 3px;
-    color: #422006;
-    font-size: 17px;
-    line-height: 1.12;
-  }
-
-  .legislative-history-close {
-    border: 1px solid rgba(120, 53, 15, 0.25);
-    border-radius: 9px;
-    width: 30px;
-    height: 30px;
-    background: rgba(255, 255, 255, 0.72);
-    color: #78350f;
-    cursor: pointer;
-    font-size: 18px;
-  }
-
-  .legislative-history-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 11px 0 9px;
-  }
-
-  .legislative-history-grid label {
-    display: grid;
-    gap: 4px;
-    margin: 0 !important;
-    color: #7c2d12 !important;
-    font-size: 10px !important;
-  }
-
-  .legislative-history-grid label:last-child {
-    grid-column: 1 / -1;
-  }
-
-  .legislative-history-grid select {
-    width: 100%;
-    min-width: 0;
-    background: #fff;
-  }
-
-  .legislative-history-summary,
-  .legislative-history-detail {
-    border-radius: 11px;
-    padding: 9px 10px;
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
-  .legislative-history-summary {
-    background: rgba(120, 53, 15, 0.07);
-    color: #573114;
-  }
-
-  .legislative-history-detail {
-    margin-top: 8px;
-    border: 1px solid rgba(120, 53, 15, 0.14);
-    background: rgba(255, 255, 255, 0.8);
-    color: #334155;
-  }
-
-  .legislative-history-detail strong {
-    color: #422006;
-  }
-
-  .legislative-history-lineage {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 7px;
-  }
-
-  .legislative-history-lineage span {
-    border: 1px solid rgba(120, 53, 15, 0.16);
-    border-radius: 999px;
-    padding: 3px 6px;
-    background: #fff7ed;
-    color: #7c2d12;
-    font-size: 10px;
-    font-weight: 750;
-  }
-
 </style>
 </head>
 <body>
@@ -10048,17 +9923,6 @@ document.addEventListener('DOMContentLoaded', function() {
                   Start here: pick a contest, then click a county or district for the full story. Shortcuts: `P` precincts, `L` labels, `C` copy link.
                 </div>
             </div>
-            <section class="control-group legislative-history-panel" id="legislative-history-panel" aria-labelledby="legislative-history-title" hidden>
-              <div class="legislative-history-head">
-                <div>
-                  <span class="section-kicker">Separate explorer</span>
-                  <h3 id="legislative-history-title">How the Legislature Changed</h3>
-                </div>
-                <button class="legislative-history-close" id="legislative-history-close" type="button" aria-label="Close legislative history">&times;</button>
-              </div>
-              <div class="legislative-history-summary" id="legislative-history-summary" aria-live="polite">Choose a chamber and year to load the historical composite.</div>
-              <div class="legislative-history-detail" id="legislative-history-detail">Click a modern district to see its historical district lineage and contested-vote coverage.</div>
-            </section>
             <div class="control-summary" id="control-summary">
                 <div class="control-summary-head">
                   <span class="control-summary-kicker">Current map</span>
@@ -20582,24 +20446,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function appendLegislativeHistoryContestOptions(sel) {
       if (!sel || sel.querySelector('optgroup[data-legislative-history="1"]')) return;
+      if (!['state_house', 'state_senate'].includes(currentView)) return;
       const q = (contestSearchQuery || '').toString().trim().toUpperCase();
       const group = document.createElement('optgroup');
-      group.label = 'Legislative History — modern-lines estimates';
+      const isSenate = currentView === 'state_senate';
+      group.label = `${isSenate ? 'State Senate' : 'State House'} history — modern-lines estimates`;
       group.dataset.legislativeHistory = '1';
       const years = [2000, 2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020];
-      [
-        ['state_house', 'State House'],
-        ['state_senate', 'State Senate']
-      ].forEach(([chamber, label]) => {
-        years.forEach(year => {
-          const text = `${year} ${label} vote → modern districts [Estimate]`;
-          const haystack = `${text} legislative history crosswalk ${chamber}`.toUpperCase();
-          if (q && !haystack.includes(q)) return;
-          const option = document.createElement('option');
-          option.value = `legislative_history_${chamber}_${year}`;
-          option.textContent = text;
-          group.appendChild(option);
-        });
+      const chamber = isSenate ? 'state_senate' : 'state_house';
+      const label = isSenate ? 'State Senate' : 'State House';
+      years.forEach(year => {
+        const text = `${year} ${label} vote → modern districts [Estimate]`;
+        const haystack = `${text} legislative history crosswalk ${chamber}`.toUpperCase();
+        if (q && !haystack.includes(q)) return;
+        const option = document.createElement('option');
+        option.value = `legislative_history_${chamber}_${year}`;
+        option.textContent = text;
+        group.appendChild(option);
       });
       if (group.children.length) sel.appendChild(group);
     }
@@ -21496,7 +21359,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!m) return raw;
       const nick = (m[2] || '').trim();
       const after = (m[3] || '').trim();
-      if (!nick || /vote\s*for|unexpired|nonpartisan|partisan/i.test(nick)) return raw;
+      if (!nick || /vote\s*for|unexpired|nonpartisan|partisan|write[- ]?in|miscellaneous|replacement\s+for/i.test(nick)) return raw;
       // Nickname should look like a personal name, not a seat note.
       if (!/^[A-Za-z][A-Za-z.'\-]*$/.test(nick.replace(/\s+/g, ''))) return raw;
       if (!after) return nick;
@@ -31460,6 +31323,7 @@ document.addEventListener('DOMContentLoaded', function() {
               zoomToClickedDistrictFeature(e.features[0], { padding: 40, duration: 850, maxZoom: 11.2 });
               if (legislativeHistoryActive && showLegislativeHistoryDistrict(districtNum, 'state_house')) {
                 setDistrictHoverOutline('state_house', districtNum);
+                renderLegislativeHistoryHover(e, 'state_house', districtNum, true, true);
                 return;
               }
               // Show detailed sidebar (results + trends).
@@ -31582,6 +31446,7 @@ document.addEventListener('DOMContentLoaded', function() {
               zoomToClickedDistrictFeature(e.features[0], { padding: 40, duration: 850, maxZoom: 11.0 });
               if (legislativeHistoryActive && showLegislativeHistoryDistrict(districtNum, 'state_senate')) {
                 setDistrictHoverOutline('state_senate', districtNum);
+                renderLegislativeHistoryHover(e, 'state_senate', districtNum, true, true);
                 return;
               }
               // Show detailed sidebar (results + trends).
@@ -34358,9 +34223,6 @@ document.addEventListener('DOMContentLoaded', function() {
           legislativeHistoryRequestId++;
           legislativeHistoryActive = false;
           currentLegislativeHistoryPayload = null;
-          document.body.classList.remove('legislative-history-active');
-          const historyPanel = document.getElementById('legislative-history-panel');
-          if (historyPanel) historyPanel.hidden = true;
           if (map.getLayer(historyLayerId)) map.setPaintProperty(historyLayerId, 'fill-color', '#e0e0e0');
         }
         currentContestMeta = { contestType: '', year: '' };
@@ -34392,9 +34254,6 @@ document.addEventListener('DOMContentLoaded', function() {
         legislativeHistoryRequestId++;
         legislativeHistoryActive = false;
         currentLegislativeHistoryPayload = null;
-        document.body.classList.remove('legislative-history-active');
-        const historyPanel = document.getElementById('legislative-history-panel');
-        if (historyPanel) historyPanel.hidden = true;
         clearPinnedVoteCounterState();
       }
 
@@ -35680,27 +35539,6 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${rep > dem ? 'R' : 'D'}+${margin.toFixed(1)}`;
     }
 
-    function renderLegislativeHistorySummary(payload) {
-      const summary = document.getElementById('legislative-history-summary');
-      if (!summary || !payload) return;
-      const meta = payload.meta || {};
-      const plan = meta.source_plan || {};
-      const chamberLabel = payload.chamber === 'state_senate' ? 'State Senate' : 'State House';
-      const contested = Number(meta.contested_source_race_count || 0);
-      const totalRaces = Number(meta.source_race_count || 0);
-      const directCoverage = Number(meta.match_coverage_pct || 0);
-      const allocatedCoverage = Number(meta.allocated_vote_coverage_pct || 0);
-      summary.innerHTML = `
-        <strong>${escapeHtml(String(payload.year))} ${escapeHtml(chamberLabel)}</strong> on
-        <strong>${escapeHtml(String(payload.target_lines_year))} lines</strong><br>
-        Source plan: <strong>${escapeHtml(String(plan.label || 'Historical plan'))}</strong>.
-        ${contested} of ${totalRaces} source races had both major parties.
-        Direct precinct match: ${directCoverage.toFixed(1)}%; allocated candidate-vote coverage: ${allocatedCoverage.toFixed(1)}%.
-        <a href="${escapeHtml(String(plan.archive_page || 'https://www.ncleg.gov/Redistricting'))}" target="_blank" rel="noopener">NCGA plan archive</a>.
-        ${meta.multi_member_ballot ? '<br><strong>2000 caution:</strong> multi-member candidate votes are not ordinary single-member turnout.' : ''}
-      `;
-    }
-
     function showLegislativeHistoryDistrict(districtNum, chamber = null) {
       const payload = currentLegislativeHistoryPayload;
       if (!legislativeHistoryActive || !payload) return false;
@@ -35708,119 +35546,136 @@ document.addEventListener('DOMContentLoaded', function() {
       if (selectedChamber !== payload.chamber) return false;
       const row = getLegislativeHistoryRow(districtNum);
       if (!row) return false;
-      const detail = document.getElementById('legislative-history-detail');
-      const label = legislativeHistoryDistrictLabel(payload.chamber, districtNum);
-      const coverage = Number(row.contested_vote_coverage_pct || 0);
-      const lineage = Array.isArray(row.source_districts) ? row.source_districts : [];
-      const raceByDistrict = new Map(
-        (payload.source_races || []).map(race => [String(Number(race.district)), race])
-      );
-      const lineageHTML = lineage.length
-        ? `<div class="legislative-history-lineage">${lineage.map(item => (
-            (() => {
-              const race = raceByDistrict.get(String(Number(item.district))) || {};
-              const demName = String(race.dem_candidate || '').trim();
-              const repName = String(race.rep_candidate || '').trim();
-              const slate = Array.isArray(race.candidates) ? race.candidates : [];
-              const seats = Math.max(1, Number(race.seats || 1));
-              const candidates = slate.length
-                ? slate.map(candidate => {
-                    const party = String(candidate.party || 'OTHER') === 'DEM'
-                      ? 'D'
-                      : String(candidate.party || 'OTHER') === 'REP' ? 'R' : String(candidate.party || 'Other');
-                    const elected = candidate.elected ? ', elected' : '';
-                    return `${candidate.name || 'Name unavailable'} (${party}, ${Number(candidate.votes || 0).toLocaleString()} votes${elected})`;
-                  }).join('; ')
-                : demName && repName
-                  ? `${demName} (D) vs. ${repName} (R)`
-                  : demName
-                    ? `${demName} (D) — uncontested/no Republican listed`
-                    : repName
-                      ? `${repName} (R) — uncontested/no Democrat listed`
-                      : 'candidate names unavailable';
-              const magnitude = seats > 1 ? ` · ${seats} seats` : '';
-              return `<span>${payload.chamber === 'state_senate' ? 'Old SD' : 'Old HD'} ${escapeHtml(String(item.district))}${magnitude}: ${Number(item.share_pct || 0).toFixed(1)}% · ${escapeHtml(candidates)}</span>`;
-            })()
-          )).join('')}</div>`
-        : '<div style="margin-top:7px;color:#64748b;">No source-district lineage was recoverable.</div>';
-      if (detail) {
-        detail.innerHTML = `
-          <strong>${escapeHtml(label)} &middot; ${escapeHtml(String(payload.year))} composite</strong><br>
-          ${escapeHtml(legislativeHistoryMarginLabel(row))} among comparable contested races;
-          ${coverage.toFixed(1)}% of allocated legislative candidate votes came from two-party races.
-          ${lineageHTML}
-          <div style="margin-top:7px;color:#64748b;">This is an estimated party-vote composite, not a contest between the historical candidates.</div>
-        `;
+      {
+        const label = legislativeHistoryDistrictLabel(payload.chamber, districtNum);
+        const lineage = Array.isArray(row.source_districts) ? row.source_districts : [];
+        const primarySource = lineage[0] || {};
+        const race = (payload.source_races || []).find(item => Number(item.district) === Number(primarySource.district)) || {};
+        const slate = Array.isArray(primarySource.candidates) && primarySource.candidates.length
+          ? primarySource.candidates
+          : (Array.isArray(race.candidates) ? race.candidates : []);
+        const demNames = slate.filter(candidate => candidate.party === 'DEM').map(candidate => candidate.name).filter(Boolean);
+        const repNames = slate.filter(candidate => candidate.party === 'REP').map(candidate => candidate.name).filter(Boolean);
+        pinVoteCounterState(
+          `Selected: ${label}`,
+          `${payload.year} legislative history (${payload.target_lines_year} lines)`,
+          Number(row.dem_votes || 0),
+          Number(row.rep_votes || 0),
+          Number(row.other_votes || 0),
+          { kind: 'legislative_history', chamber: payload.chamber, districtNum: Number(districtNum), year: Number(payload.year), linesYear: Number(payload.target_lines_year) },
+          {
+            demCandidate: demNames.length === 1 ? demNames[0] : 'Democratic candidates',
+            repCandidate: repNames.length === 1 ? repNames[0] : 'Republican candidates'
+          }
+        );
+        return true;
       }
-      const dem = Number(row.dem_votes || 0);
-      const rep = Number(row.rep_votes || 0);
-      const other = Number(row.other_votes || 0);
-      pinVoteCounterState(
-        `Selected: ${label}`,
-        `${payload.year} legislative history (${payload.target_lines_year} lines)`,
-        dem,
-        rep,
-        other,
-        { kind: 'legislative_history', chamber: payload.chamber, districtNum: Number(districtNum), year: Number(payload.year), linesYear: Number(payload.target_lines_year) },
-        { demCandidate: 'Democratic candidates', repCandidate: 'Republican candidates' }
-      );
-      return true;
     }
 
-    function renderLegislativeHistoryHover(e, scope, districtNum, forceTooltip = false) {
+    function renderLegislativeHistoryHover(e, scope, districtNum, forceTooltip = false, pinSelection = false) {
       const payload = currentLegislativeHistoryPayload;
       if (!legislativeHistoryActive || !payload || payload.chamber !== scope) return false;
       const row = getLegislativeHistoryRow(districtNum);
       if (!row) return true;
-      const label = legislativeHistoryDistrictLabel(scope, districtNum);
-      const coverage = Number(row.contested_vote_coverage_pct || 0);
-      const raceByDistrict = new Map(
-        (payload.source_races || []).map(race => [String(Number(race.district)), race])
-      );
-      const leadingSources = (row.source_districts || []).slice(0, 2);
-      const topSources = leadingSources
-        .map(item => {
-          const race = raceByDistrict.get(String(Number(item.district))) || {};
-          const slate = Array.isArray(race.candidates) ? race.candidates : [];
-          const elected = slate.filter(candidate => candidate.elected);
-          const visibleSlate = (Number(race.seats || 1) > 1 ? elected : slate.slice(0, 2))
-            .map(candidate => `${candidate.name} (${candidate.party === 'DEM' ? 'D' : candidate.party === 'REP' ? 'R' : 'Other'})`)
-            .join(', ');
-          const sourceText = `${scope === 'state_senate' ? 'Old SD' : 'Old HD'} ${item.district} ${Number(item.share_pct || 0).toFixed(0)}%${visibleSlate ? ` — ${visibleSlate}` : ''}`;
-          return `<div>${escapeHtml(sourceText)}</div>`;
-        })
-        .join('');
-      const primaryRace = leadingSources.length
-        ? raceByDistrict.get(String(Number(leadingSources[0].district))) || {}
-        : {};
-      const primarySlate = Array.isArray(primaryRace.candidates) ? primaryRace.candidates : [];
-      const primaryDemNames = primarySlate.filter(candidate => candidate.party === 'DEM').map(candidate => candidate.name);
-      const primaryRepNames = primarySlate.filter(candidate => candidate.party === 'REP').map(candidate => candidate.name);
-      const content = `
-        <div style="font-weight:850;">${escapeHtml(String(payload.year))} party-vote composite</div>
-        <div style="margin-top:5px;font-size:16px;font-weight:900;">${escapeHtml(legislativeHistoryMarginLabel(row))}</div>
-        <div style="margin-top:5px;color:rgba(226,232,240,.9);">Two-party race coverage: ${coverage.toFixed(1)}%</div>
-        ${topSources ? `<div style="margin-top:5px;color:rgba(226,232,240,.78);">${topSources}</div>` : ''}
-      `;
-      const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
-      showHoverTooltip(
-        e.point.x,
-        e.point.y,
-        buildTooltipShell(label, content, { pinned: pinnedShell, copyText: `${label} ${payload.year} legislative history` }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail' }
-      );
-      setVoteCounterHoverState(
-        `Hover: ${label}`,
-        `${payload.year} legislative history`,
-        Number(row.dem_votes || 0),
-        Number(row.rep_votes || 0),
-        Number(row.other_votes || 0),
-        {
-          demCandidate: primaryDemNames.length === 1 ? primaryDemNames[0] : 'Democratic candidates',
-          repCandidate: primaryRepNames.length === 1 ? primaryRepNames[0] : 'Republican candidates'
-        }
-      );
-      return true;
+      {
+        const label = legislativeHistoryDistrictLabel(scope, districtNum);
+        const coverage = Number(row.contested_vote_coverage_pct || 0);
+        const demVotes = Number(row.dem_votes || 0);
+        const repVotes = Number(row.rep_votes || 0);
+        const otherVotes = Number(row.other_votes || 0);
+        const totalVotes = demVotes + repVotes + otherVotes;
+        const signedMargin = totalVotes > 0 ? ((repVotes - demVotes) / totalVotes) * 100 : 0;
+        const winnerParty = signedMargin > 0 ? 'rep' : (signedMargin < 0 ? 'dem' : 'tie');
+        const raceByDistrict = new Map(
+          (payload.source_races || []).map(race => [String(Number(race.district)), race])
+        );
+        const sources = Array.isArray(row.source_districts) ? row.source_districts : [];
+        const primarySource = sources[0] || {};
+        const primaryRace = raceByDistrict.get(String(Number(primarySource.district))) || {};
+        const primarySlate = Array.isArray(primarySource.candidates) && primarySource.candidates.length
+          ? primarySource.candidates
+          : (Array.isArray(primaryRace.candidates) ? primaryRace.candidates : []);
+        const primaryDemNames = primarySlate.filter(candidate => candidate.party === 'DEM').map(candidate => candidate.name).filter(Boolean);
+        const primaryRepNames = primarySlate.filter(candidate => candidate.party === 'REP').map(candidate => candidate.name).filter(Boolean);
+        const demName = primaryDemNames.length === 1 ? primaryDemNames[0] : 'Democratic candidates';
+        const repName = primaryRepNames.length === 1 ? primaryRepNames[0] : 'Republican candidates';
+        const winnerName = winnerParty === 'rep' ? repName : (winnerParty === 'dem' ? demName : 'Tie');
+        const chamberLabel = scope === 'state_senate' ? 'State Senate' : 'State House';
+        const sourceLabel = scope === 'state_senate' ? 'Old SD' : 'Old HD';
+        const lineageHTML = sources.length
+          ? sources.map(item => {
+              const race = raceByDistrict.get(String(Number(item.district))) || {};
+              const slate = Array.isArray(item.candidates) && item.candidates.length
+                ? item.candidates
+                : (Array.isArray(race.candidates) ? race.candidates : []);
+              const seats = Math.max(1, Number(item.seats || race.seats || 1));
+              const candidateText = slate.length
+                ? slate.map(candidate => {
+                    const party = candidate.party === 'DEM' ? 'D' : (candidate.party === 'REP' ? 'R' : 'Other');
+                    const elected = candidate.elected ? ', elected' : '';
+                    return `${candidate.name || 'Name unavailable'} (${party}, ${formatVotehubVotes(candidate.votes)} votes${elected})`;
+                  }).join('; ')
+                : 'Candidate names unavailable';
+              const seatText = seats > 1 ? ` · ${seats} seats` : '';
+              return `<div class="tooltip-insight"><strong>${escapeHtml(`${sourceLabel} ${item.district}${seatText}`)}</strong> · ${Number(item.share_pct || 0).toFixed(1)}%<br>${escapeHtml(candidateText)}</div>`;
+            }).join('')
+          : '<div class="tooltip-insight">No source-district lineage was recoverable.</div>';
+        const votehubCore = buildVotehubResultsTooltip({
+          title: label,
+          subtitle: `${payload.year} ${chamberLabel} estimate · ${payload.target_lines_year} lines`,
+          demName,
+          repName,
+          otherName: 'Other',
+          demVotes,
+          repVotes,
+          otherVotes,
+          totalVotes,
+          winnerName,
+          winnerParty,
+          marginPct: Math.abs(signedMargin),
+          winnerLineText: legislativeHistoryMarginLabel(row),
+          winnerRawLeadText: `${formatVotehubVotes(Math.abs(repVotes - demVotes))} votes`,
+          currentSignedMarginPct: signedMargin,
+          districtType: chamberLabel,
+          showWinnerLine: totalVotes > 0,
+          showShiftLine: false
+        });
+        const caution = payload.meta?.multi_member_ballot
+          ? 'Multi-member year: candidate totals reflect candidate-vote slates, so they are not ordinary single-member turnout.'
+          : 'Candidate names identify the historical source races; the modern-district result is an estimated party-vote composite.';
+        const details = `
+          <details class="tooltip-more" aria-label="Historical candidate lineage">
+            <summary>Historical candidate lineage</summary>
+            <div class="tooltip-more-body">
+              <div class="tooltip-insight">Two-party race coverage: ${coverage.toFixed(1)}%</div>
+              ${lineageHTML}
+              <div class="tooltip-insight">${escapeHtml(caution)}</div>
+            </div>
+          </details>
+        `;
+        const copyText = `${label} · ${payload.year} ${chamberLabel} estimate · ${legislativeHistoryMarginLabel(row)}`;
+        const pinnedShell = !!(pinSelection || tooltipPinned || (forceTooltip && isMobileInteractionMode()));
+        showHoverTooltip(
+          e.point.x,
+          e.point.y,
+          buildTooltipShell('', `${votehubCore}${details}`, {
+            pinned: pinnedShell,
+            showClose: pinnedShell,
+            copyText
+          }),
+          { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
+        );
+        wireTooltipButtons();
+        setVoteCounterHoverState(
+          `Hover: ${label}`,
+          `${payload.year} legislative history`,
+          demVotes,
+          repVotes,
+          otherVotes,
+          { demCandidate: demName, repCandidate: repName }
+        );
+        return true;
+      }
     }
 
     async function applyLegislativeHistorySelection(contestKey = '') {
@@ -35834,11 +35689,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const selection = legislativeHistorySelection(contestKey);
       if (![2022, 2024].includes(selection.linesYear)) selection.linesYear = 2024;
       legislativeHistoryActive = true;
-      document.body.classList.add('legislative-history-active');
-      const panel = document.getElementById('legislative-history-panel');
-      if (panel) panel.hidden = false;
-      const summary = document.getElementById('legislative-history-summary');
-      if (summary) summary.textContent = 'Loading historical district lineage and vote crosswalk...';
+      setStatus('Loading historical district lineage and vote crosswalk...');
 
       try {
         if (normalizeDistrictLinesYear(currentDistrictLinesYear) !== selection.linesYear) {
@@ -35882,9 +35733,6 @@ document.addEventListener('DOMContentLoaded', function() {
           applyLayerOpacityTuning();
         }
         renderLegendForVizMode('margins');
-        renderLegislativeHistorySummary(payload);
-        const detail = document.getElementById('legislative-history-detail');
-        if (detail) detail.textContent = 'Click a modern district to see its historical district lineage and contested-vote coverage.';
         const totals = payload?.meta?.statewide_composite || {};
         setVoteCounterBaselineState(
           'Statewide composite',
@@ -35899,33 +35747,9 @@ document.addEventListener('DOMContentLoaded', function() {
         setStatus(`Applied ${payload.year} legislative history to ${payload.target_lines_year} ${payload.chamber === 'state_senate' ? 'Senate' : 'House'} districts.`);
       } catch (err) {
         currentLegislativeHistoryPayload = null;
-        if (summary) summary.textContent = `Historical dataset could not be loaded: ${err?.message || err}`;
         setStatus('Legislative history data could not be loaded.', 5000, true);
       } finally {
         legislativeHistoryApplying = false;
-      }
-    }
-
-    async function closeLegislativeHistoryExplorer() {
-      legislativeHistoryRequestId++;
-      legislativeHistoryActive = false;
-      currentLegislativeHistoryPayload = null;
-      document.body.classList.remove('legislative-history-active');
-      const panel = document.getElementById('legislative-history-panel');
-      if (panel) panel.hidden = true;
-      clearPinnedVoteCounterState();
-      const select = document.getElementById('contestSelect');
-      if (select && String(select.value || '').startsWith('legislative_history_')) select.value = '';
-      const layerId = legislativeHistoryLayerId(currentView);
-      if (map.getLayer(layerId)) map.setPaintProperty(layerId, 'fill-color', '#e0e0e0');
-      setStatus('Closed Legislative History.');
-    }
-
-    function setupLegislativeHistoryExplorer() {
-      const close = document.getElementById('legislative-history-close');
-      if (close && !close.dataset.wired) {
-        close.dataset.wired = '1';
-        close.addEventListener('click', closeLegislativeHistoryExplorer);
       }
     }
 
@@ -36499,7 +36323,6 @@ document.addEventListener('DOMContentLoaded', function() {
       setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
     }
 
-    setupLegislativeHistoryExplorer();
     window.onload = init;
 </script>
 </body>

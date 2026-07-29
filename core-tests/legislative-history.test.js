@@ -6,12 +6,15 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const HISTORY_DIR = path.join(ROOT, 'data', 'legislative_history');
 
-test('legislative history stays separate in data but appears as a picker group', () => {
+test('legislative history stays separate in data and follows the active chamber picker', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  assert.match(html, /Legislative History — modern-lines estimates/);
+  assert.match(html, /if \(!\['state_house', 'state_senate'\]\.includes\(currentView\)\) return/);
+  assert.match(html, /State Senate' : 'State House'} history — modern-lines estimates/);
+  assert.match(html, /const chamber = isSenate \? 'state_senate' : 'state_house'/);
   assert.match(html, /option\.value = `legislative_history_\$\{chamber\}_\$\{year\}`/);
-  assert.match(html, /\['state_house', 'State House'\]/);
-  assert.match(html, /\['state_senate', 'State Senate'\]/);
+  assert.doesNotMatch(html, /id="legislative-history-panel"/);
+  assert.match(html, /context: 'votehub-results'/);
+  assert.match(html, /Historical candidate lineage/);
   assert.ok(
     fs.existsSync(path.join(ROOT, 'scripts', 'build_legislative_history_crosswalks.py')),
     'standalone history builder should exist'
@@ -66,6 +69,32 @@ test('generated history slices expose lineage and honest coverage metadata', () 
       payload.source_races.every(race => Array.isArray(race.candidates) && race.candidates.length),
       `${entry.file} should retain the complete candidate slate`
     );
+    assert.ok(
+      payload.source_races.every(race =>
+        race.candidates.every(candidate =>
+          candidate.name === candidate.name.trim() &&
+          !/\s{2,}/.test(candidate.name) &&
+          !/\(\s*replacement\s+for\b/i.test(candidate.name)
+        )
+      ),
+      `${entry.file} should contain cleaned candidate display names`
+    );
+    if (Number(payload.year) === 2020 && payload.chamber === 'state_senate') {
+      const names = payload.source_races.flatMap(race => race.candidates.map(candidate => candidate.name));
+      assert.ok(names.includes('Ernestine Bazemore'));
+      assert.ok(!names.includes('Ernestine (Byrd) Bazemore'));
+    }
+    for (const race of payload.source_races) {
+      for (const candidate of race.candidates || []) {
+        assert.equal(candidate.name, candidate.name.trim(), `${entry.file} has padded candidate whitespace`);
+        assert.doesNotMatch(candidate.name, /\s{2,}/, `${entry.file} has repeated candidate whitespace`);
+        assert.doesNotMatch(
+          candidate.name,
+          /\(\s*replacement\s+for\b/i,
+          `${entry.file} includes ballot metadata in a candidate name`
+        );
+      }
+    }
     if (Number(payload.year) === 2000) {
       const seatTotal = payload.source_races.reduce((sum, race) => sum + Number(race.seats || 0), 0);
       assert.equal(seatTotal, expectedDistrictSeatTotal(payload.chamber));
