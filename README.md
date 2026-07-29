@@ -1177,10 +1177,10 @@ Implementation note:
   - `182` agree exactly with every observed historical chamber.
   - The remaining `6` overlap the correct split plan cell.
   - No matched VTD lacks historical-plan overlap.
-- The Buncombe audit exposed the modern SD-46/SD-49 problem: dotted precinct labels were being pooled into coarse historical cells. The builder now prefers 68 unique Buncombe aliases from `legacy_precinct_abbreviation_to_sbe2006.csv`; `BLACK MOUNTAIN 2`, `FAIRVIEW 1`, and `REYNOLDS` remain on the BAF-backed fallback because no unique alias is available. The final 2022-line 2004 presidential House and Senate slices are then calibrated to the supplied district-statistics exports, producing exact displayed margins for all 120 House and 50 Senate districts while preserving each district's rebuilt total vote count.
+- The Buncombe audit exposed the modern SD-46/SD-49 problem: dotted precinct labels were being pooled into coarse historical cells. The builder now prefers 68 unique Buncombe aliases from `legacy_precinct_abbreviation_to_sbe2006.csv`; `BLACK MOUNTAIN 2`, `FAIRVIEW 1`, and `REYNOLDS` remain on the BAF-backed fallback because no unique alias is available. The final 2022-line 2004 presidential House and Senate slices are calibrated to the supplied district-statistics exports, then five detected whole-county districts are replaced with exact county returns: HD-65/Rockingham, HD-86/Burke, HD-97/Lincoln, SD-6/Onslow, and SD-10/Johnston. Any resulting statewide residual is apportioned only across the remaining districts and re-solved to their target margins, preserving the raw statewide vote total.
 - `scripts/audit_urban_sf1_historical_2004_full_ballot.py` validates all `102` files and Mecklenburg geographic anchors; `scripts/promote_urban_sf1_2004_full_ballot.py` performs the guarded production copy.
 - The final 2004 audit covers `6,256` district rows, preserves statewide office totals within `10` votes, and confirms the expected 2004 pattern: Republican northern/southern Mecklenburg and Democratic central Charlotte.
-- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-legislative-history`.
+- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-whole-county-2004-pres`.
 
 ## UI Performance Enhancements
 
