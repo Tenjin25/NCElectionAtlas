@@ -66,7 +66,7 @@ Historical district views are still presented on the selected modern district li
 
 The current bridge chain has two main branches. Modern SBE precinct vintages for **2020, 2022, and 2024** are VAP-weighted to the December 2025 OneMap basis. Early-era SBE 2006 is reached through [NHGIS](https://www.nhgis.org/) block-to-block crosswalks: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> Dec 2025 OneMap / modern districts`.
 
-For the most difficult **2000, 2002, and 2004 urban-county district allocations**, the atlas now adds a Census 2000 SF1 / historical-plan layer before the modern-district aggregation. It combines Census VTD codes and voting-age population, official historical NCGA block-assignment files, NCSBE voter-history code evidence, and the NHGIS 2000-to-2010-to-2020 bridge. The 2000 path requires an exact VTD to agree with the precinct's historical House/Senate/congressional cell; otherwise it falls back to the matching historical plan cell. The 2002/2004 path uses direct SF1 VTD matches where supported, historical-plan cells for rejected/split codes, and narrowly documented SBE 2006 lineage fallbacks. These remain VAP-weighted estimates rather than reconstructed cast-vote records at the block level.
+For the most difficult **2000, 2002, and 2004 urban-county district allocations**, the atlas now adds a Census 2000 SF1 / historical-plan layer before the modern-district aggregation. It combines Census VTD codes and voting-age population, official historical NCGA block-assignment files, NCSBE voter-history code evidence, and the NHGIS 2000-to-2010-to-2020 bridge. The 2000 path requires an exact VTD to agree with the precinct's historical House/Senate/congressional cell; otherwise it falls back to the matching historical plan cell. The 2002/2004 path uses direct SF1 VTD matches where supported, historical-plan cells for rejected/split codes, and narrowly documented SBE 2006 lineage fallbacks. For Buncombe in 2004, 68 explicit county-year precinct aliases now take priority over coarse plan cells so the 2022 SD-46/SD-49 split retains Asheville-versus-outer-county geography; three precincts without a unique alias remain BAF-backed plan-cell estimates. These remain VAP-weighted estimates rather than reconstructed cast-vote records at the block level.
 
 ## Features
 
@@ -1172,14 +1172,15 @@ Implementation note:
 
 - Rebuilt all `17` statewide 2004 contests for Congressional, State House, and State Senate on both the 2022 and 2024 plans (`51` files per plan, `102` promoted files total).
 - Added the previously missing 2024-line district overlays for five contested judicial seats across all three scopes (`15` files).
-- Added `scripts/audit_mecklenburg_2004_vtd_plan_cells.py`, which compares Mecklenburg's raw 2004 precinct labels with Census 2000 VTDs and the official 2003 NCGA House/Senate block assignments:
+- Added `scripts/audit_mecklenburg_2004_vtd_plan_cells.py`, which accepts `--county` and compares a county's raw 2004 precinct labels with Census 2000 VTDs and the official 2003 NCGA House/Senate block assignments:
   - `188` direct VTD codes were checked.
   - `182` agree exactly with every observed historical chamber.
   - The remaining `6` overlap the correct split plan cell.
   - No matched VTD lacks historical-plan overlap.
+- The Buncombe audit exposed the modern SD-46/SD-49 problem: dotted precinct labels were being pooled into coarse historical cells. The builder now prefers 68 unique Buncombe aliases from `legacy_precinct_abbreviation_to_sbe2006.csv`; `BLACK MOUNTAIN 2`, `FAIRVIEW 1`, and `REYNOLDS` remain on the BAF-backed fallback because no unique alias is available. The final 2022-line 2004 presidential House and Senate slices are then calibrated to the supplied district-statistics exports, producing exact displayed margins for all 120 House and 50 Senate districts while preserving each district's rebuilt total vote count.
 - `scripts/audit_urban_sf1_historical_2004_full_ballot.py` validates all `102` files and Mecklenburg geographic anchors; `scripts/promote_urban_sf1_2004_full_ballot.py` performs the guarded production copy.
 - The final 2004 audit covers `6,256` district rows, preserves statewide office totals within `10` votes, and confirms the expected 2004 pattern: Republican northern/southern Mecklenburg and Democratic central Charlotte.
-- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-28-mecklenburg-2004`.
+- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-dra-2004-pres`.
 
 ## UI Performance Enhancements
 

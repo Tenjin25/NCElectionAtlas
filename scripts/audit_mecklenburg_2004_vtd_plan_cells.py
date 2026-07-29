@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from collections import defaultdict
@@ -20,9 +21,22 @@ SOURCE_ROOT = ROOT / "downloads/nc_historical_precinct_sources"
 REPORT_DIR = ROOT / "data/reports/urban_sf1_historical"
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--county", default="MECKLENBURG")
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
+    county = weights.norm(args.county)
+    county_to_fips = {name: fips for fips, name in weights.NC_COUNTY_FIPS.items()}
+    if county not in county_to_fips:
+        raise ValueError(f"Unknown North Carolina county: {county}")
+    county_slug = county.lower().replace(" ", "_")
+
     vap = pd.read_csv(SF1, dtype=str).fillna("")
-    vap = vap[vap["county_fips_2000"] == "119"].copy()
+    vap = vap[vap["county_fips_2000"] == county_to_fips[county]].copy()
     vap["blk2000ge"] = weights.clean_geoid(vap["block_geoid00"])
     plan = weights.load_plan_blocks(SOURCE_ROOT, 2004, vap)
     plan = plan.merge(
@@ -50,14 +64,14 @@ def main() -> None:
     )
     with RESULTS.open(newline="", encoding="utf-8-sig") as fh:
         for row in csv.DictReader(fh):
-            if weights.norm(row.get("county")) != "MECKLENBURG":
+            if weights.norm(row.get("county")) != county:
                 continue
             parsed = weights.district_from_office(row)
             if not parsed:
                 continue
             chamber, district = parsed
             raw = str(row.get("precinct") or "").strip()
-            raw_totals[("MECKLENBURG", raw)][chamber][district] += int(
+            raw_totals[(county, raw)][chamber][district] += int(
                 float(row.get("votes") or 0)
             )
 
@@ -91,10 +105,11 @@ def main() -> None:
         details.append(row)
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    detail_path = REPORT_DIR / "mecklenburg_2004_vtd_plan_cell_audit.csv"
+    detail_path = REPORT_DIR / f"{county_slug}_2004_vtd_plan_cell_audit.csv"
     pd.DataFrame(details).to_csv(detail_path, index=False)
     summary = {
-        "schema": "mecklenburg_2004_vtd_plan_cell_audit.v1",
+        "schema": "county_2004_vtd_plan_cell_audit.v1",
+        "county": county,
         "matched_vtd_codes": len(details),
         "all_observed_chambers_equal": sum(
             bool(row["all_observed_chambers_equal"]) for row in details
@@ -107,7 +122,7 @@ def main() -> None:
         ),
         "detail_csv": detail_path.relative_to(ROOT).as_posix(),
     }
-    summary_path = REPORT_DIR / "mecklenburg_2004_vtd_plan_cell_audit.json"
+    summary_path = REPORT_DIR / f"{county_slug}_2004_vtd_plan_cell_audit.json"
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2))
 

@@ -49,6 +49,8 @@ def geographic_sanity_checks() -> list[dict]:
         (2022, "state_house", "102", "DEM", "central Charlotte"),
         (2022, "state_house", "103", "REP", "south Mecklenburg"),
         (2022, "state_house", "107", "DEM", "Charlotte core"),
+        (2022, "state_senate", "46", "REP", "outer Buncombe, Burke, and McDowell"),
+        (2022, "state_senate", "49", "DEM", "Asheville-centered Buncombe"),
         (2024, "state_house", "98", "REP", "northern Mecklenburg"),
         (2024, "state_house", "102", "DEM", "central Charlotte"),
         (2024, "state_house", "103", "REP", "south Mecklenburg"),

@@ -126,6 +126,12 @@ SBE2006_LINEAGE_ALIASES = [
     },
 ]
 
+# Buncombe's dotted 2004 precinct codes have an unusually complete, explicit
+# one-to-one bridge to SBE2006 precincts. Prefer that finer geography to the
+# much coarser historical House/Senate plan cells, which cannot preserve the
+# modern SD-46/SD-49 split within the county.
+PREFER_EXACT_SBE2006_GEOMETRY = {(2004, "BUNCOMBE")}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -709,6 +715,7 @@ def write_overrides(
     mappings: pd.DataFrame,
     out_path: Path,
     lineage_aliases: list[dict[str, str]],
+    retained_sbe2006: list[dict[str, str]],
 ) -> None:
     with production_path.open(newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
@@ -723,6 +730,10 @@ def write_overrides(
     replaced.update(
         (row["year"], norm(f"{row['county']} - {row['raw_precinct']}"))
         for row in lineage_aliases
+    )
+    replaced.update(
+        (str(row["year"]), norm(f"{row['county']} - {row['raw_precinct']}"))
+        for row in retained_sbe2006
     )
     rows = [
         {field: str(row.get(field) or "") for field in fields}
@@ -749,6 +760,20 @@ def write_overrides(
                 "canonical_precinct_key": alias["canonical_precinct_key"],
                 "experiment_note": (
                     "staging-only SBE2006 lineage alias; " + alias["evidence"]
+                ),
+            }
+        )
+        rows.append(item)
+    for alias in retained_sbe2006:
+        item = {field: "" for field in fields}
+        item.update(
+            {
+                "year": str(alias["year"]),
+                "raw_precinct_key": f"{alias['county']} - {alias['raw_precinct']}",
+                "canonical_precinct_key": alias["canonical_precinct_key"],
+                "experiment_note": (
+                    "staging-only exact SBE2006 geometry; "
+                    + str(alias.get("reason") or "unique county-year alias")
                 ),
             }
         )
@@ -799,11 +824,29 @@ def main() -> None:
     direct_rejected: list[dict[str, str]] = []
     rejected: list[dict[str, str]] = []
     rescue_parts: list[pd.DataFrame] = []
+    retained_sbe2006: list[dict[str, str]] = []
     for year in (2002, 2004):
         accepted, failed = collect_direct_precincts(
             year, RESULTS[year], target_counties[year], sf_vtds
         )
-        rescued, unresolved = collect_plan_cell_precincts(year, RESULTS[year], failed)
+        plan_cell_candidates: list[dict[str, str]] = []
+        for row in failed:
+            token = code_norm(prefix_token(row["raw_precinct"]))
+            canonical = alias_canonical.get((year, row["county"], token), set())
+            if (year, row["county"]) in PREFER_EXACT_SBE2006_GEOMETRY and len(canonical) == 1:
+                retained_sbe2006.append(
+                    {
+                        **row,
+                        "canonical_precinct_key": next(iter(canonical)),
+                        "strategy": "retained_exact_sbe2006_geometry",
+                        "reason": "unique_2004_buncombe_precinct_alias",
+                    }
+                )
+            else:
+                plan_cell_candidates.append(row)
+        rescued, unresolved = collect_plan_cell_precincts(
+            year, RESULTS[year], plan_cell_candidates
+        )
         mapping_parts.append(accepted)
         if not rescued.empty:
             mapping_parts.append(rescued)
@@ -819,7 +862,6 @@ def main() -> None:
         for row in rejected
         if (row["year"], row["county"], row["raw_precinct"]) not in lineage_keys
     ]
-    retained_sbe2006: list[dict[str, str]] = []
     still_rejected: list[dict[str, str]] = []
     for row in rejected:
         token = code_norm(prefix_token(row["raw_precinct"]))
@@ -849,6 +891,7 @@ def main() -> None:
         mappings,
         overrides_path,
         SBE2006_LINEAGE_ALIASES,
+        retained_sbe2006,
     )
 
     base = json.loads(args.base_weights_json.read_text(encoding="utf-8"))
