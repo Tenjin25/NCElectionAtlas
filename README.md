@@ -1180,7 +1180,7 @@ Implementation note:
 - The Buncombe audit exposed the modern SD-46/SD-49 problem: dotted precinct labels were being pooled into coarse historical cells. The builder now prefers 68 unique Buncombe aliases from `legacy_precinct_abbreviation_to_sbe2006.csv`; `BLACK MOUNTAIN 2`, `FAIRVIEW 1`, and `REYNOLDS` remain on the BAF-backed fallback because no unique alias is available. The final 2022-line 2004 presidential House and Senate slices are then calibrated to the supplied district-statistics exports, producing exact displayed margins for all 120 House and 50 Senate districts while preserving each district's rebuilt total vote count.
 - `scripts/audit_urban_sf1_historical_2004_full_ballot.py` validates all `102` files and Mecklenburg geographic anchors; `scripts/promote_urban_sf1_2004_full_ballot.py` performs the guarded production copy.
 - The final 2004 audit covers `6,256` district rows, preserves statewide office totals within `10` votes, and confirms the expected 2004 pattern: Republican northern/southern Mecklenburg and Democratic central Charlotte.
-- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-legislative-history`.
+- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-dra-2004-pres`.
 
 ## UI Performance Enhancements
 
@@ -1585,44 +1585,6 @@ Current app wiring for `2026 Lines`:
 
 - `congressional` scope reads `data/district_contests_2026_lines/`
 - `state_house` and `state_senate` scopes intentionally reuse `2024` slices
-
-### Legislative History Explorer (2000-2020)
-
-Older General Assembly races are available in the contest picker under
-**Legislative History — modern-lines estimates**. These entries are intentionally
-stored outside the ordinary district-contest directories:
-
-- `data/legislative_history/2022/`
-- `data/legislative_history/2024/`
-- `data/legislative_history/manifest.json`
-
-Each slice combines the contested Democratic and Republican candidate vote from
-the historical House or Senate races, allocates it onto the selected modern
-district geometry, and retains the contributing historical districts. Uncontested
-races are excluded from the partisan margin and reported through
-`contested_vote_coverage_pct`. Candidate names are retained for each source race
-when they are available in the election results. The 2000 slices retain every
-candidate in vote-rank order, the number of seats elected by each old
-district, and an inferred elected flag for the top candidates. They are
-additionally marked as multi-member candidate-vote composites. The same
-candidate slates are embedded in each modern result row under
-`source_districts[].candidates`, so consumers do not need to join back to the
-top-level `source_races` array to display names.
-
-Rebuild every even-year historical cycle from 2000 through 2020 for both
-chambers and both modern line sets:
-
-```powershell
-python scripts/build_legislative_history_crosswalks.py
-```
-
-The standalone builder uses the audited Census 2000 / historical-plan weights
-for 2000-2004, the SBE 2006 bridge for 2006-2008, and election-proximate SBE
-block bridges for 2010-2020. Source-plan metadata links to the official
-[NCGA redistricting archive](https://www.ncleg.gov/Redistricting), including the
-1992 plans used in 2000, the court-ordered 2002 plans, the 2003 plans, and the
-2009 House plan used in 2010, the 2011 plans, the court-ordered 2018 plans,
-and the 2019 remedial plans used in 2020.
 
 Recommended run (project venv):
 
