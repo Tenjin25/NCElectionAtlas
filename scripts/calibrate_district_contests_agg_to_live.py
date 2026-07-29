@@ -79,12 +79,44 @@ STATS_CSV_BY_KEY: dict[tuple[int, str, str], Path] = {
 }
 
 # Keep the July 28 geographic rebuild for 2022-line House districts outside
-# Mecklenburg and Buncombe. District contest files are aggregates, so districts
-# touching either county are calibrated as a whole.
+# the seven counties treated as urban in the 2004 SF1 rebuild. District contest
+# files are aggregates, so districts touching an urban county are calibrated
+# as a whole.
 PARTIAL_STATS_DISTRICTS: dict[tuple[int, str, str], frozenset[str]] = {
     (2004, "state_house", "president"): frozenset(
         {
+            "11",
+            "18",
+            "19",
+            "20",
+            "21",
+            "33",
+            "34",
+            "35",
+            "36",
+            "37",
+            "38",
+            "39",
+            "40",
+            "41",
+            "42",
+            "43",
+            "44",
+            "45",
+            "49",
+            "57",
+            "58",
+            "59",
+            "60",
+            "61",
+            "62",
+            "66",
+            "71",
+            "72",
+            "74",
+            "75",
             "88",
+            "91",
             "92",
             "98",
             "99",
@@ -605,7 +637,7 @@ def calibrate_agg_dir(
                     audit_only=audit_only,
                 )
                 summary["note"] = (
-                    "calibrated only districts touching Mecklenburg or Buncombe; "
+                    "calibrated only districts touching an audited 2004 urban county; "
                     "kept the July 28 geographic rebuild elsewhere"
                 )
             else:
