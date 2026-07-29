@@ -64,12 +64,14 @@ These lines were chosen as the consistent historical baseline for two reasons:
 
 Historical district views are still presented on the selected modern district line set (default 2022 MQP), but the current precinct target is now the **December 2025 OneMap/SBE precinct basis** at `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`, with 2020-block assignments in `data/crosswalks/block20_to_onemap_2025_12.csv`.
 
-The current bridge chain has two main branches. Modern SBE precinct vintages for **2020, 2022, and 2024** are VAP-weighted to the December 2025 OneMap basis. Early-era SBE 2006 is reached through [NHGIS](https://www.nhgis.org/) block-to-block crosswalks: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> Dec 2025 OneMap / modern districts`. Early-year district and precinct outputs are approximate VAP-weighted shatter/apportionment estimates, not exact historical precinct geometry.
+The current bridge chain has two main branches. Modern SBE precinct vintages for **2020, 2022, and 2024** are VAP-weighted to the December 2025 OneMap basis. Early-era SBE 2006 is reached through [NHGIS](https://www.nhgis.org/) block-to-block crosswalks: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> Dec 2025 OneMap / modern districts`.
+
+For the most difficult **2000, 2002, and 2004 urban-county district allocations**, the atlas now adds a Census 2000 SF1 / historical-plan layer before the modern-district aggregation. It combines Census VTD codes and voting-age population, official historical NCGA block-assignment files, NCSBE voter-history code evidence, and the NHGIS 2000-to-2010-to-2020 bridge. The 2000 path requires an exact VTD to agree with the precinct's historical House/Senate/congressional cell; otherwise it falls back to the matching historical plan cell. The 2002/2004 path uses direct SF1 VTD matches where supported, historical-plan cells for rejected/split codes, and narrowly documented SBE 2006 lineage fallbacks. These remain VAP-weighted estimates rather than reconstructed cast-vote records at the block level.
 
 ## Features
 
 - **Multiple Views:** Counties, Precincts (zoomed in), Congressional Districts, State House, State Senate
-- **District Lines Toggle (2022 vs 2024):** District views can switch between the 2022 MQP baseline and a 2024 line option; the first 2024 load can take longer while boundary GeoJSON downloads/parses
+- **District Lines Toggle (2022 / 2024 / 2026):** District views can switch between the 2022 MQP baseline and 2024 lines; the 2026 option supplies the enacted `SL 2025-95` congressional plan while State House and State Senate continue to use the 2024 slices. The first alternate-line load can take longer while boundary GeoJSON downloads/parses.
 - **Progressive District Linework (DRA-style):** Congressional/State House/State Senate boundaries use a bright halo + crisp charcoal inner stroke with smooth zoom interpolation, stronger statewide readability, and a close hierarchy (Congress strongest, Senate very close, House only slightly thinner)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
@@ -108,7 +110,7 @@ The current bridge chain has two main branches. Modern SBE precinct vintages for
 
 ## Recent Updates (March–July 2026)
 
-**Last updated:** July 21, 2026
+**Last updated:** July 28, 2026
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -1133,6 +1135,52 @@ Implementation note:
 - Removed the corresponding congressional, State House, and State Senate slices and manifest entries for the 2022-lines, 2024-lines, and DRA-review district datasets.
 - Retained the archival raw 2012 election CSV as an unchanged source record.
 
+### Census 2000 SF1 + Historical Plan-Cell District Rebuild (July 28, 2026)
+
+- Added a reproducible early-election source pipeline:
+  - `scripts/fetch_nc_historical_precinct_sources.py` inventories/downloads Census, NCGA, and NCSBE source material and records it in `data/reports/urban_sf1_historical/historical_source_manifest.json`.
+  - `scripts/extract_census2000_block_vap.py` produces `data/reports/nc_block_vap_geography_2000_sf1.csv`, including 2000 block, VTD, congressional, State House, State Senate, place, and VAP fields.
+  - `scripts/build_urban_sf1_historical_legislative_weights.py` joins the SF1 geography and historical NCGA plan cells through the NHGIS 2000-to-2010-to-2020 bridge and emits year-specific weights for the 2022, 2024, and 2026 target plans.
+- Added urban-county linkage coverage for the difficult early cycles:
+  - 2000: `985` accepted/effective precinct linkages in Buncombe, Cabarrus, Cumberland, Durham, Forsyth, Gaston, Guilford, Mecklenburg, New Hanover, Union, and Wake.
+  - 2002: `787` accepted (`788` effective) linkages in Cumberland, Forsyth, Gaston, Guilford, Mecklenburg, New Hanover, and Wake.
+  - 2004: `845` accepted (`861` effective) linkages in Buncombe, Cumberland, Forsyth, Gaston, Guilford, Mecklenburg, New Hanover, and Wake.
+- The 2000 allocator now uses an **exact VTD + historical district-cell intersection** when both pieces of evidence agree. If that intersection is unavailable, it uses the county's historical House/Senate/congressional cell instead of assigning an unrelated later-vintage SBE precinct geometry.
+- Fixed a Guilford-specific source quirk: the raw 2000 export contains zero-vote rows for congressional contests that did not cover the precinct. District detection now uses positive-vote rows (while preserving a uniquely listed zero-turnout district), recovering `156` Guilford precincts that had previously been rejected as falsely ambiguous.
+- Added geographic regression anchors for northern/central/southern Mecklenburg, central/outer Guilford, Raleigh/outer Wake, the Triangle and Charlotte congressional cores, and the 2026 coastal-plain / western-Mecklenburg congressional districts.
+- The main audit artifacts are:
+  - `data/reports/urban_sf1_historical/summary.json`
+  - `data/reports/urban_sf1_historical/validation.json`
+  - `data/reports/urban_sf1_historical/precinct_linkage.csv`
+  - `data/reports/urban_sf1_historical/weight_detail.csv`
+  - `data/reports/urban_sf1_historical/district_outlier_audit_2002_2004.json`
+  - `data/reports/urban_sf1_historical/congressional_outlier_audit_2000_2004.json`
+
+### Full 2000 Ballot on Modern Legislative/Congressional Plans (July 28, 2026)
+
+- Rebuilt all `18` statewide 2000 contests (President, Council of State, and contested Supreme Court/Court of Appeals seats) for Congressional, State House, and State Senate on both the 2022 and 2024 plans: `54` files per line set.
+- Built the same `18` contests for the enacted 2026 `SL 2025-95` congressional plan, including seven judicial slices that were previously absent.
+- Promoted `126` validated files in total:
+  - `54` under `data/district_contests/` for the 2022 plan.
+  - `54` under `data/district_contests_2024_lines/` for the 2024 plan.
+  - `18` congressional files under `data/district_contests_2026_lines/`.
+- `scripts/audit_urban_sf1_historical_2000_full_ballot.py` checks raw statewide vote conservation and geographic anchors; `scripts/promote_urban_sf1_2000_full_ballot.py` and `scripts/promote_urban_sf1_2026_congressional_2000.py` refuse promotion unless those checks pass.
+- The final audit covers `6,876` district rows, marks all `126` files as promotion candidates, and keeps statewide totals within `11` votes of the raw office totals.
+- The 2002 promotion remains deliberately narrower: the SF1/historical-cell version is live for 2002 US Senate congressional slices on both line sets and for the 2024-line State House/State Senate slices. Other staged 2002 outputs remain review material rather than silently replacing production.
+
+### Full 2004 Ballot + Mecklenburg Verification (July 28, 2026)
+
+- Rebuilt all `17` statewide 2004 contests for Congressional, State House, and State Senate on both the 2022 and 2024 plans (`51` files per plan, `102` promoted files total).
+- Added the previously missing 2024-line district overlays for five contested judicial seats across all three scopes (`15` files).
+- Added `scripts/audit_mecklenburg_2004_vtd_plan_cells.py`, which compares Mecklenburg's raw 2004 precinct labels with Census 2000 VTDs and the official 2003 NCGA House/Senate block assignments:
+  - `188` direct VTD codes were checked.
+  - `182` agree exactly with every observed historical chamber.
+  - The remaining `6` overlap the correct split plan cell.
+  - No matched VTD lacks historical-plan overlap.
+- `scripts/audit_urban_sf1_historical_2004_full_ballot.py` validates all `102` files and Mecklenburg geographic anchors; `scripts/promote_urban_sf1_2004_full_ballot.py` performs the guarded production copy.
+- The final 2004 audit covers `6,256` district rows, preserves statewide office totals within `10` votes, and confirms the expected 2004 pattern: Republican northern/southern Mecklenburg and Democratic central Charlotte.
+- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-28-mecklenburg-2004`.
+
 ## UI Performance Enhancements
 
 The current `index.html` includes several speed-focused improvements that are already live in the app:
@@ -1444,6 +1492,56 @@ This produces three district slice files (congressional, state_house, state_sena
 
 **Note (2024 lines accuracy):** If you see obvious district misallocation in modern precinct-coded counties (for example, Gaston precinct numeric codes vs `A`-suffix geometry codes), rebuild using a block→precinct crosswalk derived from the official SBE precinct geometry for the same era. This improves precinct-key match coverage and reduces unmatched-vote smearing.
 
+### Rebuilding the Urban SF1 Historical Weights (2000-2004)
+
+The early urban-county pipeline is separate from the generic SBE 2006 fallback. Its checked-in outputs live under `data/reports/urban_sf1_historical/`.
+
+1. Fetch or inventory the historical sources:
+
+```powershell
+py scripts/fetch_nc_historical_precinct_sources.py
+```
+
+2. Extract the Census 2000 SF1 block/VTD/VAP geography:
+
+```powershell
+py scripts/extract_census2000_block_vap.py
+```
+
+3. Build weights for every configured target plan:
+
+```powershell
+py scripts/build_urban_sf1_historical_legislative_weights.py
+```
+
+The resulting files are:
+
+- `data/reports/urban_sf1_historical/district_weights_2000.json`
+- `data/reports/urban_sf1_historical/district_weights_2002.json`
+- `data/reports/urban_sf1_historical/district_weights_2004.json`
+
+Each contains scopes for 2022 State House, State Senate, and congressional lines; 2024 State House, State Senate, and congressional lines; and the 2026 `SL 2025-95` congressional plan. The historical House/Senate/congressional IDs are evidence cells used to locate old precincts; the final JSON keys always come from the selected modern block assignment.
+
+Run the audits before promoting results:
+
+```powershell
+py scripts/audit_urban_sf1_historical_legislative_pilot.py
+py scripts/audit_urban_sf1_district_outliers.py
+py scripts/audit_urban_sf1_historical_2000_full_ballot.py
+py scripts/audit_mecklenburg_2004_vtd_plan_cells.py
+py scripts/audit_urban_sf1_historical_2004_full_ballot.py
+```
+
+The promotion scripts are intentionally guarded and expect the complete audited file counts:
+
+```powershell
+py scripts/promote_urban_sf1_2000_full_ballot.py
+py scripts/promote_urban_sf1_2026_congressional_2000.py
+py scripts/promote_urban_sf1_2004_full_ballot.py
+```
+
+Do not promote directly from `data/district_contests_urban_sf1_*` merely because statewide totals match. Review the geographic sanity checks and district outlier reports first; an incorrect precinct link can conserve every vote while placing it in the wrong district.
+
 ### Rebuilding Historical District Slices on 2024 Lines (2000-2022)
 
 Use `scripts/build_historical_district_contests_2024_lines.py` to batch-build historical district slices against 2024 district assignments.
@@ -1715,11 +1813,12 @@ python scripts/add_early_comparable_judicial_district_contests.py
 
 Current block/VAP bridge coverage is summarized in the Crosswalk Coverage Audit above. Contest-level match rates still vary by office, county, and year, and generated district contest JSON may include per-file metadata such as `match_coverage_pct`, `matched_precinct_keys`, and the target crosswalk used.
 
-Early-year district and precinct layers are approximate shatter/apportionment estimates. The SBE 2006 bridge gives the 2000-2006 era a reproducible cross-vintage path into the December 2025 OneMap basis, but it does not recreate exact historical precinct geometry. Those outputs stay as shatter estimates unless an explicit trusted calibration target exists.
+Early-year district and precinct layers are approximate shatter/apportionment estimates. The SBE 2006 bridge gives the 2000-2006 era a reproducible cross-vintage path into the December 2025 OneMap basis, while the urban SF1/historical-cell pipeline supplies better-supported 2000/2002/2004 district weights where the required source evidence exists. Neither path recreates cast votes at block level. Those outputs stay as shatter estimates unless an explicit trusted calibration target exists.
 
 ### Other Limitations
 
-- **Wake and Mecklenburg:** These large counties have complex precinct histories with frequent splits and renumbering. They benefit most from NHGIS crosswalks but may still have gaps in the earliest years.
+- **Wake and Mecklenburg:** These large counties have complex precinct histories with frequent splits and renumbering. The 2000 and 2004 modern-district slices now use the audited SF1/historical-cell path, including Mecklenburg-specific geographic anchors and an official-plan check for 2004. Other early cycles and precinct-mode geometry can still have gaps.
+- **Guilford 2000:** Zero-filled out-of-district contest rows must not be interpreted as geographic membership. The historical builder now requires positive votes (or one uniquely listed zero-turnout district), and the full-ballot audit checks central/outer Guilford before promotion.
 - **Non-geographic votes:** Absentee and early-voting totals are distributed by county weight or candidate share, not mapped 1:1 to precincts. This can smooth precinct-level variation.
 - **Reallocation approximation:** Block-to-district crosswalks use population-based weights, not actual voter rolls. Small precincts straddling district lines may have minor inaccuracies.
 - **Boundary vintage:** The 2022 MQP lines are modern — applying them retroactively to 2000–2020 results is an approximation of what those contests would have looked like under current districts.
@@ -1738,7 +1837,8 @@ Early-year district and precinct layers are approximate shatter/apportionment es
 - **Demographics chips are hard to read in hover cards:** Turn on `High contrast demographics` in controls, then hard refresh (`Ctrl+Shift+R`) to ensure latest CSS/JS assets are loaded.
 - **Hover totals show VAP instead of CVAP:** Ensure `data/cvap_aggregates/*.csv` exists (or rebuild via `py scripts/build_cvap_aggregates.py`) and hard refresh to clear cached assets.
 - **Legend colors do not appear to match map colors in colorblind mode:** Refresh once to clear cached assets; the latest build ties legend swatches to the same palette functions used for map fills.
-- **Wake/Meck district accuracy looks off in older years:** Check unmatched precinct reports and add overrides; rebuild slices.
+- **Wake/Meck district accuracy looks off in 2000 or 2004:** Run the urban SF1 audits above before adding overrides. For 2004 Mecklenburg, inspect `mecklenburg_2004_vtd_plan_cell_audit.csv`; for 2000, inspect the full-ballot geographic checks and `precinct_linkage.csv`.
+- **Guilford's early legislative districts all have nearly identical margins:** Rebuild the 2000 weights with the current positive-vote district parser. That symptom indicates the zero-filled congressional rows were treated as ambiguity and Guilford's geographic precincts were discarded.
 
 ## Contributing
 
