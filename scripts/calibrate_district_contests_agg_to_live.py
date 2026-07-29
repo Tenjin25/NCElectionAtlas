@@ -25,6 +25,7 @@ from calibrate_district_slices_to_stats_margins import (  # noqa: E402
     StatsRow,
     calculate_competitiveness,
     calibrate_slice,
+    load_stats,
     normalize_district_id,
     solve_votes_for_margin,
 )
@@ -75,6 +76,32 @@ STATS_CSV_BY_KEY: dict[tuple[int, str, str], Path] = {
     (2024, "state_house", "president"): Path("data/district-statistics 2024 Pres State House 2022.csv"),
     (2024, "congressional", "president"): Path("data/district-statistics 2024 Pres Congress.csv"),
     (2024, "state_house", "governor"): Path("data/district-statistics 2024 gov.csv"),
+}
+
+# Keep the July 28 geographic rebuild for 2022-line House districts outside
+# Mecklenburg and Buncombe. District contest files are aggregates, so districts
+# touching either county are calibrated as a whole.
+PARTIAL_STATS_DISTRICTS: dict[tuple[int, str, str], frozenset[str]] = {
+    (2004, "state_house", "president"): frozenset(
+        {
+            "88",
+            "92",
+            "98",
+            "99",
+            "100",
+            "101",
+            "102",
+            "103",
+            "104",
+            "105",
+            "106",
+            "107",
+            "112",
+            "114",
+            "115",
+            "116",
+        }
+    )
 }
 
 # DRA Downloads short labels -> contest_type (State House / 2022 lines).
@@ -561,19 +588,40 @@ def calibrate_agg_dir(
         # than bypassing them under the general 2000-2006 keep-shatter policy.
         stats_csv = resolve_stats_csv(year, scope, contest_type)
         if prefer_stats_csv and stats_csv is not None and stats_csv.exists():
-            summary = calibrate_slice(
-                agg_path,
-                stats_csv,
-                format_mode="auto",
-                precision=2,
-                margin_basis="total",
-                exact_rounded_margin=True,
-                total_votes_mode="existing",
-                total_votes_column="",
-                other_search_radius=50,
-                margin_search_radius=500,
-                audit_only=audit_only,
-            )
+            partial_districts = PARTIAL_STATS_DISTRICTS.get(key)
+            if partial_districts:
+                stats_rows = {
+                    district: row
+                    for district, row in load_stats(
+                        stats_csv, margin_basis="total", precision=2
+                    ).items()
+                    if district in partial_districts
+                }
+                summary = calibrate_slice_from_stats_rows(
+                    agg_path,
+                    stats_rows,
+                    precision=2,
+                    margin_basis="total",
+                    audit_only=audit_only,
+                )
+                summary["note"] = (
+                    "calibrated only districts touching Mecklenburg or Buncombe; "
+                    "kept the July 28 geographic rebuild elsewhere"
+                )
+            else:
+                summary = calibrate_slice(
+                    agg_path,
+                    stats_csv,
+                    format_mode="auto",
+                    precision=2,
+                    margin_basis="total",
+                    exact_rounded_margin=True,
+                    total_votes_mode="existing",
+                    total_votes_column="",
+                    other_search_radius=50,
+                    margin_search_radius=500,
+                    audit_only=audit_only,
+                )
             summary["source"] = f"{year}_csv"
             summary["file"] = agg_path.name
             summaries.append(summary)
