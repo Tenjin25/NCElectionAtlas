@@ -167,33 +167,9 @@ MULTI_MEMBER_MAGNITUDES_2000 = {
 BLOCK_BRIDGE_BASE_CACHE: dict[int, tuple[pd.DataFrame, Path]] = {}
 TARGET_DISTRICT_MAP_CACHE: dict[tuple[int, str], pd.DataFrame] = {}
 
-LEGISLATIVE_CANDIDATE_DISPLAY_OVERRIDES = {
-    # The SBE ballot export includes her nickname in the middle of the name.
-    # Use the public display name while leaving the source CSV untouched.
-    "ERNESTINE (BYRD) BAZEMORE": "Ernestine Bazemore",
-}
-
 
 def parse_int_list(raw: str) -> list[int]:
     return sorted({int(part.strip()) for part in str(raw).split(",") if part.strip()})
-
-
-def legislative_candidate_display_name(name: str) -> str:
-    normalized = re.sub(r"\s+", " ", str(name or "")).strip()
-    normalized = re.sub(
-        r"\s+\(\s*replacement\s+for\s+[^)]+\)\s*$",
-        "",
-        normalized,
-        flags=re.I,
-    ).strip()
-    normalized = canonicalize_candidate_label(normalized)
-    key = re.sub(r"\s+", " ", normalized).strip().upper()
-    return LEGISLATIVE_CANDIDATE_DISPLAY_OVERRIDES.get(key, normalized)
-
-
-def is_generic_candidate_placeholder(name: str) -> bool:
-    key = re.sub(r"[^A-Z]+", " ", str(name or "").upper()).strip()
-    return key in {"WRITE IN", "WRITE IN MISCELLANEOUS"}
 
 
 def discover_general_csv(year: int) -> Path:
@@ -225,9 +201,8 @@ def candidate_slate(
     frame["votes_num"] = pd.to_numeric(frame["votes"], errors="coerce").fillna(0.0)
     frame["party_group"] = frame["party"].map(party_group)
     frame = apply_candidate_party_overrides(frame, election_year=year)
-    frame["candidate"] = frame["candidate"].map(legislative_candidate_display_name)
+    frame["candidate"] = frame["candidate"].map(canonicalize_candidate_label)
     frame = frame[frame["candidate"].astype(str).str.strip().ne("")]
-    frame = frame[~frame["candidate"].map(is_generic_candidate_placeholder)]
     grouped = (
         frame.groupby(["candidate", "party_group"], as_index=False)["votes_num"]
         .sum()
@@ -504,8 +479,6 @@ def prepare_chamber_races(
             precinct_overrides=precinct_overrides,
             election_year=year,
         )
-        dem_candidate = legislative_candidate_display_name(dem_candidate)
-        rep_candidate = legislative_candidate_display_name(rep_candidate)
         if precinct_party.empty:
             continue
         dem_total = int(round(float(precinct_party["dem_votes"].sum())))
