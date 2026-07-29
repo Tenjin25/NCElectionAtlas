@@ -32,6 +32,12 @@ from calibrate_district_slices_to_stats_margins import (  # noqa: E402
 # Explicit DRA district-statistics paths (2022 lines unless noted).
 # Also discovers aliases via resolve_stats_csv() for judicial / Downloads imports.
 STATS_CSV_BY_KEY: dict[tuple[int, str, str], Path] = {
+    (2004, "state_house", "president"): Path(
+        "data/NC-2022-State-House-district-statistics 2004 pres.csv"
+    ),
+    (2004, "state_senate", "president"): Path(
+        "data/NC-2022-State-Senate-district-statistics 2004 pres.csv"
+    ),
     (2020, "state_house", "president"): Path("data/district-statistics 2020 Pres State House 2022.csv"),
     (2020, "state_house", "governor"): Path("data/district-statistics 2020 Gov State House 2022.csv"),
     (2020, "state_house", "lieutenant_governor"): Path("data/district-statistics 2020 LtGov State House 2022.csv"),
@@ -550,6 +556,29 @@ def calibrate_agg_dir(
             summaries.append(summary)
             continue
 
+        # Explicit district-statistics exports are trusted calibration targets
+        # even for early years. Apply them after the geographic rebuild rather
+        # than bypassing them under the general 2000-2006 keep-shatter policy.
+        stats_csv = resolve_stats_csv(year, scope, contest_type)
+        if prefer_stats_csv and stats_csv is not None and stats_csv.exists():
+            summary = calibrate_slice(
+                agg_path,
+                stats_csv,
+                format_mode="auto",
+                precision=2,
+                margin_basis="total",
+                exact_rounded_margin=True,
+                total_votes_mode="existing",
+                total_votes_column="",
+                other_search_radius=50,
+                margin_search_radius=500,
+                audit_only=audit_only,
+            )
+            summary["source"] = f"{year}_csv"
+            summary["file"] = agg_path.name
+            summaries.append(summary)
+            continue
+
         if year in {2000, 2002, 2004, 2006}:
             summaries.append(
                 {
@@ -577,27 +606,6 @@ def calibrate_agg_dir(
                 audit_only=audit_only,
             )
             summary["source"] = "2020_dra_review_president_congressional"
-            summary["file"] = agg_path.name
-            summaries.append(summary)
-            continue
-
-        stats_csv = resolve_stats_csv(year, scope, contest_type)
-
-        if prefer_stats_csv and stats_csv is not None and stats_csv.exists():
-            summary = calibrate_slice(
-                agg_path,
-                stats_csv,
-                format_mode="auto",
-                precision=2,
-                margin_basis="total",
-                exact_rounded_margin=True,
-                total_votes_mode="existing",
-                total_votes_column="",
-                other_search_radius=50,
-                margin_search_radius=500,
-                audit_only=audit_only,
-            )
-            summary["source"] = f"{year}_csv"
             summary["file"] = agg_path.name
             summaries.append(summary)
             continue

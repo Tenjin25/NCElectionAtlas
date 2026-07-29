@@ -117,6 +117,11 @@ def normalize_share_triplet(dem: float, rep: float, other: float) -> tuple[float
     total = sum(vals)
     if total <= 0:
         raise ValueError("Dem/Rep/Oth shares sum to zero")
+    # District-statistics exports independently round each party share. Keep
+    # near-100% triplets as printed so the solver can reproduce those displayed
+    # percentages; normalize only materially incomplete or overfull inputs.
+    if abs(total - 1.0) <= 0.005:
+        return vals[0], vals[1], vals[2]
     return vals[0] / total, vals[1] / total, vals[2] / total
 
 
@@ -277,11 +282,13 @@ def solve_votes_for_margin(
             other_delta = abs(other_votes - desired_other)
             total_margin_delta = abs(margin - desired_total_margin_votes)
 
-            # Sort by user-visible rounded margin, then raw closeness, then share fidelity.
+            # Sort by user-visible rounded margin, then the supplied party shares,
+            # then raw margin closeness. DRA share columns are independently rounded,
+            # so share fidelity must win among solutions with the same display margin.
             score = (
                 display_delta,
-                raw_delta,
                 share_error,
+                raw_delta,
                 int(round(other_delta * 1000)),
                 int(round(total_margin_delta * 1000)),
             )
