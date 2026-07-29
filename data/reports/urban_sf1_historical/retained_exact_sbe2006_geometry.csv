@@ -1,16 +1,80 @@
-year,county,raw_precinct,prefix_token,reason,house_districts,senate_districts,congressional_districts,canonical_precinct_key,strategy
-2002,CUMBERLAND,AH49 ARRAN HILLS,AH49,no_unique_two_way_historical_plan_cell,44;45,19;21,8,CUMBERLAND - ARRAN HILLS,retained_exact_sbe2006_geometry
-2004,BUNCOMBE,14.1 ASHEVILLE 14,14.1,no_unique_two_way_historical_plan_cell,114;116,49,,BUNCOMBE - ASHEVILLE 14,retained_exact_sbe2006_geometry
-2004,BUNCOMBE,29.1 ASHEVILLE 29,29.1,no_unique_two_way_historical_plan_cell,115;116,48,,BUNCOMBE - ASHEVILLE 29,retained_exact_sbe2006_geometry
-2004,BUNCOMBE,57.1 LIMESTONE 4,57.1,no_unique_two_way_historical_plan_cell,115;116,48,,BUNCOMBE - LIMESTONE 4,retained_exact_sbe2006_geometry
-2004,BUNCOMBE,68.1 WEST BUNCOMBE 1,68.1,no_unique_two_way_historical_plan_cell,114;116,49,,BUNCOMBE - WEST BUNCOMBE 1,retained_exact_sbe2006_geometry
-2004,CUMBERLAND,CC03 CROSS CREEK #03,CC03,no_unique_two_way_historical_plan_cell,43;44,21,,CUMBERLAND - CROSS CREEK 03,retained_exact_sbe2006_geometry
-2004,CUMBERLAND,HM02 HOPE MILLS #2,HM02,no_unique_two_way_historical_plan_cell,22;45,19,,CUMBERLAND - HOPE MILLS 2,retained_exact_sbe2006_geometry
-2004,GUILFORD,H19A H19A,H19A,no_unique_two_way_historical_plan_cell,60;61,28,,GUILFORD - HP 19A,retained_exact_sbe2006_geometry
-2004,WAKE,13-05 13-05,13-05,no_unique_two_way_historical_plan_cell,34,14;15,,WAKE - 13-05,retained_exact_sbe2006_geometry
-2004,WAKE,13-06 13-06,13-06,no_unique_two_way_historical_plan_cell,34,14;15,,WAKE - 13-06,retained_exact_sbe2006_geometry
-2004,WAKE,13-07 13-07,13-07,no_unique_two_way_historical_plan_cell,33;39,14,,WAKE - 13-07,retained_exact_sbe2006_geometry
-2004,WAKE,18-08 18-08,18-08,no_unique_two_way_historical_plan_cell,36,16;17,,WAKE - 18-08,retained_exact_sbe2006_geometry
-2004,WAKE,19-07 19-07,19-07,no_unique_two_way_historical_plan_cell,40,14;15,,WAKE - 19-07,retained_exact_sbe2006_geometry
-2004,WAKE,19-08 19-08,19-08,no_unique_two_way_historical_plan_cell,39;40,14,,WAKE - 19-08,retained_exact_sbe2006_geometry
-2004,WAKE,20-07 20-07,20-07,no_unique_two_way_historical_plan_cell,37;41,17,,WAKE - 20-07,retained_exact_sbe2006_geometry
+year,county,raw_precinct,prefix_token,reason,canonical_precinct_key,strategy,house_districts,senate_districts,congressional_districts
+2004,BUNCOMBE,01.1 ASHEVILLE 1,01.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 01,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,02.1 ASHEVILLE 2,02.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 02,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,03.1 ASHEVILLE 3,03.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 03,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,04.1 ASHEVILLE 4,04.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 04,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,05.1 ASHEVILLE 5,05.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 05,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,06.1 ASHEVILLE 6,06.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 06,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,07.1 ASHEVILLE 7,07.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 07,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,08.1 ASHEVILLE 8,08.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 08,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,09.1 ASHEVILLE 9,09.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 09,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,10.1 ASHEVILLE 10,10.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 10,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,11.1 ASHEVILLE 11,11.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 11,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,12.1 ASHEVILLE 12,12.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 12,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,13.1 ASHEVILLE 13,13.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 13,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,14.1 ASHEVILLE 14,14.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 14,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,15.1 ASHEVILLE 15,15.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 15,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,16.1 ASHEVILLE 16,16.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 16,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,17.1 ASHEVILLE 17,17.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 17,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,18.1 ASHEVILLE 18,18.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 18,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,19.1 ASHEVILLE 19,19.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 19,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,20.1 ASHEVILLE 20,20.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 20,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,21.1 ASHEVILLE 21,21.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 21,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,22.1 ASHEVILLE 22,22.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 22,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,23.1 ASHEVILLE 23,23.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 23,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,24.1 ASHEVILLE 24,24.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 24,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,25.1 ASHEVILLE 25,25.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 25,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,26.1 ASHEVILLE 26,26.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 26,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,27.1 ASHEVILLE 27,27.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 27,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,28.1 ASHEVILLE 28,28.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 28,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,29.1 ASHEVILLE 29,29.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - ASHEVILLE 29,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,30.1 AVERYS CREEK,30.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - AVERYS CREEK,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,31.1 BILTMORE FOREST,31.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BILTMORE,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,32.1 BLACK MOUNTAIN 1,32.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BLACK MOUNTAIN 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,34.1 BLACK MOUNTAIN 3,34.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BLACK MOUNTAIN 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,35.1 BLACK MOUNTAIN 4,35.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BLACK MOUNTAIN 4,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,36.1 BLACK MOUNTAIN 5,36.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BLACK MOUNTAIN 5,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,37.1 BROAD RIVER,37.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - BROAD RIVER,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,39.1 FAIRVIEW 2,39.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - FAIRVIEW 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,40.1 FLAT CREEK,40.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - FLAT CREEK,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,41.1 FRENCH BROAD,41.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - FRENCH BROAD,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,42.1 HAZEL 1,42.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - HAZEL 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,43.1 HAZEL 2,43.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - HAZEL 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,44.1 LOWER HOMINY 1,44.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LOWER HOMINY 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,45.1 LOWER HOMINY 2,45.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LOWER HOMINY 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,46.1 LOWER HOMINY 3,46.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LOWER HOMINY 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,47.1 UPPER HOMINY 1,47.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - UPPER HOMINY 1 & 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,48.1 UPPER HOMINY 2,48.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - UPPER HOMINY 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,49.1 UPPER HOMINY 3,49.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - UPPER HOMINY 1 & 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,50.1 IVY 1,50.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - IVY 1 & 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,51.1 IVY 2,51.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - IVY 1 & 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,52.1 LEICESTER 1,52.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LEICESTER 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,53.1 LEICESTER 2,53.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LEICESTER 2 & SANDY MUSH,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,54.1 LIMESTONE 1,54.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LIMESTONE 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,55.1 LIMESTONE 2,55.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LIMESTONE 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,56.1 LIMESTONE 3,56.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LIMESTONE 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,57.1 LIMESTONE 4,57.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LIMESTONE 4,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,58.1 NORTH BUNCOMBE,58.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - NORTH BUNCOMBE,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,59.1 REEMS CREEK,59.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - REEMS CREEK,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,61.1 RICEVILLE 1,61.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - RICEVILLE 1 & SWANNANOA 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,62.1 RICEVILLE 2,62.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - RICEVILLE 2 & SWANNANOA 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,63.1 SANDY MUSH,63.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - LEICESTER 2 & SANDY MUSH,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,64.1 SWANNANOA 1,64.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - SWANNANOA 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,65.1 SWANNANOA 2,65.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - RICEVILLE 1 & SWANNANOA 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,66.1 SWANNANOA 3,66.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - RICEVILLE 2 & SWANNANOA 3,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,67.1 WEAVERVILLE,67.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - WEAVERVILLE,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,68.1 WEST BUNCOMBE 1,68.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - WEST BUNCOMBE 1,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,69.1 WEST BUNCOMBE 2,69.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - WEST BUNCOMBE 2,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,70.1 WOODFIN,70.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - WOODFIN,retained_exact_sbe2006_geometry,,,
+2004,BUNCOMBE,71.1 WOODLAND HILLS,71.1,unique_2004_buncombe_precinct_alias,BUNCOMBE - WOODLAND HILLS,retained_exact_sbe2006_geometry,,,
+2002,CUMBERLAND,AH49 ARRAN HILLS,AH49,no_unique_two_way_historical_plan_cell,CUMBERLAND - ARRAN HILLS,retained_exact_sbe2006_geometry,44;45,19;21,8
+2004,CUMBERLAND,CC03 CROSS CREEK #03,CC03,no_unique_two_way_historical_plan_cell,CUMBERLAND - CROSS CREEK 03,retained_exact_sbe2006_geometry,43;44,21,
+2004,CUMBERLAND,HM02 HOPE MILLS #2,HM02,no_unique_two_way_historical_plan_cell,CUMBERLAND - HOPE MILLS 2,retained_exact_sbe2006_geometry,22;45,19,
+2004,GUILFORD,H19A H19A,H19A,no_unique_two_way_historical_plan_cell,GUILFORD - HP 19A,retained_exact_sbe2006_geometry,60;61,28,
+2004,WAKE,13-05 13-05,13-05,no_unique_two_way_historical_plan_cell,WAKE - 13-05,retained_exact_sbe2006_geometry,34,14;15,
+2004,WAKE,13-06 13-06,13-06,no_unique_two_way_historical_plan_cell,WAKE - 13-06,retained_exact_sbe2006_geometry,34,14;15,
+2004,WAKE,13-07 13-07,13-07,no_unique_two_way_historical_plan_cell,WAKE - 13-07,retained_exact_sbe2006_geometry,33;39,14,
+2004,WAKE,18-08 18-08,18-08,no_unique_two_way_historical_plan_cell,WAKE - 18-08,retained_exact_sbe2006_geometry,36,16;17,
+2004,WAKE,19-07 19-07,19-07,no_unique_two_way_historical_plan_cell,WAKE - 19-07,retained_exact_sbe2006_geometry,40,14;15,
+2004,WAKE,19-08 19-08,19-08,no_unique_two_way_historical_plan_cell,WAKE - 19-08,retained_exact_sbe2006_geometry,39;40,14,
+2004,WAKE,20-07 20-07,20-07,no_unique_two_way_historical_plan_cell,WAKE - 20-07,retained_exact_sbe2006_geometry,37;41,17,
