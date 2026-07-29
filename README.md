@@ -1589,8 +1589,12 @@ Current app wiring for `2026 Lines`:
 ### Legislative History Explorer (2000-2020)
 
 Older General Assembly races are available in the contest picker under
-**Legislative History — modern-lines estimates**. These entries are intentionally
-stored outside the ordinary district-contest directories:
+**State House history — modern-lines estimates** or
+**State Senate history — modern-lines estimates**. The matching history group
+only appears while that chamber's map layer is active. District hover and click
+reuse the standard VoteHub results card, with the contributing historical
+candidate slates in an expandable lineage section. The datasets remain
+intentionally stored outside the ordinary district-contest directories:
 
 - `data/legislative_history/2022/`
 - `data/legislative_history/2024/`
