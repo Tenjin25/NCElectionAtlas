@@ -10392,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-29-2008-precinct-label-fix-2';
-    const APP_BUILD_ID = '2026-07-29-2008-precinct-label-fix-2';
+    const DATA_CACHE_BUSTER = '2026-07-29-2012-precinct-bridge';
+    const APP_BUILD_ID = '2026-07-29-2012-precinct-bridge';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -10432,6 +10432,7 @@ document.addEventListener('DOMContentLoaded', function() {
         precinct_stable_to_nconemap_old_to_new: withBase('./data/crosswalks/precinct_stable_to_nconemap_2026_07_best_old_to_new.csv'),
         precinct_sbe2006_to_onemap: withBase('./data/mappings/sbe2006_to_onemap_precinct_bridge.json'),
         precinct_sbe2006_to_onemap_weights: withBase('./data/mappings/sbe2006_to_onemap_precinct_weights.json'),
+        precinct_sbe2012_to_onemap_weights: withBase('./data/crosswalks/precinct_sbe_2012_to_onemap_2025_vap.csv'),
         precinct_variant_overrides: withBase('./data/mappings/precinct_variant_overrides.json'),
         districts: withBase('./data/tileset/nc_cd118_tileset.geojson'),
         districts_2022: withBase('./data/tileset/nc_cd118_tileset.geojson'),
@@ -11560,12 +11561,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let precinctStableToOneMapByCounty = null; // Map<string countyNorm, Map<string old_alias, string[] newCodes>>
     let precinctSbe2006ToOneMapByCounty = null; // Map<string countyNorm, Map<string sbe2006_alias, string[] newCodes>>
     let precinctSbe2006ToOneMapWeightsByCounty = null; // Map<string countyNorm, Map<string sbe2006_alias, Array<{code, weight}>>>
+    let precinctSbe2012ToOneMapWeightsByCounty = null; // Map<string countyNorm, Map<string sbe2012_alias, Array<{code, weight}>>>
     let precinctFriendlyNamesLoadInFlight = false;
     let precinctFriendlyNamesFileLoaded = false;
     let precinctAliasLoadInFlight = false;
     let precinctStableToOneMapLoadInFlight = false;
     let precinctSbe2006ToOneMapLoadInFlight = false;
     let precinctSbe2006ToOneMapWeightsLoadInFlight = false;
+    let precinctSbe2012ToOneMapWeightsLoadInFlight = false;
+    let precinctSbe2012ToOneMapWeightsLoadPromise = null;
     let precinctVariantOverridesByCounty = null; // Map<string countyNorm, Map<string alias, string[] codes>>
     let precinctVariantOverridesLoadInFlight = false;
     let precinctFullNameByNormCache = null; // Map<string precinct_norm, string precinct_display_name> (from precinct polygons when loaded)
@@ -13499,7 +13503,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const stableToOneMapPath = CONFIG.paths?.precinct_stable_to_nconemap_old_to_new;
       const sbe2006ToOneMapPath = CONFIG.paths?.precinct_sbe2006_to_onemap;
       const sbe2006WeightsPath = CONFIG.paths?.precinct_sbe2006_to_onemap_weights;
-      if (!aliasPath && !friendlyPath && !stableToOneMapPath && !sbe2006ToOneMapPath && !sbe2006WeightsPath) return;
+      const sbe2012WeightsPath = CONFIG.paths?.precinct_sbe2012_to_onemap_weights;
+      if (!aliasPath && !friendlyPath && !stableToOneMapPath && !sbe2006ToOneMapPath && !sbe2006WeightsPath && !sbe2012WeightsPath) return;
 
       // Load lightweight code->name labels immediately so hover feels "instant".
       try {
@@ -13520,6 +13525,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (sbe2006WeightsPath && !precinctSbe2006ToOneMapWeightsByCounty && !precinctSbe2006ToOneMapWeightsLoadInFlight) {
           ensurePrecinctSbe2006ToOneMapWeightsIndex().catch(() => {});
+        }
+        if (sbe2012WeightsPath && !precinctSbe2012ToOneMapWeightsByCounty && !precinctSbe2012ToOneMapWeightsLoadInFlight) {
+          ensurePrecinctSbe2012ToOneMapWeightsIndex().catch(() => {});
         }
       };
 
@@ -14148,10 +14156,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return candidates;
     }
 
-    function getSbe2006ToOneMapWeightEntries(countyNorm, rawPrecinctValue) {
-      if (!precinctSbe2006ToOneMapWeightsByCounty || !countyNorm) return [];
+    function getHistoricalPrecinctWeightEntries(weightIndex, countyNorm, rawPrecinctValue) {
+      if (!weightIndex || !countyNorm) return [];
       const countyKey = (countyNorm || '').toString().trim().toUpperCase();
-      const countyMap = precinctSbe2006ToOneMapWeightsByCounty.get(countyKey);
+      const countyMap = weightIndex.get(countyKey);
       if (!countyMap) return [];
 
       const byCode = new Map();
@@ -14173,6 +14181,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return Array.from(byCode.entries())
         .map(([code, weight]) => ({ code, weight: Number(weight || 0) / total }))
         .filter(entry => entry.code && Number.isFinite(entry.weight) && entry.weight > 0);
+    }
+
+    function getSbe2006ToOneMapWeightEntries(countyNorm, rawPrecinctValue) {
+      return getHistoricalPrecinctWeightEntries(
+        precinctSbe2006ToOneMapWeightsByCounty,
+        countyNorm,
+        rawPrecinctValue
+      );
+    }
+
+    function getSbe2012ToOneMapWeightEntries(countyNorm, rawPrecinctValue) {
+      return getHistoricalPrecinctWeightEntries(
+        precinctSbe2012ToOneMapWeightsByCounty,
+        countyNorm,
+        rawPrecinctValue
+      );
     }
 
     function addSbe2006ToOneMapBridges(countyNorm, rawPrecinctValue, addVariantFn) {
@@ -30384,6 +30408,35 @@ document.addEventListener('DOMContentLoaded', function() {
       return precinctSbe2006ToOneMapWeightsByCounty;
     }
 
+    async function ensurePrecinctSbe2012ToOneMapWeightsIndex() {
+      if (precinctSbe2012ToOneMapWeightsByCounty) return precinctSbe2012ToOneMapWeightsByCounty;
+      if (precinctSbe2012ToOneMapWeightsLoadPromise) return precinctSbe2012ToOneMapWeightsLoadPromise;
+      const path = CONFIG.paths?.precinct_sbe2012_to_onemap_weights;
+      if (!path) return null;
+      precinctSbe2012ToOneMapWeightsLoadInFlight = true;
+      precinctSbe2012ToOneMapWeightsLoadPromise = (async () => {
+        try {
+          const csvText = await loadCSV(path);
+          const rows = parseCSV(csvText);
+          precinctSbe2012ToOneMapWeightsByCounty = window.AtlasCore.buildCountyPrecinctWeightIndex(rows, {
+            sourceField: 'sbe_precinct_id',
+            targetField: 'onemap_precinct_id',
+            weightField: 'share'
+          });
+        } catch (err) {
+          console.warn('Failed to load SBE 2012-to-OneMap precinct weights:', err?.message || err);
+        } finally {
+          precinctSbe2012ToOneMapWeightsLoadInFlight = false;
+        }
+        return precinctSbe2012ToOneMapWeightsByCounty;
+      })();
+      try {
+        return await precinctSbe2012ToOneMapWeightsLoadPromise;
+      } finally {
+        precinctSbe2012ToOneMapWeightsLoadPromise = null;
+      }
+    }
+
     async function ensurePrecinctFriendlyNamesIndex() {
       if (precinctFriendlyNamesFileLoaded && precinctFriendlyNameByCountyCode) return precinctFriendlyNameByCountyCode;
       if (precinctFriendlyNamesLoadInFlight) return null;
@@ -34352,6 +34405,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (Number(year) <= 2010) {
           try { await ensurePrecinctSbe2006ToOneMapIndex(); } catch (_) {}
           try { await ensurePrecinctSbe2006ToOneMapWeightsIndex(); } catch (_) {}
+        } else if (Number(year) === 2012) {
+          try { await ensurePrecinctSbe2012ToOneMapWeightsIndex(); } catch (_) {}
         }
         try { await ensurePrecinctVariantOverrides(); } catch (_) {}
       }
@@ -34544,8 +34599,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	        return Array.from(out);
 	      }
 
-      function sbe2006WeightedNormEntries(rowName) {
-        if (Number(year) > 2010) return [];
+      function historicalWeightedNormEntries(rowName) {
+        const electionYear = Number(year);
+        if (electionYear > 2012 || electionYear === 2011) return [];
         const raw = (rowName || '').toString();
         if (!raw.includes(' - ')) return [];
         const [countyOnlyRaw, precRaw0] = raw.split(' - ', 2);
@@ -34569,7 +34625,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const byNorm = new Map();
         const addWeightedEntries = (token) => {
-          const entries = getSbe2006ToOneMapWeightEntries(countyNorm, token);
+          const entries = electionYear === 2012
+            ? getSbe2012ToOneMapWeightEntries(countyNorm, token)
+            : getSbe2006ToOneMapWeightEntries(countyNorm, token);
           entries.forEach(entry => {
             const code = (entry?.code || '').toString().trim().toUpperCase();
             const weight = Number(entry?.weight);
@@ -34608,7 +34666,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let skipPrecinctRowBuild = false;
       currentPrecinctResults = needsPrecinctDetail ? new Map() : null;
       if (needsPrecinctDetail) {
-        const matchSig = `code:${precinctIdx ? 1 : 0}|alias:${precinctAliasIdx ? 1 : 0}|sbe2006:${precinctSbe2006ToOneMapByCounty ? 1 : 0}|sbe2006w:${precinctSbe2006ToOneMapWeightsByCounty ? 1 : 0}|var:${precinctVariantOverridesByCounty ? 1 : 0}`;
+        const matchSig = `code:${precinctIdx ? 1 : 0}|alias:${precinctAliasIdx ? 1 : 0}|sbe2006:${precinctSbe2006ToOneMapByCounty ? 1 : 0}|sbe2006w:${precinctSbe2006ToOneMapWeightsByCounty ? 1 : 0}|sbe2012w:${precinctSbe2012ToOneMapWeightsByCounty ? 1 : 0}|var:${precinctVariantOverridesByCounty ? 1 : 0}`;
         precinctCacheKey = `${aggCacheKey}|precinctMatch:${matchSig}`;
         if (precinctAdjustedRowCache.has(precinctCacheKey)) {
           currentPrecinctResults = precinctAdjustedRowCache.get(precinctCacheKey) || new Map();
@@ -34656,8 +34714,8 @@ document.addEventListener('DOMContentLoaded', function() {
           const repCand = (row[`${contestType}_rep_candidate`] || '').toString();
 
           if (needsPrecinctDetail && !skipPrecinctRowBuild) {
-            const weightedNorms = sbe2006WeightedNormEntries(rowName);
-            // The weighted SBE bridge is authoritative for pre-2012 historical rows.
+            const weightedNorms = historicalWeightedNormEntries(rowName);
+            // The weighted SBE bridge is authoritative for supported historical rows.
             // Only run the broader alias/code fallback when that bridge has no hit.
             const norms = weightedNorms.length ? null : precinctNormVariants(rowName);
             const adjustedSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);

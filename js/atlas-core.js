@@ -284,6 +284,46 @@
     return (value || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
   }
 
+  function buildCountyPrecinctWeightIndex(rows, options = {}) {
+    const sourceField = String(options.sourceField || 'source_precinct_id');
+    const targetField = String(options.targetField || 'target_precinct_id');
+    const weightField = String(options.weightField || 'share');
+    const accum = new Map();
+
+    (rows || []).forEach(row => {
+      const source = normalizeRowKey(row?.[sourceField]);
+      const target = normalizeRowKey(row?.[targetField]);
+      const weight = Number(row?.[weightField]);
+      if (!source.includes(' - ') || !target.includes(' - ') || !Number.isFinite(weight) || weight <= 0) return;
+      const [sourceCounty, sourceCode] = source.split(' - ', 2);
+      const [targetCounty, targetCode] = target.split(' - ', 2);
+      if (!sourceCounty || !sourceCode || sourceCounty !== targetCounty || !targetCode) return;
+
+      if (!accum.has(sourceCounty)) accum.set(sourceCounty, new Map());
+      const countyMap = accum.get(sourceCounty);
+      [source, sourceCode].forEach(alias => {
+        if (!countyMap.has(alias)) countyMap.set(alias, new Map());
+        const byCode = countyMap.get(alias);
+        byCode.set(targetCode, (byCode.get(targetCode) || 0) + weight);
+      });
+    });
+
+    const out = new Map();
+    accum.forEach((countyMap, county) => {
+      const aliases = new Map();
+      countyMap.forEach((byCode, alias) => {
+        const total = Array.from(byCode.values()).reduce((sum, weight) => sum + Number(weight || 0), 0);
+        if (!Number.isFinite(total) || total <= 0) return;
+        aliases.set(alias, Array.from(byCode.entries()).map(([code, weight]) => ({
+          code,
+          weight: Number(weight || 0) / total
+        })));
+      });
+      if (aliases.size) out.set(county, aliases);
+    });
+    return out;
+  }
+
   function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
@@ -322,6 +362,7 @@
     addPrefixStrippedNumericVariants,
     normalizeRowKey,
     normalizeOpenElectionsPrecinctLabel,
+    buildCountyPrecinctWeightIndex,
     signedMarginPctFromVotes,
     rescaleVoteSetToTargetTotal
   };
