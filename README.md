@@ -1180,7 +1180,15 @@ Implementation note:
 - The Buncombe audit exposed the modern SD-46/SD-49 problem: dotted precinct labels were being pooled into coarse historical cells. The builder now prefers 68 unique Buncombe aliases from `legacy_precinct_abbreviation_to_sbe2006.csv`; `BLACK MOUNTAIN 2`, `FAIRVIEW 1`, and `REYNOLDS` remain on the BAF-backed fallback because no unique alias is available. For the 2022-line 2004 presidential House slice, the July 28 geographic rebuild is retained outside districts touching the seven counties treated as urban here: Buncombe, Cumberland, Forsyth, Guilford, Mecklenburg, New Hanover, and Wake. The 47 districts touching those counties use the supplied district-statistics margins; Gaston remains on the geographic rebuild as an exurban county. Because the published file is district-aggregated, a district crossing an urban-county boundary is treated as one unit. The Senate slice remains calibrated statewide.
 - `scripts/audit_urban_sf1_historical_2004_full_ballot.py` validates all `102` files and Mecklenburg geographic anchors; `scripts/promote_urban_sf1_2004_full_ballot.py` performs the guarded production copy.
 - The final 2004 audit covers `6,256` district rows, preserves statewide office totals within `10` votes, and confirms the expected 2004 pattern: Republican northern/southern Mecklenburg and Democratic central Charlotte.
-- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the current token is `2026-07-29-house-2004-urban-calibration`.
+- Front-end cache-buster/app build IDs were advanced through the historical-data deployments; the token for that release was `2026-07-29-house-2004-urban-calibration`.
+
+### Statewide 2008 Presidential Precinct Label Fix (July 29, 2026)
+
+- Fixed the live OpenElections presidential CSV loader so it preserves complete precinct labels before historical crosswalk and alias resolution instead of truncating every label to its first word.
+- The old behavior collapsed `2,768` geographic 2008 labels into only `1,938` lookup keys, losing `830` precinct distinctions across `59` counties. The most visible failures included Wake (`198` precincts collapsed to one `PRECINCT` key), Mecklenburg (`195` collapsed to one `PCT` key), Gates (`6` collapsed to one `PRECINCT` key), and Hyde multiword labels such as `LAKE LANDING`.
+- Preserving the source labels lets the existing SBE 2006-to-OneMap weighted bridge, exact-code matching, and county alias fallbacks resolve those precincts as intended; this was a loader-key regression rather than a need to replace the underlying crosswalk.
+- Added core regression coverage for Wake-style verbose codes, Mecklenburg `PCT` labels, Gates numbered/north-south labels, and Hyde name-only labels.
+- Bumped the front-end cache-buster/app build token to `2026-07-29-2008-precinct-label-fix` so deployed clients immediately fetch the corrected loader.
 
 ## UI Performance Enhancements
 

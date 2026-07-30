@@ -8,6 +8,24 @@ test('normalizes county and row keys without changing established semantics', ()
   assert.equal(AtlasCore.normalizeRowKey('  Scotland   -  01-16 '), 'SCOTLAND - 01-16');
 });
 
+test('preserves complete OpenElections precinct labels for historical matching', () => {
+  assert.equal(
+    AtlasCore.normalizeOpenElectionsPrecinctLabel('  Precinct   01-07A '),
+    'PRECINCT 01-07A'
+  );
+  assert.equal(
+    AtlasCore.normalizeOpenElectionsPrecinctLabel('Burlington 10'),
+    'BURLINGTON 10'
+  );
+  assert.equal(AtlasCore.normalizeOpenElectionsPrecinctLabel('PCT 243'), 'PCT 243');
+  assert.equal(AtlasCore.normalizeOpenElectionsPrecinctLabel('PRECINCT #4 NORTH'), 'PRECINCT #4 NORTH');
+  assert.equal(AtlasCore.normalizeOpenElectionsPrecinctLabel('Lake Landing'), 'LAKE LANDING');
+  assert.notEqual(
+    AtlasCore.normalizeOpenElectionsPrecinctLabel('PRECINCT 01-01'),
+    AtlasCore.normalizeOpenElectionsPrecinctLabel('PRECINCT 01-02')
+  );
+});
+
 test('normalizes and compacts legacy precinct aliases', () => {
   assert.equal(
     AtlasCore.normalizePrecinctAliasToken('Precinct 04_Arcadia #04'),
