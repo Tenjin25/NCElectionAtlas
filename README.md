@@ -390,7 +390,7 @@ Implementation note:
 - Updated live source:
   - `data/district_contests_2024_lines/state_senate_governor_2024.json`
 - The corrected SD-26 values are **58,375 DEM / 60,243 REP / 6,222 OTH** (`124,840` total; REP +`1.5%`).
-- This promotes the validated temporary senate calibration result into the live 2024-lines senate governor slice.
+- This promotes the validated senate calibration result into the live 2024-lines senate governor slice.
 
 
 ### SD-43 and SD-44 Senate 2024 Contest Sync To 2022 Lines (April 13, 2026)
@@ -1526,7 +1526,6 @@ Each contains scopes for 2022 State House, State Senate, and congressional lines
 Run the audits before promoting results:
 
 ```powershell
-py scripts/audit_urban_sf1_historical_legislative_pilot.py
 py scripts/audit_urban_sf1_district_outliers.py
 py scripts/audit_urban_sf1_historical_2000_full_ballot.py
 py scripts/audit_mecklenburg_2004_vtd_plan_cells.py
@@ -1631,7 +1630,7 @@ The atlas reads 2022-line legislative district slices from:
 - `data/district_contests/*.json`
 - `data/district_contests/manifest.json`
 
-If you generate alternate output folders for experiments or audits, they are not referenced by the live app unless you wire them in explicitly.
+Only the production district-contest folders listed above are referenced by the live app.
 
 ### Rebuilding Demographic Layers
 
