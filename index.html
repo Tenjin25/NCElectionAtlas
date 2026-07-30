@@ -10392,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-29-2012-precinct-bridge';
-    const APP_BUILD_ID = '2026-07-29-2012-precinct-bridge';
+    const DATA_CACHE_BUSTER = '2026-07-30-historical-president-slices';
+    const APP_BUILD_ID = '2026-07-30-historical-president-slices';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -19699,20 +19699,14 @@ document.addEventListener('DOMContentLoaded', function() {
             : null;
           const manifestFile = (manifestEntry?.file || '').toString().trim();
 
-          // Prefer OpenElections CSV for older presidential cycles to avoid a known-missing JSON fetch (and console 404 noise).
-          if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
-            try {
-              const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
-              contestSliceCache.set(key, rows);
-              return rows;
-            } catch (err) {
-              console.warn('Failed to load OpenElections presidential CSV for', year, err?.message || err);
-            }
-          }
-
 	        try {
             if (manifestHasEntries && !manifestEntry) {
               // Manifest is present but this contest/year isn't indexed: don't guess a JSON filename that will 404.
+              if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+                const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+                contestSliceCache.set(key, rows);
+                return rows;
+              }
               const fallback = (electionData || []).filter(row => row.year == year);
               contestSliceCache.set(key, fallback);
               return fallback;
@@ -19726,7 +19720,22 @@ document.addEventListener('DOMContentLoaded', function() {
 	          attachOfficialCountyTotalsToRows(rows, payload);
 	          contestSliceCache.set(key, rows);
 	          return rows;
-	        } catch (_) {
+	        } catch (jsonErr) {
+            // The checked-in presidential slices are the fast path. Keep the
+            // statewide OpenElections file as a resilience fallback only.
+            if (
+              !(manifestHasEntries && !manifestEntry)
+              && contestType === 'president'
+              && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]
+            ) {
+              try {
+                const rows = await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+                contestSliceCache.set(key, rows);
+                return rows;
+              } catch (csvErr) {
+                console.warn('Failed to load presidential slice and CSV fallback for', year, jsonErr?.message || jsonErr, csvErr?.message || csvErr);
+              }
+            }
 	          const fallback = (electionData || []).filter(row => row.year == year);
 	          contestSliceCache.set(key, fallback);
 	          return fallback;
@@ -33860,15 +33869,14 @@ document.addEventListener('DOMContentLoaded', function() {
         : null;
       const manifestFile = (manifestEntry?.file || '').toString().trim();
 
-      if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
-        try {
-          return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
-        } catch (err) {
-          console.warn('Strict presidential CSV load failed for', year, err?.message || err);
-        }
-      }
-
       if (manifestHasEntries && !manifestEntry) {
+        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+          try {
+            return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+          } catch (err) {
+            console.warn('Strict presidential CSV fallback failed for', year, err?.message || err);
+          }
+        }
         return null;
       }
 
@@ -33891,7 +33899,14 @@ document.addEventListener('DOMContentLoaded', function() {
           [`${contestType}_winner`]: r.winner || '',
           [`${contestType}_color`]: r.color || ''
         }));
-      } catch (_) {
+      } catch (jsonErr) {
+        if (contestType === 'president' && PRESIDENT_OPEN_ELECTIONS_CSV[Number(year)]) {
+          try {
+            return await loadPresidentSliceFromOpenElectionsCSV(Number(year));
+          } catch (csvErr) {
+            console.warn('Strict presidential slice and CSV fallback failed for', year, jsonErr?.message || jsonErr, csvErr?.message || csvErr);
+          }
+        }
         return null;
       }
     }

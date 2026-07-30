@@ -1198,6 +1198,14 @@ Implementation note:
 - Added a reusable, county-safe weighted-crosswalk index builder with cross-county rejection and normalized split weights.
 - Bumped the front-end cache-buster/app build token to `2026-07-29-2012-precinct-bridge`.
 
+### Historical presidential load-time fix (July 30, 2026)
+
+- Added compact, prebuilt precinct slices for the 2000, 2004, and 2008 presidential elections and put the existing 2012 slice on the same fast path. Each payload is about 1 MB, versus 11–18 MB for the corresponding statewide OpenElections CSV.
+- The normal and strict contest loaders now prefer these manifest-indexed JSON slices. The raw OpenElections CSV parser remains available only as a resilience fallback if a compact slice cannot be loaded.
+- The slices are pre-matched through the appropriate VAP-weighted historical-to-December-2025 OneMap bridge, retain all 100 county totals, and avoid downloading and parsing every other contest in the election file inside the browser.
+- `scripts/rebuild_statewide_contests_from_sbe_bridge.js` now permits an explicitly requested, missing statewide slice to be created without broadening its default rebuild behavior.
+- Bumped the front-end cache-buster/app build token to `2026-07-30-historical-president-slices`.
+
 ## UI Performance Enhancements
 
 The current `index.html` includes several speed-focused improvements that are already live in the app:
