@@ -26,6 +26,40 @@ test('preserves complete OpenElections precinct labels for historical matching',
   );
 });
 
+test('builds county-scoped weighted precinct bridges from crosswalk rows', () => {
+  const index = AtlasCore.buildCountyPrecinctWeightIndex([
+    {
+      old: 'WAKE - 01-07',
+      current: 'WAKE - 01-07',
+      share: '0.75'
+    },
+    {
+      old: 'WAKE - 01-07',
+      current: 'WAKE - 01-07A',
+      share: '0.25'
+    },
+    {
+      old: 'WAKE - 01-07',
+      current: 'DURHAM - 01',
+      share: '1'
+    }
+  ], {
+    sourceField: 'old',
+    targetField: 'current',
+    weightField: 'share'
+  });
+
+  assert.deepEqual(index.get('WAKE').get('01-07'), [
+    { code: '01-07', weight: 0.75 },
+    { code: '01-07A', weight: 0.25 }
+  ]);
+  assert.deepEqual(index.get('WAKE').get('WAKE - 01-07'), [
+    { code: '01-07', weight: 0.75 },
+    { code: '01-07A', weight: 0.25 }
+  ]);
+  assert.equal(index.has('DURHAM'), false);
+});
+
 test('normalizes and compacts legacy precinct aliases', () => {
   assert.equal(
     AtlasCore.normalizePrecinctAliasToken('Precinct 04_Arcadia #04'),

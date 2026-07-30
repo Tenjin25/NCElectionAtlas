@@ -1191,6 +1191,13 @@ Implementation note:
 - Added a performance follow-up so pre-2012 precinct rows that resolve through the weighted SBE bridge skip the broader alias/code fallback pass.
 - Bumped the front-end cache-buster/app build token to `2026-07-29-2008-precinct-label-fix-2` so deployed clients immediately fetch the corrected and optimized loader.
 
+### Live 2012 SBE-to-OneMap Precinct Bridge (July 29, 2026)
+
+- Connected the existing `data/crosswalks/precinct_sbe_2012_to_onemap_2025_vap.csv` artifact to the live precinct resolver. The file was already used by rebuild scripts but was not loaded by the front end, leaving some renamed and split 2012 precincts dependent on weaker exact/current-name fallbacks.
+- The checked-in bridge contains `2,746` county-scoped 2012 source precinct IDs and directly covers about `98.7%` of geographic 2012 presidential vote after administrative `ACCUMULATED` rows are excluded. Rows without a weighted hit retain the existing exact-code, stable-alias, and county-override fallback path.
+- Added a reusable, county-safe weighted-crosswalk index builder with cross-county rejection and normalized split weights.
+- Bumped the front-end cache-buster/app build token to `2026-07-29-2012-precinct-bridge`.
+
 ## UI Performance Enhancements
 
 The current `index.html` includes several speed-focused improvements that are already live in the app:
