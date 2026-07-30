@@ -10392,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-29-house-2004-urban-calibration';
-    const APP_BUILD_ID = '2026-07-29-house-2004-urban-calibration';
+    const DATA_CACHE_BUSTER = '2026-07-29-2008-precinct-label-fix';
+    const APP_BUILD_ID = '2026-07-29-2008-precinct-label-fix';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -15854,20 +15854,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	      if (!path) throw new Error(`No OpenElections CSV configured for president ${year}`);
 	      const downloadUrl = withCacheBuster(toAbsoluteUrl(path));
 
-	      function extractPrecinctCode(precinctRaw) {
-	        const p = (precinctRaw || '').toString().trim();
-	        if (!p) return '';
-	        const u = p.toUpperCase();
-	        // Non-geographic buckets: keep as-is so totals still reconcile, but they won't match precinct geometry.
-	        if (u.includes('ABSENTEE') || u.includes('PROVISIONAL') || u.includes('ONE STOP') || u.includes('CURBSIDE') || u.startsWith('OS ') || u.startsWith('OS-')) return u;
-	        // Typical formats:
-	        // - "01_PATTERSON" (OpenElections newer years)
-	        // - "01 PATTERSON" (older years)
-	        // - "LI-1 ..." (some counties)
-	        return u.split(/[_\s]+/, 1)[0].trim();
-	      }
-
-	      // Aggregate to precinct key "COUNTY - CODE" where CODE is the first token extracted from OpenElections `precinct`.
+	      // Preserve the complete OpenElections label. Historical bridge and alias matching
+	      // need it for name-only precincts and verbose labels such as "PRECINCT 01-01".
+	      // Reducing these to the first word collapsed many distinct 2008 precincts together.
 	      const byPrecinct = new Map(); // key -> {dem, rep, other, demCand, repCand}
 	      const officeOk = (s) => (s || '').toString().toUpperCase().includes('PRESIDENT');
 
@@ -15888,9 +15877,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	                const county = (r.county || '').toString().trim().toUpperCase();
 	                const precinctRaw = (r.precinct || '').toString().trim();
 	                if (!county || !precinctRaw) return;
-	                const code = extractPrecinctCode(precinctRaw);
-	                if (!code) return;
-	                const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+	                const precinctLabel = window.AtlasCore.normalizeOpenElectionsPrecinctLabel(precinctRaw);
+	                if (!precinctLabel) return;
+	                const key = `${county} - ${precinctLabel}`.replace(/\s+/g, ' ').trim();
 	                const party = (r.party || '').toString().trim().toUpperCase();
 	                const cand = (r.candidate || '').toString().trim();
 	                const votes = Number(r.votes) || 0;
@@ -15916,9 +15905,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	          const county = (r.county || '').toString().trim().toUpperCase();
 	          const precinctRaw = (r.precinct || '').toString().trim();
 	          if (!county || !precinctRaw) return;
-	          const code = extractPrecinctCode(precinctRaw);
-	          if (!code) return;
-	          const key = `${county} - ${code}`.replace(/\s+/g, ' ').trim();
+	          const precinctLabel = window.AtlasCore.normalizeOpenElectionsPrecinctLabel(precinctRaw);
+	          if (!precinctLabel) return;
+	          const key = `${county} - ${precinctLabel}`.replace(/\s+/g, ' ').trim();
 	          const party = (r.party || '').toString().trim().toUpperCase();
 	          const cand = (r.candidate || '').toString().trim();
 	          const votes = Number(r.votes) || 0;

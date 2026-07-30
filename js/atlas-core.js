@@ -280,6 +280,10 @@
     return (value || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
   }
 
+  function normalizeOpenElectionsPrecinctLabel(value) {
+    return (value || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+  }
+
   function signedMarginPctFromVotes(demVotes, repVotes, totalVotes) {
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
@@ -317,6 +321,7 @@
     addCompactCodeVariants,
     addPrefixStrippedNumericVariants,
     normalizeRowKey,
+    normalizeOpenElectionsPrecinctLabel,
     signedMarginPctFromVotes,
     rescaleVoteSetToTargetTotal
   };
