@@ -97,6 +97,35 @@ test('compact county slices stay small and contain one row per county', async ({
   expect(payload.rows.every((row) => row && row.county && !String(row.county).includes(' - '))).toBeTruthy();
 });
 
+test('historical presidential slices avoid the statewide CSV hot path', async ({ request }) => {
+  const manifestResponse = await request.get('/data/contests/manifest.json');
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest = await manifestResponse.json();
+
+  for (const year of [2000, 2004, 2008, 2012]) {
+    const entry = (manifest.files || []).find((row) => (
+      row?.contest_type === 'president' && Number(row.year) === year && !row.scope
+    ));
+    expect(entry?.file).toBe(`president_${year}.json`);
+
+    const response = await request.get(`/data/contests/${entry.file}`);
+    expect(response.ok()).toBeTruthy();
+    const body = await response.body();
+    expect(body.length).toBeLessThan(1_500_000);
+    const payload = JSON.parse(body.toString('utf8'));
+    expect(payload.rows.length).toBeGreaterThan(2_500);
+    expect(Object.keys(payload.county_totals || {})).toHaveLength(100);
+
+    const precinctTotal = payload.rows.reduce((sum, row) => (
+      sum + Number(row.dem_votes || 0) + Number(row.rep_votes || 0) + Number(row.other_votes || 0)
+    ), 0);
+    const countyTotal = Object.values(payload.county_totals || {}).reduce((sum, row) => (
+      sum + Number(row.dem_votes || 0) + Number(row.rep_votes || 0) + Number(row.other_votes || 0)
+    ), 0);
+    expect(precinctTotal).toBe(countyTotal);
+  }
+});
+
 test('DRA colors are the default while Atlas remains a persisted option', async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem('nc-atlas-partisan-palette', 'dra');
@@ -111,7 +140,7 @@ test('DRA colors are the default while Atlas remains a persisted option', async 
     observer.observe(document, { childList: true, subtree: true });
   });
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-29-house-2004-urban-calibration');
+  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-30-historical-president-slices');
   const toggle = page.locator('#dra-palette-toggle');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('body')).toHaveClass(/dra-palette/);

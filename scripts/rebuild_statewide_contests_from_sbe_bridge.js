@@ -719,6 +719,20 @@ function rebuildYear(repoRoot, year, requestedFiles) {
     && !entry.scope
     && (!requestedFiles.length || requestedFiles.includes(entry.file))
   ));
+  // Explicit file arguments may intentionally request a new statewide slice.
+  // This keeps the default all-years rebuild conservative while allowing a
+  // compact prebuilt payload to replace an expensive browser-side CSV parse.
+  if (requestedFiles.length) {
+    const existingTargetFiles = new Set(targets.map((entry) => entry.file));
+    requestedFiles.forEach((fileName) => {
+      const match = /^(.+)_(\d{4})\.json$/i.exec(fileName);
+      if (!match || Number(match[2]) !== Number(year) || existingTargetFiles.has(fileName)) return;
+      const contestType = match[1];
+      if (!CONTEST_TYPE_TO_OFFICE_ALIASES[contestType]) return;
+      targets.push({ year, contest_type: contestType, file: fileName });
+      existingTargetFiles.add(fileName);
+    });
+  }
 
   const csvPath = path.join(repoRoot, yearCfg.csv);
   const bridgePath = path.join(repoRoot, yearCfg.bridge);
@@ -744,11 +758,14 @@ function rebuildYear(repoRoot, year, requestedFiles) {
   for (const entry of targets) {
     const fileName = entry.file;
     const outPath = path.join(contestDir, fileName);
-    if (!fs.existsSync(outPath)) {
-      summary.skipped.push({ file: fileName, reason: 'missing_file' });
-      continue;
-    }
-    const existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+    const existing = fs.existsSync(outPath)
+      ? JSON.parse(fs.readFileSync(outPath, 'utf8'))
+      : {
+          year,
+          contest_type: entry.contest_type,
+          meta: {},
+          rows: [],
+        };
     const contestType = String(existing.contest_type || entry.contest_type || '').trim();
     const office = resolveOfficeName(
       (existing.meta || {}).office,
