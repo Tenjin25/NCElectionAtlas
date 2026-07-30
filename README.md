@@ -1188,7 +1188,8 @@ Implementation note:
 - The old behavior collapsed `2,768` geographic 2008 labels into only `1,938` lookup keys, losing `830` precinct distinctions across `59` counties. The most visible failures included Wake (`198` precincts collapsed to one `PRECINCT` key), Mecklenburg (`195` collapsed to one `PCT` key), Gates (`6` collapsed to one `PRECINCT` key), and Hyde multiword labels such as `LAKE LANDING`.
 - Preserving the source labels lets the existing SBE 2006-to-OneMap weighted bridge, exact-code matching, and county alias fallbacks resolve those precincts as intended; this was a loader-key regression rather than a need to replace the underlying crosswalk.
 - Added core regression coverage for Wake-style verbose codes, Mecklenburg `PCT` labels, Gates numbered/north-south labels, and Hyde name-only labels.
-- Bumped the front-end cache-buster/app build token to `2026-07-29-2008-precinct-label-fix` so deployed clients immediately fetch the corrected loader.
+- Added a performance follow-up so pre-2012 precinct rows that resolve through the weighted SBE bridge skip the broader alias/code fallback pass.
+- Bumped the front-end cache-buster/app build token to `2026-07-29-2008-precinct-label-fix-2` so deployed clients immediately fetch the corrected and optimized loader.
 
 ## UI Performance Enhancements
 

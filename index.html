@@ -10392,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-07-29-2008-precinct-label-fix';
-    const APP_BUILD_ID = '2026-07-29-2008-precinct-label-fix';
+    const DATA_CACHE_BUSTER = '2026-07-29-2008-precinct-label-fix-2';
+    const APP_BUILD_ID = '2026-07-29-2008-precinct-label-fix-2';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -34656,8 +34656,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const repCand = (row[`${contestType}_rep_candidate`] || '').toString();
 
           if (needsPrecinctDetail && !skipPrecinctRowBuild) {
-            const norms = precinctNormVariants(rowName);
             const weightedNorms = sbe2006WeightedNormEntries(rowName);
+            // The weighted SBE bridge is authoritative for pre-2012 historical rows.
+            // Only run the broader alias/code fallback when that bridge has no hit.
+            const norms = weightedNorms.length ? null : precinctNormVariants(rowName);
             const adjustedSigned = signedMarginPctFromVotes(demVotes, repVotes, totalVotes);
             const adjustedWinner = adjustedSigned > 0 ? 'REPUBLICAN' : (adjustedSigned < 0 ? 'DEMOCRAT' : 'TIE');
             const adjustedRow = {
@@ -34727,7 +34729,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
               });
             } else {
-              norms.forEach(n => {
+              (norms || []).forEach(n => {
                 const key = (n || '').toString().trim().toUpperCase();
                 if (!key) return;
                 const primaryNorm = normalizeCountyName(rowName);
