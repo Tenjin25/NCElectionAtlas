@@ -1129,6 +1129,12 @@ Implementation note:
 | Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 
+### Legacy Nonpartisan Judicial Manifest Cleanup (August 8, 2026)
+
+- Removed the legacy 2008 Tyson Seat and 2010 Elmore Seat entries from the active district manifests for the 2022, 2024, and 2026 line datasets.
+- These contests remain available in the archival/raw election material, but are no longer exposed in district dropdowns because both races were same-party/non-major-party for the contest visibility model.
+- Bumped the front-end cache-buster/app build token to `2026-08-08-remove-legacy-judicial-manifests`.
+
 ### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
 
 - Removed the uncontested 2012 Attorney General contest from the precinct and county manifests and deleted both derived result slices.
