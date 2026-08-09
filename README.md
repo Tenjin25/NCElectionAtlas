@@ -1135,6 +1135,13 @@ Implementation note:
 - These contests remain available in the archival/raw election material, but are no longer exposed in district dropdowns because both races were same-party/non-major-party for the contest visibility model.
 - Bumped the front-end cache-buster/app build token to `2026-08-08-remove-legacy-judicial-manifests`.
 
+### Congressional U.S. House Results (August 9, 2026)
+
+- Added all 14 certified U.S. House results from the November 2022 and November 2024 general-election precinct returns to the Congressional district selector.
+- Each result is displayed on the contemporaneous congressional plan: 2022 results on the 2022 lines, and 2024 results on the 2024 lines. The new slices retain Democratic, Republican, and other-party totals plus the major-party candidate names.
+- Added `scripts/build_congressional_us_house_slices.py` so the direct district totals and both manifest entries can be reproduced from the source precinct returns.
+- Bumped the front-end cache-buster/app build token to `2026-08-09-congressional-us-house-results`.
+
 ### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
 
 - Removed the uncontested 2012 Attorney General contest from the precinct and county manifests and deleted both derived result slices.
