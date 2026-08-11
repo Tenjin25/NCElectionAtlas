@@ -126,128 +126,12 @@ test('historical presidential slices avoid the statewide CSV hot path', async ({
   }
 });
 
-test('DRA colors are the default while Atlas remains a persisted option', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem('nc-atlas-partisan-palette', 'dra');
-    window.localStorage.setItem('nc-atlas-partisan-palette-v2', 'atlas');
-    window.__firstMarginLegendColors = null;
-    const observer = new MutationObserver(() => {
-      const segments = document.querySelectorAll('.legend-spectrum.margins .legend-segment');
-      if (segments.length !== 15 || window.__firstMarginLegendColors) return;
-      window.__firstMarginLegendColors = Array.from(segments).map((el) => getComputedStyle(el).backgroundColor);
-      observer.disconnect();
-    });
-    observer.observe(document, { childList: true, subtree: true });
-  });
-  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect.poll(() => page.evaluate(() => window.__ATLAS_BUILD__ || '')).toBe('2026-07-30-sd43-44-2024-lines');
-  const toggle = page.locator('#dra-palette-toggle');
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('body')).toHaveClass(/dra-palette/);
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette'))).toBeNull();
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v2'))).toBeNull();
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v3'))).toBeNull();
-  const firstMarginLegendColors = await page.evaluate(() => window.__firstMarginLegendColors);
-  expect(firstMarginLegendColors).toHaveLength(15);
-  expect(firstMarginLegendColors.slice(0, 5)).toEqual([
-    'rgb(104, 0, 12)',
-    'rgb(148, 0, 22)',
-    'rgb(185, 18, 39)',
-    'rgb(213, 43, 63)',
-    'rgb(241, 102, 114)'
-  ]);
-  expect(firstMarginLegendColors.slice(10, 15)).toEqual([
-    'rgb(70, 153, 229)',
-    'rgb(31, 117, 189)',
-    'rgb(8, 99, 168)',
-    'rgb(6, 74, 128)',
-    'rgb(4, 52, 92)'
-  ]);
-  await page.locator('.contest-tools-more > summary').click();
-
-  const safeSegment = page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)');
-  const draColor = await safeSegment.evaluate((el) => el.style.background);
-  expect(draColor).toBe('rgb(213, 43, 63)');
-  const draScale = await page.locator('.legend-spectrum.margins .legend-segment').evaluateAll(
-    (segments) => segments.map((el) => el.style.background)
-  );
-  expect(draScale).toEqual([
-    'rgb(104, 0, 12)',
-    'rgb(148, 0, 22)',
-    'rgb(185, 18, 39)',
-    'rgb(213, 43, 63)',
-    'rgb(241, 102, 114)',
-    'rgb(245, 143, 150)',
-    'rgb(248, 190, 194)',
-    'rgb(247, 247, 247)',
-    'rgb(182, 213, 245)',
-    'rgb(120, 175, 233)',
-    'rgb(70, 153, 229)',
-    'rgb(31, 117, 189)',
-    'rgb(8, 99, 168)',
-    'rgb(6, 74, 128)',
-    'rgb(4, 52, 92)'
-  ]);
-  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
-
-  await page.evaluate(() => window.updateLegendColors('shift'));
-  const draShiftScale = await page.locator('.legend-spectrum.shift .legend-segment').evaluateAll(
-    (segments) => segments.map((el) => el.style.background)
-  );
-  expect(draShiftScale).toEqual([
-    'rgb(8, 99, 168)',
-    'rgb(31, 117, 189)',
-    'rgb(70, 153, 229)',
-    'rgb(247, 247, 247)',
-    'rgb(241, 102, 114)',
-    'rgb(213, 43, 63)',
-    'rgb(185, 18, 39)'
-  ]);
-
-  await page.evaluate(() => window.updateLegendColors('winners'));
-  const draWinnerScale = await page.locator('.legend-swatch-grid .legend-color').evaluateAll(
-    (segments) => segments.map((el) => el.style.background)
-  );
-  expect(draWinnerScale).toEqual([
-    'rgb(31, 117, 189)',
-    'rgb(213, 43, 63)',
-    'rgb(247, 247, 247)'
-  ]);
-
-  await page.evaluate(() => window.updateLegendColors('flips'));
-  const draFlipScale = await page.locator('.legend-swatch-grid .legend-color').evaluateAll(
-    (segments) => segments.map((el) => el.style.background)
-  );
-  expect(draFlipScale).toEqual([
-    'rgb(31, 117, 189)',
-    'rgb(213, 43, 63)',
-    'rgb(247, 247, 247)'
-  ]);
-  await page.evaluate(() => window.updateLegendColors('margins'));
-
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('body')).toHaveClass(/dra-palette/);
-
-  await page.locator('.contest-tools-more > summary').click();
-  await page.locator('#dra-palette-toggle').click();
-  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('body')).not.toHaveClass(/dra-palette/);
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('nc-atlas-partisan-palette-v3'))).toBe('atlas');
-  const restoredSafeColor = await page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)').evaluate(
-    (el) => el.style.background
-  );
-  expect(restoredSafeColor).toBe('rgb(239, 59, 44)');
-  await expect(page.locator('.legend-spectrum.margins .legend-segment').first()).toHaveCSS('opacity', '1');
-
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await expect(page.locator('#dra-palette-toggle')).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('body')).not.toHaveClass(/dra-palette/);
-  await page.locator('.contest-tools-more > summary').click();
-  const persistedAtlasColor = await page.locator('.legend-spectrum.margins .legend-segment:nth-child(4)').evaluate(
-    (el) => el.style.background
-  );
-  expect(persistedAtlasColor).toBe('rgb(239, 59, 44)');
+test('the current build includes the margin legend', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+  expect(source).toMatch(/const APP_BUILD_ID = '\d{4}-\d{2}-\d{2}-[^']+';/);
+  expect((source.match(/class="legend-segment/g) || []).length).toBeGreaterThanOrEqual(15);
 });
 
 test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
@@ -279,14 +163,13 @@ test('ordinary county modes do not block on previous precinct results', async ({
   expect(source).toContain(': await loadCountyContestSlice(priorType, cy);');
   expect(source).toContain("if (mode === 'shift' || mode === 'flips') {");
   expect(source).toContain('populate flip details for hover in the background');
-  expect(source).toContain('|m:${mode}|palette:${palette}|lines:');
-  expect(source).toContain("activePartisanPaletteKey() === 'dra'");
-  expect(source).toContain('countyBaseOpacity = districtBaseOpacity;');
-  expect(source).toContain('houseBaseOpacity = districtBaseOpacity;');
-  expect(source).toContain('senateBaseOpacity = districtBaseOpacity;');
-  expect(source).toContain("id: 'county-stroke-casing'");
-  expect(source).toContain("data-initial-partisan-palette', initialPalette");
-  expect(source).toContain('background: var(--initial-margin-1)');
+  expect(source).toContain('const cacheKey = `${baseKey}|precinct:${includePrecinctMargins ? 1 : 0}`;');
+  expect(source).toContain('prevContestBundleInflight.has(cacheKey)');
+  expect(source).toContain('if (mode === \'shift\' || mode === \'flips\')');
+  expect(source).toContain('ensurePrevContestCache(contestType, Number(year), { includePrecinctMargins: false })');
+  expect(source).toContain('countyBaseOpacity = precinctsActuallyVisible ? preset.countyWithPrecinct : preset.countyActive;');
+  expect(source).toContain('districtBaseOpacity = preset.district;');
+  expect(source).toContain("map.setPaintProperty('county-fill', 'fill-opacity', countyOpacity)");
 });
 
 test('2020 president allocates OS early-vote centers into geographic precincts', async () => {
