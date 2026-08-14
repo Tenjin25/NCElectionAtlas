@@ -1123,9 +1123,9 @@ Implementation note:
 | Annihilation | 40+ | `#67000d` | `#08306b` |
 | Dominant | 30+ | `#a50f15` | `#08519c` |
 | Stronghold | 20+ | `#cb181d` | `#2876b5` |
-| Safe | 10+ | `#ef3b2c` | `#3b86c8` |
-| Likely | 5.5+ | `#fb6a4a` | `#5aa4d0` |
-| Lean | 1+ | `#f99a90` | `#8bbde0` |
+| Safe | 10+ | `#e93a2d` | `#3b86c8` |
+| Likely | 5.5+ | `#f7634b` | `#5aa4d0` |
+| Lean | 1+ | `#fca793` | `#8bbde0` |
 | Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 
@@ -1151,8 +1151,9 @@ Implementation note:
 ### Democratic Mid-Ramp Chroma (August 14, 2026)
 
 - Deepened Democratic Lean / Likely / Safe (`#8bbde0` / `#5aa4d0` / `#3b86c8`) so precinct-scale competitive blues match GOP visual weight without collapsing into Stronghold `#2876b5`.
+- Restored the pre-today live Republican mid-tier stops and comment phrasing (`#e93a2d` / `#f7634b` / `#fca793`, `original atlas middle tier`).
 - Left Tilt, Stronghold, Dominant, and Annihilation unchanged.
-- Bumped the front-end cache-buster/app build token to `2026-08-14-dem-midramp-chroma-v3`.
+- Bumped the front-end cache-buster/app build token to `2026-08-14-dem-midramp-chroma-v4`.
 
 ### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
 
