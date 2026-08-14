@@ -7,9 +7,9 @@ const SHOT_DIR = '/opt/cursor/artifacts/screenshots';
 
 const DEM_MID_RAMP = [
   { label: 'Tilt', margin: 0.5, hex: '#c7ddf0' },
-  { label: 'Lean', margin: 1, hex: '#9ecae1' },
-  { label: 'Likely', margin: 5.5, hex: '#6baed6' },
-  { label: 'Safe', margin: 10, hex: '#4795d2' },
+  { label: 'Lean', margin: 1, hex: '#8bbde0' },
+  { label: 'Likely', margin: 5.5, hex: '#5aa4d0' },
+  { label: 'Safe', margin: 10, hex: '#3b86c8' },
   { label: 'Stronghold', margin: 20, hex: '#2876b5' },
   { label: 'Dominant', margin: 30, hex: '#08519c' },
   { label: 'Annihilation', margin: 40, hex: '#08306b' }
@@ -86,7 +86,7 @@ test.describe('live Democratic margin ramp', () => {
     await page.waitForFunction(() => {
       try {
         const fill = map.getPaintProperty('county-fill', 'fill-color');
-        return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#4795d2');
+        return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#3b86c8');
       } catch (_) {
         return false;
       }
@@ -126,15 +126,15 @@ test.describe('live Democratic margin ramp', () => {
 
     expect(painted.live).toEqual({
       tilt: '#c7ddf0',
-      lean: '#9ecae1',
-      likely: '#6baed6',
-      safe: '#4795d2'
+      lean: '#8bbde0',
+      likely: '#5aa4d0',
+      safe: '#3b86c8'
     });
     expect(painted.legend.slice(8)).toEqual(DEM_MID_RAMP.map((stop) => stop.hex));
-    expect(painted.pitt).toBe('#6baed6');
-    expect(painted.hoke).toBe('#6baed6');
-    expect(painted.forsyth).toBe('#4795d2');
-    expect(painted.warren).toBe('#4795d2');
+    expect(painted.pitt).toBe('#5aa4d0');
+    expect(painted.hoke).toBe('#5aa4d0');
+    expect(painted.forsyth).toBe('#3b86c8');
+    expect(painted.warren).toBe('#3b86c8');
     expect(painted.newHanover).toBe('#c7ddf0');
     expect(relativeLuminance(painted.live.likely)).toBeLessThan(relativeLuminance(painted.live.lean));
     expect(relativeLuminance(painted.live.safe)).toBeLessThan(relativeLuminance(painted.live.likely));
