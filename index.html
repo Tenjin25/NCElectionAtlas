@@ -560,7 +560,8 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet'>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Regular + Bold only: matches the earlier incognito/system-ui rendering. -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
 html, body {
   height: 100vh;
@@ -569,24 +570,19 @@ html, body {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  font-synthesis: none;
 }
 body {
   height: 100vh;
   margin: 0;
   padding: 0;
   font-family: 'Manrope', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-weight: 400;
   color: #0f172a;
   overflow: hidden;
   touch-action: pan-x pan-y;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-/* Keep native controls on the same atlas type system in every browser mode. */
-button,
-input,
-select,
-textarea {
-  font: inherit;
 }
 #map {
   position: absolute;
@@ -10138,7 +10134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #9ecae1;"></span>
                 <span class="legend-segment legend-color" style="background: #5b9fd0;"></span>
                 <span class="legend-segment legend-color" style="background: #3f8fc9;"></span>
-                <span class="legend-segment legend-color" style="background: #3388c5;"></span>
+                <span class="legend-segment legend-color" style="background: #2f80bd;"></span>
                 <span class="legend-segment legend-color" style="background: #08519c;"></span>
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
@@ -10399,8 +10395,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-14-dem-compromise-font-v7';
-    const APP_BUILD_ID = '2026-08-14-dem-compromise-font-v7';
+    const DATA_CACHE_BUSTER = '2026-08-14-dem-stronghold-2f80bd-v1';
+    const APP_BUILD_ID = '2026-08-14-dem-stronghold-2f80bd-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33723,7 +33719,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 30) {
         return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-          return winner === 'R' ? '#cb181d' : '#3388c5'; // Stronghold — separated blue, OG red
+          return winner === 'R' ? '#cb181d' : '#2f80bd'; // Stronghold — separated blue, OG red
       } else if (marginPct >= 10) {
           return winner === 'R' ? '#ef3b2c' : '#3f8fc9'; // Safe — moderated blue middle tier
       } else if (marginPct >= 5.5) {
