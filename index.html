@@ -10138,7 +10138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #9ecae1;"></span>
                 <span class="legend-segment legend-color" style="background: #5b9fd0;"></span>
                 <span class="legend-segment legend-color" style="background: #3f8fc9;"></span>
-                <span class="legend-segment legend-color" style="background: #3a8bc8;"></span>
+                <span class="legend-segment legend-color" style="background: #3388c5;"></span>
                 <span class="legend-segment legend-color" style="background: #08519c;"></span>
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
@@ -10399,8 +10399,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-14-dem-compromise-font-v6';
-    const APP_BUILD_ID = '2026-08-14-dem-compromise-font-v6';
+    const DATA_CACHE_BUSTER = '2026-08-14-dem-compromise-font-v7';
+    const APP_BUILD_ID = '2026-08-14-dem-compromise-font-v7';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33723,7 +33723,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 30) {
         return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-          return winner === 'R' ? '#cb181d' : '#3a8bc8'; // Stronghold — balanced blue, OG red
+          return winner === 'R' ? '#cb181d' : '#3388c5'; // Stronghold — separated blue, OG red
       } else if (marginPct >= 10) {
           return winner === 'R' ? '#ef3b2c' : '#3f8fc9'; // Safe — moderated blue middle tier
       } else if (marginPct >= 5.5) {
