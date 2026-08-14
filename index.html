@@ -1474,7 +1474,6 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   background: rgba(255, 255, 255, 0.95);
   color: var(--ui-text);
   font-size: 14px;
-  font-weight: 700;
 }
 
 /* Legend */
@@ -20932,7 +20931,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let breakdownRow = '';
         if (isMobile) {
           const chips = breakdownItems.map(item => (
-            `<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(15,23,42,0.12);background:#fff;white-space:nowrap;color:${item.color};font-size:14px;font-weight:700;">` +
+            `<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(15,23,42,0.12);background:#fff;white-space:nowrap;color:${item.color};font-size:14px;">` +
             `${item.label}: ${item.votes.toLocaleString()} (${item.pct.toFixed(2)}%)</div>`
           )).join('');
           breakdownRow = `<div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 2px 0;margin-top:8px;">${chips}</div>`;
