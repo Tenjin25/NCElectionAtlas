@@ -1152,7 +1152,7 @@ Implementation note:
 
 - Deepened Democratic Lean / Likely / Safe (`#8bbde0` / `#5aa4d0` / `#3b86c8`) so precinct-scale competitive blues match GOP visual weight without collapsing into Stronghold `#2876b5`.
 - Left Tilt, Stronghold, Dominant, and Annihilation unchanged.
-- Bumped the front-end cache-buster/app build token to `2026-08-14-dem-midramp-chroma`.
+- Bumped the front-end cache-buster/app build token to `2026-08-14-dem-midramp-chroma-v2`.
 
 ### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
 
