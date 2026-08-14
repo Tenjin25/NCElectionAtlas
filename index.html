@@ -10128,9 +10128,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #f4c9c5;"></span>
                 <span class="legend-segment legend-color" style="background: #f7f7f7; border-left: 1px solid rgba(15,23,42,0.12); border-right: 1px solid rgba(15,23,42,0.12);"></span>
                 <span class="legend-segment legend-color" style="background: #c7ddf0;"></span>
-                <span class="legend-segment legend-color" style="background: #8bbde0;"></span>
-                <span class="legend-segment legend-color" style="background: #5aa4d0;"></span>
-                <span class="legend-segment legend-color" style="background: #3b86c8;"></span>
+                <span class="legend-segment legend-color" style="background: #90c2e4;"></span>
+                <span class="legend-segment legend-color" style="background: #4b9cd0;"></span>
+                <span class="legend-segment legend-color" style="background: #3182ce;"></span>
                 <span class="legend-segment legend-color" style="background: #2876b5;"></span>
                 <span class="legend-segment legend-color" style="background: #08519c;"></span>
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
@@ -10392,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-14-dem-midramp-chroma-v3';
-    const APP_BUILD_ID = '2026-08-14-dem-midramp-chroma-v3';
+    const DATA_CACHE_BUSTER = '2026-08-14-dem-match-aug12-reds-v1';
+    const APP_BUILD_ID = '2026-08-14-dem-match-aug12-reds-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33718,11 +33718,11 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 20) {
         return winner === 'R' ? '#cb181d' : '#2876b5'; // Stronghold — midpoint blue, OG red
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#ef3b2c' : '#3b86c8'; // Safe — matched GOP weight, above Stronghold
+        return winner === 'R' ? '#ef3b2c' : '#3182ce'; // Safe — paired to Aug 12 GOP Safe luminance
       } else if (marginPct >= 5.5) {
-        return winner === 'R' ? '#fb6a4a' : '#5aa4d0'; // Likely — deeper than Lean, still under Safe
+        return winner === 'R' ? '#fb6a4a' : '#4b9cd0'; // Likely — paired to Aug 12 GOP Likely luminance
       } else if (marginPct >= 1.0) {
-        return winner === 'R' ? '#f99a90' : '#8bbde0'; // Lean — more chroma than Tilt, lighter than Likely
+        return winner === 'R' ? '#f99a90' : '#90c2e4'; // Lean — paired to Aug 12 GOP Lean luminance
       } else if (marginPct >= 0.5) {
         return winner === 'R' ? '#f4c9c5' : '#c7ddf0'; // Balanced Tilt shades
       } else {
