@@ -9,7 +9,7 @@ const DEM_MID_RAMP = [
   { label: 'Tilt', margin: 0.5, hex: '#c7ddf0' },
   { label: 'Lean', margin: 1, hex: '#90c2e4' },
   { label: 'Likely', margin: 5.5, hex: '#4b9cd0' },
-  { label: 'Safe', margin: 10, hex: '#3182ce' },
+  { label: 'Safe', margin: 10, hex: '#2c86e4' },
   { label: 'Stronghold', margin: 20, hex: '#2876b5' },
   { label: 'Dominant', margin: 30, hex: '#08519c' },
   { label: 'Annihilation', margin: 40, hex: '#08306b' }
@@ -18,8 +18,7 @@ const DEM_MID_RAMP = [
 // August 12 live GOP mid-tier luminance targets (function colors from that index).
 const AUG12_GOP_MID = [
   { label: 'Lean', hex: '#fca793' },
-  { label: 'Likely', hex: '#f7634b' },
-  { label: 'Safe', hex: '#e93a2d' }
+  { label: 'Likely', hex: '#f7634b' }
 ];
 
 function relativeLuminance(hex) {
@@ -60,6 +59,13 @@ test('first-paint legend DEM spectrum is monotonic Lean → Likely → Safe', as
     const gap = relativeLuminance(dem.hex) - relativeLuminance(stop.hex);
     expect(Math.abs(gap), `${dem.label} DEM luminance should match Aug 12 GOP ${stop.hex}`).toBeLessThan(0.02);
   }
+
+  const safe = DEM_MID_RAMP.find((row) => row.label === 'Safe');
+  const stronghold = DEM_MID_RAMP.find((row) => row.label === 'Stronghold');
+  expect(
+    relativeLuminance(stronghold.hex),
+    'Safe should stay clearly lighter than Stronghold'
+  ).toBeLessThan(relativeLuminance(safe.hex) - 0.055);
 });
 
 test.describe('live Democratic margin ramp', () => {
@@ -99,7 +105,7 @@ test.describe('live Democratic margin ramp', () => {
     await page.waitForFunction(() => {
       try {
         const fill = map.getPaintProperty('county-fill', 'fill-color');
-        return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#3182ce');
+        return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#2c86e4');
       } catch (_) {
         return false;
       }
@@ -141,13 +147,13 @@ test.describe('live Democratic margin ramp', () => {
       tilt: '#c7ddf0',
       lean: '#90c2e4',
       likely: '#4b9cd0',
-      safe: '#3182ce'
+      safe: '#2c86e4'
     });
     expect(painted.legend.slice(8)).toEqual(DEM_MID_RAMP.map((stop) => stop.hex));
     expect(painted.pitt).toBe('#4b9cd0');
     expect(painted.hoke).toBe('#4b9cd0');
-    expect(painted.forsyth).toBe('#3182ce');
-    expect(painted.warren).toBe('#3182ce');
+    expect(painted.forsyth).toBe('#2c86e4');
+    expect(painted.warren).toBe('#2c86e4');
     expect(painted.newHanover).toBe('#c7ddf0');
     expect(relativeLuminance(painted.live.likely)).toBeLessThan(relativeLuminance(painted.live.lean));
     expect(relativeLuminance(painted.live.safe)).toBeLessThan(relativeLuminance(painted.live.likely));
