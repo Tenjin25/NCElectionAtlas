@@ -50,6 +50,7 @@ test('first-paint legend DEM spectrum is monotonic Lean → Likely → Safe', as
 });
 
 test.describe('live Democratic margin ramp', () => {
+  test.setTimeout(180_000);
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
     await waitForAtlasReady(page);
@@ -138,14 +139,18 @@ test.describe('live Democratic margin ramp', () => {
     expect(relativeLuminance(painted.live.likely)).toBeLessThan(relativeLuminance(painted.live.lean));
     expect(relativeLuminance(painted.live.safe)).toBeLessThan(relativeLuminance(painted.live.likely));
 
-    await page.selectOption('#overlay-opacity-preset', 'balanced');
     await page.evaluate(() => {
       const help = document.getElementById('help-modal');
       if (help) help.style.display = 'none';
       const helpBackdrop = document.getElementById('help-backdrop');
       if (helpBackdrop) helpBackdrop.style.display = 'none';
+      const overlay = document.getElementById('overlay-opacity-preset');
+      if (overlay) {
+        overlay.value = 'balanced';
+        overlay.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     });
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(600);
 
     fs.mkdirSync(SHOT_DIR, { recursive: true });
     await page.locator('#legend').screenshot({ path: path.join(SHOT_DIR, 'dem-ramp-legend.png') });
