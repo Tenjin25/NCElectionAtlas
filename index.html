@@ -581,6 +581,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* Keep native controls on the same atlas type system in every browser mode. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
 #map {
   position: absolute;
   top: 0;
@@ -10128,10 +10135,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-segment legend-color" style="background: #f4c9c5;"></span>
                 <span class="legend-segment legend-color" style="background: #f7f7f7; border-left: 1px solid rgba(15,23,42,0.12); border-right: 1px solid rgba(15,23,42,0.12);"></span>
                 <span class="legend-segment legend-color" style="background: #c7ddf0;"></span>
-                <span class="legend-segment legend-color" style="background: #90c2e4;"></span>
-                <span class="legend-segment legend-color" style="background: #4b9cd0;"></span>
-                <span class="legend-segment legend-color" style="background: #2c86e4;"></span>
-                <span class="legend-segment legend-color" style="background: #2876b5;"></span>
+                <span class="legend-segment legend-color" style="background: #9ecae1;"></span>
+                <span class="legend-segment legend-color" style="background: #5b9fd0;"></span>
+                <span class="legend-segment legend-color" style="background: #3f8fc9;"></span>
+                <span class="legend-segment legend-color" style="background: #3a8bc8;"></span>
                 <span class="legend-segment legend-color" style="background: #08519c;"></span>
                 <span class="legend-segment legend-color" style="background: #08306b;"></span>
               </div>
@@ -10392,8 +10399,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-14-dem-match-aug12-reds-v2';
-    const APP_BUILD_ID = '2026-08-14-dem-match-aug12-reds-v2';
+    const DATA_CACHE_BUSTER = '2026-08-14-dem-compromise-font-v6';
+    const APP_BUILD_ID = '2026-08-14-dem-compromise-font-v6';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -33716,13 +33723,13 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 30) {
         return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#cb181d' : '#2876b5'; // Stronghold — midpoint blue, OG red
+          return winner === 'R' ? '#cb181d' : '#3a8bc8'; // Stronghold — balanced blue, OG red
       } else if (marginPct >= 10) {
-        return winner === 'R' ? '#ef3b2c' : '#2c86e4'; // Safe — separated from Stronghold, still under Likely
+          return winner === 'R' ? '#ef3b2c' : '#3f8fc9'; // Safe — moderated blue middle tier
       } else if (marginPct >= 5.5) {
-        return winner === 'R' ? '#fb6a4a' : '#4b9cd0'; // Likely — paired to Aug 12 GOP Likely luminance
+          return winner === 'R' ? '#fb6a4a' : '#5b9fd0'; // Likely — moderated blue middle tier
       } else if (marginPct >= 1.0) {
-        return winner === 'R' ? '#f99a90' : '#90c2e4'; // Lean — paired to Aug 12 GOP Lean luminance
+          return winner === 'R' ? '#f99a90' : '#9ecae1'; // Lean — deeper separation from Tilt
       } else if (marginPct >= 0.5) {
         return winner === 'R' ? '#f4c9c5' : '#c7ddf0'; // Balanced Tilt shades
       } else {
