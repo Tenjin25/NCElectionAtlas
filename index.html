@@ -560,8 +560,7 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet'>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Regular + Bold only: matches incognito system-ui (400/700). Medium/ExtraBold made cached Manrope look heavier. -->
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
 html, body {
   height: 100vh;
@@ -570,14 +569,12 @@ html, body {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  font-synthesis: none;
 }
 body {
   height: 100vh;
   margin: 0;
   padding: 0;
   font-family: 'Manrope', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  font-weight: 400;
   color: #0f172a;
   overflow: hidden;
   touch-action: pan-x pan-y;
@@ -10395,8 +10392,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-14-incognito-text-weights-v1';
-    const APP_BUILD_ID = '2026-08-14-incognito-text-weights-v1';
+    const DATA_CACHE_BUSTER = '2026-08-14-dem-midramp-chroma-v3';
+    const APP_BUILD_ID = '2026-08-14-dem-midramp-chroma-v3';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
