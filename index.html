@@ -20254,6 +20254,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return Number.isFinite(Number(year)) ? `${officeName} ${year}` : officeName;
     }
 
+    function formatContestDropdownLabel(label) {
+      return String(label || '').replace(/^NC\s+/i, '');
+    }
+
     function populateContestSelectFromElectionJSON(electionData) {
       if (!Array.isArray(electionData) || electionData.length === 0) return;
       if (contestManifest && contestManifest.length > 0) {
@@ -20549,7 +20553,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	        });
 
 	        const og = document.createElement('optgroup');
-	        og.label = label;
+        og.label = formatContestDropdownLabel(label);
 
 	        items.forEach(item => {
 	          const opt = document.createElement('option');
@@ -20558,12 +20562,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const modeledOptionLabel = String(modeledDef?.optionLabel || '').trim();
             const modeledSuffix = modeledDef && !modeledOptionLabel ? ' [Modeled]' : '';
             if (modeledOptionLabel) {
-              opt.textContent = modeledOptionLabel;
+              opt.textContent = formatContestDropdownLabel(modeledOptionLabel);
             } else
 	          if (isJudicial || modeledDef) {
-              opt.textContent = `${formatContestName(item.contestType, item.year)} (${item.year})${modeledSuffix}`;
+                opt.textContent = `${formatContestDropdownLabel(formatContestName(item.contestType, item.year))} (${item.year})${modeledSuffix}`;
 	          } else {
-              opt.textContent = `${label} (${item.year})${modeledSuffix}`;
+                opt.textContent = `${formatContestDropdownLabel(label)} (${item.year})${modeledSuffix}`;
 	          }
 	          if (q) {
 	            const hay = `${label} ${item.year} ${item.contestType} ${formatContestName(item.contestType, item.year)}`.toUpperCase();
@@ -20713,11 +20717,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	      orderedLabels.forEach(label => {
 	        const items = (grouped.get(label) || []).slice().sort((a, b) => Number(a.year) - Number(b.year));
 	        const og = document.createElement('optgroup');
-	        og.label = label;
+        og.label = formatContestDropdownLabel(label);
 	        items.forEach(item => {
 	          const opt = document.createElement('option');
 	          opt.value = `${item.contestType}_${item.year}`;
-	          opt.textContent = `${label} (${item.year})`;
+          opt.textContent = `${formatContestDropdownLabel(label)} (${item.year})`;
 	          og.appendChild(opt);
 	        });
 	        fragment.appendChild(og);
