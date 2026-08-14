@@ -1123,9 +1123,9 @@ Implementation note:
 | Annihilation | 40+ | `#67000d` | `#08306b` |
 | Dominant | 30+ | `#a50f15` | `#08519c` |
 | Stronghold | 20+ | `#cb181d` | `#2876b5` |
-| Safe | 10+ | `#e93a2d` | `#4795d2` |
-| Likely | 5.5+ | `#f7634b` | `#6baed6` |
-| Lean | 1+ | `#fca793` | `#8bbde0` |
+| Safe | 10+ | `#ef3b2c` | `#4795d2` |
+| Likely | 5.5+ | `#fb6a4a` | `#6baed6` |
+| Lean | 1+ | `#f99a90` | `#9ecae1` |
 | Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 
@@ -1141,6 +1141,12 @@ Implementation note:
 - Each result is displayed on the contemporaneous congressional plan: 2022 results on the 2022 lines, and 2024 results on the 2024 lines. The new slices retain Democratic, Republican, and other-party totals plus the major-party candidate names.
 - Added `scripts/build_congressional_us_house_slices.py` so the direct district totals and both manifest entries can be reproduced from the source precinct returns.
 - Bumped the front-end cache-buster/app build token to `2026-08-09-congressional-us-house-results`.
+
+### Democratic Mid-Ramp Monotonicity (August 14, 2026)
+
+- Restored a strictly darkening Democratic Lean → Likely → Safe sequence (`#9ecae1` / `#6baed6` / `#4795d2`) so a larger DEM lead no longer paints lighter than a smaller one.
+- Synced the first-painted Map Key spectrum with those live fill colors. Stronghold / Dominant / Annihilation navy stops are unchanged.
+- Bumped the front-end cache-buster/app build token to `2026-08-14-dem-midramp-monotonic`.
 
 ### Uncontested 2012 Attorney General Cleanup (July 21, 2026)
 
