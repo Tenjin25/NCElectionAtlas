@@ -9748,6 +9748,134 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+  function exportCsvValue(value) {
+    if (value === null || value === undefined) return '';
+    const text = String(value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  }
+
+  function exportRowsToCsv(rows) {
+    const headers = [];
+    (rows || []).forEach(row => Object.keys(row || {}).forEach(key => {
+      if (!headers.includes(key)) headers.push(key);
+    }));
+    return [headers, ...(rows || []).map(row => headers.map(key => exportCsvValue(row?.[key])))]
+      .map(row => row.join(','))
+      .join('\r\n');
+  }
+
+  function exportNumber(value, digits = 2) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Number(n.toFixed(digits)) : '';
+  }
+
+  function buildActiveExportRows() {
+    const rows = [];
+    const mode = String(currentVizMode || 'margins');
+    const snapshot = activeComparisonSnapshot;
+    const viewLabel = typeof getReadableViewLabel === 'function' ? getReadableViewLabel(currentView) : currentView;
+    if (mode === 'comparison' && snapshot?.records instanceof Map) {
+      snapshot.records.forEach(record => {
+        const primaryRow = record.primaryRow || {};
+        const secondaryRow = record.secondaryRow || {};
+        const primaryTotal = Number(primaryRow.total || primaryRow.total_votes || 0);
+        const secondaryTotal = Number(secondaryRow.total || secondaryRow.total_votes || 0);
+        rows.push({
+          view: viewLabel,
+          geography: record.key,
+          selected_contest: record.primaryLabel || snapshot.primaryLabel || '',
+          compared_contest: record.secondaryLabel || snapshot.secondaryLabel || '',
+          selected_margin_pct: exportNumber(record.primarySigned),
+          compared_margin_pct: exportNumber(record.secondarySigned),
+          comparison_delta_pct: exportNumber(record.delta),
+          selected_dem_votes: Number(primaryRow.dem || primaryRow.dem_votes || 0),
+          selected_rep_votes: Number(primaryRow.rep || primaryRow.rep_votes || 0),
+          selected_other_votes: Number(primaryRow.other || primaryRow.other_votes || 0),
+          selected_total_votes: primaryTotal,
+          compared_dem_votes: Number(secondaryRow.dem || secondaryRow.dem_votes || 0),
+          compared_rep_votes: Number(secondaryRow.rep || secondaryRow.rep_votes || 0),
+          compared_other_votes: Number(secondaryRow.other || secondaryRow.other_votes || 0),
+          compared_total_votes: secondaryTotal
+        });
+      });
+      return rows;
+    }
+
+    const contestType = String(currentContestMeta?.contestType || '').trim();
+    const year = Number(currentContestMeta?.year);
+    const contestLabel = contestType && Number.isFinite(year)
+      ? formatContestLabel(contestType, year)
+      : '';
+    if (currentView === 'counties' && currentElectionResults) {
+      Object.entries(currentElectionResults).forEach(([key, row]) => {
+        const dem = Number(row?.[`${contestType}_dem`] || 0);
+        const rep = Number(row?.[`${contestType}_rep`] || 0);
+        const other = Number(row?.[`${contestType}_other`] || 0);
+        const total = Number(row?.[`${contestType}_total`] || (dem + rep + other));
+        const signed = total > 0 ? (dem - rep) / total * 100 : 0;
+        rows.push({
+          view: viewLabel,
+          geography: row?.county || key,
+          contest: contestLabel,
+          year: Number.isFinite(year) ? year : '',
+          dem_candidate: row?.[`${contestType}_dem_candidate`] || '',
+          rep_candidate: row?.[`${contestType}_rep_candidate`] || '',
+          dem_votes: dem,
+          rep_votes: rep,
+          other_votes: other,
+          total_votes: total,
+          dem_pct: exportNumber(total ? dem / total * 100 : 0),
+          rep_pct: exportNumber(total ? rep / total * 100 : 0),
+          margin_pct: exportNumber(signed),
+          winner: signed > 0 ? 'D' : (signed < 0 ? 'R' : 'Tie')
+        });
+      });
+      return rows;
+    }
+
+    Object.entries(currentDistrictTurnoutTotals || {}).forEach(([district, total]) => rows.push({
+      view: viewLabel,
+      geography: district,
+      contest: contestLabel,
+      year: Number.isFinite(year) ? year : '',
+      total_votes: Number(total || 0),
+      note: 'District turnout total; use Compare mode for vote and margin columns'
+    }));
+    return rows;
+  }
+
+  function downloadActiveExport(format) {
+    const rows = buildActiveExportRows();
+    if (!rows.length) {
+      if (typeof setStatus === 'function') setStatus('Select a contest before exporting data.');
+      return;
+    }
+    const contestToken = String(currentContestMeta?.contestType || (activeComparisonSnapshot?.primaryValue || 'map'))
+      .replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'map';
+    const viewToken = String(currentView || 'view').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    const viewLabel = typeof getReadableViewLabel === 'function' ? getReadableViewLabel(currentView) : currentView;
+    const extension = format === 'json' ? 'json' : 'csv';
+    const mime = format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8';
+    const body = format === 'json'
+      ? JSON.stringify({ exported_at: new Date().toISOString(), view: currentView, mode: currentVizMode, rows }, null, 2)
+      : exportRowsToCsv(rows);
+    const blob = new Blob([body], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `nc-election-atlas-${viewToken}-${contestToken}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (typeof setStatus === 'function') setStatus(`Exported ${rows.length.toLocaleString()} ${viewLabel || currentView} rows as ${extension.toUpperCase()}.`);
+  }
+
+  const exportCsvBtn = document.getElementById('export-csv-btn');
+  if (exportCsvBtn) exportCsvBtn.onclick = function() { downloadActiveExport('csv'); };
+  const exportJsonBtn = document.getElementById('export-json-btn');
+  if (exportJsonBtn) exportJsonBtn.onclick = function() { downloadActiveExport('json'); };
+
   const snapshotBtn = document.getElementById('snapshot-share-btn');
   if (snapshotBtn) {
     snapshotBtn.onclick = function() {
@@ -10227,6 +10355,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <details class="contest-tools-more" aria-label="More tools">
                     <summary class="tool-chip-btn tool-chip-btn-muted" role="button">More</summary>
                     <div class="contest-tools-row contest-tools-row-more">
+                      <button id="export-csv-btn" title="Download the active map data as CSV" class="tool-chip-btn" type="button" data-testid="tool-export-csv" aria-label="Export active map data as CSV">Export CSV</button>
+                      <button id="export-json-btn" title="Download the active map data as JSON" class="tool-chip-btn tool-chip-btn-ghost" type="button" data-testid="tool-export-json" aria-label="Export active map data as JSON">Export JSON</button>
                       <button id="follow-hover-toggle" title="Auto-update hover tooltip while panning (mobile)" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-follow-hover" aria-label="Toggle auto hover while panning" aria-pressed="false">Auto Hover Off</button>
                       <button id="gps-locate-btn" title="Find my precinct by GPS" class="tool-chip-btn" type="button" data-testid="tool-gps" aria-label="Find my precinct by GPS">Find My Precinct</button>
                       <button id="reset-view-btn" title="Reset map camera and clear pinned focus" class="tool-chip-btn tool-chip-btn-muted" type="button" data-testid="tool-reset-view" aria-label="Reset map view">Reset View</button>
@@ -10667,18 +10797,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-comparison.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-core.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-data.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-display.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-election.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-manifest.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-modeling.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-regions.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-trends.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-turnout.js?v=2026-08-19-ab-comparison-v5"></script>
-    <script src="./js/atlas-url-state.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-classification.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-comparison.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-core.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-data.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-display.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-election.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-manifest.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-modeling.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-regions.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-trends.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-turnout.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-url-state.js?v=2026-08-19-ab-comparison-v6"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10711,8 +10841,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v5';
-    const APP_BUILD_ID = '2026-08-19-ab-comparison-v5';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v6';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v6';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
