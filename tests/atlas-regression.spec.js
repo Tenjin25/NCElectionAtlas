@@ -283,6 +283,40 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     }
   });
 
+  test('comparison mode maps any two county contests and survives a fast mode switch', async ({ page }) => {
+    await waitForSplitTicketOptions(page);
+
+    await page.selectOption('#contestSelect', 'president_2024');
+    await page.locator('[data-mode="comparison"]:visible').click();
+
+    await expect(page.locator('#comparison-controls')).toBeVisible();
+    await expect(page.locator('#comparisonContestSelect')).toHaveValue('president_2020');
+    await page.waitForFunction(() => {
+      const summary = document.getElementById('comparison-summary')?.textContent || '';
+      const loading = document.getElementById('contest-loading-indicator');
+      return loading?.hidden && /statewide difference/i.test(summary);
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const countyComparisonState = await page.evaluate(() => {
+      const summary = document.getElementById('comparison-summary')?.textContent || '';
+      const fill = map?.getLayer?.('county-fill')
+        ? map.getPaintProperty('county-fill', 'fill-color')
+        : null;
+      return {
+        summary,
+        primary: document.getElementById('contestSelect')?.value || '',
+        secondary: document.getElementById('comparisonContestSelect')?.value || '',
+        fill
+      };
+    });
+
+    expect(countyComparisonState.primary).toBe('president_2024');
+    expect(countyComparisonState.secondary).toBe('president_2020');
+    expect(countyComparisonState.summary).toMatch(/President.*2020.*President.*2024.*statewide difference/i);
+    expect(Array.isArray(countyComparisonState.fill)).toBeTruthy();
+    expect(countyComparisonState.fill[0]).toBe('match');
+  });
+
   test('split-ticket toggle enables President vs Governor overlay', async ({ page }) => {
     await waitForSplitTicketOptions(page);
 

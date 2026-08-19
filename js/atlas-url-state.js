@@ -4,7 +4,7 @@
   if (root) root.AtlasURLState = Object.freeze(api);
 }(typeof globalThis !== 'undefined' ? globalThis : this, function createAtlasURLState() {
   const VIEW_VALUES = new Set(['counties', 'districts', 'state_house', 'state_senate', 'vtds_2000']);
-  const MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'demographics', 'population_change']);
+  const MODE_VALUES = new Set(['margins', 'winners', 'shift', 'flips', 'comparison', 'demographics', 'population_change']);
 
   function normalizeViewToken(raw) {
     const token = String(raw || '').trim().toLowerCase();
@@ -27,6 +27,7 @@
     const params = new URLSearchParams(String(search || ''));
     const view = normalizeViewToken(params.get('view'));
     const contest = String(params.get('contest') || '').trim();
+    const comparisonContest = String(params.get('compare') || '').trim();
     const mode = normalizeModeToken(params.get('mode'));
     const focus = String(params.get('focus') || '').trim();
     const linesRaw = String(params.get('lines') || '').trim();
@@ -54,6 +55,7 @@
     const hasAny = !!(
       view ||
       contest ||
+      comparisonContest ||
       mode ||
       focus ||
       lines !== null ||
@@ -70,6 +72,7 @@
       hasAny,
       view,
       contest,
+      comparisonContest,
       mode,
       focus,
       lines,
