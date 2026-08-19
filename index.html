@@ -10667,18 +10667,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js"></script>
-    <script src="./js/atlas-comparison.js"></script>
-    <script src="./js/atlas-core.js"></script>
-    <script src="./js/atlas-data.js"></script>
-    <script src="./js/atlas-display.js"></script>
-    <script src="./js/atlas-election.js"></script>
-    <script src="./js/atlas-manifest.js"></script>
-    <script src="./js/atlas-modeling.js"></script>
-    <script src="./js/atlas-regions.js"></script>
-    <script src="./js/atlas-trends.js"></script>
-    <script src="./js/atlas-turnout.js"></script>
-    <script src="./js/atlas-url-state.js"></script>
+    <script src="./js/atlas-classification.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-comparison.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-core.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-data.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-display.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-election.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-manifest.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-modeling.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-regions.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-trends.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-turnout.js?v=2026-08-19-ab-comparison-v5"></script>
+    <script src="./js/atlas-url-state.js?v=2026-08-19-ab-comparison-v5"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10711,8 +10711,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v4';
-    const APP_BUILD_ID = '2026-08-19-ab-comparison-v4';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v5';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v5';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -34785,6 +34785,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${Math.abs(n).toFixed(2)}% more ${party}`;
     }
 
+    function compareMarginsForDisplay(primarySigned, secondarySigned) {
+      const comparisonApi = window.AtlasComparison;
+      if (comparisonApi && typeof comparisonApi.compareDisplayedSignedMargins === 'function') {
+        return comparisonApi.compareDisplayedSignedMargins(primarySigned, secondarySigned);
+      }
+      const round = value => {
+        if (window.AtlasDisplay && typeof window.AtlasDisplay.roundForDisplay === 'function') {
+          return window.AtlasDisplay.roundForDisplay(value, 2);
+        }
+        return Math.round(Number(value) * 100) / 100;
+      };
+      return comparisonApi.compareSignedMargins(round(primarySigned), round(secondarySigned));
+    }
+
     function comparisonOutcomeLabel(signed, row = null, candidates = null) {
       const margin = Number(signed);
       if (!Number.isFinite(margin)) return 'No result';
@@ -34814,7 +34828,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderComparisonRecordHTML(record, { sidebar = false, standalone = false, title = '', subtitle = '' } = {}) {
       if (!record) return '';
-      const comparison = window.AtlasComparison.compareDisplayedSignedMargins(record.primarySigned, record.secondarySigned);
+      const comparison = compareMarginsForDisplay(record.primarySigned, record.secondarySigned);
       const tone = comparison.direction === 'rep' ? 'rep' : (comparison.direction === 'dem' ? 'dem' : 'even');
       const primaryTone = Number(record.primarySigned) > 0 ? 'rep' : (Number(record.primarySigned) < 0 ? 'dem' : 'even');
       const secondaryTone = Number(record.secondarySigned) > 0 ? 'rep' : (Number(record.secondarySigned) < 0 ? 'dem' : 'even');
@@ -34906,7 +34920,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!secondaryRow) return;
         const primarySigned = signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total);
         const secondarySigned = signedCountyMarginPctDisplayValue(secondaryRow.dem, secondaryRow.rep, secondaryRow.total);
-        const comparison = window.AtlasComparison.compareDisplayedSignedMargins(primarySigned, secondarySigned);
+        const comparison = compareMarginsForDisplay(primarySigned, secondarySigned);
         const record = {
           key: countyNorm,
           primarySigned: comparison.primary,
@@ -34945,7 +34959,7 @@ document.addEventListener('DOMContentLoaded', function() {
       };
       const primaryState = primaryBundle.statewide;
       const secondaryState = secondaryBundle.statewide;
-      const statewideComparison = window.AtlasComparison.compareDisplayedSignedMargins(
+      const statewideComparison = compareMarginsForDisplay(
         signedCountyMarginPctDisplayValue(primaryState.dem, primaryState.rep, primaryState.total),
         signedCountyMarginPctDisplayValue(secondaryState.dem, secondaryState.rep, secondaryState.total)
       );
@@ -35013,7 +35027,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const primarySigned = signedDistrictMarginPctForDisplay(scope, districtId, pDem, pRep, pTotal, primaryRow.margin_pct);
         const secondarySigned = signedDistrictMarginPctForDisplay(scope, districtId, sDem, sRep, sTotal, secondaryRow.margin_pct);
-        const comparison = window.AtlasComparison.compareDisplayedSignedMargins(primarySigned, secondarySigned);
+        const comparison = compareMarginsForDisplay(primarySigned, secondarySigned);
         const key = String(Number(districtId));
         records.set(key, {
           key,
@@ -35058,7 +35072,7 @@ document.addEventListener('DOMContentLoaded', function() {
         secondaryLabel,
         records
       };
-      const statewideComparison = window.AtlasComparison.compareDisplayedSignedMargins(
+      const statewideComparison = compareMarginsForDisplay(
         window.AtlasComparison.signedMarginPct(primaryDem, primaryRep, primaryTotal),
         window.AtlasComparison.signedMarginPct(secondaryDem, secondaryRep, secondaryTotal)
       );

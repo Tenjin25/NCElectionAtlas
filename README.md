@@ -118,6 +118,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a control for swapping the selected contests.
 - Added comparison shading and compact, named-contest tooltips across Counties, Congress, State House, and State Senate. The comparison popup replaces the taller standard-results stack, shortens presidential labels to `US President YEAR`, and uses `%` for both contest margins and their displayed difference. Differences are calculated from the same two-decimal margins shown in the card, preventing `0.01%` display drift; coverage includes same-year legislative/congressional ticket splits and county-level statewide/judicial comparisons.
 - Added `compare=` URL state, comparison-specific legend/summary text, and regression coverage for margin math, default-pair selection, URL parsing, and fast switching into the mode.
+- Versioned the local JavaScript module URLs alongside the build/cache token and added a compatibility fallback, preventing a stale cached comparison module from blocking contest loading after deployment.
 
 ### Palette, Typography, and UI Stability (August 11–14, 2026)
 
