@@ -15,6 +15,11 @@ test('preserves a visible margin in extremely close races', () => {
   assert.equal(AtlasDisplay.formatMarginPctForDisplay(0.014), '0.014');
 });
 
+test('keeps Cabarrus margin display aligned with its visible candidate shares', () => {
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63746, 54494, 120202) - 7.69) < 1e-10);
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.44) < 1e-10);
+});
+
 test('formats compact totals and signed deltas with established suffixes', () => {
   assert.equal(AtlasDisplay.formatCompactVoteTotal(1250), '1.3K');
   assert.equal(AtlasDisplay.formatCompactDeltaTotal(1250), '1.3k');

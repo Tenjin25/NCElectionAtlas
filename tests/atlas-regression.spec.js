@@ -263,15 +263,19 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(response.ok()).toBeTruthy();
   const source = await response.text();
 
-  expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.primaryLabel)}');
-  expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.secondaryLabel)}');
+  expect(source).toContain('class="comparison-result-contest">${escapeHtml(primaryLabel)}');
+  expect(source).toContain('class="comparison-result-contest">${escapeHtml(secondaryLabel)}');
   expect(source).toContain('class="comparison-delta-pill ${tone}">${escapeHtml(deltaLabel)}');
   expect(source).toContain('class="comparison-result-role">Selected contest');
   expect(source).toContain('class="comparison-result-role">Compared with');
   expect(source).toContain('class="comparison-change-label">Comparison direction');
-  expect(source).toContain('${escapeHtml(record.secondaryLabel)} → ${escapeHtml(record.primaryLabel)}');
+  expect(source).toContain('${escapeHtml(secondaryLabel)} → ${escapeHtml(primaryLabel)}');
   expect(source).toContain("standalone ? ' is-standalone' : ''");
   expect(source).toContain('return `${name} +${Math.abs(margin).toFixed(2)}%`;');
+  expect(source).toContain('return `${Math.abs(n).toFixed(2)}% more ${party}`;');
+  expect(source).toContain('compareDisplayedSignedMargins(record.primarySigned, record.secondarySigned)');
+  expect(source).toContain('signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total)');
+  expect(source).toContain('`US President ${year}${suffix || \'\'}`');
   expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
   expect(source).not.toContain('class="comparison-result-key">A</span>');
   expect(source).not.toContain('from B to A');
