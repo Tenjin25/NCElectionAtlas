@@ -22,6 +22,19 @@ test('marks missing comparisons and effectively even changes safely', () => {
   assert.ok(Number.isNaN(AtlasComparison.signedMarginPct(0, 0, 0)));
 });
 
+test('derives displayed comparison changes from the displayed margins', () => {
+  assert.deepEqual(
+    AtlasComparison.compareDisplayedSignedMargins(-25.437, -26.452),
+    {
+      primary: -25.44,
+      comparison: -26.45,
+      delta: 1.01,
+      direction: 'rep',
+      magnitude: 1.01
+    }
+  );
+});
+
 test('prefers the nearest prior contest of the same type', () => {
   assert.equal(
     AtlasComparison.pickDefaultComparisonContest('president_2024', [

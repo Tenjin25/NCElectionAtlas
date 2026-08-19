@@ -10711,8 +10711,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v3';
-    const APP_BUILD_ID = '2026-08-19-ab-comparison-v3';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v4';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v4';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -34782,7 +34782,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return 'No margin change';
       const party = n > 0 ? 'Republican' : 'Democratic';
-      return `${Math.abs(n).toFixed(2)} pts more ${party}`;
+      return `${Math.abs(n).toFixed(2)}% more ${party}`;
     }
 
     function comparisonOutcomeLabel(signed, row = null, candidates = null) {
@@ -34797,6 +34797,13 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${name} +${Math.abs(margin).toFixed(2)}%`;
     }
 
+    function comparisonContestDisplayLabel(label) {
+      return String(label || '').replace(
+        /^President of (?:the )?United States\s+(\d{4})(.*)$/i,
+        (_, year, suffix) => `US President ${year}${suffix || ''}`
+      );
+    }
+
     function getActiveComparisonRecord(scope, geographyKey) {
       const snapshot = activeComparisonSnapshot;
       if (!snapshot || String(snapshot.scope || '') !== String(scope || '')) return null;
@@ -34807,12 +34814,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderComparisonRecordHTML(record, { sidebar = false, standalone = false, title = '', subtitle = '' } = {}) {
       if (!record) return '';
-      const comparison = window.AtlasComparison.compareSignedMargins(record.primarySigned, record.secondarySigned);
+      const comparison = window.AtlasComparison.compareDisplayedSignedMargins(record.primarySigned, record.secondarySigned);
       const tone = comparison.direction === 'rep' ? 'rep' : (comparison.direction === 'dem' ? 'dem' : 'even');
       const primaryTone = Number(record.primarySigned) > 0 ? 'rep' : (Number(record.primarySigned) < 0 ? 'dem' : 'even');
       const secondaryTone = Number(record.secondarySigned) > 0 ? 'rep' : (Number(record.secondarySigned) < 0 ? 'dem' : 'even');
       const primaryOutcome = comparisonOutcomeLabel(record.primarySigned, record.primaryRow, record.primaryCandidates);
       const secondaryOutcome = comparisonOutcomeLabel(record.secondarySigned, record.secondaryRow, record.secondaryCandidates);
+      const primaryLabel = comparisonContestDisplayLabel(record.primaryLabel);
+      const secondaryLabel = comparisonContestDisplayLabel(record.secondaryLabel);
       const deltaLabel = comparisonDeltaBadgeLabel(comparison.delta);
       const className = sidebar ? 'comparison-sidebar-card' : 'comparison-tooltip-card';
       const geographyHead = standalone && title
@@ -34833,21 +34842,21 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="comparison-result-row is-primary">
             <span class="comparison-result-role">Selected contest</span>
             <div class="comparison-result-main">
-              <span class="comparison-result-contest">${escapeHtml(record.primaryLabel)}</span>
+              <span class="comparison-result-contest">${escapeHtml(primaryLabel)}</span>
               <strong class="${primaryTone}">${escapeHtml(primaryOutcome)}</strong>
             </div>
           </div>
           <div class="comparison-result-row is-secondary">
             <span class="comparison-result-role">Compared with</span>
             <div class="comparison-result-main">
-              <span class="comparison-result-contest">${escapeHtml(record.secondaryLabel)}</span>
+              <span class="comparison-result-contest">${escapeHtml(secondaryLabel)}</span>
               <strong class="${secondaryTone}">${escapeHtml(secondaryOutcome)}</strong>
             </div>
           </div>
           ${standalone ? '' : `
             <div class="comparison-change-line ${tone}">
               <span class="comparison-change-label">Comparison direction</span>
-              <span class="comparison-change-route">${escapeHtml(record.secondaryLabel)} → ${escapeHtml(record.primaryLabel)}</span>
+              <span class="comparison-change-route">${escapeHtml(secondaryLabel)} → ${escapeHtml(primaryLabel)}</span>
             </div>
           `}
         </div>
@@ -34892,17 +34901,19 @@ document.addEventListener('DOMContentLoaded', function() {
         ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
       ];
 
-      primaryBundle.signedByCounty.forEach((primarySigned, countyNorm) => {
-        const secondarySigned = secondaryBundle.signedByCounty.get(countyNorm);
-        if (!Number.isFinite(Number(secondarySigned))) return;
-        const comparison = window.AtlasComparison.compareSignedMargins(primarySigned, secondarySigned);
+      primaryBundle.totalsByCounty.forEach((primaryRow, countyNorm) => {
+        const secondaryRow = secondaryBundle.totalsByCounty.get(countyNorm);
+        if (!secondaryRow) return;
+        const primarySigned = signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total);
+        const secondarySigned = signedCountyMarginPctDisplayValue(secondaryRow.dem, secondaryRow.rep, secondaryRow.total);
+        const comparison = window.AtlasComparison.compareDisplayedSignedMargins(primarySigned, secondarySigned);
         const record = {
           key: countyNorm,
-          primarySigned,
-          secondarySigned,
+          primarySigned: comparison.primary,
+          secondarySigned: comparison.comparison,
           delta: comparison.delta,
-          primaryRow: primaryBundle.totalsByCounty.get(countyNorm),
-          secondaryRow: secondaryBundle.totalsByCounty.get(countyNorm),
+          primaryRow,
+          secondaryRow,
           primaryCandidates,
           secondaryCandidates,
           primaryLabel,
@@ -34932,9 +34943,11 @@ document.addEventListener('DOMContentLoaded', function() {
         secondaryLabel,
         records
       };
-      const statewideComparison = window.AtlasComparison.compareSignedMargins(
-        primaryBundle.statewideSigned,
-        secondaryBundle.statewideSigned
+      const primaryState = primaryBundle.statewide;
+      const secondaryState = secondaryBundle.statewide;
+      const statewideComparison = window.AtlasComparison.compareDisplayedSignedMargins(
+        signedCountyMarginPctDisplayValue(primaryState.dem, primaryState.rep, primaryState.total),
+        signedCountyMarginPctDisplayValue(secondaryState.dem, secondaryState.rep, secondaryState.total)
       );
       updateComparisonControlsSummary(`${secondaryLabel} → ${primaryLabel} · statewide difference ${comparisonDeltaLabel(statewideComparison.delta, { includeWord: false })}`);
       setStatewideContestTitle(`Compare: ${primaryLabel} vs ${secondaryLabel}`);
@@ -35000,12 +35013,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const primarySigned = signedDistrictMarginPctForDisplay(scope, districtId, pDem, pRep, pTotal, primaryRow.margin_pct);
         const secondarySigned = signedDistrictMarginPctForDisplay(scope, districtId, sDem, sRep, sTotal, secondaryRow.margin_pct);
-        const comparison = window.AtlasComparison.compareSignedMargins(primarySigned, secondarySigned);
+        const comparison = window.AtlasComparison.compareDisplayedSignedMargins(primarySigned, secondarySigned);
         const key = String(Number(districtId));
         records.set(key, {
           key,
-          primarySigned,
-          secondarySigned,
+          primarySigned: comparison.primary,
+          secondarySigned: comparison.comparison,
           delta: comparison.delta,
           primaryRow,
           secondaryRow,
@@ -35045,7 +35058,7 @@ document.addEventListener('DOMContentLoaded', function() {
         secondaryLabel,
         records
       };
-      const statewideComparison = window.AtlasComparison.compareSignedMargins(
+      const statewideComparison = window.AtlasComparison.compareDisplayedSignedMargins(
         window.AtlasComparison.signedMarginPct(primaryDem, primaryRep, primaryTotal),
         window.AtlasComparison.signedMarginPct(secondaryDem, secondaryRep, secondaryTotal)
       );

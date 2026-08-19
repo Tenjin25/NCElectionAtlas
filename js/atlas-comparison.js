@@ -41,6 +41,30 @@
     };
   }
 
+  function compareDisplayedSignedMargins(primarySigned, comparisonSigned, digits = 2) {
+    const primaryRaw = Number(primarySigned);
+    const comparisonRaw = Number(comparisonSigned);
+    if (!Number.isFinite(primaryRaw) || !Number.isFinite(comparisonRaw)) {
+      return compareSignedMargins(primaryRaw, comparisonRaw);
+    }
+    const d = Math.max(0, Math.floor(Number(digits) || 0));
+    const factor = Math.pow(10, d);
+    const round = value => {
+      const epsilonNudge = (Math.sign(value) || 1) * Number.EPSILON * 8;
+      return Math.round((value + epsilonNudge) * factor) / factor;
+    };
+    const primary = round(primaryRaw);
+    const comparison = round(comparisonRaw);
+    const delta = round(primary - comparison);
+    return {
+      primary,
+      comparison,
+      delta,
+      direction: Math.abs(delta) < (0.5 / factor) ? 'even' : (delta > 0 ? 'rep' : 'dem'),
+      magnitude: Math.abs(delta)
+    };
+  }
+
   function pickDefaultComparisonContest(primaryValue, optionValues) {
     const primary = parseContestValue(primaryValue);
     const values = Array.from(new Set((optionValues || []).map(v => String(v || '').trim()).filter(Boolean)))
@@ -72,6 +96,7 @@
     parseContestValue,
     signedMarginPct,
     compareSignedMargins,
+    compareDisplayedSignedMargins,
     pickDefaultComparisonContest
   };
 }));
