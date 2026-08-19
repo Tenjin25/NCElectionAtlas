@@ -266,8 +266,13 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.primaryLabel)}');
   expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.secondaryLabel)}');
   expect(source).toContain('class="comparison-delta-pill ${tone}">${escapeHtml(deltaLabel)}');
-  expect(source).toContain('class="comparison-change-label">Margin difference');
+  expect(source).toContain('class="comparison-result-role">Selected contest');
+  expect(source).toContain('class="comparison-result-role">Compared with');
+  expect(source).toContain('class="comparison-change-label">Comparison direction');
   expect(source).toContain('${escapeHtml(record.secondaryLabel)} → ${escapeHtml(record.primaryLabel)}');
+  expect(source).toContain("standalone ? ' is-standalone' : ''");
+  expect(source).toContain('return `${name} +${Math.abs(margin).toFixed(2)}%`;');
+  expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
   expect(source).not.toContain('class="comparison-result-key">A</span>');
   expect(source).not.toContain('from B to A');
 });
