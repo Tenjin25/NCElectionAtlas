@@ -74,7 +74,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **District Lines Toggle (2022 / 2024 / 2026):** District views can switch between the 2022 MQP baseline and 2024 lines; the 2026 option supplies the enacted `SL 2025-95` congressional plan while State House and State Senate continue to use the 2024 slices. The first alternate-line load can take longer while boundary GeoJSON downloads/parses.
 - **Progressive District Linework (DRA-style):** Congressional/State House/State Senate boundaries use a bright halo + crisp charcoal inner stroke with smooth zoom interpolation, stronger statewide readability, and a close hierarchy (Congress strongest, Senate very close, House only slightly thinner)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
-- **A/B Contest Comparison:** `Compare` can map any two available contests as the change in signed R−D margin from B to A. It works on counties, Congressional districts, State House districts, and State Senate districts; supports cross-year and same-year ticket-split pairs; includes statewide and judicial races on county layers; and adds A/B outcomes to hover and pinned-detail cards. The selected pair is preserved in share links.
+- **Contest Comparison:** `Compare` can map any two available contests as the change in signed R−D margin from the comparison contest to the primary contest. It works on counties, Congressional districts, State House districts, and State Senate districts; supports cross-year and same-year ticket-split pairs; includes statewide and judicial races on county layers; and adds named outcomes to hover and pinned-detail cards. The selected pair is preserved in share links.
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
@@ -113,10 +113,10 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 **Last updated:** August 19, 2026
 
-### A/B Contest Comparison (August 19, 2026)
+### Contest Comparison (August 19, 2026)
 
-- Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a swap control for A/B.
-- Added comparison shading and A/B result cards across Counties, Congress, State House, and State Senate, including same-year legislative/congressional ticket-split checks and county-level statewide/judicial comparisons.
+- Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a control for swapping the selected contests.
+- Added comparison shading and polished, named-contest result cards across Counties, Congress, State House, and State Senate, including same-year legislative/congressional ticket-split checks and county-level statewide/judicial comparisons.
 - Added `compare=` URL state, comparison-specific legend/summary text, and regression coverage for margin math, default-pair selection, URL parsing, and fast switching into the mode.
 
 ### Palette, Typography, and UI Stability (August 11–14, 2026)

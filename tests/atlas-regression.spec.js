@@ -258,6 +258,20 @@ test('2002 US Senate county totals come from the November general election', asy
   expect(totals).toEqual({ dem: 1047983, rep: 1248664, other: 34534, total: 2331181 });
 });
 
+test('comparison cards name both contests instead of using opaque A/B keys', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+
+  expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.primaryLabel)}');
+  expect(source).toContain('class="comparison-result-contest">${escapeHtml(record.secondaryLabel)}');
+  expect(source).toContain('class="comparison-delta-pill ${tone}">${escapeHtml(deltaLabel)}');
+  expect(source).toContain('class="comparison-change-label">Margin difference');
+  expect(source).toContain('${escapeHtml(record.secondaryLabel)} → ${escapeHtml(record.primaryLabel)}');
+  expect(source).not.toContain('class="comparison-result-key">A</span>');
+  expect(source).not.toContain('from B to A');
+});
+
 test.describe('North Carolina Election Atlas regression checks', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
