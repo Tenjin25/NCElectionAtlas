@@ -50,7 +50,7 @@ The project is powered by prebuilt JSON data slices and raw [OpenElections](http
 
 - **General public:** Open the live site, pick a contest/year, click a county or precinct, and read winner/margin/trend cards.
 - **Students:** Start with Counties view, then switch to Congressional/State House/State Senate to compare the same contest across geographies.
-- **Political junkies:** Use `Split-ticket`, `Shift`, `Flips`, and `Reset View` to scan for realignment and crossover patterns.
+- **Political junkies:** Use `Compare`, `Split-ticket`, `Shift`, `Flips`, and `Reset View` to scan for ticket splitting, realignment, and crossover patterns.
 - **Data journalists:** Pin a county/precinct/district, use `Copy Link` for reproducible map state, use the pinned hover tooltip `Copy` button for quick labels, and cross-check with files in `data/contests/` and `data/reports/`.
 
 ## Why the 2022 Court-Ordered (MQP) Lines?
@@ -74,6 +74,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **District Lines Toggle (2022 / 2024 / 2026):** District views can switch between the 2022 MQP baseline and 2024 lines; the 2026 option supplies the enacted `SL 2025-95` congressional plan while State House and State Senate continue to use the 2024 slices. The first alternate-line load can take longer while boundary GeoJSON downloads/parses.
 - **Progressive District Linework (DRA-style):** Congressional/State House/State Senate boundaries use a bright halo + crisp charcoal inner stroke with smooth zoom interpolation, stronger statewide readability, and a close hierarchy (Congress strongest, Senate very close, House only slightly thinner)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
+- **A/B Contest Comparison:** `Compare` can map any two available contests as the change in signed R−D margin from B to A. It works on counties, Congressional districts, State House districts, and State Senate districts; supports cross-year and same-year ticket-split pairs; includes statewide and judicial races on county layers; and adds A/B outcomes to hover and pinned-detail cards. The selected pair is preserved in share links.
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
@@ -108,9 +109,22 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–July 2026)
+## Recent Updates (March–August 2026)
 
-**Last updated:** July 28, 2026
+**Last updated:** August 19, 2026
+
+### A/B Contest Comparison (August 19, 2026)
+
+- Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a swap control for A/B.
+- Added comparison shading and A/B result cards across Counties, Congress, State House, and State Senate, including same-year legislative/congressional ticket-split checks and county-level statewide/judicial comparisons.
+- Added `compare=` URL state, comparison-specific legend/summary text, and regression coverage for margin math, default-pair selection, URL parsing, and fast switching into the mode.
+
+### Palette, Typography, and UI Stability (August 11–14, 2026)
+
+- Refined the default Atlas/DRA partisan ramp so the Stronghold, Safe, Likely, Lean, and Tilt tiers remain visibly distinct on desktop and mobile; the static first-paint legend now uses the same colors as the live map functions.
+- Restored the intended Manrope / IBM Plex Sans regular-and-bold typography setup, disabled synthetic font weights, and stabilized native-control rendering across browser modes.
+- Refreshed the Playwright regression checks for the current atlas controls, corrected palette cache-buster mismatches, and fixed the inline-script syntax regression that could prevent the interface from initializing.
+- Updated the documented color table below to match the current production palette, including the latest Stronghold blue and Lean red refinements.
 
 ### Demographics + Accessibility (March 21, 2026)
 
@@ -1123,9 +1137,9 @@ Implementation note:
 | Annihilation | 40+ | `#67000d` | `#08306b` |
 | Dominant | 30+ | `#a50f15` | `#08519c` |
 | Stronghold | 20+ | `#cb181d` | `#2876b5` |
-| Safe | 10+ | `#ef3b2c` | `#3b86c8` |
-| Likely | 5.5+ | `#fb6a4a` | `#5aa4d0` |
-| Lean | 1+ | `#f99a90` | `#8bbde0` |
+| Safe | 10+ | `#e93a2d` | `#3f8fc9` |
+| Likely | 5.5+ | `#f7634b` | `#5b9fd0` |
+| Lean | 1+ | `#fcae91` | `#9ecae1` |
 | Tilt | 0.5+ | `#f4c9c5` | `#c7ddf0` |
 | Tossup | under 0.5 | `#f7f7f7` | `#f7f7f7` |
 

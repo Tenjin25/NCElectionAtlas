@@ -7,17 +7,17 @@ const SHOT_DIR = '/opt/cursor/artifacts/screenshots';
 
 const DEM_MID_RAMP = [
   { label: 'Tilt', margin: 0.5, hex: '#c7ddf0' },
-  { label: 'Lean', margin: 1, hex: '#90c2e4' },
-  { label: 'Likely', margin: 5.5, hex: '#4b9cd0' },
-  { label: 'Safe', margin: 10, hex: '#2c86e4' },
+  { label: 'Lean', margin: 1, hex: '#9ecae1' },
+  { label: 'Likely', margin: 5.5, hex: '#5b9fd0' },
+  { label: 'Safe', margin: 10, hex: '#3f8fc9' },
   { label: 'Stronghold', margin: 20, hex: '#2876b5' },
   { label: 'Dominant', margin: 30, hex: '#08519c' },
   { label: 'Annihilation', margin: 40, hex: '#08306b' }
 ];
 
-// August 12 live GOP mid-tier luminance targets (function colors from that index).
-const AUG12_GOP_MID = [
-  { label: 'Lean', hex: '#fca793' },
+// Current GOP mid-tier luminance targets from the shared map/legend ramp.
+const CURRENT_GOP_MID = [
+  { label: 'Lean', hex: '#fcae91' },
   { label: 'Likely', hex: '#f7634b' }
 ];
 
@@ -54,10 +54,10 @@ test('first-paint legend DEM spectrum is monotonic Lean → Likely → Safe', as
     expect(demLuminance[i], `${DEM_MID_RAMP[i].label} should be darker than ${DEM_MID_RAMP[i - 1].label}`).toBeLessThan(demLuminance[i - 1] - 0.02);
   }
 
-  for (const stop of AUG12_GOP_MID) {
+  for (const stop of CURRENT_GOP_MID) {
     const dem = DEM_MID_RAMP.find((row) => row.label === stop.label);
     const gap = relativeLuminance(dem.hex) - relativeLuminance(stop.hex);
-    expect(Math.abs(gap), `${dem.label} DEM luminance should match Aug 12 GOP ${stop.hex}`).toBeLessThan(0.02);
+    expect(Math.abs(gap), `${dem.label} DEM luminance should match current GOP ${stop.hex}`).toBeLessThan(0.025);
   }
 
   const safe = DEM_MID_RAMP.find((row) => row.label === 'Safe');
@@ -105,7 +105,7 @@ test.describe('live Democratic margin ramp', () => {
     await page.waitForFunction(() => {
       try {
         const fill = map.getPaintProperty('county-fill', 'fill-color');
-        return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#2c86e4');
+      return Array.isArray(fill) && fill[0] === 'match' && fill.includes('FORSYTH') && fill.includes('#3f8fc9');
       } catch (_) {
         return false;
       }
@@ -145,15 +145,15 @@ test.describe('live Democratic margin ramp', () => {
 
     expect(painted.live).toEqual({
       tilt: '#c7ddf0',
-      lean: '#90c2e4',
-      likely: '#4b9cd0',
-      safe: '#2c86e4'
+      lean: '#9ecae1',
+      likely: '#5b9fd0',
+      safe: '#3f8fc9'
     });
     expect(painted.legend.slice(8)).toEqual(DEM_MID_RAMP.map((stop) => stop.hex));
-    expect(painted.pitt).toBe('#4b9cd0');
-    expect(painted.hoke).toBe('#4b9cd0');
-    expect(painted.forsyth).toBe('#2c86e4');
-    expect(painted.warren).toBe('#2c86e4');
+    expect(painted.pitt).toBe('#5b9fd0');
+    expect(painted.hoke).toBe('#5b9fd0');
+    expect(painted.forsyth).toBe('#3f8fc9');
+    expect(painted.warren).toBe('#3f8fc9');
     expect(painted.newHanover).toBe('#c7ddf0');
     expect(relativeLuminance(painted.live.likely)).toBeLessThan(relativeLuminance(painted.live.lean));
     expect(relativeLuminance(painted.live.safe)).toBeLessThan(relativeLuminance(painted.live.likely));

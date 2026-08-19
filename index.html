@@ -9264,6 +9264,111 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
     }
+
+    .comparison-controls {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid rgba(79, 70, 229, 0.22);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(238, 242, 255, 0.96), rgba(236, 254, 255, 0.90));
+    }
+
+    .comparison-controls[hidden] {
+      display: none !important;
+    }
+
+    .comparison-controls-head,
+    .comparison-select-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comparison-controls-head {
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .comparison-controls-title {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #3730a3;
+    }
+
+    .comparison-select-row select {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .comparison-swap-btn {
+      flex: 0 0 auto;
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid rgba(79, 70, 229, 0.30);
+      border-radius: 12px;
+      background: #fff;
+      color: #3730a3;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .comparison-summary {
+      margin-top: 7px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    .comparison-tooltip-card,
+    .comparison-sidebar-card {
+      margin-top: 9px;
+      padding: 9px 10px;
+      border-radius: 11px;
+      border: 1px solid rgba(129, 140, 248, 0.30);
+      background: rgba(30, 41, 59, 0.72);
+    }
+
+    .comparison-sidebar-card {
+      color: #0f172a;
+      background: linear-gradient(135deg, #eef2ff, #ecfeff);
+    }
+
+    .comparison-result-row {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr) auto;
+      gap: 7px;
+      align-items: baseline;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .comparison-result-key {
+      font-weight: 950;
+      color: #818cf8;
+    }
+
+    .comparison-sidebar-card .comparison-result-key {
+      color: #4338ca;
+    }
+
+    .comparison-change-line {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(148, 163, 184, 0.28);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .comparison-change-line.dem { color: #60a5fa; }
+    .comparison-change-line.rep { color: #f87171; }
+    .comparison-change-line.even { color: #94a3b8; }
+
+    .comparison-sidebar-card .comparison-change-line.dem { color: #1d4ed8; }
+    .comparison-sidebar-card .comparison-change-line.rep { color: #b91c1c; }
+    .comparison-sidebar-card .comparison-change-line.even { color: #64748b; }
   }
     
 </style>
@@ -9890,6 +9995,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="contest-loading-indicator" id="contest-loading-indicator" aria-live="polite" aria-atomic="true" hidden>Loading…</div>
                 <div class="model-inputs-inline" id="model-inputs-inline" role="note" hidden></div>
+                <div class="comparison-controls" id="comparison-controls" data-testid="comparison-controls" hidden>
+                  <div class="comparison-controls-head">
+                    <span class="comparison-controls-title">Compare against</span>
+                    <span aria-hidden="true">A ↔ B</span>
+                  </div>
+                  <div class="comparison-select-row">
+                    <select id="comparisonContestSelect" data-testid="comparison-contest-select" aria-label="Select comparison contest">
+                      <option value="">Select comparison contest...</option>
+                    </select>
+                    <button id="comparison-swap-btn" class="comparison-swap-btn" type="button" data-testid="comparison-swap" aria-label="Swap primary and comparison contests" title="Swap A and B">⇄</button>
+                  </div>
+                  <div class="comparison-summary" id="comparison-summary" aria-live="polite">Choose a second contest to map the change from B to A.</div>
+                </div>
                 <div class="contest-search-wrap contest-search-wrap-secondary">
                   <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
                 </div>
@@ -9996,6 +10114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="viz-mode-btn" data-mode="winners" type="button"><span>Winners</span></button>
                 <button class="viz-mode-btn" data-mode="shift" type="button"><span>Shift</span></button>
                 <button class="viz-mode-btn" data-mode="flips" type="button"><span>Flips</span></button>
+                <button class="viz-mode-btn" data-mode="comparison" type="button"><span>Compare</span></button>
                 <button class="viz-mode-btn" data-mode="demographics" type="button"><span>Demographics</span></button>
                 <button class="viz-mode-btn" data-mode="population_change" type="button"><span>Pop Change</span></button>
               </div>
@@ -10189,6 +10308,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="viz-mode-btn" data-mode="flips" id="mode-flips">
       <span>Flips</span>
     </button>
+    <button class="viz-mode-btn" data-mode="comparison" id="mode-comparison">
+      <span>Compare</span>
+    </button>
     <button class="viz-mode-btn" data-mode="demographics" id="mode-demographics">
       <span>Demographics</span>
     </button>
@@ -10353,6 +10475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <script src="./js/atlas-classification.js"></script>
+    <script src="./js/atlas-comparison.js"></script>
     <script src="./js/atlas-core.js"></script>
     <script src="./js/atlas-data.js"></script>
     <script src="./js/atlas-display.js"></script>
@@ -10395,8 +10518,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-15-dem-ramp-nc-red-v4';
-    const APP_BUILD_ID = '2026-08-15-dem-ramp-nc-red-v4';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v1';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -11540,7 +11663,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentView = 'counties'; // 'counties', 'districts', 'state_house', 'state_senate'
     let currentElectionResults = null; // Current contest results for county details
     let currentPrecinctResults = null; // Current contest results keyed by precinct
-    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips', 'demographics', 'population_change'
+    let currentVizMode = 'margins'; // 'margins', 'winners', 'shift', 'flips', 'comparison', 'demographics', 'population_change'
+    let comparisonContestValue = '';
+    let activeComparisonSnapshot = null;
+    let comparisonRequestId = 0;
     let populationChangeMetric = 'pct'; // 'pct' | 'abs'
     let previousElectionData = null; // For shift mode
     let precinctsEnabled = false;
@@ -12242,6 +12368,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestValue = String(document.getElementById('contestSelect')?.value || '').trim();
       if (contestValue) params.set('contest', contestValue);
       if (currentVizMode && currentVizMode !== 'margins') params.set('mode', currentVizMode);
+      if (currentVizMode === 'comparison' && comparisonContestValue) params.set('compare', comparisonContestValue);
       const linesYear = normalizeDistrictLinesYear(currentDistrictLinesYear);
       if (linesYear !== 2022) params.set('lines', String(linesYear));
       if (Number.isFinite(Number(scenarioSwingPct)) && Math.abs(Number(scenarioSwingPct)) >= 0.05) {
@@ -12401,6 +12528,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (state.view && state.view !== currentView) {
           await setMapView(state.view);
+        }
+
+        if (state.comparisonContest) {
+          comparisonContestValue = String(state.comparisonContest || '').trim();
+          try { syncComparisonContestOptions({ preferredValue: comparisonContestValue, autoPick: false }); } catch (_) {}
         }
 
         if (state.mode && state.mode !== currentVizMode) {
@@ -13808,6 +13940,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const useTurnoutOpacity = turnoutBivariateEnabled && !demographicsModeActive;
       const precinctsActuallyVisible =
         precinctsEnabled &&
+        currentVizMode !== 'comparison' &&
         map.getZoom() >= (CONFIG.precincts?.minZoom || 8.5);
       let countyBaseOpacity = precinctsActuallyVisible ? preset.countyWithPrecinct : preset.countyActive;
       let districtBaseOpacity = preset.district;
@@ -14320,6 +14453,119 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
 
+    function getComparisonOptionValues() {
+      const primary = document.getElementById('contestSelect');
+      if (!primary) return [];
+      return Array.from(primary.options || [])
+        .map(option => String(option?.value || '').trim())
+        .filter(Boolean);
+    }
+
+    function syncComparisonContestOptions({ preferredValue = comparisonContestValue, autoPick = true } = {}) {
+      const primary = document.getElementById('contestSelect');
+      const comparison = document.getElementById('comparisonContestSelect');
+      if (!primary || !comparison) return '';
+
+      const primaryValue = String(primary.value || '').trim();
+      const prior = String(preferredValue || comparisonContestValue || comparison.value || '').trim();
+      comparison.innerHTML = primary.innerHTML;
+      const first = comparison.querySelector('option');
+      if (first) first.textContent = 'Select comparison contest...';
+
+      Array.from(comparison.options || []).forEach(option => {
+        option.disabled = !!(primaryValue && option.value === primaryValue);
+      });
+
+      const values = getComparisonOptionValues().filter(value => value !== primaryValue);
+      let next = values.includes(prior) ? prior : '';
+      if (!next && autoPick && primaryValue && window.AtlasComparison) {
+        next = window.AtlasComparison.pickDefaultComparisonContest(primaryValue, values);
+      }
+      comparison.value = next;
+      comparisonContestValue = next;
+      updateComparisonControlsSummary();
+      return next;
+    }
+
+    function updateComparisonControlsSummary(message = '') {
+      const summary = document.getElementById('comparison-summary');
+      if (!summary) return;
+      if (message) {
+        summary.textContent = message;
+        return;
+      }
+      const primaryValue = String(document.getElementById('contestSelect')?.value || '').trim();
+      const secondaryValue = String(comparisonContestValue || '').trim();
+      if (!primaryValue) {
+        summary.textContent = 'Choose contest A, then choose a contest to compare against.';
+        return;
+      }
+      if (!secondaryValue) {
+        summary.textContent = 'Choose contest B to map the change from B to A.';
+        return;
+      }
+      const [primaryType, primaryYear] = parseContestValue(primaryValue);
+      const [secondaryType, secondaryYear] = parseContestValue(secondaryValue);
+      summary.textContent = `A: ${formatContestLabel(primaryType, primaryYear)} · B: ${formatContestLabel(secondaryType, secondaryYear)} · map shows B → A`;
+    }
+
+    function syncComparisonControlsVisibility() {
+      const controls = document.getElementById('comparison-controls');
+      if (!controls) return;
+      const visible = currentVizMode === 'comparison';
+      controls.hidden = !visible;
+      if (visible) syncComparisonContestOptions({ autoPick: true });
+    }
+
+    function refreshPinnedDetailsAfterComparisonChange() {
+      const raw = String(window.lastSelectedCounty || '').trim();
+      if (!raw) return;
+      const cd = raw.match(/Congressional District\s+(\d+)/i);
+      const hd = raw.match(/State House District\s+(\d+)/i);
+      const sd = raw.match(/State Senate District\s+(\d+)/i);
+      if (cd) return showDistrictDetails(Number(cd[1]));
+      if (hd) return showStateDistrictDetails(Number(hd[1]), 'house');
+      if (sd) return showStateDistrictDetails(Number(sd[1]), 'senate');
+      if (currentView === 'counties') return showCountyDetails(raw);
+    }
+
+    function wireComparisonControls() {
+      const comparison = document.getElementById('comparisonContestSelect');
+      const swap = document.getElementById('comparison-swap-btn');
+      if (comparison && !comparison.dataset.wired) {
+        comparison.dataset.wired = 'true';
+        comparison.addEventListener('change', async function() {
+          comparisonContestValue = String(this.value || '').trim();
+          activeComparisonSnapshot = null;
+          updateComparisonControlsSummary();
+          const primaryValue = String(document.getElementById('contestSelect')?.value || '').trim();
+          if (currentVizMode === 'comparison' && primaryValue && comparisonContestValue) {
+            await applyContest(primaryValue, { force: true });
+            refreshPinnedDetailsAfterComparisonChange();
+          } else {
+            renderLegendForVizMode('comparison');
+          }
+          saveUIState();
+        });
+      }
+      if (swap && !swap.dataset.wired) {
+        swap.dataset.wired = 'true';
+        swap.addEventListener('click', async function() {
+          const primary = document.getElementById('contestSelect');
+          if (!primary) return;
+          const primaryValue = String(primary.value || '').trim();
+          const secondaryValue = String(comparisonContestValue || '').trim();
+          if (!primaryValue || !secondaryValue) return;
+          primary.value = secondaryValue;
+          comparisonContestValue = primaryValue;
+          syncComparisonContestOptions({ preferredValue: primaryValue, autoPick: false });
+          await handleContestSelectionChange(secondaryValue);
+          refreshPinnedDetailsAfterComparisonChange();
+        });
+      }
+      syncComparisonControlsVisibility();
+    }
+
     // Visualization Mode Functions - VoteHub Style
     function setupVizModes() {
       const modeButtons = document.querySelectorAll('.viz-mode-btn');
@@ -14330,6 +14576,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
       setVizModeUI(currentVizMode);
+      wireComparisonControls();
       // Ensure legend matches initial mode.
       renderLegendForVizMode(currentVizMode);
       try { updatePopulationMetricLegendChip(); } catch (_) {}
@@ -14348,13 +14595,19 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update button states
       setVizModeUI(mode);
+      syncComparisonControlsVisibility();
       renderLegendForVizMode(mode);
+      if (mode !== 'comparison') {
+        activeComparisonSnapshot = null;
+        clearRenderedComparisonCards();
+      }
+      try { updatePrecinctVisibility(); } catch (_) {}
       try { updatePopulationMetricLegendChip(); } catch (_) {}
       
       // Reapply current contest with new mode
       const contestSelect = document.getElementById('contestSelect');
       if (contestSelect && contestSelect.value) {
-        applyContest(contestSelect.value);
+        handleContestSelectionChange(contestSelect.value, { force: true });
       }
       updateContextBanner();
       saveUIState();
@@ -20292,7 +20545,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const precinctGeom = (typeof getDesiredPrecinctGeometryMode === 'function') ? String(getDesiredPrecinctGeometryMode() || '') : '';
       const overlays = `split:${splitTicketOverlayEnabled ? 1 : 0}|baro:${barometerOverlayEnabled ? 1 : 0}|turnout:${turnoutBivariateEnabled ? 1 : 0}|opacity:${String(overlayOpacityPreset || '')}`;
       const precinct = `precincts:${precinctsEnabled ? 1 : 0}|geom:${precinctGeom}`;
-      return `k:${key}|ct:${ct}|y:${Number.isFinite(y) ? y : ''}|v:${view}|m:${mode}|lines:${linesYear}|${precinct}|${overlays}|scenario:${scenarioSignature()}`;
+      const comparison = mode === 'comparison' ? String(comparisonContestValue || '').trim() : '';
+      return `k:${key}|ct:${ct}|y:${Number.isFinite(y) ? y : ''}|v:${view}|m:${mode}|compare:${comparison}|lines:${linesYear}|${precinct}|${overlays}|scenario:${scenarioSignature()}`;
     }
 
     function wireContestSelectHandlers(sel) {
@@ -20415,10 +20669,17 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
-    async function handleContestSelectionChange(contestKey) {
+    async function handleContestSelectionChange(contestKey, opts = {}) {
+      const force = !!opts?.force;
       try { refreshStartHereHint(); } catch (_) {}
+      try {
+        syncComparisonContestOptions({
+          preferredValue: comparisonContestValue,
+          autoPick: currentVizMode === 'comparison'
+        });
+      } catch (_) {}
       const queued = queueContestSelection(contestKey);
-      if (!contestChangeInFlight && queued.key && queued.key === lastCompletedContestSelection) {
+      if (!force && !contestChangeInFlight && queued.key && queued.key === lastCompletedContestSelection) {
         queueCountyDetailsRefresh();
         return;
       }
@@ -20583,6 +20844,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	      sel.appendChild(fragment);
 	      sel.dataset.populated = 'true';
 	      wireContestSelectHandlers(sel);
+	      try {
+	        syncComparisonContestOptions({
+	          preferredValue: comparisonContestValue,
+	          autoPick: currentVizMode === 'comparison'
+	        });
+	      } catch (_) {}
 	    }
 
     function updateContestSelectForCurrentView() {
@@ -22510,6 +22777,37 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
+    function buildComparisonLegendHTML() {
+      const colors = [
+        colorForShiftMode(-15),
+        colorForShiftMode(-10),
+        colorForShiftMode(-5),
+        colorForShiftMode(0),
+        colorForShiftMode(5),
+        colorForShiftMode(10),
+        colorForShiftMode(15)
+      ];
+      return `
+        <div class="legend-scale-shell">
+          ${buildLegendSpectrum(colors, 'shift')}
+          <div class="legend-scale-caption">
+            <span class="dem">A more Democratic</span>
+            <span>No difference</span>
+            <span class="rep">A more Republican</span>
+          </div>
+          <div class="legend-axis shift">
+            <span class="dem">D +15</span>
+            <span class="dem">D +10</span>
+            <span class="dem">D +5</span>
+            <span>0</span>
+            <span class="rep">R +5</span>
+            <span class="rep">R +10</span>
+            <span class="rep">R +15</span>
+          </div>
+        </div>
+      `;
+    }
+
     function buildDemographicsLegendHTML() {
       return `
         <div class="legend-swatch-grid">
@@ -22587,6 +22885,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (badge) badge.textContent = 'Flips';
         if (footer) footer.textContent = 'Neutral areas either did not flip or do not have a usable prior result.';
         content.innerHTML = buildFlipsLegendHTML();
+      } else if (mode === 'comparison') {
+        const primaryValue = String(document.getElementById('contestSelect')?.value || '').trim();
+        const secondaryValue = String(comparisonContestValue || '').trim();
+        const [primaryType, primaryYear] = parseContestValue(primaryValue);
+        const [secondaryType, secondaryYear] = parseContestValue(secondaryValue);
+        const primaryLabel = primaryValue ? formatContestLabel(primaryType, primaryYear) : 'Contest A';
+        const secondaryLabel = secondaryValue ? formatContestLabel(secondaryType, secondaryYear) : 'Contest B';
+        if (header) header.textContent = 'Contest comparison';
+        if (subtitle) subtitle.textContent = `${secondaryLabel} → ${primaryLabel}. Colors show the difference in two-party margin.`;
+        if (badge) badge.textContent = 'A − B';
+        if (footer) footer.textContent = 'Blue means contest A was more Democratic than B; red means A was more Republican.';
+        content.innerHTML = buildComparisonLegendHTML();
       } else if (mode === 'shift') {
         const shiftRange = meta?.fromYear ? `${meta.fromYear}-${meta.toYear || 'current'}` : 'Shift';
         if (header) header.textContent = meta?.fromYear ? `Shift (${shiftRange})` : 'Shift';
@@ -25201,6 +25511,7 @@ document.addEventListener('DOMContentLoaded', function() {
         winners: 'Winners',
         shift: 'Shift',
         flips: 'Flips',
+        comparison: 'Compare',
         demographics: 'Demographics',
         population_change: 'Pop Change'
       };
@@ -27269,12 +27580,15 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="tooltip-more-body">${detailLines}</div>
             </details>
           `.trim();
+      const comparisonHTML = currentVizMode === 'comparison'
+        ? renderComparisonRecordHTML(getActiveComparisonRecord('county', norm))
+        : '';
 
       const copyText = `${countyDisplay} County`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', inner + comparisonHTML, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       clearDesktopHoverExpandState();
@@ -27826,11 +28140,14 @@ document.addEventListener('DOMContentLoaded', function() {
         shiftYearLabel: (prevYearForFlip && year) ? `${prevYearForFlip}→${year}` : '',
         showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!prevYearForFlip
       });
+      const comparisonHTML = currentVizMode === 'comparison'
+        ? renderComparisonRecordHTML(getActiveComparisonRecord(scope, districtNum))
+        : '';
       const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
       showHoverTooltip(
         e.point.x,
         e.point.y,
-        buildTooltipShell('', inner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+        buildTooltipShell('', inner + comparisonHTML, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
         { force: !!forceTooltip, pinned: pinnedShell, context: 'votehub-results', copyText }
       );
       wireTooltipButtons();
@@ -29049,6 +29366,9 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </details>
   `;
+  if (currentVizMode === 'comparison') {
+    focusContent = renderComparisonRecordHTML(getActiveComparisonRecord('county', norm), { sidebar: true }) + focusContent;
+  }
   contentEl.innerHTML = focusContent;
   try {
     const scroller = document.getElementById('focus-details-cache');
@@ -31007,11 +31327,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const minZoom = (CONFIG.precincts?.minZoom || 8.5);
       const z = map.getZoom();
-      const wantsPolygons = precinctsEnabled && !shouldUseCentroidOnlyPrecinctMode() && z >= minZoom;
+      const comparisonAllowsPrecincts = currentVizMode !== 'comparison';
+      const wantsPolygons = precinctsEnabled && comparisonAllowsPrecincts && !shouldUseCentroidOnlyPrecinctMode() && z >= minZoom;
       // Keep centroids visible until polygon geometry is actually ready; otherwise users can zoom
       // into an empty map while the heavy precinct GeoJSON is still loading.
       const polyVisible = wantsPolygons && !!precinctSourceLoaded;
-      const dotVisible = precinctsEnabled && (!wantsPolygons || !precinctSourceLoaded || shouldUseCentroidOnlyPrecinctMode());
+      const dotVisible = precinctsEnabled && comparisonAllowsPrecincts && (!wantsPolygons || !precinctSourceLoaded || shouldUseCentroidOnlyPrecinctMode());
 
       // Auto-load precinct centroids at statewide zoom (fast), polygons later (heavy).
       if (dotVisible && !precinctCentroidsLoaded && !precinctCentroidsLoadInFlight) {
@@ -33072,7 +33393,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const repBlank = !((row.rep_candidate || '').toString().trim());
             if (demBlank || repBlank) cand = await getContestCandidates(contestType, year);
           }
-          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: 'default' });
+          if (el) {
+            const comparisonHTML = currentVizMode === 'comparison'
+              ? renderComparisonRecordHTML(getActiveComparisonRecord('congressional', districtNum), { sidebar: true })
+              : '';
+            el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: 'default' }) + comparisonHTML;
+          }
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-election');
@@ -33161,7 +33487,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const repBlank = !((row.rep_candidate || '').toString().trim());
             if (demBlank || repBlank) cand = await getContestCandidates(contestType, year);
           }
-          if (el) el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default' });
+          if (el) {
+            const comparisonHTML = currentVizMode === 'comparison'
+              ? renderComparisonRecordHTML(getActiveComparisonRecord(scope, districtNum), { sidebar: true })
+              : '';
+            el.innerHTML = renderDistrictElectionInfoHTML(contestType, year, row, cand, { marginPrecision: isLincolnCountyEquivalentHouseDistrict(scope, districtNum) ? 'county' : 'default' }) + comparisonHTML;
+          }
         } catch (err) {
           if (reqId !== districtSidebarRequestId) return;
           const el = document.getElementById('district-election');
@@ -33723,7 +34054,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (marginPct >= 30) {
         return winner === 'R' ? '#a50f15' : '#08519c'; // OG Dominant
       } else if (marginPct >= 20) {
-        return winner === 'R' ? '#cb181d' : '#2876b5'; // Stronghold — midpoint blue, OG red
+        return winner === 'R' ? '#cb181d' : '#2876b5'; // Stronghold — clearer separation from Safe on mobile
       } else if (marginPct >= 10) {
           return winner === 'R' ? '#e93a2d' : '#3f8fc9'; // Safe — moderated blue middle tier
       } else if (marginPct >= 5.5) {
@@ -34228,6 +34559,303 @@ document.addEventListener('DOMContentLoaded', function() {
       return cached;
     }
 
+    function comparisonDeltaLabel(delta, { includeWord = true } = {}) {
+      const n = Number(delta);
+      if (!Number.isFinite(n)) return 'No comparison';
+      if (Math.abs(n) < 0.005) return includeWord ? 'No margin difference' : 'Even';
+      const party = n > 0 ? 'R' : 'D';
+      const value = Math.abs(n).toFixed(2);
+      return includeWord ? `${party}+${value} difference` : `${party}+${value}`;
+    }
+
+    function comparisonOutcomeLabel(signed, row = null, candidates = null) {
+      const margin = Number(signed);
+      if (!Number.isFinite(margin)) return 'No result';
+      if (Math.abs(margin) < 0.005) return 'Tie';
+      const repName = String(row?.rep_candidate || candidates?.repCandidate || candidates?.rep || '').trim();
+      const demName = String(row?.dem_candidate || candidates?.demCandidate || candidates?.dem || '').trim();
+      const name = margin > 0
+        ? shortCandidateLabel(repName, 'R')
+        : shortCandidateLabel(demName, 'D');
+      return `${name} +${Math.abs(margin).toFixed(2)}`;
+    }
+
+    function getActiveComparisonRecord(scope, geographyKey) {
+      const snapshot = activeComparisonSnapshot;
+      if (!snapshot || String(snapshot.scope || '') !== String(scope || '')) return null;
+      const raw = String(geographyKey ?? '').trim();
+      const key = scope === 'county' ? normalizeCountyToken(raw) : String(Number(raw));
+      return snapshot.records?.get(key) || null;
+    }
+
+    function renderComparisonRecordHTML(record, { sidebar = false } = {}) {
+      if (!record) return '';
+      const comparison = window.AtlasComparison.compareSignedMargins(record.primarySigned, record.secondarySigned);
+      const tone = comparison.direction === 'rep' ? 'rep' : (comparison.direction === 'dem' ? 'dem' : 'even');
+      const primaryOutcome = comparisonOutcomeLabel(record.primarySigned, record.primaryRow, record.primaryCandidates);
+      const secondaryOutcome = comparisonOutcomeLabel(record.secondarySigned, record.secondaryRow, record.secondaryCandidates);
+      const className = sidebar ? 'comparison-sidebar-card' : 'comparison-tooltip-card';
+      return `
+        <div class="${className}" data-testid="comparison-result-card">
+          <div style="font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;${sidebar ? 'color:#3730a3;' : 'color:#c7d2fe;'}">Contest comparison</div>
+          <div class="comparison-result-row">
+            <span class="comparison-result-key">A</span>
+            <span>${escapeHtml(record.primaryLabel)}</span>
+            <strong>${escapeHtml(primaryOutcome)}</strong>
+          </div>
+          <div class="comparison-result-row">
+            <span class="comparison-result-key">B</span>
+            <span>${escapeHtml(record.secondaryLabel)}</span>
+            <strong>${escapeHtml(secondaryOutcome)}</strong>
+          </div>
+          <div class="comparison-change-line ${tone}">${escapeHtml(comparisonDeltaLabel(comparison.delta))} from B to A</div>
+        </div>
+      `;
+    }
+
+    function clearRenderedComparisonCards() {
+      document.querySelectorAll('[data-testid="comparison-result-card"]').forEach(card => card.remove());
+    }
+
+    function comparisonCandidateNamesFromRows(rows, contestType) {
+      const ct = String(contestType || '').trim();
+      const first = (rows || []).find(row => row && (
+        row[`${ct}_dem_candidate`] || row[`${ct}_rep_candidate`] || row.dem_candidate || row.rep_candidate
+      )) || null;
+      return {
+        demCandidate: String(first?.[`${ct}_dem_candidate`] || first?.dem_candidate || '').trim(),
+        repCandidate: String(first?.[`${ct}_rep_candidate`] || first?.rep_candidate || '').trim()
+      };
+    }
+
+    async function applyCountyComparison(primary, secondary, requestId) {
+      const [primaryType, primaryYear] = parseContestValue(primary);
+      const [secondaryType, secondaryYear] = parseContestValue(secondary);
+      const [primaryRows, secondaryRows] = await Promise.all([
+        loadContestSlice(primaryType, primaryYear),
+        loadContestSlice(secondaryType, secondaryYear)
+      ]);
+      if (requestId !== comparisonRequestId || currentVizMode !== 'comparison') return false;
+
+      const primaryBundle = buildCountyAggregateBundleFromSliceRows(primaryRows, primaryType);
+      const secondaryBundle = buildCountyAggregateBundleFromSliceRows(secondaryRows, secondaryType);
+      if (!primaryBundle || !secondaryBundle) return false;
+
+      const primaryLabel = formatContestLabel(primaryType, primaryYear);
+      const secondaryLabel = formatContestLabel(secondaryType, secondaryYear);
+      const primaryCandidates = comparisonCandidateNamesFromRows(primaryRows, primaryType);
+      const secondaryCandidates = comparisonCandidateNamesFromRows(secondaryRows, secondaryType);
+      const records = new Map();
+      const expr = [
+        'match',
+        ['upcase', ['coalesce', ['get', 'NAME20'], ['get', 'CountyName'], ['get', 'COUNTYNAME'], ['get', 'county_nam'], ['get', 'NAME']]]
+      ];
+
+      primaryBundle.signedByCounty.forEach((primarySigned, countyNorm) => {
+        const secondarySigned = secondaryBundle.signedByCounty.get(countyNorm);
+        if (!Number.isFinite(Number(secondarySigned))) return;
+        const comparison = window.AtlasComparison.compareSignedMargins(primarySigned, secondarySigned);
+        const record = {
+          key: countyNorm,
+          primarySigned,
+          secondarySigned,
+          delta: comparison.delta,
+          primaryRow: primaryBundle.totalsByCounty.get(countyNorm),
+          secondaryRow: secondaryBundle.totalsByCounty.get(countyNorm),
+          primaryCandidates,
+          secondaryCandidates,
+          primaryLabel,
+          secondaryLabel
+        };
+        records.set(countyNorm, record);
+        expr.push(countyNorm, colorForShiftMode(comparison.delta));
+      });
+      expr.push('#d1d5db');
+
+      if (map.getLayer('county-fill')) {
+        map.setPaintProperty('county-fill', 'fill-color', expr);
+        lastCountyFillExpr = expr;
+      }
+      if (precinctsEnabled) {
+        ['precinct-fill', 'precinct-stroke', 'precinct-dot', 'precinct-dot-missing'].forEach(layerId => {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', 'none');
+        });
+      }
+
+      activeComparisonSnapshot = {
+        scope: 'county',
+        view: currentView,
+        primaryValue: primary,
+        secondaryValue: secondary,
+        primaryLabel,
+        secondaryLabel,
+        records
+      };
+      const statewideComparison = window.AtlasComparison.compareSignedMargins(
+        primaryBundle.statewideSigned,
+        secondaryBundle.statewideSigned
+      );
+      updateComparisonControlsSummary(`${secondaryLabel} → ${primaryLabel} · statewide difference ${comparisonDeltaLabel(statewideComparison.delta, { includeWord: false })}`);
+      setStatewideContestTitle(`Compare: ${primaryLabel} vs ${secondaryLabel}`);
+      setStatus(`Compared ${primaryLabel} with ${secondaryLabel} by county.`);
+      renderLegendForVizMode('comparison');
+      applyLayerOpacityTuning();
+      return true;
+    }
+
+    async function resolveComparisonDistrictRow(scope, districtId, contestType, year, payload) {
+      let row = pickDistrictSliceRow(payload, districtId);
+      row = await getCountyEquivalentDistrictResultRow(scope, districtId, contestType, year, row);
+      return row || null;
+    }
+
+    async function applyDistrictComparison(primary, secondary, requestId) {
+      const scope = getDistrictScopeForView(currentView);
+      if (!scope) return false;
+      const [primaryType, primaryYear] = parseContestValue(primary);
+      const [secondaryType, secondaryYear] = parseContestValue(secondary);
+      const [primaryNode, secondaryNode] = await Promise.all([
+        loadDistrictSlice(scope, primaryType, primaryYear),
+        loadDistrictSlice(scope, secondaryType, secondaryYear)
+      ]);
+      if (requestId !== comparisonRequestId || currentVizMode !== 'comparison') return false;
+
+      const primaryResults = primaryNode?.general?.results || null;
+      const secondaryResults = secondaryNode?.general?.results || null;
+      if (!primaryResults || !secondaryResults) return false;
+
+      const primaryLabel = formatContestLabel(primaryType, primaryYear);
+      const secondaryLabel = formatContestLabel(secondaryType, secondaryYear);
+      const primaryCandidates = { demCandidate: '', repCandidate: '' };
+      const secondaryCandidates = { demCandidate: '', repCandidate: '' };
+      const ids = Array.from(new Set([...Object.keys(primaryResults), ...Object.keys(secondaryResults)]))
+        .map(Number)
+        .filter(Number.isFinite)
+        .sort((a, b) => a - b);
+      const records = new Map();
+      const expr = ['case'];
+      let primaryDem = 0;
+      let primaryRep = 0;
+      let primaryTotal = 0;
+      let secondaryDem = 0;
+      let secondaryRep = 0;
+      let secondaryTotal = 0;
+
+      for (const districtId of ids) {
+        const [primaryRow, secondaryRow] = await Promise.all([
+          resolveComparisonDistrictRow(scope, districtId, primaryType, primaryYear, primaryNode),
+          resolveComparisonDistrictRow(scope, districtId, secondaryType, secondaryYear, secondaryNode)
+        ]);
+        if (!primaryRow || !secondaryRow) continue;
+        const pDem = Number(primaryRow.dem_votes || 0);
+        const pRep = Number(primaryRow.rep_votes || 0);
+        const pOther = Number(primaryRow.other_votes || 0);
+        const pTotal = Number(primaryRow.total_votes || (pDem + pRep + pOther));
+        const sDem = Number(secondaryRow.dem_votes || 0);
+        const sRep = Number(secondaryRow.rep_votes || 0);
+        const sOther = Number(secondaryRow.other_votes || 0);
+        const sTotal = Number(secondaryRow.total_votes || (sDem + sRep + sOther));
+        if (pTotal <= 0 || sTotal <= 0) continue;
+
+        const primarySigned = signedDistrictMarginPctForDisplay(scope, districtId, pDem, pRep, pTotal, primaryRow.margin_pct);
+        const secondarySigned = signedDistrictMarginPctForDisplay(scope, districtId, sDem, sRep, sTotal, secondaryRow.margin_pct);
+        const comparison = window.AtlasComparison.compareSignedMargins(primarySigned, secondarySigned);
+        const key = String(Number(districtId));
+        records.set(key, {
+          key,
+          primarySigned,
+          secondarySigned,
+          delta: comparison.delta,
+          primaryRow,
+          secondaryRow,
+          primaryCandidates,
+          secondaryCandidates,
+          primaryLabel,
+          secondaryLabel
+        });
+
+        expr.push([
+          '==',
+          ['to-number', ['coalesce', ['get', 'DISTRICT'], ['get', 'CD118FP'], ['get', 'CD119FP'], ['get', 'SLDLST'], ['get', 'SLDUST'], ['get', 'district_id'], ['get', 'district']]],
+          Number(districtId)
+        ]);
+        expr.push(colorForShiftMode(comparison.delta));
+        primaryDem += pDem;
+        primaryRep += pRep;
+        primaryTotal += pTotal;
+        secondaryDem += sDem;
+        secondaryRep += sRep;
+        secondaryTotal += sTotal;
+      }
+      expr.push('#d1d5db');
+
+      const layerName = currentView === 'districts'
+        ? 'district-fill'
+        : (currentView === 'state_house' ? 'state-house-fill' : 'state-senate-fill');
+      if (map.getLayer(layerName)) map.setPaintProperty(layerName, 'fill-color', expr);
+
+      activeComparisonSnapshot = {
+        scope,
+        view: currentView,
+        linesYear: normalizeDistrictLinesYear(currentDistrictLinesYear),
+        primaryValue: primary,
+        secondaryValue: secondary,
+        primaryLabel,
+        secondaryLabel,
+        records
+      };
+      const statewideComparison = window.AtlasComparison.compareSignedMargins(
+        window.AtlasComparison.signedMarginPct(primaryDem, primaryRep, primaryTotal),
+        window.AtlasComparison.signedMarginPct(secondaryDem, secondaryRep, secondaryTotal)
+      );
+      const linesLabel = getDistrictLinesLabel();
+      updateComparisonControlsSummary(`${secondaryLabel} → ${primaryLabel} · ${getReadableViewLabel(currentView)} difference ${comparisonDeltaLabel(statewideComparison.delta, { includeWord: false })}`);
+      setStatewideContestTitle(`Compare: ${primaryLabel} vs ${secondaryLabel} (${linesLabel})`);
+      setStatus(`Compared ${primaryLabel} with ${secondaryLabel} across ${getReadableViewLabel(currentView)} on ${linesLabel}.`);
+      renderLegendForVizMode('comparison');
+      applyLayerOpacityTuning();
+      return true;
+    }
+
+    async function applyComparisonOverlay(primaryContestValue) {
+      if (currentVizMode !== 'comparison') return false;
+      clearRenderedComparisonCards();
+      const primary = String(primaryContestValue || '').trim();
+      let secondary = String(comparisonContestValue || '').trim();
+      if (!secondary || secondary === primary) {
+        secondary = syncComparisonContestOptions({ preferredValue: secondary, autoPick: true });
+      }
+      if (!primary || !secondary || primary === secondary) {
+        activeComparisonSnapshot = null;
+        updateComparisonControlsSummary();
+        setStatus('Choose two different contests to compare.');
+        renderLegendForVizMode('comparison');
+        return false;
+      }
+
+      const requestId = ++comparisonRequestId;
+      activeComparisonSnapshot = null;
+      updateComparisonControlsSummary('Loading comparison…');
+      try {
+        const applied = currentView === 'counties'
+          ? await applyCountyComparison(primary, secondary, requestId)
+          : await applyDistrictComparison(primary, secondary, requestId);
+        if (!applied && requestId === comparisonRequestId) {
+          updateComparisonControlsSummary('Those contests do not share usable results on the current geography and line set.');
+          setStatus('Comparison data is unavailable for the current geography and district lines.');
+        }
+        return applied;
+      } catch (err) {
+        if (requestId === comparisonRequestId) {
+          activeComparisonSnapshot = null;
+          updateComparisonControlsSummary('Comparison failed to load. Try another contest pair.');
+          setStatus('Comparison failed to load.', 5000, true);
+        }
+        console.warn('Failed to apply contest comparison:', err?.message || err);
+        return false;
+      }
+    }
+
     async function applyContest(contestKey, opts = {}) {
       const selectionSeq = Number(opts?.selectionSeq || 0);
       const force = !!opts?.force;
@@ -34274,6 +34902,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestType = contestKey.substring(0, lastUnderscoreIndex);
       const year = contestKey.substring(lastUnderscoreIndex + 1);
       currentContestMeta = { contestType, year };
+      if (currentVizMode !== 'comparison') activeComparisonSnapshot = null;
       const nextApplySig = buildContestApplySignature(contestKey, contestType, year);
       try { syncModelTuningControls(); } catch (_) {}
       try { updateContextBanner(); } catch (_) {}
@@ -34329,6 +34958,10 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           await applyStatewideContestToDistricts(contestType, year);
         }
+      }
+      if (isStaleSelection()) return;
+      if (currentVizMode === 'comparison') {
+        await applyComparisonOverlay(contestKey);
       }
       if (isStaleSelection()) return;
       try { await refreshPinnedDistrictForContest(contestType, year); } catch (_) {}
