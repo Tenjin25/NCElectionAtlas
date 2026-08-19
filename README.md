@@ -75,6 +75,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Progressive District Linework (DRA-style):** Congressional/State House/State Senate boundaries use a bright halo + crisp charcoal inner stroke with smooth zoom interpolation, stronger statewide readability, and a close hierarchy (Congress strongest, Senate very close, House only slightly thinner)
 - **Contest Picker:** Only valid contests for the current view are shown, driven by manifest files
 - **Contest Comparison:** `Compare` can map any two available contests as the change in signed R−D margin from the comparison contest to the primary contest. It works on counties, Congressional districts, State House districts, and State Senate districts; supports cross-year and same-year ticket-split pairs; includes statewide and judicial races on county layers; and adds named outcomes to hover and pinned-detail cards. The selected pair is preserved in share links.
+- **Data Export:** Export the active map view as CSV for spreadsheets or JSON for programmatic analysis. Exports are generated entirely in the browser and include vote totals, percentages, margins, contest names, and comparison fields when Compare mode is active, so GitHub Pages remains static and fast.
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
@@ -114,6 +115,9 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 **Last updated:** August 19, 2026
 
 ### Contest Comparison (August 19, 2026)
+
+- Added client-side CSV and JSON export controls under `More`, covering county results and comparison-mode results across county, Congressional, State House, and State Senate views.
+- Bumped the front-end build/cache token to `2026-08-19-ab-comparison-v6` so the new export UI and comparison fixes arrive together on GitHub Pages.
 
 - Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a control for swapping the selected contests.
 - Added comparison shading and compact, named-contest tooltips across Counties, Congress, State House, and State Senate. The comparison popup replaces the taller standard-results stack, shortens presidential labels to `US President YEAR`, and uses `%` for both contest margins and their displayed difference. Differences are calculated from the same two-decimal margins shown in the card, preventing `0.01%` display drift; coverage includes same-year legislative/congressional ticket splits and county-level statewide/judicial comparisons.

@@ -287,12 +287,25 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain('return `${Math.abs(n).toFixed(2)}% more ${party}`;');
   expect(source).toContain('compareMarginsForDisplay(record.primarySigned, record.secondarySigned)');
   expect(source).toContain("typeof comparisonApi.compareDisplayedSignedMargins === 'function'");
-  expect(source).toContain('atlas-comparison.js?v=2026-08-19-ab-comparison-v5');
+  expect(source).toContain('atlas-comparison.js?v=2026-08-19-ab-comparison-v6');
   expect(source).toContain('signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total)');
   expect(source).toContain('`US President ${year}${suffix || \'\'}`');
   expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
   expect(source).not.toContain('class="comparison-result-key">A</span>');
   expect(source).not.toContain('from B to A');
+});
+
+test('data export stays client-side and includes comparison fields', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+
+  expect(source).toContain('id="export-csv-btn"');
+  expect(source).toContain('id="export-json-btn"');
+  expect(source).toContain('function exportRowsToCsv(rows)');
+  expect(source).toContain('comparison_delta_pct');
+  expect(source).toContain('new Blob([body], { type: mime })');
+  expect(source).not.toContain('function exportActiveDataFromServer');
 });
 
 test.describe('North Carolina Election Atlas regression checks', () => {
