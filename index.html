@@ -9264,112 +9264,223 @@ body.focus-active #hover-tooltip[data-context="preview"] {
       font-variant-numeric: tabular-nums;
       font-feature-settings: "tnum" 1;
     }
-
-    .comparison-controls {
-      margin-top: 10px;
-      padding: 10px;
-      border: 1px solid rgba(79, 70, 229, 0.22);
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(238, 242, 255, 0.96), rgba(236, 254, 255, 0.90));
-    }
-
-    .comparison-controls[hidden] {
-      display: none !important;
-    }
-
-    .comparison-controls-head,
-    .comparison-select-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .comparison-controls-head {
-      justify-content: space-between;
-      margin-bottom: 7px;
-    }
-
-    .comparison-controls-title {
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #3730a3;
-    }
-
-    .comparison-select-row select {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-
-    .comparison-swap-btn {
-      flex: 0 0 auto;
-      min-width: 42px;
-      min-height: 42px;
-      border: 1px solid rgba(79, 70, 229, 0.30);
-      border-radius: 12px;
-      background: #fff;
-      color: #3730a3;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .comparison-summary {
-      margin-top: 7px;
-      font-size: 11px;
-      line-height: 1.45;
-      color: #475569;
-      font-weight: 700;
-    }
-
-    .comparison-tooltip-card,
-    .comparison-sidebar-card {
-      margin-top: 9px;
-      padding: 9px 10px;
-      border-radius: 11px;
-      border: 1px solid rgba(129, 140, 248, 0.30);
-      background: rgba(30, 41, 59, 0.72);
-    }
-
-    .comparison-sidebar-card {
-      color: #0f172a;
-      background: linear-gradient(135deg, #eef2ff, #ecfeff);
-    }
-
-    .comparison-result-row {
-      display: grid;
-      grid-template-columns: 20px minmax(0, 1fr) auto;
-      gap: 7px;
-      align-items: baseline;
-      margin-top: 4px;
-      font-size: 12px;
-    }
-
-    .comparison-result-key {
-      font-weight: 950;
-      color: #818cf8;
-    }
-
-    .comparison-sidebar-card .comparison-result-key {
-      color: #4338ca;
-    }
-
-    .comparison-change-line {
-      margin-top: 7px;
-      padding-top: 7px;
-      border-top: 1px solid rgba(148, 163, 184, 0.28);
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .comparison-change-line.dem { color: #60a5fa; }
-    .comparison-change-line.rep { color: #f87171; }
-    .comparison-change-line.even { color: #94a3b8; }
-
-    .comparison-sidebar-card .comparison-change-line.dem { color: #1d4ed8; }
-    .comparison-sidebar-card .comparison-change-line.rep { color: #b91c1c; }
-    .comparison-sidebar-card .comparison-change-line.even { color: #64748b; }
   }
+
+.comparison-controls {
+  position: relative;
+  overflow: hidden;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(79, 70, 229, 0.24);
+  border-radius: 15px;
+  background: linear-gradient(140deg, rgba(238, 242, 255, 0.98), rgba(236, 254, 255, 0.94));
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.comparison-controls::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #6366f1 48%, #06b6d4);
+}
+
+.comparison-controls[hidden] {
+  display: none !important;
+}
+
+.comparison-controls-head,
+.comparison-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparison-controls-head {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.comparison-controls-title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+  color: #3730a3;
+}
+
+.comparison-select-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 42px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.comparison-swap-btn {
+  flex: 0 0 auto;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid rgba(79, 70, 229, 0.30);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fff, #eef2ff);
+  color: #3730a3;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.10);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.comparison-swap-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(79, 70, 229, 0.54);
+  box-shadow: 0 7px 14px rgba(79, 70, 229, 0.16);
+}
+
+.comparison-swap-btn:active {
+  transform: translateY(0);
+}
+
+.comparison-summary {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(99, 102, 241, 0.15);
+  font-size: 11px;
+  line-height: 1.45;
+  color: #475569;
+  font-weight: 700;
+}
+
+.comparison-tooltip-card,
+.comparison-sidebar-card {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.32);
+}
+
+.comparison-tooltip-card {
+  color: #f8fafc;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.95));
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.comparison-sidebar-card {
+  color: #0f172a;
+  background: linear-gradient(140deg, #eef2ff, #ecfeff);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.90);
+}
+
+.comparison-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.comparison-card-kicker {
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #c7d2fe;
+}
+
+.comparison-sidebar-card .comparison-card-kicker {
+  color: #3730a3;
+}
+
+.comparison-delta-pill {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.comparison-delta-pill.dem { color: #7dd3fc; }
+.comparison-delta-pill.rep { color: #fca5a5; }
+.comparison-delta-pill.even { color: #cbd5e1; }
+
+.comparison-sidebar-card .comparison-delta-pill.dem { color: #1d4ed8; background: rgba(219, 234, 254, 0.72); }
+.comparison-sidebar-card .comparison-delta-pill.rep { color: #b91c1c; background: rgba(254, 226, 226, 0.72); }
+.comparison-sidebar-card .comparison-delta-pill.even { color: #475569; background: rgba(226, 232, 240, 0.76); }
+
+.comparison-result-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 5px;
+  padding: 7px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-left-width: 3px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 12px;
+}
+
+.comparison-result-row.is-primary { border-left-color: #38bdf8; }
+.comparison-result-row.is-secondary { border-left-color: #a78bfa; }
+
+.comparison-sidebar-card .comparison-result-row {
+  border-color: rgba(99, 102, 241, 0.13);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.comparison-sidebar-card .comparison-result-row.is-primary { border-left-color: #0284c7; }
+.comparison-sidebar-card .comparison-result-row.is-secondary { border-left-color: #7c3aed; }
+
+.comparison-result-contest {
+  min-width: 0;
+  font-weight: 850;
+  line-height: 1.28;
+}
+
+.comparison-result-row strong {
+  padding: 3px 6px;
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.32);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.comparison-sidebar-card .comparison-result-row strong {
+  background: rgba(226, 232, 240, 0.80);
+}
+
+.comparison-change-line {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 8px 2px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.comparison-change-label {
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+}
+
+.comparison-change-line.dem .comparison-change-label { color: #7dd3fc; }
+.comparison-change-line.rep .comparison-change-label { color: #fca5a5; }
+.comparison-change-line.even .comparison-change-label { color: #cbd5e1; }
+
+.comparison-sidebar-card .comparison-change-line.dem .comparison-change-label { color: #1d4ed8; }
+.comparison-sidebar-card .comparison-change-line.rep .comparison-change-label { color: #b91c1c; }
+.comparison-sidebar-card .comparison-change-line.even .comparison-change-label { color: #475569; }
+
+.comparison-change-route {
+  color: inherit;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.35;
+}
     
 </style>
 </head>
@@ -9997,16 +10108,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="model-inputs-inline" id="model-inputs-inline" role="note" hidden></div>
                 <div class="comparison-controls" id="comparison-controls" data-testid="comparison-controls" hidden>
                   <div class="comparison-controls-head">
-                    <span class="comparison-controls-title">Compare against</span>
-                    <span aria-hidden="true">A ↔ B</span>
+                    <span class="comparison-controls-title">Comparison contest</span>
+                    <span aria-hidden="true">Margin shift</span>
                   </div>
                   <div class="comparison-select-row">
                     <select id="comparisonContestSelect" data-testid="comparison-contest-select" aria-label="Select comparison contest">
                       <option value="">Select comparison contest...</option>
                     </select>
-                    <button id="comparison-swap-btn" class="comparison-swap-btn" type="button" data-testid="comparison-swap" aria-label="Swap primary and comparison contests" title="Swap A and B">⇄</button>
+                    <button id="comparison-swap-btn" class="comparison-swap-btn" type="button" data-testid="comparison-swap" aria-label="Swap primary and comparison contests" title="Swap selected contests">⇄</button>
                   </div>
-                  <div class="comparison-summary" id="comparison-summary" aria-live="polite">Choose a second contest to map the change from B to A.</div>
+                  <div class="comparison-summary" id="comparison-summary" aria-live="polite">Choose a second contest to map the margin difference.</div>
                 </div>
                 <div class="contest-search-wrap contest-search-wrap-secondary">
                   <input id="contestSearch" type="search" placeholder="Search contests (e.g., President, Senate, 2008)..." autocomplete="off" spellcheck="false" data-testid="contest-search" aria-label="Search contests" />
@@ -10518,8 +10629,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v1';
-    const APP_BUILD_ID = '2026-08-19-ab-comparison-v1';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v2';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v2';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -14497,16 +14608,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const primaryValue = String(document.getElementById('contestSelect')?.value || '').trim();
       const secondaryValue = String(comparisonContestValue || '').trim();
       if (!primaryValue) {
-        summary.textContent = 'Choose contest A, then choose a contest to compare against.';
+        summary.textContent = 'Choose the primary contest, then choose what to compare it with.';
         return;
       }
       if (!secondaryValue) {
-        summary.textContent = 'Choose contest B to map the change from B to A.';
+        summary.textContent = 'Choose a comparison contest to map the margin difference.';
         return;
       }
       const [primaryType, primaryYear] = parseContestValue(primaryValue);
       const [secondaryType, secondaryYear] = parseContestValue(secondaryValue);
-      summary.textContent = `A: ${formatContestLabel(primaryType, primaryYear)} · B: ${formatContestLabel(secondaryType, secondaryYear)} · map shows B → A`;
+      summary.textContent = `${formatContestLabel(secondaryType, secondaryYear)} → ${formatContestLabel(primaryType, primaryYear)} · map shows the margin difference`;
     }
 
     function syncComparisonControlsVisibility() {
@@ -22791,9 +22902,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="legend-scale-shell">
           ${buildLegendSpectrum(colors, 'shift')}
           <div class="legend-scale-caption">
-            <span class="dem">A more Democratic</span>
+            <span class="dem">Primary more Democratic</span>
             <span>No difference</span>
-            <span class="rep">A more Republican</span>
+            <span class="rep">Primary more Republican</span>
           </div>
           <div class="legend-axis shift">
             <span class="dem">D +15</span>
@@ -22890,12 +23001,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const secondaryValue = String(comparisonContestValue || '').trim();
         const [primaryType, primaryYear] = parseContestValue(primaryValue);
         const [secondaryType, secondaryYear] = parseContestValue(secondaryValue);
-        const primaryLabel = primaryValue ? formatContestLabel(primaryType, primaryYear) : 'Contest A';
-        const secondaryLabel = secondaryValue ? formatContestLabel(secondaryType, secondaryYear) : 'Contest B';
+        const primaryLabel = primaryValue ? formatContestLabel(primaryType, primaryYear) : 'Primary contest';
+        const secondaryLabel = secondaryValue ? formatContestLabel(secondaryType, secondaryYear) : 'Comparison contest';
         if (header) header.textContent = 'Contest comparison';
         if (subtitle) subtitle.textContent = `${secondaryLabel} → ${primaryLabel}. Colors show the difference in two-party margin.`;
-        if (badge) badge.textContent = 'A − B';
-        if (footer) footer.textContent = 'Blue means contest A was more Democratic than B; red means A was more Republican.';
+        if (badge) badge.textContent = 'Margin Δ';
+        if (footer) footer.textContent = `Blue means ${primaryLabel} was more Democratic than ${secondaryLabel}; red means it was more Republican.`;
         content.innerHTML = buildComparisonLegendHTML();
       } else if (mode === 'shift') {
         const shiftRange = meta?.fromYear ? `${meta.fromYear}-${meta.toYear || 'current'}` : 'Shift';
@@ -34594,21 +34705,26 @@ document.addEventListener('DOMContentLoaded', function() {
       const tone = comparison.direction === 'rep' ? 'rep' : (comparison.direction === 'dem' ? 'dem' : 'even');
       const primaryOutcome = comparisonOutcomeLabel(record.primarySigned, record.primaryRow, record.primaryCandidates);
       const secondaryOutcome = comparisonOutcomeLabel(record.secondarySigned, record.secondaryRow, record.secondaryCandidates);
+      const deltaLabel = comparisonDeltaLabel(comparison.delta, { includeWord: false });
       const className = sidebar ? 'comparison-sidebar-card' : 'comparison-tooltip-card';
       return `
         <div class="${className}" data-testid="comparison-result-card">
-          <div style="font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;${sidebar ? 'color:#3730a3;' : 'color:#c7d2fe;'}">Contest comparison</div>
-          <div class="comparison-result-row">
-            <span class="comparison-result-key">A</span>
-            <span>${escapeHtml(record.primaryLabel)}</span>
+          <div class="comparison-card-head">
+            <span class="comparison-card-kicker">Contest comparison</span>
+            <span class="comparison-delta-pill ${tone}">${escapeHtml(deltaLabel)}</span>
+          </div>
+          <div class="comparison-result-row is-primary">
+            <span class="comparison-result-contest">${escapeHtml(record.primaryLabel)}</span>
             <strong>${escapeHtml(primaryOutcome)}</strong>
           </div>
-          <div class="comparison-result-row">
-            <span class="comparison-result-key">B</span>
-            <span>${escapeHtml(record.secondaryLabel)}</span>
+          <div class="comparison-result-row is-secondary">
+            <span class="comparison-result-contest">${escapeHtml(record.secondaryLabel)}</span>
             <strong>${escapeHtml(secondaryOutcome)}</strong>
           </div>
-          <div class="comparison-change-line ${tone}">${escapeHtml(comparisonDeltaLabel(comparison.delta))} from B to A</div>
+          <div class="comparison-change-line ${tone}">
+            <span class="comparison-change-label">Margin difference</span>
+            <span class="comparison-change-route">${escapeHtml(record.secondaryLabel)} → ${escapeHtml(record.primaryLabel)}</span>
+          </div>
         </div>
       `;
     }
