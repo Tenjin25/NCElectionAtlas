@@ -134,6 +134,18 @@ test('the current build includes the margin legend', async ({ request }) => {
   expect((source.match(/class="legend-segment/g) || []).length).toBeGreaterThanOrEqual(15);
 });
 
+test('local app modules use the same cache token as the deployed build', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+  const buildId = source.match(/const APP_BUILD_ID = '([^']+)'/)?.[1] || '';
+  const moduleVersions = [...source.matchAll(/<script src="\.\/js\/[^"?]+\?v=([^"]+)"/g)].map(match => match[1]);
+
+  expect(buildId).toBeTruthy();
+  expect(moduleVersions).toHaveLength(12);
+  expect(new Set(moduleVersions)).toEqual(new Set([buildId]));
+});
+
 test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
   const response = await request.get('/data/district_contests/congressional_president_2016.json');
   expect(response.ok()).toBeTruthy();
@@ -273,7 +285,9 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain("standalone ? ' is-standalone' : ''");
   expect(source).toContain('return `${name} +${Math.abs(margin).toFixed(2)}%`;');
   expect(source).toContain('return `${Math.abs(n).toFixed(2)}% more ${party}`;');
-  expect(source).toContain('compareDisplayedSignedMargins(record.primarySigned, record.secondarySigned)');
+  expect(source).toContain('compareMarginsForDisplay(record.primarySigned, record.secondarySigned)');
+  expect(source).toContain("typeof comparisonApi.compareDisplayedSignedMargins === 'function'");
+  expect(source).toContain('atlas-comparison.js?v=2026-08-19-ab-comparison-v5');
   expect(source).toContain('signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total)');
   expect(source).toContain('`US President ${year}${suffix || \'\'}`');
   expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
