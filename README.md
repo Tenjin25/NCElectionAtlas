@@ -117,7 +117,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 ### Contest Comparison (August 19, 2026)
 
 - Added client-side CSV and JSON export controls under `More`, covering county results and comparison-mode results across county, Congressional, State House, and State Senate views.
-- Bumped the front-end build/cache token to `2026-08-19-ab-comparison-v6` so the new export UI and comparison fixes arrive together on GitHub Pages.
+- Bumped the front-end build/cache token to `2026-08-19-ab-comparison-v7` so the export margin correction arrives together on GitHub Pages.
 
 - Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a control for swapping the selected contests.
 - Added comparison shading and compact, named-contest tooltips across Counties, Congress, State House, and State Senate. The comparison popup replaces the taller standard-results stack, shortens presidential labels to `US President YEAR`, and uses `%` for both contest margins and their displayed difference. Differences are calculated from the same two-decimal margins shown in the card, preventing `0.01%` display drift; coverage includes same-year legislative/congressional ticket splits and county-level statewide/judicial comparisons.

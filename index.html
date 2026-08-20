@@ -9778,6 +9778,7 @@ document.addEventListener('DOMContentLoaded', function() {
       snapshot.records.forEach(record => {
         const primaryRow = record.primaryRow || {};
         const secondaryRow = record.secondaryRow || {};
+        const displayedComparison = compareMarginsForDisplay(record.primarySigned, record.secondarySigned);
         const primaryTotal = Number(primaryRow.total || primaryRow.total_votes || 0);
         const secondaryTotal = Number(secondaryRow.total || secondaryRow.total_votes || 0);
         rows.push({
@@ -9785,9 +9786,9 @@ document.addEventListener('DOMContentLoaded', function() {
           geography: record.key,
           selected_contest: record.primaryLabel || snapshot.primaryLabel || '',
           compared_contest: record.secondaryLabel || snapshot.secondaryLabel || '',
-          selected_margin_pct: exportNumber(record.primarySigned),
-          compared_margin_pct: exportNumber(record.secondarySigned),
-          comparison_delta_pct: exportNumber(record.delta),
+          selected_margin_pct: exportNumber(displayedComparison.primary),
+          compared_margin_pct: exportNumber(displayedComparison.comparison),
+          comparison_delta_pct: exportNumber(displayedComparison.delta),
           selected_dem_votes: Number(primaryRow.dem || primaryRow.dem_votes || 0),
           selected_rep_votes: Number(primaryRow.rep || primaryRow.rep_votes || 0),
           selected_other_votes: Number(primaryRow.other || primaryRow.other_votes || 0),
@@ -9812,7 +9813,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const rep = Number(row?.[`${contestType}_rep`] || 0);
         const other = Number(row?.[`${contestType}_other`] || 0);
         const total = Number(row?.[`${contestType}_total`] || (dem + rep + other));
-        const signed = total > 0 ? (dem - rep) / total * 100 : 0;
+        const signed = total > 0
+          ? signedCountyMarginPctDisplayValue(dem, rep, total)
+          : 0;
         rows.push({
           view: viewLabel,
           geography: row?.county || key,
@@ -9827,7 +9830,7 @@ document.addEventListener('DOMContentLoaded', function() {
           dem_pct: exportNumber(total ? dem / total * 100 : 0),
           rep_pct: exportNumber(total ? rep / total * 100 : 0),
           margin_pct: exportNumber(signed),
-          winner: signed > 0 ? 'D' : (signed < 0 ? 'R' : 'Tie')
+          winner: signed > 0 ? 'R' : (signed < 0 ? 'D' : 'Tie')
         });
       });
       return rows;
@@ -10797,18 +10800,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-comparison.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-core.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-data.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-display.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-election.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-manifest.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-modeling.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-regions.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-trends.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-turnout.js?v=2026-08-19-ab-comparison-v6"></script>
-    <script src="./js/atlas-url-state.js?v=2026-08-19-ab-comparison-v6"></script>
+    <script src="./js/atlas-classification.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-comparison.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-core.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-data.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-display.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-election.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-manifest.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-modeling.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-regions.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-trends.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-turnout.js?v=2026-08-19-ab-comparison-v7"></script>
+    <script src="./js/atlas-url-state.js?v=2026-08-19-ab-comparison-v7"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10841,8 +10844,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v6';
-    const APP_BUILD_ID = '2026-08-19-ab-comparison-v6';
+    const DATA_CACHE_BUSTER = '2026-08-19-ab-comparison-v7';
+    const APP_BUILD_ID = '2026-08-19-ab-comparison-v7';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
