@@ -134,6 +134,55 @@ test('the current build includes the margin legend', async ({ request }) => {
   expect((source.match(/class="legend-segment/g) || []).length).toBeGreaterThanOrEqual(15);
 });
 
+test('color-blind mode visibly recolors the legend and persists', async ({ page }) => {
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await page.waitForFunction(() => (
+    typeof renderLegendForVizMode === 'function' &&
+    typeof accessibilityMarginColor === 'function' &&
+    !!document.getElementById('accessibility-toggle')
+  ), { timeout: APP_READY_TIMEOUT });
+
+  await page.click('#accessibility-toggle');
+  const active = await page.evaluate(() => ({
+    pressed: document.getElementById('accessibility-toggle')?.getAttribute('aria-pressed'),
+    badge: document.getElementById('legend-badge')?.textContent,
+    subtitle: document.getElementById('legend-subtitle')?.textContent,
+    note: document.querySelector('.colorblind-legend-note')?.textContent?.replace(/\s+/g, ' ').trim(),
+    colors: Array.from(document.querySelectorAll('#legend-content .legend-spectrum.margins .legend-segment'))
+      .map((el) => (el.getAttribute('style')?.match(/#[0-9a-f]{6}/i)?.[0] || '').toLowerCase())
+  }));
+
+  expect(active.pressed).toBe('true');
+  expect(active.badge).toContain('CB');
+  expect(active.subtitle).toContain('Orange = Republican lead');
+  expect(active.note).toContain('Republican = orange');
+  expect(active.note).toContain('Democratic = blue');
+  expect(active.colors).toEqual([
+    '#8c2d04', '#b33c00', '#d65300', '#ed6a00', '#f58a2a', '#f6ad55', '#ffd29a',
+    '#cbd5e1',
+    '#bae6fd', '#60a5fa', '#0ea5e9', '#0284c7', '#0369a1', '#075985', '#063f5c'
+  ]);
+
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await expect(page.locator('body')).toHaveClass(/colorblind-mode/);
+  await expect(page.locator('#accessibility-toggle')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.colorblind-legend-note')).toBeVisible();
+});
+
+test('Aa control is replaced by a persistent basemap-only toggle', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+
+  expect(source).toContain('id="basemap-toggle"');
+  expect(source).toContain('data-testid="tool-basemap"');
+  expect(source).toContain('>Map On</button>');
+  expect(source).not.toContain('>Aa</button>');
+  expect(source).toContain("localStorage.setItem('nc-atlas-basemap-visible'");
+  expect(source).toContain("layer.source === 'composite'");
+  expect(source).toContain("map.getLayer('county-fill')");
+});
+
 test('local app modules use the same cache token as the deployed build', async ({ request }) => {
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();
