@@ -169,6 +169,14 @@ test('color-blind mode visibly recolors the legend and persists', async ({ page 
   await expect(page.locator('.colorblind-legend-note')).toBeVisible();
 });
 
+test('color-blind toggle forces the active contest map paint to rebuild', async () => {
+  const html = fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8');
+  expect(html).toContain("applyContest(contestKey, { force: true });");
+  expect(html).toContain('countyColorExprCache.clear()');
+  expect(html).toContain('precinctColorExprCache.clear()');
+  expect(html).toContain('|palette:${paletteKey}');
+});
+
 test('Aa control is replaced by a persistent basemap-only toggle', async ({ request }) => {
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();

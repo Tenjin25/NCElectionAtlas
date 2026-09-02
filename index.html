@@ -9696,11 +9696,18 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof splitTicketOverlayCache !== 'undefined' && splitTicketOverlayCache && typeof splitTicketOverlayCache.clear === 'function') {
         splitTicketOverlayCache.clear();
       }
+      // Color expressions are palette-dependent. Drop both geography caches
+      // before rebuilding or the map can reuse red/blue expressions while the
+      // legend has already switched to orange/blue.
+      try { countyColorExprCache.clear(); } catch (_) {}
+      try { precinctColorExprCache.clear(); } catch (_) {}
       // Reapply current contest with new color mode
       const contestSelect = document.getElementById('contestSelect');
       const contestKey = contestSelect && contestSelect.value;
         if (contestKey) {
-          applyContest(contestKey);
+          // Palette changes must bypass the same-selection fast path so every
+          // active Mapbox paint expression is rebuilt with the new colors.
+          applyContest(contestKey, { force: true });
         }
         try { updateFiltersActiveChip(); } catch (_) {}
         try { saveUIState(); } catch (_) {}
@@ -10873,18 +10880,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-core.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-data.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-display.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-election.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-01-basemap-toggle-v1"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-01-basemap-toggle-v1"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-core.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-data.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-display.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-election.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-01-colorblind-repaint-v2"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-01-colorblind-repaint-v2"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10917,8 +10924,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-01-basemap-toggle-v1';
-    const APP_BUILD_ID = '2026-09-01-basemap-toggle-v1';
+    const DATA_CACHE_BUSTER = '2026-09-01-colorblind-repaint-v2';
+    const APP_BUILD_ID = '2026-09-01-colorblind-repaint-v2';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -36438,7 +36445,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       const prevYearKey = Number(vizPrevCache?.prevYear || 0) || 0;
-      const countyExprKey = `${aggCacheKey}|countyExpr|mode:${mode}|prev:${prevYearKey}`;
+      const paletteKey = isColorblindModeActive() ? 'colorblind' : 'standard';
+      const countyExprKey = `${aggCacheKey}|countyExpr|mode:${mode}|prev:${prevYearKey}|palette:${paletteKey}`;
       const cachedCountyExpr = countyColorExprCache.get(countyExprKey) || null;
       let countyFillColorByNorm = cachedCountyExpr?.countyFillColorByNorm || new Map();
       const expr = cachedCountyExpr?.expr || (() => {
