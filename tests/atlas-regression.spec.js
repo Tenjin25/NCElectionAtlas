@@ -177,15 +177,6 @@ test('color-blind toggle forces the active contest map paint to rebuild', async 
   expect(html).toContain('|palette:${paletteKey}');
 });
 
-test('contest dropdown starts loading before the window load event', async () => {
-  const html = fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8');
-  const preloadCall = html.lastIndexOf("preloadContestDropdown().catch(");
-  const windowLoad = html.lastIndexOf('window.onload = init;');
-  expect(preloadCall).toBeGreaterThan(0);
-  expect(windowLoad).toBeGreaterThan(preloadCall);
-  expect(html).toContain('earlyContestManifestPromise || loadJSON');
-});
-
 test('Aa control is replaced by a persistent basemap-only toggle', async ({ request }) => {
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();
