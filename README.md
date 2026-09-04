@@ -62,7 +62,7 @@ These lines were chosen as the consistent historical baseline for two reasons:
 1. **Neutrality** — they were drawn by independent experts under court supervision, not by either party, making them the most politically neutral set of modern statewide district lines available. Using party-drawn maps as a baseline would embed partisan intent into the geographic frame when comparing results across years.
 2. **Practical coverage** — the 2022 remedial maps were actually used for a real election (the 2022 general), making them a grounded modern baseline for reallocating earlier results.
 
-Historical district views are still presented on the selected modern district line set (default 2022 MQP), but the current precinct target is now the **December 2025 OneMap/SBE precinct basis** at `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`, with 2020-block assignments in `data/crosswalks/block20_to_onemap_2025_12.csv`.
+Historical district views are still presented on the selected modern district line set (default 2022 MQP). Historical election results remain canonically allocated to the **December 2025 OneMap/SBE precinct basis** at `data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`, with 2020-block assignments in `data/crosswalks/block20_to_onemap_2025_12.csv`. The live precinct overlay uses the **August 24, 2026 SBE precinct layer** and maps the December 2025 keys forward through `data/crosswalks/precinct_stable_to_sbe_2026_08_24_best_old_to_new.csv`.
 
 The current bridge chain has two main branches. Modern SBE precinct vintages for **2020, 2022, and 2024** are VAP-weighted to the December 2025 OneMap basis. Early-era SBE 2006 is reached through [NHGIS](https://www.nhgis.org/) block-to-block crosswalks: `2000 tabblocks -> NHGIS 2000-to-2010 -> NHGIS 2010-to-2020 -> SBE 2006 precincts -> Dec 2025 OneMap / modern districts`.
 
@@ -1383,7 +1383,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 | Data | Source |
 |------|--------|
 | Precinct-level election results | [OpenElections North Carolina](https://github.com/openelections/openelections-data-nc) |
-| Precinct boundaries | December 2025 OneMap/SBE precinct shapefile (`data/census/SBE_PRECINCTS_20251212/SBE_PRECINCTS_20251212.shp`) plus older SBE vintage precinct sources |
+| Precinct boundaries | August 24, 2026 SBE precinct source archive (`data/SBE_PRECINCTS_20260824.zip`) for display; December 2025 and older SBE vintages retained for historical allocation |
 | Census block geography | US Census Bureau TIGER/Line files |
 | Block-to-precinct crosswalks | Current target: `data/crosswalks/block20_to_onemap_2025_12.csv`; older SBE vintage maps remain in `data/crosswalks/` |
 | Block-to-block crosswalks (cross-vintage) | [NHGIS Longitudinal Block Crosswalks](https://www.nhgis.org/documentation/tabular-data/crosswalks) |
@@ -1392,11 +1392,12 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 
 ### Crosswalk Coverage Audit
 
-The current production target is the December 2025 OneMap/SBE precinct layer. Coverage below is read from the existing CSV/JSON bridge artifacts rather than recomputed contest outputs.
+The historical allocation target is the December 2025 OneMap/SBE precinct layer; the browser maps it forward to the August 24, 2026 display layer. Coverage below is read from the existing CSV/JSON bridge artifacts rather than recomputed contest outputs.
 
 | Chain | Main artifact(s) | Current coverage | Keys / notes |
 |-------|------------------|------------------|--------------|
 | December 2025 OneMap target | `block20_to_onemap_2025_12.csv` | 236,633 / 236,638 NC 2020 blocks (99.9979%) | 2,632 target precinct keys |
+| Dec 2025 target -> Aug 2026 display | `precinct_onemap_2025_12_to_sbe_2026_08_24_*.csv`; composed browser bridge `precinct_stable_to_sbe_2026_08_24_best_old_to_new.csv` | 2,632 / 2,632 old precincts and 2,625 / 2,625 new precincts matched | 17 retired keys map to 10 replacement keys across seven counties; unchanged keys retain identical geometry |
 | Early era / SBE 2006 | `block20_to_sbe_2006_via_block00_nhgis_filled.csv`; `sbe2006_to_onemap_precinct_*.json`; `sbe2006_to_modern_district_weights.json` | 236,638 / 236,638 blocks in the filled SBE 2006 map (100.0000%); district bridge report covers 2,715 / 2,715 SBE 2006 precincts in each modern district scope | 2,715 SBE 2006 precincts; 2,632 Dec 2025 target precincts |
 | 2020 SBE precincts -> Dec 2025 OneMap | `precinct_sbe_2020_to_onemap_2025_12_vap.csv` | 8,155,075 / 8,155,075 source VAP assigned (100.0000%) | 2,658 source precincts -> 2,632 target precincts |
 | 2022 SBE precincts -> Dec 2025 OneMap | `precinct_sbe_2022_to_onemap_2025_12_vap.csv` | 8,155,080 / 8,155,080 source VAP assigned (100.0000%) | 2,663 source precincts -> 2,632 target precincts |
@@ -1501,7 +1502,8 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 
 ### 2. Precinct Geometry (Precincts Overlay)
 
-- `data/2025Voting_Precincts.geojson` — Live polygon boundaries for the atlas precinct overlay (current NCOneMap 2025 keyspace)
+- `data/2026Voting_Precincts.geojson` — Live polygon boundaries for the atlas precinct overlay (August 24, 2026 SBE keyspace)
+- `data/2025Voting_Precincts.geojson` — Canonical December 2025 geometry retained for historical result allocation and bridge generation
 - `data/Voting_Precincts.geojson` — Earlier precinct geometry retained for scripts/comparisons that still reference it
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
 - `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
@@ -1509,10 +1511,15 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 - `data/mappings/judicial_candidate_party_overrides.csv` — Nonpartisan / blank-party judicial candidate → DEM/REP/OTHER affiliations used when building county/precinct contest slices (2004–2016 and selected later blanks)
 - `data/mappings/judicial_seat_crosswalk.csv` — OE office labels for early appellate races ↔ Wikipedia seat number ↔ atlas `contest_type` (used by the create-only early judicial builders)
 
-To rebuild from the latest NCSBE shapefile:
+To rebuild the 2026 display geometry from the extracted NCSBE shapefile:
 
 ```powershell
-py scripts/build_voting_precincts_geojson.py
+Expand-Archive data/SBE_PRECINCTS_20260824.zip data/census/SBE_PRECINCTS_20260824
+py scripts/build_voting_precincts_geojson.py --in-shp data/census/SBE_PRECINCTS_20260824/SBE_PRECINCTS_20260824.shp --out-geojson data/2026Voting_Precincts.geojson --out-centroids ""
+py scripts/build_precinct_geometry_crosswalks.py --old data/2025Voting_Precincts.geojson --new data/2026Voting_Precincts.geojson --old-label onemap_2025_12 --new-label sbe_2026_08_24 --min-share 0.01 --out-prefix data/crosswalks/precinct_onemap_2025_12_to_sbe_2026_08_24
+py scripts/compose_precinct_frontend_bridge.py --previous data/crosswalks/precinct_stable_to_nconemap_2026_07_best_old_to_new.csv --next data/crosswalks/precinct_onemap_2025_12_to_sbe_2026_08_24_best_old_to_new.csv --out data/crosswalks/precinct_stable_to_sbe_2026_08_24_best_old_to_new.csv
+py scripts/build_precinct_centroids_geojson.py
+py scripts/build_precinct_alias_index.py
 ```
 
 To (re)generate friendly precinct display names from the alias index + live geometry:
@@ -1524,7 +1531,7 @@ node scripts/build_precinct_friendly_names.js
 Notes:
 - This mapping is intentionally **county-scoped**: the same short code can mean different things in different counties.
 - If a code has no known friendly name, the UI falls back to showing the raw code.
-- The friendly-name builder defaults to `data/2025Voting_Precincts.geojson` and applies county overrides last so confirmed labels (for example, Cleveland Shelby seats) are not overwritten by smash tokens.
+- The centroid, alias, and friendly-name builders default to `data/2026Voting_Precincts.geojson`; friendly-name county overrides still apply last so confirmed labels are not overwritten by smash tokens.
 ### 3. District Contest Slices (District Views)
 
 - `data/district_contests/<scope>_<contest_type>_<year>.json` — Aggregated results for each district
@@ -1909,10 +1916,10 @@ python scripts/add_early_comparable_judicial_district_contests.py
 Modern State Senate and congressional slices use the strongest available source in this order:
 
 1. Exact NCGA StatPack district totals, when the StatPack publishes the contest for that plan.
-2. Official NCSBE precinct general-election results (2016–2024), projected through the election-vintage precinct crosswalk and the official plan's 2020 Census blocks using VAP weights.
+2. Official NCSBE precinct general-election results (2008–2024), projected through the election-vintage precinct crosswalk and the official plan's 2020 Census blocks using VAP weights.
 3. MGGG's NCGA-derived VTD election fields for the available 2008–2014 Governor, President, and U.S. Senate contests.
 
-The projected-source apply script will not overwrite files marked `ncga_statpack_calibrated`. It defaults to a 97% directly matched source-vote threshold; unmatched NCSBE precinct totals that pass that gate are allocated within their county by district VAP share. The current NCSBE benchmark's minimum direct vote coverage is 97.9137%, and the MGGG benchmark is 100%.
+The projected-source apply script will not overwrite files marked `ncga_statpack_calibrated` or preserve a stronger MGGG VTD projection when NCSBE has an overlapping headline race. It defaults to a 97% directly matched source-vote threshold; unmatched NCSBE precinct totals that pass that gate are allocated within their county by district VAP share. The 2016–2024 NCSBE benchmark's minimum direct vote coverage is 97.9137%. The 2008/2012 regular-result files contain larger administrative vote buckets (59.7207% and 88.3794% minimum direct coverage), so those historical Council projections are explicitly marked as lower-confidence allocations. The MGGG benchmark is 100%.
 
 Rebuild and audit the benchmarks with:
 
@@ -1925,6 +1932,24 @@ python scripts/apply_projected_senate_congress_benchmarks.py --benchmark data/re
 ```
 
 Add `--write` to an apply command only after reviewing its audit report. NCSBE precinct geometry provenance is recorded from `https://dl.ncsbe.gov/?prefix=ShapeFiles/Precinct/`; the builder reuses the repository's existing vintage crosswalks and allocation helpers.
+
+### Calibrated Precinct-Sort District Results (September 4, 2026)
+
+Congressional, State Senate, and State House estimates for the 2016, 2018, 2020, 2022, and 2024 elections are calibrated from the official NCSBE precinct-sort distributions. The benchmark covers the 2022, 2024, and 2026 congressional plans and both the 2022 and 2024 legislative plans. Each county/contest/party bucket is reconciled to the non-noised official NCSBE returns before projection through election-vintage precinct geometry and 2020-block VAP weights. Largest-remainder rounding preserves the official statewide Democratic, Republican, and other-party totals exactly on every plan.
+
+Exact NCGA StatPack district rows remain authoritative and are never replaced. The consolidated apply updated 12,304 estimated rows while preserving 6,898 NCGA-backed rows; the post-apply audit reports zero remaining differences and no unmatched positive-vote geographic precincts. Historical exceptions are explicit: the 2024 Union sort codes `0020B`, `0044`, and `0045` normalize to geometry codes `020B`, `044`, and `045`; New Hanover `W32` uses the verified adjacent `W33` district lineage; and Christopher Anglin is assigned to `other_votes` in the 2018 Supreme Court race while incumbent Barbara Jackson remains the principal Republican candidate.
+
+These are reproducible district estimates rather than certified district canvass totals. Votes in precincts split by a district boundary are apportioned with 2020 VAP, not individual ballots, and non-geographic one-stop/absentee/provisional rows are allocated within their county.
+
+Rebuild, audit, apply, and verify with:
+
+```powershell
+python scripts/fetch_ncsbe_precinct_sorts.py
+python scripts/build_ncsbe_congressional_precinct_sort_benchmarks.py
+python scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py --report data/reports/ncsbe_all_plans_precinct_sort_apply_audit.json
+python scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py --write --report data/reports/ncsbe_all_plans_precinct_sort_apply.json
+python scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py --report data/reports/ncsbe_all_plans_precinct_sort_post_apply.json
+```
 
 ## Known Limitations
 

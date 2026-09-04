@@ -85,6 +85,9 @@ def main() -> int:
             if meta.get("ncga_statpack_calibrated"):
                 protected_files.append(relative_path)
                 continue
+            if source_kind == "ncsbe" and meta.get("mggg_projected_calibrated"):
+                protected_files.append(relative_path)
+                continue
             if source_kind == "mggg" and meta.get("ncsbe_projected_calibrated"):
                 protected_files.append(relative_path)
                 continue

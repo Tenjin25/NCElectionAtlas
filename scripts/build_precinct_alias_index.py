@@ -99,13 +99,13 @@ def build_precinct_alias_index(voting_geojson_path: Path) -> dict[str, dict[str,
 
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    in_path = repo_root / "data" / "2025Voting_Precincts.geojson"
+    in_path = repo_root / "data" / "2026Voting_Precincts.geojson"
     out_path = repo_root / "data" / "precinct_alias_index.json"
 
     alias_index = build_precinct_alias_index(in_path)
     payload = {
         "version": 1,
-        "generated_from": ["data/2025Voting_Precincts.geojson"],
+        "generated_from": ["data/2026Voting_Precincts.geojson"],
         "counties": {
             county: {
                 alias: sorted(values)
