@@ -344,7 +344,8 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain('return `${Math.abs(n).toFixed(2)}% more ${party}`;');
   expect(source).toContain('compareMarginsForDisplay(record.primarySigned, record.secondarySigned)');
   expect(source).toContain("typeof comparisonApi.compareDisplayedSignedMargins === 'function'");
-  expect(source).toContain('atlas-comparison.js?v=2026-08-31-davidson-friendly-names-v1');
+  const buildId = source.match(/const APP_BUILD_ID = '([^']+)'/)?.[1] || '';
+  expect(source).toContain(`atlas-comparison.js?v=${buildId}`);
   expect(source).toContain('signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total)');
   expect(source).toContain('`US President ${year}${suffix || \'\'}`');
   expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
