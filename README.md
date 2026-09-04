@@ -1904,6 +1904,28 @@ node scripts/add_early_comparable_judicial_contests.js
 python scripts/add_early_comparable_judicial_district_contests.py
 ```
 
+### Senate and Congressional Source Priority
+
+Modern State Senate and congressional slices use the strongest available source in this order:
+
+1. Exact NCGA StatPack district totals, when the StatPack publishes the contest for that plan.
+2. Official NCSBE precinct general-election results (2016–2024), projected through the election-vintage precinct crosswalk and the official plan's 2020 Census blocks using VAP weights.
+3. MGGG's NCGA-derived VTD election fields for the available 2008–2014 Governor, President, and U.S. Senate contests.
+
+The projected-source apply script will not overwrite files marked `ncga_statpack_calibrated`. It defaults to a 97% directly matched source-vote threshold; unmatched NCSBE precinct totals that pass that gate are allocated within their county by district VAP share. The current NCSBE benchmark's minimum direct vote coverage is 97.9137%, and the MGGG benchmark is 100%.
+
+Rebuild and audit the benchmarks with:
+
+```powershell
+python scripts/build_ncsbe_mggg_senate_congress_benchmarks.py --source ncsbe --output data/reports/ncsbe_senate_congress_benchmarks.json
+python scripts/build_ncsbe_mggg_senate_congress_benchmarks.py --source mggg --output data/reports/mggg_senate_congress_benchmarks.json
+
+python scripts/apply_projected_senate_congress_benchmarks.py --benchmark data/reports/ncsbe_senate_congress_benchmarks.json --report data/reports/ncsbe_senate_congress_audit.json
+python scripts/apply_projected_senate_congress_benchmarks.py --benchmark data/reports/mggg_senate_congress_benchmarks.json --report data/reports/mggg_senate_congress_audit.json
+```
+
+Add `--write` to an apply command only after reviewing its audit report. NCSBE precinct geometry provenance is recorded from `https://dl.ncsbe.gov/?prefix=ShapeFiles/Precinct/`; the builder reuses the repository's existing vintage crosswalks and allocation helpers.
+
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
