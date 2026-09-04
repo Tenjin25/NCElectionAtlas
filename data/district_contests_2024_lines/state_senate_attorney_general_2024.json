@@ -16,39 +16,43 @@
     "ncsbe_precinct_sort_calibrated": true,
     "ncsbe_precinct_sort_year": 2024,
     "ncsbe_precinct_sort_plan": "2024_state_senate",
-    "ncsbe_precinct_sort_method": "Residential precinct-sort distributions reconciled by county/contest/party to official NCSBE totals; 2020 block VAP used for split precincts"
+    "ncsbe_precinct_sort_method": "Residential precinct-sort distributions reconciled by county/contest/party to official NCSBE totals; 2020 block VAP used for split precincts",
+    "whole_county_exact_override": true,
+    "whole_county_exact_districts": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "10",
+      "11",
+      "23",
+      "24",
+      "30",
+      "33",
+      "36",
+      "48"
+    ],
+    "whole_county_exact_method": "Sum official raw county contest totals for districts composed entirely of one or more whole counties."
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 48958,
-        "rep_votes": 61823,
+        "dem_votes": 47193,
+        "rep_votes": 73357,
         "other_votes": 0,
-        "total_votes": 110781,
+        "total_votes": 120550,
         "dem_candidate": "Jeff Jackson",
         "rep_candidate": "Dan Bishop",
-        "margin": 12865,
-        "margin_pct": 11.61,
+        "margin": 26164,
+        "margin_pct": 21.7,
         "winner": "REP",
         "competitiveness": {
-          "color": "#ef3b2c"
+          "color": "#cb181d"
         }
       },
       "2": {
-        "dem_votes": 51240,
-        "rep_votes": 62633,
-        "other_votes": 0,
-        "total_votes": 113873,
-        "dem_candidate": "Jeff Jackson",
-        "rep_candidate": "Dan Bishop",
-        "margin": 11393,
-        "margin_pct": 10.01,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "3": {
         "dem_votes": 47230,
         "rep_votes": 61089,
         "other_votes": 0,
@@ -60,6 +64,20 @@
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
+        }
+      },
+      "3": {
+        "dem_votes": 53005,
+        "rep_votes": 51099,
+        "other_votes": 0,
+        "total_votes": 104104,
+        "dem_candidate": "Jeff Jackson",
+        "rep_candidate": "Dan Bishop",
+        "margin": -1906,
+        "margin_pct": -1.83,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#c6dbef"
         }
       },
       "4": {
@@ -427,13 +445,13 @@
         }
       },
       "30": {
-        "dem_votes": 36293,
-        "rep_votes": 82842,
+        "dem_votes": 36295,
+        "rep_votes": 82846,
         "other_votes": 0,
-        "total_votes": 119135,
+        "total_votes": 119141,
         "dem_candidate": "Jeff Jackson",
         "rep_candidate": "Dan Bishop",
-        "margin": 46549,
+        "margin": 46551,
         "margin_pct": 39.07,
         "winner": "REP",
         "competitiveness": {
@@ -679,14 +697,14 @@
         }
       },
       "48": {
-        "dem_votes": 45873,
-        "rep_votes": 70150,
+        "dem_votes": 45847,
+        "rep_votes": 70130,
         "other_votes": 0,
-        "total_votes": 116023,
+        "total_votes": 115977,
         "dem_candidate": "Jeff Jackson",
         "rep_candidate": "Dan Bishop",
-        "margin": 24277,
-        "margin_pct": 20.92,
+        "margin": 24283,
+        "margin_pct": 20.94,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
