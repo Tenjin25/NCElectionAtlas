@@ -8,7 +8,14 @@
     "total_precinct_keys": 2724,
     "source": "batch_shatter_vap_party_split",
     "office": "US SENATE",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "targeted_mggg_projection_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "targeted_mggg_projection_source": "https://github.com/mggg-states/NC-shapefiles",
+    "targeted_mggg_projection_method": "2020-VAP-weighted 2010-VTD allocation to official block assignments"
   },
   "general": {
     "results": {
@@ -1511,42 +1518,42 @@
         }
       },
       "108": {
-        "dem_votes": 6609,
-        "rep_votes": 12200,
-        "other_votes": 998,
-        "total_votes": 19807,
+        "dem_votes": 6438,
+        "rep_votes": 12773,
+        "other_votes": 1044,
+        "total_votes": 20255,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Thom Tillis",
-        "margin": 5591,
-        "margin_pct": 28.23,
+        "margin": 6335,
+        "margin_pct": 31.28,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 8376,
-        "rep_votes": 13717,
-        "other_votes": 977,
-        "total_votes": 23070,
+        "dem_votes": 8669,
+        "rep_votes": 13870,
+        "other_votes": 990,
+        "total_votes": 23529,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Thom Tillis",
-        "margin": 5341,
-        "margin_pct": 23.15,
+        "margin": 5201,
+        "margin_pct": 22.1,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
         }
       },
       "110": {
-        "dem_votes": 9483,
-        "rep_votes": 13467,
-        "other_votes": 1234,
-        "total_votes": 24184,
+        "dem_votes": 9362,
+        "rep_votes": 12741,
+        "other_votes": 1175,
+        "total_votes": 23278,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Thom Tillis",
-        "margin": 3984,
-        "margin_pct": 16.47,
+        "margin": 3379,
+        "margin_pct": 14.52,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

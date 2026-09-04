@@ -1250,6 +1250,35 @@ Implementation note:
 - `scripts/rebuild_statewide_contests_from_sbe_bridge.js` now permits an explicitly requested, missing statewide slice to be created without broadening its default rebuild behavior.
 - Bumped the front-end cache-buster/app build token to `2026-07-30-historical-president-slices`.
 
+### Statewide House Official Benchmark Pass (September 4, 2026)
+
+- Replaced every State House row covered by the official NCGA StatPacks on both line sets: `1,440` exact district/contest rows for the 2022 House lines and `2,760` for the 2024 House lines. The population-deviation pages are deliberately skipped; extraction begins at the election-report pages.
+- The statewide write corrected `1,388` rows on the 2022 lines and `2,617` rows on the 2024 lines. A post-write audit reports zero remaining differences, missing files, or unknown contests across all 120 districts.
+- HD-108/109/110 received an additional historical pass using official NCSBE precinct-sort projections for the remaining 2016 Council of State races and MGGG's NCGA-based VTD election fields for the 2008–2014 headline races.
+- The official 2016 NCSBE files add the omitted Council of State offices without a manual DRA export. All `90` geographic precincts in Cleveland, Gaston, and Lincoln match `data/crosswalks/block20_to_sbe_2016_via_block10.csv`; zero-only administrative placeholders are excluded. Across `21` rows that can be checked against an NCGA StatPack, the largest margin difference is `0.06` percentage points.
+- The MGGG 2010-VTD package extends the target review to Governor and U.S. Senate in 2008, U.S. Senate in 2010, Governor and President in 2012, and U.S. Senate in 2014. Its 2016 headline-race projection reproduces the official target margins to rounding and is used as a validation check, not in place of exact StatPack rows.
+- Other 2008/2012 Council of State races remain on the existing historical reconstruction because NCSBE's public precinct-sort archive begins in 2016. The older regular results retain non-geographic absentee/early-vote buckets, so replacing those rows without a stronger historical allocation source would not be an accuracy improvement.
+
+Reproduce the NCSBE portion with:
+
+```powershell
+python scripts/fetch_ncsbe2016_precinct_sort_targets.py
+python scripts/audit_ncsbe2016_house_targets.py downloads/ncsbe/2016_precinct_sort `
+  --output data/reports/ncsbe2016_hd108_110_both_lines.json `
+  --ncga-benchmark data/reports/ncga_house_statpack_hd108_110_2022_lines.json `
+  --ncga-benchmark data/reports/ncga_house_statpack_hd108_110_2024_lines.json
+```
+
+The source-specific apply scripts run in audit mode unless `--write` is supplied. The checked-in benchmarks preserve the official rows and source methods; detailed before/after logs can be generated locally when needed.
+
+### Official NCGA Senate and Congressional StatPack Calibration (September 4, 2026)
+
+- Calibrated every published district election row to the official NCGA StatPacks for the 2022 State Senate plan (`SL 2022-2`), the court-ordered 2022 interim congressional plan, the 2023 State Senate plan (`SL 2023-146`, used for the 2024 election), and the 2025 congressional plan (`SL 2025-95`).
+- The four compact JSON benchmarks in `data/reports/ncga_statpack_*.json` preserve the exact party vote totals, PDF page references, plan identifiers, and official source URLs. The corresponding `*_apply.json` reports preserve every before/after change.
+- The calibrated coverage is `12` contests / `600` Senate district rows and `12` contests / `168` congressional rows on the 2022 lines, `23` contests / `1,150` Senate rows on the 2024 lines, and `30` contests / `420` congressional rows on the 2026 lines.
+- NCGA marks these election tables as derived from the NCSBE `statewide_precinct_sort` files with administrative precincts excluded. Precinct-mode results remain on the atlas's geographic reconstruction; only the district aggregate slices are replaced by the published NCGA totals.
+- `scripts/extract_ncga_statpack_benchmark.py` reproduces a benchmark from a downloaded PDF. `scripts/apply_ncga_statpack_benchmark.py` audits by default and requires `--write` to update a line-set directory.
+
 ## UI Performance Enhancements
 
 The current `index.html` includes several speed-focused improvements that are already live in the app:

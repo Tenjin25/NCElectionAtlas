@@ -8,7 +8,14 @@
     "total_precinct_keys": 2764,
     "source": "batch_shatter_vap_party_split",
     "office": "US SENATE",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "targeted_mggg_projection_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "targeted_mggg_projection_source": "https://github.com/mggg-states/NC-shapefiles",
+    "targeted_mggg_projection_method": "2020-VAP-weighted 2010-VTD allocation to official block assignments"
   },
   "general": {
     "results": {
@@ -1511,45 +1518,45 @@
         }
       },
       "108": {
-        "dem_votes": 13738,
-        "rep_votes": 18048,
-        "other_votes": 1217,
-        "total_votes": 33003,
+        "dem_votes": 12120,
+        "rep_votes": 17812,
+        "other_votes": 1241,
+        "total_votes": 31173,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Elizabeth Dole",
-        "margin": 4310,
-        "margin_pct": 13.06,
+        "margin": 5692,
+        "margin_pct": 18.26,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "109": {
-        "dem_votes": 13629,
-        "rep_votes": 17905,
-        "other_votes": 1208,
-        "total_votes": 32742,
+        "dem_votes": 14558,
+        "rep_votes": 18496,
+        "other_votes": 1164,
+        "total_votes": 34218,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Elizabeth Dole",
-        "margin": 4276,
-        "margin_pct": 13.06,
+        "margin": 3938,
+        "margin_pct": 11.51,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
       "110": {
-        "dem_votes": 16593,
-        "rep_votes": 19069,
-        "other_votes": 1321,
-        "total_votes": 36983,
+        "dem_votes": 17623,
+        "rep_votes": 17341,
+        "other_votes": 1227,
+        "total_votes": 36191,
         "dem_candidate": "Kay Hagan",
         "rep_candidate": "Elizabeth Dole",
-        "margin": 2476,
-        "margin_pct": 6.69,
-        "winner": "REP",
+        "margin": -282,
+        "margin_pct": -0.78,
+        "winner": "DEM",
         "competitiveness": {
-          "color": "#fb6a4a"
+          "color": "#e1f5fe"
         }
       },
       "111": {
