@@ -8,7 +8,14 @@
     "total_precinct_keys": 2764,
     "source": "batch_shatter_vap_party_split",
     "office": "GOVERNOR",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "targeted_mggg_projection_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "targeted_mggg_projection_source": "https://github.com/mggg-states/NC-shapefiles",
+    "targeted_mggg_projection_method": "2020-VAP-weighted 2010-VTD allocation to official block assignments"
   },
   "general": {
     "results": {
@@ -1511,13 +1518,13 @@
         }
       },
       "108": {
-        "dem_votes": 10835,
-        "rep_votes": 21696,
-        "other_votes": 613,
-        "total_votes": 33144,
+        "dem_votes": 10235,
+        "rep_votes": 20496,
+        "other_votes": 578,
+        "total_votes": 31309,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 10861,
+        "margin": 10261,
         "margin_pct": 32.77,
         "winner": "REP",
         "competitiveness": {
@@ -1525,13 +1532,13 @@
         }
       },
       "109": {
-        "dem_votes": 11260,
-        "rep_votes": 21004,
-        "other_votes": 618,
-        "total_votes": 32882,
+        "dem_votes": 11774,
+        "rep_votes": 21961,
+        "other_votes": 647,
+        "total_votes": 34382,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 9744,
+        "margin": 10187,
         "margin_pct": 29.63,
         "winner": "REP",
         "competitiveness": {
@@ -1539,14 +1546,14 @@
         }
       },
       "110": {
-        "dem_votes": 15912,
-        "rep_votes": 20598,
-        "other_votes": 590,
-        "total_votes": 37100,
+        "dem_votes": 15559,
+        "rep_votes": 20148,
+        "other_votes": 579,
+        "total_votes": 36286,
         "dem_candidate": "Bev Perdue",
         "rep_candidate": "Pat McCrory",
-        "margin": 4686,
-        "margin_pct": 12.63,
+        "margin": 4589,
+        "margin_pct": 12.65,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"

@@ -8,7 +8,14 @@
     "total_precinct_keys": 2759,
     "source": "batch_shatter_vap_party_split",
     "office": "PRESIDENT AND VICE PRESIDENT OF THE UNITED STATES",
-    "nongeo_allocation_mode": "precinct_candidate"
+    "nongeo_allocation_mode": "precinct_candidate",
+    "targeted_mggg_projection_districts": [
+      "108",
+      "109",
+      "110"
+    ],
+    "targeted_mggg_projection_source": "https://github.com/mggg-states/NC-shapefiles",
+    "targeted_mggg_projection_method": "2020-VAP-weighted 2010-VTD allocation to official block assignments"
   },
   "general": {
     "results": {
@@ -1511,45 +1518,45 @@
         }
       },
       "108": {
-        "dem_votes": 13053,
-        "rep_votes": 22287,
-        "other_votes": 499,
-        "total_votes": 35839,
+        "dem_votes": 11414,
+        "rep_votes": 22213,
+        "other_votes": 370,
+        "total_votes": 33997,
         "dem_candidate": "Obama",
         "rep_candidate": "Romney",
-        "margin": 9234,
-        "margin_pct": 25.77,
+        "margin": 10799,
+        "margin_pct": 31.76,
         "winner": "REP",
         "competitiveness": {
-          "color": "#cb181d"
+          "color": "#a50f15"
         }
       },
       "109": {
-        "dem_votes": 13015,
-        "rep_votes": 19466,
-        "other_votes": 426,
-        "total_votes": 32907,
+        "dem_votes": 14317,
+        "rep_votes": 22572,
+        "other_votes": 367,
+        "total_votes": 37256,
         "dem_candidate": "Obama",
         "rep_candidate": "Romney",
-        "margin": 6451,
-        "margin_pct": 19.6,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#ef3b2c"
-        }
-      },
-      "110": {
-        "dem_votes": 13864,
-        "rep_votes": 23967,
-        "other_votes": 447,
-        "total_votes": 38278,
-        "dem_candidate": "Obama",
-        "rep_candidate": "Romney",
-        "margin": 10103,
-        "margin_pct": 26.39,
+        "margin": 8255,
+        "margin_pct": 22.16,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
+        }
+      },
+      "110": {
+        "dem_votes": 15689,
+        "rep_votes": 21426,
+        "other_votes": 392,
+        "total_votes": 37507,
+        "dem_candidate": "Obama",
+        "rep_candidate": "Romney",
+        "margin": 5737,
+        "margin_pct": 15.3,
+        "winner": "REP",
+        "competitiveness": {
+          "color": "#ef3b2c"
         }
       },
       "111": {
