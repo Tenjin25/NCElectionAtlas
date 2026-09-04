@@ -10924,8 +10924,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-04-house-county-clusters';
-    const APP_BUILD_ID = '2026-09-04-house-county-clusters';
+    const DATA_CACHE_BUSTER = '2026-09-04-ncsbe-district-calibration';
+    const APP_BUILD_ID = '2026-09-04-ncsbe-district-calibration';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -10956,12 +10956,12 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       paths: {
         counties: withBase('./data/census/tl_2020_37_county20.geojson'),
-        precincts: withBase('./data/2025Voting_Precincts.geojson'),
+        precincts: withBase('./data/2026Voting_Precincts.geojson'),
         precincts_fallback_vtd20: withBase('./data/census/tl_2020_37_vtd20/tl_2020_37_vtd20.geojson'),
         precinct_centroids: withBase('./data/precinct_centroids.geojson'),
         precinct_aliases: withBase('./data/precinct_alias_index.json'),
         precinct_friendly_names: withBase('./data/precinct_friendly_names.json'),
-        precinct_stable_to_nconemap_old_to_new: withBase('./data/crosswalks/precinct_stable_to_nconemap_2026_07_best_old_to_new.csv'),
+        precinct_stable_to_nconemap_old_to_new: withBase('./data/crosswalks/precinct_stable_to_sbe_2026_08_24_best_old_to_new.csv'),
         precinct_sbe2006_to_onemap: withBase('./data/mappings/sbe2006_to_onemap_precinct_bridge.json'),
         precinct_sbe2006_to_onemap_weights: withBase('./data/mappings/sbe2006_to_onemap_precinct_weights.json'),
         precinct_sbe2012_to_onemap_weights: withBase('./data/crosswalks/precinct_sbe_2012_to_onemap_2025_vap.csv'),

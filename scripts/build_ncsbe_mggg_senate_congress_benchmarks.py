@@ -77,11 +77,28 @@ PLAN_SPECS = {
 }
 
 NCSBE_FILES = {
+    2008: ROOT / "data/2008/20081104__nc__general__precinct.csv",
+    2010: ROOT / "data/2010/20101102__nc__general__precinct.csv",
+    2012: ROOT / "data/2012/20121106__nc__general__precinct.csv",
+    2014: ROOT / "data/2014/20141104__nc__general__precinct.csv",
     2016: ROOT / "data/2016/20161108__nc__general__precinct.csv",
     2018: ROOT / "data/2018/20181106__nc__general__precinct.csv",
     2020: ROOT / "data/2020/20201103__nc__general__precinct.csv",
     2022: ROOT / "data/2022/20221108__nc__general__precinct.csv",
     2024: ROOT / "data/2024/20241105__nc__general__precinct.csv",
+}
+
+COUNCIL_SLUGS = {
+    "governor",
+    "lieutenant_governor",
+    "attorney_general",
+    "auditor",
+    "secretary_of_state",
+    "treasurer",
+    "agriculture_commissioner",
+    "labor_commissioner",
+    "insurance_commissioner",
+    "superintendent",
 }
 
 MGGG_CONTESTS = {
@@ -245,6 +262,8 @@ def build_ncsbe() -> dict[str, Any]:
         block_precinct = load_crosswalk(crosswalk_path, "precinct_id", "block_geoid20")
         plan_weights = {name: build_weights(block_precinct, plan, vap) for name, plan in plans.items()}
         for office, slug in offices:
+            if year < 2016 and slug not in COUNCIL_SLUGS:
+                continue
             precinct, dem_candidate, rep_candidate = district_builder.build_precinct_party_votes(
                 source, office, precinct_overrides=overrides, election_year=year
             )

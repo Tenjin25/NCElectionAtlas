@@ -1,0 +1,516 @@
+{
+  "schema": "ncsbe2024_precinct_sort_congressional_president_compare.v1",
+  "precinct_sort_source": "downloads/ncsbe/2024_precinct_sort/STATEWIDE_PRECINCT_SORT.txt",
+  "current_source": "data/district_contests/congressional_president_2024.json",
+  "plan": "2022 Interim Congressional (Court)",
+  "method": "NCSBE residential precinct-sort totals allocated to plan with 2020 block VAP; unmatched precincts allocated by county VAP",
+  "privacy_note": "NCSBE adds statistical noise to precinct-sort results; these are analytical, not official reporting totals.",
+  "coverage": {
+    "source_precincts": 2908,
+    "matched_precincts": 2652,
+    "unmatched_precincts": 256,
+    "vote_coverage_pct": 99.7785,
+    "unmatched_allocated_by": "county_vap_share",
+    "source_vote_totals": {
+      "dem_votes": 2714876,
+      "rep_votes": 2897860,
+      "other_votes": 86514
+    },
+    "projected_vote_totals": {
+      "dem_votes": 2714876,
+      "rep_votes": 2897860,
+      "other_votes": 86514
+    },
+    "allocation_delta": {
+      "dem_votes": 0,
+      "rep_votes": 0,
+      "other_votes": 0
+    }
+  },
+  "district_comparisons": {
+    "1": {
+      "current": {
+        "dem_votes": 198082,
+        "rep_votes": 186350,
+        "other_votes": 4167,
+        "total_votes": 388599,
+        "margin": -11732,
+        "margin_pct": -3.02,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 198422,
+        "rep_votes": 186537,
+        "other_votes": 4289,
+        "total_votes": 389248,
+        "margin": -11885,
+        "margin_pct": -3.05,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 340,
+        "rep_votes": 187,
+        "other_votes": 122,
+        "total_votes": 649,
+        "margin": -153,
+        "margin_pct": -0.029999999999999805
+      }
+    },
+    "2": {
+      "current": {
+        "dem_votes": 267572,
+        "rep_votes": 148522,
+        "other_votes": 8731,
+        "total_votes": 424825,
+        "margin": -119050,
+        "margin_pct": -28.02,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 267985,
+        "rep_votes": 149724,
+        "other_votes": 8919,
+        "total_votes": 426628,
+        "margin": -118261,
+        "margin_pct": -27.72,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 413,
+        "rep_votes": 1202,
+        "other_votes": 188,
+        "total_votes": 1803,
+        "margin": 789,
+        "margin_pct": 0.3000000000000007
+      }
+    },
+    "3": {
+      "current": {
+        "dem_votes": 134230,
+        "rep_votes": 248113,
+        "other_votes": 4113,
+        "total_votes": 386456,
+        "margin": 113883,
+        "margin_pct": 29.47,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 133898,
+        "rep_votes": 247928,
+        "other_votes": 4239,
+        "total_votes": 386065,
+        "margin": 114030,
+        "margin_pct": 29.54,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -332,
+        "rep_votes": -185,
+        "other_votes": 126,
+        "total_votes": -391,
+        "margin": 147,
+        "margin_pct": 0.07000000000000028
+      }
+    },
+    "4": {
+      "current": {
+        "dem_votes": 273368,
+        "rep_votes": 132656,
+        "other_votes": 7027,
+        "total_votes": 413051,
+        "margin": -140712,
+        "margin_pct": -34.07,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 273357,
+        "rep_votes": 132652,
+        "other_votes": 7097,
+        "total_votes": 413106,
+        "margin": -140705,
+        "margin_pct": -34.06,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -11,
+        "rep_votes": -4,
+        "other_votes": 70,
+        "total_votes": 55,
+        "margin": 7,
+        "margin_pct": 0.00999999999999801
+      }
+    },
+    "5": {
+      "current": {
+        "dem_votes": 157314,
+        "rep_votes": 251280,
+        "other_votes": 5522,
+        "total_votes": 414116,
+        "margin": 93966,
+        "margin_pct": 22.69,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 157129,
+        "rep_votes": 250545,
+        "other_votes": 5604,
+        "total_votes": 413278,
+        "margin": 93416,
+        "margin_pct": 22.6,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -185,
+        "rep_votes": -735,
+        "other_votes": 82,
+        "total_votes": -838,
+        "margin": -550,
+        "margin_pct": -0.08999999999999986
+      }
+    },
+    "6": {
+      "current": {
+        "dem_votes": 215775,
+        "rep_votes": 174441,
+        "other_votes": 6109,
+        "total_votes": 396325,
+        "margin": -41334,
+        "margin_pct": -10.43,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 215757,
+        "rep_votes": 174421,
+        "other_votes": 6241,
+        "total_votes": 396419,
+        "margin": -41336,
+        "margin_pct": -10.43,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -18,
+        "rep_votes": -20,
+        "other_votes": 132,
+        "total_votes": 94,
+        "margin": -2,
+        "margin_pct": 0.0
+      }
+    },
+    "7": {
+      "current": {
+        "dem_votes": 181417,
+        "rep_votes": 251009,
+        "other_votes": 4926,
+        "total_votes": 437352,
+        "margin": 69592,
+        "margin_pct": 15.91,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 180968,
+        "rep_votes": 250580,
+        "other_votes": 4976,
+        "total_votes": 436524,
+        "margin": 69612,
+        "margin_pct": 15.95,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -449,
+        "rep_votes": -429,
+        "other_votes": 50,
+        "total_votes": -828,
+        "margin": 20,
+        "margin_pct": 0.03999999999999915
+      }
+    },
+    "8": {
+      "current": {
+        "dem_votes": 131552,
+        "rep_votes": 276687,
+        "other_votes": 4994,
+        "total_votes": 413233,
+        "margin": 145135,
+        "margin_pct": 35.12,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 131637,
+        "rep_votes": 275490,
+        "other_votes": 5136,
+        "total_votes": 412263,
+        "margin": 143853,
+        "margin_pct": 34.89,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 85,
+        "rep_votes": -1197,
+        "other_votes": 142,
+        "total_votes": -970,
+        "margin": -1282,
+        "margin_pct": -0.22999999999999687
+      }
+    },
+    "9": {
+      "current": {
+        "dem_votes": 159412,
+        "rep_votes": 200029,
+        "other_votes": 4695,
+        "total_votes": 364136,
+        "margin": 40617,
+        "margin_pct": 11.15,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 159409,
+        "rep_votes": 200027,
+        "other_votes": 4726,
+        "total_votes": 364162,
+        "margin": 40618,
+        "margin_pct": 11.15,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -3,
+        "rep_votes": -2,
+        "other_votes": 31,
+        "total_votes": 26,
+        "margin": 1,
+        "margin_pct": 0.0
+      }
+    },
+    "10": {
+      "current": {
+        "dem_votes": 122507,
+        "rep_votes": 290036,
+        "other_votes": 4318,
+        "total_votes": 416861,
+        "margin": 167529,
+        "margin_pct": 40.19,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 122665,
+        "rep_votes": 290659,
+        "other_votes": 4466,
+        "total_votes": 417790,
+        "margin": 167994,
+        "margin_pct": 40.21,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 158,
+        "rep_votes": 623,
+        "other_votes": 148,
+        "total_votes": 929,
+        "margin": 465,
+        "margin_pct": 0.020000000000003126
+      }
+    },
+    "11": {
+      "current": {
+        "dem_votes": 199204,
+        "rep_votes": 237914,
+        "other_votes": 6857,
+        "total_votes": 443975,
+        "margin": 38710,
+        "margin_pct": 8.72,
+        "winner": "REP"
+      },
+      "precinct_sort": {
+        "dem_votes": 199204,
+        "rep_votes": 237914,
+        "other_votes": 7065,
+        "total_votes": 444183,
+        "margin": 38710,
+        "margin_pct": 8.71,
+        "winner": "REP"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "other_votes": 208,
+        "total_votes": 208,
+        "margin": 0,
+        "margin_pct": -0.009999999999999787
+      }
+    },
+    "12": {
+      "current": {
+        "dem_votes": 239384,
+        "rep_votes": 128342,
+        "other_votes": 8542,
+        "total_votes": 376268,
+        "margin": -111042,
+        "margin_pct": -29.51,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 237188,
+        "rep_votes": 129207,
+        "other_votes": 8499,
+        "total_votes": 374894,
+        "margin": -107981,
+        "margin_pct": -28.8,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -2196,
+        "rep_votes": 865,
+        "other_votes": -43,
+        "total_votes": -1374,
+        "margin": 3061,
+        "margin_pct": 0.7100000000000009
+      }
+    },
+    "13": {
+      "current": {
+        "dem_votes": 211613,
+        "rep_votes": 208229,
+        "other_votes": 7674,
+        "total_votes": 427516,
+        "margin": -3384,
+        "margin_pct": -0.79,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 211195,
+        "rep_votes": 207027,
+        "other_votes": 7517,
+        "total_votes": 425739,
+        "margin": -4168,
+        "margin_pct": -0.98,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": -418,
+        "rep_votes": -1202,
+        "other_votes": -157,
+        "total_votes": -1777,
+        "margin": -784,
+        "margin_pct": -0.18999999999999995
+      }
+    },
+    "14": {
+      "current": {
+        "dem_votes": 223945,
+        "rep_votes": 164815,
+        "other_votes": 7655,
+        "total_votes": 396415,
+        "margin": -59130,
+        "margin_pct": -14.92,
+        "winner": "DEM"
+      },
+      "precinct_sort": {
+        "dem_votes": 226062,
+        "rep_votes": 165149,
+        "other_votes": 7740,
+        "total_votes": 398951,
+        "margin": -60913,
+        "margin_pct": -15.27,
+        "winner": "DEM"
+      },
+      "delta_precinct_sort_minus_current": {
+        "dem_votes": 2117,
+        "rep_votes": 334,
+        "other_votes": 85,
+        "total_votes": 2536,
+        "margin": -1783,
+        "margin_pct": -0.34999999999999964
+      }
+    }
+  },
+  "split_precincts_touching_district_13": [
+    {
+      "precinct_id": "HARNETT - PR20",
+      "district": "13",
+      "vap_share": 0.90983607,
+      "precinct_sort_votes": {
+        "dem_votes": 1158.0,
+        "rep_votes": 1164.0,
+        "other_votes": 27.0
+      },
+      "allocated_votes": {
+        "dem_votes": 1053.5902,
+        "rep_votes": 1059.0492,
+        "other_votes": 24.5656
+      }
+    },
+    {
+      "precinct_id": "HARNETT - PR20",
+      "district": "9",
+      "vap_share": 0.09016393,
+      "precinct_sort_votes": {
+        "dem_votes": 1158.0,
+        "rep_votes": 1164.0,
+        "other_votes": 27.0
+      },
+      "allocated_votes": {
+        "dem_votes": 104.4098,
+        "rep_votes": 104.9508,
+        "other_votes": 2.4344
+      }
+    },
+    {
+      "precinct_id": "WAKE - 10-05",
+      "district": "13",
+      "vap_share": 0.10841547,
+      "precinct_sort_votes": {
+        "dem_votes": 1900.0,
+        "rep_votes": 1661.0,
+        "other_votes": 60.0
+      },
+      "allocated_votes": {
+        "dem_votes": 205.9894,
+        "rep_votes": 180.0781,
+        "other_votes": 6.5049
+      }
+    },
+    {
+      "precinct_id": "WAKE - 10-05",
+      "district": "2",
+      "vap_share": 0.89158453,
+      "precinct_sort_votes": {
+        "dem_votes": 1900.0,
+        "rep_votes": 1661.0,
+        "other_votes": 60.0
+      },
+      "allocated_votes": {
+        "dem_votes": 1694.0106,
+        "rep_votes": 1480.9219,
+        "other_votes": 53.4951
+      }
+    },
+    {
+      "precinct_id": "WAYNE - 23",
+      "district": "13",
+      "vap_share": 0.0196281,
+      "precinct_sort_votes": {
+        "dem_votes": 583.0,
+        "rep_votes": 632.0,
+        "other_votes": 16.0
+      },
+      "allocated_votes": {
+        "dem_votes": 11.4432,
+        "rep_votes": 12.405,
+        "other_votes": 0.314
+      }
+    },
+    {
+      "precinct_id": "WAYNE - 23",
+      "district": "3",
+      "vap_share": 0.9803719,
+      "precinct_sort_votes": {
+        "dem_votes": 583.0,
+        "rep_votes": 632.0,
+        "other_votes": 16.0
+      },
+      "allocated_votes": {
+        "dem_votes": 571.5568,
+        "rep_votes": 619.595,
+        "other_votes": 15.686
+      }
+    }
+  ]
+}
