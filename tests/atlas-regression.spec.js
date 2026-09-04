@@ -203,7 +203,7 @@ test('local app modules use the same cache token as the deployed build', async (
   expect(new Set(moduleVersions)).toEqual(new Set([buildId]));
 });
 
-test('2022-lines NC-13 2016 presidential result matches snapshot margin without changing total', async ({ request }) => {
+test('2022-lines NC-13 2016 presidential result matches the official NCGA StatPack', async ({ request }) => {
   const response = await request.get('/data/district_contests/congressional_president_2016.json');
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
@@ -211,16 +211,16 @@ test('2022-lines NC-13 2016 presidential result matches snapshot margin without 
 
   expect(row).toBeTruthy();
   expect(row).toMatchObject({
-    dem_votes: 151987,
-    rep_votes: 159607,
-    other_votes: 14033,
-    total_votes: 325627,
-    margin: 7620,
-    margin_pct: 2.34,
+    dem_votes: 150859,
+    rep_votes: 158392,
+    other_votes: 14182,
+    total_votes: 323433,
+    margin: 7533,
+    margin_pct: 2.33,
     winner: 'REP'
   });
   expect(row.dem_votes + row.rep_votes + row.other_votes).toBe(row.total_votes);
-  expect(((row.rep_votes - row.dem_votes) / row.total_votes) * 100).toBeCloseTo(2.34, 2);
+  expect(((row.rep_votes - row.dem_votes) / row.total_votes) * 100).toBeCloseTo(2.33, 2);
 });
 
 test('ordinary county modes do not block on previous precinct results', async ({ request }) => {

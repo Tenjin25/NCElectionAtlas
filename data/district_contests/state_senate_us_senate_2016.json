@@ -12,7 +12,11 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "ncsbe_projected_calibrated": true,
+    "ncsbe_projected_source": "data/2016/20161108__nc__general__precinct.csv",
+    "ncsbe_projected_method": "election-vintage precinct to official plan; 2020 VAP split; non-geographic votes allocated by candidate within county",
+    "ncsbe_projected_vote_coverage_pct": 100.0
   },
   "general": {
     "results": {
@@ -167,7 +171,7 @@
         "margin_pct": -1.0,
         "winner": "DEM",
         "competitiveness": {
-          "color": "#e1f5fe"
+          "color": "#c6dbef"
         }
       },
       "12": {
@@ -507,13 +511,13 @@
         }
       },
       "36": {
-        "dem_votes": 21296,
+        "dem_votes": 21297,
         "rep_votes": 72904,
         "other_votes": 4074,
-        "total_votes": 98274,
+        "total_votes": 98275,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
-        "margin": 51608,
+        "margin": 51607,
         "margin_pct": 52.51,
         "winner": "REP",
         "competitiveness": {
@@ -705,8 +709,8 @@
       "50": {
         "dem_votes": 35197,
         "rep_votes": 62901,
-        "other_votes": 4403,
-        "total_votes": 102501,
+        "other_votes": 4404,
+        "total_votes": 102502,
         "dem_candidate": "Deborah K. Ross",
         "rep_candidate": "Richard Burr",
         "margin": 27704,

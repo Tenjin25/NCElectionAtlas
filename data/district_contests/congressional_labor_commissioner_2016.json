@@ -12,7 +12,11 @@
     "match_crosswalk": "data/crosswalks/block20_to_sbe_2016_via_block10.csv",
     "target_crosswalk": "data/crosswalks/block20_to_onemap_2025_12.csv",
     "district_lines_year": 2022,
-    "district_lines_label": "2022 lines"
+    "district_lines_label": "2022 lines",
+    "ncsbe_projected_calibrated": true,
+    "ncsbe_projected_source": "data/2016/20161108__nc__general__precinct.csv",
+    "ncsbe_projected_method": "election-vintage precinct to official plan; 2020 VAP split; non-geographic votes allocated by candidate within county",
+    "ncsbe_projected_vote_coverage_pct": 100.0
   },
   "general": {
     "results": {
@@ -116,12 +120,12 @@
       },
       "8": {
         "dem_votes": 93826,
-        "rep_votes": 229645,
+        "rep_votes": 229646,
         "other_votes": 275,
-        "total_votes": 323746,
+        "total_votes": 323747,
         "dem_candidate": "Charles Meeker",
         "rep_candidate": "Cherie Berry",
-        "margin": 135819,
+        "margin": 135820,
         "margin_pct": 41.95,
         "winner": "REP",
         "competitiveness": {
