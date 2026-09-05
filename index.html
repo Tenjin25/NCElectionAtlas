@@ -10880,18 +10880,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-core.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-data.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-display.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-election.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-04-house-county-clusters"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-04-house-county-clusters"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-core.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-data.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-display.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-election.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-05-precinct-2026-names-merge"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-05-precinct-2026-names-merge"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -10924,8 +10924,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-04-senate-whole-county-president-2024-lines';
-    const APP_BUILD_ID = '2026-09-04-senate-whole-county-president-2024-lines';
+    const DATA_CACHE_BUSTER = '2026-09-05-precinct-2026-names-merge';
+    const APP_BUILD_ID = '2026-09-05-precinct-2026-names-merge';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -35938,14 +35938,28 @@ document.addEventListener('DOMContentLoaded', function() {
               [`${contestType}_margin_pct`]: adjustedSigned,
               [`${contestType}_winner`]: adjustedWinner
             };
+            const primaryNorm = normalizeCountyName(rowName);
+            let stableMergeTargetNorm = '';
+            try {
+              const countyBridge = precinctStableToOneMapByCounty?.get(countyNorm) || null;
+              const rawPrecinct = rowName.includes(' - ') ? rowName.split(' - ', 2)[1].trim() : '';
+              const resolvedCode = countyBridge && rawPrecinct
+                ? resolveUniquePrecinctCodeByAlias(countyBridge, rawPrecinct)
+                : '';
+              const resolvedNorm = resolvedCode ? normalizeCountyName(`${countyOnly} - ${resolvedCode}`) : '';
+              if (resolvedNorm && resolvedNorm !== primaryNorm) stableMergeTargetNorm = resolvedNorm;
+            } catch (_) { stableMergeTargetNorm = ''; }
             const addPrecinctResult = (norm, nextRow) => {
               const key = (norm || '').toString().trim().toUpperCase();
               if (!key || !nextRow) return;
               const existing = currentPrecinctResults.get(key);
+              const aggregatingScopes = new Set(['sbe2006_to_onemap_vap', 'stable_to_current_merge']);
+              const existingScope = String(existing?.__apportionment_scope || '');
+              const nextScope = String(nextRow?.__apportionment_scope || '');
               if (
                 !existing ||
-                existing.__apportionment_scope !== 'sbe2006_to_onemap_vap' ||
-                nextRow.__apportionment_scope !== 'sbe2006_to_onemap_vap'
+                existingScope !== nextScope ||
+                !aggregatingScopes.has(nextScope)
               ) {
                 currentPrecinctResults.set(key, nextRow);
                 return;
@@ -35999,7 +36013,15 @@ document.addEventListener('DOMContentLoaded', function() {
               (norms || []).forEach(n => {
                 const key = (n || '').toString().trim().toUpperCase();
                 if (!key) return;
-                const primaryNorm = normalizeCountyName(rowName);
+                if (stableMergeTargetNorm && key === stableMergeTargetNorm) {
+                  addPrecinctResult(key, {
+                    ...adjustedRow,
+                    county: key,
+                    __apportionment_scope: 'stable_to_current_merge',
+                    __apportionment_source: rowName
+                  });
+                  return;
+                }
                 // Never let a later generated alias replace an exact precinct row.
                 // Wake 19-25 previously overwrote exact Wake 01-25 through this path.
                 if (key === primaryNorm || !currentPrecinctResults.has(key)) {

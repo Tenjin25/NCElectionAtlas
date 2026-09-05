@@ -114,6 +114,16 @@ function applyManualOverrides(counties) {
       '5': 'Wardville',
       '6': 'Yeopim'
     },
+    // Forsyth County BOE November 2026 polling-place list. The statewide
+    // shapefile carries only the precinct number in enr_desc for these six.
+    FORSYTH: {
+      '016': 'Sedge Garden United Methodist Church',
+      '017': 'Glenn High School',
+      '076': 'Agape Faith Church',
+      '077': 'Southwest Elementary School',
+      '085': 'East Forsyth High School',
+      '124': 'Heavenview United Pentecostal Church'
+    },
     MADISON: {
       'EBBS C': 'Ebbs Chapel',
       'HOT SP': 'Hot Springs',
@@ -823,6 +833,18 @@ function pruneToDisplayCodes(counties, displayCodesByCounty) {
   return out;
 }
 
+function cleanCountySpecificLabels(counties) {
+  const davidson = counties?.DAVIDSON;
+  if (!davidson || typeof davidson !== 'object') return counties;
+  for (const [code, rawName] of Object.entries(davidson)) {
+    const name = String(rawName || '').trim();
+    const escapedCode = String(code || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cleaned = name.replace(new RegExp(`\\s+${escapedCode}$`, 'i'), '').trim();
+    if (cleaned) davidson[code] = cleaned;
+  }
+  return counties;
+}
+
 function sortCountyCodeMap(counties) {
   const sorted = {};
   for (const county of Object.keys(counties || {}).sort((a, b) => a.localeCompare(b))) {
@@ -1074,9 +1096,11 @@ function main() {
   const votingGeoJson = JSON.parse(fs.readFileSync(votingGeoJsonPath, 'utf8'));
   const displayCodesByCounty = collectDisplayCodes(votingGeoJson);
   const counties = sortCountyCodeMap(
-    pruneToDisplayCodes(
-      applyManualOverrides(mergeGeoJsonNames(buildFriendlyNamesIndex(payload), votingGeoJson)),
-      displayCodesByCounty
+    cleanCountySpecificLabels(
+      pruneToDisplayCodes(
+        applyManualOverrides(mergeGeoJsonNames(buildFriendlyNamesIndex(payload), votingGeoJson)),
+        displayCodesByCounty
+      )
     )
   );
   const out = {

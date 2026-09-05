@@ -993,6 +993,13 @@ Implementation note:
 - Production bridge artifacts include `data/mappings/sbe2006_to_onemap_precinct_bridge.json`, `data/mappings/sbe2006_to_onemap_precinct_weights.json`, and `data/mappings/sbe2006_to_modern_district_weights.json`.
 - Early-year district/precinct outputs are documented as VAP-weighted shatter/apportionment estimates. For 2000-2006, rebuilt outputs stay as shatter estimates unless there is an explicit trusted calibration target.
 
+### August 2026 Precinct Display Refresh (September 5, 2026)
+
+- Advanced the live precinct overlay to the August 24, 2026 SBE geometry while retaining December 2025 as the canonical historical allocation basis.
+- Added a composed historical-to-2026 browser bridge and fixed merged precinct rendering so retired source precinct vote rows are summed rather than overwritten.
+- Filled the six numeric-only Forsyth labels from the county Board of Elections polling-place list and removed redundant trailing precinct codes from Davidson display names.
+- Added regression coverage for all 17 retired-to-current key changes, the seven merge targets, Forsyth labels, and Davidson suffix cleanup.
+
 ### Canonical County Totals + Lazy Precinct Modeling (July 15, 2026)
 
 - **Root fix (July 16):** Dec 2025 OneMap VAP bridges are clamped so shares never cross county lines (`python scripts/clamp_precinct_bridge_to_source_county.py --write`; default in the SBE/VTD bridge builders). Rebuild statewide contests with `node scripts/rebuild_statewide_contests_from_sbe_bridge.js`. After that, precinct-row county sums match OE again — no separate `county_contests` accuracy workaround needed.
