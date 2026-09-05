@@ -6,6 +6,30 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const APP_READY_TIMEOUT = 180_000;
 
+function parseCsvLine(line) {
+  const values = [];
+  let value = '';
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === '"') {
+      if (quoted && line[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (char === ',' && !quoted) {
+      values.push(value);
+      value = '';
+    } else {
+      value += char;
+    }
+  }
+  values.push(value);
+  return values;
+}
+
 async function waitForAtlasReady(page) {
   await page.waitForSelector('#map .mapboxgl-canvas', { timeout: APP_READY_TIMEOUT });
   await page.waitForSelector('#contestSelect', { timeout: APP_READY_TIMEOUT });
@@ -201,6 +225,88 @@ test('local app modules use the same cache token as the deployed build', async (
   expect(buildId).toBeTruthy();
   expect(moduleVersions).toHaveLength(12);
   expect(new Set(moduleVersions)).toEqual(new Set([buildId]));
+});
+
+test('August 2026 precinct assets preserve migrated keys and Forsyth names', async () => {
+  const geometry = JSON.parse(fs.readFileSync(path.join(repoRoot, 'data', '2026Voting_Precincts.geojson'), 'utf8'));
+  const geometryKeys = new Set((geometry.features || []).map((feature) => feature?.properties?.precinct_norm).filter(Boolean));
+  expect(geometry.features).toHaveLength(2625);
+  expect(geometryKeys.size).toBe(2625);
+
+  const bridgeLines = fs.readFileSync(
+    path.join(repoRoot, 'data', 'crosswalks', 'precinct_onemap_2025_12_to_sbe_2026_08_24_best_old_to_new.csv'),
+    'utf8'
+  ).trim().split(/\r?\n/);
+  const header = parseCsvLine(bridgeLines[0]);
+  const oldKeyIndex = header.indexOf('old_precinct_key');
+  const oldCodeIndex = header.indexOf('old_precinct_id');
+  const newKeyIndex = header.indexOf('new_precinct_key');
+  const newCodeIndex = header.indexOf('new_precinct_id');
+  const rows = bridgeLines.slice(1).map(parseCsvLine);
+  const changed = rows.filter((row) => row[oldCodeIndex] !== row[newCodeIndex]);
+  expect(rows).toHaveLength(2632);
+  expect(changed).toHaveLength(17);
+
+  const expectedChanges = {
+    'CABARRUS - 02-05': 'CABARRUS - 02-10',
+    'CABARRUS - 02-07': 'CABARRUS - 02-10',
+    'CHATHAM - 85': 'CHATHAM - WSC112',
+    'CHATHAM - ESC114': 'CHATHAM - ESC111',
+    'CHEROKEE - ANNW': 'CHEROKEE - ANW',
+    'CHEROKEE - TOPT': 'CHEROKEE - ANW',
+    'HALIFAX - ENF 2': 'HALIFAX - ENF',
+    'HALIFAX - ENF1': 'HALIFAX - ENF',
+    'HALIFAX - RR1-2': 'HALIFAX - RR1-4',
+    'HALIFAX - RR3-4': 'HALIFAX - RR1-4',
+    'JOHNSTON - PR24': 'JOHNSTON - PR39',
+    'JOHNSTON - PR25': 'JOHNSTON - PR39',
+    'JOHNSTON - PR27A': 'JOHNSTON - PR40',
+    'JOHNSTON - PR27B': 'JOHNSTON - PR40',
+    'LENOIR - PH1': 'LENOIR - PH',
+    'LENOIR - PH2': 'LENOIR - PH',
+    'VANCE - NH': 'VANCE - TWN'
+  };
+  const actualChanges = Object.fromEntries(changed.map((row) => [row[oldKeyIndex], row[newKeyIndex]]));
+  expect(actualChanges).toEqual(expectedChanges);
+  Object.values(expectedChanges).forEach((key) => expect(geometryKeys.has(key)).toBe(true));
+
+  const mergeSources = {};
+  for (const [oldKey, newKey] of Object.entries(expectedChanges)) {
+    if (!mergeSources[newKey]) mergeSources[newKey] = [];
+    mergeSources[newKey].push(oldKey);
+  }
+  expect(mergeSources).toMatchObject({
+    'CABARRUS - 02-10': ['CABARRUS - 02-05', 'CABARRUS - 02-07'],
+    'CHEROKEE - ANW': ['CHEROKEE - ANNW', 'CHEROKEE - TOPT'],
+    'HALIFAX - ENF': ['HALIFAX - ENF 2', 'HALIFAX - ENF1'],
+    'HALIFAX - RR1-4': ['HALIFAX - RR1-2', 'HALIFAX - RR3-4'],
+    'JOHNSTON - PR39': ['JOHNSTON - PR24', 'JOHNSTON - PR25'],
+    'JOHNSTON - PR40': ['JOHNSTON - PR27A', 'JOHNSTON - PR27B'],
+    'LENOIR - PH': ['LENOIR - PH1', 'LENOIR - PH2']
+  });
+  const appSource = fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8');
+  expect(appSource).toContain("__apportionment_scope: 'stable_to_current_merge'");
+  expect(appSource).toContain("new Set(['sbe2006_to_onemap_vap', 'stable_to_current_merge'])");
+
+  const friendly = JSON.parse(fs.readFileSync(path.join(repoRoot, 'data', 'precinct_friendly_names.json'), 'utf8'));
+  expect(friendly.counties?.FORSYTH).toMatchObject({
+    '016': 'Sedge Garden United Methodist Church',
+    '017': 'Glenn High School',
+    '076': 'Agape Faith Church',
+    '077': 'Southwest Elementary School',
+    '085': 'East Forsyth High School',
+    '124': 'Heavenview United Pentecostal Church'
+  });
+  expect(friendly.counties?.DAVIDSON).toMatchObject({
+    '04': 'Arcadia',
+    '22': 'Lexington 1',
+    '60': 'Thomasville 1',
+    '80A': 'Wallburg',
+    '86A': 'Abbotts Creek 1'
+  });
+  for (const [code, name] of Object.entries(friendly.counties?.DAVIDSON || {})) {
+    expect(String(name).toUpperCase().endsWith(` ${code.toUpperCase()}`)).toBe(false);
+  }
 });
 
 test('2022-lines NC-13 2016 presidential result matches the official NCGA StatPack', async ({ request }) => {
