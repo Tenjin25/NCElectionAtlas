@@ -12,60 +12,78 @@
     "ncsbe_projected_calibrated": true,
     "ncsbe_projected_source": "data/2012/20121106__nc__general__precinct.csv",
     "ncsbe_projected_method": "election-vintage precinct to official plan; 2020 VAP split; non-geographic votes allocated by candidate within county",
-    "ncsbe_projected_vote_coverage_pct": 88.3948
+    "ncsbe_projected_vote_coverage_pct": 88.3948,
+    "whole_county_exact_override": true,
+    "whole_county_exact_districts": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "10",
+      "11",
+      "23",
+      "24",
+      "30",
+      "33",
+      "36",
+      "48"
+    ],
+    "whole_county_exact_method": "Sum official raw county contest totals for districts composed entirely of one or more whole counties."
   },
   "general": {
     "results": {
       "1": {
-        "dem_votes": 51136,
-        "rep_votes": 42198,
+        "dem_votes": 41540,
+        "rep_votes": 55581,
         "other_votes": 0,
-        "total_votes": 93334,
+        "total_votes": 97121,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": -8938,
-        "margin_pct": -9.58,
-        "winner": "DEM",
+        "margin": 14041,
+        "margin_pct": 14.46,
+        "winner": "REP",
         "competitiveness": {
-          "color": "#9ecae1"
+          "color": "#ef3b2c"
         }
       },
       "2": {
-        "dem_votes": 51677,
-        "rep_votes": 52905,
+        "dem_votes": 42055,
+        "rep_votes": 52545,
         "other_votes": 0,
-        "total_votes": 104582,
+        "total_votes": 94600,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 1228,
-        "margin_pct": 1.17,
-        "winner": "REP",
-        "competitiveness": {
-          "color": "#fcae91"
-        }
-      },
-      "3": {
-        "dem_votes": 42031,
-        "rep_votes": 52514,
-        "other_votes": 0,
-        "total_votes": 94545,
-        "dem_candidate": "Walter Smith",
-        "rep_candidate": "Steve Troxler",
-        "margin": 10483,
+        "margin": 10490,
         "margin_pct": 11.09,
         "winner": "REP",
         "competitiveness": {
           "color": "#ef3b2c"
         }
       },
-      "4": {
-        "dem_votes": 46765,
-        "rep_votes": 49622,
+      "3": {
+        "dem_votes": 61271,
+        "rep_votes": 39521,
         "other_votes": 0,
-        "total_votes": 96387,
+        "total_votes": 100792,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 2857,
+        "margin": -21750,
+        "margin_pct": -21.58,
+        "winner": "DEM",
+        "competitiveness": {
+          "color": "#3182bd"
+        }
+      },
+      "4": {
+        "dem_votes": 46747,
+        "rep_votes": 49600,
+        "other_votes": 0,
+        "total_votes": 96347,
+        "dem_candidate": "Walter Smith",
+        "rep_candidate": "Steve Troxler",
+        "margin": 2853,
         "margin_pct": 2.96,
         "winner": "REP",
         "competitiveness": {
@@ -73,28 +91,28 @@
         }
       },
       "5": {
-        "dem_votes": 58722,
-        "rep_votes": 44375,
+        "dem_votes": 58713,
+        "rep_votes": 44359,
         "other_votes": 0,
-        "total_votes": 103097,
+        "total_votes": 103072,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": -14347,
-        "margin_pct": -13.92,
+        "margin": -14354,
+        "margin_pct": -13.93,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "6": {
-        "dem_votes": 18922,
-        "rep_votes": 29642,
+        "dem_votes": 18918,
+        "rep_votes": 29629,
         "other_votes": 0,
-        "total_votes": 48564,
+        "total_votes": 48547,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 10720,
-        "margin_pct": 22.07,
+        "margin": 10711,
+        "margin_pct": 22.06,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"
@@ -143,27 +161,27 @@
         }
       },
       "10": {
-        "dem_votes": 24223,
-        "rep_votes": 50914,
+        "dem_votes": 24160,
+        "rep_votes": 50827,
         "other_votes": 0,
-        "total_votes": 75137,
+        "total_votes": 74987,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 26691,
-        "margin_pct": 35.52,
+        "margin": 26667,
+        "margin_pct": 35.56,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
         }
       },
       "11": {
-        "dem_votes": 48700,
-        "rep_votes": 47172,
+        "dem_votes": 48756,
+        "rep_votes": 47229,
         "other_votes": 0,
-        "total_votes": 95872,
+        "total_votes": 95985,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": -1528,
+        "margin": -1527,
         "margin_pct": -1.59,
         "winner": "DEM",
         "competitiveness": {
@@ -325,28 +343,28 @@
         }
       },
       "23": {
-        "dem_votes": 61014,
-        "rep_votes": 40752,
+        "dem_votes": 61037,
+        "rep_votes": 40781,
         "other_votes": 0,
-        "total_votes": 101766,
+        "total_votes": 101818,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": -20262,
-        "margin_pct": -19.91,
+        "margin": -20256,
+        "margin_pct": -19.89,
         "winner": "DEM",
         "competitiveness": {
           "color": "#6baed6"
         }
       },
       "24": {
-        "dem_votes": 46094,
-        "rep_votes": 25022,
+        "dem_votes": 46125,
+        "rep_votes": 25046,
         "other_votes": 0,
-        "total_votes": 71116,
+        "total_votes": 71171,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": -21072,
-        "margin_pct": -29.63,
+        "margin": -21079,
+        "margin_pct": -29.62,
         "winner": "DEM",
         "competitiveness": {
           "color": "#3182bd"
@@ -423,14 +441,14 @@
         }
       },
       "30": {
-        "dem_votes": 23100,
-        "rep_votes": 66216,
+        "dem_votes": 23099,
+        "rep_votes": 66225,
         "other_votes": 0,
-        "total_votes": 89316,
+        "total_votes": 89324,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 43116,
-        "margin_pct": 48.27,
+        "margin": 43126,
+        "margin_pct": 48.28,
         "winner": "REP",
         "competitiveness": {
           "color": "#67000d"
@@ -465,14 +483,14 @@
         }
       },
       "33": {
-        "dem_votes": 29316,
-        "rep_votes": 58334,
+        "dem_votes": 29288,
+        "rep_votes": 58296,
         "other_votes": 0,
-        "total_votes": 87650,
+        "total_votes": 87584,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 29018,
-        "margin_pct": 33.11,
+        "margin": 29008,
+        "margin_pct": 33.12,
         "winner": "REP",
         "competitiveness": {
           "color": "#a50f15"
@@ -507,13 +525,13 @@
         }
       },
       "36": {
-        "dem_votes": 25096,
-        "rep_votes": 64182,
+        "dem_votes": 25117,
+        "rep_votes": 64233,
         "other_votes": 0,
-        "total_votes": 89278,
+        "total_votes": 89350,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 39086,
+        "margin": 39116,
         "margin_pct": 43.78,
         "winner": "REP",
         "competitiveness": {
@@ -675,14 +693,14 @@
         }
       },
       "48": {
-        "dem_votes": 31178,
-        "rep_votes": 56430,
+        "dem_votes": 31182,
+        "rep_votes": 56441,
         "other_votes": 0,
-        "total_votes": 87608,
+        "total_votes": 87623,
         "dem_candidate": "Walter Smith",
         "rep_candidate": "Steve Troxler",
-        "margin": 25252,
-        "margin_pct": 28.82,
+        "margin": 25259,
+        "margin_pct": 28.83,
         "winner": "REP",
         "competitiveness": {
           "color": "#cb181d"

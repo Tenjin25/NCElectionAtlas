@@ -41,7 +41,7 @@ def build_whole_county_map(
     crosswalk_csv: Path,
     *,
     threshold: float,
-) -> dict[str, str]:
+) -> dict[str, list[str]]:
     county_intersections: dict[tuple[str, str], float] = defaultdict(float)
     county_total_area: dict[str, float] = defaultdict(float)
     district_total_area: dict[str, float] = defaultdict(float)
@@ -67,16 +67,28 @@ def build_whole_county_map(
     for (county_name, _), precinct_area in county_precinct_area.items():
         county_total_area[county_name] += precinct_area
 
-    out: dict[str, str] = {}
+    whole_counties_by_district: dict[str, list[str]] = defaultdict(list)
+    whole_county_area_by_district: dict[str, float] = defaultdict(float)
     for (county_name, district_id), intersection_area in county_intersections.items():
         total_county = county_total_area.get(county_name, 0.0)
-        total_district = district_total_area.get(district_id, 0.0)
-        if total_county <= 0 or total_district <= 0:
+        if total_county <= 0:
             continue
         county_cover_pct = intersection_area / total_county
-        district_cover_pct = intersection_area / total_district
-        if county_cover_pct >= threshold and district_cover_pct >= threshold:
-            out[district_id] = county_name
+        if county_cover_pct >= threshold:
+            whole_counties_by_district[district_id].append(county_name)
+            whole_county_area_by_district[district_id] += intersection_area
+
+    # A qualifying district may contain one whole county or several whole counties.
+    # Require the union of those counties to cover the district so a district that
+    # also contains part of another county is not incorrectly treated as exact.
+    out: dict[str, list[str]] = {}
+    for district_id, county_names in whole_counties_by_district.items():
+        total_district = district_total_area.get(district_id, 0.0)
+        if total_district <= 0:
+            continue
+        district_cover_pct = whole_county_area_by_district[district_id] / total_district
+        if district_cover_pct >= threshold:
+            out[district_id] = sorted(county_names)
     return out
 
 
@@ -134,7 +146,7 @@ def aggregate_county_contest_totals_from_raw_csv(
 
 def enforce_county_totals(
     contest_json: Path,
-    district_to_county: dict[str, str],
+    district_to_counties: dict[str, list[str]],
     county_totals: dict[str, dict[str, int]],
 ) -> dict[str, object]:
     raw_text = contest_json.read_text(encoding="utf-8")
@@ -147,15 +159,20 @@ def enforce_county_totals(
     missing_counties: list[str] = []
     missing_districts: list[str] = []
 
-    for district_id, county_name in sorted(district_to_county.items(), key=lambda kv: int(kv[0])):
+    for district_id, county_names in sorted(district_to_counties.items(), key=lambda kv: int(kv[0])):
         row = results.get(district_id)
         if not isinstance(row, dict):
             missing_districts.append(district_id)
             continue
-        totals = county_totals.get(county_name)
-        if not totals:
-            missing_counties.append(county_name)
+        absent = [county_name for county_name in county_names if county_name not in county_totals]
+        if absent:
+            missing_counties.extend(absent)
             continue
+
+        totals = {
+            key: sum(int(county_totals[county_name][key]) for county_name in county_names)
+            for key in ["dem_votes", "rep_votes", "other_votes", "total_votes"]
+        }
 
         dem_votes = int(totals["dem_votes"])
         rep_votes = int(totals["rep_votes"])
@@ -180,12 +197,30 @@ def enforce_county_totals(
         updated.append(
             {
                 "district": district_id,
-                "county": county_name,
+                "counties": county_names,
                 "dem_votes": dem_votes,
                 "rep_votes": rep_votes,
                 "other_votes": other_votes,
                 "margin_pct": margin_pct,
             }
+        )
+
+    if updated:
+        meta = payload.setdefault("meta", {})
+        prior_districts = {
+            normalize_district_id(value)
+            for value in meta.get("whole_county_exact_districts", [])
+        }
+        corrected_districts = prior_districts | {
+            str(item["district"]) for item in updated
+        }
+        meta["whole_county_exact_override"] = True
+        meta["whole_county_exact_districts"] = sorted(
+            corrected_districts, key=lambda value: int(value)
+        )
+        meta["whole_county_exact_method"] = (
+            "Sum official raw county contest totals for districts composed entirely "
+            "of one or more whole counties."
         )
 
     was_pretty = ("\n" in raw_text.strip()) and (len(raw_text.strip().splitlines()) > 1)
@@ -229,20 +264,33 @@ def main() -> None:
     )
     parser.add_argument("--target", action="append", required=True)
     parser.add_argument("--threshold", type=float, default=0.999)
+    parser.add_argument(
+        "--district",
+        action="append",
+        default=[],
+        help="Limit corrections to one or more district IDs (repeatable).",
+    )
     args = parser.parse_args()
+    requested_districts = {normalize_district_id(value) for value in args.district}
 
     summaries = []
 
     for raw_target in args.target:
         contest_json, crosswalk_csv, raw_csv, raw_office_name = parse_target(raw_target)
-        district_to_county = build_whole_county_map(
+        district_to_counties = build_whole_county_map(
             crosswalk_csv,
             threshold=args.threshold,
         )
+        if requested_districts:
+            district_to_counties = {
+                district_id: county_names
+                for district_id, county_names in district_to_counties.items()
+                if district_id in requested_districts
+            }
         county_totals = aggregate_county_contest_totals_from_raw_csv(raw_csv, office_name=raw_office_name)
-        summary = enforce_county_totals(contest_json, district_to_county, county_totals)
-        summary["whole_county_districts_found"] = len(district_to_county)
-        summary["district_to_county"] = district_to_county
+        summary = enforce_county_totals(contest_json, district_to_counties, county_totals)
+        summary["whole_county_districts_found"] = len(district_to_counties)
+        summary["district_to_counties"] = district_to_counties
         summaries.append(summary)
 
     print(json.dumps({"updated": summaries}, indent=2))
