@@ -1330,7 +1330,7 @@ The current `index.html` includes several speed-focused improvements that are al
 
 ### Data Source by View
 
-- **Counties:** `data/county_demographics_2020_dp1.json` (DP1 total-pop race/ethnicity shares + VAP 18+ shown in sidebar).
+- **Counties:** `data/county_demographics_2020_2024_cvap.json` (official 2020–2024 ACS CVAP race/ethnicity estimates, released January 30, 2026).
 - **Congressional / State House / State Senate:** District demographic CSVs (`data/nc_congressional_districts.csv`, `data/nc_state_house_districts.csv`, `data/nc_state_senate_districts.csv`).
 - **Precincts:** `data/precinct_demographics_2020_vap.csv` (block-aggregated precinct VAP race fields).
 
@@ -1745,11 +1745,19 @@ Only the production district-contest folders listed above are referenced by the 
 
 ### Rebuilding Demographic Layers
 
-Rebuild county-level demographics (DP1 JSON used in county mode):
+Rebuild the legacy 2020 DP1 county demographic artifact:
 
 ```powershell
 py scripts/build_county_demographics_2020_dp1.py
 ```
+
+Rebuild the preferred, newer county CVAP demographics after downloading and extracting the official Census CSV bundle:
+
+```powershell
+py scripts/build_county_demographics_cvap_2024.py path\to\County.csv
+```
+
+The county demographic-mode colors, race chips, and totals use this 2020–2024 CVAP artifact. The legacy 2020 DP1 builder remains available for historical comparisons.
 
 Rebuild precinct-level demographics (2020 block VAP -> precinct CSV used by precinct overlays/tooltips):
 
