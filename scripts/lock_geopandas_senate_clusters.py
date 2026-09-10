@@ -30,64 +30,16 @@ def finalize(row: dict) -> None:
         row["competitiveness"]["color"] = calculate_competitiveness(float(row["margin_pct"]))
 
 
-def distribute_adjustment(rows: dict, districts: list[str], field: str, amount: int) -> list[str]:
-    """Spread a statewide-total correction without making any district negative."""
-    if not amount:
-        return []
-    weights = {district: max(0, int(rows[district][field])) for district in districts}
-    total_weight = sum(weights.values())
-    if total_weight <= 0:
-        if amount < 0:
-            raise ValueError(f"Cannot subtract {abs(amount)} {field}: no unlocked votes available")
-        rows[districts[0]][field] += amount
-        return [districts[0]]
-
-    remaining = amount
-    touched = []
-    # Truncation leaves only a small integer remainder for the second pass.
-    for district in districts:
-        share = int(amount * weights[district] / total_weight)
-        if amount < 0:
-            share = max(share, -int(rows[district][field]))
-        if share:
-            rows[district][field] += share
-            remaining -= share
-            touched.append(district)
-
-    step = 1 if remaining > 0 else -1
-    eligible = districts if step > 0 else [d for d in districts if int(rows[d][field]) > 0]
-    cursor = 0
-    while remaining:
-        if not eligible:
-            raise ValueError(f"Cannot finish {field} adjustment of {amount}")
-        district = eligible[cursor % len(eligible)]
-        if step > 0 or int(rows[district][field]) > 0:
-            rows[district][field] += step
-            remaining -= step
-            if district not in touched:
-                touched.append(district)
-        cursor += 1
-    return touched
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true")
-    parser.add_argument("--scope", choices=sorted(LOCKED), help="Limit the lock to one legislative scope")
-    parser.add_argument("--district", type=int, help="Limit the lock to one destination district")
     args = parser.parse_args()
     changed = 0
     balanced = 0
     details = []
 
     for scope, locked in LOCKED.items():
-      if args.scope and scope != args.scope:
-        continue
-      if args.district is not None:
-        locked = {district: source for district, source in locked.items() if district == args.district}
-      if not locked:
-        continue
-      for source_path in sorted(SOURCE_DIR.glob(f"{scope}_*.json")):
+      for source_path in sorted(SOURCE_DIR.glob(f"{scope}_*_2024.json")):
         if source_path.name == f"{scope}_{scope}_2024.json":
             continue
         dest_path = DEST_DIR / source_path.name
@@ -111,15 +63,14 @@ def main() -> int:
 
         if touched:
             # Preserve each destination file's original statewide totals.
+            balancer = max((d for d in dst if int(d) not in locked), key=lambda d: dst[d]["total_votes"])
             adjustments = {field: target_totals[field] - sum(int(row[field]) for row in dst.values()) for field in FIELDS}
-            balanced_districts = set()
             if any(adjustments.values()):
                 for field, amount in adjustments.items():
-                    balanced_districts.update(distribute_adjustment(dst, [d for d in dst if int(d) not in locked], field, amount))
-                for district in balanced_districts:
-                    finalize(dst[district])
+                    dst[balancer][field] += amount
+                finalize(dst[balancer])
                 balanced += 1
-            details.append({"scope": scope, "file": source_path.name, "locked_districts": touched, "balanced_districts": sorted(balanced_districts, key=int), "adjustments": adjustments})
+            details.append({"scope": scope, "file": source_path.name, "locked_districts": touched, "balancer": balancer, "adjustments": adjustments})
             if args.write:
                 destination["general"]["results"] = dst
                 dest_path.write_text(json.dumps(destination, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
