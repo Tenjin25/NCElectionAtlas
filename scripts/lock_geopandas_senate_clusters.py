@@ -33,13 +33,26 @@ def finalize(row: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--scope", choices=sorted(LOCKED), help="Limit the lock to one legislative scope")
+    parser.add_argument("--district", type=int, help="Limit the lock to one destination district")
+    parser.add_argument(
+        "--no-rebalance",
+        action="store_true",
+        help="Leave every unlocked district unchanged instead of preserving statewide totals",
+    )
     args = parser.parse_args()
     changed = 0
     balanced = 0
     details = []
 
     for scope, locked in LOCKED.items():
-      for source_path in sorted(SOURCE_DIR.glob(f"{scope}_*_2024.json")):
+      if args.scope and scope != args.scope:
+        continue
+      if args.district is not None:
+        locked = {district: source for district, source in locked.items() if district == args.district}
+      if not locked:
+        continue
+      for source_path in sorted(SOURCE_DIR.glob(f"{scope}_*.json")):
         if source_path.name == f"{scope}_{scope}_2024.json":
             continue
         dest_path = DEST_DIR / source_path.name
@@ -62,10 +75,11 @@ def main() -> int:
                 touched.append(new_district)
 
         if touched:
-            # Preserve each destination file's original statewide totals.
-            balancer = max((d for d in dst if int(d) not in locked), key=lambda d: dst[d]["total_votes"])
             adjustments = {field: target_totals[field] - sum(int(row[field]) for row in dst.values()) for field in FIELDS}
-            if any(adjustments.values()):
+            balancer = None
+            if any(adjustments.values()) and not args.no_rebalance:
+                # Preserve each destination file's original statewide totals.
+                balancer = max((d for d in dst if int(d) not in locked), key=lambda d: dst[d]["total_votes"])
                 for field, amount in adjustments.items():
                     dst[balancer][field] += amount
                 finalize(dst[balancer])
