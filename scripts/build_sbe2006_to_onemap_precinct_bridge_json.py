@@ -346,7 +346,7 @@ def main() -> None:
     weights_payload = build_weighted_bridge(args.sbe_block_map, args.onemap_block_map, args.vap_csv)
     payload = build_bridge_from_weights(weights_payload)
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
-    args.out_json.write_text(json.dumps(payload, separators=(",", ":"), sort_keys=True), encoding="utf-8")
+    args.out_json.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     args.out_weights_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_weights_json.write_text(json.dumps(weights_payload, separators=(",", ":"), sort_keys=True), encoding="utf-8")
     print(

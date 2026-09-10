@@ -115,7 +115,7 @@ def main() -> None:
         },
     }
 
-    out_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {out_path}")
 
 
