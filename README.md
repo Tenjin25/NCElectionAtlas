@@ -1966,6 +1966,17 @@ python scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py --write --repor
 python scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py --report data/reports/ncsbe_all_plans_precinct_sort_post_apply.json
 ```
 
+### State Senate District 3 Lineage Lock (September 9, 2026)
+
+The 2024-lines State Senate District 3 covers the same area as State Senate District 2 under the 2022 lines. Every shared 2000–2024 contest slice in `data/district_contests_2024_lines/` therefore locks SD-03 to the corresponding 2022-lines SD-02 result. This targeted correction leaves every other district unchanged; because it replaces only SD-03, the sum of the district rows may differ from the prior statewide aggregate.
+
+Audit or reapply this district-only correction with:
+
+```powershell
+python scripts/lock_geopandas_senate_clusters.py --scope state_senate --district 3 --no-rebalance
+python scripts/lock_geopandas_senate_clusters.py --write --scope state_senate --district 3 --no-rebalance
+```
+
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
