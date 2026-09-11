@@ -1977,8 +1977,6 @@ python scripts/lock_geopandas_senate_clusters.py --scope state_senate --district
 python scripts/lock_geopandas_senate_clusters.py --write --scope state_senate --district 3 --no-rebalance
 ```
 
-The front-end cache-buster/app build token for this data refresh is `2026-09-11-house-whole-county-lock`.
-
 ## Known Limitations
 
 ### Crosswalk Coverage and Accuracy
