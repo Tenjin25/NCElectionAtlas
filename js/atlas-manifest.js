@@ -68,8 +68,35 @@
     return true;
   }
 
-  function getVisibleManifestEntries(entries) {
-    return (Array.isArray(entries) ? entries : []).filter(shouldIncludeManifestEntry);
+  function getVisibleManifestEntries(entries, statewideEntries = []) {
+    const statewide = Array.isArray(statewideEntries) ? statewideEntries : [];
+    return (Array.isArray(entries) ? entries : []).filter(entry => {
+      if (!shouldIncludeManifestEntry(entry)) return false;
+
+      // District manifests created before party-aware judicial aggregation do not
+      // carry totals/contested metadata.  Treat the statewide manifest as the
+      // source of truth: uncontested judicial races are intentionally absent
+      // there, while stale district slices can still remain on disk.
+      const contestType = String(entry?.contest_type || '').trim();
+      const isDistrictEntry = !!String(entry?.scope || '').trim();
+      const isJudicial = contestType.startsWith('nc_supreme_court_') ||
+        contestType.startsWith('nc_court_of_appeals_');
+      if (!isDistrictEntry || !isJudicial || !statewide.length) return true;
+
+      const year = Number(entry?.year);
+      const familyKey = getJudicialSeatFamilyKey(contestType, year);
+      const statewideEntry = statewide.find(candidate =>
+        Number(candidate?.year) === year &&
+        (
+          String(candidate?.contest_type || '').trim() === contestType ||
+          (
+            familyKey &&
+            getJudicialSeatFamilyKey(candidate?.contest_type, candidate?.year) === familyKey
+          )
+        )
+      );
+      return !!statewideEntry && shouldIncludeManifestEntry(statewideEntry);
+    });
   }
 
   function getJudicialSeatFamilyKey(contestType, year = NaN) {

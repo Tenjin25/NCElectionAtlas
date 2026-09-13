@@ -23,6 +23,40 @@ test('filters empty and uncontested statewide manifest entries', () => {
   );
 });
 
+test('filters stale judicial district slices that have no statewide contest', () => {
+  const districtEntries = [
+    {
+      contest_type: 'nc_court_of_appeals_judge_martin_seat',
+      year: 2008,
+      scope: 'congressional',
+      districts: 14
+    },
+    {
+      contest_type: 'nc_court_of_appeals_judge_arrowood_seat',
+      year: 2008,
+      scope: 'congressional',
+      districts: 14
+    },
+    { contest_type: 'governor', year: 2008, scope: 'congressional', districts: 14 }
+  ];
+  const statewideEntries = [
+    {
+      // The statewide side may use the modern numbered name while an older
+      // district slice retains the historical named-seat form.
+      contest_type: 'nc_court_of_appeals_judge_seat_12',
+      year: 2008,
+      rows: 2700,
+      major_party_contested: true
+    }
+  ];
+
+  assert.deepEqual(
+    AtlasManifest.getVisibleManifestEntries(districtEntries, statewideEntries)
+      .map(entry => entry.contest_type),
+    ['nc_court_of_appeals_judge_arrowood_seat', 'governor']
+  );
+});
+
 test('maps named and numbered judicial contests into stable seat families', () => {
   assert.equal(
     AtlasManifest.getJudicialSeatFamilyKey(
