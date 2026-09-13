@@ -121,7 +121,14 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Rebuilt the 2014 Seat 10 Congressional, State House, and State Senate overlays on the 2024 lines, corrected the remaining 2022-line State House labels, and rebuilt the 2026 congressional slice by mirroring 2024 outside the only changed districts (CD-01 and CD-03).
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
-- Bumped the frontend build/data cache token to `2026-09-13-seat-10-and-yanceyville-fix`.
+- Bumped the frontend build/data cache token to `2026-09-13-house-county-groups-docs`.
+
+### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
+
+- Corrected State House district calculations for districts composed entirely of one or more whole counties. These rows now use canonical statewide-contest county totals instead of accepting small precinct-crosswalk or rounding drift.
+- A single-county district copies that county's complete Democratic, Republican, and other vote totals. A grouped-county district adds the complete totals for every constituent county, then recalculates total votes, margin, margin percentage, winner, competitiveness color, and candidate labels from the combined result.
+- For example, **HD-22** is calculated as **Bladen + Sampson**, while **HD-119** is calculated as **Jackson + Swain + Transylvania**. The same rule covers the other verified whole-county groups defined in `scripts/fix_2024_house_whole_county_totals.py`.
+- The correction applies to matching State House contest slices in both `data/district_contests/` (2022 lines) and `data/district_contests_2024_lines/` (2024 lines). Districts containing any split county are intentionally excluded from this override.
 
 ### Contest Comparison (August 19, 2026)
 
