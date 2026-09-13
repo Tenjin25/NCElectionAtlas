@@ -118,8 +118,9 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 - Hid stale uncontested judicial district slices unless they correspond to a valid statewide contest, while preserving the named-to-numbered seat-family crosswalk used by historical timelines.
 - Corrected the 2014 Court of Appeals Seat 10 statewide party-group labels from Abe Jones / Hunter Murphy to the leading mapped candidates, John S. Arrowood / John M. Tyson.
+- Rebuilt the 2014 Seat 10 Congressional, State House, and State Senate overlays on the 2024 lines, corrected the remaining 2022-line State House labels, and rebuilt the 2026 congressional slice by mirroring 2024 outside the only changed districts (CD-01 and CD-03).
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
-- Bumped the frontend build/data cache token to `2026-09-13-seat-10-candidate-fix`.
+- Bumped the frontend build/data cache token to `2026-09-13-seat-10-district-fix`.
 
 ### Contest Comparison (August 19, 2026)
 
