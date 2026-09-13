@@ -79,7 +79,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
-- **Unopposed Filtering (Counties):** Unopposed Council of State contests and uncontested / same-party-only judicial contests are hidden from the Counties picker
+- **Unopposed Filtering:** Unopposed Council of State contests and uncontested / same-party-only judicial contests are hidden from the Counties picker. Judicial district overlays must also match an authoritative statewide contest, preventing stale uncontested district slices from appearing as all-`Other` ties.
 	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 	- **County Focus Panel (Newsroom-style):** Clicking a county gives a dominant **At a glance** summary (winner, margin strength, vote split, story, “what to watch”), plus a short **Why it votes this way** explainer, a **Confidence** meter, and a one-line **Compared with North Carolina** context sentence; deeper detail stays behind expandable sections
 	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Stable Republican (Stronghold)`, `Strengthening Democratic (Edge)`, `Emerging Republican (Tilt)`, or `Battleground`, with the category pill stacked under the trajectory header for more readable long labels
@@ -107,12 +107,19 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
-- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
+- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Named historical contests are joined to modern numbered seats through stable seat families (for example, Martin Seat → Seat 10). In multi-candidate elections, the displayed DEM/REP names are the highest-vote candidates within their mapped party groups; for the 2014 Seat 10 vacancy, those labels are John S. Arrowood and John M. Tyson. Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–August 2026)
+## Recent Updates (March–September 2026)
 
-**Last updated:** August 19, 2026
+**Last updated:** September 13, 2026
+
+### Judicial Seat Filtering and Labels (September 13, 2026)
+
+- Hid stale uncontested judicial district slices unless they correspond to a valid statewide contest, while preserving the named-to-numbered seat-family crosswalk used by historical timelines.
+- Corrected the 2014 Court of Appeals Seat 10 statewide party-group labels from Abe Jones / Hunter Murphy to the leading mapped candidates, John S. Arrowood / John M. Tyson.
+- Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
+- Bumped the frontend build/data cache token to `2026-09-13-seat-10-candidate-fix`.
 
 ### Contest Comparison (August 19, 2026)
 

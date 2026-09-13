@@ -418,6 +418,23 @@ test('2018 Supreme Court county totals keep Anglin separate from Jackson', async
   expect(payload.rows.every((row) => row.rep_candidate === 'Barbara Jackson')).toBeTruthy();
 });
 
+test('2014 Court of Appeals Seat 10 names the leading mapped candidates', async ({ request }) => {
+  const response = await request.get('/data/contests/nc_court_of_appeals_judge_martin_seat_2014.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const counties = Object.values(payload.county_totals || {});
+
+  expect(counties).toHaveLength(100);
+  expect(counties.every((row) => row.dem_candidate === 'John S. Arrowood')).toBeTruthy();
+  expect(counties.every((row) => row.rep_candidate === 'John M. Tyson')).toBeTruthy();
+  expect(payload.meta).toMatchObject({
+    dem_total: 702067,
+    rep_total: 753422,
+    other_total: 883705,
+    total_votes: 2339194
+  });
+});
+
 test('2002 US Senate county totals come from the November general election', async ({ request }) => {
   const response = await request.get('/data/county_contests/us_senate_2002.json');
   expect(response.ok()).toBeTruthy();
