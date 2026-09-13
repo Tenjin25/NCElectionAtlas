@@ -304,6 +304,7 @@ test('August 2026 precinct assets preserve migrated keys and Forsyth names', asy
     '80A': 'Wallburg',
     '86A': 'Abbotts Creek 1'
   });
+  expect(friendly.counties?.CASWELL?.YANC).toBe('Yanceyville');
   for (const [code, name] of Object.entries(friendly.counties?.DAVIDSON || {})) {
     expect(String(name).toUpperCase().endsWith(` ${code.toUpperCase()}`)).toBe(false);
   }
