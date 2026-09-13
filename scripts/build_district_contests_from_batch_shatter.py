@@ -1427,6 +1427,14 @@ def build_precinct_party_votes(
     df["party_group"] = df["party"].map(party_group)
     df = apply_candidate_party_overrides(df, election_year=election_year)
     df["candidate"] = df["candidate"].map(canonicalize_candidate_label)
+    from judicial_contest_buckets import judicial_contest_candidate_bucket
+
+    special_buckets = df["candidate"].map(
+        lambda candidate: judicial_contest_candidate_bucket(
+            year=election_year, office=office, candidate=candidate
+        )
+    )
+    df.loc[special_buckets.notna(), "party_group"] = special_buckets[special_buckets.notna()]
 
     # Candidate labels (statewide top by party).
     dem_c = (
@@ -1484,6 +1492,14 @@ def build_precinct_party_votes_county_weight_mode(
     df["party_group"] = df["party"].map(party_group)
     df = apply_candidate_party_overrides(df, election_year=election_year)
     df["candidate"] = df["candidate"].map(canonicalize_candidate_label)
+    from judicial_contest_buckets import judicial_contest_candidate_bucket
+
+    special_buckets = df["candidate"].map(
+        lambda candidate: judicial_contest_candidate_bucket(
+            year=election_year, office=office, candidate=candidate
+        )
+    )
+    df.loc[special_buckets.notna(), "party_group"] = special_buckets[special_buckets.notna()]
     df["county"] = df["county"].astype(str).str.strip().str.upper()
     df["precinct"] = df["precinct"].astype(str).str.strip().str.upper()
     df["precinct_id"] = df["county"] + " - " + df["precinct"]

@@ -107,21 +107,21 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
-- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Named historical contests are joined to modern numbered seats through stable seat families (for example, Martin Seat → Seat 10). In multi-candidate elections, the displayed DEM/REP names are the highest-vote candidates within their mapped party groups; for the 2014 Seat 10 vacancy, those labels are John S. Arrowood and John M. Tyson. Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
+- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when a meaningful major-candidate comparison can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties generally come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). The exceptional 19-candidate 2014 Seat 10 vacancy compares the actual top two candidates—John S. Arrowood and John M. Tyson—while preserving all other candidates as OTHER instead of combining party-endorsed candidates. Named historical contests are joined to modern numbered seats through stable seat families (for example, Martin Seat → Seat 10). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
 ## Recent Updates (March–September 2026)
 
 **Last updated:** September 13, 2026
 
-### Judicial Seat Filtering and Labels (September 13, 2026)
+### Judicial Seat Filtering, Labels, and Seat 10 Totals (September 13, 2026)
 
 - Hid stale uncontested judicial district slices unless they correspond to a valid statewide contest, while preserving the named-to-numbered seat-family crosswalk used by historical timelines.
-- Corrected the 2014 Court of Appeals Seat 10 statewide party-group labels from Abe Jones / Hunter Murphy to the leading mapped candidates, John S. Arrowood / John M. Tyson.
-- Rebuilt the 2014 Seat 10 Congressional, State House, and State Senate overlays on the 2024 lines, corrected the remaining 2022-line State House labels, and rebuilt the 2026 congressional slice by mirroring 2024 outside the only changed districts (CD-01 and CD-03).
+- Corrected the 19-candidate 2014 Court of Appeals Seat 10 vacancy to use the candidates' actual votes: John S. Arrowood 336,839 (14.40%), John M. Tyson 557,700 (23.84%), and all other candidates 1,444,655 (61.76%). Tyson's certified statewide margin is 220,861 votes, or 9.44 percentage points of all votes cast.
+- Rebuilt the 2014 Seat 10 county, precinct, Congressional, State House, and State Senate results on both the 2022 and 2024 lines. The 2026 congressional slice mirrors the corrected 2024 districts except for changed CD-01 and CD-03, which are recalculated on the SL 2025-95 lines.
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
-- Bumped the frontend build/data cache token to `2026-09-13-house-county-groups-docs`.
+- Bumped the frontend build/data cache token to `2026-09-13-seat10-certified-totals`.
 
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 

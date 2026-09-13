@@ -429,11 +429,24 @@ test('2014 Court of Appeals Seat 10 names the leading mapped candidates', async 
   expect(counties.every((row) => row.dem_candidate === 'John S. Arrowood')).toBeTruthy();
   expect(counties.every((row) => row.rep_candidate === 'John M. Tyson')).toBeTruthy();
   expect(payload.meta).toMatchObject({
-    dem_total: 702067,
-    rep_total: 753422,
-    other_total: 883705,
+    dem_total: 336839,
+    rep_total: 557700,
+    other_total: 1444655,
     total_votes: 2339194
   });
+  expect(payload.meta.rep_total - payload.meta.dem_total).toBe(220861);
+  expect(((payload.meta.rep_total - payload.meta.dem_total) / payload.meta.total_votes) * 100).toBeCloseTo(9.44, 2);
+
+  const countyResponse = await request.get('/data/county_contests/nc_court_of_appeals_judge_martin_seat_2014.json');
+  expect(countyResponse.ok()).toBeTruthy();
+  const countyPayload = await countyResponse.json();
+  const countyRollup = countyPayload.rows.reduce((sum, row) => ({
+    dem: sum.dem + Number(row.dem_votes || 0),
+    rep: sum.rep + Number(row.rep_votes || 0),
+    other: sum.other + Number(row.other_votes || 0),
+    total: sum.total + Number(row.total_votes || 0)
+  }), { dem: 0, rep: 0, other: 0, total: 0 });
+  expect(countyRollup).toEqual({ dem: 336839, rep: 557700, other: 1444655, total: 2339194 });
 });
 
 test('2014 Court of Appeals Seat 10 district slices retain names and 2026 lineage', async ({ request }) => {
@@ -455,6 +468,16 @@ test('2014 Court of Appeals Seat 10 district slices retain names and 2026 lineag
     expect(rows.length, path).toBeGreaterThan(0);
     expect(rows.every((row) => row.dem_candidate === 'John S. Arrowood'), path).toBeTruthy();
     expect(rows.every((row) => row.rep_candidate === 'John M. Tyson'), path).toBeTruthy();
+    const rollup = rows.reduce((sum, row) => ({
+      dem: sum.dem + Number(row.dem_votes || 0),
+      rep: sum.rep + Number(row.rep_votes || 0),
+      other: sum.other + Number(row.other_votes || 0),
+      total: sum.total + Number(row.total_votes || 0)
+    }), { dem: 0, rep: 0, other: 0, total: 0 });
+    expect(Math.abs(rollup.dem - 336839), `${path} DEM rollup`).toBeLessThanOrEqual(100);
+    expect(Math.abs(rollup.rep - 557700), `${path} REP rollup`).toBeLessThanOrEqual(100);
+    expect(Math.abs(rollup.other - 1444655), `${path} OTHER rollup`).toBeLessThanOrEqual(100);
+    expect(Math.abs(rollup.total - 2339194), `${path} total rollup`).toBeLessThanOrEqual(100);
     payloads.push(payload);
   }
 
