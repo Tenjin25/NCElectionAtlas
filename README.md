@@ -79,7 +79,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Atlas-Style Desktop UI:** Refined left/right control rails, statewide snapshot cards, and map-first layout inspired by modern election atlas interfaces
 - **Mobile Dock + Sheet UI:** On phones, Search / Layers / Legend open as bottom sheets with snap states (collapsed, half, full) so controls stay reachable without covering the map
 - **Regional Quick Jumps:** Preset regions (Triangle, Triad, Charlotte, Asheville, Mountains, Coast, Inner Banks, Sandhills, Fayetteville, Cape Fear, I-95, and Foothills) can zoom the map and pin an aggregated regional result summary
-- **Unopposed Filtering (Counties):** Unopposed Council of State contests and uncontested / same-party-only judicial contests are hidden from the Counties picker
+- **Unopposed Filtering:** Unopposed Council of State contests and uncontested / same-party-only judicial contests are hidden from the Counties picker. Judicial district overlays must also match an authoritative statewide contest, preventing stale uncontested district slices from appearing as all-`Other` ties.
 	- **Hover + Sidebar Details:** Margins, vote shares, flip/shift modes, statewide summaries, and trend history for each geography
 	- **County Focus Panel (Newsroom-style):** Clicking a county gives a dominant **At a glance** summary (winner, margin strength, vote split, story, “what to watch”), plus a short **Why it votes this way** explainer, a **Confidence** meter, and a one-line **Compared with North Carolina** context sentence; deeper detail stays behind expandable sections
 	- **Trajectory / Status Card:** County/district/precinct trend panels include an edge-case-aware trajectory block with composite labels such as `Stable Republican (Stronghold)`, `Strengthening Democratic (Edge)`, `Emerging Republican (Tilt)`, or `Battleground`, with the category pill stacked under the trajectory header for more readable long labels
@@ -107,12 +107,66 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
 - **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
-- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
+- **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when contested two-party margins can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). Named historical contests are joined to modern numbered seats through stable seat families (for example, Martin Seat → Seat 10). In multi-candidate elections, the displayed DEM/REP names are the highest-vote candidates within their mapped party groups; for the 2014 Seat 10 vacancy, those labels are John S. Arrowood and John M. Tyson. Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
-## Recent Updates (March–August 2026)
+## Recent Updates (March–September 2026)
 
-**Last updated:** August 19, 2026
+**Last updated:** September 13, 2026
+
+### Judicial Seat Filtering and Labels (September 13, 2026)
+
+- Hid stale uncontested judicial district slices unless they correspond to a valid statewide contest, while preserving the named-to-numbered seat-family crosswalk used by historical timelines.
+- Corrected the 2014 Court of Appeals Seat 10 statewide party-group labels from Abe Jones / Hunter Murphy to the leading mapped candidates, John S. Arrowood / John M. Tyson.
+- Rebuilt the 2014 Seat 10 Congressional, State House, and State Senate overlays on the 2024 lines, corrected the remaining 2022-line State House labels, and rebuilt the 2026 congressional slice by mirroring 2024 outside the only changed districts (CD-01 and CD-03).
+- Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
+- Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
+- Bumped the frontend build/data cache token to `2026-09-13-house-county-groups-docs`.
+
+### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
+
+- Corrected State House district calculations for districts composed entirely of one or more whole counties. These rows now use canonical statewide-contest county totals instead of accepting small precinct-crosswalk or rounding drift.
+- This produces more accurate margins of victory because the qualifying districts have complete or near-complete county coverage: certified county totals capture essentially 100% of the relevant votes, whereas precinct crosswalks can introduce small matching, allocation, and rounding differences.
+- A single-county district copies that county's complete Democratic, Republican, and other vote totals. A grouped-county district adds the complete totals for every constituent county, then recalculates total votes, margin, margin percentage, winner, competitiveness color, and candidate labels from the combined result.
+- For example, **HD-22** is calculated as **Bladen + Sampson**, while **HD-119** is calculated as **Jackson + Swain + Transylvania**. The same rule covers the other verified whole-county groups defined in `scripts/fix_2024_house_whole_county_totals.py`.
+- The correction applies to matching State House contest slices in both `data/district_contests/` (2022 lines) and `data/district_contests_2024_lines/` (2024 lines). Districts containing any split county are intentionally excluded from this override.
+
+| District shape | Example | Result calculation | Expected coverage |
+|---|---|---|---|
+| One complete county | HD-65: Rockingham; HD-86: Burke; HD-97: Lincoln | Copy that county's complete DEM, REP, and OTHER totals, then recalculate the margin | 100% or effectively 100% |
+| Several complete counties | HD-22: Bladen + Sampson; HD-118: Haywood + Madison; HD-119: Jackson + Swain + Transylvania | Sum DEM, REP, and OTHER votes across all listed counties, then recalculate the margin | 100% or effectively 100% |
+| Includes part of a county | Any district containing a county split | Retain the precinct/block-weighted allocation | Depends on precinct matching and crosswalk coverage |
+
+All verified whole-county House clusters covered by this correction are listed below:
+
+| District | Type | Complete county composition |
+|---|---|---|
+| HD-5 | Grouped counties | Camden + Gates + Hertford + Pasquotank |
+| HD-12 | Grouped counties | Greene + Jones + Lenoir |
+| HD-22 | Grouped counties | Bladen + Sampson |
+| HD-23 | Grouped counties | Bertie + Edgecombe + Martin |
+| HD-27 | Grouped counties | Halifax + Northampton + Warren |
+| HD-48 | Grouped counties | Hoke + Scotland |
+| HD-65 | Single county | Rockingham |
+| HD-67 | Grouped counties | Montgomery + Stanly |
+| HD-86 | Single county | Burke |
+| HD-97 | Single county | Lincoln |
+| HD-118 | Grouped counties | Haywood + Madison |
+| HD-119 | Grouped counties | Jackson + Swain + Transylvania |
+| HD-120 | Grouped counties | Cherokee + Clay + Graham + Macon |
+
+The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
+
+| District | Complete counties | Election | Previous margin | Canonical margin now used | Change |
+|---|---|---:|---:|---:|---:|
+| HD-22 | Bladen + Sampson | President 2012 | R+6.10 | R+6.03 | 0.07 pt toward D |
+| HD-22 | Bladen + Sampson | President 2020 | R+19.21 | R+19.23 | 0.02 pt toward R |
+| HD-118 | Haywood + Madison | President 2012 | R+12.72 | R+12.39 | 0.33 pt toward D |
+| HD-118 | Haywood + Madison | President 2020 | R+25.70 | R+25.73 | 0.03 pt toward R |
+| HD-119 | Jackson + Swain + Transylvania | President 2012 | R+8.74 | R+8.48 | 0.26 pt toward D |
+| HD-119 | Jackson + Swain + Transylvania | Governor 2016 | R+4.73 | R+4.64 | 0.09 pt toward D |
+
+These are illustrative contests, not fixed partisan baselines: each election is independently summed from that contest's certified county totals. Small changes are expected because the correction removes allocation and rounding drift; the resulting vote counts and margins are the higher-coverage values used by the atlas.
 
 ### Contest Comparison (August 19, 2026)
 

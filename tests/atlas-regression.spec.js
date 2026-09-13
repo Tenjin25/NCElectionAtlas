@@ -304,6 +304,7 @@ test('August 2026 precinct assets preserve migrated keys and Forsyth names', asy
     '80A': 'Wallburg',
     '86A': 'Abbotts Creek 1'
   });
+  expect(friendly.counties?.CASWELL?.YANC).toBe('Yanceyville');
   for (const [code, name] of Object.entries(friendly.counties?.DAVIDSON || {})) {
     expect(String(name).toUpperCase().endsWith(` ${code.toUpperCase()}`)).toBe(false);
   }
@@ -416,6 +417,55 @@ test('2018 Supreme Court county totals keep Anglin separate from Jackson', async
   expect(payload.rows).toHaveLength(100);
   expect(totals).toEqual({ dem: 1812751, rep: 1246263, other: 598753, total: 3657767 });
   expect(payload.rows.every((row) => row.rep_candidate === 'Barbara Jackson')).toBeTruthy();
+});
+
+test('2014 Court of Appeals Seat 10 names the leading mapped candidates', async ({ request }) => {
+  const response = await request.get('/data/contests/nc_court_of_appeals_judge_martin_seat_2014.json');
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  const counties = Object.values(payload.county_totals || {});
+
+  expect(counties).toHaveLength(100);
+  expect(counties.every((row) => row.dem_candidate === 'John S. Arrowood')).toBeTruthy();
+  expect(counties.every((row) => row.rep_candidate === 'John M. Tyson')).toBeTruthy();
+  expect(payload.meta).toMatchObject({
+    dem_total: 702067,
+    rep_total: 753422,
+    other_total: 883705,
+    total_votes: 2339194
+  });
+});
+
+test('2014 Court of Appeals Seat 10 district slices retain names and 2026 lineage', async ({ request }) => {
+  const paths = [
+    '/data/district_contests/congressional_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests/state_house_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests/state_senate_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests_2024_lines/congressional_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests_2024_lines/state_house_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests_2024_lines/state_senate_nc_court_of_appeals_judge_martin_seat_2014.json',
+    '/data/district_contests_2026_lines/congressional_nc_court_of_appeals_judge_martin_seat_2014.json'
+  ];
+  const payloads = [];
+  for (const path of paths) {
+    const response = await request.get(path);
+    expect(response.ok(), path).toBeTruthy();
+    const payload = await response.json();
+    const rows = Object.values(payload?.general?.results || {});
+    expect(rows.length, path).toBeGreaterThan(0);
+    expect(rows.every((row) => row.dem_candidate === 'John S. Arrowood'), path).toBeTruthy();
+    expect(rows.every((row) => row.rep_candidate === 'John M. Tyson'), path).toBeTruthy();
+    payloads.push(payload);
+  }
+
+  const congressional2024 = payloads[3].general.results;
+  const congressional2026 = payloads[6].general.results;
+  for (const district of Object.keys(congressional2024)) {
+    if (district === '1' || district === '3') continue;
+    expect(congressional2026[district], `CD-${district}`).toEqual(congressional2024[district]);
+  }
+  expect(congressional2026['1']).not.toEqual(congressional2024['1']);
+  expect(congressional2026['3']).not.toEqual(congressional2024['3']);
 });
 
 test('2002 US Senate county totals come from the November general election', async ({ request }) => {
