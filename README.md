@@ -131,6 +131,43 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - For example, **HD-22** is calculated as **Bladen + Sampson**, while **HD-119** is calculated as **Jackson + Swain + Transylvania**. The same rule covers the other verified whole-county groups defined in `scripts/fix_2024_house_whole_county_totals.py`.
 - The correction applies to matching State House contest slices in both `data/district_contests/` (2022 lines) and `data/district_contests_2024_lines/` (2024 lines). Districts containing any split county are intentionally excluded from this override.
 
+| District shape | Example | Result calculation | Expected coverage |
+|---|---|---|---|
+| One complete county | HD-65: Rockingham; HD-86: Burke; HD-97: Lincoln | Copy that county's complete DEM, REP, and OTHER totals, then recalculate the margin | 100% or effectively 100% |
+| Several complete counties | HD-22: Bladen + Sampson; HD-118: Haywood + Madison; HD-119: Jackson + Swain + Transylvania | Sum DEM, REP, and OTHER votes across all listed counties, then recalculate the margin | 100% or effectively 100% |
+| Includes part of a county | Any district containing a county split | Retain the precinct/block-weighted allocation | Depends on precinct matching and crosswalk coverage |
+
+All verified whole-county House clusters covered by this correction are listed below:
+
+| District | Type | Complete county composition |
+|---|---|---|
+| HD-5 | Grouped counties | Camden + Gates + Hertford + Pasquotank |
+| HD-12 | Grouped counties | Greene + Jones + Lenoir |
+| HD-22 | Grouped counties | Bladen + Sampson |
+| HD-23 | Grouped counties | Bertie + Edgecombe + Martin |
+| HD-27 | Grouped counties | Halifax + Northampton + Warren |
+| HD-48 | Grouped counties | Hoke + Scotland |
+| HD-65 | Single county | Rockingham |
+| HD-67 | Grouped counties | Montgomery + Stanly |
+| HD-86 | Single county | Burke |
+| HD-97 | Single county | Lincoln |
+| HD-118 | Grouped counties | Haywood + Madison |
+| HD-119 | Grouped counties | Jackson + Swain + Transylvania |
+| HD-120 | Grouped counties | Cherokee + Clay + Graham + Macon |
+
+The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
+
+| District | Complete counties | Election | Previous margin | Canonical margin now used | Change |
+|---|---|---:|---:|---:|---:|
+| HD-22 | Bladen + Sampson | President 2012 | R+6.10 | R+6.03 | 0.07 pt toward D |
+| HD-22 | Bladen + Sampson | President 2020 | R+19.21 | R+19.23 | 0.02 pt toward R |
+| HD-118 | Haywood + Madison | President 2012 | R+12.72 | R+12.39 | 0.33 pt toward D |
+| HD-118 | Haywood + Madison | President 2020 | R+25.70 | R+25.73 | 0.03 pt toward R |
+| HD-119 | Jackson + Swain + Transylvania | President 2012 | R+8.74 | R+8.48 | 0.26 pt toward D |
+| HD-119 | Jackson + Swain + Transylvania | Governor 2016 | R+4.73 | R+4.64 | 0.09 pt toward D |
+
+These are illustrative contests, not fixed partisan baselines: each election is independently summed from that contest's certified county totals. Small changes are expected because the correction removes allocation and rounding drift; the resulting vote counts and margins are the higher-coverage values used by the atlas.
+
 ### Contest Comparison (August 19, 2026)
 
 - Added client-side CSV and JSON export controls under `More`, covering county results and comparison-mode results across county, Congressional, State House, and State Senate views.
