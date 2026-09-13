@@ -137,6 +137,13 @@ def aggregate_county_totals(
 ) -> dict[str, dict]:
     candidate_buckets = json_candidate_buckets(payload.get("rows") or [])
     party_overrides = party_overrides or {}
+    from judicial_contest_buckets import judicial_contest_candidate_bucket
+
+    try:
+        year = int(payload.get("year") or 0)
+    except (TypeError, ValueError):
+        year = 0
+    office = (payload.get("meta") or {}).get("office")
     dem_candidate = next((row.get("dem_candidate", "") for row in payload.get("rows") or [] if row.get("dem_candidate")), "")
     rep_candidate = next((row.get("rep_candidate", "") for row in payload.get("rows") or [] if row.get("rep_candidate")), "")
     totals: dict[str, dict] = {}
@@ -150,8 +157,13 @@ def aggregate_county_totals(
         except (TypeError, ValueError):
             votes = 0
         candidate = norm(row.get("candidate"))
+        special_bucket = judicial_contest_candidate_bucket(
+            year=year, office=office, candidate=candidate
+        )
         party = party_overrides.get(candidate, candidate_buckets.get(candidate, norm(row.get("party"))))
-        bucket = "dem_votes" if party.startswith("DEM") else ("rep_votes" if party.startswith("REP") else "other_votes")
+        bucket = special_bucket or (
+            "dem_votes" if party.startswith("DEM") else ("rep_votes" if party.startswith("REP") else "other_votes")
+        )
         node = totals.setdefault(
             county,
             {

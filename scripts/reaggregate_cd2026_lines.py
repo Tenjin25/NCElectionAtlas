@@ -65,6 +65,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--aggregated", type=Path, default=Path("data/nc_elections_aggregated.json"))
     p.add_argument("--in-dir", type=Path, default=Path("data/district_contests_2024_lines"))
     p.add_argument("--out-dir", type=Path, default=Path("data/district_contests_2026_lines"))
+    p.add_argument("--contests-dir", type=Path, default=Path("data/contests"))
+    p.add_argument(
+        "--contest-type-regex",
+        default="",
+        help="Optional regex limiting the congressional contest slices to rebuild.",
+    )
+    p.add_argument("--years", default="", help="Optional comma-separated election-year filter.")
     p.add_argument("--out-crosswalk", type=Path, default=Path("data/crosswalks/precinct_to_cd2026_sl2025_95.csv"))
     p.add_argument("--target-districts", default="1,3")
     return p.parse_args()
@@ -119,16 +126,17 @@ def build_precinct_crosswalk(precinct_geojson: Path, cd_shp: Path, district_col:
 
 def load_precinct_crosswalk(path: Path) -> pd.DataFrame:
     crosswalk = pd.read_csv(path, dtype=str)
-    needed = {"precinct_key", "district", "area_weight"}
+    needed = {"precinct_key", "district", "prec_area", "area_weight"}
     missing = needed - set(crosswalk.columns)
     if missing:
         raise ValueError(f"Crosswalk file missing columns: {sorted(missing)}")
 
-    out = crosswalk[["precinct_key", "district", "area_weight"]].copy()
+    out = crosswalk[["precinct_key", "district", "prec_area", "area_weight"]].copy()
     out["precinct_key"] = out["precinct_key"].astype(str).str.strip().str.upper()
     out["district"] = out["district"].astype(str).str.strip().str.replace(r"\.0$", "", regex=True).str.lstrip("0")
     out.loc[out["district"] == "", "district"] = "0"
     out["area_weight"] = pd.to_numeric(out["area_weight"], errors="coerce").fillna(0.0)
+    out["prec_area"] = pd.to_numeric(out["prec_area"], errors="coerce").fillna(0.0)
     out = out[(out["precinct_key"] != "") & (out["district"] != "") & (out["area_weight"] > 0)].copy()
     sums = out.groupby("precinct_key")["area_weight"].transform("sum").replace(0, pd.NA)
     out["area_weight"] = out["area_weight"] / sums
@@ -156,6 +164,19 @@ def build_vote_maps(results_node: dict) -> dict[str, dict[str, int]]:
             "other_votes": int(row.get("other_votes", 0) or 0),
         }
     return out
+
+
+def load_contest_vote_map(contests_dir: Path, contest_type: str, year: int) -> dict[str, dict[str, int]]:
+    path = contests_dir / f"{contest_type}_{year}.json"
+    if not path.exists():
+        return {}
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    results = {
+        str(row.get("county") or "").strip(): row
+        for row in (payload.get("rows") or [])
+        if str(row.get("county") or "").strip()
+    }
+    return build_vote_maps(results)
 
 
 def canonicalize_precinct_key(precinct_key: str) -> str:
@@ -342,6 +363,7 @@ def is_uncontested_partisan_contest(agg_votes: dict[str, dict[str, int]]) -> boo
 def main() -> None:
     args = parse_args()
     target_districts = {d.strip().lstrip("0") or "0" for d in str(args.target_districts).split(",") if d.strip()}
+    year_filter = {int(y.strip()) for y in str(args.years).split(",") if y.strip()}
 
     if args.rebuild_crosswalk or not args.precinct_crosswalk.exists():
         crosswalk = build_precinct_crosswalk(args.precinct_geojson, args.cd_shapefile, args.district_col)
@@ -361,19 +383,25 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for src in sorted(args.in_dir.glob("congressional_*.json")):
         dst = args.out_dir / src.name
-        payload_path = dst if dst.exists() else src
-        payload = json.loads(payload_path.read_text(encoding="utf-8"))
+        # Begin with the 2024-line slice so unchanged districts remain exact
+        # mirrors; only the explicitly changed 2026 districts are replaced.
+        payload = json.loads(src.read_text(encoding="utf-8"))
         meta = extract_cd_file_meta(src.name)
         if not meta:
             continue
         contest_type, year = meta
+        if year_filter and year not in year_filter:
+            continue
+        if args.contest_type_regex and not re.search(args.contest_type_regex, contest_type):
+            continue
         year_node = results_by_year.get(str(year), {})
         contest_node = (((year_node.get(contest_type) or {}).get("general")) or {}).get("results")
-        if not isinstance(contest_node, dict):
+        vote_map = build_vote_maps(contest_node) if isinstance(contest_node, dict) else {}
+        if not vote_map:
+            vote_map = load_contest_vote_map(args.contests_dir, contest_type, year)
+        if not vote_map:
             print(f"Skipped {src.name}: no precinct aggregate for {contest_type} {year}")
             continue
-
-        vote_map = build_vote_maps(contest_node)
         agg_votes, matched, total, county_fallback_used = weighted_aggregate(
             vote_map, crosswalk, target_counties=target_counties
         )
