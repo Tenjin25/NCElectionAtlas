@@ -126,6 +126,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 
 - Corrected State House district calculations for districts composed entirely of one or more whole counties. These rows now use canonical statewide-contest county totals instead of accepting small precinct-crosswalk or rounding drift.
+- This produces more accurate margins of victory because the qualifying districts have complete or near-complete county coverage: certified county totals capture essentially 100% of the relevant votes, whereas precinct crosswalks can introduce small matching, allocation, and rounding differences.
 - A single-county district copies that county's complete Democratic, Republican, and other vote totals. A grouped-county district adds the complete totals for every constituent county, then recalculates total votes, margin, margin percentage, winner, competitiveness color, and candidate labels from the combined result.
 - For example, **HD-22** is calculated as **Bladen + Sampson**, while **HD-119** is calculated as **Jackson + Swain + Transylvania**. The same rule covers the other verified whole-county groups defined in `scripts/fix_2024_house_whole_county_totals.py`.
 - The correction applies to matching State House contest slices in both `data/district_contests/` (2022 lines) and `data/district_contests_2024_lines/` (2024 lines). Districts containing any split county are intentionally excluded from this override.
