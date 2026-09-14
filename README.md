@@ -155,7 +155,27 @@ All verified whole-county House clusters covered by this correction are listed b
 | HD-119 | Grouped counties | Jackson + Swain + Transylvania |
 | HD-120 | Grouped counties | Cherokee + Clay + Graham + Macon |
 
-#### Whole-county State Senate clusters
+The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
+
+| District | Complete counties | Election | Previous margin | Canonical margin now used | Change |
+|---|---|---:|---:|---:|---:|
+| HD-22 | Bladen + Sampson | President 2012 | R+6.10 | R+6.03 | 0.07 pt toward D |
+| HD-22 | Bladen + Sampson | President 2020 | R+19.21 | R+19.23 | 0.02 pt toward R |
+| HD-118 | Haywood + Madison | President 2012 | R+12.72 | R+12.39 | 0.33 pt toward D |
+| HD-118 | Haywood + Madison | President 2020 | R+25.70 | R+25.73 | 0.03 pt toward R |
+| HD-119 | Jackson + Swain + Transylvania | President 2012 | R+8.74 | R+8.48 | 0.26 pt toward D |
+| HD-119 | Jackson + Swain + Transylvania | Governor 2016 | R+4.73 | R+4.64 | 0.09 pt toward D |
+
+These are illustrative contests, not fixed partisan baselines: each election is independently summed from that contest's certified county totals. Small changes are expected because the correction removes allocation and rounding drift; the resulting vote counts and margins are the higher-coverage values used by the atlas.
+
+### August 2026 Precinct Display Refresh (September 5, 2026)
+
+- Advanced the live precinct overlay to the August 24, 2026 SBE geometry while retaining December 2025 as the canonical historical allocation basis.
+- Added a composed historical-to-2026 browser bridge and fixed merged precinct rendering so retired source precinct vote rows are summed rather than overwritten.
+- Filled the six numeric-only Forsyth labels from the county Board of Elections polling-place list and removed redundant trailing precinct codes from Davidson display names.
+- Added regression coverage for all 17 retired-to-current key changes, the seven merge targets, Forsyth labels, and Davidson suffix cleanup.
+
+### Canonical Whole-County State Senate Totals (September 4, 2026)
 
 The same canonical-county method applies to 14 State Senate districts in each plan. The tables are separate because the northeastern districts changed between the 2022 and 2024 lines. In particular, the 2022 SD-02 Beaufort + Craven + Lenoir cluster became SD-03 in the 2024 plan, while the former SD-01 and SD-03 counties were redistributed between the new SD-01 and SD-02. Other districts containing county splits remain precinct/block-weighted. The lists below were verified against both the enacted census-block assignments and GeoPandas county/district coverage.
 
@@ -208,21 +228,27 @@ Examples of corrected margins on the 2022 lines are shown below. In these older 
 | SD-23 | Supreme Court Associate Justice Seat 4, 2004 | TIE 0.00 | D+50.38 |
 | SD-36 | Court of Appeals Seat 9, 2006 | TIE 0.00 | R+15.77 |
 
-The 2022-line nonjudicial rows were already canonical before this audit, so their margins did not require a before/after correction. Representative whole-county checks include:
+The recent 2022-line statewide rows were already canonical before the September 13 audit, so they did not require a new before/after correction. Representative 2022-election checks across nonjudicial and judicial contests include:
 
 | District | Election | Verified canonical margin |
 |---|---|---:|
-| SD-01 | President 2020 | R+23.14 |
-| SD-02 | President 2020 | R+16.40 |
-| SD-03 | President 2020 | D+3.64 |
-| SD-06 | US Senate 2014 | R+30.81 |
-| SD-23 | US Senate 2014 | D+33.95 |
-| SD-48 | US Senate 2014 | R+23.28 |
+| SD-01 | US Senate 2022 | R+27.02 |
+| SD-02 | US Senate 2022 | R+22.18 |
+| SD-03 | US Senate 2022 | R+3.84 |
+| SD-06 | Court of Appeals Seat 8, 2022 | R+36.70 |
+| SD-23 | Court of Appeals Seat 8, 2022 | D+34.65 |
+| SD-48 | Supreme Court Associate Justice Seat 3, 2022 | R+29.80 |
 
 Examples of the corrected 2024-line margins are shown below. Positive values are Republican margins and negative values are Democratic margins.
 
 | District | Election | Previous margin | Canonical margin now used | Change |
 |---|---:|---:|---:|---:|
+| SD-01 | President 2024 | R+26.70 | R+14.80 | 11.90 pt toward D |
+| SD-02 | President 2024 | R+19.57 | R+16.60 | 2.97 pt toward D |
+| SD-01 | Governor 2024 | R+11.43 | R+7.27 | 4.16 pt toward D |
+| SD-02 | Governor 2024 | R+1.82 | D+0.87 | 2.69 pt toward D; winner changes |
+| SD-01 | Attorney General 2024 | R+21.70 | R+11.61 | 10.09 pt toward D |
+| SD-02 | Court of Appeals Seat 12, 2024 | R+18.75 | R+14.83 | 3.92 pt toward D |
 | SD-01 | President 2020 | R+23.14 | R+8.81 | 14.33 pt toward D |
 | SD-02 | President 2020 | R+16.40 | R+11.75 | 4.65 pt toward D |
 | SD-01 | US Senate 2014 | R+16.49 | D+1.53 | 18.02 pt toward D |
@@ -230,26 +256,6 @@ Examples of the corrected 2024-line margins are shown below. Positive values are
 | SD-01 | Court of Appeals Seat 10, 2014 | R+22.36 | R+15.14 | 7.22 pt toward D |
 | SD-02 | Court of Appeals Seat 10, 2014 | R+24.57 | R+16.81 | 7.76 pt toward D |
 | SD-03 | Court of Appeals Seat 10, 2014 | R+9.54 | R+24.57 | Uses the former 2022 SD-02 county cluster |
-
-The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
-
-| District | Complete counties | Election | Previous margin | Canonical margin now used | Change |
-|---|---|---:|---:|---:|---:|
-| HD-22 | Bladen + Sampson | President 2012 | R+6.10 | R+6.03 | 0.07 pt toward D |
-| HD-22 | Bladen + Sampson | President 2020 | R+19.21 | R+19.23 | 0.02 pt toward R |
-| HD-118 | Haywood + Madison | President 2012 | R+12.72 | R+12.39 | 0.33 pt toward D |
-| HD-118 | Haywood + Madison | President 2020 | R+25.70 | R+25.73 | 0.03 pt toward R |
-| HD-119 | Jackson + Swain + Transylvania | President 2012 | R+8.74 | R+8.48 | 0.26 pt toward D |
-| HD-119 | Jackson + Swain + Transylvania | Governor 2016 | R+4.73 | R+4.64 | 0.09 pt toward D |
-
-These are illustrative contests, not fixed partisan baselines: each election is independently summed from that contest's certified county totals. Small changes are expected because the correction removes allocation and rounding drift; the resulting vote counts and margins are the higher-coverage values used by the atlas.
-
-### August 2026 Precinct Display Refresh (September 5, 2026)
-
-- Advanced the live precinct overlay to the August 24, 2026 SBE geometry while retaining December 2025 as the canonical historical allocation basis.
-- Added a composed historical-to-2026 browser bridge and fixed merged precinct rendering so retired source precinct vote rows are summed rather than overwritten.
-- Filled the six numeric-only Forsyth labels from the county Board of Elections polling-place list and removed redundant trailing precinct codes from Davidson display names.
-- Added regression coverage for all 17 retired-to-current key changes, the seven merge targets, Forsyth labels, and Davidson suffix cleanup.
 
 ### Statewide House Official Benchmark Pass (September 4, 2026)
 
