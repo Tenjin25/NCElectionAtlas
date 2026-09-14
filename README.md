@@ -228,7 +228,7 @@ Examples of corrected margins on the 2022 lines are shown below. In these older 
 | SD-23 | Supreme Court Associate Justice Seat 4, 2004 | TIE 0.00 | D+50.38 |
 | SD-36 | Court of Appeals Seat 9, 2006 | TIE 0.00 | R+15.77 |
 
-The recent 2022-line statewide rows were already canonical before the September 13 audit, so they did not require a new before/after correction. Representative 2022-election checks across nonjudicial and judicial contests include:
+The recent 2022-line statewide rows were already canonical before the September 13 audit, so they did not require a new before/after correction. “2022 lines” identifies the boundary plan, not the election year: the same districts also contain projected 2024 contests. Representative checks across both election years include:
 
 | District | Election | Verified canonical margin |
 |---|---|---:|
@@ -238,6 +238,12 @@ The recent 2022-line statewide rows were already canonical before the September 
 | SD-06 | Court of Appeals Seat 8, 2022 | R+36.70 |
 | SD-23 | Court of Appeals Seat 8, 2022 | D+34.65 |
 | SD-48 | Supreme Court Associate Justice Seat 3, 2022 | R+29.80 |
+| SD-01 | President 2024 | R+26.70 |
+| SD-02 | Governor 2024 | R+1.82 |
+| SD-03 | Attorney General 2024 | D+1.83 |
+| SD-06 | President 2024 | R+35.84 |
+| SD-23 | Governor 2024 | D+43.59 |
+| SD-48 | Court of Appeals Seat 12, 2024 | R+25.40 |
 
 Examples of the corrected 2024-line margins are shown below. Positive values are Republican margins and negative values are Democratic margins.
 
@@ -280,11 +286,24 @@ The source-specific apply scripts run in audit mode unless `--write` is supplied
 
 ### Official NCGA Senate and Congressional StatPack Calibration (September 4, 2026)
 
+- Built Senate and congressional district results from official NCSBE precinct-sort returns wherever those files were available, projecting election-vintage precincts through the official plan blocks and reconciling county/party totals before district aggregation. Exact NCGA StatPack district rows supersede those projections whenever a StatPack publishes the same contest and plan; MGGG's NCGA-derived VTD fields fill selected older headline-race gaps.
 - Calibrated every published district election row to the official NCGA StatPacks for the 2022 State Senate plan (`SL 2022-2`), the court-ordered 2022 interim congressional plan, the 2023 State Senate plan (`SL 2023-146`, used for the 2024 election), and the 2025 congressional plan (`SL 2025-95`).
 - The four compact JSON benchmarks in `data/reports/ncga_statpack_*.json` preserve the exact party vote totals, PDF page references, plan identifiers, and official source URLs. The corresponding `*_apply.json` reports preserve every before/after change.
 - The calibrated coverage is `12` contests / `600` Senate district rows and `12` contests / `168` congressional rows on the 2022 lines, `23` contests / `1,150` Senate rows on the 2024 lines, and `30` contests / `420` congressional rows on the 2026 lines.
 - NCGA marks these election tables as derived from the NCSBE `statewide_precinct_sort` files with administrative precincts excluded. Precinct-mode results remain on the atlas's geographic reconstruction; only the district aggregate slices are replaced by the published NCGA totals.
 - `scripts/extract_ncga_statpack_benchmark.py` reproduces a benchmark from a downloaded PDF. `scripts/apply_ncga_statpack_benchmark.py` audits by default and requires `--write` to update a line-set directory.
+
+Congressional results were therefore affected by the September 4 work too: official precinct-sort projections supplied the broad coverage, and published StatPack rows supplied the final exact benchmark where available. Congress did not receive the complete-county override used for qualifying House and Senate districts because the congressional plans contain county splits; treating those districts as exact sums of whole counties would be incorrect. Representative final StatPack corrections include:
+
+| Congressional plan | District | Election | Previous margin | Official margin now used | Change |
+|---|---|---|---:|---:|---:|
+| 2022 interim lines | NC-13 | Agriculture Commissioner 2020 | R+6.74 | R+9.05 | 2.31 pt toward R |
+| 2022 interim lines | NC-13 | Labor Commissioner 2020 | D+2.95 | D+0.77 | 2.18 pt toward R |
+| 2022 interim lines | NC-12 | Governor 2020 | D+35.71 | D+33.64 | 2.07 pt toward R |
+| 2022 interim lines | NC-12 | US Senate 2020 | D+28.92 | D+26.85 | 2.07 pt toward R |
+| 2026 `SL 2025-95` lines | NC-01 | Supreme Court Associate Justice Seat 6, 2024 | D+0.21 | R+8.27 | 8.48 pt toward R; winner changes |
+| 2026 `SL 2025-95` lines | NC-03 | Supreme Court Associate Justice Seat 6, 2024 | R+18.02 | R+9.69 | 8.33 pt toward D |
+
 ### Contest Comparison (August 19, 2026)
 
 - Added client-side CSV and JSON export controls under `More`, covering county results and comparison-mode results across county, Congressional, State House, and State Senate views.
