@@ -7124,6 +7124,13 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
+  .legend-axis.shift.detailed {
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+    gap: 1px;
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
   .legend-axis span {
     text-align: center;
     line-height: 1.2;
@@ -23274,14 +23281,22 @@ document.addEventListener('DOMContentLoaded', function() {
             <span>No change</span>
             <span class="rep">Toward Republicans</span>
           </div>
-          <div class="legend-axis shift">
-            <span class="dem">D +15</span>
+          <div class="legend-axis shift detailed">
+            <span class="dem">D +25</span>
+            <span class="dem">20</span>
+            <span class="dem">15</span>
             <span class="dem">D +10</span>
             <span class="dem">D +5</span>
+            <span class="dem">D +1</span>
+            <span class="dem">0.5</span>
             <span>0</span>
+            <span class="rep">0.5</span>
+            <span class="rep">R +1</span>
             <span class="rep">R +5</span>
             <span class="rep">R +10</span>
-            <span class="rep">R +15</span>
+            <span class="rep">15</span>
+            <span class="rep">20</span>
+            <span class="rep">R +25</span>
           </div>
         </div>
       `;
@@ -23314,14 +23329,22 @@ document.addEventListener('DOMContentLoaded', function() {
             <span>No difference</span>
             <span class="rep">Primary more Republican</span>
           </div>
-          <div class="legend-axis shift">
-            <span class="dem">D +15</span>
+          <div class="legend-axis shift detailed">
+            <span class="dem">D +25</span>
+            <span class="dem">20</span>
+            <span class="dem">15</span>
             <span class="dem">D +10</span>
             <span class="dem">D +5</span>
+            <span class="dem">D +1</span>
+            <span class="dem">0.5</span>
             <span>0</span>
+            <span class="rep">0.5</span>
+            <span class="rep">R +1</span>
             <span class="rep">R +5</span>
             <span class="rep">R +10</span>
-            <span class="rep">R +15</span>
+            <span class="rep">15</span>
+            <span class="rep">20</span>
+            <span class="rep">R +25</span>
           </div>
         </div>
       `;
