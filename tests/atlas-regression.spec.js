@@ -158,6 +158,19 @@ test('the current build includes the margin legend', async ({ request }) => {
   expect((source.match(/class="legend-segment/g) || []).length).toBeGreaterThanOrEqual(15);
 });
 
+test('demographic colors distinguish plurality from majority at 50 percent', async ({ request }) => {
+  const response = await request.get('/index.html');
+  expect(response.ok()).toBeTruthy();
+  const source = await response.text();
+
+  expect(source).toContain('majority: Number(top.value) >= 50');
+  for (const group of ['White', 'Black', 'Hispanic', 'Native', 'Asian', 'Pacific', 'Multiracial']) {
+    expect(source).toContain(`${group} majority`);
+    expect(source).toContain(`${group} plurality`);
+  }
+  expect(source).toContain("dom.majority ? '#1d4ed8' : '#93c5fd'");
+});
+
 test('color-blind mode visibly recolors the legend and persists', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await page.waitForFunction(() => (

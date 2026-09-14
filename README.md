@@ -121,7 +121,8 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Rebuilt the 2014 Seat 10 county, precinct, Congressional, State House, and State Senate results on both the 2022 and 2024 lines. The 14 whole-county State Senate clusters were then restored from exact county sums on both line sets. The 2026 congressional slice mirrors the corrected 2024 districts except for changed CD-01 and CD-03, which are recalculated on the SL 2025-95 lines.
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
-- Bumped the frontend build/data cache token to `2026-09-13-senate-line-clusters`.
+- Split every demographic map category into a lighter plurality shade (largest group below 50%) and a darker majority shade (50% or greater), with matching normal, high-contrast, and colorblind-aware legend colors.
+- Bumped the frontend build/data cache token to `2026-09-13-demographic-majority`.
 
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 
