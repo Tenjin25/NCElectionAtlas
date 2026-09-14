@@ -227,13 +227,13 @@
   body.colorblind-mode .legend-spectrum.margins .legend-segment.legend-color:nth-child(n+9) {
     border-color: rgba(37, 99, 235, 0.75) !important;
   }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(-n+3) {
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(-n+7) {
     border-color: rgba(37, 99, 235, 0.75) !important;
   }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(4) {
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(8) {
     border-color: rgba(100, 116, 139, 0.6) !important;
   }
-  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(n+5) {
+  body.colorblind-mode .legend-spectrum.shift .legend-segment.legend-color:nth-child(n+9) {
     border-color: rgba(217, 119, 6, 0.75) !important;
   }
   body.colorblind-mode .legend-swatch-card .legend-color {
@@ -23249,13 +23249,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildShiftLegendHTML() {
       const colors = [
+        colorForShiftMode(-25),
+        colorForShiftMode(-20),
         colorForShiftMode(-15),
         colorForShiftMode(-10),
         colorForShiftMode(-5),
+        colorForShiftMode(-1),
+        colorForShiftMode(-0.5),
         colorForShiftMode(0),
+        colorForShiftMode(0.5),
+        colorForShiftMode(1),
         colorForShiftMode(5),
         colorForShiftMode(10),
-        colorForShiftMode(15)
+        colorForShiftMode(15),
+        colorForShiftMode(20),
+        colorForShiftMode(25)
       ];
       return `
         <div class="legend-scale-shell">
@@ -23281,13 +23289,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function buildComparisonLegendHTML() {
       const colors = [
+        colorForShiftMode(-25),
+        colorForShiftMode(-20),
         colorForShiftMode(-15),
         colorForShiftMode(-10),
         colorForShiftMode(-5),
+        colorForShiftMode(-1),
+        colorForShiftMode(-0.5),
         colorForShiftMode(0),
+        colorForShiftMode(0.5),
+        colorForShiftMode(1),
         colorForShiftMode(5),
         colorForShiftMode(10),
-        colorForShiftMode(15)
+        colorForShiftMode(15),
+        colorForShiftMode(20),
+        colorForShiftMode(25)
       ];
       return `
         <div class="legend-scale-shell">
@@ -34626,16 +34642,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const cb = isColorblindModeActive();
       const dir = s >= 0 ? 'R' : 'D';
       if (a < 0.5) return '#f8fafc';
-      // Bins tuned for readability; "strong" kicks in at 10.
-      const bin = a >= 15 ? 4 : a >= 10 ? 3 : a >= 5 ? 2 : 1;
+      // Preserve subtle movement while separating meaningful 1-5 point shifts
+      // and exceptional realignments that would otherwise collapse together.
+      const bin = a >= 25 ? 7 : a >= 20 ? 6 : a >= 15 ? 5 : a >= 10 ? 4 : a >= 5 ? 3 : a >= 1 ? 2 : 1;
       if (cb) {
         // Blue (D shift) vs orange (R shift).
-        if (dir === 'R') return ['#ffd29a', '#f58a2a', '#d65300', '#8c2d04'][bin - 1];
-        return ['#bae6fd', '#60a5fa', '#0284c7', '#063f5c'][bin - 1];
+        if (dir === 'R') return ['#ffedd5', '#fed7aa', '#fdba74', '#f58a2a', '#e66a00', '#b54708', '#7c2d12'][bin - 1];
+        return ['#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0284c7', '#0072b2', '#063f5c'][bin - 1];
       }
       // Red vs blue diverging.
-      if (dir === 'R') return ['#fee2e2', '#fca5a5', '#ef4444', '#991b1b'][bin - 1];
-      return ['#dbeafe', '#93c5fd', '#3b82f6', '#1e3a8a'][bin - 1];
+      if (dir === 'R') return ['#fee2e2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#7f1d1d'][bin - 1];
+      return ['#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1e3a8a'][bin - 1];
     }
 
     function colorForPopulationChangeMode(changePct) {
