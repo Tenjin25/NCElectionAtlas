@@ -121,7 +121,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Rebuilt the 2014 Seat 10 county, precinct, Congressional, State House, and State Senate results on both the 2022 and 2024 lines. The 14 whole-county State Senate clusters were then restored from exact county sums on both line sets. The 2026 congressional slice mirrors the corrected 2024 districts except for changed CD-01 and CD-03, which are recalculated on the SL 2025-95 lines.
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
-- Bumped the frontend build/data cache token to `2026-09-13-seat10-senate-clusters`.
+- Bumped the frontend build/data cache token to `2026-09-13-senate-line-clusters`.
 
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 
@@ -157,24 +157,79 @@ All verified whole-county House clusters covered by this correction are listed b
 
 #### Whole-county State Senate clusters
 
-The same canonical-county method applies to the 14 State Senate districts below. The plans are shown separately because the 2022 and 2024 Senate maps differ in some areas. For these particular qualifying districts, however, the complete-county compositions are unchanged between the two plans. Other Senate districts include county splits or changed internal boundaries and therefore remain precinct/block-weighted rather than receiving an exact county-sum override. SD-06 and SD-10 are the two single-county cases.
+The same canonical-county method applies to 14 State Senate districts in each plan. The tables are separate because the northeastern districts changed between the 2022 and 2024 lines. In particular, the 2022 SD-02 Beaufort + Craven + Lenoir cluster became SD-03 in the 2024 plan, while the former SD-01 and SD-03 counties were redistributed between the new SD-01 and SD-02. Other districts containing county splits remain precinct/block-weighted. The lists below were verified against both the enacted census-block assignments and GeoPandas county/district coverage.
 
-| District | 2022-line complete counties | 2024-line complete counties | Canonical treatment |
-|---|---|---|---|
-| SD-01 | Carteret + Chowan + Dare + Hyde + Pamlico + Pasquotank + Perquimans + Washington | Carteret + Chowan + Dare + Hyde + Pamlico + Pasquotank + Perquimans + Washington | Grouped-county sum on both plans |
-| SD-02 | Beaufort + Craven + Lenoir | Beaufort + Craven + Lenoir | Grouped-county sum on both plans |
-| SD-03 | Bertie + Camden + Currituck + Gates + Halifax + Hertford + Martin + Northampton + Tyrrell + Warren | Bertie + Camden + Currituck + Gates + Halifax + Hertford + Martin + Northampton + Tyrrell + Warren | Grouped-county sum on both plans |
-| SD-04 | Greene + Wayne + Wilson | Greene + Wayne + Wilson | Grouped-county sum on both plans |
-| SD-05 | Edgecombe + Pitt | Edgecombe + Pitt | Grouped-county sum on both plans |
-| SD-06 | Onslow | Onslow | Single-county copy on both plans |
-| SD-10 | Johnston | Johnston | Single-county copy on both plans |
-| SD-11 | Franklin + Nash + Vance | Franklin + Nash + Vance | Grouped-county sum on both plans |
-| SD-23 | Caswell + Orange + Person | Caswell + Orange + Person | Grouped-county sum on both plans |
-| SD-24 | Hoke + Robeson + Scotland | Hoke + Robeson + Scotland | Grouped-county sum on both plans |
-| SD-30 | Davidson + Davie | Davidson + Davie | Grouped-county sum on both plans |
-| SD-33 | Rowan + Stanly | Rowan + Stanly | Grouped-county sum on both plans |
-| SD-36 | Alexander + Surry + Wilkes + Yadkin | Alexander + Surry + Wilkes + Yadkin | Grouped-county sum on both plans |
-| SD-48 | Henderson + Polk + Rutherford | Henderson + Polk + Rutherford | Grouped-county sum on both plans |
+##### 2022 State Senate lines
+
+| District | Type | Complete county composition |
+|---|---|---|
+| SD-01 | Grouped counties | Carteret + Chowan + Dare + Hyde + Pamlico + Pasquotank + Perquimans + Washington |
+| SD-02 | Grouped counties | Beaufort + Craven + Lenoir |
+| SD-03 | Grouped counties | Bertie + Camden + Currituck + Gates + Halifax + Hertford + Martin + Northampton + Tyrrell + Warren |
+| SD-04 | Grouped counties | Greene + Wayne + Wilson |
+| SD-05 | Grouped counties | Edgecombe + Pitt |
+| SD-06 | Single county | Onslow |
+| SD-10 | Single county | Johnston |
+| SD-11 | Grouped counties | Franklin + Nash + Vance |
+| SD-23 | Grouped counties | Caswell + Orange + Person |
+| SD-24 | Grouped counties | Hoke + Robeson + Scotland |
+| SD-30 | Grouped counties | Davidson + Davie |
+| SD-33 | Grouped counties | Rowan + Stanly |
+| SD-36 | Grouped counties | Alexander + Surry + Wilkes + Yadkin |
+| SD-48 | Grouped counties | Henderson + Polk + Rutherford |
+
+##### 2024 State Senate lines
+
+| District | Type | Complete county composition |
+|---|---|---|
+| SD-01 | Grouped counties | Bertie + Camden + Currituck + Dare + Gates + Hertford + Northampton + Pasquotank + Perquimans + Tyrrell |
+| SD-02 | Grouped counties | Carteret + Chowan + Halifax + Hyde + Martin + Pamlico + Warren + Washington |
+| SD-03 | Grouped counties | Beaufort + Craven + Lenoir |
+| SD-04 | Grouped counties | Greene + Wayne + Wilson |
+| SD-05 | Grouped counties | Edgecombe + Pitt |
+| SD-06 | Single county | Onslow |
+| SD-10 | Single county | Johnston |
+| SD-11 | Grouped counties | Franklin + Nash + Vance |
+| SD-23 | Grouped counties | Caswell + Orange + Person |
+| SD-24 | Grouped counties | Hoke + Robeson + Scotland |
+| SD-30 | Grouped counties | Davidson + Davie |
+| SD-33 | Grouped counties | Rowan + Stanly |
+| SD-36 | Grouped counties | Alexander + Surry + Wilkes + Yadkin |
+| SD-48 | Grouped counties | Henderson + Polk + Rutherford |
+
+Examples of corrected margins on the 2022 lines are shown below. In these older judicial slices, the previous whole-county rows had the correct total-vote count but placed all votes in the `other` bucket, which displayed a false `TIE` at 0.00%. The canonical county sums restore the candidate-party vote split and the real margin.
+
+| District | Election | Previous display | Canonical margin now used |
+|---|---|---|---:|
+| SD-01 | Court of Appeals Seat 4, 2004 | TIE 0.00 | D+13.48 |
+| SD-02 | Court of Appeals Seat 5, 2004 | TIE 0.00 | R+8.76 |
+| SD-06 | Court of Appeals Seat 6, 2004 | TIE 0.00 | R+32.12 |
+| SD-10 | Court of Appeals Seat 4, 2004 | TIE 0.00 | D+0.44 |
+| SD-23 | Supreme Court Associate Justice Seat 4, 2004 | TIE 0.00 | D+50.38 |
+| SD-36 | Court of Appeals Seat 9, 2006 | TIE 0.00 | R+15.77 |
+
+The 2022-line nonjudicial rows were already canonical before this audit, so their margins did not require a before/after correction. Representative whole-county checks include:
+
+| District | Election | Verified canonical margin |
+|---|---|---:|
+| SD-01 | President 2020 | R+23.14 |
+| SD-02 | President 2020 | R+16.40 |
+| SD-03 | President 2020 | D+3.64 |
+| SD-06 | US Senate 2014 | R+30.81 |
+| SD-23 | US Senate 2014 | D+33.95 |
+| SD-48 | US Senate 2014 | R+23.28 |
+
+Examples of the corrected 2024-line margins are shown below. Positive values are Republican margins and negative values are Democratic margins.
+
+| District | Election | Previous margin | Canonical margin now used | Change |
+|---|---:|---:|---:|---:|
+| SD-01 | President 2020 | R+23.14 | R+8.81 | 14.33 pt toward D |
+| SD-02 | President 2020 | R+16.40 | R+11.75 | 4.65 pt toward D |
+| SD-01 | US Senate 2014 | R+16.49 | D+1.53 | 18.02 pt toward D |
+| SD-02 | US Senate 2014 | R+11.93 | R+2.16 | 9.77 pt toward D |
+| SD-01 | Court of Appeals Seat 10, 2014 | R+22.36 | R+15.14 | 7.22 pt toward D |
+| SD-02 | Court of Appeals Seat 10, 2014 | R+24.57 | R+16.81 | 7.76 pt toward D |
+| SD-03 | Court of Appeals Seat 10, 2014 | R+9.54 | R+24.57 | Uses the former 2022 SD-02 county cluster |
 
 The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
 

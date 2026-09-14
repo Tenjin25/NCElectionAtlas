@@ -490,7 +490,7 @@ test('2014 Court of Appeals Seat 10 district slices retain names and 2026 lineag
   expect(congressional2026['1']).not.toEqual(congressional2024['1']);
   expect(congressional2026['3']).not.toEqual(congressional2024['3']);
 
-  const senateClusters = {
+  const senateClusters2022 = {
     '1': ['CARTERET', 'CHOWAN', 'DARE', 'HYDE', 'PAMLICO', 'PASQUOTANK', 'PERQUIMANS', 'WASHINGTON'],
     '2': ['BEAUFORT', 'CRAVEN', 'LENOIR'],
     '3': ['BERTIE', 'CAMDEN', 'CURRITUCK', 'GATES', 'HALIFAX', 'HERTFORD', 'MARTIN', 'NORTHAMPTON', 'TYRRELL', 'WARREN'],
@@ -506,10 +506,26 @@ test('2014 Court of Appeals Seat 10 district slices retain names and 2026 lineag
     '36': ['ALEXANDER', 'SURRY', 'WILKES', 'YADKIN'],
     '48': ['HENDERSON', 'POLK', 'RUTHERFORD']
   };
+  const senateClusters2024 = {
+    '1': ['BERTIE', 'CAMDEN', 'CURRITUCK', 'DARE', 'GATES', 'HERTFORD', 'NORTHAMPTON', 'PASQUOTANK', 'PERQUIMANS', 'TYRRELL'],
+    '2': ['CARTERET', 'CHOWAN', 'HALIFAX', 'HYDE', 'MARTIN', 'PAMLICO', 'WARREN', 'WASHINGTON'],
+    '3': ['BEAUFORT', 'CRAVEN', 'LENOIR'],
+    '4': ['GREENE', 'WAYNE', 'WILSON'],
+    '5': ['EDGECOMBE', 'PITT'],
+    '6': ['ONSLOW'],
+    '10': ['JOHNSTON'],
+    '11': ['FRANKLIN', 'NASH', 'VANCE'],
+    '23': ['CASWELL', 'ORANGE', 'PERSON'],
+    '24': ['HOKE', 'ROBESON', 'SCOTLAND'],
+    '30': ['DAVIDSON', 'DAVIE'],
+    '33': ['ROWAN', 'STANLY'],
+    '36': ['ALEXANDER', 'SURRY', 'WILKES', 'YADKIN'],
+    '48': ['HENDERSON', 'POLK', 'RUTHERFORD']
+  };
   const countyResponse = await request.get('/data/county_contests/nc_court_of_appeals_judge_martin_seat_2014.json');
   const countyPayload = await countyResponse.json();
   const counties = Object.fromEntries(countyPayload.rows.map((row) => [row.county, row]));
-  for (const senatePayload of [payloads[2], payloads[5]]) {
+  for (const [senatePayload, senateClusters] of [[payloads[2], senateClusters2022], [payloads[5], senateClusters2024]]) {
     expect(senatePayload.meta.whole_county_exact_districts).toEqual(Object.keys(senateClusters));
     for (const [district, countyNames] of Object.entries(senateClusters)) {
       const expected = countyNames.reduce((sum, county) => ({
