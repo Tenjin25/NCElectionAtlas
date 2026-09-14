@@ -118,10 +118,10 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 - Hid stale uncontested judicial district slices unless they correspond to a valid statewide contest, while preserving the named-to-numbered seat-family crosswalk used by historical timelines.
 - Corrected the 19-candidate 2014 Court of Appeals Seat 10 vacancy to use the candidates' actual votes: John S. Arrowood 336,839 (14.40%), John M. Tyson 557,700 (23.84%), and all other candidates 1,444,655 (61.76%). Tyson's certified statewide margin is 220,861 votes, or 9.44 percentage points of all votes cast.
-- Rebuilt the 2014 Seat 10 county, precinct, Congressional, State House, and State Senate results on both the 2022 and 2024 lines. The 2026 congressional slice mirrors the corrected 2024 districts except for changed CD-01 and CD-03, which are recalculated on the SL 2025-95 lines.
+- Rebuilt the 2014 Seat 10 county, precinct, Congressional, State House, and State Senate results on both the 2022 and 2024 lines. The 14 whole-county State Senate clusters were then restored from exact county sums on both line sets. The 2026 congressional slice mirrors the corrected 2024 districts except for changed CD-01 and CD-03, which are recalculated on the SL 2025-95 lines.
 - Audited the remaining pre-2018 statewide judicial candidate labels against the source results and party-override table; no other substantive top-candidate labeling mismatch was found.
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
-- Bumped the frontend build/data cache token to `2026-09-13-seat10-certified-totals`.
+- Bumped the frontend build/data cache token to `2026-09-13-seat10-senate-clusters`.
 
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 
@@ -154,6 +154,27 @@ All verified whole-county House clusters covered by this correction are listed b
 | HD-118 | Grouped counties | Haywood + Madison |
 | HD-119 | Grouped counties | Jackson + Swain + Transylvania |
 | HD-120 | Grouped counties | Cherokee + Clay + Graham + Macon |
+
+#### Whole-county State Senate clusters
+
+The same canonical-county method applies to the 14 State Senate districts below. The plans are shown separately because the 2022 and 2024 Senate maps differ in some areas. For these particular qualifying districts, however, the complete-county compositions are unchanged between the two plans. Other Senate districts include county splits or changed internal boundaries and therefore remain precinct/block-weighted rather than receiving an exact county-sum override. SD-06 and SD-10 are the two single-county cases.
+
+| District | 2022-line complete counties | 2024-line complete counties | Canonical treatment |
+|---|---|---|---|
+| SD-01 | Carteret + Chowan + Dare + Hyde + Pamlico + Pasquotank + Perquimans + Washington | Carteret + Chowan + Dare + Hyde + Pamlico + Pasquotank + Perquimans + Washington | Grouped-county sum on both plans |
+| SD-02 | Beaufort + Craven + Lenoir | Beaufort + Craven + Lenoir | Grouped-county sum on both plans |
+| SD-03 | Bertie + Camden + Currituck + Gates + Halifax + Hertford + Martin + Northampton + Tyrrell + Warren | Bertie + Camden + Currituck + Gates + Halifax + Hertford + Martin + Northampton + Tyrrell + Warren | Grouped-county sum on both plans |
+| SD-04 | Greene + Wayne + Wilson | Greene + Wayne + Wilson | Grouped-county sum on both plans |
+| SD-05 | Edgecombe + Pitt | Edgecombe + Pitt | Grouped-county sum on both plans |
+| SD-06 | Onslow | Onslow | Single-county copy on both plans |
+| SD-10 | Johnston | Johnston | Single-county copy on both plans |
+| SD-11 | Franklin + Nash + Vance | Franklin + Nash + Vance | Grouped-county sum on both plans |
+| SD-23 | Caswell + Orange + Person | Caswell + Orange + Person | Grouped-county sum on both plans |
+| SD-24 | Hoke + Robeson + Scotland | Hoke + Robeson + Scotland | Grouped-county sum on both plans |
+| SD-30 | Davidson + Davie | Davidson + Davie | Grouped-county sum on both plans |
+| SD-33 | Rowan + Stanly | Rowan + Stanly | Grouped-county sum on both plans |
+| SD-36 | Alexander + Surry + Wilkes + Yadkin | Alexander + Surry + Wilkes + Yadkin | Grouped-county sum on both plans |
+| SD-48 | Henderson + Polk + Rutherford | Henderson + Polk + Rutherford | Grouped-county sum on both plans |
 
 The following examples show why the canonical sum is used. “Previous” is the pre-September 11 precinct/crosswalk-derived margin; “canonical” is the current margin calculated from the complete county totals. Positive Republican margins are written as `R+`; negative stored margins are written as `D+`.
 
