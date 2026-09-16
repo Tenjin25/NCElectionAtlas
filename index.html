@@ -10961,7 +10961,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-14-directional-narrow-majority-v16';
+    const DATA_CACHE_BUSTER = '2026-09-16-county-cvap-mobile-v1';
         const APP_BUILD_ID = '2026-09-14-directional-narrow-majority-v16';
 
     function withCacheBuster(path) {
@@ -22341,6 +22341,11 @@ document.addEventListener('DOMContentLoaded', function() {
       return numericOrNull(demo?.[`${group}_cvap_pct`] ?? demo?.[`${group}_pop_pct`]);
     }
 
+    function countyDemoUsesCvapShares(demo) {
+      return ['white', 'black', 'hispanic', 'native', 'asian', 'pacific', 'multiracial']
+        .some(group => numericOrNull(demo?.[`${group}_cvap_pct`]) !== null);
+    }
+
     function buildRaceChipRowHTML(whitePct, blackPct, hispanicPct, nativePct, extraRacesOrOptions = null, maybeOptions = null) {
       let extraRaces = {};
       let options = maybeOptions;
@@ -22545,6 +22550,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const cvap = cvapDirect !== null ? cvapDirect : (countyNorm ? getCvapCountyTotal(countyNorm) : null);
       const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : vap;
       const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP (18+):' : 'VAP (18+):';
+      const usesCvapShares = countyDemoUsesCvapShares(demo);
       const races = buildRaceChipRowHTML(
         countyDemoPct(demo, 'white'),
         countyDemoPct(demo, 'black'),
@@ -22560,7 +22566,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="demo-hover-card">
           <div class="demo-hover-metric">${metricLabel} ${Math.round(metricValue).toLocaleString()}</div>
           ${races}
-          <div class="demo-hover-note">Race/ethnicity and totals are CVAP estimates from the 2020–2024 ACS special tabulation.</div>
+          <div class="demo-hover-note">${usesCvapShares ? 'Race/ethnicity and totals are CVAP estimates from the 2020–2024 ACS special tabulation.' : 'Race/ethnicity reflects total population; the adult total is shown separately.'}</div>
         </div>
       `;
     }
@@ -29952,11 +29958,12 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         { extraClass: 'sidebar-demo-race-row' }
       );
-      const countyCvap = Number(demo.cvap_total ?? getCvapCountyTotal(norm));
+      const countyCvap = numericOrNull(demo.cvap_total) ?? getCvapCountyTotal(norm);
       const countyVap = Number(demo.vap_18plus || 0);
-      const hasCountyCvap = Number.isFinite(countyCvap) && countyCvap > 0;
+      const hasCountyCvap = numericOrNull(countyCvap) !== null && Number(countyCvap) > 0;
+      const usesCvapShares = countyDemoUsesCvapShares(demo);
       demoHtml += `<p class="sidebar-breakdown"><b>${hasCountyCvap ? 'CVAP' : 'VAP'} (18+):</b> ${escapeHtml((hasCountyCvap ? countyCvap : countyVap).toLocaleString())}</p>`;
-      demoHtml += `<p class="sidebar-margin-details" style="margin-top:6px;">${hasCountyCvap ? '2020–2024 ACS citizen voting-age estimates.' : '2020 Census voting-age population.'}</p>`;
+      demoHtml += `<p class="sidebar-margin-details" style="margin-top:6px;">${usesCvapShares ? 'Citizen voting-age population by race/ethnicity, 2020–2024 ACS CVAP.' : (hasCountyCvap ? 'CVAP total from the 2020–2024 ACS; race/ethnicity shares reflect total population.' : '2020 Census voting-age population; race/ethnicity shares reflect total population.')}</p>`;
       if (demoRaceChips) demoHtml += demoRaceChips;
     }
   } catch (_) {}
