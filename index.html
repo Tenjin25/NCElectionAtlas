@@ -22580,6 +22580,18 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
 
+    function buildDemographicsHoverCardHTML({ metricLabel, metricValue, racesHTML = '', note = '' } = {}) {
+      const value = Number(metricValue);
+      if (!Number.isFinite(value)) return '';
+      return `
+        <div class="demo-hover-card">
+          <div class="demo-hover-metric">${escapeHtml(String(metricLabel || 'Population'))}: ${Math.round(value).toLocaleString()}</div>
+          ${String(racesHTML || '')}
+          ${note ? `<div class="demo-hover-note">${escapeHtml(String(note))}</div>` : ''}
+        </div>
+      `;
+    }
+
     function buildCountyDemographicsHoverHTML(demo, countyNormRaw = '') {
       if (!demo) return '';
       const vap = numericOrZero(demo.vap_18plus);
@@ -22600,13 +22612,14 @@ document.addEventListener('DOMContentLoaded', function() {
           multiracialPct: countyDemoPct(demo, 'multiracial')
         }
       );
-      return `
-        <div class="demo-hover-card">
-          <div class="demo-hover-metric">${metricLabel} ${Math.round(metricValue).toLocaleString()}</div>
-          ${races}
-          <div class="demo-hover-note">${usesCvapShares ? 'Race/ethnicity and totals are CVAP estimates from the 2020–2024 ACS special tabulation.' : 'Race/ethnicity reflects total population; the adult total is shown separately.'}</div>
-        </div>
-      `;
+      return buildDemographicsHoverCardHTML({
+        metricLabel: metricLabel.replace(/:$/, ''),
+        metricValue,
+        racesHTML: races,
+        note: usesCvapShares
+          ? 'Race/ethnicity and totals are CVAP estimates from the 2020–2024 ACS special tabulation.'
+          : 'Race/ethnicity reflects total population; the adult total is shown separately.'
+      });
     }
 
     function buildPrecinctDemographicsHoverHTML(demo, precinctNormRaw = '') {
@@ -22627,12 +22640,11 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         { includeUnknownHispanic: true }
       );
-      return `
-        <div class="demo-hover-card">
-          <div class="demo-hover-metric">${metricLabel} ${Math.round(metricValue).toLocaleString()}</div>
-          ${races}
-        </div>
-      `;
+      return buildDemographicsHoverCardHTML({
+        metricLabel: metricLabel.replace(/:$/, ''),
+        metricValue,
+        racesHTML: races
+      });
     }
 
     function buildPrecinctDemographicsIndexes(rows) {
@@ -34288,13 +34300,14 @@ document.addEventListener('DOMContentLoaded', function() {
           multiracialPct: demoRow.multiracial_vap_pct
         }
       );
-      return `
-        <div class="demo-hover-card">
-          <div class="demo-hover-metric">${hasCvap ? 'CVAP' : 'Population'}: ${Math.round(metricValue).toLocaleString()}</div>
-          ${races}
-          <div class="demo-hover-note">${hasCvap ? 'CVAP total; race/ethnicity shares reflect district VAP.' : 'Race/ethnicity shares reflect district VAP.'}</div>
-        </div>
-      `;
+      return buildDemographicsHoverCardHTML({
+        metricLabel: hasCvap ? 'CVAP' : 'Population',
+        metricValue,
+        racesHTML: races,
+        note: hasCvap
+          ? 'CVAP total; race/ethnicity shares reflect district VAP.'
+          : 'Race/ethnicity shares reflect district VAP.'
+      });
     }
 
     function getQuickDistrictInfo(districtNum, type) {
