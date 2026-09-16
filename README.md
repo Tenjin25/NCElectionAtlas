@@ -105,14 +105,19 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, keyboard focus rings (`:focus-visible`), reduced-motion support, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
 - **County Population Change Mode:** Counties view includes a `Pop Change` visualization mode for 2020-2025 Census Vintage population change, with percent/absolute metric toggle and a dedicated legend badge/subtitle
-- **Compact Map Key:** Margins, winners, shift, and flips legends are presented in a cleaner visual key instead of long text lists
+- **Compact Map Key:** Margins use named category rows; Winners, Flips, and Demographics use color swatches, while Shift and Compare use a 15-step diverging spectrum with labeled 0.5-, 1-, 5-, 10-, 15-, 20-, and 25-point thresholds on either side of zero (including a colorblind-safe blue/orange option).
 - **Margin Categories (Map Key):** Category chips are *absolute* two-party margin buckets (|Rep% − Dem%|), while the red/blue spectrum shows the signed margin (Rep% − Dem%).
 - **Judicial Contests:** NC Supreme Court and Court of Appeals seats in Counties / Precincts (and district overlays) when a meaningful major-candidate comparison can be shown. Coverage includes **seat-numbered** comparable races for **2000–2006** plus named-seat / seat-numbered contests from **2008 onward**. Ballots were nonpartisan in **2004–2016**; DEM/REP display parties generally come from `data/mappings/judicial_candidate_party_overrides.csv` (for example 2004 Orr vacancy: James A. Wynn, Jr. → DEM, Paul Martin Newby → REP; remaining plurality field → OTHER). The exceptional 19-candidate 2014 Seat 10 vacancy compares the actual top two candidates—John S. Arrowood and John M. Tyson—while preserving all other candidates as OTHER instead of combining party-endorsed candidates. Named historical contests are joined to modern numbered seats through stable seat families (for example, Martin Seat → Seat 10). Seat lineages use Wikipedia seat numbers via `data/mappings/judicial_seat_crosswalk.csv`. Tooltips and panels prefer OpenElections nicknames in parentheses when present (for example, `Mike Morgan`, `Bob Edmunds`)
 - **Flexible Data Model:** Add new contests, years, or district lines by updating manifests and data files
 
 ## Recent Updates (March–September 2026)
 
-**Last updated:** September 13, 2026
+**Last updated:** September 15, 2026
+
+### Shift and Compare Map Scale (September 13–14, 2026)
+
+- Expanded Shift and Compare shading from four to seven directional color bins, separating subtle movement (0.5–1 point), moderate shifts, and extreme 20–25-point realignments. Changes below 0.5 points remain near-white.
+- Updated the matching normal and colorblind palettes and the detailed legends to label both Democratic and Republican directions through 25 points, with larger threshold text for readability. Compare still measures the change in signed Republican-minus-Democratic margin from the comparison contest to the primary contest.
 
 ### Judicial Seat Filtering, Labels, and Seat 10 Totals (September 13, 2026)
 
