@@ -171,6 +171,66 @@ test('demographic colors distinguish plurality from majority at 50 percent', asy
   expect(source).toContain("dom.majority ? '#1d4ed8' : '#93c5fd'");
 });
 
+test('map legends use named category rows for every visualization mode', async ({ page }) => {
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await page.waitForFunction(() => typeof renderLegendForVizMode === 'function', { timeout: APP_READY_TIMEOUT });
+
+  const expectedRows = {
+    margins: 15,
+    winners: 3,
+    flips: 3,
+    shift: 15,
+    comparison: 15,
+    demographics: 16,
+    population_change: 12
+  };
+  for (const [mode, count] of Object.entries(expectedRows)) {
+    const result = await page.evaluate((vizMode) => {
+      renderLegendForVizMode(vizMode);
+      const rows = Array.from(document.querySelectorAll('#legend-content .legend-tier-row'));
+      return {
+        count: rows.length,
+        labels: rows.map(row => row.querySelector('.legend-tier-label')?.textContent?.trim()),
+        ranges: rows.map(row => row.querySelector('.legend-tier-range')?.textContent?.trim()),
+        scrollable: (() => {
+          const list = document.querySelector('#legend-content .legend-tier-list');
+          return !!list && list.scrollHeight > list.clientHeight && getComputedStyle(list).overflowY === 'auto';
+        })()
+      };
+    }, mode);
+    expect(result.count, mode).toBe(count);
+    expect(result.labels.every(Boolean), mode).toBeTruthy();
+    expect(result.ranges.every(Boolean), mode).toBeTruthy();
+    if (mode === 'shift' || mode === 'comparison') {
+      expect(result.scrollable, `${mode} expands into a scrollable category list`).toBeTruthy();
+    }
+    if (mode === 'population_change') {
+      expect(result.labels).toContain('Near flat');
+      expect(result.labels).toContain('No population data');
+    }
+  }
+
+  const populationAbs = await page.evaluate(() => {
+    const metric = document.getElementById('pop-change-metric');
+    metric.value = 'abs';
+    metric.dispatchEvent(new Event('change', { bubbles: true }));
+    renderLegendForVizMode('population_change');
+    return {
+      labels: Array.from(document.querySelectorAll('#legend-content .legend-tier-label')).map(el => el.textContent?.trim()),
+      missingPct: colorForPopulationChangeMode(null),
+      missingAbs: colorForPopulationChangeAbsMode(null),
+      flatPct: colorForPopulationChangeMode(0),
+      flatAbs: colorForPopulationChangeAbsMode(0)
+    };
+  });
+  expect(populationAbs.labels).toContain('Near flat');
+  expect(populationAbs.labels).toContain('No population data');
+  expect(populationAbs.missingPct).toBe('#e2e8f0');
+  expect(populationAbs.missingAbs).toBe('#e2e8f0');
+  expect(populationAbs.flatPct).toBe('#f8fafc');
+  expect(populationAbs.flatAbs).toBe('#f8fafc');
+});
+
 test('color-blind mode visibly recolors the legend and persists', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await page.waitForFunction(() => (
