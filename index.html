@@ -3407,6 +3407,19 @@ body.focus-active #hover-tooltip[data-context="preview"] {
     color: #cbd5e1;
   }
 
+  .hover-tooltip .vhr-demographics .demo-hover-card {
+    margin: 8px 0 0;
+    padding: 9px 10px;
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.38);
+  }
+
+  .hover-tooltip .vhr-demographics-divider {
+    height: 1px;
+    margin: 10px 0;
+    background: rgba(148, 163, 184, 0.24);
+  }
+
   .hover-tooltip .demo-race-label {
     color: #e2e8f0;
   }
@@ -28055,7 +28068,7 @@ document.addEventListener('DOMContentLoaded', function() {
         title: `${countyDisplay} County`,
         subtitle: String(currentVizMode || '') === 'population_change'
           ? 'Population change'
-          : 'County',
+          : (String(currentVizMode || '') === 'demographics' && demoLine ? 'Demographics' : 'County'),
         demName: demCandidate,
         repName: repCandidate,
         otherName: 'Other',
@@ -28074,11 +28087,14 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: vizPrevCache?.prevYear || null,
         districtType: 'County',
-        showWinnerLine: true,
+        showWinnerLine: !(currentVizMode === 'demographics' && demoLine),
         shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
         shiftToneClass: shiftClass,
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
-        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear,
+        leadingContent: currentVizMode === 'demographics' && demoLine
+          ? `<div class="vhr-demographics">${demoLine}<div class="vhr-demographics-divider"></div></div>`
+          : ''
       });
       const popChangeVotehubCore = popChangeHeaderMeta
         ? buildPopulationChangeCountyTooltip({
@@ -28308,9 +28324,15 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftClass = Math.abs(shiftDelta) < 0.01 ? 'tie' : (shiftDelta > 0 ? 'rep' : 'dem');
         }
       }
+      const precinctDemo = currentVizMode === 'demographics'
+        ? getPrecinctDemographicsRow(precinctNorm, countyName, displayCode)
+        : null;
+      const precinctDemoHTML = precinctDemo
+        ? buildPrecinctDemographicsHoverHTML(precinctDemo, precinctNorm)
+        : '';
       const votehubCore = buildVotehubResultsTooltip({
         title,
-        subtitle: 'Precinct',
+        subtitle: currentVizMode === 'demographics' && precinctDemoHTML ? 'Demographics' : 'Precinct',
         demName: demCandidate,
         repName: repCandidate,
         otherName: 'Other',
@@ -28326,11 +28348,14 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: curSigned,
         flipYearLabel: vizPrevCache?.prevYear || null,
         districtType: 'Precinct',
-        showWinnerLine: true,
+        showWinnerLine: !(currentVizMode === 'demographics' && precinctDemoHTML),
         shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
         shiftToneClass: shiftClass,
         shiftYearLabel: (vizShiftCache?.prevYear && vizShiftCache?.year) ? `${vizShiftCache.prevYear}->${vizShiftCache.year}` : '',
-        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!vizShiftCache?.prevYear,
+        leadingContent: precinctDemoHTML
+          ? `<div class="vhr-demographics">${precinctDemoHTML}<div class="vhr-demographics-divider"></div></div>`
+          : ''
       });
       const flipLine = (prevSignedForFlip !== null)
         ? flipLineHTML(prevSignedForFlip, curSigned, vizPrevCache?.prevYear || null, Number(year))
@@ -28670,7 +28695,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const inner = buildVotehubResultsTooltip({
         title: districtTitle,
-        subtitle: subtitleByScope,
+        subtitle: currentVizMode === 'demographics' && _demoHTML ? 'Demographics' : subtitleByScope,
         demName: demCandidate,
         repName: repCandidate,
         otherName: 'Other',
@@ -28687,11 +28712,14 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSignedMarginPct: signedMarginPct,
         flipYearLabel: prevYearForFlip,
         districtType: subtitleByScope,
-        showWinnerLine: true,
+        showWinnerLine: !(currentVizMode === 'demographics' && _demoHTML),
         shiftLineText: Number.isFinite(shiftDelta) ? formatShiftLabel(shiftDelta) : '',
         shiftToneClass: shiftClass,
         shiftYearLabel: (prevYearForFlip && year) ? `${prevYearForFlip}→${year}` : '',
-        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!prevYearForFlip
+        showShiftLine: currentVizMode === 'shift' && Number.isFinite(shiftDelta) && !!prevYearForFlip,
+        leadingContent: currentVizMode === 'demographics' && _demoHTML
+          ? `<div class="vhr-demographics">${_demoHTML}<div class="vhr-demographics-divider"></div></div>`
+          : ''
       });
       const comparisonRecord = currentVizMode === 'comparison'
         ? getActiveComparisonRecord(scope, districtNum)
@@ -30612,7 +30640,8 @@ document.addEventListener('DOMContentLoaded', function() {
       showShiftLine,
       winnerLineToneClass,
       winnerRawLeadToneClass,
-      marginPrecision
+      marginPrecision,
+      leadingContent
     } = {}) {
       const dVotes = Number(demVotes || 0);
       const rVotes = Number(repVotes || 0);
@@ -30690,6 +30719,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="votehub-results-card">
           <div class="vhr-title">${escapeHtml((title || '').toString())}</div>
           ${(subtitle || districtType) ? `<div class="vhr-subtitle">${escapeHtml(String(subtitle || districtType || ''))}</div>` : ''}
+          ${String(leadingContent || '')}
           ${winnerLine}
           ${flipLine}
           ${shiftLine}
@@ -34121,15 +34151,25 @@ document.addEventListener('DOMContentLoaded', function() {
         ? getCvapDistrictTotal(scope, districtNum, currentDistrictLinesYear)
         : null;
       const metricValue = Number.isFinite(Number(cvap)) ? Number(cvap) : Number(demoRow.total_population || 0);
-      const metricLabel = Number.isFinite(Number(cvap)) ? 'CVAP:' : 'Pop:';
-      const extras = buildDistrictExtraRaceInlineHTML(demoRow, 30);
-      return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;color:#cbd5e1;">` +
-        `<span style="font-weight:700;color:#e2e8f0;">${metricLabel}</span> ${Math.round(metricValue).toLocaleString()}` +
-        ` &nbsp;<span style="font-weight:700;color:#e2e8f0;">W:</span>${demoRow.white_vap_pct}%` +
-        ` <span style="font-weight:700;color:#e2e8f0;">B:</span>${demoRow.black_vap_pct}%` +
-        ` <span style="font-weight:700;color:#e2e8f0;">H:</span>${demoRow.hispanic_vap_pct}%` +
-        extras +
-        `</div>`;
+      const hasCvap = Number.isFinite(Number(cvap));
+      const races = buildRaceChipRowHTML(
+        demoRow.white_vap_pct,
+        demoRow.black_vap_pct,
+        demoRow.hispanic_vap_pct,
+        demoRow.native_vap_pct,
+        {
+          asianPct: demoRow.asian_vap_pct,
+          pacificPct: demoRow.pacific_vap_pct,
+          multiracialPct: demoRow.multiracial_vap_pct
+        }
+      );
+      return `
+        <div class="demo-hover-card">
+          <div class="demo-hover-metric">${hasCvap ? 'CVAP' : 'Population'}: ${Math.round(metricValue).toLocaleString()}</div>
+          ${races}
+          <div class="demo-hover-note">${hasCvap ? 'CVAP total; race/ethnicity shares reflect district VAP.' : 'Race/ethnicity shares reflect district VAP.'}</div>
+        </div>
+      `;
     }
 
     function getQuickDistrictInfo(districtNum, type) {
