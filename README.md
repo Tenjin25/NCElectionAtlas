@@ -93,7 +93,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
-- **Demographic Hover Chips:** County and precinct hover/sidebar cards include race-share chips that are tuned for readability in normal, colorblind, and high-contrast combinations
+- **Unified Demographic Hover Cards:** County, precinct, and district hover cards use the same compact race-share chip layout in Demographics mode, with the demographic summary shown before election results. County mobile/sidebar details prefer CVAP race shares when available, and source notes distinguish CVAP totals and shares from VAP or total-population fallbacks.
 - **Precinct Click Behavior (Precincts On):** Clicking a precinct is passive (no selection/highlight, no pinned tooltip, no zoom). Hover remains the primary interaction.
 - **CVAP Hover Totals (Optional):** When available, hover cards prefer RDH `CVAP_TOT24` (citizen voting-age population, 18+) for “total” metrics; otherwise they fall back to VAP/total population (this does not change election calculations)
 - **Recount Radar Badge:** A live topbar badge appears at higher zoom when the active focus margin is under `0.5%`, showing vote margin and percent gap
@@ -112,7 +112,14 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 ## Recent Updates (March–September 2026)
 
-**Last updated:** September 15, 2026
+**Last updated:** September 16, 2026
+
+### Unified Demographic Hover and Mobile Details (September 16, 2026)
+
+- Unified Demographics-mode hover cards across county, precinct, Congressional, State House, and State Senate views. The demographic summary now appears first in the standard results card, with a `Demographics` subtitle and election rows retained below for context.
+- Replaced the district-only inline demographic string with the same race-share chips used by county and precinct cards, including the expanded Native, Asian, Pacific Islander, and multiracial categories when available.
+- Tightened hover-card spacing, chip sizing, and source-note typography so the expanded breakdown remains readable without overwhelming the map.
+- Updated county mobile/sidebar details to prefer 2020–2024 ACS CVAP race/ethnicity shares when present and to state clearly when the displayed total or shares instead come from VAP or total-population data.
 
 ### Shift and Compare Map Scale (September 13–14, 2026)
 
