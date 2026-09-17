@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -285,11 +286,27 @@ def project(
     contests: list[str] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     geographic, coverage = allocate_nongeographic(precinct, weights)
-    joined = geographic.merge(weights, on="precinct_id", how="inner")
+    # Some callers retain a derived county column on their weight table. The
+    # reconciled vote row is authoritative for county identity; selecting only
+    # allocation columns avoids county_x/county_y suffixes after the merge.
+    joined = geographic.merge(
+        weights[["precinct_id", "district", "share"]],
+        on="precinct_id",
+        how="inner",
+    )
     joined["allocated"] = joined["votes"] * joined["share"]
-    allocated = joined.groupby(["contest", "bucket", "district"], as_index=False)[
+    allocated = joined.groupby(["county", "contest", "bucket", "district"], as_index=False)[
         "allocated"
     ].sum()
+    official_county_lookup = {
+        (row.county, row.contest, row.bucket): int(row.official_votes)
+        for row in official.itertuples(index=False)
+    }
+    allocated_county_lookup: dict[tuple[str, str, str], dict[str, float]] = defaultdict(dict)
+    for row in allocated.itertuples(index=False):
+        allocated_county_lookup[(row.county, row.contest, row.bucket)][str(row.district)] = float(
+            row.allocated
+        )
     official_state = official.groupby(["contest", "bucket"], as_index=False)[
         "official_votes"
     ].sum()
@@ -300,15 +317,34 @@ def project(
 
     contest_names = sorted(contests if contests is not None else CONTESTS.values())
     rounded: dict[tuple[str, str], dict[str, int]] = {}
+    county_totals_audit: list[dict[str, Any]] = []
     districts = [str(value) for value in range(1, district_count + 1)]
     for contest in contest_names:
         for bucket in ("dem", "rep", "other"):
-            subset = allocated[(allocated["contest"] == contest) & (allocated["bucket"] == bucket)]
-            values = {district: 0.0 for district in districts}
-            values.update({str(row.district): float(row.allocated) for row in subset.itertuples(index=False)})
-            rounded[(contest, bucket)] = largest_remainder(
-                values, official_lookup.get((contest, bucket), 0)
+            district_totals = {district: 0 for district in districts}
+            county_keys = sorted(
+                county
+                for county, item_contest, item_bucket in official_county_lookup
+                if item_contest == contest and item_bucket == bucket
             )
+            for county in county_keys:
+                values = {district: 0.0 for district in districts}
+                values.update(allocated_county_lookup.get((county, contest, bucket), {}))
+                official_county_total = official_county_lookup[(county, contest, bucket)]
+                county_rounded = largest_remainder(values, official_county_total)
+                for district, votes in county_rounded.items():
+                    district_totals[district] += votes
+                county_totals_audit.append(
+                    {
+                        "county": county,
+                        "contest": contest,
+                        "bucket": bucket,
+                        "official_votes": official_county_total,
+                        "projected_votes": sum(county_rounded.values()),
+                        "difference": sum(county_rounded.values()) - official_county_total,
+                    }
+                )
+            rounded[(contest, bucket)] = district_totals
 
     results: dict[str, dict[str, Any]] = {}
     totals_audit: list[dict[str, Any]] = []
@@ -344,6 +380,7 @@ def project(
             )
     return results, {
         **coverage,
+        "county_totals": county_totals_audit,
         "statewide_totals": totals_audit,
     }
 
