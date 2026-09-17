@@ -1,6 +1,23 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const AtlasData = require('../js/atlas-data.js');
+
+test('records exact and allocated counties for mixed legislative districts', () => {
+  const catalogPath = path.join(__dirname, '..', 'data', 'mappings', 'mixed_county_components.json');
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+
+  for (const plan of ['2022_state_senate', '2024_state_senate']) {
+    assert.deepEqual(catalog.plans[plan].exact_components['18'], ['GRANVILLE']);
+    assert.deepEqual(catalog.plans[plan].allocated_components['18'], ['WAKE']);
+  }
+
+  for (const plan of ['2022_state_house', '2024_state_house']) {
+    assert.deepEqual(catalog.plans[plan].exact_components['7'], ['FRANKLIN']);
+    assert.deepEqual(catalog.plans[plan].allocated_components['7'], ['GRANVILLE']);
+  }
+});
 
 test('resolves local and GitHub Pages base paths', () => {
   assert.equal(
