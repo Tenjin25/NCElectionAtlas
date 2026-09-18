@@ -23,6 +23,8 @@ test('records exact and allocated counties for mixed legislative districts', () 
     assert.deepEqual(catalog.plans[plan].allocated_components['24'], ['NASH']);
     assert.equal(catalog.plans[plan].exact_components['25'], undefined);
     assert.equal(catalog.plans[plan].allocated_components['25'], undefined);
+    assert.deepEqual(catalog.plans[plan].exact_components['55'], ['ANSON']);
+    assert.deepEqual(catalog.plans[plan].allocated_components['55'], ['UNION']);
     assert.deepEqual(catalog.plans[plan].exact_components['87'], ['CALDWELL']);
     assert.deepEqual(catalog.plans[plan].allocated_components['87'], ['WATAUGA']);
     assert.deepEqual(catalog.plans[plan].exact_components['93'], ['ALLEGHANY', 'ASHE']);

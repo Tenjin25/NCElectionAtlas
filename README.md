@@ -148,15 +148,13 @@ flowchart LR
 
 This is a statewide rule—not an SD-18 special case. The full machine-readable catalog is in `data/mappings/mixed_county_components.json`; these examples show the main patterns:
 
-| Line set | Example district | Exact component | Weighted component |
-| --- | --- | --- | --- |
-| 2022 | HD-7 | Franklin | Granville |
-| 2024 | HD-7 | Franklin | Vance |
-| 2022 and 2024 | HD-24 | Wilson | Most of the Sharpsburg precinct in Nash County |
-| 2022 and 2024 | HD-25 | None—the district is the remainder of Nash County | Nash outside most of the Sharpsburg precinct |
-| 2022 and 2024 | HD-87 | Caldwell | Watauga |
-| 2022 and 2024 | HD-93 | Alleghany and Ashe | Watauga |
-| 2022 and 2024 | SD-18 | Granville | Wake |
+| Pattern | Plan and district | Component calculation |
+| --- | --- | --- |
+| Changed split county | HD-7: 2022 / 2024 | Franklin exact + Granville weighted / Vance weighted |
+| Complementary Nash districts | HD-24 and HD-25: both plans | HD-24 = Wilson exact + most of Sharpsburg weighted; HD-25 = the Nash remainder |
+| Standard whole + split | HD-55: both plans | Anson exact + Union weighted |
+| Shared split county | HD-87 and HD-93: both plans | Caldwell exact + Watauga weighted / Alleghany and Ashe exact + Watauga weighted |
+| Senate example | SD-18: both plans | Granville exact + Wake weighted |
 
 For a numeric example, 2024-lines SD-18 in the 2024 presidential contest is the exact Granville return (14,365 D / 17,383 R / 356 other) plus the weighted northern Wake component (47,275 D / 44,872 R / 1,454 other), producing 61,640 D / 62,255 R / 1,810 other (R+0.49).
 
