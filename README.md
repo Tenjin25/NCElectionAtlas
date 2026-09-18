@@ -129,13 +129,11 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - The same component-separated trial was run against the 2022 House and Senate lines. County and statewide party totals again reconcile exactly; versus the existing live files, maximum mixed-district margin differences were 5.03 House / 3.55 Senate points for 2012 and 11.67 House / 6.16 Senate points for 2004. These remain staging diagnostics, not production replacements.
 - A precinct-level audit of the 2004 Buncombe SD-46/SD-49 split found 71 of 71 precinct rows matched and no weight-sum failures. Sixty-eight precincts use exact SBE2006 geometry; only three use historical plan-cell estimates because their 2004 precincts changed or split before the 2006 geometry. Those three account for 6.1% of county votes and do not create the SD-46 Republican lean, which is already present in the 68 exact-geometry precincts. The existing live allocation is therefore a stale comparison baseline rather than evidence of a bad current lineage; see `data/reports/buncombe_2004_split_component_audit.json`.
 
-| Push group | Included files | Why it is worth pushing | Production impact |
-| --- | --- | --- | --- |
-| Mixed-county framework | `data/mappings/mixed_county_components.json`, `scripts/apply_mixed_county_components.py`, and its core regression test | Makes exact-county plus split-county composition reproducible for both legislative line sets | Classification and validation only |
-| County-constrained precinct-sort code | `scripts/build_ncsbe2024_house_benchmarks.py` and `scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py` | Preserves certified county and statewide totals and prevents partial-file splicing around protected rows | Production methodology improved |
-| Reconciled modern district results | Updated 2016–2024 House and Senate JSON files under both production line-set directories | Applies the corrected rounding method; mixed margins move by no more than 0.01 point and no winners change | Production data updated |
-| Reconciliation audit trail | NCSBE benchmark/compare reports and the mixed-county audit/apply/post-audit reports | Records 58,000 exact county checks, 768 exact statewide checks, protected files, and changed rows | Reporting only |
-| Historical research tooling | `scripts/build_historical_district_contests_county_constrained.py` and its two audit reports | Preserves the component-separated experiment and documents why historical outputs remain unpromoted | No historical production data changed |
+| Bundle | What was pushed | Status |
+| --- | --- | --- |
+| Production | Mixed-county catalog and allocator, official plan crosswalks, and reconciled 2016–2024 legislative results | Live data; county and statewide totals preserved, no winners changed |
+| Verification | Regression tests plus benchmark, comparison, and rounding audit reports | Reproducibility and audit trail only |
+| Historical experiment | Separate pre-precinct-sort builder and its diagnostic reports | Staged research; no historical live results replaced |
 
 ```mermaid
 flowchart LR
