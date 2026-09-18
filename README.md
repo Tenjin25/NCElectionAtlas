@@ -119,7 +119,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Added a shared, reproducible component catalog for State House and State Senate districts on both the 2022 and 2024 line sets: `data/mappings/mixed_county_components.json`.
 - In a mixed district, every complete county retains its canonical county vote totals; only the portion drawn from a split county uses the calibrated precinct/block allocation. For example, **SD-18 = exact Granville County + allocated northern Wake County** on both line sets.
 - Geometry overlaps covering at least 99.9% of a county are treated as complete. Overlaps of 0.1% or less are treated as geometry slivers rather than genuine county splits.
-- The catalog is regenerated and audited with `python scripts/apply_mixed_county_components.py --write`. It covers 23 mixed House / 16 mixed Senate districts on the 2022 lines and 25 mixed House / 20 mixed Senate districts on the enacted 2024 lines.
+- The catalog is regenerated and audited with `python scripts/apply_mixed_county_components.py --write`. It covers 23 mixed House and 16 mixed Senate districts on each line set.
 - Regression coverage locks the SD-18 Granville/Wake classification on both plans and the changed HD-7 split: exact Franklin plus allocated Granville on the 2022 lines, but exact Franklin plus allocated Vance on the enacted 2024 lines.
 - Rebuilt the available 2016–2024 legislative district slices from NCSBE precinct-sort distributions reconciled to certified county/contest/party totals. Final integer allocation now uses largest-remainder rounding separately within each county before county contributions are summed into districts.
 - The constrained rebuild produced zero differences across 58,000 county-total checks and 768 statewide-total checks. No district winners changed; mixed-district margins moved by at most 0.01 percentage point. Files containing protected exact NCGA/statpack rows are preserved atomically rather than mixing two allocation authorities within one contest.
@@ -151,13 +151,11 @@ This is a statewide rule—not an SD-18 special case. Every district with both a
 | 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, Washington | Dare |
 | 2022 and 2024 | HD-2 | Person | Durham |
 | 2022 and 2024 | HD-4 | Duplin | Wayne |
-| 2024 | HD-5 | Camden, Gates, Hertford, Pasquotank | Northampton |
 | 2022 | HD-7 | Franklin | Granville |
 | 2024 | HD-7 | Franklin | Vance |
 | 2022 and 2024 | HD-13 | Carteret | Craven |
 | 2022 and 2024 | HD-16 | Pender | Onslow |
 | 2022 and 2024 | HD-24 | Wilson | Nash |
-| 2024 | HD-27 | Halifax, Warren | Northampton |
 | 2022 | HD-32 | Vance | Granville |
 | 2024 | HD-32 | Granville | Vance |
 | 2022 and 2024 | HD-46 | Columbus | Robeson |
@@ -175,14 +173,9 @@ This is a statewide rule—not an SD-18 special case. Every district with both a
 | 2022 and 2024 | HD-93 | Alleghany, Ashe | Watauga |
 | 2022 and 2024 | HD-94 | Alexander | Wilkes |
 | 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, Rutherford |
-| 2024 | SD-1 | Bertie, Camden, Currituck, Dare, Gates, Hertford, Northampton, Pasquotank, Perquimans, Tyrrell | Halifax |
-| 2024 | SD-2 | Carteret, Chowan, Hyde, Martin, Pamlico, Warren, Washington | Halifax |
-| 2024 | SD-3 | Beaufort, Craven, Lenoir | Greene |
-| 2024 | SD-4 | Wayne, Wilson | Greene |
 | 2022 and 2024 | SD-8 | Brunswick, Columbus | New Hanover |
 | 2022 and 2024 | SD-9 | Bladen, Duplin, Jones, Pender | Sampson |
-| 2022 | SD-12 | Harnett, Lee | Sampson |
-| 2024 | SD-12 | Harnett, Lee | Cumberland, Sampson |
+| 2022 and 2024 | SD-12 | Harnett, Lee | Sampson |
 | 2022 and 2024 | SD-18 | Granville | Wake |
 | 2022 and 2024 | SD-20 | Chatham | Durham |
 | 2022 and 2024 | SD-21 | Moore | Cumberland |

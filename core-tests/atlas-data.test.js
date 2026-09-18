@@ -11,6 +11,13 @@ test('records exact and allocated counties for mixed legislative districts', () 
   for (const plan of ['2022_state_senate', '2024_state_senate']) {
     assert.deepEqual(catalog.plans[plan].exact_components['18'], ['GRANVILLE']);
     assert.deepEqual(catalog.plans[plan].allocated_components['18'], ['WAKE']);
+    assert.deepEqual(catalog.plans[plan].exact_components['12'], ['HARNETT', 'LEE']);
+    assert.deepEqual(catalog.plans[plan].allocated_components['12'], ['SAMPSON']);
+  }
+
+  for (const district of ['1', '2', '3', '4']) {
+    assert.equal(catalog.plans['2024_state_senate'].exact_components[district], undefined);
+    assert.equal(catalog.plans['2024_state_senate'].allocated_components[district], undefined);
   }
 
   assert.deepEqual(catalog.plans['2022_state_house'].exact_components['7'], ['FRANKLIN']);
