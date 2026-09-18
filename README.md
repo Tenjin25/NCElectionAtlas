@@ -146,23 +146,17 @@ flowchart LR
     D --> F[Statewide totals remain unchanged]
 ```
 
-This is a statewide rule—not an SD-18 special case. Representative structures include:
+This is a statewide rule—not an SD-18 special case. The full machine-readable catalog is in `data/mappings/mixed_county_components.json`; these examples show the main patterns:
 
 | Line set | Example district | Exact component | Weighted component |
 | --- | --- | --- | --- |
-| 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, and Washington | Dare |
 | 2022 | HD-7 | Franklin | Granville |
 | 2024 | HD-7 | Franklin | Vance |
 | 2022 and 2024 | HD-24 | Wilson | Most of the Sharpsburg precinct in Nash County |
 | 2022 and 2024 | HD-25 | None—the district is the remainder of Nash County | Nash outside most of the Sharpsburg precinct |
-| 2022 and 2024 | HD-46 | Columbus | Robeson |
-| 2022 and 2024 | HD-77 | Davie and Yadkin | Rowan |
-| 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, and Rutherford |
-| 2022 and 2024 | SD-8 | Brunswick and Columbus | New Hanover |
+| 2022 and 2024 | HD-87 | Caldwell | Watauga |
+| 2022 and 2024 | HD-93 | Alleghany and Ashe | Watauga |
 | 2022 and 2024 | SD-18 | Granville | Wake |
-| 2022 and 2024 | SD-29 | Anson, Montgomery, and Richmond | Randolph and Union |
-| 2022 and 2024 | SD-46 | Burke and McDowell | Buncombe |
-| 2022 and 2024 | SD-50 | Cherokee, Clay, Graham, Jackson, Macon, Swain, and Transylvania | Haywood |
 
 For a numeric example, 2024-lines SD-18 in the 2024 presidential contest is the exact Granville return (14,365 D / 17,383 R / 356 other) plus the weighted northern Wake component (47,275 D / 44,872 R / 1,454 other), producing 61,640 D / 62,255 R / 1,810 other (R+0.49).
 
