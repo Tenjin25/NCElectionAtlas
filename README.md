@@ -146,12 +146,56 @@ flowchart LR
 
 This is a statewide rule—not an SD-18 special case. Every district with both an exact whole-county component and a weighted split-county component is listed below; county details are in `data/mappings/mixed_county_components.json`.
 
-| Line set | Chamber | Districts using exact + weighted components |
-| --- | --- | --- |
-| 2022 | House | HD-1, HD-2, HD-4, HD-7, HD-13, HD-16, HD-24, HD-32, HD-46, HD-50, HD-51, HD-52, HD-54, HD-55, HD-77, HD-79, HD-85, HD-87, HD-90, HD-91, HD-93, HD-94, HD-113 |
-| 2024 | House | HD-1, HD-2, HD-4, HD-5, HD-7, HD-13, HD-16, HD-24, HD-27, HD-32, HD-46, HD-50, HD-51, HD-52, HD-54, HD-55, HD-77, HD-79, HD-85, HD-87, HD-90, HD-91, HD-93, HD-94, HD-113 |
-| 2022 | Senate | SD-8, SD-9, SD-12, SD-18, SD-20, SD-21, SD-25, SD-26, SD-29, SD-31, SD-37, SD-44, SD-45, SD-46, SD-47, SD-50 |
-| 2024 | Senate | SD-1, SD-2, SD-3, SD-4, SD-8, SD-9, SD-12, SD-18, SD-20, SD-21, SD-25, SD-26, SD-29, SD-31, SD-37, SD-44, SD-45, SD-46, SD-47, SD-50 |
+| Line set | Example district | Exact component | Weighted component |
+| --- | --- | --- | --- |
+| 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, Washington | Dare |
+| 2022 and 2024 | HD-2 | Person | Durham |
+| 2022 and 2024 | HD-4 | Duplin | Wayne |
+| 2024 | HD-5 | Camden, Gates, Hertford, Pasquotank | Northampton |
+| 2022 | HD-7 | Franklin | Granville |
+| 2024 | HD-7 | Franklin | Vance |
+| 2022 and 2024 | HD-13 | Carteret | Craven |
+| 2022 and 2024 | HD-16 | Pender | Onslow |
+| 2022 and 2024 | HD-24 | Wilson | Nash |
+| 2024 | HD-27 | Halifax, Warren | Northampton |
+| 2022 | HD-32 | Vance | Granville |
+| 2024 | HD-32 | Granville | Vance |
+| 2022 and 2024 | HD-46 | Columbus | Robeson |
+| 2022 and 2024 | HD-50 | Caswell | Orange |
+| 2022 and 2024 | HD-51 | Lee | Moore |
+| 2022 and 2024 | HD-52 | Richmond | Moore |
+| 2022 and 2024 | HD-54 | Chatham | Randolph |
+| 2022 and 2024 | HD-55 | Anson | Union |
+| 2022 and 2024 | HD-77 | Davie, Yadkin | Rowan |
+| 2022 and 2024 | HD-79 | Beaufort, Hyde, Pamlico | Dare |
+| 2022 and 2024 | HD-85 | Avery, Mitchell, Yancey | McDowell |
+| 2022 and 2024 | HD-87 | Caldwell | Watauga |
+| 2022 and 2024 | HD-90 | Surry | Wilkes |
+| 2022 and 2024 | HD-91 | Stokes | Forsyth |
+| 2022 and 2024 | HD-93 | Alleghany, Ashe | Watauga |
+| 2022 and 2024 | HD-94 | Alexander | Wilkes |
+| 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, Rutherford |
+| 2024 | SD-1 | Bertie, Camden, Currituck, Dare, Gates, Hertford, Northampton, Pasquotank, Perquimans, Tyrrell | Halifax |
+| 2024 | SD-2 | Carteret, Chowan, Hyde, Martin, Pamlico, Warren, Washington | Halifax |
+| 2024 | SD-3 | Beaufort, Craven, Lenoir | Greene |
+| 2024 | SD-4 | Wayne, Wilson | Greene |
+| 2022 and 2024 | SD-8 | Brunswick, Columbus | New Hanover |
+| 2022 and 2024 | SD-9 | Bladen, Duplin, Jones, Pender | Sampson |
+| 2022 | SD-12 | Harnett, Lee | Sampson |
+| 2024 | SD-12 | Harnett, Lee | Cumberland, Sampson |
+| 2022 and 2024 | SD-18 | Granville | Wake |
+| 2022 and 2024 | SD-20 | Chatham | Durham |
+| 2022 and 2024 | SD-21 | Moore | Cumberland |
+| 2022 and 2024 | SD-25 | Alamance | Randolph |
+| 2022 and 2024 | SD-26 | Rockingham | Guilford |
+| 2022 and 2024 | SD-29 | Anson, Montgomery, Richmond | Randolph, Union |
+| 2022 and 2024 | SD-31 | Stokes | Forsyth |
+| 2022 and 2024 | SD-37 | Iredell | Mecklenburg |
+| 2022 and 2024 | SD-44 | Cleveland, Lincoln | Gaston |
+| 2022 and 2024 | SD-45 | Catawba | Caldwell |
+| 2022 and 2024 | SD-46 | Burke, McDowell | Buncombe |
+| 2022 and 2024 | SD-47 | Alleghany, Ashe, Avery, Madison, Mitchell, Watauga, Yancey | Caldwell, Haywood |
+| 2022 and 2024 | SD-50 | Cherokee, Clay, Graham, Jackson, Macon, Swain, Transylvania | Haywood |
 
 Split-only complements such as HD-25 also benefit from county-constrained precinct allocation, but are not in this table because they have no whole-county component to preserve directly. For orientation: HD-24 is Wilson plus most of the Sharpsburg precinct in Nash, HD-25 is the Nash remainder, HD-55 is Anson plus part of Union, and HD-87/HD-93 divide Watauga while preserving their complete counties.
 
