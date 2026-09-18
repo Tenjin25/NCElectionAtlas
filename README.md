@@ -129,13 +129,11 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - The same component-separated trial was run against the 2022 House and Senate lines. County and statewide party totals again reconcile exactly; versus the existing live files, maximum mixed-district margin differences were 5.03 House / 3.55 Senate points for 2012 and 11.67 House / 6.16 Senate points for 2004. These remain staging diagnostics, not production replacements.
 - A precinct-level audit of the 2004 Buncombe SD-46/SD-49 split found 71 of 71 precinct rows matched and no weight-sum failures. Sixty-eight precincts use exact SBE2006 geometry; only three use historical plan-cell estimates because their 2004 precincts changed or split before the 2006 geometry. Those three account for 6.1% of county votes and do not create the SD-46 Republican lean, which is already present in the 68 exact-geometry precincts. The existing live allocation is therefore a stale comparison baseline rather than evidence of a bad current lineage; see `data/reports/buncombe_2004_split_component_audit.json`.
 
-| Push group | Included files | Why it is worth pushing | Production impact |
-| --- | --- | --- | --- |
-| Mixed-county framework | `data/mappings/mixed_county_components.json`, `scripts/apply_mixed_county_components.py`, and its core regression test | Makes exact-county plus split-county composition reproducible for both legislative line sets | Classification and validation only |
-| County-constrained precinct-sort code | `scripts/build_ncsbe2024_house_benchmarks.py` and `scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py` | Preserves certified county and statewide totals and prevents partial-file splicing around protected rows | Production methodology improved |
-| Reconciled modern district results | Updated 2016–2024 House and Senate JSON files under both production line-set directories | Applies the corrected rounding method; mixed margins move by no more than 0.01 point and no winners change | Production data updated |
-| Reconciliation audit trail | NCSBE benchmark/compare reports and the mixed-county audit/apply/post-audit reports | Records 58,000 exact county checks, 768 exact statewide checks, protected files, and changed rows | Reporting only |
-| Historical research tooling | `scripts/build_historical_district_contests_county_constrained.py` and its two audit reports | Preserves the component-separated experiment and documents why historical outputs remain unpromoted | No historical production data changed |
+| Bundle | What was pushed | Status |
+| --- | --- | --- |
+| Production | Mixed-county catalog and allocator, official plan crosswalks, and reconciled 2016–2024 legislative results | Live data; county and statewide totals preserved, no winners changed |
+| Verification | Regression tests plus benchmark, comparison, and rounding audit reports | Reproducibility and audit trail only |
+| Historical experiment | Separate pre-precinct-sort builder and its diagnostic reports | Staged research; no historical live results replaced |
 
 ```mermaid
 flowchart LR
@@ -146,23 +144,60 @@ flowchart LR
     D --> F[Statewide totals remain unchanged]
 ```
 
-This is a statewide rule—not an SD-18 special case. Representative structures include:
+This is a statewide rule—not an SD-18 special case. Every district with both an exact whole-county component and a weighted split-county component is listed below; county details are in `data/mappings/mixed_county_components.json`.
 
 | Line set | Example district | Exact component | Weighted component |
 | --- | --- | --- | --- |
-| 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, and Washington | Dare |
+| 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, Washington | Dare |
+| 2022 and 2024 | HD-2 | Person | Durham |
+| 2022 and 2024 | HD-4 | Duplin | Wayne |
+| 2024 | HD-5 | Camden, Gates, Hertford, Pasquotank | Northampton |
 | 2022 | HD-7 | Franklin | Granville |
 | 2024 | HD-7 | Franklin | Vance |
-| 2022 and 2024 | HD-24 | Wilson | Most of the Sharpsburg precinct in Nash County |
-| 2022 and 2024 | HD-25 | None—the district is the remainder of Nash County | Nash outside most of the Sharpsburg precinct |
+| 2022 and 2024 | HD-13 | Carteret | Craven |
+| 2022 and 2024 | HD-16 | Pender | Onslow |
+| 2022 and 2024 | HD-24 | Wilson | Nash |
+| 2024 | HD-27 | Halifax, Warren | Northampton |
+| 2022 | HD-32 | Vance | Granville |
+| 2024 | HD-32 | Granville | Vance |
 | 2022 and 2024 | HD-46 | Columbus | Robeson |
-| 2022 and 2024 | HD-77 | Davie and Yadkin | Rowan |
-| 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, and Rutherford |
-| 2022 and 2024 | SD-8 | Brunswick and Columbus | New Hanover |
+| 2022 and 2024 | HD-50 | Caswell | Orange |
+| 2022 and 2024 | HD-51 | Lee | Moore |
+| 2022 and 2024 | HD-52 | Richmond | Moore |
+| 2022 and 2024 | HD-54 | Chatham | Randolph |
+| 2022 and 2024 | HD-55 | Anson | Union |
+| 2022 and 2024 | HD-77 | Davie, Yadkin | Rowan |
+| 2022 and 2024 | HD-79 | Beaufort, Hyde, Pamlico | Dare |
+| 2022 and 2024 | HD-85 | Avery, Mitchell, Yancey | McDowell |
+| 2022 and 2024 | HD-87 | Caldwell | Watauga |
+| 2022 and 2024 | HD-90 | Surry | Wilkes |
+| 2022 and 2024 | HD-91 | Stokes | Forsyth |
+| 2022 and 2024 | HD-93 | Alleghany, Ashe | Watauga |
+| 2022 and 2024 | HD-94 | Alexander | Wilkes |
+| 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, Rutherford |
+| 2024 | SD-1 | Bertie, Camden, Currituck, Dare, Gates, Hertford, Northampton, Pasquotank, Perquimans, Tyrrell | Halifax |
+| 2024 | SD-2 | Carteret, Chowan, Hyde, Martin, Pamlico, Warren, Washington | Halifax |
+| 2024 | SD-3 | Beaufort, Craven, Lenoir | Greene |
+| 2024 | SD-4 | Wayne, Wilson | Greene |
+| 2022 and 2024 | SD-8 | Brunswick, Columbus | New Hanover |
+| 2022 and 2024 | SD-9 | Bladen, Duplin, Jones, Pender | Sampson |
+| 2022 | SD-12 | Harnett, Lee | Sampson |
+| 2024 | SD-12 | Harnett, Lee | Cumberland, Sampson |
 | 2022 and 2024 | SD-18 | Granville | Wake |
-| 2022 and 2024 | SD-29 | Anson, Montgomery, and Richmond | Randolph and Union |
-| 2022 and 2024 | SD-46 | Burke and McDowell | Buncombe |
-| 2022 and 2024 | SD-50 | Cherokee, Clay, Graham, Jackson, Macon, Swain, and Transylvania | Haywood |
+| 2022 and 2024 | SD-20 | Chatham | Durham |
+| 2022 and 2024 | SD-21 | Moore | Cumberland |
+| 2022 and 2024 | SD-25 | Alamance | Randolph |
+| 2022 and 2024 | SD-26 | Rockingham | Guilford |
+| 2022 and 2024 | SD-29 | Anson, Montgomery, Richmond | Randolph, Union |
+| 2022 and 2024 | SD-31 | Stokes | Forsyth |
+| 2022 and 2024 | SD-37 | Iredell | Mecklenburg |
+| 2022 and 2024 | SD-44 | Cleveland, Lincoln | Gaston |
+| 2022 and 2024 | SD-45 | Catawba | Caldwell |
+| 2022 and 2024 | SD-46 | Burke, McDowell | Buncombe |
+| 2022 and 2024 | SD-47 | Alleghany, Ashe, Avery, Madison, Mitchell, Watauga, Yancey | Caldwell, Haywood |
+| 2022 and 2024 | SD-50 | Cherokee, Clay, Graham, Jackson, Macon, Swain, Transylvania | Haywood |
+
+Split-only complements such as HD-25 also benefit from county-constrained precinct allocation, but are not in this table because they have no whole-county component to preserve directly. For orientation: HD-24 is Wilson plus most of the Sharpsburg precinct in Nash, HD-25 is the Nash remainder, HD-55 is Anson plus part of Union, and HD-87/HD-93 divide Watauga while preserving their complete counties.
 
 For a numeric example, 2024-lines SD-18 in the 2024 presidential contest is the exact Granville return (14,365 D / 17,383 R / 356 other) plus the weighted northern Wake component (47,275 D / 44,872 R / 1,454 other), producing 61,640 D / 62,255 R / 1,810 other (R+0.49).
 
