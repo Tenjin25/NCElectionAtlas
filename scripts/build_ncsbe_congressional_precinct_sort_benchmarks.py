@@ -30,7 +30,7 @@ PLAN_TARGETS = {
     "2022_state_senate": ("state_senate", ROOT / "data/district_contests", modern.PLAN_SPECS["2022_state_senate"]),
     "2024_state_senate": ("state_senate", ROOT / "data/district_contests_2024_lines", modern.PLAN_SPECS["2024_state_senate"]),
     "2022_state_house": ("state_house", ROOT / "data/district_contests", {"assignment": ROOT / "data/tmp/block_assign_extract/SL 2022-4.csv", "block_col": "Block", "district_col": "District", "plan_id": "SL 2022-4"}),
-    "2024_state_house": ("state_house", ROOT / "data/district_contests_2024_lines", {"assignment": ROOT / "data/crosswalks/block20_to_2024_state_house.csv", "block_col": "block_geoid20", "district_col": "district", "plan_id": "SL 2023-149"}),
+    "2024_state_house": ("state_house", ROOT / "data/district_contests_2024_lines", {"assignment": ROOT / "data/crosswalks/ncga_sl2023_149_house_block_assignments.csv", "block_col": "Block", "district_col": "District", "plan_id": "SL 2023-149"}),
 }
 
 

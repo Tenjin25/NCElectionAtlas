@@ -2,7 +2,7 @@
   "schema": "mixed_county_components.v1",
   "full_county_threshold": 0.999,
   "material_partial_county_threshold": 0.001,
-  "method": "Whole-county components retain canonical county totals; only partial-county components are allocated through calibrated precinct/block crosswalks. Shares at or below the material-partial threshold are treated as geometry slivers.",
+  "method": "Whole-county components retain canonical county totals; only partial-county components are allocated through calibrated precinct/block crosswalks. Geometry-area shares are used when present; normalized block/VAP precinct shares are used otherwise. Shares at or below the material-partial threshold are treated as geometry slivers.",
   "plans": {
     "2022_state_house": {
       "crosswalk": "data/crosswalks/precinct_to_2022_state_house.csv",
@@ -177,6 +177,12 @@
         "4": [
           "DUPLIN"
         ],
+        "5": [
+          "CAMDEN",
+          "GATES",
+          "HERTFORD",
+          "PASQUOTANK"
+        ],
         "7": [
           "FRANKLIN"
         ],
@@ -189,8 +195,12 @@
         "24": [
           "WILSON"
         ],
+        "27": [
+          "HALIFAX",
+          "WARREN"
+        ],
         "32": [
-          "VANCE"
+          "GRANVILLE"
         ],
         "46": [
           "COLUMBUS"
@@ -254,8 +264,11 @@
         "4": [
           "WAYNE"
         ],
+        "5": [
+          "NORTHAMPTON"
+        ],
         "7": [
-          "GRANVILLE"
+          "VANCE"
         ],
         "13": [
           "CRAVEN"
@@ -266,8 +279,11 @@
         "24": [
           "NASH"
         ],
+        "27": [
+          "NORTHAMPTON"
+        ],
         "32": [
-          "GRANVILLE"
+          "VANCE"
         ],
         "46": [
           "ROBESON"
@@ -447,6 +463,36 @@
     "2024_state_senate": {
       "crosswalk": "data/crosswalks/precinct_to_2024_state_senate.csv",
       "exact_components": {
+        "1": [
+          "BERTIE",
+          "CAMDEN",
+          "CURRITUCK",
+          "DARE",
+          "GATES",
+          "HERTFORD",
+          "NORTHAMPTON",
+          "PASQUOTANK",
+          "PERQUIMANS",
+          "TYRRELL"
+        ],
+        "2": [
+          "CARTERET",
+          "CHOWAN",
+          "HYDE",
+          "MARTIN",
+          "PAMLICO",
+          "WARREN",
+          "WASHINGTON"
+        ],
+        "3": [
+          "BEAUFORT",
+          "CRAVEN",
+          "LENOIR"
+        ],
+        "4": [
+          "WAYNE",
+          "WILSON"
+        ],
         "8": [
           "BRUNSWICK",
           "COLUMBUS"
@@ -518,6 +564,18 @@
         ]
       },
       "allocated_components": {
+        "1": [
+          "HALIFAX"
+        ],
+        "2": [
+          "HALIFAX"
+        ],
+        "3": [
+          "GREENE"
+        ],
+        "4": [
+          "GREENE"
+        ],
         "8": [
           "NEW HANOVER"
         ],
@@ -525,6 +583,7 @@
           "SAMPSON"
         ],
         "12": [
+          "CUMBERLAND",
           "SAMPSON"
         ],
         "18": [

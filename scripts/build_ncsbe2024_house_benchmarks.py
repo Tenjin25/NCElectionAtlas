@@ -408,9 +408,9 @@ def main() -> int:
             "SL 2022-4",
         ),
         "2024_lines": (
-            ROOT / "data/crosswalks/block20_to_2024_state_house.csv",
-            "block_geoid20",
-            "district",
+            ROOT / "data/crosswalks/ncga_sl2023_149_house_block_assignments.csv",
+            "Block",
+            "District",
             "SL 2023-149",
         ),
     }

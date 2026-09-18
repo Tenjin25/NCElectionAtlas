@@ -60,6 +60,7 @@ def build_components(crosswalk_path: Path) -> tuple[dict[str, list[str]], dict[s
     """Return whole and material partial counties for each mixed district."""
     intersections: dict[tuple[str, str], float] = defaultdict(float)
     precinct_areas: dict[tuple[str, str], float] = {}
+    uses_geometric_area = False
 
     with crosswalk_path.open("r", encoding="utf-8-sig", newline="") as source:
         for row in csv.DictReader(source):
@@ -70,8 +71,16 @@ def build_components(crosswalk_path: Path) -> tuple[dict[str, list[str]], dict[s
             district = normalize_district(row.get("district"))
             if not district:
                 continue
-            intersections[(county, district)] += float(row.get("intersect_area_m2", 0) or 0)
-            precinct_areas[(county, precinct_key)] = float(row.get("precinct_area_m2", 0) or 0)
+            if row.get("intersect_area_m2") and row.get("precinct_area_m2"):
+                uses_geometric_area = True
+                intersections[(county, district)] += float(row["intersect_area_m2"])
+                precinct_areas[(county, precinct_key)] = float(row["precinct_area_m2"])
+            else:
+                # Block-derived modern crosswalks use normalized VAP shares and
+                # omit polygon areas. Averaging their per-precinct shares still
+                # identifies whether a county is wholly or partly in a district.
+                intersections[(county, district)] += float(row.get("area_weight", 0) or 0)
+                precinct_areas[(county, precinct_key)] = 1.0
 
     county_areas: dict[str, float] = defaultdict(float)
     for (county, _), area in precinct_areas.items():
@@ -148,7 +157,8 @@ def main() -> int:
         "method": (
             "Whole-county components retain canonical county totals; only partial-"
             "county components are allocated through calibrated precinct/block "
-            "crosswalks. Shares at or below the material-partial threshold are "
+            "crosswalks. Geometry-area shares are used when present; normalized "
+            "block/VAP precinct shares are used otherwise. Shares at or below the material-partial threshold are "
             "treated as geometry slivers."
         ),
         "plans": {},

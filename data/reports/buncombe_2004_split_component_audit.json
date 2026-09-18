@@ -1,0 +1,68 @@
+{
+  "schema": "buncombe_2004_split_component_audit.v1",
+  "county": "BUNCOMBE",
+  "contest": "president_2004",
+  "line_set": 2024,
+  "scope": "state_senate",
+  "production_modified": false,
+  "source_weights": "data/reports/urban_sf1_historical/district_weights_2004.json",
+  "source_precincts": 71,
+  "matched_precincts": 71,
+  "unmatched_precincts": 0,
+  "weight_share_sum_failures": 0,
+  "lineage": {
+    "exact_sbe2006_geometry_precincts": 68,
+    "historical_plan_cell_precincts": 3,
+    "historical_plan_cell_names": [
+      "33.1 BLACK MOUNTAIN 2",
+      "38.1 FAIRVIEW 1",
+      "60.1 REYNOLDS"
+    ],
+    "reason": "These three 2004 precincts were changed or split by the 2006 SBE geometry and therefore have no defensible one-to-one 2006 polygon alias."
+  },
+  "county_votes": {
+    "dem_votes": 51868,
+    "rep_votes": 52491,
+    "other_votes": 654
+  },
+  "exact_geometry_68_precinct_contribution": {
+    "SD-46": {
+      "dem_votes_raw": 8155.02,
+      "rep_votes_raw": 13346.60,
+      "other_votes_raw": 138.99
+    },
+    "SD-49": {
+      "dem_votes_raw": 41168.51,
+      "rep_votes_raw": 35293.01,
+      "other_votes_raw": 479.36
+    },
+    "geometry_slivers_SD47_SD48_votes": 30.40
+  },
+  "estimated_plan_cell_3_precinct_contribution": {
+    "SD-46": {
+      "dem_votes_raw": 661.19,
+      "rep_votes_raw": 1053.07,
+      "other_votes_raw": 10.09
+    },
+    "SD-49": {
+      "dem_votes_raw": 1872.25,
+      "rep_votes_raw": 2779.04,
+      "other_votes_raw": 25.48
+    }
+  },
+  "county_constrained_result": {
+    "SD-46_buncombe_component": {
+      "dem_votes": 8818,
+      "rep_votes": 14404,
+      "other_votes": 149
+    },
+    "SD-49_buncombe_component": {
+      "dem_votes": 43044,
+      "rep_votes": 38077,
+      "other_votes": 505
+    }
+  },
+  "finding": "The SD-46 Republican advantage is already present in the 68 exact-geometry precincts. The three estimated plan-cell precincts contribute only 6.1% of Buncombe votes and reinforce, but do not create, that pattern. No erroneous one-to-one lineage correction is supported for those three precincts.",
+  "production_comparison": "The live 2004 files imply a substantially different Buncombe split and are stale relative to the current exact-geometry-preferred weight file. Treat the live margin as a comparison baseline, not ground truth.",
+  "disposition": "Keep the current Buncombe SF1 weights unchanged and retain the county-constrained result in staging pending map-level validation."
+}

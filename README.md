@@ -112,7 +112,59 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 ## Recent Updates (March–September 2026)
 
-**Last updated:** September 16, 2026
+**Last updated:** September 17, 2026
+
+### Mixed Whole-County and Split-County Districts (September 17, 2026)
+
+- Added a shared, reproducible component catalog for State House and State Senate districts on both the 2022 and 2024 line sets: `data/mappings/mixed_county_components.json`.
+- In a mixed district, every complete county retains its canonical county vote totals; only the portion drawn from a split county uses the calibrated precinct/block allocation. For example, **SD-18 = exact Granville County + allocated northern Wake County** on both line sets.
+- Geometry overlaps covering at least 99.9% of a county are treated as complete. Overlaps of 0.1% or less are treated as geometry slivers rather than genuine county splits.
+- The catalog is regenerated and audited with `python scripts/apply_mixed_county_components.py --write`. It covers 23 mixed House / 16 mixed Senate districts on the 2022 lines and 25 mixed House / 20 mixed Senate districts on the enacted 2024 lines.
+- Regression coverage locks the SD-18 Granville/Wake classification on both plans and the changed HD-7 split: exact Franklin plus allocated Granville on the 2022 lines, but exact Franklin plus allocated Vance on the enacted 2024 lines.
+- Rebuilt the available 2016–2024 legislative district slices from NCSBE precinct-sort distributions reconciled to certified county/contest/party totals. Final integer allocation now uses largest-remainder rounding separately within each county before county contributions are summed into districts.
+- The constrained rebuild produced zero differences across 58,000 county-total checks and 768 statewide-total checks. No district winners changed; mixed-district margins moved by at most 0.01 percentage point. Files containing protected exact NCGA/statpack rows are preserved atomically rather than mixing two allocation authorities within one contest.
+- Added a separate experimental builder for elections without NCSBE precinct-sort files: `scripts/build_historical_district_contests_county_constrained.py`. It imports the established historical parser, aliases, SF1/VAP weights, and lineage helpers without modifying that production builder, and should write to a staging directory until reviewed. Mixed districts are now computed as an explicit sum: canonical whole-county votes are added directly, while only the split-county component uses precinct/SF1 weights.
+- President 2004 and President 2012 staging trials conserve Democratic, Republican, other, county, and statewide totals exactly. They are not promoted: comparison with the existing SF1-enhanced live slices found materially different historical margins, reaching 10.50 points in a mixed House district and 5.92 points in a mixed Senate district in the 2012 trial.
+- A second President 2004 trial explicitly loaded `district_weights_2004.json`; county and statewide conservation passed. Component separation reduced the maximum mixed House comparison to 1.72 points, while the 8.32-point mixed Senate outlier is now specifically attributable to SD-46's estimated Buncombe component (its Burke and McDowell component is exact). The trial remains staged pending validation of split-county historical weights; see `data/reports/historical_county_constrained_trial.json`.
+- The same component-separated trial was run against the 2022 House and Senate lines. County and statewide party totals again reconcile exactly; versus the existing live files, maximum mixed-district margin differences were 5.03 House / 3.55 Senate points for 2012 and 11.67 House / 6.16 Senate points for 2004. These remain staging diagnostics, not production replacements.
+- A precinct-level audit of the 2004 Buncombe SD-46/SD-49 split found 71 of 71 precinct rows matched and no weight-sum failures. Sixty-eight precincts use exact SBE2006 geometry; only three use historical plan-cell estimates because their 2004 precincts changed or split before the 2006 geometry. Those three account for 6.1% of county votes and do not create the SD-46 Republican lean, which is already present in the 68 exact-geometry precincts. The existing live allocation is therefore a stale comparison baseline rather than evidence of a bad current lineage; see `data/reports/buncombe_2004_split_component_audit.json`.
+
+| Push group | Included files | Why it is worth pushing | Production impact |
+| --- | --- | --- | --- |
+| Mixed-county framework | `data/mappings/mixed_county_components.json`, `scripts/apply_mixed_county_components.py`, and its core regression test | Makes exact-county plus split-county composition reproducible for both legislative line sets | Classification and validation only |
+| County-constrained precinct-sort code | `scripts/build_ncsbe2024_house_benchmarks.py` and `scripts/apply_ncsbe_all_plans_precinct_sort_benchmarks.py` | Preserves certified county and statewide totals and prevents partial-file splicing around protected rows | Production methodology improved |
+| Reconciled modern district results | Updated 2016–2024 House and Senate JSON files under both production line-set directories | Applies the corrected rounding method; mixed margins move by no more than 0.01 point and no winners change | Production data updated |
+| Reconciliation audit trail | NCSBE benchmark/compare reports and the mixed-county audit/apply/post-audit reports | Records 58,000 exact county checks, 768 exact statewide checks, protected files, and changed rows | Reporting only |
+| Historical research tooling | `scripts/build_historical_district_contests_county_constrained.py` and its two audit reports | Preserves the component-separated experiment and documents why historical outputs remain unpromoted | No historical production data changed |
+
+```mermaid
+flowchart LR
+    A[Canonical votes from each whole county] --> D[District totals]
+    B[Votes from each split county] --> C[Precinct/block or SF1 district weights]
+    C --> E[County-constrained rounding]
+    E --> D
+    D --> F[Statewide totals remain unchanged]
+```
+
+This is a statewide rule—not an SD-18 special case. Representative structures include:
+
+| Line set | Example district | Exact component | Weighted component |
+| --- | --- | --- | --- |
+| 2022 and 2024 | HD-1 | Chowan, Currituck, Perquimans, Tyrrell, and Washington | Dare |
+| 2022 | HD-7 | Franklin | Granville |
+| 2024 | HD-7 | Franklin | Vance |
+| 2022 and 2024 | HD-24 | Wilson | Most of the Sharpsburg precinct in Nash County |
+| 2022 and 2024 | HD-25 | None—the district is the remainder of Nash County | Nash outside most of the Sharpsburg precinct |
+| 2022 and 2024 | HD-46 | Columbus | Robeson |
+| 2022 and 2024 | HD-77 | Davie and Yadkin | Rowan |
+| 2022 and 2024 | HD-113 | Polk | Henderson, McDowell, and Rutherford |
+| 2022 and 2024 | SD-8 | Brunswick and Columbus | New Hanover |
+| 2022 and 2024 | SD-18 | Granville | Wake |
+| 2022 and 2024 | SD-29 | Anson, Montgomery, and Richmond | Randolph and Union |
+| 2022 and 2024 | SD-46 | Burke and McDowell | Buncombe |
+| 2022 and 2024 | SD-50 | Cherokee, Clay, Graham, Jackson, Macon, Swain, and Transylvania | Haywood |
+
+For a numeric example, 2024-lines SD-18 in the 2024 presidential contest is the exact Granville return (14,365 D / 17,383 R / 356 other) plus the weighted northern Wake component (47,275 D / 44,872 R / 1,454 other), producing 61,640 D / 62,255 R / 1,810 other (R+0.49).
 
 ### Unified Demographic Hover and Mobile Details (September 16, 2026)
 
@@ -135,6 +187,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - Included the pending Caswell precinct display-name correction from September 11 (`YANC`: `Yanceyville 2` → `Yanceyville`).
 - Split every demographic map category into a lighter plurality shade (largest group below 50%) and a darker majority shade (50% or greater), with matching normal, high-contrast, and colorblind-aware legend colors.
 - Bumped the frontend build/data cache token to `2026-09-13-demographic-majority`.
+
 
 ### Canonical Single-County and Grouped-County House Totals (September 11, 2026)
 

@@ -51,7 +51,7 @@ PLAN_SPECS = {
         "scope": "state_senate",
         "lines": 2024,
         "plan_id": "SL 2023-146",
-        "assignment": ROOT / "data/tmp/block_assign_extract_2024/SL_2024_2.csv",
+        "assignment": ROOT / "data/crosswalks/ncga_sl2023_146_senate_block_assignments.csv",
         "block_col": "Block",
         "district_col": "District",
         "live_dir": ROOT / "data/district_contests_2024_lines",

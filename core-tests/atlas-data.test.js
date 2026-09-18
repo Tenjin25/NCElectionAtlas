@@ -13,9 +13,16 @@ test('records exact and allocated counties for mixed legislative districts', () 
     assert.deepEqual(catalog.plans[plan].allocated_components['18'], ['WAKE']);
   }
 
+  assert.deepEqual(catalog.plans['2022_state_house'].exact_components['7'], ['FRANKLIN']);
+  assert.deepEqual(catalog.plans['2022_state_house'].allocated_components['7'], ['GRANVILLE']);
+  assert.deepEqual(catalog.plans['2024_state_house'].exact_components['7'], ['FRANKLIN']);
+  assert.deepEqual(catalog.plans['2024_state_house'].allocated_components['7'], ['VANCE']);
+
   for (const plan of ['2022_state_house', '2024_state_house']) {
-    assert.deepEqual(catalog.plans[plan].exact_components['7'], ['FRANKLIN']);
-    assert.deepEqual(catalog.plans[plan].allocated_components['7'], ['GRANVILLE']);
+    assert.deepEqual(catalog.plans[plan].exact_components['24'], ['WILSON']);
+    assert.deepEqual(catalog.plans[plan].allocated_components['24'], ['NASH']);
+    assert.equal(catalog.plans[plan].exact_components['25'], undefined);
+    assert.equal(catalog.plans[plan].allocated_components['25'], undefined);
   }
 });
 
