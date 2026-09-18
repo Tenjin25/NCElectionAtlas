@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from build_district_results_2024_lines import NC_COUNTY_FIPS
+
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -177,14 +179,21 @@ def district_name(value: object, spec: DistrictCrosswalkSpec) -> str:
 
 def load_precinct_blocks(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path, dtype=str)
-    required = {"block_geoid20", "precinct_id"}
+    required = {"block_geoid20", "countyfp20", "precinct_id"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"{path} missing columns: {sorted(missing)}")
-    out = df[["block_geoid20", "precinct_id"]].copy()
+    out = df[["block_geoid20", "countyfp20", "precinct_id"]].copy()
     out["block_geoid20"] = clean_block(out["block_geoid20"])
+    out["countyfp20"] = out["countyfp20"].fillna("").astype(str).str.strip().str.zfill(3)
     out["precinct_key"] = clean_precinct(out["precinct_id"])
     out = out[(out["block_geoid20"] != "") & (out["precinct_key"] != "")]
+    out["precinct_county"] = out["precinct_key"].str.split(" - ", n=1).str[0]
+    out["block_county"] = out["countyfp20"].map(NC_COUNTY_FIPS)
+    mismatched = out["block_county"].notna() & (out["precinct_county"] != out["block_county"])
+    if mismatched.any():
+        print(f"Excluded {int(mismatched.sum()):,} cross-county block-to-precinct assignments from {path}")
+        out = out[~mismatched]
     return out[["block_geoid20", "precinct_key"]].drop_duplicates("block_geoid20")
 
 
