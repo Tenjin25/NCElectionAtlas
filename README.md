@@ -144,15 +144,16 @@ flowchart LR
     D --> F[Statewide totals remain unchanged]
 ```
 
-This is a statewide rule—not an SD-18 special case. The full machine-readable catalog is in `data/mappings/mixed_county_components.json`; these examples show the main patterns:
+This is a statewide rule—not an SD-18 special case. Every district with both an exact whole-county component and a weighted split-county component is listed below; county details are in `data/mappings/mixed_county_components.json`.
 
-| Pattern | Plan and district | Component calculation |
+| Line set | Chamber | Districts using exact + weighted components |
 | --- | --- | --- |
-| Changed split county | HD-7: 2022 / 2024 | Franklin exact + Granville weighted / Vance weighted |
-| Complementary Nash districts | HD-24 and HD-25: both plans | HD-24 = Wilson exact + most of Sharpsburg weighted; HD-25 = the Nash remainder |
-| Standard whole + split | HD-55: both plans | Anson exact + Union weighted |
-| Shared split county | HD-87 and HD-93: both plans | Caldwell exact + Watauga weighted / Alleghany and Ashe exact + Watauga weighted |
-| Senate example | SD-18: both plans | Granville exact + Wake weighted |
+| 2022 | House | HD-1, HD-2, HD-4, HD-7, HD-13, HD-16, HD-24, HD-32, HD-46, HD-50, HD-51, HD-52, HD-54, HD-55, HD-77, HD-79, HD-85, HD-87, HD-90, HD-91, HD-93, HD-94, HD-113 |
+| 2024 | House | HD-1, HD-2, HD-4, HD-5, HD-7, HD-13, HD-16, HD-24, HD-27, HD-32, HD-46, HD-50, HD-51, HD-52, HD-54, HD-55, HD-77, HD-79, HD-85, HD-87, HD-90, HD-91, HD-93, HD-94, HD-113 |
+| 2022 | Senate | SD-8, SD-9, SD-12, SD-18, SD-20, SD-21, SD-25, SD-26, SD-29, SD-31, SD-37, SD-44, SD-45, SD-46, SD-47, SD-50 |
+| 2024 | Senate | SD-1, SD-2, SD-3, SD-4, SD-8, SD-9, SD-12, SD-18, SD-20, SD-21, SD-25, SD-26, SD-29, SD-31, SD-37, SD-44, SD-45, SD-46, SD-47, SD-50 |
+
+Split-only complements such as HD-25 also benefit from county-constrained precinct allocation, but are not in this table because they have no whole-county component to preserve directly. For orientation: HD-24 is Wilson plus most of the Sharpsburg precinct in Nash, HD-25 is the Nash remainder, HD-55 is Anson plus part of Union, and HD-87/HD-93 divide Watauga while preserving their complete counties.
 
 For a numeric example, 2024-lines SD-18 in the 2024 presidential contest is the exact Granville return (14,365 D / 17,383 R / 356 other) plus the weighted northern Wake component (47,275 D / 44,872 R / 1,454 other), producing 61,640 D / 62,255 R / 1,810 other (R+0.49).
 
