@@ -1,0 +1,86 @@
+{
+  "schema": "historical_county_constrained_trial.v1",
+  "production_modified": false,
+  "builder": "scripts/build_historical_district_contests_county_constrained.py",
+  "method": "Add canonical whole-county components directly, allocate only split-county components with historical precinct lineage and SF1/VAP weights, reconcile every county to canonical contest party totals, largest-remainder round within every county and party bucket, then sum counties into districts.",
+  "trials": [
+    {
+      "year": 2004,
+      "contest": "president",
+      "line_set": 2024,
+      "weights": "data/reports/urban_sf1_historical/district_weights_2004.json",
+      "staging_directory": "data/tmp/county_component_sf1_trial_2004",
+      "statewide_differences": {
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "other_votes": 0
+      },
+      "comparison": {
+        "state_house_max_margin_point_difference_vs_live": 22.54,
+        "state_house_mixed_max_margin_point_difference_vs_live": 1.72,
+        "state_senate_max_margin_point_difference_vs_live": 8.32,
+        "state_senate_mixed_max_margin_point_difference_vs_live": 8.32,
+        "largest_mixed_outlier": "SD-46; exact Burke plus McDowell is fixed, so the remaining difference is isolated to the Buncombe split component"
+      },
+      "promoted": false
+    },
+    {
+      "year": 2012,
+      "contest": "president",
+      "line_set": 2024,
+      "staging_directory": "data/tmp/county_component_trial_2012",
+      "statewide_differences": {
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "other_votes": 0
+      },
+      "comparison": {
+        "mixed_state_house_max_margin_point_difference_vs_live": 10.50,
+        "mixed_state_senate_max_margin_point_difference_vs_live": 5.92,
+        "largest_house_mixed_outlier": "HD-91; exact Stokes contribution is canonical, so the remaining difference is isolated to the Forsyth split component",
+        "largest_senate_mixed_outlier": "SD-29; exact Anson, Montgomery, and Richmond contribution is canonical, so the remaining difference is isolated to the Randolph and Union split components"
+      },
+      "promoted": false
+    },
+    {
+      "year": 2004,
+      "contest": "president",
+      "line_set": 2022,
+      "weights": "data/reports/urban_sf1_historical/district_weights_2004.json",
+      "staging_directory": "data/tmp/county_component_2022_lines_sf1_trial_2004",
+      "statewide_differences": {
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "other_votes": 0
+      },
+      "comparison": {
+        "state_house_max_margin_point_difference_vs_live": 12.71,
+        "state_house_mixed_max_margin_point_difference_vs_live": 11.67,
+        "state_senate_max_margin_point_difference_vs_live": 8.29,
+        "state_senate_mixed_max_margin_point_difference_vs_live": 6.16
+      },
+      "promoted": false
+    },
+    {
+      "year": 2012,
+      "contest": "president",
+      "line_set": 2022,
+      "staging_directory": "data/tmp/county_component_2022_lines_trial_2012",
+      "statewide_differences": {
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "other_votes": 0
+      },
+      "comparison": {
+        "state_house_max_margin_point_difference_vs_live": 18.29,
+        "state_house_mixed_max_margin_point_difference_vs_live": 5.03,
+        "state_senate_max_margin_point_difference_vs_live": 8.57,
+        "state_senate_mixed_max_margin_point_difference_vs_live": 3.55
+      },
+      "promoted": false
+    }
+  ],
+  "finding": "Separating exact and split components proves that whole-county weighting is not causing the remaining outliers. The uncertainty is confined to the named split-county components.",
+  "buncombe_2004_audit": "data/reports/buncombe_2004_split_component_audit.json",
+  "disposition": "Keep staged. Exact county and statewide conservation succeeds, but material split-county margin differences require validation of historical precinct lineage/SF1 weights before promotion."
+}

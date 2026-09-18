@@ -1,0 +1,633 @@
+{
+  "schema": "mixed_county_components.v1",
+  "full_county_threshold": 0.999,
+  "material_partial_county_threshold": 0.001,
+  "method": "Whole-county components retain canonical county totals; only partial-county components are allocated through calibrated precinct/block crosswalks. Geometry-area shares are used when present; normalized block/VAP precinct shares are used otherwise. Shares at or below the material-partial threshold are treated as geometry slivers.",
+  "plans": {
+    "2022_state_house": {
+      "crosswalk": "data/crosswalks/precinct_to_2022_state_house.csv",
+      "exact_components": {
+        "1": [
+          "CHOWAN",
+          "CURRITUCK",
+          "PERQUIMANS",
+          "TYRRELL",
+          "WASHINGTON"
+        ],
+        "2": [
+          "PERSON"
+        ],
+        "4": [
+          "DUPLIN"
+        ],
+        "7": [
+          "FRANKLIN"
+        ],
+        "13": [
+          "CARTERET"
+        ],
+        "16": [
+          "PENDER"
+        ],
+        "24": [
+          "WILSON"
+        ],
+        "32": [
+          "VANCE"
+        ],
+        "46": [
+          "COLUMBUS"
+        ],
+        "50": [
+          "CASWELL"
+        ],
+        "51": [
+          "LEE"
+        ],
+        "52": [
+          "RICHMOND"
+        ],
+        "54": [
+          "CHATHAM"
+        ],
+        "55": [
+          "ANSON"
+        ],
+        "77": [
+          "DAVIE",
+          "YADKIN"
+        ],
+        "79": [
+          "BEAUFORT",
+          "HYDE",
+          "PAMLICO"
+        ],
+        "85": [
+          "AVERY",
+          "MITCHELL",
+          "YANCEY"
+        ],
+        "87": [
+          "CALDWELL"
+        ],
+        "90": [
+          "SURRY"
+        ],
+        "91": [
+          "STOKES"
+        ],
+        "93": [
+          "ALLEGHANY",
+          "ASHE"
+        ],
+        "94": [
+          "ALEXANDER"
+        ],
+        "113": [
+          "POLK"
+        ]
+      },
+      "allocated_components": {
+        "1": [
+          "DARE"
+        ],
+        "2": [
+          "DURHAM"
+        ],
+        "4": [
+          "WAYNE"
+        ],
+        "7": [
+          "GRANVILLE"
+        ],
+        "13": [
+          "CRAVEN"
+        ],
+        "16": [
+          "ONSLOW"
+        ],
+        "24": [
+          "NASH"
+        ],
+        "32": [
+          "GRANVILLE"
+        ],
+        "46": [
+          "ROBESON"
+        ],
+        "50": [
+          "ORANGE"
+        ],
+        "51": [
+          "MOORE"
+        ],
+        "52": [
+          "MOORE"
+        ],
+        "54": [
+          "RANDOLPH"
+        ],
+        "55": [
+          "UNION"
+        ],
+        "77": [
+          "ROWAN"
+        ],
+        "79": [
+          "DARE"
+        ],
+        "85": [
+          "MCDOWELL"
+        ],
+        "87": [
+          "WATAUGA"
+        ],
+        "90": [
+          "WILKES"
+        ],
+        "91": [
+          "FORSYTH"
+        ],
+        "93": [
+          "WATAUGA"
+        ],
+        "94": [
+          "WILKES"
+        ],
+        "113": [
+          "HENDERSON",
+          "MCDOWELL",
+          "RUTHERFORD"
+        ]
+      }
+    },
+    "2024_state_house": {
+      "crosswalk": "data/crosswalks/precinct_to_2024_state_house.csv",
+      "exact_components": {
+        "1": [
+          "CHOWAN",
+          "CURRITUCK",
+          "PERQUIMANS",
+          "TYRRELL",
+          "WASHINGTON"
+        ],
+        "2": [
+          "PERSON"
+        ],
+        "4": [
+          "DUPLIN"
+        ],
+        "5": [
+          "CAMDEN",
+          "GATES",
+          "HERTFORD",
+          "PASQUOTANK"
+        ],
+        "7": [
+          "FRANKLIN"
+        ],
+        "13": [
+          "CARTERET"
+        ],
+        "16": [
+          "PENDER"
+        ],
+        "24": [
+          "WILSON"
+        ],
+        "27": [
+          "HALIFAX",
+          "WARREN"
+        ],
+        "32": [
+          "GRANVILLE"
+        ],
+        "46": [
+          "COLUMBUS"
+        ],
+        "50": [
+          "CASWELL"
+        ],
+        "51": [
+          "LEE"
+        ],
+        "52": [
+          "RICHMOND"
+        ],
+        "54": [
+          "CHATHAM"
+        ],
+        "55": [
+          "ANSON"
+        ],
+        "77": [
+          "DAVIE",
+          "YADKIN"
+        ],
+        "79": [
+          "BEAUFORT",
+          "HYDE",
+          "PAMLICO"
+        ],
+        "85": [
+          "AVERY",
+          "MITCHELL",
+          "YANCEY"
+        ],
+        "87": [
+          "CALDWELL"
+        ],
+        "90": [
+          "SURRY"
+        ],
+        "91": [
+          "STOKES"
+        ],
+        "93": [
+          "ALLEGHANY",
+          "ASHE"
+        ],
+        "94": [
+          "ALEXANDER"
+        ],
+        "113": [
+          "POLK"
+        ]
+      },
+      "allocated_components": {
+        "1": [
+          "DARE"
+        ],
+        "2": [
+          "DURHAM"
+        ],
+        "4": [
+          "WAYNE"
+        ],
+        "5": [
+          "NORTHAMPTON"
+        ],
+        "7": [
+          "VANCE"
+        ],
+        "13": [
+          "CRAVEN"
+        ],
+        "16": [
+          "ONSLOW"
+        ],
+        "24": [
+          "NASH"
+        ],
+        "27": [
+          "NORTHAMPTON"
+        ],
+        "32": [
+          "VANCE"
+        ],
+        "46": [
+          "ROBESON"
+        ],
+        "50": [
+          "ORANGE"
+        ],
+        "51": [
+          "MOORE"
+        ],
+        "52": [
+          "MOORE"
+        ],
+        "54": [
+          "RANDOLPH"
+        ],
+        "55": [
+          "UNION"
+        ],
+        "77": [
+          "ROWAN"
+        ],
+        "79": [
+          "DARE"
+        ],
+        "85": [
+          "MCDOWELL"
+        ],
+        "87": [
+          "WATAUGA"
+        ],
+        "90": [
+          "WILKES"
+        ],
+        "91": [
+          "FORSYTH"
+        ],
+        "93": [
+          "WATAUGA"
+        ],
+        "94": [
+          "WILKES"
+        ],
+        "113": [
+          "HENDERSON",
+          "MCDOWELL",
+          "RUTHERFORD"
+        ]
+      }
+    },
+    "2022_state_senate": {
+      "crosswalk": "data/crosswalks/precinct_to_2022_state_senate.csv",
+      "exact_components": {
+        "8": [
+          "BRUNSWICK",
+          "COLUMBUS"
+        ],
+        "9": [
+          "BLADEN",
+          "DUPLIN",
+          "JONES",
+          "PENDER"
+        ],
+        "12": [
+          "HARNETT",
+          "LEE"
+        ],
+        "18": [
+          "GRANVILLE"
+        ],
+        "20": [
+          "CHATHAM"
+        ],
+        "21": [
+          "MOORE"
+        ],
+        "25": [
+          "ALAMANCE"
+        ],
+        "26": [
+          "ROCKINGHAM"
+        ],
+        "29": [
+          "ANSON",
+          "MONTGOMERY",
+          "RICHMOND"
+        ],
+        "31": [
+          "STOKES"
+        ],
+        "37": [
+          "IREDELL"
+        ],
+        "44": [
+          "CLEVELAND",
+          "LINCOLN"
+        ],
+        "45": [
+          "CATAWBA"
+        ],
+        "46": [
+          "BURKE",
+          "MCDOWELL"
+        ],
+        "47": [
+          "ALLEGHANY",
+          "ASHE",
+          "AVERY",
+          "MADISON",
+          "MITCHELL",
+          "WATAUGA",
+          "YANCEY"
+        ],
+        "50": [
+          "CHEROKEE",
+          "CLAY",
+          "GRAHAM",
+          "JACKSON",
+          "MACON",
+          "SWAIN",
+          "TRANSYLVANIA"
+        ]
+      },
+      "allocated_components": {
+        "8": [
+          "NEW HANOVER"
+        ],
+        "9": [
+          "SAMPSON"
+        ],
+        "12": [
+          "SAMPSON"
+        ],
+        "18": [
+          "WAKE"
+        ],
+        "20": [
+          "DURHAM"
+        ],
+        "21": [
+          "CUMBERLAND"
+        ],
+        "25": [
+          "RANDOLPH"
+        ],
+        "26": [
+          "GUILFORD"
+        ],
+        "29": [
+          "RANDOLPH",
+          "UNION"
+        ],
+        "31": [
+          "FORSYTH"
+        ],
+        "37": [
+          "MECKLENBURG"
+        ],
+        "44": [
+          "GASTON"
+        ],
+        "45": [
+          "CALDWELL"
+        ],
+        "46": [
+          "BUNCOMBE"
+        ],
+        "47": [
+          "CALDWELL",
+          "HAYWOOD"
+        ],
+        "50": [
+          "HAYWOOD"
+        ]
+      }
+    },
+    "2024_state_senate": {
+      "crosswalk": "data/crosswalks/precinct_to_2024_state_senate.csv",
+      "exact_components": {
+        "1": [
+          "BERTIE",
+          "CAMDEN",
+          "CURRITUCK",
+          "DARE",
+          "GATES",
+          "HERTFORD",
+          "NORTHAMPTON",
+          "PASQUOTANK",
+          "PERQUIMANS",
+          "TYRRELL"
+        ],
+        "2": [
+          "CARTERET",
+          "CHOWAN",
+          "HYDE",
+          "MARTIN",
+          "PAMLICO",
+          "WARREN",
+          "WASHINGTON"
+        ],
+        "3": [
+          "BEAUFORT",
+          "CRAVEN",
+          "LENOIR"
+        ],
+        "4": [
+          "WAYNE",
+          "WILSON"
+        ],
+        "8": [
+          "BRUNSWICK",
+          "COLUMBUS"
+        ],
+        "9": [
+          "BLADEN",
+          "DUPLIN",
+          "JONES",
+          "PENDER"
+        ],
+        "12": [
+          "HARNETT",
+          "LEE"
+        ],
+        "18": [
+          "GRANVILLE"
+        ],
+        "20": [
+          "CHATHAM"
+        ],
+        "21": [
+          "MOORE"
+        ],
+        "25": [
+          "ALAMANCE"
+        ],
+        "26": [
+          "ROCKINGHAM"
+        ],
+        "29": [
+          "ANSON",
+          "MONTGOMERY",
+          "RICHMOND"
+        ],
+        "31": [
+          "STOKES"
+        ],
+        "37": [
+          "IREDELL"
+        ],
+        "44": [
+          "CLEVELAND",
+          "LINCOLN"
+        ],
+        "45": [
+          "CATAWBA"
+        ],
+        "46": [
+          "BURKE",
+          "MCDOWELL"
+        ],
+        "47": [
+          "ALLEGHANY",
+          "ASHE",
+          "AVERY",
+          "MADISON",
+          "MITCHELL",
+          "WATAUGA",
+          "YANCEY"
+        ],
+        "50": [
+          "CHEROKEE",
+          "CLAY",
+          "GRAHAM",
+          "JACKSON",
+          "MACON",
+          "SWAIN",
+          "TRANSYLVANIA"
+        ]
+      },
+      "allocated_components": {
+        "1": [
+          "HALIFAX"
+        ],
+        "2": [
+          "HALIFAX"
+        ],
+        "3": [
+          "GREENE"
+        ],
+        "4": [
+          "GREENE"
+        ],
+        "8": [
+          "NEW HANOVER"
+        ],
+        "9": [
+          "SAMPSON"
+        ],
+        "12": [
+          "CUMBERLAND",
+          "SAMPSON"
+        ],
+        "18": [
+          "WAKE"
+        ],
+        "20": [
+          "DURHAM"
+        ],
+        "21": [
+          "CUMBERLAND"
+        ],
+        "25": [
+          "RANDOLPH"
+        ],
+        "26": [
+          "GUILFORD"
+        ],
+        "29": [
+          "RANDOLPH",
+          "UNION"
+        ],
+        "31": [
+          "FORSYTH"
+        ],
+        "37": [
+          "MECKLENBURG"
+        ],
+        "44": [
+          "GASTON"
+        ],
+        "45": [
+          "CALDWELL"
+        ],
+        "46": [
+          "BUNCOMBE"
+        ],
+        "47": [
+          "CALDWELL",
+          "HAYWOOD"
+        ],
+        "50": [
+          "HAYWOOD"
+        ]
+      }
+    }
+  }
+}

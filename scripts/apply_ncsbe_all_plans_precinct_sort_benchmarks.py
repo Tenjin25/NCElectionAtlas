@@ -29,6 +29,7 @@ def main() -> int:
     parser.add_argument("--benchmark", type=Path, default=ROOT / "data/reports/ncsbe_all_plans_precinct_sort_benchmarks.json")
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--plans", nargs="+", default=[])
     args = parser.parse_args()
     args.benchmark = args.benchmark.resolve()
     args.report = args.report.resolve()
@@ -37,10 +38,13 @@ def main() -> int:
     changes: list[dict[str, Any]] = []
     preserved: list[dict[str, str]] = []
     skipped_missing_files: list[str] = []
+    skipped_protected_files: list[str] = []
     changed_files: set[str] = set()
 
     for year, year_payload in sorted(benchmark["years"].items()):
         for plan_name, plan in sorted(year_payload["plans"].items()):
+            if args.plans and plan_name not in set(args.plans):
+                continue
             live_dir = ROOT / plan["live_dir"]
             scope = plan["scope"]
             for contest, districts in sorted(plan["results"].items()):
@@ -52,12 +56,24 @@ def main() -> int:
                 payload = json.loads(raw_text)
                 meta = payload.get("meta") or {}
                 live = payload["general"]["results"]
+                protected_districts = [
+                    district for district in districts
+                    if district in live and exact_ncga_district(meta, district)
+                ]
+                # Applying only the unprotected rows would splice two complete
+                # allocations together and could break statewide conservation.
+                # Preserve the entire contest atomically whenever any district
+                # is locked to an exact NCGA/statpack result.
+                if protected_districts:
+                    preserved.extend(
+                        {"file": path.relative_to(ROOT).as_posix(), "district": district}
+                        for district in protected_districts
+                    )
+                    skipped_protected_files.append(path.relative_to(ROOT).as_posix())
+                    continue
                 file_changed = False
                 for district, values in districts.items():
                     if district not in live:
-                        continue
-                    if exact_ncga_district(meta, district):
-                        preserved.append({"file": path.relative_to(ROOT).as_posix(), "district": district})
                         continue
                     before = snapshot(live[district])
                     after = snapshot(values)
@@ -88,6 +104,7 @@ def main() -> int:
         "benchmark": args.benchmark.relative_to(ROOT).as_posix(),
         "changed_rows": len(changes), "winner_changes": sum(row["winner_changed"] for row in changes),
         "changed_files": sorted(changed_files), "preserved_exact_ncga_rows": len(preserved),
+        "skipped_protected_files": sorted(set(skipped_protected_files)),
         "skipped_missing_files": sorted(set(skipped_missing_files)), "changes": changes,
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
