@@ -51,11 +51,12 @@
   }
 
   function closeRaceDisplayDigits(marginPct) {
-    return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+    const pct = Math.abs(Number(marginPct) || 0);
+    return roundForDisplay(pct, 1) === 0 ? 3 : 1;
   }
 
   function countyMarginDisplayDigits(marginPct) {
-    return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+    return closeRaceDisplayDigits(marginPct);
   }
 
   function formatPctForCloseRace(value, marginPct) {
@@ -67,7 +68,7 @@
   }
 
   function marginDisplayDigits(marginPct) {
-    return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
+    return closeRaceDisplayDigits(marginPct);
   }
 
   function formatMarginPctForDisplay(marginPct) {

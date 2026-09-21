@@ -639,7 +639,7 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain('class="comparison-change-label">Comparison direction');
   expect(source).toContain('${escapeHtml(secondaryLabel)} → ${escapeHtml(primaryLabel)}');
   expect(source).toContain("standalone ? ' is-standalone' : ''");
-  expect(source).toContain('return `${name} +${toFixedForDisplay(Math.abs(margin), 1)}%`;');
+  expect(source).toContain('return `${name} +${formatMarginPctForDisplay(Math.abs(margin))}%`;');
   expect(source).toContain('return `${toFixedForDisplay(Math.abs(n), 1)}% more ${party}`;');
   expect(source).toContain('compareMarginsForDisplay(record.primarySigned, record.secondarySigned)');
   expect(source).toContain("typeof comparisonApi.compareDisplayedSignedMargins === 'function'");

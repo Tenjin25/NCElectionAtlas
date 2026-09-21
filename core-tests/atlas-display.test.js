@@ -11,14 +11,16 @@ test('rounds display values consistently at decimal boundaries', () => {
 
 test('preserves a visible margin in extremely close races', () => {
   assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.014), 3);
-  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.015), 2);
+  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.049), 3);
+  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.05), 1);
   assert.ok(Math.abs(AtlasDisplay.marginPctDisplayValue(5001, 5000, 10001) - 0.01) < 1e-10);
   assert.equal(AtlasDisplay.formatMarginPctForDisplay(0.014), '0.014');
+  assert.equal(AtlasDisplay.formatMarginPctForDisplay(5.45), '5.5');
 });
 
 test('keeps Cabarrus margin display aligned with its visible candidate shares', () => {
-  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63746, 54494, 120202) - 7.69) < 1e-10);
-  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.44) < 1e-10);
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63746, 54494, 120202) - 7.7) < 1e-10);
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.4) < 1e-10);
 });
 
 test('formats compact totals and signed deltas with established suffixes', () => {

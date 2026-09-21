@@ -114,10 +114,10 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 **Last updated:** September 21, 2026
 
-### VoteHub-Aligned Comparison Precision (September 21, 2026)
+### VoteHub-Aligned Frontend Precision (September 21, 2026)
 
-- Comparison-card contest margins and directional differences now match VoteHub's 2024 precinct-map presentation at one decimal place. Values use deterministic rounding, so `1.67%` and `1.65%` display as `1.7%`, while `5.45%` displays as `5.5%`.
-- The change is presentational only: comparison calculations and stored election values retain their existing precision.
+- Election margins, candidate shares, shifts, trends, hover tooltips, sidebar cards, statewide summaries, and comparison cards now match VoteHub's 2024 precinct-map presentation at one decimal place. Values use deterministic rounding, so `1.67%` and `1.65%` display as `1.7%`, while `5.45%` displays as `5.5%`.
+- Ultra-close races retain three decimal places so results such as the 2024 NC Supreme Court contest remain visible rather than appearing as `0.0%`. The change is presentational only: calculations, exports, and stored election values retain their existing precision.
 
 ### Mixed Whole-County and Split-County Districts (September 17, 2026)
 
