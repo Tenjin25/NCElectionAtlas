@@ -10955,18 +10955,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-core.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-data.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-display.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-election.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-21-two-decimal-restore-v21"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-core.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-data.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-display.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-election.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-13-demographic-majority"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -11000,7 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-21-two-decimal-restore-v21';
+        const APP_BUILD_ID = '2026-09-14-directional-narrow-majority-v16';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -15773,7 +15773,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(shift), 2)}% since ${prevYear}`
+        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${Math.abs(shift).toFixed(2)}% since ${prevYear}`
       };
     }
 
@@ -15976,7 +15976,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : '';
           const leadSummary = entry.leadLabel === 'Tie' ? 'Even race' : entry.leadLabel;
           const otherChip = entry.otherPct >= 0.05
-            ? `<span class="focus-trend-chip">Other ${escapeHtml(formatPctForCloseRace(entry.otherPct, Math.abs(entry.signedPct)))}%</span>`
+            ? `<span class="focus-trend-chip">Other ${escapeHtml(entry.otherPct.toFixed(2))}%</span>`
             : '';
           return `
             <div class="focus-trend-entry">
@@ -15990,8 +15990,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <span class="focus-trend-entry-margin">${escapeHtml(leadSummary)}</span>
                 </div>
                 <div class="focus-trend-entry-scale">
-                  <span class="dem">${escapeHtml(`${getCandidateLastName(entry.item, 'Democrat', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${formatPctForCloseRace(entry.demPct, Math.abs(entry.signedPct))}%`)}</span>
-                  <span class="rep">${escapeHtml(`${getCandidateLastName(entry.item, 'Republican', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${formatPctForCloseRace(entry.repPct, Math.abs(entry.signedPct))}%`)}</span>
+                  <span class="dem">${escapeHtml(`${getCandidateLastName(entry.item, 'Democrat', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${entry.demPct.toFixed(2)}%`)}</span>
+                  <span class="rep">${escapeHtml(`${getCandidateLastName(entry.item, 'Republican', { contestType: contestTypeHint, year: Number(entry.item?.year), office: contestTypeHint ? formatContestName(contestTypeHint, Number(entry.item?.year)) : '' })} ${entry.repPct.toFixed(2)}%`)}</span>
                 </div>
                 <div class="focus-trend-entry-bar" aria-hidden="true">
                   <span style="width:${entry.demPct.toFixed(4)}%;background:#2563eb;"></span>
@@ -21667,8 +21667,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = marginPctDisplayValue(repVotes, demVotes, totalVotes);
-        const marginLabel = formatMarginPctForDisplay(marginPct);
+        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+        const marginLabel = formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
         const winner = demPct > repPct ? 'Democratic' : 'Republican';
         let officeName = formatContestName(contestType, year);
         let demKey = `${year}|${officeName}|Democrat`;
@@ -21751,12 +21751,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isMobile) {
           const chips = breakdownItems.map(item => (
             `<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(15,23,42,0.12);background:#fff;white-space:nowrap;color:${item.color};font-size:14px;">` +
-            `${item.label}: ${item.votes.toLocaleString()} (${formatPctForCloseRace(item.pct, marginPct)}%)</div>`
+            `${item.label}: ${item.votes.toLocaleString()} (${item.pct.toFixed(2)}%)</div>`
           )).join('');
           breakdownRow = `<div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 2px 0;margin-top:8px;">${chips}</div>`;
         } else {
           const rows = breakdownItems.map(item => (
-            `<div style="color:${item.color};font-size:15px;font-weight:700;">${item.label}: ${item.votes.toLocaleString()} (${formatPctForCloseRace(item.pct, marginPct)}%)</div>`
+            `<div style="color:${item.color};font-size:15px;font-weight:700;">${item.label}: ${item.votes.toLocaleString()} (${item.pct.toFixed(2)}%)</div>`
           )).join('');
           breakdownRow = `<div style="display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:space-between;margin-top:6px;">${rows}</div>`;
         }
@@ -22881,8 +22881,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      // Winner margins round the raw vote difference directly. Candidate shares
-      // are presented independently and are not subtracted to derive the margin.
+      // Match candidate % labels: margin = rounded Trump% − rounded Harris%.
+      // Raw vote margin (e.g. Scotland 6.925 → 6.93) drifts from the familiar share-diff (6.92).
       return window.AtlasDisplay.countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
@@ -23077,7 +23077,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const repMissingAny = repMissing || repMissingByVotes;
       const demMissingAny = demMissing || demMissingByVotes;
 
-      // Keep hover tooltip margins on the same raw-vote display pipeline as the rest of the UI.
+      // Keep hover tooltip margins on the same display pipeline as the rest of the UI.
+      // The sign can still come from the active/derived margin, but the printed number
+      // should be derived from the same rounded vote-share display values used in cards.
       const useCountyPrecision = String(options?.precision || '').toLowerCase() === 'county';
       const marginPct = useCountyPrecision
         ? countyMarginPctDisplayValue(repVotes, demVotes, totalVotes)
@@ -23135,20 +23137,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function compactCompetitivenessLabel(marginPct, party) {
-      const displayPct = Number(formatMarginPctForDisplay(marginPct));
       const side = party === 'rep' ? 'R' : (party === 'dem' ? 'D' : '');
-      if (displayPct >= 40) return side ? `Annihilation ${side}` : 'Annihilation';
-      if (displayPct >= 30) return side ? `Dominant ${side}` : 'Dominant';
-      if (displayPct >= 20) return side ? `Stronghold ${side}` : 'Stronghold';
-      if (displayPct >= 10) return side ? `Safe ${side}` : 'Safe';
-      if (displayPct >= 5.5) return side ? `Likely ${side}` : 'Likely';
-      if (displayPct >= 1) return side ? `Lean ${side}` : 'Lean';
-      if (displayPct >= 0.5) return side ? `Tilt ${side}` : 'Tilt';
+      if (marginPct >= 40) return side ? `Annihilation ${side}` : 'Annihilation';
+      if (marginPct >= 30) return side ? `Dominant ${side}` : 'Dominant';
+      if (marginPct >= 20) return side ? `Stronghold ${side}` : 'Stronghold';
+      if (marginPct >= 10) return side ? `Safe ${side}` : 'Safe';
+      if (marginPct >= 5.5) return side ? `Likely ${side}` : 'Likely';
+      if (marginPct >= 1) return side ? `Lean ${side}` : 'Lean';
+      if (marginPct >= 0.5) return side ? `Tilt ${side}` : 'Tilt';
       return 'Tossup';
     }
 
     function competitivenessTierMeta(marginPct, party) {
-      const pct = Number(formatMarginPctForDisplay(Math.abs(Number(marginPct) || 0)));
+      const pct = Math.abs(Number(marginPct) || 0);
       const normalizedParty = party === 'rep' || party === 'R'
         ? 'rep'
         : (party === 'dem' || party === 'D' ? 'dem' : 'tie');
@@ -23221,7 +23222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       const partyClass = tierMeta.party === 'rep' ? 'rep' : (tierMeta.party === 'dem' ? 'dem' : 'tie');
-      const titleText = `${tierMeta.label} (${formatMarginPctForDisplay(Number(tierMeta.marginPct || 0))}%)`;
+      const titleText = `${tierMeta.label} (${Number(tierMeta.marginPct || 0).toFixed(2)}%)`;
       targetEl.innerHTML = `
         <span class="focus-name-title">${escapeHtml(label)}</span>
         <span class="focus-name-tier-badge ${partyClass}" title="${escapeHtml(titleText)}">${escapeHtml(tierMeta.label)}</span>
@@ -23987,8 +23988,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = marginPctDisplayValue(repVotes, demVotes, totalVotes);
-        const marginLabel = formatMarginPctForDisplay(marginPct);
+        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
+        const marginLabel = formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
         let repCandidate = (opts?.repCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Republican');
@@ -24170,7 +24171,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const demPct = (d / total) * 100.0;
       const repPct = (r / total) * 100.0;
       const otherPct = (o / total) * 100.0;
-      const displayMarginPct = Math.abs(repPct - demPct);
 
       const marginLabel = useCountyPrecision
         ? compactCountyWinnerMarginLabel(r, d, total, repCandidate || '', demCandidate || '')
@@ -24202,15 +24202,15 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="rc-row">
             <div class="rc-chip">
               <div class="k">D: ${demFull}</div>
-              <div class="v" style="color:#1d4ed8;">${d.toLocaleString()} (${formatPctForCloseRace(demPct, displayMarginPct)}%)</div>
+              <div class="v" style="color:#1d4ed8;">${d.toLocaleString()} (${demPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
               <div class="k">OTHER</div>
-              <div class="v" style="color:#475569;">${o.toLocaleString()} (${formatPctForCloseRace(otherPct, displayMarginPct)}%)</div>
+              <div class="v" style="color:#475569;">${o.toLocaleString()} (${otherPct.toFixed(2)}%)</div>
             </div>
             <div class="rc-chip">
               <div class="k">R: ${repFull}</div>
-              <div class="v" style="color:#b91c1c;">${r.toLocaleString()} (${formatPctForCloseRace(repPct, displayMarginPct)}%)</div>
+              <div class="v" style="color:#b91c1c;">${r.toLocaleString()} (${repPct.toFixed(2)}%)</div>
             </div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:#64748b;">
@@ -24823,7 +24823,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const side = delta > 0 ? 'R' : 'D';
         const arrow = delta > 0 ? '→' : '←';
-        return `${arrow} ${side}+${toFixedForDisplay(Math.abs(delta), 2)} since ${baseYear}`;
+        return `${arrow} ${side}+${Math.abs(delta).toFixed(2)} since ${baseYear}`;
       })();
 
       function shortPopulationContext(context) {
@@ -24976,7 +24976,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(recentShiftSince2020) || selectedYear <= 2020) return '—';
         if (Math.abs(recentShiftSince2020) < 0.75) return 'Steady since 2020';
         const side = recentShiftSince2020 > 0 ? 'R' : 'D';
-        return `${side}+${toFixedForDisplay(Math.abs(recentShiftSince2020), 2)} since 2020`;
+        return `${side}+${Math.abs(recentShiftSince2020).toFixed(2)} since 2020`;
       })();
 
       const confidence = confidenceForNarrative();
@@ -25011,7 +25011,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(delta)) return '';
         if (Math.abs(delta) < 0.005) return 'Compared with NC: about even';
         const word = delta > 0 ? 'redder' : 'bluer';
-        return `Compared with NC: ${toFixedForDisplay(Math.abs(delta), 2)} pts ${word}`;
+        return `Compared with NC: ${Math.abs(delta).toFixed(2)} pts ${word}`;
       })();
 
       function buildNarrativeSentence(options = {}) {
@@ -25121,7 +25121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) return '—';
         if (Math.abs(delta) < 0.05) return `0.00 since ${baseYear}`;
         const side = delta > 0 ? 'R' : 'D';
-        return `${side}+${toFixedForDisplay(Math.abs(delta), 2)} since ${baseYear}`;
+        return `${side}+${Math.abs(delta).toFixed(2)} since ${baseYear}`;
       })();
 
       const glanceHtml = `
@@ -26012,7 +26012,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const prev = Number(prevSignedPct);
       const hasPrev = prevSignedPct !== null && prevSignedPct !== undefined && Number.isFinite(prev);
       const currentLabel = Number.isFinite(cur)
-        ? (Math.abs(cur) < 0.005 ? 'Tie' : `${cur > 0 ? 'R' : 'D'} +${formatMarginPctForDisplay(Math.abs(cur))}%`)
+        ? (Math.abs(cur) < 0.01 ? 'Tie' : `${cur > 0 ? 'R' : 'D'} +${Math.abs(cur).toFixed(2)}%`)
         : 'No margin data';
       let shiftLabel = 'No prior precinct cycle loaded';
       let shiftColor = '#64748b';
@@ -26023,7 +26023,7 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftLabel = `Shift: No shift since ${prevYear}`;
           shiftColor = '#64748b';
         } else {
-          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(delta), 2)}% since ${prevYear}`;
+          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${Math.abs(delta).toFixed(2)}% since ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
           const abs = Math.abs(delta);
           const strengthClass = abs >= 7.5 ? 'trend-arrow-strong' : (abs >= 2 ? 'trend-arrow-medium' : 'trend-arrow-soft');
@@ -26438,7 +26438,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const signed = Number(signedPct || 0);
       if (!Number.isFinite(signed) || Math.abs(signed) < 0.005) return 'Tied';
       const winner = signed > 0 ? 'R' : 'D';
-      return `${winner}+${formatMarginPctForDisplay(Math.abs(signed))}%`;
+      return `${winner}+${toFixedForDisplay(Math.abs(signed), 2)}%`;
     }
 
     function getSplitTicketCountyInsight(countyNorm, contestType, demVotes, repVotes, totalVotes) {
@@ -27773,7 +27773,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       body.innerHTML = top.map((entry, idx) => {
         const dir = entry.shift > 0 ? 'R' : 'D';
-        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${toFixedForDisplay(Math.abs(entry.shift), 2)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
+        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${Math.abs(entry.shift).toFixed(2)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
       }).join('');
     }
 
@@ -33713,9 +33713,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
             const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
-            const marginPct = (chamber === 'house' && Number(districtNum) === 97)
-              ? countyMarginPctDisplayValue(repVotes, demVotes, totalVotes)
-              : marginPctDisplayValue(repVotes, demVotes, totalVotes);
+            const marginPct = Math.abs(demPct - repPct);
             const winner = demPct > repPct ? 'Democratic' : 'Republican';
             
             // Determine competitiveness
@@ -33767,13 +33765,13 @@ document.addEventListener('DOMContentLoaded', function() {
               <div style="margin-bottom: 16px;">
                 <h5>Margin</h5>
                 <p style="color: ${winner === 'Republican' ? '#dc2626' : '#2563eb'}; font-weight: bold; font-size: 18px;">
-                  ${winner} +${(chamber === 'house' && Number(districtNum) === 97 ? formatCountyMarginPctForDisplay(marginPct) : formatMarginPctForDisplay(marginPct))}%
+                  ${winner} +${(chamber === 'house' && Number(districtNum) === 97 ? formatCountyMarginPctForDisplay(marginPct) : toFixedForDisplay(marginPct, 2))}%
                 </p>
               </div>
               <div style="margin-bottom: 16px;">
                 <h5>Vote Breakdown</h5>
-                <p class="tooltip-vote-line"><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(demPct, marginPct) : formatPctForCloseRace(demPct, marginPct))}%</span> (${demVotes.toLocaleString()})</p>
-                <p class="tooltip-vote-line"><span style="color: #dc2626; font-weight: bold;">Republican: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(repPct, marginPct) : formatPctForCloseRace(repPct, marginPct))}%</span> (${repVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #2563eb; font-weight: bold;">Democratic: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(demPct, marginPct) : toFixedForDisplay(demPct, 2))}%</span> (${demVotes.toLocaleString()})</p>
+                <p class="tooltip-vote-line"><span style="color: #dc2626; font-weight: bold;">Republican: </span><span class="tooltip-vote-pct">${(chamber === 'house' && Number(districtNum) === 97 ? formatPctForCountyCloseRace(repPct, marginPct) : toFixedForDisplay(repPct, 2))}%</span> (${repVotes.toLocaleString()})</p>
                 <p><strong>Total Votes:</strong> ${totalVotes.toLocaleString()}</p>
               </div>
             `;
@@ -34233,7 +34231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return `<div class="quick-tooltip">
           <strong>${countyName} County</strong><br>
-          ${recent.year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}%<br>
+          ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
           <em>Click for full trends</em>
         </div>`;
       }
@@ -34335,7 +34333,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return `<div class="quick-tooltip">
             <strong>${displayName}</strong><br>
             ${desc ? `<span style="color:#64748b;font-weight:700;">${desc}</span><br>` : ''}
-            ${recent.year}: ${winner}+${formatMarginPctForDisplay(marginAbs)}%<br>
+            ${recent.year}: ${winner}+${toFixedForDisplay(marginAbs, 2)}%<br>
             <em>Click for full trends</em>
           </div>`;
         }
@@ -34807,10 +34805,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function colorForMarginMode(marginPctAbs, winner) {
-      const displayMarginPct = Number(formatMarginPctForDisplay(Math.abs(Number(marginPctAbs) || 0)));
       return isColorblindModeActive()
-        ? accessibilityMarginColor(displayMarginPct, winner)
-        : categoryColorForMargin(displayMarginPct, winner);
+        ? accessibilityMarginColor(marginPctAbs, winner)
+        : categoryColorForMargin(marginPctAbs, winner);
     }
 
     function colorForWinnerMode(winner) {
@@ -35314,7 +35311,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return includeWord ? 'No margin difference' : 'Even';
       const party = n > 0 ? 'R' : 'D';
-      const value = toFixedForDisplay(Math.abs(n), 2);
+      const value = Math.abs(n).toFixed(2);
       return includeWord ? `${party}+${value} difference` : `${party}+${value}`;
     }
 
@@ -35323,7 +35320,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return 'No margin change';
       const party = n > 0 ? 'Republican' : 'Democratic';
-      return `${toFixedForDisplay(Math.abs(n), 2)}% more ${party}`;
+      return `${Math.abs(n).toFixed(2)}% more ${party}`;
     }
 
     function compareMarginsForDisplay(primarySigned, secondarySigned) {
@@ -35349,7 +35346,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const name = margin > 0
         ? shortCandidateLabel(repName, 'R')
         : shortCandidateLabel(demName, 'D');
-      return `${name} +${formatMarginPctForDisplay(Math.abs(margin))}%`;
+      return `${name} +${Math.abs(margin).toFixed(2)}%`;
     }
 
     function comparisonContestDisplayLabel(label) {
@@ -37384,9 +37381,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const statewideDemPct = statewideSummary?.total ? (statewideSummary.dem / statewideSummary.total) * 100 : 0;
             const statewideRepPct = statewideSummary?.total ? (statewideSummary.rep / statewideSummary.total) * 100 : 0;
             if (preserveDistrictViewSummary) {
-              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 2)}% D, ${toFixedForDisplay(statewideRepPct, 2)}% R.`);
+              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
             } else {
-              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 2)}% D, ${toFixedForDisplay(statewideRepPct, 2)}% R.`);
+              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
             }
           }
           return;
@@ -37533,7 +37530,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
       }
-      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O)`);
+      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
     }
 
     window.onload = init;

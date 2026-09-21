@@ -55,7 +55,7 @@
   }
 
   function countyMarginDisplayDigits(marginPct) {
-    return closeRaceDisplayDigits(marginPct);
+    return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
   }
 
   function formatPctForCloseRace(value, marginPct) {
@@ -67,7 +67,7 @@
   }
 
   function marginDisplayDigits(marginPct) {
-    return closeRaceDisplayDigits(marginPct);
+    return preservesTwoDecimalMargin(marginPct) ? 2 : 3;
   }
 
   function formatMarginPctForDisplay(marginPct) {
@@ -84,14 +84,22 @@
     const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
-    return roundForDisplay(rawMarginPct, marginDisplayDigits(rawMarginPct));
+    const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / total) * 100, rawMarginPct));
+    const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / total) * 100, rawMarginPct));
+    if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
+    const diff = Math.abs(repPctDisplay - demPctDisplay);
+    return diff === 0 && rawMarginPct > 0 ? rawMarginPct : diff;
   }
 
   function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
     const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
-    return roundForDisplay(rawMarginPct, countyMarginDisplayDigits(rawMarginPct));
+    const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / total) * 100, rawMarginPct));
+    const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / total) * 100, rawMarginPct));
+    if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
+    const diff = Math.abs(repPctDisplay - demPctDisplay);
+    return diff === 0 && rawMarginPct > 0 ? rawMarginPct : diff;
   }
 
   function formatCompactTotal(value, thousandsSuffix) {
