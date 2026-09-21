@@ -85,22 +85,14 @@
     const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
-    const repPctDisplay = Number(formatPctForCloseRace((Number(repVotes || 0) / total) * 100, rawMarginPct));
-    const demPctDisplay = Number(formatPctForCloseRace((Number(demVotes || 0) / total) * 100, rawMarginPct));
-    if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-    const diff = Math.abs(repPctDisplay - demPctDisplay);
-    return diff === 0 && rawMarginPct > 0 ? rawMarginPct : diff;
+    return roundForDisplay(rawMarginPct, marginDisplayDigits(rawMarginPct));
   }
 
   function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
     const rawMarginPct = marginPctValue(repVotes, demVotes, totalVotes);
     const total = Number(totalVotes) || 0;
     if (total <= 0) return 0;
-    const repPctDisplay = Number(formatPctForCountyCloseRace((Number(repVotes || 0) / total) * 100, rawMarginPct));
-    const demPctDisplay = Number(formatPctForCountyCloseRace((Number(demVotes || 0) / total) * 100, rawMarginPct));
-    if (!Number.isFinite(repPctDisplay) || !Number.isFinite(demPctDisplay)) return rawMarginPct;
-    const diff = Math.abs(repPctDisplay - demPctDisplay);
-    return diff === 0 && rawMarginPct > 0 ? rawMarginPct : diff;
+    return roundForDisplay(rawMarginPct, countyMarginDisplayDigits(rawMarginPct));
   }
 
   function formatCompactTotal(value, thousandsSuffix) {

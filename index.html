@@ -10955,18 +10955,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-core.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-data.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-display.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-election.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-21-frontend-tenths-v18"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-21-frontend-tenths-v18"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-core.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-data.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-display.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-election.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-21-margin-color-alignment-v19"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -11000,7 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-21-frontend-tenths-v18';
+        const APP_BUILD_ID = '2026-09-21-margin-color-alignment-v19';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -23137,19 +23137,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function compactCompetitivenessLabel(marginPct, party) {
+      const displayPct = Number(formatMarginPctForDisplay(marginPct));
       const side = party === 'rep' ? 'R' : (party === 'dem' ? 'D' : '');
-      if (marginPct >= 40) return side ? `Annihilation ${side}` : 'Annihilation';
-      if (marginPct >= 30) return side ? `Dominant ${side}` : 'Dominant';
-      if (marginPct >= 20) return side ? `Stronghold ${side}` : 'Stronghold';
-      if (marginPct >= 10) return side ? `Safe ${side}` : 'Safe';
-      if (marginPct >= 5.5) return side ? `Likely ${side}` : 'Likely';
-      if (marginPct >= 1) return side ? `Lean ${side}` : 'Lean';
-      if (marginPct >= 0.5) return side ? `Tilt ${side}` : 'Tilt';
+      if (displayPct >= 40) return side ? `Annihilation ${side}` : 'Annihilation';
+      if (displayPct >= 30) return side ? `Dominant ${side}` : 'Dominant';
+      if (displayPct >= 20) return side ? `Stronghold ${side}` : 'Stronghold';
+      if (displayPct >= 10) return side ? `Safe ${side}` : 'Safe';
+      if (displayPct >= 5.5) return side ? `Likely ${side}` : 'Likely';
+      if (displayPct >= 1) return side ? `Lean ${side}` : 'Lean';
+      if (displayPct >= 0.5) return side ? `Tilt ${side}` : 'Tilt';
       return 'Tossup';
     }
 
     function competitivenessTierMeta(marginPct, party) {
-      const pct = Math.abs(Number(marginPct) || 0);
+      const pct = Number(formatMarginPctForDisplay(Math.abs(Number(marginPct) || 0)));
       const normalizedParty = party === 'rep' || party === 'R'
         ? 'rep'
         : (party === 'dem' || party === 'D' ? 'dem' : 'tie');
@@ -34806,9 +34807,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function colorForMarginMode(marginPctAbs, winner) {
+      const displayMarginPct = Number(formatMarginPctForDisplay(Math.abs(Number(marginPctAbs) || 0)));
       return isColorblindModeActive()
-        ? accessibilityMarginColor(marginPctAbs, winner)
-        : categoryColorForMargin(marginPctAbs, winner);
+        ? accessibilityMarginColor(displayMarginPct, winner)
+        : categoryColorForMargin(displayMarginPct, winner);
     }
 
     function colorForWinnerMode(winner) {
