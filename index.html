@@ -10955,18 +10955,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-core.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-data.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-display.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-election.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-21-margin-color-alignment-v19"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-21-margin-color-alignment-v19"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-core.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-data.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-display.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-election.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-21-margin-surface-audit-v20"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -11000,7 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-21-margin-color-alignment-v19';
+        const APP_BUILD_ID = '2026-09-21-margin-surface-audit-v20';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -21667,8 +21667,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
-        const marginLabel = formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const marginPct = marginPctDisplayValue(repVotes, demVotes, totalVotes);
+        const marginLabel = formatMarginPctForDisplay(marginPct);
         const winner = demPct > repPct ? 'Democratic' : 'Republican';
         let officeName = formatContestName(contestType, year);
         let demKey = `${year}|${officeName}|Democrat`;
@@ -22881,8 +22881,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function countyMarginPctDisplayValue(repVotes, demVotes, totalVotes) {
-      // Match candidate % labels: margin = rounded Trump% − rounded Harris%.
-      // Raw vote margin (e.g. Scotland 6.925 → 6.93) drifts from the familiar share-diff (6.92).
+      // Winner margins round the raw vote difference directly. Candidate shares
+      // are presented independently and are not subtracted to derive the margin.
       return window.AtlasDisplay.countyMarginPctDisplayValue(repVotes, demVotes, totalVotes);
     }
 
@@ -23077,9 +23077,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const repMissingAny = repMissing || repMissingByVotes;
       const demMissingAny = demMissing || demMissingByVotes;
 
-      // Keep hover tooltip margins on the same display pipeline as the rest of the UI.
-      // The sign can still come from the active/derived margin, but the printed number
-      // should be derived from the same rounded vote-share display values used in cards.
+      // Keep hover tooltip margins on the same raw-vote display pipeline as the rest of the UI.
       const useCountyPrecision = String(options?.precision || '').toLowerCase() === 'county';
       const marginPct = useCountyPrecision
         ? countyMarginPctDisplayValue(repVotes, demVotes, totalVotes)
@@ -23989,8 +23987,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const demPct = (demVotes / totalVotes) * 100;
         const repPct = (repVotes / totalVotes) * 100;
         const otherPct = (otherVotes / totalVotes) * 100;
-        const marginPct = marginPctValue(repVotes, demVotes, totalVotes);
-        const marginLabel = formatMarginPctForDisplay(marginPctDisplayValue(repVotes, demVotes, totalVotes));
+        const marginPct = marginPctDisplayValue(repVotes, demVotes, totalVotes);
+        const marginLabel = formatMarginPctForDisplay(marginPct);
         const officeName = formatContestName(contestType, year);
         let demCandidate = (opts?.demCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Democrat');
         let repCandidate = (opts?.repCandidate || '').toString().trim() || getCandidateName(year, officeName, 'Republican');
@@ -27775,7 +27773,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       body.innerHTML = top.map((entry, idx) => {
         const dir = entry.shift > 0 ? 'R' : 'D';
-        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${Math.abs(entry.shift).toFixed(2)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
+        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${toFixedForDisplay(Math.abs(entry.shift), 1)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
       }).join('');
     }
 
@@ -33715,7 +33713,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const demPct = totalVotes > 0 ? (demVotes / totalVotes) * 100 : 0;
             const repPct = totalVotes > 0 ? (repVotes / totalVotes) * 100 : 0;
-            const marginPct = Math.abs(demPct - repPct);
+            const marginPct = (chamber === 'house' && Number(districtNum) === 97)
+              ? countyMarginPctDisplayValue(repVotes, demVotes, totalVotes)
+              : marginPctDisplayValue(repVotes, demVotes, totalVotes);
             const winner = demPct > repPct ? 'Democratic' : 'Republican';
             
             // Determine competitiveness
@@ -37384,9 +37384,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const statewideDemPct = statewideSummary?.total ? (statewideSummary.dem / statewideSummary.total) * 100 : 0;
             const statewideRepPct = statewideSummary?.total ? (statewideSummary.rep / statewideSummary.total) * 100 : 0;
             if (preserveDistrictViewSummary) {
-              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
+              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 1)}% D, ${toFixedForDisplay(statewideRepPct, 1)}% R.`);
             } else {
-              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O); statewide summary stays ${statewideDemPct.toFixed(2)}% D, ${statewideRepPct.toFixed(2)}% R.`);
+              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 1)}% D, ${toFixedForDisplay(statewideRepPct, 1)}% R.`);
             }
           }
           return;
@@ -37533,7 +37533,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
       }
-      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${demPct.toFixed(2)}% D, ${repPct.toFixed(2)}% R, ${otherPct.toFixed(2)}% O)`);
+      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O)`);
     }
 
     window.onload = init;
