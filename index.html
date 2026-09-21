@@ -10955,18 +10955,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-core.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-data.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-display.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-election.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-21-margin-surface-audit-v20"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-21-margin-surface-audit-v20"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-core.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-data.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-display.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-election.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-21-two-decimal-restore-v21"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-21-two-decimal-restore-v21"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -11000,7 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-21-margin-surface-audit-v20';
+        const APP_BUILD_ID = '2026-09-21-two-decimal-restore-v21';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -15773,7 +15773,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       return {
         cls: shift > 0 ? 'rep' : 'dem',
-        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(shift), 1)}% since ${prevYear}`
+        text: `Shift: ${shift > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(shift), 2)}% since ${prevYear}`
       };
     }
 
@@ -24823,7 +24823,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const side = delta > 0 ? 'R' : 'D';
         const arrow = delta > 0 ? '→' : '←';
-        return `${arrow} ${side}+${toFixedForDisplay(Math.abs(delta), 1)} since ${baseYear}`;
+        return `${arrow} ${side}+${toFixedForDisplay(Math.abs(delta), 2)} since ${baseYear}`;
       })();
 
       function shortPopulationContext(context) {
@@ -24976,7 +24976,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(recentShiftSince2020) || selectedYear <= 2020) return '—';
         if (Math.abs(recentShiftSince2020) < 0.75) return 'Steady since 2020';
         const side = recentShiftSince2020 > 0 ? 'R' : 'D';
-        return `${side}+${toFixedForDisplay(Math.abs(recentShiftSince2020), 1)} since 2020`;
+        return `${side}+${toFixedForDisplay(Math.abs(recentShiftSince2020), 2)} since 2020`;
       })();
 
       const confidence = confidenceForNarrative();
@@ -25011,7 +25011,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(delta)) return '';
         if (Math.abs(delta) < 0.005) return 'Compared with NC: about even';
         const word = delta > 0 ? 'redder' : 'bluer';
-        return `Compared with NC: ${toFixedForDisplay(Math.abs(delta), 1)} pts ${word}`;
+        return `Compared with NC: ${toFixedForDisplay(Math.abs(delta), 2)} pts ${word}`;
       })();
 
       function buildNarrativeSentence(options = {}) {
@@ -25121,7 +25121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Number.isFinite(delta) || !Number.isFinite(Number(baseYear))) return '—';
         if (Math.abs(delta) < 0.05) return `0.00 since ${baseYear}`;
         const side = delta > 0 ? 'R' : 'D';
-        return `${side}+${toFixedForDisplay(Math.abs(delta), 1)} since ${baseYear}`;
+        return `${side}+${toFixedForDisplay(Math.abs(delta), 2)} since ${baseYear}`;
       })();
 
       const glanceHtml = `
@@ -25978,7 +25978,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const s = Number(shiftPct) || 0;
       const abs = Math.abs(s);
       if (abs < TREND_SHIFT_NOISE_PTS) return 'No change';
-      return `${s > 0 ? 'R' : 'D'}+${toFixedForDisplay(abs, 1)}%`;
+      return `${s > 0 ? 'R' : 'D'}+${toFixedForDisplay(abs, 2)}%`;
     }
 
     function shiftChipHTML(shiftPct, prevYear, year, options = {}) {
@@ -26023,7 +26023,7 @@ document.addEventListener('DOMContentLoaded', function() {
           shiftLabel = `Shift: No shift since ${prevYear}`;
           shiftColor = '#64748b';
         } else {
-          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(delta), 1)}% since ${prevYear}`;
+          shiftLabel = `Shift: ${delta > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(delta), 2)}% since ${prevYear}`;
           shiftColor = delta > 0 ? '#dc2626' : '#2563eb';
           const abs = Math.abs(delta);
           const strengthClass = abs >= 7.5 ? 'trend-arrow-strong' : (abs >= 2 ? 'trend-arrow-medium' : 'trend-arrow-soft');
@@ -26452,7 +26452,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const deltaSigned = govSigned - presSigned;
       const deltaLabel = Math.abs(deltaSigned) < 0.005
         ? 'No split shift'
-        : `${deltaSigned > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(deltaSigned), 1)} vs President`;
+        : `${deltaSigned > 0 ? 'R' : 'D'}+${toFixedForDisplay(Math.abs(deltaSigned), 2)} vs President`;
 
       return {
         presidentSigned: presSigned,
@@ -27773,7 +27773,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       body.innerHTML = top.map((entry, idx) => {
         const dir = entry.shift > 0 ? 'R' : 'D';
-        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${toFixedForDisplay(Math.abs(entry.shift), 1)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
+        return `<div><strong>${idx + 1}.</strong> ${escapeHtml(entry.rowName)} - ${dir}+${toFixedForDisplay(Math.abs(entry.shift), 2)} (${Number(entry.total || 0).toLocaleString()} votes)</div>`;
       }).join('');
     }
 
@@ -30794,7 +30794,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const marginFormatter = (v) => {
         if (useCountyMarginPrecision && typeof formatCountyMarginPctForDisplay === 'function') return formatCountyMarginPctForDisplay(v);
         if (typeof formatMarginPctForDisplay === 'function') return formatMarginPctForDisplay(v);
-        return formatVotehubPct(v, 1);
+        return formatVotehubPct(v, 2);
       };
       const normalizeCandidateLabel = (value, fallback) => {
         const cleaned = typeof fullCandidateLabel === 'function'
@@ -30918,7 +30918,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const flipLine = flipLabel ? `<div class="vhr-flip ${flipToneClass}">${escapeHtml(flipLabel)}</div>` : '';
 
       const rowHtml = rows.map(row => (
-        `<div class="vhr-row ${row.partyClass}"><span class="vhr-dot"></span><span class="vhr-name">${escapeHtml(row.label)}</span><span class="vhr-votes">${escapeHtml(formatVotehubVotes(row.votes))}</span><span class="vhr-pct">${escapeHtml(formatVotehubPct(row.pct, 1))}%</span></div>`
+        `<div class="vhr-row ${row.partyClass}"><span class="vhr-dot"></span><span class="vhr-name">${escapeHtml(row.label)}</span><span class="vhr-votes">${escapeHtml(formatVotehubVotes(row.votes))}</span><span class="vhr-pct">${escapeHtml(formatVotehubPct(row.pct, 2))}%</span></div>`
       )).join('');
 
       return `
@@ -35314,7 +35314,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return includeWord ? 'No margin difference' : 'Even';
       const party = n > 0 ? 'R' : 'D';
-      const value = toFixedForDisplay(Math.abs(n), 1);
+      const value = toFixedForDisplay(Math.abs(n), 2);
       return includeWord ? `${party}+${value} difference` : `${party}+${value}`;
     }
 
@@ -35323,7 +35323,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return 'No margin change';
       const party = n > 0 ? 'Republican' : 'Democratic';
-      return `${toFixedForDisplay(Math.abs(n), 1)}% more ${party}`;
+      return `${toFixedForDisplay(Math.abs(n), 2)}% more ${party}`;
     }
 
     function compareMarginsForDisplay(primarySigned, secondarySigned) {
@@ -37384,9 +37384,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const statewideDemPct = statewideSummary?.total ? (statewideSummary.dem / statewideSummary.total) * 100 : 0;
             const statewideRepPct = statewideSummary?.total ? (statewideSummary.rep / statewideSummary.total) * 100 : 0;
             if (preserveDistrictViewSummary) {
-              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 1)}% D, ${toFixedForDisplay(statewideRepPct, 1)}% R.`);
+              setStatus(`Applied ${getReadableViewLabel(currentView)} crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 2)}% D, ${toFixedForDisplay(statewideRepPct, 2)}% R.`);
             } else {
-              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 1)}% D, ${toFixedForDisplay(statewideRepPct, 1)}% R.`);
+              setStatus(`Applied district crosswalk results to the map: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O); statewide summary stays ${toFixedForDisplay(statewideDemPct, 2)}% D, ${toFixedForDisplay(statewideRepPct, 2)}% R.`);
             }
           }
           return;
@@ -37533,7 +37533,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         refreshStatewideSummaryFromCountyRows(contestData, ' - Statewide Result');
       }
-      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 1)}% D, ${toFixedForDisplay(repPct, 1)}% R, ${toFixedForDisplay(otherPct, 1)}% O)`);
+      setStatus(`Applied statewide contest: ${formatContestLabel(contestType, year)} (${toFixedForDisplay(demPct, 2)}% D, ${toFixedForDisplay(repPct, 2)}% R, ${toFixedForDisplay(otherPct, 2)}% O)`);
     }
 
     window.onload = init;

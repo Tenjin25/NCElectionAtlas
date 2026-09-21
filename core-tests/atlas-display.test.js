@@ -11,24 +11,23 @@ test('rounds display values consistently at decimal boundaries', () => {
 
 test('preserves a visible margin in extremely close races', () => {
   assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.014), 3);
-  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.049), 3);
-  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.05), 1);
+  assert.equal(AtlasDisplay.closeRaceDisplayDigits(0.015), 2);
   assert.ok(Math.abs(AtlasDisplay.marginPctDisplayValue(5001, 5000, 10001) - 0.01) < 1e-10);
   assert.equal(AtlasDisplay.formatMarginPctForDisplay(0.014), '0.014');
-  assert.equal(AtlasDisplay.formatMarginPctForDisplay(5.45), '5.5');
+  assert.equal(AtlasDisplay.formatMarginPctForDisplay(5.45), '5.45');
 });
 
 test('rounds county margins directly from raw vote totals', () => {
   assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63746, 54494, 120202) - 7.7) < 1e-10);
-  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.4) < 1e-10);
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.45) < 1e-10);
 });
 
 test('rounds the raw NC-13 margin instead of subtracting rounded shares', () => {
-  assert.equal(AtlasDisplay.marginPctDisplayValue(158392, 150859, 323433), 2.3);
+  assert.equal(AtlasDisplay.marginPctDisplayValue(158392, 150859, 323433), 2.33);
 });
 
-test('rounds the 2024 statewide presidential margin directly to 3.2', () => {
-  assert.equal(AtlasDisplay.marginPctDisplayValue(2898423, 2715375, 5699141), 3.2);
+test('rounds the 2024 statewide presidential margin directly to 3.21', () => {
+  assert.equal(AtlasDisplay.marginPctDisplayValue(2898423, 2715375, 5699141), 3.21);
 });
 
 test('formats compact totals and signed deltas with established suffixes', () => {
