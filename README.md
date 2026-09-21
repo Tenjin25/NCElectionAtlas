@@ -112,13 +112,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 ## Recent Updates (March–September 2026)
 
-**Last updated:** September 21, 2026
-
-### Frontend Precision Alignment (September 21, 2026)
-
-- Election margins, candidate shares, shifts, trends, hover tooltips, sidebar cards, statewide summaries, and comparison cards use two decimal places. Deterministic rounding prevents floating-point boundary drift.
-- Ultra-close races retain three decimal places so results such as the 2024 NC Supreme Court contest remain visible rather than appearing as `0.0%`. The change is presentational only: calculations, exports, and stored election values retain their existing precision.
-- Winner margins are rounded directly from the raw vote margin rather than calculated by subtracting independently rounded candidate shares (for example, President 2016 in NC-13 on the 2022 lines displays as `R+2.33`). Map colors and competitiveness tiers use that same displayed margin.
+**Last updated:** September 17, 2026
 
 ### Mixed Whole-County and Split-County Districts (September 17, 2026)
 
@@ -410,7 +404,7 @@ Congressional results were therefore affected by the September 4 work too: offic
 - Bumped the front-end build/cache token to `2026-08-19-ab-comparison-v7` so the export margin correction arrives together on GitHub Pages.
 
 - Added a general `Compare` analysis mode for any two available contest/year entries, with an automatic prior-cycle match when one exists and a control for swapping the selected contests.
-- Added comparison shading and compact, named-contest tooltips across Counties, Congress, State House, and State Senate. The comparison popup replaces the taller standard-results stack, shortens presidential labels to `US President YEAR`, and uses `%` for both contest margins and their displayed difference. Coverage includes same-year legislative/congressional ticket splits and county-level statewide/judicial comparisons.
+- Added comparison shading and compact, named-contest tooltips across Counties, Congress, State House, and State Senate. The comparison popup replaces the taller standard-results stack, shortens presidential labels to `US President YEAR`, and uses `%` for both contest margins and their displayed difference. Differences are calculated from the same two-decimal margins shown in the card, preventing `0.01%` display drift; coverage includes same-year legislative/congressional ticket splits and county-level statewide/judicial comparisons.
 - Added `compare=` URL state, comparison-specific legend/summary text, and regression coverage for margin math, default-pair selection, URL parsing, and fast switching into the mode.
 - Versioned the local JavaScript module URLs alongside the build/cache token and added a compatibility fallback, preventing a stale cached comparison module from blocking contest loading after deployment.
 
@@ -549,8 +543,8 @@ Congressional results were therefore affected by the September 4 work too: offic
 
 ### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
 
-- Initially corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to a trusted snapshot estimate of `R+2.34`. The later official NCGA StatPack calibration superseded that estimate with exact district totals: Trump `158,392`, Clinton `150,859`, other `14,182`, total `323,433`, for the authoritative displayed margin of `R+2.33`.
-- That snapshot-era correction preserved its then-current `325,627` total and `14,033` other votes while reallocating only the Democratic/Republican split (`151,987 D` / `159,607 R`); those estimated counts are no longer the live authority.
+- Corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to the trusted snapshot margin of `R+2.34`.
+- Preserved the existing `325,627` total and `14,033` other votes; only the Democratic/Republican split was reallocated (`151,987 D` / `159,607 R`).
 
 ### Precinct-First US Senate Calibration (July 17, 2026)
 
