@@ -10955,18 +10955,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-core.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-data.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-display.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-election.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-13-demographic-majority"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-13-demographic-majority"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-core.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-data.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-display.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-election.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-21-comparison-tenths-v17"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-21-comparison-tenths-v17"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -11000,7 +11000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-14-directional-narrow-majority-v16';
+        const APP_BUILD_ID = '2026-09-21-comparison-tenths-v17';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -35311,7 +35311,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return includeWord ? 'No margin difference' : 'Even';
       const party = n > 0 ? 'R' : 'D';
-      const value = Math.abs(n).toFixed(2);
+      const value = toFixedForDisplay(Math.abs(n), 1);
       return includeWord ? `${party}+${value} difference` : `${party}+${value}`;
     }
 
@@ -35320,7 +35320,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!Number.isFinite(n)) return 'No comparison';
       if (Math.abs(n) < 0.005) return 'No margin change';
       const party = n > 0 ? 'Republican' : 'Democratic';
-      return `${Math.abs(n).toFixed(2)}% more ${party}`;
+      return `${toFixedForDisplay(Math.abs(n), 1)}% more ${party}`;
     }
 
     function compareMarginsForDisplay(primarySigned, secondarySigned) {
@@ -35346,7 +35346,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const name = margin > 0
         ? shortCandidateLabel(repName, 'R')
         : shortCandidateLabel(demName, 'D');
-      return `${name} +${Math.abs(margin).toFixed(2)}%`;
+      return `${name} +${toFixedForDisplay(Math.abs(margin), 1)}%`;
     }
 
     function comparisonContestDisplayLabel(label) {

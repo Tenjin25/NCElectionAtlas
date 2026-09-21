@@ -4,6 +4,7 @@ const AtlasDisplay = require('../js/atlas-display.js');
 
 test('rounds display values consistently at decimal boundaries', () => {
   assert.equal(AtlasDisplay.roundForDisplay(1.005, 2), 1.01);
+  assert.equal(AtlasDisplay.toFixedForDisplay(1.65, 1), '1.7');
   assert.equal(AtlasDisplay.toFixedForDisplay(2.675, 2), '2.68');
   assert.equal(AtlasDisplay.formatVotehubPct(Number.NaN, 2), '0.00');
 });
