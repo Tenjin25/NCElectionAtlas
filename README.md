@@ -543,8 +543,8 @@ Congressional results were therefore affected by the September 4 work too: offic
 
 ### 2022-Lines NC-13 Presidential Snapshot Alignment (July 17, 2026)
 
-- Corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to the trusted snapshot margin of `R+2.34`.
-- Preserved the existing `325,627` total and `14,033` other votes; only the Democratic/Republican split was reallocated (`151,987 D` / `159,607 R`).
+- Initially corrected the 2016 presidential result in NC-13 under the 2022 congressional lines from `R+2.12` to a trusted snapshot estimate of `R+2.34`. The later official NCGA StatPack calibration superseded that estimate with exact district totals: Trump `158,392`, Clinton `150,859`, other `14,182`, total `323,433`, for the authoritative displayed margin of `R+2.33`.
+- That snapshot-era correction preserved its then-current `325,627` total and `14,033` other votes while reallocating only the Democratic/Republican split (`151,987 D` / `159,607 R`); those estimated counts are no longer the live authority.
 
 ### Precinct-First US Senate Calibration (July 17, 2026)
 
