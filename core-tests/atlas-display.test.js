@@ -23,6 +23,10 @@ test('keeps Cabarrus margin display aligned with its visible candidate shares', 
   assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(63237, 52162, 117227) - 9.4) < 1e-10);
 });
 
+test('rounds the raw NC-13 margin instead of subtracting rounded shares', () => {
+  assert.equal(AtlasDisplay.marginPctDisplayValue(158392, 150859, 323433), 2.3);
+});
+
 test('formats compact totals and signed deltas with established suffixes', () => {
   assert.equal(AtlasDisplay.formatCompactVoteTotal(1250), '1.3K');
   assert.equal(AtlasDisplay.formatCompactDeltaTotal(1250), '1.3k');
