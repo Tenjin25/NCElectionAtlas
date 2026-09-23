@@ -103,7 +103,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 - **Mobile "MapTalk" Actions:** `Find My Precinct` (GPS) and `Story Snapshot` (9:16 share export of current map view)
 - **Share + Reset Actions:** `Copy Link` captures the current deep-linked map state (view/contest/mode/lines/focus plus scenario swing/scope and any model tuning); `Reset View` recenters/clears pinned focus; `Reset Swing` returns scenario shift to `0.0%`
 - **Advanced Analytics Cards:** Realignment Index (`Top shifting precincts`) and Ghost Precinct tracker for unmatched-key transparency
-- **Source & Confidence Inspector:** The focus panel identifies certified county totals, official NCGA benchmarks, calibrated or high-coverage estimates, bridged precincts, county fallbacks, and modeled scenarios. Expand the card to see direct-match coverage, non-geographic vote handling, boundary basis, and the source bridge when those fields are available.
+- **Data source details:** A subtle link below the focus-panel trend opens provenance details when needed. It distinguishes certified county totals, official NCGA benchmarks, estimates, bridged precincts, county fallbacks, and modeled scenarios without showing a confidence badge by default.
 - **Custom county regions:** Under Quick Jumps, name a region and select its counties. The saved region appears as a jump button, uses the existing regional totals/trend calculations, and is included when you copy a link while it is selected. One region is saved per browser.
 - **Accessibility Support:** Colorblind palette toggle (`B`), live screen-reader summaries for hovered/selected results, keyboard focus rings (`:focus-visible`), reduced-motion support, and stronger map label halos for town/county labels
 - **State URL Sync:** View/contest/mode/district-lines/focus are encoded in URL params so links reopen to the same map state
@@ -117,7 +117,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset cache token is `2026-09-23-atlas-reliability-v4` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset cache token is `2026-09-23-atlas-reliability-v5` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 
