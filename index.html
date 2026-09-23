@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-09-23-atlas-reliability-v4" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-09-23-atlas-reliability-v5" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1787,13 +1787,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
       <div class="focus-insights" id="focus-insights" aria-label="At a glance"></div>
-      <details class="focus-provenance" id="focus-provenance" data-level="medium">
-        <summary>
-          <span>Source &amp; confidence</span>
-          <span class="focus-provenance-badge" id="focus-provenance-badge">Loading</span>
-        </summary>
-        <div class="focus-provenance-body" id="focus-provenance-body">Select a contest to inspect its data source.</div>
-      </details>
       <div class="focus-trend" id="focus-trend">
         <div class="focus-trend-head">
           <span class="focus-trend-title">Trend + shift</span>
@@ -1803,6 +1796,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="focus-trend-empty">Pick a contest to load trend history.<br><span style="color:#94a3b8;">Tip: click a county/district/precinct to switch from statewide.</span></div>
         </div>
       </div>
+      <details class="focus-provenance" id="focus-provenance" data-level="medium">
+        <summary>
+          <span>Data source</span>
+          <span class="focus-provenance-badge" id="focus-provenance-badge">Loading</span>
+        </summary>
+        <div class="focus-provenance-body" id="focus-provenance-body">Select a contest to inspect its data source.</div>
+      </details>
     </div>
     <div class="vote-counter-row">
       <div class="vote-item dem">
@@ -1900,20 +1900,20 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-core.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-data.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-display.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-election.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-provenance.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-23-atlas-reliability-v4"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-core.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-data.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-display.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-election.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-provenance.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-23-atlas-reliability-v5"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-23-atlas-reliability-v5"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1946,8 +1946,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-23-atlas-reliability-v4';
-    const APP_BUILD_ID = '2026-09-23-atlas-reliability-v4';
+    const DATA_CACHE_BUSTER = '2026-09-23-atlas-reliability-v5';
+    const APP_BUILD_ID = '2026-09-23-atlas-reliability-v5';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
