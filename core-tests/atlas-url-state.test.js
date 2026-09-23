@@ -26,6 +26,8 @@ test('parses a complete shareable atlas URL state', () => {
       comparisonContest: 'president_2024',
       mode: 'comparison',
       focus: 'county:WAKE',
+      customRegionName: '',
+      customRegionCounties: [],
       lines: 2024,
       swing: -1.5,
       sscope: 'wake',
@@ -47,6 +49,8 @@ test('returns neutral defaults when URL state is absent', () => {
     comparisonContest: '',
     mode: '',
     focus: '',
+    customRegionName: '',
+    customRegionCounties: [],
     lines: null,
     swing: null,
     sscope: null,
@@ -57,4 +61,11 @@ test('returns neutral defaults when URL state is absent', () => {
     mTurnout: null,
     mBonus: null
   });
+});
+
+test('parses a shareable custom county region', () => {
+  const state = AtlasURLState.parse('?focus=region%3Acustom&rname=North+Metro&rcounties=Wake%2CDurham');
+  assert.equal(state.focus, 'region:custom');
+  assert.equal(state.customRegionName, 'North Metro');
+  assert.deepEqual(state.customRegionCounties, ['Wake', 'Durham']);
 });
