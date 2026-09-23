@@ -9,7 +9,8 @@ The September 21 frontend precision change below was reverted before this releas
 ### Merge Reconciliation (September 23, 2026)
 
 - Rebased the reliability and custom-region work onto the restored pre-September-21 `main` branch without reapplying the reverted precision change.
-- Aligned the HTML build ID, local stylesheet/module URLs, and data-request cachebuster at `2026-09-23-atlas-reliability-v4`.
+- Aligned the HTML build ID, local stylesheet/module URLs, and data-request cachebuster at `2026-09-23-atlas-reliability-v5`.
+- Moved provenance below the focus-panel trend and hid its confidence badge until the reader opens the small Data source disclosure.
 
 ### Reliability and Structure (September 22, 2026)
 

@@ -6647,7 +6647,10 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   }
 
   .focus-provenance {
-    margin-top: 12px;
+    margin-top: 8px;
+  }
+
+  .focus-provenance[open] {
     padding: 10px 12px;
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 12px;
@@ -6657,18 +6660,19 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .focus-provenance summary {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 10px;
     cursor: pointer;
     list-style: none;
-    color: #334155;
+    color: #64748b;
     font-size: 11px;
-    font-weight: 850;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-weight: 650;
   }
 
   .focus-provenance summary::-webkit-details-marker { display: none; }
+  .focus-provenance summary:hover { color: #334155; }
+  .focus-provenance:not([open]) .focus-provenance-badge { display: none; }
+  .focus-provenance[open] summary { justify-content: space-between; color: #334155; }
 
   .focus-provenance-badge {
     padding: 3px 7px;
