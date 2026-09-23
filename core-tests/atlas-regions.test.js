@@ -75,3 +75,14 @@ test('reports unmatched configured counties without adding votes', () => {
     }
   );
 });
+
+test('uses certified county totals when a regional precinct sum differs', () => {
+  const rows = [{ county: 'WAKE - 01', president_dem: 40, president_rep: 30, president_other: 2, president_total: 72 }];
+  Object.defineProperty(rows, '__officialCountyTotals', {
+    value: { WAKE: { dem_votes: 50, rep_votes: 35, other_votes: 3, total_votes: 88 } }
+  });
+  const region = AtlasRegions.aggregateContestRows(rows, 'president', ['Wake']);
+  assert.equal(region.dem, 50);
+  assert.equal(region.rep, 35);
+  assert.equal(region.total, 88);
+});

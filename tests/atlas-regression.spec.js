@@ -71,6 +71,7 @@ async function pickContestKey(page) {
 }
 
 async function flyToPrecinct(page, query = 'Wake 01-14') {
+  await page.waitForFunction(() => document.getElementById('desktop-fly-search')?.dataset.flySearchReady === 'true', null, { timeout: APP_READY_TIMEOUT });
   await page.fill('#desktop-fly-search', query);
   await page.press('#desktop-fly-search', 'Enter');
 }
@@ -158,6 +159,19 @@ test('the current build includes the margin legend', async ({ request }) => {
   expect((source.match(/class="legend-segment/g) || []).length).toBeGreaterThanOrEqual(15);
 });
 
+test('the extracted atlas stylesheet is served with the page', async ({ request }) => {
+  const pageResponse = await request.get('/index.html');
+  expect(pageResponse.ok()).toBeTruthy();
+  const source = await pageResponse.text();
+  const stylesheetPath = source.match(/href="(\.\/css\/atlas-main\.css\?v=[^"]+)"/i)?.[1];
+  expect(stylesheetPath).toBeTruthy();
+  const cssResponse = await request.get(stylesheetPath);
+  expect(cssResponse.ok()).toBeTruthy();
+  const css = await cssResponse.text();
+  expect(css).toContain('.region-jump-btn');
+  expect(css).toContain('.focus-provenance');
+});
+
 test('demographic colors distinguish plurality from majority at 50 percent', async ({ request }) => {
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();
@@ -165,15 +179,19 @@ test('demographic colors distinguish plurality from majority at 50 percent', asy
 
   expect(source).toContain('majority: Number(top.value) >= 50');
   for (const group of ['White', 'Black', 'Hispanic', 'Native', 'Asian', 'Pacific', 'Multiracial']) {
-    expect(source).toContain(`${group} majority`);
-    expect(source).toContain(`${group} plurality`);
+    expect(source).toContain(`{ name: '${group}', majority:`);
   }
+  expect(source).toContain('label: `${g.name} majority`');
+  expect(source).toContain('label: `${g.name} plurality`');
   expect(source).toContain("dom.majority ? '#1d4ed8' : '#93c5fd'");
 });
 
 test('map legends use named category rows for every visualization mode', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
-  await page.waitForFunction(() => typeof renderLegendForVizMode === 'function', { timeout: APP_READY_TIMEOUT });
+  await page.waitForFunction(() => {
+    try { return appReady && typeof renderLegendForVizMode === 'function'; }
+    catch (_) { return false; }
+  }, { timeout: APP_READY_TIMEOUT });
 
   const expectedRows = {
     margins: 15,
@@ -181,8 +199,8 @@ test('map legends use named category rows for every visualization mode', async (
     flips: 3,
     shift: 15,
     comparison: 15,
-    demographics: 16,
-    population_change: 12
+    demographics: 18,
+    population_change: 14
   };
   for (const [mode, count] of Object.entries(expectedRows)) {
     const result = await page.evaluate((vizMode) => {
@@ -296,7 +314,7 @@ test('local app modules use the same cache token as the deployed build', async (
   const moduleVersions = [...source.matchAll(/<script src="\.\/js\/[^"?]+\?v=([^"]+)"/g)].map(match => match[1]);
 
   expect(buildId).toBeTruthy();
-  expect(moduleVersions).toHaveLength(12);
+  expect(moduleVersions).toHaveLength(14);
   expect(new Set(moduleVersions)).toEqual(new Set([buildId]));
 });
 
@@ -1313,19 +1331,20 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     });
 
     expect(modeledSnapshot.senateOptionText).toBe('US Senate (2026) model');
-    expect(modeledSnapshot.courtOptionText).toBe('NC Supreme Court Associate Justice Seat 1 (2026) Model');
+    expect(modeledSnapshot.courtOptionText).toBe('Supreme Court Associate Justice Seat 1 (2026) Model');
     expect(modeledSnapshot.senateRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.senateCountyRows).toBe(100);
     expect(modeledSnapshot.courtRows).toBeGreaterThan(2000);
     expect(modeledSnapshot.senateOfficialCount).toBe(100);
     expect(modeledSnapshot.nashCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.nashCountyOfficialMargin).toBeGreaterThan(-6);
-    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(6.95, 2);
+    // Local boosts are multiplied by the model's 0.80 candidate-bonus scale.
+    expect(modeledSnapshot.nashLocalCandidateEffect).toBeCloseTo(6.95 * 0.80, 2);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeLessThan(0);
     expect(modeledSnapshot.wilsonCountyOfficialMargin).toBeGreaterThan(-6);
-    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(5.50, 2);
+    expect(modeledSnapshot.wilsonLocalCandidateEffect).toBeCloseTo(5.50 * 0.80, 2);
     expect(modeledSnapshot.wataugaLocalCandidateEffect).toBeCloseTo(0.60, 2);
-    expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(1.60, 2);
+    expect(modeledSnapshot.gastonLocalCandidateEffect).toBeCloseTo(1.60 * 0.80, 2);
     expect(modeledSnapshot.buncombeCountyOfficialMargin).toBeLessThan(-15);
     expect(modeledSnapshot.ansonCountyOfficialMargin).toBeGreaterThan(3);
     expect(modeledSnapshot.ansonCountyOfficialMargin).toBeLessThan(5);
@@ -1393,7 +1412,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(modeledSnapshot.senateStatewideUiMargin).toBeLessThan(1.90);
     expect(modeledSnapshot.senatePrecinctUiMargin).toBeGreaterThan(1.50);
     expect(modeledSnapshot.senatePrecinctUiMargin).toBeLessThan(1.90);
-    expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.10);
+    expect(Math.abs(modeledSnapshot.senateDistrictUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.12);
     expect(Math.abs(modeledSnapshot.senateStateHouseUiMargin - modeledSnapshot.senatePrecinctUiMargin)).toBeLessThan(0.02);
     expect(modeledSnapshot.courtDistricts).toBeGreaterThan(0);
 

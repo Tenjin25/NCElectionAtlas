@@ -30,6 +30,8 @@
     const comparisonContest = String(params.get('compare') || '').trim();
     const mode = normalizeModeToken(params.get('mode'));
     const focus = String(params.get('focus') || '').trim();
+    const customRegionName = String(params.get('rname') || '').trim();
+    const customRegionCounties = String(params.get('rcounties') || '').split(',').map(value => value.trim()).filter(Boolean);
     const linesRaw = String(params.get('lines') || '').trim();
     const lines = linesRaw ? normalizeDistrictLinesYear(linesRaw) : null;
     const swingRaw = String(params.get('swing') || '').trim();
@@ -58,6 +60,8 @@
       comparisonContest ||
       mode ||
       focus ||
+      customRegionName ||
+      customRegionCounties.length ||
       lines !== null ||
       swingRaw ||
       sscopeRaw ||
@@ -75,6 +79,8 @@
       comparisonContest,
       mode,
       focus,
+      customRegionName,
+      customRegionCounties,
       lines,
       swing,
       sscope,
