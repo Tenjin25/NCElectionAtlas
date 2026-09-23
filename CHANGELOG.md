@@ -6,6 +6,11 @@
 
 The September 21 frontend precision change below was reverted before this release. Its entry is retained as history, not a description of the current decimal format.
 
+### Focus Panel Preference (September 23, 2026)
+
+- Hid the source/confidence disclosure entirely from the focus panel at user request, while retaining provenance classification in code.
+- Bumped the shared asset and data cache token to `2026-09-23-atlas-reliability-v6` so cached pages reload the hidden panel state.
+
 ### Merge Reconciliation (September 23, 2026)
 
 - Rebased the reliability and custom-region work onto the restored pre-September-21 `main` branch without reapplying the reverted precision change.

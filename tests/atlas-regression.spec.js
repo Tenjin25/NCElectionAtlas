@@ -172,7 +172,7 @@ test('the extracted atlas stylesheet is served with the page', async ({ request 
   expect(css).toContain('.focus-provenance');
 });
 
-test('source confidence stays unobtrusive until the reader opens it', async ({ page }) => {
+test('source confidence panel stays hidden when a contest is selected', async ({ page }) => {
   test.setTimeout(180_000);
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await page.waitForFunction(() => [...document.querySelectorAll('#contestSelect option')].some(option => option.value === 'president_2024'), null, { timeout: APP_READY_TIMEOUT });
@@ -181,12 +181,10 @@ test('source confidence stays unobtrusive until the reader opens it', async ({ p
   await page.evaluate(() => setVoteCounterMinimizedState(false));
   const disclosure = page.locator('#focus-provenance');
   const badge = page.locator('#focus-provenance-badge');
-  await expect(disclosure).not.toHaveAttribute('open', '');
+  await expect(page.locator('#focus-trend')).toBeVisible();
+  await expect(disclosure).toHaveAttribute('hidden', '');
+  await expect(disclosure).toBeHidden();
   await expect(badge).toBeHidden();
-  await expect(page.locator('#focus-provenance summary')).toHaveText(/Data source/);
-  await page.locator('#focus-provenance summary').click();
-  await expect(disclosure).toHaveAttribute('open', '');
-  await expect(badge).toBeVisible();
 });
 
 test('demographic colors distinguish plurality from majority at 50 percent', async ({ request }) => {
