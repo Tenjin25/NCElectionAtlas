@@ -8,7 +8,7 @@ The September 21 frontend precision change below was reverted before this releas
 
 ### Precinct Friendly-Name Display (September 25, 2026)
 
-- Prefers verified Presbyterian affiliation labels from the county-scoped friendly-name lookup when precinct geometry has an older church or venue name.
+- Keeps the county-scoped friendly-name lookup authoritative when the alias index loads, preserving verified PCA, PCUSA, EPC, OPC, ECO, and Evangel Presbytery labels.
 - Cache-busts the friendly-name JSON request so published label updates appear in the map.
 - Keeps the Friendly Hills Church, PCA override in the friendly-name builder; the change affects display names, not precinct IDs or election results.
 
