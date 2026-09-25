@@ -63,6 +63,9 @@ function formatDisplayName(raw) {
   s = s.replace(/\bJr\b/g, 'JR');
   s = s.replace(/\bMlk\b/g, 'MLK');
   s = s.replace(/\bPca\b/g, 'PCA');
+  s = s.replace(/\bEpc\b/g, 'EPC');
+  s = s.replace(/\bEco\b/g, 'ECO');
+  s = s.replace(/\bPcusa\b/g, 'PCUSA');
   s = s.replace(/\bPlc\b/g, 'PLC');
   s = s.replace(/\bIi\b/g, 'II');
   s = s.replace(/\bIii\b/g, 'III');
@@ -717,6 +720,43 @@ function applyManualOverrides(counties) {
     for (const [code, displayName] of Object.entries(countyOverrides)) {
       counties[county][code] = formatDisplayName(displayName);
     }
+  }
+
+  // County-specific polling sites verified against the congregations or their denominations.
+  // Apply these after title casing to preserve PCA, EPC, and PCUSA exactly.
+  const denominationOverrides = {
+    BUNCOMBE: {
+      '06.1': 'Trinity Presbyterian Church, PCA',
+      '07.1': 'Kenilworth Presbyterian Church, PCUSA',
+      '28.1': 'Covenant Reformed Presbyterian Church, PCA',
+      '29.2': 'New Hope Presbyterian Church, PCUSA'
+    },
+    FORSYTH: {
+      '033': 'St. Andrews Presbyterian Church, PCUSA',
+      '052': 'Clemmons Presbyterian Church, PCUSA'
+    },
+    GUILFORD: {
+      FR2: 'Jamestown Presbyterian Church, PCUSA',
+      G34: 'Westminster Presbyterian Church, PCUSA',
+      G47: 'Glenwood Presbyterian Church, PCUSA',
+      H15: 'Forest Hills Presbyterian Church, PCUSA',
+      JAM2: 'Friendly Hills Church, PCA',
+      JAM3: 'Sedgefield Presbyterian Church, PCUSA',
+      JEF4: 'Alamance Presbyterian Church, PCUSA',
+      NCLAY1: 'Community in Christ Presbyterian Church, PCUSA'
+    },
+    'NEW HANOVER': {
+      W30: 'Cape Fear Presbyterian Church, PCUSA'
+    },
+    UNION: {
+      '006': 'Benton Heights Presbyterian Church, EPC',
+      '012': 'Bethlehem Presbyterian Church, EPC',
+      '017B': 'Siler Presbyterian Church, EPC'
+    }
+  };
+  for (const [county, names] of Object.entries(denominationOverrides)) {
+    if (!counties[county]) counties[county] = {};
+    Object.assign(counties[county], names);
   }
 
   return counties;
