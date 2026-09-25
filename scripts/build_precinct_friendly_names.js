@@ -366,7 +366,7 @@ function applyManualOverrides(counties) {
       H29A: "Turner's Chapel AME Church",
       H29B: 'Hickory Grove United Methodist Church',
       JAM1: 'Jamestown Town Hall',
-      JAM2: 'Friendly Hills Church PCA',
+      JAM2: 'Friendly Hills Church, PCA',
       JAM3: 'Sedgefield Presbyterian Church',
       JAM4: 'Haynes-Inman Education Center',
       JAM5: 'Fairfield Community Church',
