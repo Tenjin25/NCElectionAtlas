@@ -2,9 +2,15 @@
 
 ## March–September 2026
 
-**Last updated:** September 23, 2026
+**Last updated:** September 25, 2026
 
 The September 21 frontend precision change below was reverted before this release. Its entry is retained as history, not a description of the current decimal format.
+
+### Precinct Friendly-Name Display (September 25, 2026)
+
+- Prefers verified Presbyterian affiliation labels from the county-scoped friendly-name lookup when precinct geometry has an older church or venue name.
+- Cache-busts the friendly-name JSON request so published label updates appear in the map.
+- Keeps the Friendly Hills Church, PCA override in the friendly-name builder; the change affects display names, not precinct IDs or election results.
 
 ### Focus Panel Preference (September 23, 2026)
 
