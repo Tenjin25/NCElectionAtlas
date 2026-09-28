@@ -354,6 +354,7 @@ The Counties dropdown uses `major_party_contested` to suppress unopposed Council
 - `data/precinct_centroids.geojson` — Point locations (used for high-zoom fallback/indexing)
 - `data/precinct_alias_index.json` — County-scoped alias index for resolving variant precinct keys (code/name combos, spacing/underscore variants, etc.)
 - `data/precinct_friendly_names.json` — County-scoped `precinct_code → display_name` labels used to show human-readable precinct names in hover/selection UI
+- Presbyterian polling-place labels show verified denomination abbreviations in parentheses, for example `Friendly Hills Church (PCA)`, `Jamestown Presbyterian Church (PCUSA)`, and `Benton Heights Presbyterian Church (EPC)`.
 - `data/mappings/judicial_candidate_party_overrides.csv` — Nonpartisan / blank-party judicial candidate → DEM/REP/OTHER affiliations used when building county/precinct contest slices (2004–2016 and selected later blanks)
 - `data/mappings/judicial_seat_crosswalk.csv` — OE office labels for early appellate races ↔ Wikipedia seat number ↔ atlas `contest_type` (used by the create-only early judicial builders)
 
