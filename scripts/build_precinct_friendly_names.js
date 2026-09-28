@@ -366,7 +366,7 @@ function applyManualOverrides(counties) {
       H29A: "Turner's Chapel AME Church",
       H29B: 'Hickory Grove United Methodist Church',
       JAM1: 'Jamestown Town Hall',
-      JAM2: 'Friendly Hills Church, PCA',
+      JAM2: 'Friendly Hills Church (PCA)',
       JAM3: 'Sedgefield Presbyterian Church',
       JAM4: 'Haynes-Inman Education Center',
       JAM5: 'Fairfield Community Church',
@@ -726,32 +726,32 @@ function applyManualOverrides(counties) {
   // Apply these after title casing to preserve PCA, EPC, and PCUSA exactly.
   const denominationOverrides = {
     BUNCOMBE: {
-      '06.1': 'Trinity Presbyterian Church, PCA',
-      '07.1': 'Kenilworth Presbyterian Church, PCUSA',
-      '28.1': 'Covenant Reformed Presbyterian Church, PCA',
-      '29.2': 'New Hope Presbyterian Church, PCUSA'
+      '06.1': 'Trinity Presbyterian Church (PCA)',
+      '07.1': 'Kenilworth Presbyterian Church (PCUSA)',
+      '28.1': 'Covenant Reformed Presbyterian Church (PCA)',
+      '29.2': 'New Hope Presbyterian Church (PCUSA)'
     },
     FORSYTH: {
-      '033': 'St. Andrews Presbyterian Church, PCUSA',
-      '052': 'Clemmons Presbyterian Church, PCUSA'
+      '033': 'St. Andrews Presbyterian Church (PCUSA)',
+      '052': 'Clemmons Presbyterian Church (PCUSA)'
     },
     GUILFORD: {
-      FR2: 'Jamestown Presbyterian Church, PCUSA',
-      G34: 'Westminster Presbyterian Church, PCUSA',
-      G47: 'Glenwood Presbyterian Church, PCUSA',
-      H15: 'Forest Hills Presbyterian Church, PCUSA',
-      JAM2: 'Friendly Hills Church, PCA',
-      JAM3: 'Sedgefield Presbyterian Church, PCUSA',
-      JEF4: 'Alamance Presbyterian Church, PCUSA',
-      NCLAY1: 'Community in Christ Presbyterian Church, PCUSA'
+      FR2: 'Jamestown Presbyterian Church (PCUSA)',
+      G34: 'Westminster Presbyterian Church (PCUSA)',
+      G47: 'Glenwood Presbyterian Church (PCUSA)',
+      H15: 'Forest Hills Presbyterian Church (PCUSA)',
+      JAM2: 'Friendly Hills Church (PCA)',
+      JAM3: 'Sedgefield Presbyterian Church (PCUSA)',
+      JEF4: 'Alamance Presbyterian Church (PCUSA)',
+      NCLAY1: 'Community in Christ Presbyterian Church (PCUSA)'
     },
     'NEW HANOVER': {
-      W30: 'Cape Fear Presbyterian Church, PCUSA'
+      W30: 'Cape Fear Presbyterian Church (PCUSA)'
     },
     UNION: {
-      '006': 'Benton Heights Presbyterian Church, EPC',
-      '012': 'Bethlehem Presbyterian Church, EPC',
-      '017B': 'Siler Presbyterian Church, EPC'
+      '006': 'Benton Heights Presbyterian Church (EPC)',
+      '012': 'Bethlehem Presbyterian Church (EPC)',
+      '017B': 'Siler Presbyterian Church (EPC)'
     }
   };
   for (const [county, names] of Object.entries(denominationOverrides)) {
