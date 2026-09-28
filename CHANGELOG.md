@@ -2,9 +2,14 @@
 
 ## March–September 2026
 
-**Last updated:** September 25, 2026
+**Last updated:** September 28, 2026
 
 The September 21 frontend precision change below was reverted before this release. Its entry is retained as history, not a description of the current decimal format.
+
+### Presbyterian Polling-Place Labels (September 28, 2026)
+
+- Display verified PCA, PCUSA, and EPC affiliations in parentheses across 18 precinct labels, including `Friendly Hills Church (PCA)`.
+- Updated both the friendly-name data and its builder so regenerated labels keep the same format. Precinct identifiers and election results are unchanged.
 
 ### Precinct Friendly-Name Display (September 25, 2026)
 
