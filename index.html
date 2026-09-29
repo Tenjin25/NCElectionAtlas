@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-09-23-atlas-reliability-v4" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-09-28-legend-precision-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1695,10 +1695,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="legend-chip">Dominant 30+</span>
                 <span class="legend-chip">Stronghold 20+</span>
                 <span class="legend-chip">Safe 10+</span>
-                <span class="legend-chip">Likely 5.5+</span>
+                <span class="legend-chip">Likely 5.50+</span>
                 <span class="legend-chip">Lean 1+</span>
-                <span class="legend-chip">Tilt 0.5+</span>
-                <span class="legend-chip">Tossup &lt;0.5</span>
+                <span class="legend-chip">Tilt 0.50+</span>
+                <span class="legend-chip">Tossup &lt;0.50</span>
               </div>
             </div>
         </div>
@@ -1900,20 +1900,20 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-core.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-data.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-display.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-election.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-provenance.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-23-atlas-reliability-v4"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-23-atlas-reliability-v4"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-core.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-data.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-display.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-election.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-provenance.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-28-legend-precision-v1"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-28-legend-precision-v1"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1946,8 +1946,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-18-legislative-county-reconcile-v2';
-        const APP_BUILD_ID = '2026-09-23-atlas-reliability-v4';
+    const DATA_CACHE_BUSTER = '2026-09-28-legend-precision-v1';
+        const APP_BUILD_ID = '2026-09-28-legend-precision-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -14421,19 +14421,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function buildMarginsLegendHTML() {
       const tiers = [
         { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'R'), party: 'rep' },
-        { label: 'Dominant', range: '30–39.9', color: colorForMarginMode(30, 'R'), party: 'rep' },
-        { label: 'Stronghold', range: '20–29.9', color: colorForMarginMode(20, 'R'), party: 'rep' },
-        { label: 'Safe', range: '10–19.9', color: colorForMarginMode(10, 'R'), party: 'rep' },
-        { label: 'Likely', range: '5.5–9.9', color: colorForMarginMode(5.5, 'R'), party: 'rep' },
-        { label: 'Lean', range: '1–5.49', color: colorForMarginMode(1, 'R'), party: 'rep' },
-        { label: 'Tilt', range: '0.5–0.99', color: colorForMarginMode(0.5, 'R'), party: 'rep' },
-        { label: 'Tossup', range: '<0.5', color: colorForMarginMode(0, 'R'), party: 'tie' },
-        { label: 'Tilt', range: '0.5–0.99', color: colorForMarginMode(0.5, 'D'), party: 'dem' },
-        { label: 'Lean', range: '1–5.49', color: colorForMarginMode(1, 'D'), party: 'dem' },
-        { label: 'Likely', range: '5.5–9.9', color: colorForMarginMode(5.5, 'D'), party: 'dem' },
-        { label: 'Safe', range: '10–19.9', color: colorForMarginMode(10, 'D'), party: 'dem' },
-        { label: 'Stronghold', range: '20–29.9', color: colorForMarginMode(20, 'D'), party: 'dem' },
-        { label: 'Dominant', range: '30–39.9', color: colorForMarginMode(30, 'D'), party: 'dem' },
+        { label: 'Dominant', range: '30.00–39.99', color: colorForMarginMode(30, 'R'), party: 'rep' },
+        { label: 'Stronghold', range: '20.00–29.99', color: colorForMarginMode(20, 'R'), party: 'rep' },
+        { label: 'Safe', range: '10.00–19.99', color: colorForMarginMode(10, 'R'), party: 'rep' },
+        { label: 'Likely', range: '5.50–9.99', color: colorForMarginMode(5.5, 'R'), party: 'rep' },
+        { label: 'Lean', range: '1.00–5.49', color: colorForMarginMode(1, 'R'), party: 'rep' },
+        { label: 'Tilt', range: '0.50–0.99', color: colorForMarginMode(0.5, 'R'), party: 'rep' },
+        { label: 'Tossup', range: '<0.50', color: colorForMarginMode(0, 'R'), party: 'tie' },
+        { label: 'Tilt', range: '0.50–0.99', color: colorForMarginMode(0.5, 'D'), party: 'dem' },
+        { label: 'Lean', range: '1.00–5.49', color: colorForMarginMode(1, 'D'), party: 'dem' },
+        { label: 'Likely', range: '5.50–9.99', color: colorForMarginMode(5.5, 'D'), party: 'dem' },
+        { label: 'Safe', range: '10.00–19.99', color: colorForMarginMode(10, 'D'), party: 'dem' },
+        { label: 'Stronghold', range: '20.00–29.99', color: colorForMarginMode(20, 'D'), party: 'dem' },
+        { label: 'Dominant', range: '30.00–39.99', color: colorForMarginMode(30, 'D'), party: 'dem' },
         { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'D'), party: 'dem' }
       ];
       const spectrum = [
@@ -14500,19 +14500,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function buildShiftLegendHTML() {
       const tiers = [
         { label: 'Extreme Democratic shift', range: '25+ pts', value: -25, party: 'dem' },
-        { label: 'Major Democratic shift', range: '20–24.9 pts', value: -20, party: 'dem' },
-        { label: 'Very strong Democratic shift', range: '15–19.9 pts', value: -15, party: 'dem' },
-        { label: 'Strong Democratic shift', range: '10–14.9 pts', value: -10, party: 'dem' },
-        { label: 'Clear Democratic shift', range: '5–9.9 pts', value: -5, party: 'dem' },
-        { label: 'Moderate Democratic shift', range: '1–4.9 pts', value: -1, party: 'dem' },
-        { label: 'Slight Democratic shift', range: '0.5–0.9 pts', value: -0.5, party: 'dem' },
-        { label: 'No notable shift', range: 'Under 0.5 pts', value: 0, party: 'tie' },
-        { label: 'Slight Republican shift', range: '0.5–0.9 pts', value: 0.5, party: 'rep' },
-        { label: 'Moderate Republican shift', range: '1–4.9 pts', value: 1, party: 'rep' },
-        { label: 'Clear Republican shift', range: '5–9.9 pts', value: 5, party: 'rep' },
-        { label: 'Strong Republican shift', range: '10–14.9 pts', value: 10, party: 'rep' },
-        { label: 'Very strong Republican shift', range: '15–19.9 pts', value: 15, party: 'rep' },
-        { label: 'Major Republican shift', range: '20–24.9 pts', value: 20, party: 'rep' },
+        { label: 'Major Democratic shift', range: '20.00–24.99 pts', value: -20, party: 'dem' },
+        { label: 'Very strong Democratic shift', range: '15.00–19.99 pts', value: -15, party: 'dem' },
+        { label: 'Strong Democratic shift', range: '10.00–14.99 pts', value: -10, party: 'dem' },
+        { label: 'Clear Democratic shift', range: '5.00–9.99 pts', value: -5, party: 'dem' },
+        { label: 'Moderate Democratic shift', range: '1.00–4.99 pts', value: -1, party: 'dem' },
+        { label: 'Slight Democratic shift', range: '0.50–0.99 pts', value: -0.5, party: 'dem' },
+        { label: 'No notable shift', range: 'Under 0.50 pts', value: 0, party: 'tie' },
+        { label: 'Slight Republican shift', range: '0.50–0.99 pts', value: 0.5, party: 'rep' },
+        { label: 'Moderate Republican shift', range: '1.00–4.99 pts', value: 1, party: 'rep' },
+        { label: 'Clear Republican shift', range: '5.00–9.99 pts', value: 5, party: 'rep' },
+        { label: 'Strong Republican shift', range: '10.00–14.99 pts', value: 10, party: 'rep' },
+        { label: 'Very strong Republican shift', range: '15.00–19.99 pts', value: 15, party: 'rep' },
+        { label: 'Major Republican shift', range: '20.00–24.99 pts', value: 20, party: 'rep' },
         { label: 'Extreme Republican shift', range: '25+ pts', value: 25, party: 'rep' }
       ];
       const colors = [
@@ -14557,16 +14557,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function buildComparisonLegendHTML() {
       const bands = [
         { name: 'Extreme', range: '25+ pts', value: 25 },
-        { name: 'Major', range: '20–24.9 pts', value: 20 },
-        { name: 'Very strong', range: '15–19.9 pts', value: 15 },
-        { name: 'Strong', range: '10–14.9 pts', value: 10 },
-        { name: 'Clear', range: '5–9.9 pts', value: 5 },
-        { name: 'Moderate', range: '1–4.9 pts', value: 1 },
-        { name: 'Slight', range: '0.5–0.9 pts', value: 0.5 }
+        { name: 'Major', range: '20.00–24.99 pts', value: 20 },
+        { name: 'Very strong', range: '15.00–19.99 pts', value: 15 },
+        { name: 'Strong', range: '10.00–14.99 pts', value: 10 },
+        { name: 'Clear', range: '5.00–9.99 pts', value: 5 },
+        { name: 'Moderate', range: '1.00–4.99 pts', value: 1 },
+        { name: 'Slight', range: '0.50–0.99 pts', value: 0.5 }
       ];
       const tiers = [
         ...bands.map(b => ({ label: `${b.name} Democratic difference`, range: b.range, value: -b.value, party: 'dem' })),
-        { label: 'No notable difference', range: 'Under 0.5 pts', value: 0, party: 'tie' },
+        { label: 'No notable difference', range: 'Under 0.50 pts', value: 0, party: 'tie' },
         ...bands.slice().reverse().map(b => ({ label: `${b.name} Republican difference`, range: b.range, value: b.value, party: 'rep' }))
       ];
       const colors = [
@@ -14693,17 +14693,17 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
           <div class="legend-tier-list population-tiers" role="list">
             <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-180000) : colorForPopulationChangeMode(-32)};"></span><span class="legend-tier-label">${useAbs ? 'Extreme loss' : 'Extreme decline'}</span><span class="legend-tier-range">${useAbs ? '≤−150k' : '≤−30%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-120000) : colorForPopulationChangeMode(-22)};"></span><span class="legend-tier-label">${useAbs ? 'Major loss' : 'Major decline'}</span><span class="legend-tier-range">${useAbs ? '−149.9k to −100k' : '−29.9 to −20%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-60000) : colorForPopulationChangeMode(-12)};"></span><span class="legend-tier-label">${useAbs ? 'Severe loss' : 'Severe decline'}</span><span class="legend-tier-range">${useAbs ? '−99.9k to −50k' : '−19.9 to −10%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-30000) : colorForPopulationChangeMode(-7)};"></span><span class="legend-tier-label">${useAbs ? 'Sharp loss' : 'Sharp decline'}</span><span class="legend-tier-range">${useAbs ? '−49.9k to −25k' : '−9.9 to −5%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-15000) : colorForPopulationChangeMode(-3)};"></span><span class="legend-tier-label">${useAbs ? 'Moderate loss' : 'Moderate decline'}</span><span class="legend-tier-range">${useAbs ? '−24.9k to −10k' : '−4.9 to −2%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-4000) : colorForPopulationChangeMode(-1)};"></span><span class="legend-tier-label">${useAbs ? 'Mild loss' : 'Mild decline'}</span><span class="legend-tier-range">${useAbs ? '−9.9k to −2.5k' : '−1.9 to −0.5%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(0) : colorForPopulationChangeMode(0)}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">Near flat</span><span class="legend-tier-range">${useAbs ? '−2.5k to +2.5k' : '−0.5 to +1%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(4000) : colorForPopulationChangeMode(1)};"></span><span class="legend-tier-label">${useAbs ? 'Modest gain' : 'Modest growth'}</span><span class="legend-tier-range">${useAbs ? '+2.5k–9.9k' : '+1–1.9%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(15000) : colorForPopulationChangeMode(3)};"></span><span class="legend-tier-label">${useAbs ? 'Steady gain' : 'Steady growth'}</span><span class="legend-tier-range">${useAbs ? '+10k–24.9k' : '+2–4.9%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(30000) : colorForPopulationChangeMode(7)};"></span><span class="legend-tier-label">${useAbs ? 'Substantial gain' : 'Strong growth'}</span><span class="legend-tier-range">${useAbs ? '+25k–49.9k' : '+5–9.9%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(60000) : colorForPopulationChangeMode(12)};"></span><span class="legend-tier-label">${useAbs ? 'Large gain' : 'Rapid growth'}</span><span class="legend-tier-range">${useAbs ? '+50k–99.9k' : '+10–19.9%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(120000) : colorForPopulationChangeMode(22)};"></span><span class="legend-tier-label">${useAbs ? 'Major gain' : 'Boom growth'}</span><span class="legend-tier-range">${useAbs ? '+100k–149.9k' : '+20–29.9%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-120000) : colorForPopulationChangeMode(-22)};"></span><span class="legend-tier-label">${useAbs ? 'Major loss' : 'Major decline'}</span><span class="legend-tier-range">${useAbs ? '−149.99k to −100k' : '−29.99 to −20%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-60000) : colorForPopulationChangeMode(-12)};"></span><span class="legend-tier-label">${useAbs ? 'Severe loss' : 'Severe decline'}</span><span class="legend-tier-range">${useAbs ? '−99.99k to −50k' : '−19.99 to −10%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-30000) : colorForPopulationChangeMode(-7)};"></span><span class="legend-tier-label">${useAbs ? 'Sharp loss' : 'Sharp decline'}</span><span class="legend-tier-range">${useAbs ? '−49.99k to −25k' : '−9.99 to −5%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-15000) : colorForPopulationChangeMode(-3)};"></span><span class="legend-tier-label">${useAbs ? 'Moderate loss' : 'Moderate decline'}</span><span class="legend-tier-range">${useAbs ? '−24.99k to −10k' : '−4.99 to −2%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-4000) : colorForPopulationChangeMode(-1)};"></span><span class="legend-tier-label">${useAbs ? 'Mild loss' : 'Mild decline'}</span><span class="legend-tier-range">${useAbs ? '−9.99k to −2.50k' : '−1.99 to −0.50%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(0) : colorForPopulationChangeMode(0)}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">Near flat</span><span class="legend-tier-range">${useAbs ? '−2.50k to +2.50k' : '−0.50 to +1%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(4000) : colorForPopulationChangeMode(1)};"></span><span class="legend-tier-label">${useAbs ? 'Modest gain' : 'Modest growth'}</span><span class="legend-tier-range">${useAbs ? '+2.50k–9.99k' : '+1–1.99%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(15000) : colorForPopulationChangeMode(3)};"></span><span class="legend-tier-label">${useAbs ? 'Steady gain' : 'Steady growth'}</span><span class="legend-tier-range">${useAbs ? '+10k–24.99k' : '+2–4.99%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(30000) : colorForPopulationChangeMode(7)};"></span><span class="legend-tier-label">${useAbs ? 'Substantial gain' : 'Strong growth'}</span><span class="legend-tier-range">${useAbs ? '+25k–49.99k' : '+5–9.99%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(60000) : colorForPopulationChangeMode(12)};"></span><span class="legend-tier-label">${useAbs ? 'Large gain' : 'Rapid growth'}</span><span class="legend-tier-range">${useAbs ? '+50k–99.99k' : '+10–19.99%'}</span></div>
+            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(120000) : colorForPopulationChangeMode(22)};"></span><span class="legend-tier-label">${useAbs ? 'Major gain' : 'Boom growth'}</span><span class="legend-tier-range">${useAbs ? '+100k–149.99k' : '+20–29.99%'}</span></div>
             <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(180000) : colorForPopulationChangeMode(32)};"></span><span class="legend-tier-label">${useAbs ? 'Extreme gain' : 'Explosive growth'}</span><span class="legend-tier-range">${useAbs ? '+150k+' : '≥30%'}</span></div>
             <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(undefined) : colorForPopulationChangeMode(undefined)}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">No population data</span><span class="legend-tier-range">Unavailable</span></div>
           </div>
