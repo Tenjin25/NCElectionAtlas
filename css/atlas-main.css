@@ -3572,6 +3572,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
 
   #custom-region-jump[hidden],
   #custom-region-group[hidden],
+  #custom-region-delete[hidden],
   .custom-region-counties label[hidden] { display: none !important; }
 
   .custom-region-builder {
@@ -3597,6 +3598,7 @@ body.focus-active #hover-tooltip[data-context="preview"] {
   .custom-region-counties input { width: auto; margin: 0; }
   .custom-region-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
   .custom-region-actions button { cursor: pointer; }
+  #custom-region-delete { color: #b91c1c; border-color: rgba(185, 28, 28, 0.35); }
   #custom-region-feedback { color: #475569; }
 
   .main-controls {

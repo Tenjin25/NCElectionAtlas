@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-09-30-margin-tier-boundaries-v1" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-09-30-custom-region-delete-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1501,6 +1501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <div id="custom-region-counties" class="custom-region-counties" role="group" aria-label="Counties in custom region"></div>
                   <div class="custom-region-actions">
                     <button type="button" id="custom-region-save">Save and show region</button>
+                    <button type="button" id="custom-region-delete" hidden>Delete saved region</button>
                     <span id="custom-region-feedback" role="status"></span>
                   </div>
                 </details>
@@ -1900,20 +1901,20 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-core.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-data.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-display.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-election.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-provenance.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-30-margin-tier-rounding-v1"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-30-margin-tier-rounding-v1"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-core.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-data.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-display.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-election.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-provenance.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-30-custom-region-delete-v1"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1946,8 +1947,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-30-margin-tier-rounding-v1';
-    const APP_BUILD_ID = '2026-09-30-margin-tier-rounding-v1';
+    const DATA_CACHE_BUSTER = '2026-09-30-custom-region-delete-v1';
+    const APP_BUILD_ID = '2026-09-30-custom-region-delete-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -2166,6 +2167,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (jump) { jump.textContent = definition.label; jump.hidden = false; }
       const group = document.getElementById('custom-region-group');
       if (group) group.hidden = false;
+      const deleteButton = document.getElementById('custom-region-delete');
+      if (deleteButton) deleteButton.hidden = false;
       const nameInput = document.getElementById('custom-region-name');
       if (nameInput) nameInput.value = definition.label;
       document.querySelectorAll('#custom-region-counties input[type="checkbox"]').forEach(input => {
@@ -2174,6 +2177,38 @@ document.addEventListener('DOMContentLoaded', function() {
       if (persist) {
         try { localStorage.setItem(CUSTOM_REGION_STORAGE_KEY, JSON.stringify(definition)); } catch (_) {}
       }
+      return true;
+    }
+
+    function deleteCustomRegionDefinition() {
+      const wasActive = voteCounterPinned?.meta?.kind === 'region'
+        && voteCounterPinned?.meta?.regionKey === 'custom';
+      delete REGION_JUMPS.custom;
+      try { localStorage.removeItem(CUSTOM_REGION_STORAGE_KEY); } catch (_) {}
+
+      const jump = document.getElementById('custom-region-jump');
+      if (jump) { jump.textContent = 'My region'; jump.hidden = true; }
+      const group = document.getElementById('custom-region-group');
+      if (group) group.hidden = true;
+      const deleteButton = document.getElementById('custom-region-delete');
+      if (deleteButton) deleteButton.hidden = true;
+      const nameInput = document.getElementById('custom-region-name');
+      if (nameInput) nameInput.value = '';
+      const filterInput = document.getElementById('custom-region-filter');
+      if (filterInput) filterInput.value = '';
+      document.querySelectorAll('#custom-region-counties label').forEach(label => { label.hidden = false; });
+      document.querySelectorAll('#custom-region-counties input[type="checkbox"]').forEach(input => { input.checked = false; });
+
+      if (wasActive) clearPinnedVoteCounterState();
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('rname');
+        url.searchParams.delete('rcounties');
+        if (String(url.searchParams.get('focus') || '').toLowerCase() === 'region:custom') {
+          url.searchParams.delete('focus');
+        }
+        window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+      } catch (_) {}
       return true;
     }
 
@@ -2207,6 +2242,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const saved = applyCustomRegionDefinition({ label: name, counties }, { persist: true });
         if (feedback) feedback.textContent = saved ? `${counties.length} counties saved.` : 'Enter a name and select at least one county.';
         if (saved) void jumpToRegion('custom');
+      });
+      document.getElementById('custom-region-delete')?.addEventListener('click', () => {
+        if (!REGION_JUMPS.custom) return;
+        const label = REGION_JUMPS.custom.label || 'saved region';
+        if (!window.confirm(`Delete ${label}?`)) return;
+        deleteCustomRegionDefinition();
+        if (feedback) feedback.textContent = 'Saved region deleted.';
+        setStatus('Saved custom region deleted.');
       });
     }
 

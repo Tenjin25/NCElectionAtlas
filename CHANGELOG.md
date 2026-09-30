@@ -2,9 +2,22 @@
 
 ## March–September 2026
 
-**Last updated:** September 28, 2026
+**Last updated:** September 30, 2026
 
-The September 21 frontend precision change below was reverted before this release. Its entry is retained as history, not a description of the current decimal format.
+The September 21 frontend precision work was later restored and refined by the September 30 update below.
+
+### Margin-Tier Boundary Alignment (September 30, 2026)
+
+- Clarified that competitiveness categories use the two-party margin of victory in percentage points, |Rep% − Dem%|, rather than either candidate's vote share.
+- Retained the intentional `5.50`-point boundary between Lean (`1.00–5.49`) and Likely (`5.50–9.99`), alongside the existing `0.50`, `1`, `10`, `20`, `30`, and `40` point thresholds.
+- Removed redundant upper-bound comparisons so fractional values cannot fall through gaps between tiers, and aligned tier labels and colors with the rounded margin shown to readers.
+- Corrected the Democratic Likely range label from `5.51–9.99` to `5.50–9.99` and synchronized the module, data, and build cache token at `2026-09-30-margin-tier-rounding-v1`.
+- Restored the external Atlas module script tags after a cache-token replacement malformed them in the published HTML.
+
+### Custom Region Removal (September 30, 2026)
+
+- Added a confirmation-protected **Delete saved region** action to the custom county-region builder.
+- Deleting a region clears its saved browser data, county selections, shared-region URL parameters, Quick Jump button, and any active focus pinned to that region without affecting built-in regional presets.
 
 ### Presbyterian Polling-Place Labels (September 28, 2026)
 

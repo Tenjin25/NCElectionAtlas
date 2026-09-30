@@ -94,4 +94,28 @@ test('custom county region can be saved and shared', async ({ page }) => {
   await expect(page.locator('#custom-region-jump')).toHaveText('Triangle test');
   await expect(page.locator('#custom-region-counties input[value="WAKE"]')).toBeChecked();
   await expect(page.locator('#custom-region-counties input[value="DURHAM"]')).toBeChecked();
+  await expect(page.locator('#custom-region-delete')).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#custom-region-delete');
+  await expect(page.locator('#custom-region-group')).toBeHidden();
+  await expect(page.locator('#custom-region-delete')).toBeHidden();
+  await expect(page.locator('#custom-region-feedback')).toHaveText('Saved region deleted.');
+  await expect(page.locator('#custom-region-name')).toHaveValue('');
+  await expect(page.locator('#custom-region-counties input:checked')).toHaveCount(0);
+  const deletedState = await page.evaluate(() => ({
+    stored: localStorage.getItem('atlasCustomCountyRegionV1'),
+    hasRegion: Object.prototype.hasOwnProperty.call(REGION_JUMPS, 'custom'),
+    pinnedRegion: voteCounterPinned?.meta?.regionKey || '',
+    hasRegionNameParam: new URL(window.location.href).searchParams.has('rname'),
+    hasRegionCountiesParam: new URL(window.location.href).searchParams.has('rcounties'),
+    focus: new URL(window.location.href).searchParams.get('focus') || ''
+  }));
+  expect(deletedState).toEqual({
+    stored: null,
+    hasRegion: false,
+    pinnedRegion: '',
+    hasRegionNameParam: false,
+    hasRegionCountiesParam: false,
+    focus: ''
+  });
 });
