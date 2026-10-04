@@ -1947,8 +1947,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-09-30-custom-region-delete-v1';
-    const APP_BUILD_ID = '2026-09-30-custom-region-delete-v1';
+    const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
+    const APP_BUILD_ID = '2026-10-04-statewide-shared-rating-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -14059,8 +14059,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function competitivenessMarginValue(marginPct) {
       const pct = Math.abs(Number(marginPct) || 0);
-      // Classify the one-decimal margin shown in county-facing summaries.
-      return roundForDisplay(pct, 1);
+      // Classify the same two-decimal margin shown throughout the atlas.
+      // This keeps rating thresholds aligned with displayed values (for example,
+      // 0.96% remains Tilt instead of rounding to 1.0% and becoming Lean).
+      return roundForDisplay(pct, 2);
     }
 
     function marginPctDisplayValue(repVotes, demVotes, totalVotes) {
@@ -15206,34 +15208,16 @@ document.addEventListener('DOMContentLoaded', function() {
         repCandidate = stripRunningMateName(repCandidate);
 
         const winnerCall = winnerMarginCall(repVotes, demVotes, totalVotes, repCandidate, demCandidate);
-        let compLabel = '';
-        let compColor = '#6b7280';
-        if (marginPct >= 40) {
-          compLabel = winnerCall.party === 'rep' ? 'Annihilation Republican (40%+)' : 'Annihilation Democratic (40%+)';
-          compColor = winnerCall.party === 'rep' ? '#7f1d1d' : '#1e3a8a';
-        } else if (marginPct >= 30) {
-          compLabel = winnerCall.party === 'rep' ? 'Dominant Republican (30.00-39.99%)' : 'Dominant Democratic (30.00-39.99%)';
-          compColor = winnerCall.party === 'rep' ? '#7f1d1d' : '#1e3a8a';
-        } else if (marginPct >= 20) {
-          compLabel = winnerCall.party === 'rep' ? 'Stronghold Republican (20.00-29.99%)' : 'Stronghold Democratic (20.00-29.99%)';
-          compColor = winnerCall.party === 'rep' ? '#dc2626' : '#2563eb';
-        } else if (marginPct >= 10) {
-          compLabel = winnerCall.party === 'rep' ? 'Safe Republican (10.00-19.99%)' : 'Safe Democratic (10.00-19.99%)';
-          compColor = winnerCall.party === 'rep' ? '#dc2626' : '#3b82f6';
-        } else if (marginPct >= 5.5) {
-          compLabel = winnerCall.party === 'rep' ? 'Likely Republican (5.50-9.99%)' : 'Likely Democratic (5.50-9.99%)';
-          compColor = winnerCall.party === 'rep' ? '#ef4444' : '#60a5fa';
-        } else if (marginPct >= 1) {
-          compLabel = winnerCall.party === 'rep' ? 'Lean Republican (1.00-5.49%)' : 'Lean Democratic (1.00-5.49%)';
-          compColor = winnerCall.party === 'rep' ? '#f87171' : '#93c5fd';
-        } else if (marginPct >= 0.5) {
-          compLabel = winnerCall.party === 'rep' ? 'Tilt Republican (0.50-0.99%)' : 'Tilt Democratic (0.50-0.99%)';
-          // This color is used as text on the statewide rating pill. Keep it
-          // darker than the pale Tilt map fills so the label remains legible.
+        // Use the same shared competitiveness classifier as the rest of the atlas.
+        // The displayed margin is normalized to two decimals before thresholds are applied,
+        // matching backend margin_pct semantics and avoiding statewide-only drift.
+        const tierMeta = competitivenessTierMeta(marginPct, winnerCall.party);
+        let compLabel = tierMeta.label;
+        let compColor = tierMeta.color;
+        // The shared Tilt fill colors are intentionally pale; use a darker text color
+        // for the statewide rating pill while keeping the shared tier classification.
+        if (tierMeta.shortLabel.startsWith('Tilt ')) {
           compColor = winnerCall.party === 'rep' ? '#be123c' : '#1d4ed8';
-        } else {
-          compLabel = winnerCall.party === 'dem' ? 'Tossup (Democratic Win - <0.50%)' : (winnerCall.party === 'rep' ? 'Tossup (Republican Win - <0.50%)' : 'Tossup');
-          compColor = winnerCall.party === 'dem' ? '#2563eb' : (winnerCall.party === 'rep' ? '#dc2626' : '#64748b');
         }
 
         const breakdownItems = [
