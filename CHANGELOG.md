@@ -1,10 +1,16 @@
 # Change history
 
-## March–September 2026
+## March–October 2026
 
-**Last updated:** September 30, 2026
+**Last updated:** October 4, 2026
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
+
+### Statewide Snapshot Tier Precision (October 4, 2026)
+
+- Fixed statewide snapshot competitiveness ratings to classify the same two-decimal margin displayed in the interface rather than rounding the margin to one decimal first.
+- Results immediately below a tier boundary now remain in the correct category; for example, `D+0.96%` is `Tilt Democratic`, not `Lean Democratic` after an intermediate `1.0%` rounding step.
+- Reused the shared competitiveness classifier so statewide labels follow the atlas-wide `0.50`, `1.00`, `5.50`, `10.00`, `20.00`, `30.00`, and `40.00` percentage-point thresholds.
 
 ### Margin-Tier Boundary Alignment (September 30, 2026)
 
