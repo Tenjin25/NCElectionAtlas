@@ -227,17 +227,17 @@ test('demographic percentages are displayed from highest to lowest', async ({ pa
 
 });
 
-test('district tooltips keep the demographics-mode dimensions', async ({ request }) => {
+test('no-results district demographics use populated-mode pill sizing', async ({ request }) => {
   const pageResponse = await request.get('/index.html');
   expect(pageResponse.ok()).toBeTruthy();
   const source = await pageResponse.text();
-  expect(source).toContain("tooltip.classList.toggle('district-tooltip', !!district)");
-  expect((source.match(/district: true/g) || []).length).toBeGreaterThanOrEqual(3);
+  expect(source).toContain('const compactDemoHTML = _demoHTML ? `<div class="vhr-demographics">');
+  expect(source).toContain("compactDemoHTML + '<div style=\"color:#94a3b8;margin-top:6px;\">Select a contest to see results</div>'");
 
   const cssResponse = await request.get('/css/atlas-main.css');
   expect(cssResponse.ok()).toBeTruthy();
   const css = await cssResponse.text();
-  expect(css).toMatch(/\.hover-tooltip\.district-tooltip\s*\{[^}]*width:\s*314px;[^}]*height:\s*345px;/s);
+  expect(css).toMatch(/\.hover-tooltip \.vhr-demographics \.demo-race-chip\s*\{[^}]*padding:\s*3px 6px;[^}]*font-size:\s*10px;/s);
 });
 
 test('map legends use named category rows for every visualization mode', async ({ page }) => {

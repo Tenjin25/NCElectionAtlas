@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-10-04-district-tooltip-size-v1" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-10-04-district-demographic-pill-size-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
-    const APP_BUILD_ID = '2026-10-04-district-tooltip-size-v1';
+    const APP_BUILD_ID = '2026-10-04-district-demographic-pill-size-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -19166,7 +19166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.point.x,
             e.point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText, district: true }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
           );
           wireTooltipButtons();
           return;
@@ -19181,7 +19181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText, district: true }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
         );
         wireTooltipButtons();
         return;
@@ -19498,7 +19498,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.point.x,
         e.point.y,
         buildTooltipShell('', tooltipInner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: comparisonHTML ? 'comparison-results' : 'votehub-results', copyText, district: true }
+        { force: !!forceTooltip, pinned: pinnedShell, context: comparisonHTML ? 'comparison-results' : 'votehub-results', copyText }
       );
       clearDesktopHoverExpandState();
       wireTooltipButtons();
@@ -19842,13 +19842,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!contestValue) {
         const pinnedShell = !!(tooltipPinned || (forceTooltip && isMobileInteractionMode()));
         const copyText = `${panelDistrictLabel} ${panelDistrictNum} (Lines ${currentDistrictLinesYear})`;
+        const compactDemoHTML = _demoHTML ? `<div class="vhr-demographics">${_demoHTML}</div>` : '';
         if (isDesktopTooltipMode()) {
           showHoverTooltip(
             e.point.x,
             e.point.y,
             buildTooltipShell(
               formattedDistrictLabel,
-              _demoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>',
+              compactDemoHTML + '<div style="color:#94a3b8;margin-top:6px;">Select a contest to see results</div>',
               { pinned: pinnedShell, copyText }
             ),
             { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
@@ -19863,7 +19864,7 @@ document.addEventListener('DOMContentLoaded', function() {
           e.point.y,
           buildTooltipShell(
             formattedDistrictLabel,
-            `${_demoHTML}<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;margin-top:6px;">${escapeHtml(startText)}</div>`,
+            `${compactDemoHTML}<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;margin-top:6px;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
           { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
@@ -24654,7 +24655,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hoverTooltipSuppression.until = 0;
     }
 
-    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '', district = false } = {}) {
+    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '' } = {}) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       if (isTouchInteractionMode() && !force && !tooltipPinned) return;
@@ -24678,7 +24679,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
-      tooltip.classList.toggle('district-tooltip', !!district);
       tooltip.dataset.context = String(context || '');
       tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}

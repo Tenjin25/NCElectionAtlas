@@ -6,10 +6,10 @@
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
 
-### Consistent District Tooltip Sizing (October 4, 2026)
+### Consistent District Demographic Pill Sizing (October 4, 2026)
 
-- Standardized district hover cards to the original Demographics-mode card dimensions, preventing the popup from resizing when modes or result availability change.
-- Kept overflow scrollable on unusually dense cards and constrained the dimensions to the viewport on smaller screens.
+- Applied the populated Demographics-mode compact pill styling to district demographic cards before election results load.
+- Preserved the original natural popup dimensions and complete highest-to-lowest demographic layout; only the pill scale and spacing are unified.
 
 ### Descending Demographic Percentages (October 4, 2026)
 
