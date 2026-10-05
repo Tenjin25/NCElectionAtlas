@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-09-30-custom-region-delete-v1" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-10-04-district-tooltip-size-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
-    const APP_BUILD_ID = '2026-10-04-compact-district-demographics-v1';
+    const APP_BUILD_ID = '2026-10-04-district-tooltip-size-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -13591,8 +13591,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let options = maybeOptions;
       if (extraRacesOrOptions && typeof extraRacesOrOptions === 'object' && !Array.isArray(extraRacesOrOptions)) {
         const looksLikeOptions = Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'includeUnknownHispanic')
-          || Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'extraClass')
-          || Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'limit');
+          || Object.prototype.hasOwnProperty.call(extraRacesOrOptions, 'extraClass');
         if (looksLikeOptions) {
           options = extraRacesOrOptions;
         } else {
@@ -13603,7 +13602,7 @@ document.addEventListener('DOMContentLoaded', function() {
         extraRaces = { asianPct: extraRacesOrOptions };
       }
       options = (options && typeof options === 'object' && !Array.isArray(options)) ? options : {};
-      const { includeUnknownHispanic = false, extraClass = '', limit = null } = options;
+      const { includeUnknownHispanic = false, extraClass = '' } = options;
       const demographics = [];
       const w = numericOrNull(whitePct);
       const b = numericOrNull(blackPct);
@@ -13620,10 +13619,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (m !== null) demographics.push({ label: 'Multiracial', className: 'multiracial', value: m });
       if (h !== null) demographics.push({ label: 'Hispanic', className: 'hispanic', value: h });
       demographics.sort((left, right) => right.value - left.value);
-      const visibleDemographics = Number.isInteger(limit) && limit >= 0
-        ? demographics.slice(0, limit)
-        : demographics;
-      const chips = visibleDemographics.map(({ label, className, value }) =>
+      const chips = demographics.map(({ label, className, value }) =>
         `<span class="demo-race-chip ${className}">${label} ${value.toFixed(2)}%</span>`
       );
       if (h === null && includeUnknownHispanic) chips.push(`<span class="demo-race-chip unknown">Hispanic N/A</span>`);
@@ -19170,7 +19166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.point.x,
             e.point.y,
             buildTooltipShell(hoverTitle, '<div style="color:#64748b;">Select a contest to see results</div>', { pinned: pinnedShell, copyText }),
-            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+            { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText, district: true }
           );
           wireTooltipButtons();
           return;
@@ -19185,7 +19181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `<div class="tooltip-kicker">Start</div><div style="color:rgba(226,232,240,0.92);font-weight:650;">${escapeHtml(startText)}</div>`,
             { pinned: pinnedShell, copyText }
           ),
-          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText }
+          { force: !!forceTooltip, pinned: pinnedShell, context: pinnedShell ? 'pinned' : 'detail', copyText, district: true }
         );
         wireTooltipButtons();
         return;
@@ -19502,7 +19498,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.point.x,
         e.point.y,
         buildTooltipShell('', tooltipInner, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
-        { force: !!forceTooltip, pinned: pinnedShell, context: comparisonHTML ? 'comparison-results' : 'votehub-results', copyText }
+        { force: !!forceTooltip, pinned: pinnedShell, context: comparisonHTML ? 'comparison-results' : 'votehub-results', copyText, district: true }
       );
       clearDesktopHoverExpandState();
       wireTooltipButtons();
@@ -24658,7 +24654,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hoverTooltipSuppression.until = 0;
     }
 
-    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '' } = {}) {
+    function showHoverTooltip(x, y, content, { force = false, pinned = false, context = '', copyText = '', district = false } = {}) {
       const tooltip = document.getElementById('hover-tooltip');
       if (!tooltip) return;
       if (isTouchInteractionMode() && !force && !tooltipPinned) return;
@@ -24682,6 +24678,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       tooltip.innerHTML = content;
       tooltip.style.display = 'block';
+      tooltip.classList.toggle('district-tooltip', !!district);
       tooltip.dataset.context = String(context || '');
       tooltip.dataset.copyText = (copyText || '').toString();
       try { document.body.classList.toggle('hover-preview-active', !pinned); } catch (_) {}
@@ -25251,7 +25248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pacificPct: districtInfo.pacific_vap_pct,
             multiracialPct: districtInfo.multiracial_vap_pct
           },
-          { extraClass: 'sidebar-demo-race-row', limit: 3 }
+          { extraClass: 'sidebar-demo-race-row' }
         );
         demographicInfo = `
           <div style="margin-bottom: 12px;">
@@ -25352,7 +25349,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pacificPct: infoRow.pacific_vap_pct,
             multiracialPct: infoRow.multiracial_vap_pct
           },
-          { extraClass: 'sidebar-demo-race-row', limit: 3 }
+          { extraClass: 'sidebar-demo-race-row' }
         );
         demographicInfo = `
           <div style="margin-bottom: 12px;">

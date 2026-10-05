@@ -225,16 +225,19 @@ test('demographic percentages are displayed from highest to lowest', async ({ pa
     'Pacific 1.00%'
   ]);
 
-  const compactLabels = await page.evaluate(() => {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = buildRaceChipRowHTML(41, 27, 12, 2, {
-      asianPct: 14,
-      pacificPct: 1,
-      multiracialPct: 3
-    }, { limit: 3 });
-    return [...wrapper.querySelectorAll('.demo-race-chip')].map(chip => chip.textContent.trim());
-  });
-  expect(compactLabels).toEqual(['White 41.00%', 'Black 27.00%', 'Asian 14.00%']);
+});
+
+test('district tooltips keep the demographics-mode dimensions', async ({ request }) => {
+  const pageResponse = await request.get('/index.html');
+  expect(pageResponse.ok()).toBeTruthy();
+  const source = await pageResponse.text();
+  expect(source).toContain("tooltip.classList.toggle('district-tooltip', !!district)");
+  expect((source.match(/district: true/g) || []).length).toBeGreaterThanOrEqual(3);
+
+  const cssResponse = await request.get('/css/atlas-main.css');
+  expect(cssResponse.ok()).toBeTruthy();
+  const css = await cssResponse.text();
+  expect(css).toMatch(/\.hover-tooltip\.district-tooltip\s*\{[^}]*width:\s*314px;[^}]*height:\s*345px;/s);
 });
 
 test('map legends use named category rows for every visualization mode', async ({ page }) => {

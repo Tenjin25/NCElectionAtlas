@@ -6,10 +6,10 @@
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
 
-### Compact District Demographics (October 4, 2026)
+### Consistent District Tooltip Sizing (October 4, 2026)
 
-- Kept district demographic cards to a consistent three-pill summary outside the dedicated Demographics view.
-- The three displayed groups are selected after sorting, so the compact card always shows the district's largest demographic percentages from highest to lowest.
+- Standardized district hover cards to the original Demographics-mode card dimensions, preventing the popup from resizing when modes or result availability change.
+- Kept overflow scrollable on unusually dense cards and constrained the dimensions to the viewport on smaller screens.
 
 ### Descending Demographic Percentages (October 4, 2026)
 

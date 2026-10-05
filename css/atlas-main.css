@@ -120,6 +120,15 @@ a:focus-visible {
   transition: opacity 0.15s ease;
 }
 
+.hover-tooltip.district-tooltip {
+  box-sizing: border-box;
+  width: 314px;
+  height: 345px;
+  max-width: calc(100vw - 30px);
+  max-height: calc(100vh - 30px);
+  overflow: auto;
+}
+
 .hover-tooltip .tooltip-vote-line {
   margin: 4px 0;
 }
