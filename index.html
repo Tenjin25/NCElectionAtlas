@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
-    const APP_BUILD_ID = '2026-10-04-statewide-shared-rating-v1';
+    const APP_BUILD_ID = '2026-10-04-demographics-descending-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -13603,7 +13603,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       options = (options && typeof options === 'object' && !Array.isArray(options)) ? options : {};
       const { includeUnknownHispanic = false, extraClass = '' } = options;
-      const chips = [];
+      const demographics = [];
       const w = numericOrNull(whitePct);
       const b = numericOrNull(blackPct);
       const h = numericOrNull(hispanicPct);
@@ -13611,14 +13611,18 @@ document.addEventListener('DOMContentLoaded', function() {
       const a = numericOrNull(extraRaces.asianPct);
       const p = numericOrNull(extraRaces.pacificPct);
       const m = numericOrNull(extraRaces.multiracialPct);
-      if (w !== null) chips.push(`<span class="demo-race-chip white">White ${w.toFixed(2)}%</span>`);
-      if (b !== null) chips.push(`<span class="demo-race-chip black">Black ${b.toFixed(2)}%</span>`);
-      if (n !== null) chips.push(`<span class="demo-race-chip native">Native ${n.toFixed(2)}%</span>`);
-      if (a !== null) chips.push(`<span class="demo-race-chip asian">Asian ${a.toFixed(2)}%</span>`);
-      if (p !== null) chips.push(`<span class="demo-race-chip pacific">Pacific ${p.toFixed(2)}%</span>`);
-      if (m !== null) chips.push(`<span class="demo-race-chip multiracial">Multiracial ${m.toFixed(2)}%</span>`);
-      if (h !== null) chips.push(`<span class="demo-race-chip hispanic">Hispanic ${h.toFixed(2)}%</span>`);
-      else if (includeUnknownHispanic) chips.push(`<span class="demo-race-chip unknown">Hispanic N/A</span>`);
+      if (w !== null) demographics.push({ label: 'White', className: 'white', value: w });
+      if (b !== null) demographics.push({ label: 'Black', className: 'black', value: b });
+      if (n !== null) demographics.push({ label: 'Native', className: 'native', value: n });
+      if (a !== null) demographics.push({ label: 'Asian', className: 'asian', value: a });
+      if (p !== null) demographics.push({ label: 'Pacific', className: 'pacific', value: p });
+      if (m !== null) demographics.push({ label: 'Multiracial', className: 'multiracial', value: m });
+      if (h !== null) demographics.push({ label: 'Hispanic', className: 'hispanic', value: h });
+      demographics.sort((left, right) => right.value - left.value);
+      const chips = demographics.map(({ label, className, value }) =>
+        `<span class="demo-race-chip ${className}">${label} ${value.toFixed(2)}%</span>`
+      );
+      if (h === null && includeUnknownHispanic) chips.push(`<span class="demo-race-chip unknown">Hispanic N/A</span>`);
       if (!chips.length) return '';
       return `<div class="demo-race-row ${extraClass}"><span class="demo-race-label">Race</span>${chips.join('')}</div>`;
     }
@@ -25233,16 +25237,24 @@ document.addEventListener('DOMContentLoaded', function() {
       let demographicInfo = '';
       const desc = getDistrictDescription('congressional', districtNum);
       if (districtInfo) {
-        const extraRaceLines = buildDistrictExtraRaceLinesHTML(districtInfo, 30);
+        const demoRaceChips = buildRaceChipRowHTML(
+          districtInfo.white_vap_pct,
+          districtInfo.black_vap_pct,
+          districtInfo.hispanic_vap_pct,
+          districtInfo.native_vap_pct,
+          {
+            asianPct: districtInfo.asian_vap_pct,
+            pacificPct: districtInfo.pacific_vap_pct,
+            multiracialPct: districtInfo.multiracial_vap_pct
+          },
+          { extraClass: 'sidebar-demo-race-row' }
+        );
         demographicInfo = `
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
             <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
             <div style="font-size:14px;"><strong>${Number.isFinite(Number(cvapTotal)) ? 'CVAP (18+):' : 'Total Population:'}</strong> ${Math.round(Number.isFinite(Number(cvapTotal)) ? Number(cvapTotal) : Number(districtInfo.total_population || 0)).toLocaleString()}</div>
-            <div style="font-size:14px;"><strong>White:</strong> ${districtInfo.white_vap_pct}%</div>
-            <div style="font-size:14px;"><strong>Black:</strong> ${districtInfo.black_vap_pct}%</div>
-            <div style="font-size:14px;"><strong>Hispanic:</strong> ${districtInfo.hispanic_vap_pct}%</div>
-            ${extraRaceLines}
+            ${demoRaceChips}
           </div>
         `;
       } else if (desc) {
@@ -25326,16 +25338,24 @@ document.addEventListener('DOMContentLoaded', function() {
       let demographicInfo = '';
       const desc = getDistrictDescription(scope, districtNum);
       if (infoRow) {
-        const extraRaceLines = buildDistrictExtraRaceLinesHTML(infoRow, 30);
+        const demoRaceChips = buildRaceChipRowHTML(
+          infoRow.white_vap_pct,
+          infoRow.black_vap_pct,
+          infoRow.hispanic_vap_pct,
+          infoRow.native_vap_pct,
+          {
+            asianPct: infoRow.asian_vap_pct,
+            pacificPct: infoRow.pacific_vap_pct,
+            multiracialPct: infoRow.multiracial_vap_pct
+          },
+          { extraClass: 'sidebar-demo-race-row' }
+        );
         demographicInfo = `
           <div style="margin-bottom: 12px;">
             ${desc ? `<div style="margin:0 0 10px 0;color:#475569;font-weight:800;">${desc}</div>` : ''}
             <h5 style="margin:0 0 6px 0;">Demographics (VAP)</h5>
             <div style="font-size:14px;"><strong>${Number.isFinite(Number(cvapTotal)) ? 'CVAP (18+):' : 'Total Population:'}</strong> ${Math.round(Number.isFinite(Number(cvapTotal)) ? Number(cvapTotal) : Number(infoRow.total_population || 0)).toLocaleString()}</div>
-            <div style="font-size:14px;"><strong>White:</strong> ${infoRow.white_vap_pct}%</div>
-            <div style="font-size:14px;"><strong>Black:</strong> ${infoRow.black_vap_pct}%</div>
-            <div style="font-size:14px;"><strong>Hispanic:</strong> ${infoRow.hispanic_vap_pct}%</div>
-            ${extraRaceLines}
+            ${demoRaceChips}
           </div>
         `;
       } else if (desc) {

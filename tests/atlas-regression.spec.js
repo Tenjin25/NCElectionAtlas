@@ -201,6 +201,31 @@ test('demographic colors distinguish plurality from majority at 50 percent', asy
   expect(source).toContain("dom.majority ? '#1d4ed8' : '#93c5fd'");
 });
 
+test('demographic percentages are displayed from highest to lowest', async ({ page }) => {
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
+  await page.waitForFunction(() => typeof buildRaceChipRowHTML === 'function', null, { timeout: APP_READY_TIMEOUT });
+
+  const labels = await page.evaluate(() => {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildRaceChipRowHTML(41, 27, 12, 2, {
+      asianPct: 14,
+      pacificPct: 1,
+      multiracialPct: 3
+    });
+    return [...wrapper.querySelectorAll('.demo-race-chip')].map(chip => chip.textContent.trim());
+  });
+
+  expect(labels).toEqual([
+    'White 41.00%',
+    'Black 27.00%',
+    'Asian 14.00%',
+    'Hispanic 12.00%',
+    'Multiracial 3.00%',
+    'Native 2.00%',
+    'Pacific 1.00%'
+  ]);
+});
+
 test('map legends use named category rows for every visualization mode', async ({ page }) => {
   await page.goto('/index.html', { waitUntil: 'domcontentloaded', timeout: APP_READY_TIMEOUT });
   await page.waitForFunction(() => {

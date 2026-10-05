@@ -6,6 +6,11 @@
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
 
+### Descending Demographic Percentages (October 4, 2026)
+
+- Sorted demographic race/ethnicity percentages from highest to lowest across county, precinct, and district hover and sidebar views.
+- Kept unavailable Hispanic data at the end of the list and expanded district sidebar cards to use the same complete, consistently ordered demographic chips.
+
 ### Statewide Snapshot Tier Precision (October 4, 2026)
 
 - Fixed statewide snapshot competitiveness ratings to classify the same two-decimal margin displayed in the interface rather than rounding the margin to one decimal first.
