@@ -224,6 +224,17 @@ test('demographic percentages are displayed from highest to lowest', async ({ pa
     'Native 2.00%',
     'Pacific 1.00%'
   ]);
+
+  const compactLabels = await page.evaluate(() => {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildRaceChipRowHTML(41, 27, 12, 2, {
+      asianPct: 14,
+      pacificPct: 1,
+      multiracialPct: 3
+    }, { limit: 3 });
+    return [...wrapper.querySelectorAll('.demo-race-chip')].map(chip => chip.textContent.trim());
+  });
+  expect(compactLabels).toEqual(['White 41.00%', 'Black 27.00%', 'Asian 14.00%']);
 });
 
 test('map legends use named category rows for every visualization mode', async ({ page }) => {
