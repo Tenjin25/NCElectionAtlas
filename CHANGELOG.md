@@ -3,7 +3,8 @@
 ## October 6, 2026
 
 - Unlock the contest selector immediately after its manifest loads on mobile; optional district geometry and demographic resources continue loading in the background.
-- Updated the application build cache token to force the corrected startup behavior to clients.
+- Automatically collapse the mobile legend after selected election results finish loading.
+- Updated application, data, stylesheet, and shared-module cache tokens to force the corrected startup behavior to clients.
 
 ## March–October 2026
 
