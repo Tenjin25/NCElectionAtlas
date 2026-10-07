@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-10-06-mobile-contest-ready-v3" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-10-04-district-demographic-pill-size-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1901,20 +1901,20 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-comparison.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-core.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-data.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-display.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-election.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-manifest.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-modeling.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-provenance.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-regions.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-trends.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-turnout.js?v=2026-10-06-mobile-contest-ready-v3"></script>
-    <script src="./js/atlas-url-state.js?v=2026-10-06-mobile-contest-ready-v3"></script>
+    <script src="./js/atlas-classification.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-comparison.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-core.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-data.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-display.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-election.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-manifest.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-modeling.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-provenance.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-regions.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-trends.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-turnout.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-url-state.js?v=2026-09-30-custom-region-delete-v1"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1947,8 +1947,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-10-06-mobile-contest-ready-v3';
-    const APP_BUILD_ID = '2026-10-06-mobile-contest-ready-v3';
+    const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
+    const APP_BUILD_ID = '2026-10-06-mobile-contest-ready-v2';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -12460,11 +12460,7 @@ document.addEventListener('DOMContentLoaded', function() {
             continue;
           }
 
-          if (next.key) {
-            lastCompletedContestSelection = next.key;
-            // Once results are ready, return the mobile map to an unobstructed state.
-            try { minimizeLegendOnMobile(); } catch (_) {}
-          }
+          if (next.key) lastCompletedContestSelection = next.key;
           queueCountyDetailsRefresh();
           try {
             const lastUnderscoreIndex = next.key.lastIndexOf('_');
