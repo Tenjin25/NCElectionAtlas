@@ -1,5 +1,10 @@
 # Change history
 
+## October 6, 2026
+
+- Unlock the contest selector immediately after its manifest loads on mobile; optional district geometry and demographic resources continue loading in the background.
+- Updated the application build cache token to force the corrected startup behavior to clients.
+
 ## March–October 2026
 
 **Last updated:** October 4, 2026
