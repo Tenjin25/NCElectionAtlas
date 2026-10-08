@@ -229,6 +229,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 | Precinct boundaries | August 24, 2026 SBE precinct source archive (`data/SBE_PRECINCTS_20260824.zip`) for display; December 2025 and older SBE vintages retained for historical allocation |
 | Census block geography | US Census Bureau TIGER/Line files |
 | Block-to-precinct crosswalks | Current target: `data/crosswalks/block20_to_onemap_2025_12.csv`; older SBE vintage maps remain in `data/crosswalks/` |
+| Block-to-district crosswalks | Official Census block equivalency files for CD118, CD119, CD120 / SL 2025-95, and the 2022/2024 NC House and Senate plans; normalized with `scripts/convert_block_equivalency_files.py` |
 | Block-to-block crosswalks (cross-vintage) | [NHGIS Longitudinal Block Crosswalks](https://www.nhgis.org/documentation/tabular-data/crosswalks) |
 | Precinct-to-precinct bridges | VAP-weighted SBE vintage / SBE 2006 bridges in `data/crosswalks/` and `data/mappings/` |
 | District lines (2022 MQP + optional 2024) | Court-ordered remedial maps (2022 MQP); US Census TIGER/Line 2024 (CD/SLDL/SLDU) |
