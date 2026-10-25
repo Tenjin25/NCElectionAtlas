@@ -20,7 +20,7 @@ jobs:
       - run: node scripts/check_inline_scripts.js index.html
 
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       CI: 'true'

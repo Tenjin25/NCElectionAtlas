@@ -10,7 +10,7 @@ The September 21 frontend precision work was later restored and refined by the S
 
 - Moved deterministic legend category definitions and markup for Margins, Winners, Flips, Shift, Compare, Demographics, and Population Change into the tested `js/atlas-legend.js` module; the browser keeps thin compatibility wrappers while existing call sites migrate incrementally.
 - Added direct regression coverage for category counts, shift-versus-comparison semantics, population metrics, and the textual colorblind key.
-- Added a dedicated GitHub Actions browser job that installs Chromium, runs the complete Playwright suite, and uploads failure diagnostics for seven days.
+- Added a dedicated GitHub Actions browser job, pinned to Playwright-supported Ubuntu 24.04, that installs Chromium, runs the complete suite, and uploads failure diagnostics for seven days.
 - Kept the root-level `index2.html` personal remake local through a narrow `.gitignore` entry without affecting the production `index.html`.
 - Corrected current documentation and live help text to describe R−D margin over the reported total, including Other votes when present, and stopped advertising the removed original-palette toggle.
 - Rotated the stylesheet, frontend modules, and `APP_BUILD_ID` to the release cache token `2026-10-25-legend-module-ci-v1`, and aligned package metadata with the repository's Apache-2.0 license.
