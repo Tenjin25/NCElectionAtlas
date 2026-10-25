@@ -191,13 +191,16 @@ test('demographic colors distinguish plurality from majority at 50 percent', asy
   const response = await request.get('/index.html');
   expect(response.ok()).toBeTruthy();
   const source = await response.text();
+  const legendResponse = await request.get('/js/atlas-legend.js');
+  expect(legendResponse.ok()).toBeTruthy();
+  const legendSource = await legendResponse.text();
 
   expect(source).toContain('majority: Number(top.value) >= 50');
   for (const group of ['White', 'Black', 'Hispanic', 'Native', 'Asian', 'Pacific', 'Multiracial']) {
-    expect(source).toContain(`{ name: '${group}', majority:`);
+    expect(legendSource).toContain(`{ name: '${group}', majority:`);
   }
-  expect(source).toContain('label: `${g.name} majority`');
-  expect(source).toContain('label: `${g.name} plurality`');
+  expect(legendSource).toContain('label: `${group.name} majority`');
+  expect(legendSource).toContain('label: `${group.name} plurality`');
   expect(source).toContain("dom.majority ? '#1d4ed8' : '#93c5fd'");
 });
 
@@ -368,7 +371,7 @@ test('local app modules use the same cache token as the deployed build', async (
   const moduleVersions = [...source.matchAll(/<script src="\.\/js\/[^"?]+\?v=([^"]+)"/g)].map(match => match[1]);
 
   expect(buildId).toBeTruthy();
-  expect(moduleVersions).toHaveLength(14);
+  expect(moduleVersions).toHaveLength(15);
   expect(new Set(moduleVersions)).toEqual(new Set([buildId]));
 });
 

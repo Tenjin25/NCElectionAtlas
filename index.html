@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-10-04-district-demographic-pill-size-v1" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-10-25-legend-module-ci-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1650,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="legend-copy">
                 <span class="legend-kicker">Map key</span>
                 <h4>Margin Categories</h4>
-                <p class="legend-subtitle" id="legend-subtitle">Two-party margin buckets for the selected contest.</p>
+                <p class="legend-subtitle" id="legend-subtitle">R−D margin buckets; Other votes remain in the denominator.</p>
               </div>
             </div>
             <div class="legend-header-actions">
@@ -1705,7 +1705,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="legend-footer" id="legend-footer">Darker shades indicate larger two-party leads in the current contest.</div>
         <div class="legend-context-chips" id="legend-context-chips">
-          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Barometer counties are the best statewide-margin mirrors across the last 2–3 available cycles (closest to the statewide two-party margin).">Barometer</span>
+          <span class="legend-context-chip" id="legend-bellwether-chip" data-testid="legend-bellwether-chip" title="Barometer counties are the best statewide-margin mirrors across the last 2–3 available cycles (closest to the statewide R−D margin).">Barometer</span>
           <span class="legend-context-chip" id="legend-split-chip" data-testid="legend-split-chip" title="Pres-Gov mode keeps President as the base contest and overlays Governor margins on top." style="display:none;"></span>
           <span class="legend-context-chip" id="legend-popmetric-chip" data-testid="legend-popmetric-chip" title="Active population metric for Pop Change mode." style="display:none;"></span>
           <span class="legend-context-chip" id="filters-active-chip" data-testid="filters-active-chip" title="Active toggles" style="display:none;"></span>
@@ -1862,7 +1862,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="modal-body">
           <h3>Modes</h3>
-          <p><strong>Margins</strong>: colors show the <strong>two-party margin</strong> (Rep% − Dem%). Red shades = Republican lead; blue shades = Democratic lead. Darker = a larger lead (less competitive).</p>
+          <p><strong>Margins</strong>: colors show the <strong>Republican-minus-Democratic margin</strong> (Rep% − Dem%). Shares use the reported total, including Other votes when present. Red shades = Republican lead; blue shades = Democratic lead. Darker = a larger lead (less competitive).</p>
           <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
           <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
 
@@ -1878,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><strong>Tilt</strong>: 0.50–0.99%</li>
             <li><strong>Tossup</strong>: &lt;0.50%</li>
           </ul>
-          <p class="meta-subtle">Example: “Safe Republican (10–19.99%)” means the Republican candidate leads by 10–19.99 percentage points (two-party margin).</p>
+          <p class="meta-subtle">Example: “Safe Republican (10–19.99%)” means the Republican candidate leads the Democratic candidate by 10–19.99 percentage points of the reported total.</p>
 
           <h3>Hover + Select</h3>
           <ul>
@@ -1901,20 +1901,21 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-comparison.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-core.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-data.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-display.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-election.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-manifest.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-modeling.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-provenance.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-regions.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-trends.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-turnout.js?v=2026-09-30-custom-region-delete-v1"></script>
-    <script src="./js/atlas-url-state.js?v=2026-09-30-custom-region-delete-v1"></script>
+    <script src="./js/atlas-classification.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-comparison.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-core.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-data.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-display.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-election.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-legend.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-manifest.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-modeling.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-provenance.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-regions.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-trends.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-turnout.js?v=2026-10-25-legend-module-ci-v1"></script>
+    <script src="./js/atlas-url-state.js?v=2026-10-25-legend-module-ci-v1"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1948,7 +1949,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
     const DATA_CACHE_BUSTER = '2026-10-04-statewide-shared-rating-v1';
-    const APP_BUILD_ID = '2026-10-04-district-demographic-pill-size-v1';
+    const APP_BUILD_ID = '2026-10-25-legend-module-ci-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -14457,318 +14458,47 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
 
-    function buildLegendSpectrum(colors, className) {
-      return `
-        <div class="legend-spectrum ${className}">
-          ${colors.map(color => `<span class="legend-segment legend-color" style="background: ${color};"></span>`).join('')}
-        </div>
-      `;
-    }
-
-    function buildColorblindLegendNote() {
-      if (!isColorblindModeActive()) return '';
-      return `
-        <div class="colorblind-legend-note" role="note" aria-label="Color-blind palette is active">
-          <strong>Color-blind palette</strong>
-          <span class="colorblind-legend-key"><i style="background:${colorForWinnerMode('R')};"></i>Republican = orange</span>
-          <span class="colorblind-legend-key"><i style="background:${colorForWinnerMode('D')};"></i>Democratic = blue</span>
-        </div>
-      `;
+    function legendPresentationOptions() {
+      return {
+        colorblind: isColorblindModeActive(),
+        populationMetric: populationChangeMetric,
+        colorForMargin: colorForMarginMode,
+        colorForWinner: colorForWinnerMode,
+        colorForFlip: colorForFlipMode,
+        colorForShift: colorForShiftMode,
+        colorForDemographics: colorForDemographicsMode,
+        colorForPopulationPct: colorForPopulationChangeMode,
+        colorForPopulationAbs: colorForPopulationChangeAbsMode
+      };
     }
 
     function buildMarginsLegendHTML() {
-      const tiers = [
-        { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'R'), party: 'rep' },
-        { label: 'Dominant', range: '30.00–39.99', color: colorForMarginMode(30, 'R'), party: 'rep' },
-        { label: 'Stronghold', range: '20.00–29.99', color: colorForMarginMode(20, 'R'), party: 'rep' },
-        { label: 'Safe', range: '10.00–19.99', color: colorForMarginMode(10, 'R'), party: 'rep' },
-        { label: 'Likely', range: '5.50–9.99', color: colorForMarginMode(5.5, 'R'), party: 'rep' },
-        { label: 'Lean', range: '1.00–5.49', color: colorForMarginMode(1, 'R'), party: 'rep' },
-        { label: 'Tilt', range: '0.50–0.99', color: colorForMarginMode(0.5, 'R'), party: 'rep' },
-        { label: 'Tossup', range: '<0.50', color: colorForMarginMode(0, 'R'), party: 'tie' },
-        { label: 'Tilt', range: '0.50–0.99', color: colorForMarginMode(0.5, 'D'), party: 'dem' },
-        { label: 'Lean', range: '1.00–5.49', color: colorForMarginMode(1, 'D'), party: 'dem' },
-        { label: 'Likely', range: '5.50–9.99', color: colorForMarginMode(5.5, 'D'), party: 'dem' },
-        { label: 'Safe', range: '10.00–19.99', color: colorForMarginMode(10, 'D'), party: 'dem' },
-        { label: 'Stronghold', range: '20.00–29.99', color: colorForMarginMode(20, 'D'), party: 'dem' },
-        { label: 'Dominant', range: '30.00–39.99', color: colorForMarginMode(30, 'D'), party: 'dem' },
-        { label: 'Annihilation', range: '40+', color: colorForMarginMode(40, 'D'), party: 'dem' }
-      ];
-      const spectrum = [
-        colorForMarginMode(40, 'R'),
-        colorForMarginMode(30, 'R'),
-        colorForMarginMode(20, 'R'),
-        colorForMarginMode(10, 'R'),
-        colorForMarginMode(5.5, 'R'),
-        colorForMarginMode(1, 'R'),
-        colorForMarginMode(0.5, 'R'),
-        colorForMarginMode(0, 'R'),
-        colorForMarginMode(0.5, 'D'),
-        colorForMarginMode(1, 'D'),
-        colorForMarginMode(5.5, 'D'),
-        colorForMarginMode(10, 'D'),
-        colorForMarginMode(20, 'D'),
-        colorForMarginMode(30, 'D'),
-        colorForMarginMode(40, 'D')
-      ];
-      return `
-        <div class="legend-scale-shell">
-          ${buildColorblindLegendNote()}
-          ${buildLegendSpectrum(spectrum, 'margins')}
-          <div class="legend-scale-caption">
-            <span class="rep">Republican ${isColorblindModeActive() ? 'orange' : 'red'}</span>
-            <span>Even</span>
-            <span class="dem">Democratic blue</span>
-          </div>
-          <div class="legend-tier-list" role="list">
-            ${tiers.map(t => `
-              <div class="legend-tier-row" role="listitem">
-                <span class="legend-color" style="background: ${t.color};${t.party === 'tie' ? ' border: 1px solid rgba(15,23,42,0.18);' : ''}"></span>
-                <span class="legend-tier-label ${t.party}">${t.label}</span>
-                <span class="legend-tier-range">${t.range}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+      return window.AtlasLegend.buildMarginsLegendHTML(legendPresentationOptions());
     }
 
     function buildWinnersLegendHTML() {
-      return `
-        ${buildColorblindLegendNote()}
-        <div class="legend-tier-list" role="list">
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForWinnerMode('D')};"></span><span class="legend-tier-label dem">Democratic win</span><span class="legend-tier-range">D leads</span></div>
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForWinnerMode('R')};"></span><span class="legend-tier-label rep">Republican win</span><span class="legend-tier-range">R leads</span></div>
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForWinnerMode('T')}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">Tie or no data</span><span class="legend-tier-range">Even / missing</span></div>
-        </div>
-      `;
+      return window.AtlasLegend.buildWinnersLegendHTML(legendPresentationOptions());
     }
 
     function buildFlipsLegendHTML() {
-      return `
-        ${buildColorblindLegendNote()}
-        <div class="legend-tier-list" role="list">
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForFlipMode('D')};"></span><span class="legend-tier-label dem">Flip to Democratic</span><span class="legend-tier-range">R → D</span></div>
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForFlipMode('R')};"></span><span class="legend-tier-label rep">Flip to Republican</span><span class="legend-tier-range">D → R</span></div>
-          <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${colorForFlipMode('T')}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">No flip or no prior</span><span class="legend-tier-range">Unchanged / missing</span></div>
-        </div>
-      `;
+      return window.AtlasLegend.buildFlipsLegendHTML(legendPresentationOptions());
     }
 
     function buildShiftLegendHTML() {
-      const tiers = [
-        { label: 'Extreme Democratic shift', range: '25+ pts', value: -25, party: 'dem' },
-        { label: 'Major Democratic shift', range: '20.00–24.99 pts', value: -20, party: 'dem' },
-        { label: 'Very strong Democratic shift', range: '15.00–19.99 pts', value: -15, party: 'dem' },
-        { label: 'Strong Democratic shift', range: '10.00–14.99 pts', value: -10, party: 'dem' },
-        { label: 'Clear Democratic shift', range: '5.00–9.99 pts', value: -5, party: 'dem' },
-        { label: 'Moderate Democratic shift', range: '1.00–4.99 pts', value: -1, party: 'dem' },
-        { label: 'Slight Democratic shift', range: '0.50–0.99 pts', value: -0.5, party: 'dem' },
-        { label: 'No notable shift', range: 'Under 0.50 pts', value: 0, party: 'tie' },
-        { label: 'Slight Republican shift', range: '0.50–0.99 pts', value: 0.5, party: 'rep' },
-        { label: 'Moderate Republican shift', range: '1.00–4.99 pts', value: 1, party: 'rep' },
-        { label: 'Clear Republican shift', range: '5.00–9.99 pts', value: 5, party: 'rep' },
-        { label: 'Strong Republican shift', range: '10.00–14.99 pts', value: 10, party: 'rep' },
-        { label: 'Very strong Republican shift', range: '15.00–19.99 pts', value: 15, party: 'rep' },
-        { label: 'Major Republican shift', range: '20.00–24.99 pts', value: 20, party: 'rep' },
-        { label: 'Extreme Republican shift', range: '25+ pts', value: 25, party: 'rep' }
-      ];
-      const colors = [
-        colorForShiftMode(-25),
-        colorForShiftMode(-20),
-        colorForShiftMode(-15),
-        colorForShiftMode(-10),
-        colorForShiftMode(-5),
-        colorForShiftMode(-1),
-        colorForShiftMode(-0.5),
-        colorForShiftMode(0),
-        colorForShiftMode(0.5),
-        colorForShiftMode(1),
-        colorForShiftMode(5),
-        colorForShiftMode(10),
-        colorForShiftMode(15),
-        colorForShiftMode(20),
-        colorForShiftMode(25)
-      ];
-      return `
-        <div class="legend-scale-shell">
-          ${buildColorblindLegendNote()}
-          ${buildLegendSpectrum(colors, 'shift')}
-          <div class="legend-scale-caption">
-            <span class="dem">Toward Democrats</span>
-            <span>No change</span>
-            <span class="rep">Toward Republicans</span>
-          </div>
-          <div class="legend-tier-list" role="list">
-            ${tiers.map(t => `
-              <div class="legend-tier-row" role="listitem">
-                <span class="legend-color" style="background: ${colorForShiftMode(t.value)};${t.party === 'tie' ? ' border: 1px solid rgba(15,23,42,0.18);' : ''}"></span>
-                <span class="legend-tier-label ${t.party}">${t.label}</span>
-                <span class="legend-tier-range">${t.range}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+      return window.AtlasLegend.buildShiftLegendHTML(legendPresentationOptions());
     }
 
     function buildComparisonLegendHTML() {
-      const bands = [
-        { name: 'Extreme', range: '25+ pts', value: 25 },
-        { name: 'Major', range: '20.00–24.99 pts', value: 20 },
-        { name: 'Very strong', range: '15.00–19.99 pts', value: 15 },
-        { name: 'Strong', range: '10.00–14.99 pts', value: 10 },
-        { name: 'Clear', range: '5.00–9.99 pts', value: 5 },
-        { name: 'Moderate', range: '1.00–4.99 pts', value: 1 },
-        { name: 'Slight', range: '0.50–0.99 pts', value: 0.5 }
-      ];
-      const tiers = [
-        ...bands.map(b => ({ label: `${b.name} Democratic difference`, range: b.range, value: -b.value, party: 'dem' })),
-        { label: 'No notable difference', range: 'Under 0.50 pts', value: 0, party: 'tie' },
-        ...bands.slice().reverse().map(b => ({ label: `${b.name} Republican difference`, range: b.range, value: b.value, party: 'rep' }))
-      ];
-      const colors = [
-        colorForShiftMode(-25),
-        colorForShiftMode(-20),
-        colorForShiftMode(-15),
-        colorForShiftMode(-10),
-        colorForShiftMode(-5),
-        colorForShiftMode(-1),
-        colorForShiftMode(-0.5),
-        colorForShiftMode(0),
-        colorForShiftMode(0.5),
-        colorForShiftMode(1),
-        colorForShiftMode(5),
-        colorForShiftMode(10),
-        colorForShiftMode(15),
-        colorForShiftMode(20),
-        colorForShiftMode(25)
-      ];
-      return `
-        <div class="legend-scale-shell">
-          ${buildColorblindLegendNote()}
-          ${buildLegendSpectrum(colors, 'shift')}
-          <div class="legend-scale-caption">
-            <span class="dem">Primary more Democratic</span>
-            <span>No difference</span>
-            <span class="rep">Primary more Republican</span>
-          </div>
-          <div class="legend-tier-list" role="list">
-            ${tiers.map(t => `
-              <div class="legend-tier-row" role="listitem">
-                <span class="legend-color" style="background: ${colorForShiftMode(t.value)};${t.party === 'tie' ? ' border: 1px solid rgba(15,23,42,0.18);' : ''}"></span>
-                <span class="legend-tier-label ${t.party}">${t.label}</span>
-                <span class="legend-tier-range">${t.range}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+      return window.AtlasLegend.buildComparisonLegendHTML(legendPresentationOptions());
     }
 
     function buildDemographicsLegendHTML() {
-      const groups = [
-        { name: 'White', majority: [60, 20, 20], plurality: [40, 30, 30] },
-        { name: 'Black', majority: [20, 60, 20], plurality: [30, 40, 30] },
-        { name: 'Hispanic', majority: [20, 20, 60], plurality: [30, 30, 40] },
-        { name: 'Native', majority: [15, 15, 10, 60], plurality: [20, 15, 15, 40] },
-        { name: 'Asian', majority: [15, 15, 10, 10, 60], plurality: [20, 15, 10, 10, 40] },
-        { name: 'Pacific', majority: [10, 10, 10, 5, 5, 60, 0], plurality: [15, 10, 10, 5, 5, 40, 15] },
-        { name: 'Multiracial', majority: [10, 10, 10, 5, 5, 0, 60], plurality: [15, 10, 10, 5, 5, 15, 40] }
-      ];
-      const tiers = groups.flatMap(g => [
-        { label: `${g.name} majority`, range: '≥50%', color: colorForDemographicsMode(...g.majority) },
-        { label: `${g.name} plurality`, range: 'Largest, <50%', color: colorForDemographicsMode(...g.plurality) }
-      ]);
-      tiers.splice(2, 0,
-        { label: 'Narrow White majority · strong Black second', range: '≥50%', color: colorForDemographicsMode(52, 41, 7) },
-        { label: 'Narrow Black majority · strong White second', range: '≥50%', color: colorForDemographicsMode(41, 52, 7) }
-      );
-      tiers.push(
-        { label: 'Near tie / mixed', range: 'No clear leader', color: colorForDemographicsMode(35, 35, 30) },
-        { label: 'No demographic data', range: 'Unavailable', color: colorForDemographicsMode(null, null, null, null, null, null, null) }
-      );
-      return `
-        <div class="legend-tier-list" role="list">
-          ${tiers.map(t => `
-            <div class="legend-tier-row" role="listitem">
-              <span class="legend-color" style="background: ${t.color};"></span>
-              <span class="legend-tier-label">${t.label}</span>
-              <span class="legend-tier-range">${t.range}</span>
-            </div>
-          `).join('')}
-        </div>
-      `;
+      return window.AtlasLegend.buildDemographicsLegendHTML(legendPresentationOptions());
     }
 
     function buildPopulationChangeLegendHTML() {
-      const useAbs = String(populationChangeMetric || 'pct') === 'abs';
-      const colors = useAbs
-        ? [
-            colorForPopulationChangeAbsMode(-180000),
-            colorForPopulationChangeAbsMode(-120000),
-            colorForPopulationChangeAbsMode(-60000),
-            colorForPopulationChangeAbsMode(-30000),
-            colorForPopulationChangeAbsMode(-15000),
-            colorForPopulationChangeAbsMode(-4000),
-            colorForPopulationChangeAbsMode(0),
-            colorForPopulationChangeAbsMode(4000),
-            colorForPopulationChangeAbsMode(15000),
-            colorForPopulationChangeAbsMode(30000),
-            colorForPopulationChangeAbsMode(60000),
-            colorForPopulationChangeAbsMode(120000),
-            colorForPopulationChangeAbsMode(180000)
-          ]
-        : [
-            colorForPopulationChangeMode(-32),
-            colorForPopulationChangeMode(-22),
-            colorForPopulationChangeMode(-12),
-            colorForPopulationChangeMode(-7),
-            colorForPopulationChangeMode(-3),
-            colorForPopulationChangeMode(-1),
-            colorForPopulationChangeMode(0),
-            colorForPopulationChangeMode(1),
-            colorForPopulationChangeMode(3),
-            colorForPopulationChangeMode(7),
-            colorForPopulationChangeMode(12),
-            colorForPopulationChangeMode(22),
-            colorForPopulationChangeMode(32)
-          ];
-      return `
-        <div class="legend-scale-shell">
-          ${buildLegendSpectrum(colors, 'population-change')}
-          <div class="legend-scale-caption population-change">
-            <span class="dem">Decline</span>
-            <span>Near flat</span>
-            <span class="rep">Growth</span>
-            <span class="rep">${useAbs ? 'Large gains' : 'Explosive growth'}</span>
-          </div>
-          <div class="legend-axis population-change">
-            ${useAbs
-              ? '<span class="dem">-150k+</span><span class="dem">-100k</span><span class="dem">-50k</span><span class="dem">-25k</span><span class="dem">-10k</span><span class="dem">-2.5k</span><span>Flat</span><span class="rep">+2.5k</span><span class="rep">+10k</span><span class="rep">+25k</span><span class="rep">+50k</span><span class="rep">+100k</span><span class="rep">+150k+</span>'
-              : '<span class="dem">-30%+</span><span class="dem">-20%</span><span class="dem">-10%</span><span class="dem">-5%</span><span class="dem">-2%</span><span class="dem">-0.5%</span><span>Flat</span><span class="rep">+1%</span><span class="rep">+2%</span><span class="rep">+5%</span><span class="rep">+10%</span><span class="rep">+20%</span><span class="rep">+30%+</span>'
-            }
-          </div>
-          <div class="legend-tier-list population-tiers" role="list">
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-180000) : colorForPopulationChangeMode(-32)};"></span><span class="legend-tier-label">${useAbs ? 'Extreme loss' : 'Extreme decline'}</span><span class="legend-tier-range">${useAbs ? '≤−150k' : '≤−30%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-120000) : colorForPopulationChangeMode(-22)};"></span><span class="legend-tier-label">${useAbs ? 'Major loss' : 'Major decline'}</span><span class="legend-tier-range">${useAbs ? '−149.99k to −100k' : '−29.99 to −20%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-60000) : colorForPopulationChangeMode(-12)};"></span><span class="legend-tier-label">${useAbs ? 'Severe loss' : 'Severe decline'}</span><span class="legend-tier-range">${useAbs ? '−99.99k to −50k' : '−19.99 to −10%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-30000) : colorForPopulationChangeMode(-7)};"></span><span class="legend-tier-label">${useAbs ? 'Sharp loss' : 'Sharp decline'}</span><span class="legend-tier-range">${useAbs ? '−49.99k to −25k' : '−9.99 to −5%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-15000) : colorForPopulationChangeMode(-3)};"></span><span class="legend-tier-label">${useAbs ? 'Moderate loss' : 'Moderate decline'}</span><span class="legend-tier-range">${useAbs ? '−24.99k to −10k' : '−4.99 to −2%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(-4000) : colorForPopulationChangeMode(-1)};"></span><span class="legend-tier-label">${useAbs ? 'Mild loss' : 'Mild decline'}</span><span class="legend-tier-range">${useAbs ? '−9.99k to −2.50k' : '−1.99 to −0.50%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(0) : colorForPopulationChangeMode(0)}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">Near flat</span><span class="legend-tier-range">${useAbs ? '−2.50k to +2.50k' : '−0.50 to +1%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(4000) : colorForPopulationChangeMode(1)};"></span><span class="legend-tier-label">${useAbs ? 'Modest gain' : 'Modest growth'}</span><span class="legend-tier-range">${useAbs ? '+2.50k–9.99k' : '+1–1.99%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(15000) : colorForPopulationChangeMode(3)};"></span><span class="legend-tier-label">${useAbs ? 'Steady gain' : 'Steady growth'}</span><span class="legend-tier-range">${useAbs ? '+10k–24.99k' : '+2–4.99%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(30000) : colorForPopulationChangeMode(7)};"></span><span class="legend-tier-label">${useAbs ? 'Substantial gain' : 'Strong growth'}</span><span class="legend-tier-range">${useAbs ? '+25k–49.99k' : '+5–9.99%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(60000) : colorForPopulationChangeMode(12)};"></span><span class="legend-tier-label">${useAbs ? 'Large gain' : 'Rapid growth'}</span><span class="legend-tier-range">${useAbs ? '+50k–99.99k' : '+10–19.99%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(120000) : colorForPopulationChangeMode(22)};"></span><span class="legend-tier-label">${useAbs ? 'Major gain' : 'Boom growth'}</span><span class="legend-tier-range">${useAbs ? '+100k–149.99k' : '+20–29.99%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(180000) : colorForPopulationChangeMode(32)};"></span><span class="legend-tier-label">${useAbs ? 'Extreme gain' : 'Explosive growth'}</span><span class="legend-tier-range">${useAbs ? '+150k+' : '≥30%'}</span></div>
-            <div class="legend-tier-row" role="listitem"><span class="legend-color" style="background: ${useAbs ? colorForPopulationChangeAbsMode(undefined) : colorForPopulationChangeMode(undefined)}; border: 1px solid rgba(15,23,42,0.18);"></span><span class="legend-tier-label tie">No population data</span><span class="legend-tier-range">Unavailable</span></div>
-          </div>
-        </div>
-      `;
+      return window.AtlasLegend.buildPopulationChangeLegendHTML(legendPresentationOptions());
     }
-
     function renderLegendForVizMode(mode, meta = {}) {
       const legend = document.getElementById('legend');
       const header = legend ? legend.querySelector('.legend-header h4') : null;
@@ -14801,7 +14531,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const primaryLabel = primaryValue ? formatContestLabel(primaryType, primaryYear) : 'Primary contest';
         const secondaryLabel = secondaryValue ? formatContestLabel(secondaryType, secondaryYear) : 'Comparison contest';
         if (header) header.textContent = 'Contest comparison';
-        if (subtitle) subtitle.textContent = `${secondaryLabel} → ${primaryLabel}. Colors show the difference in two-party margin.`;
+        if (subtitle) subtitle.textContent = `${secondaryLabel} → ${primaryLabel}. Colors show the difference in R−D margin.`;
         if (badge) badge.textContent = colorblind ? 'Margin Δ · CB' : 'Margin Δ';
         if (footer) footer.textContent = `Blue means ${primaryLabel} was more Democratic than ${secondaryLabel}; ${colorblind ? 'orange' : 'red'} means it was more Republican.`;
         content.innerHTML = buildComparisonLegendHTML();
@@ -14810,8 +14540,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (header) header.textContent = meta?.fromYear ? `Shift (${shiftRange})` : 'Shift';
         if (subtitle) {
           subtitle.textContent = meta?.fromYear
-            ? `Shows the change in two-party margin from ${meta.fromYear} to ${meta.toYear || 'the current contest'}.`
-            : 'Shows the change in two-party margin relative to the prior comparable election.';
+            ? `Shows the change in R−D margin from ${meta.fromYear} to ${meta.toYear || 'the current contest'}.`
+            : 'Shows the change in R−D margin relative to the prior comparable election.';
         }
         if (badge) badge.textContent = `${meta?.fromYear ? shiftRange : 'Shift'}${colorblind ? ' · CB' : ''}`;
         if (footer) footer.textContent = `Blue means movement toward Democrats; ${colorblind ? 'orange' : 'red'} means movement toward Republicans.`;
@@ -14840,9 +14570,9 @@ document.addEventListener('DOMContentLoaded', function() {
         content.innerHTML = buildPopulationChangeLegendHTML();
       } else {
         if (header) header.textContent = 'Margin Categories';
-        if (subtitle) subtitle.textContent = `Buckets by two-party margin (Rep% − Dem%). ${colorblind ? 'Orange' : 'Red'} = Republican lead; blue = Democratic lead.`;
+        if (subtitle) subtitle.textContent = `Buckets by R−D margin over the reported total. ${colorblind ? 'Orange' : 'Red'} = Republican lead; blue = Democratic lead.`;
         if (badge) badge.textContent = colorblind ? 'Margins · CB' : 'Margins';
-        if (footer) footer.textContent = 'Darker shades mean a larger lead. Ranges are absolute two-party margin (|Rep% − Dem%|).';
+        if (footer) footer.textContent = 'Darker shades mean a larger lead. Ranges are |Rep% − Dem%|; Other votes remain in the denominator.';
         content.dataset.marginsHtml = buildMarginsLegendHTML();
         content.innerHTML = content.dataset.marginsHtml;
       }

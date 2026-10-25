@@ -2,9 +2,18 @@
 
 ## March–October 2026
 
-**Last updated:** October 4, 2026
+**Last updated:** October 25, 2026
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
+
+### Legend Module Extraction and Documentation Alignment (October 25, 2026)
+
+- Moved deterministic legend category definitions and markup for Margins, Winners, Flips, Shift, Compare, Demographics, and Population Change into the tested `js/atlas-legend.js` module; the browser keeps thin compatibility wrappers while existing call sites migrate incrementally.
+- Added direct regression coverage for category counts, shift-versus-comparison semantics, population metrics, and the textual colorblind key.
+- Added a dedicated GitHub Actions browser job that installs Chromium, runs the complete Playwright suite, and uploads failure diagnostics for seven days.
+- Kept the root-level `index2.html` personal remake local through a narrow `.gitignore` entry without affecting the production `index.html`.
+- Corrected current documentation and live help text to describe R−D margin over the reported total, including Other votes when present, and stopped advertising the removed original-palette toggle.
+- Rotated the stylesheet, frontend modules, and `APP_BUILD_ID` to the release cache token `2026-10-25-legend-module-ci-v1`, and aligned package metadata with the repository's Apache-2.0 license.
 
 ### Consistent District Demographic Pill Sizing (October 4, 2026)
 
