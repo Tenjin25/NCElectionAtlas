@@ -193,8 +193,7 @@ def _update_district_manifest(manifest_path: Path, entries: list[dict]) -> None:
             files.append(e)
             index[key] = len(files) - 1
 
-    files.sort(key=lambda x: (int(x.get("year", 0)), str(x.get("scope", "")), str(x.get("contest_type", ""))))
-    manifest_path.write_text(json.dumps({"files": files}, indent=2), encoding="utf-8")
+    manifest_path.write_text(json.dumps({"files": files}, indent=2) + "\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -280,8 +279,8 @@ def main() -> None:
 
     out_house = args.district_contests_dir / f"state_house_state_house_{int(args.year)}.json"
     out_senate = args.district_contests_dir / f"state_senate_state_senate_{int(args.year)}.json"
-    out_house.write_text(json.dumps(payload_house, separators=(",", ":")), encoding="utf-8")
-    out_senate.write_text(json.dumps(payload_senate, separators=(",", ":")), encoding="utf-8")
+    out_house.write_text(json.dumps(payload_house, indent=2) + "\n", encoding="utf-8")
+    out_senate.write_text(json.dumps(payload_senate, indent=2) + "\n", encoding="utf-8")
 
     manifest_entries = [
         {

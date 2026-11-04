@@ -1,10 +1,20 @@
 # Change history
 
-## March–October 2026
+## March–November 2026
 
-**Last updated:** October 25, 2026
+**Last updated:** November 4, 2026
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
+
+### Official 2026 General-Election Results (November 4, 2026)
+
+- Converted the complete November 3 NCSBE precinct export to the repository's seven-column OpenElections format, preserving all 1,380 contests, 2,842 county-precinct pairs, and zero-vote rows for reproducibility.
+- Published official 2026 precinct/county slices for U.S. Senate, NC Supreme Court Associate Justice Seat 1, and Court of Appeals Seats 1–3, replacing the synthetic Senate and Supreme Court options in the live picker.
+- Aggregated all five statewide contests to Congressional, State House, and State Senate districts on both the 2022 and 2024 line sets, and to the enacted 2026 congressional plan, with exact statewide DEM/REP/OTHER vote reconciliation.
+- Added direct 2026 NC House and NC Senate results on the 2024 legislative lines and direct U.S. House results on the 2026 congressional lines.
+- Retained the two retired modeled attempts as reproducible legacy JSON at `data/legacy/modeling/2026_modeled_attempts.json`, while disabling their manifest injection and idle preload.
+- Added reusable conversion and modern-line aggregation commands, extended the direct U.S. House builder with a single-election CLI, and normalized generated JSON/manifest formatting to the production schemas.
+- Rotated the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-04-official-results-v1`.
 
 ### Legend Module Extraction and Documentation Alignment (October 25, 2026)
 

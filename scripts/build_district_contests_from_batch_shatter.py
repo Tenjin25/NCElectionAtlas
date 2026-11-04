@@ -837,9 +837,9 @@ def update_contests_manifest(manifest_path: Path, entries: list[dict]) -> None:
     for e in entries:
         idx[(str(e.get("contest_type")), int(e.get("year")))] = e
 
+    # Preserve the established manifest order; new contest/year pairs append.
     merged = list(idx.values())
-    merged.sort(key=lambda x: (int(x.get("year", 0)), str(x.get("contest_type", ""))))
-    manifest_path.write_text(json.dumps({"files": merged}, indent=2), encoding="utf-8")
+    manifest_path.write_text(json.dumps({"files": merged}, indent=2) + "\n", encoding="utf-8")
 
 
 def build_county_shares(

@@ -7,6 +7,7 @@ by that district instead of being reallocated through a crosswalk.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import re
@@ -90,11 +91,27 @@ def build(year: int, source: Path, output_dir: Path) -> None:
         "district_lines_year": year,
         "district_lines_label": f"{year} lines",
     })
-    files.sort(key=lambda entry: (entry.get("year", 0), entry.get("scope", ""), entry.get("contest_type", "")))
     manifest_path.write_text(json.dumps({"files": files}, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {output} ({len(results)} districts)")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--year", type=int)
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--output-dir", type=Path)
+    args = parser.parse_args()
+
+    supplied = [args.year is not None, args.source is not None, args.output_dir is not None]
+    if any(supplied) and not all(supplied):
+        parser.error("--year, --source, and --output-dir must be supplied together")
+    if all(supplied):
+        build(args.year, args.source, args.output_dir)
+        return
+
     build(2022, ROOT / "data/2022/20221108__nc__general__precinct.csv", ROOT / "data/district_contests")
     build(2024, ROOT / "data/2024/20241105__nc__general__precinct.csv", ROOT / "data/district_contests_2024_lines")
+
+
+if __name__ == "__main__":
+    main()

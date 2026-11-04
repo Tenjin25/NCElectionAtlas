@@ -1,99 +1,117 @@
+"""Convert an NCSBE precinct-results TSV to OpenElections-style CSV.
+
+Output columns:
+    county,precinct,office,district,party,candidate,votes
+
+The converter preserves every contest and vote row, including zero-vote rows and
+non-geographic absentee/early/provisional buckets. Downstream atlas builders are
+responsible for selecting contests and allocating non-geographic votes.
 """
-Convert NC precinct election results to OpenElections CSV format
-Standard format: county,precinct,office,district,party,candidate,votes
-"""
-import pandas as pd
+from __future__ import annotations
+
+import argparse
+import re
 from pathlib import Path
 
-def convert_to_openelections(input_file, output_file):
-    """Convert NC results file to OpenElections format"""
+import pandas as pd
+
+
+OUTPUT_COLUMNS = [
+    "county",
+    "precinct",
+    "office",
+    "district",
+    "party",
+    "candidate",
+    "votes",
+]
+
+
+def extract_district(office: object) -> str:
+    """Return the district token from district-based NCSBE contest labels."""
+    label = str(office or "").strip().upper()
+    match = re.search(r"\bDISTRICT\s+([0-9]+[A-Z]?)\b", label)
+    return match.group(1) if match else ""
+
+
+def convert_to_openelections(
+    input_file: Path,
+    output_file: Path,
+    offices: list[str] | None = None,
+) -> pd.DataFrame:
+    """Convert one tab-separated NCSBE precinct export."""
     print(f"Processing {input_file}...")
-    
-    # Read the tab-separated file
-    df = pd.read_csv(input_file, sep='\t', low_memory=False)
-    
-    # Filter for statewide contests only (Contest Type = 'S')
-    df = df[df['Contest Type'] == 'S'].copy()
-    
-    # Standardize office names
-    office_mapping = {
-        'US PRESIDENT': 'President',
-        'NC GOVERNOR': 'Governor',
-        'NC LIEUTENANT GOVERNOR': 'Lieutenant Governor',
-        'NC ATTORNEY GENERAL': 'Attorney General',
-        'NC AUDITOR': 'State Auditor',
-        'NC COMMISSIONER OF AGRICULTURE': 'Commissioner of Agriculture',
-        'NC COMMISSIONER OF LABOR': 'Commissioner of Labor',
-        'NC COMMISSIONER OF INSURANCE': 'Commissioner of Insurance',
-        'NC SECRETARY OF STATE': 'Secretary of State',
-        'NC STATE TREASURER': 'State Treasurer',
-        'NC SUPERINTENDENT OF PUBLIC INSTRUCTION': 'Superintendent of Public Instruction',
-        'US SENATE': 'U.S. Senate',
-        'US SENATOR': 'U.S. Senate'
+    source = pd.read_csv(input_file, sep="\t", dtype=str, keep_default_na=False)
+
+    required = {
+        "County",
+        "Precinct",
+        "Contest Name",
+        "Choice Party",
+        "Choice",
+        "Total Votes",
     }
-    
-    # Create OpenElections format dataframe
-    openelections_data = []
-    
-    for _, row in df.iterrows():
-        county = row['County']
-        precinct = row['Precinct']
-        contest = row['Contest Name']
-        office = office_mapping.get(contest, contest)
-        party = row['Choice Party'] if pd.notna(row['Choice Party']) else ''
-        candidate = row['Choice']
-        votes = row['Total Votes']
-        
-        # Skip if no votes
-        if pd.isna(votes) or votes == 0:
-            continue
-        
-        openelections_data.append({
-            'county': county,
-            'precinct': precinct,
-            'office': office,
-            'district': '',  # Statewide contests have no district
-            'party': party,
-            'candidate': candidate,
-            'votes': int(votes)
-        })
-    
-    # Create DataFrame and save
-    result_df = pd.DataFrame(openelections_data)
-    result_df = result_df.sort_values(['county', 'precinct', 'office', 'party'])
-    
-    print(f"Saving to {output_file}...")
-    result_df.to_csv(output_file, index=False)
-    
-    print(f"✓ Converted {len(df)} rows to {len(result_df)} OpenElections records")
-    print(f"  Counties: {result_df['county'].nunique()}")
-    print(f"  Precincts: {result_df['precinct'].nunique()}")
-    print(f"  Offices: {result_df['office'].nunique()}")
-    
-    return result_df
+    missing = sorted(required - set(source.columns))
+    if missing:
+        raise ValueError(f"Missing required NCSBE columns: {', '.join(missing)}")
 
-def main():
-    data_dir = Path('data')
-    
-    # Convert each election year
-    conversions = [
-        ('results_pct_20201103.txt', '20201103__nc__general__precinct.csv'),
-        ('results_pct_20221108.txt', '20221108__nc__general__precinct.csv'),
-        ('results_pct_20241105.txt', '20241105__nc__general__precinct.csv')
-    ]
-    
-    for input_file, output_file in conversions:
-        input_path = data_dir / input_file
-        output_path = data_dir / output_file
-        
-        if input_path.exists():
-            df = convert_to_openelections(input_path, output_path)
-            print(f"✓ Saved: {output_path}\n")
-        else:
-            print(f"⚠ File not found: {input_path}\n")
-    
-    print("=" * 60)
-    print("Conversion complete! OpenElections CSV files created.")
+    if offices:
+        wanted = {office.strip().upper() for office in offices if office.strip()}
+        source = source[source["Contest Name"].str.strip().str.upper().isin(wanted)].copy()
+        missing_offices = sorted(wanted - set(source["Contest Name"].str.strip().str.upper()))
+        if missing_offices:
+            raise ValueError(f"Requested offices not found: {', '.join(missing_offices)}")
 
-if __name__ == '__main__':
+    votes = pd.to_numeric(source["Total Votes"], errors="raise").astype("int64")
+    if (votes < 0).any():
+        raise ValueError("Total Votes contains a negative value")
+
+    result = pd.DataFrame(
+        {
+            "county": source["County"].str.strip(),
+            "precinct": source["Precinct"].str.strip(),
+            "office": source["Contest Name"].str.strip(),
+            "district": source["Contest Name"].map(extract_district),
+            "party": source["Choice Party"].str.strip(),
+            "candidate": source["Choice"].str.strip(),
+            "votes": votes,
+        },
+        columns=OUTPUT_COLUMNS,
+    )
+    result = result.sort_values(
+        ["county", "precinct", "office", "party", "candidate"],
+        kind="stable",
+    ).reset_index(drop=True)
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    result.to_csv(output_file, index=False, lineterminator="\n")
+
+    print(f"Saved {len(result):,} rows to {output_file}")
+    print(f"  Counties: {result['county'].nunique():,}")
+    precinct_pairs = result[["county", "precinct"]].drop_duplicates().shape[0]
+    print(f"  County-precinct pairs: {precinct_pairs:,}")
+    print(f"  Offices: {result['office'].nunique():,}")
+    print(f"  Ballot selections: {int(result['votes'].sum()):,}")
+    return result
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", type=Path, help="NCSBE tab-separated results file")
+    parser.add_argument("output", type=Path, help="OpenElections-style CSV to write")
+    parser.add_argument(
+        "--office",
+        action="append",
+        default=[],
+        help="Exact contest name to include; repeat for multiple contests (default: all)",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    convert_to_openelections(args.input, args.output, offices=args.office)
+
+
+if __name__ == "__main__":
     main()

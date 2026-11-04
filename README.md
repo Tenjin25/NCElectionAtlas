@@ -2,7 +2,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 
-**NCPrecinctMap** is an interactive web-based map for exploring North Carolina election results at the precinct and district level, covering general elections from **2000 through 2024**. It is designed for researchers, journalists, and citizens who want to understand how election results map onto changing precinct and district boundaries over time.
+**NCPrecinctMap** is an interactive web-based map for exploring North Carolina election results at the precinct and district level, covering general elections from **2000 through 2026**. It is designed for researchers, journalists, and citizens who want to understand how election results map onto changing precinct and district boundaries over time.
 
 The live app is now presented as **North Carolina Election Atlas**, which is the public-facing name used in the current UI.
 
@@ -91,7 +91,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 	- **Statewide Snapshot Tier Precision:** Statewide snapshot ratings classify the same two-decimal margin shown to readers, so a result such as `D+0.96%` remains `Tilt Democratic` instead of being rounded to `1.0%` and promoted to `Lean Democratic`
 	- **Default Atlas/DRA Compromise 15-Tier Palette:** The active table blends the original Atlas colors with lessons from the former DRA palette experiment across Margins, Winners, Shift, and Flips in county, precinct, and district views. It maps directly to the atlas's 40/30/20/10/5.5/1/0.5-point margin thresholds, with darker strongholds and smoother competitive transitions. The compromise palette is the standard live palette; colorblind mode supplies the supported partisan alternative, while Demographics and Population Change retain their own semantic palettes.
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Modeled 2026 Statewide Races:** Synthetic `US Senate (2026) model` and `NC Supreme Court Associate Justice Seat 1 (2026) Model` entries use recent statewide baselines and respond to the same swing controls as real contests. The Senate model uses `2022 + 2020 US Senate` anchors and the `2024 President` climate, all loaded from the production precinct slices. County and statewide comparisons are derived in memory from those precinct rows; files in `data/county_contests/` and attached county-total sidecars are not frontend authorities for modeled output. Reliability, repeatability, anomaly, federalization, and candidate-coalition brakes allow realistic ticket splitting without turning the race into a presidential clone. A precinct reconciliation step preserves each calibrated county target without flattening precinct ordering. The current calibration gives Cooper stronger Guilford, Pitt, Northampton, and App State-centered Watauga performance, gives Chatham and Granville softer Triangle-adjacent treatment, and allows Whatley to approach Budd-like margins in selected rural areas. A Senate-only turnout-composition layer keeps the raw precinct and **Congressional / State House / State Senate** statewide aggregates near one another. In modeled mode, the statewide summary includes a compact methodology indicator, while **What-if & overlays** exposes light model-tuning sliders and `Copy Link` preserves non-default tuning.
+- **Official 2026 Results:** The contest picker uses the November 3, 2026 NCSBE precinct export for U.S. Senate, NC Supreme Court Seat 1, and Court of Appeals Seats 1–3. Statewide contests are aggregated to the 2022 and 2024 Congressional / State House / State Senate lines and to the 2026 congressional plan. Direct 2026 U.S. House, NC House, and NC Senate results use their matching 2026 congressional and 2024 legislative lines. The former synthetic Senate and Supreme Court experiments are hidden from the picker and archived for reproducibility in `data/legacy/modeling/2026_modeled_attempts.json`.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -118,7 +118,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset cache token is `2026-09-23-atlas-reliability-v6` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-04-official-results-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 
@@ -211,7 +211,7 @@ Visit [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/N
 - **Regional Presets:** Grouped quick jumps cover metro areas, broad regions (including Southeast NC), and the I-95 corridor; each zooms to its included counties and shows grouped vote summaries.
 - **Hover and Sidebar Details:** See candidate names, vote totals, margins, and trend lines for any geography.
 - **Demographics Layering:** Use `Demographics` mode to shade geographies by plurality race share, with optional high-contrast rendering for better visibility.
-- **Data Coverage:** Precinct-level results span **2000–2024**. Some contests or years may be incomplete depending on source data availability.
+- **Data Coverage:** Precinct-level results span **2000–2026**. Some contests or years may be incomplete depending on source data availability.
 - **Judicial and Special Contests:** Appear in the Counties view contest picker where available.
 
 **Navigation Tips:**
@@ -399,6 +399,7 @@ Review-only audit folders may also appear in `data/` (for example `data/district
 ### 4. Statewide County Results (Fallback)
 
 - `data/nc_elections_aggregated.json` — Used as a fallback for some contests/years
+- `data/legacy/modeling/2026_modeled_attempts.json` — Retired synthetic 2026 model definitions and generated outputs (not published in the contest picker)
 
 ### 5. District Descriptions (Optional)
 
@@ -430,6 +431,49 @@ The district-building pipeline and front-end treat these as **non-geographic** a
 - allocate them using candidate shares / county weights (depending on mode)
 
 ## Rebuilding Data
+
+### Rebuilding the 2026 General Election
+
+The checked-in NCSBE precinct export is converted to the seven-column OpenElections layout before any frontend JSON is built. The CSV intentionally retains every contest and zero-vote row; its sum is therefore total ballot selections across contests, not voter turnout.
+
+```powershell
+python tools/convert_to_openelections.py `
+  data/results_pct_20261103/results_pct_20261103.txt `
+  data/2026/20261103__nc__general__precinct.csv
+```
+
+Build the five statewide partisan contests used by the atlas, attach their 100-county totals, and aggregate them to every supported line set:
+
+```powershell
+$statewide = "^(us_senate|nc_court_of_appeals_judge_seat_0[1-3]|nc_supreme_court_associate_justice_seat_01)$"
+
+python scripts/build_district_contests_from_batch_shatter.py `
+  --year 2026 --allocation-year 2026 `
+  --results-csv data/2026/20261103__nc__general__precinct.csv `
+  --office-source auto --contest-type-regex $statewide `
+  --contests-only --write-contests
+
+python scripts/add_csv_county_totals_to_contests.py --write --years 2026
+python scripts/aggregate_contests_to_district_lines.py --year 2026 --line-sets 2022,2024,2026
+```
+
+The county-total helper also emits convenience files under `data/county_contests/`; those files are not frontend authorities and are not required for this release. The frontend reads `data/contests/` and the three district-contest directories.
+
+Build the direct legislative and congressional races on the plans used for the 2026 election:
+
+```powershell
+python scripts/build_legislative_district_contests.py `
+  --year 2026 `
+  --results-csv data/2026/20261103__nc__general__precinct.csv `
+  --district-contests-dir data/district_contests_2024_lines
+
+python scripts/build_congressional_us_house_slices.py `
+  --year 2026 `
+  --source data/2026/20261103__nc__general__precinct.csv `
+  --output-dir data/district_contests_2026_lines
+```
+
+The retired synthetic Senate and Supreme Court attempts can be regenerated with `node scripts/inspect_2026_senate_model.js`; that exporter writes `data/legacy/modeling/2026_modeled_attempts.json`, but the legacy contests remain disabled in the picker.
 
 ### Rebuilding District Slices
 
