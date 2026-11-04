@@ -1205,7 +1205,7 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(rawToneClasses).toEqual([]);
   });
 
-  test('2026 modeled Senate and Supreme Court contests synthesize county and district slices', async ({ page }) => {
+  test.skip('legacy 2026 modeled Senate and Supreme Court contests synthesize county and district slices', async ({ page }) => {
     await page.waitForFunction(() => {
       const sel = document.getElementById('contestSelect');
       const values = Array.from(sel?.options || [])
@@ -1479,6 +1479,25 @@ test.describe('North Carolina Election Atlas regression checks', () => {
       'us_senate_model_2026'
     );
     await expect(page.locator('#context-contest')).toContainText('US Senate (2026) model');
+  });
+
+  test('2026 official contests replace legacy modeled dropdown entries', async ({ page }) => {
+    await page.waitForFunction(() => {
+      const values = Array.from(document.getElementById('contestSelect')?.options || [])
+        .map((option) => String(option?.value || '').trim());
+      return values.includes('us_senate_2026')
+        && values.includes('nc_supreme_court_associate_justice_seat_01_2026')
+        && values.includes('nc_court_of_appeals_judge_seat_01_2026');
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const options = await page.locator('#contestSelect option').evaluateAll((nodes) => (
+      Object.fromEntries(nodes.map((node) => [node.value, node.textContent?.trim() || '']))
+    ));
+    expect(options.us_senate_model_2026).toBeUndefined();
+    expect(options.nc_supreme_court_model_2026).toBeUndefined();
+    expect(options.us_senate_2026).toContain('2026');
+    expect(options.nc_supreme_court_associate_justice_seat_01_2026).toContain('2026');
+    expect(options.nc_court_of_appeals_judge_seat_01_2026).toContain('2026');
   });
 
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {

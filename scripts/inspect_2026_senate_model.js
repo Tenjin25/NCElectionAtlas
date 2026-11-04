@@ -389,6 +389,35 @@ function summarizeResults(results) {
   ) {
     throw new Error(`Modern Davidson precinct collision detected: ${JSON.stringify(result.davidson2024Precincts)}`);
   }
+  const legacyModels = await page.evaluate(async () => {
+    const specs = [
+      ['us_senate_model_2026', 'us_senate_model'],
+      ['nc_supreme_court_model_2026', 'nc_supreme_court_model']
+    ];
+    const models = {};
+    for (const [key, contestType] of specs) {
+      const districtSlices = {};
+      for (const scope of ['congressional', 'state_house', 'state_senate']) {
+        districtSlices[scope] = await loadDistrictSlice(scope, contestType, 2026);
+      }
+      models[key] = {
+        definition: MODELED_CONTEST_DEFINITIONS[key],
+        precinct_rows: await loadContestSlice(contestType, 2026),
+        district_slices: districtSlices
+      };
+    }
+    return models;
+  });
+  const legacyOutput = path.join(modelRoot, 'data', 'legacy', 'modeling', '2026_modeled_attempts.json');
+  fs.mkdirSync(path.dirname(legacyOutput), { recursive: true });
+  fs.writeFileSync(legacyOutput, JSON.stringify({
+    schema_version: 1,
+    status: 'legacy_attempts',
+    archived_on: '2026-11-04',
+    note: 'Synthetic 2026 models retained for reproducibility; not published in the contest dropdown.',
+    models: legacyModels
+  }, null, 2) + '\n');
+  console.log(`Wrote ${legacyOutput}`);
   console.log(JSON.stringify(result, null, 2));
   await modelBrowser.close();
   modelServer.kill();
