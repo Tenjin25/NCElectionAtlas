@@ -118,7 +118,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-04-official-results-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-04-house-leader-v2` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 

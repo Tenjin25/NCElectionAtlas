@@ -1500,6 +1500,14 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(options.nc_court_of_appeals_judge_seat_01_2026).toContain('2026');
   });
 
+  test('2026 State House statewide summary uses Democratic leader labels', async ({ page }) => {
+    const labels = await page.evaluate(() => legislativeLeaderCandidateOverrides('state_house', 2026));
+    expect(labels).toEqual({
+      demCandidate: 'Democratic Leader Robert Reives',
+      repCandidate: 'Minority Leader Destin Hall'
+    });
+  });
+
   test('story snapshot exports include selected layout variant in filename', async ({ page }) => {
     await page.evaluate(() => {
       const png1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR4nGNgYGAAAAAEAAGjChXjAAAAAElFTkSuQmCC';
