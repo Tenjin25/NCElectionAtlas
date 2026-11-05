@@ -1500,11 +1500,20 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(options.nc_court_of_appeals_judge_seat_01_2026).toContain('2026');
   });
 
-  test('2026 State House statewide summary uses incoming chamber leadership labels', async ({ page }) => {
-    const labels = await page.evaluate(() => legislativeLeaderCandidateOverrides('state_house', 2026));
+  test('2026 State House uses chamber leaders in the minimized context only', async ({ page }) => {
+    const labels = await page.evaluate(() => ({
+      expanded: legislativeLeaderCandidateOverrides('state_house', 2026),
+      minimized: legislativeMinimizedContextOverride('state_house', 2026)
+    }));
     expect(labels).toEqual({
-      demCandidate: 'Speaker Robert Reives',
-      repCandidate: 'Minority Leader Destin Hall'
+      expanded: {
+        demCandidate: 'House Democrats',
+        repCandidate: 'House Republicans'
+      },
+      minimized: {
+        title: 'Speaker Robert Reives',
+        sub: '2026 State House | Minority Leader Destin Hall'
+      }
     });
   });
 

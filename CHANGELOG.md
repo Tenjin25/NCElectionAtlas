@@ -8,8 +8,8 @@ The September 21 frontend precision work was later restored and refined by the S
 
 ### Official 2026 General-Election Results (November 4, 2026)
 
-- Updated the 2026 State House statewide summary to identify incoming Speaker Robert Reives after Democrats won 71 of 120 seats and to label Destin Hall as Minority Leader rather than Speaker.
-- Rotated the shared asset, data-request, and `APP_BUILD_ID` cache token to `2026-11-04-house-speaker-v3`.
+- Updated the minimized 2026 State House results header to identify incoming Speaker Robert Reives and Minority Leader Destin Hall, while keeping the expanded vote breakdown labeled by party caucus.
+- Rotated the shared asset, data-request, and `APP_BUILD_ID` cache token to `2026-11-04-house-context-v4`.
 - Converted the complete November 3 NCSBE precinct export to the repository's seven-column OpenElections format, preserving all 1,380 contests, 2,842 county-precinct pairs, and zero-vote rows for reproducibility.
 - Published official 2026 precinct/county slices for U.S. Senate, NC Supreme Court Associate Justice Seat 1, and Court of Appeals Seats 1–3, replacing the synthetic Senate and Supreme Court options in the live picker.
 - Aggregated all five statewide contests to Congressional, State House, and State Senate districts on both the 2022 and 2024 line sets, and to the enacted 2026 congressional plan, with exact statewide DEM/REP/OTHER vote reconciliation.

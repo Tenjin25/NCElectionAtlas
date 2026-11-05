@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-11-04-house-speaker-v3" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-11-04-house-context-v4" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1901,21 +1901,21 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-comparison.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-core.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-data.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-display.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-election.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-legend.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-manifest.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-modeling.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-provenance.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-regions.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-trends.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-turnout.js?v=2026-11-04-house-speaker-v3"></script>
-    <script src="./js/atlas-url-state.js?v=2026-11-04-house-speaker-v3"></script>
+    <script src="./js/atlas-classification.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-comparison.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-core.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-data.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-display.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-election.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-legend.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-manifest.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-modeling.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-provenance.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-regions.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-trends.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-turnout.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-url-state.js?v=2026-11-04-house-context-v4"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1948,8 +1948,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-11-04-house-speaker-v3';
-    const APP_BUILD_ID = '2026-11-04-house-speaker-v3';
+    const DATA_CACHE_BUSTER = '2026-11-04-house-context-v4';
+    const APP_BUILD_ID = '2026-11-04-house-context-v4';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -7415,9 +7415,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setVoteCounterBaselineState(title, sub, demVotes, repVotes, otherVotes, meta = null, candidates = null) {
-      voteCounterBaseline = { title, sub, demVotes, repVotes, otherVotes, meta, candidates };
+      const compactContext = legislativeMinimizedContextOverride(meta?.contestType, meta?.year);
+      const contextTitle = compactContext?.title || title;
+      const contextSub = compactContext?.sub || sub;
+      voteCounterBaseline = { title: contextTitle, sub: contextSub, demVotes, repVotes, otherVotes, meta, candidates };
       if (!voteCounterPinned) {
-        setVoteCounterContext(title, sub, { showClear: false });
+        setVoteCounterContext(contextTitle, contextSub, { showClear: false });
         updateVoteCounter(demVotes, repVotes, otherVotes, candidates, meta);
         refreshFocusTrend(voteCounterBaseline);
         refreshSourceConfidence(voteCounterBaseline);
@@ -28049,10 +28052,22 @@ document.addEventListener('DOMContentLoaded', function() {
       if (key === 'state_house') {
         if (yearNum === 2022) return { repCandidate: 'Speaker Tim Moore', demCandidate: 'House Democrats' };
         if (yearNum === 2024) return { repCandidate: 'Speaker Destin Hall', demCandidate: 'House Democrats' };
-        if (yearNum === 2026) return { repCandidate: 'Minority Leader Destin Hall', demCandidate: 'Speaker Robert Reives' };
+        if (yearNum === 2026) return { repCandidate: 'House Republicans', demCandidate: 'House Democrats' };
       }
       if (key === 'state_senate') {
         if (yearNum === 2022 || yearNum === 2024) return { repCandidate: 'Phil Berger', demCandidate: 'Senate Democrats' };
+      }
+      return null;
+    }
+
+    function legislativeMinimizedContextOverride(ct, y) {
+      const key = String(ct || '').trim().toLowerCase();
+      const yearNum = Number(y);
+      if (key === 'state_house' && yearNum === 2026) {
+        return {
+          title: 'Speaker Robert Reives',
+          sub: '2026 State House | Minority Leader Destin Hall'
+        };
       }
       return null;
     }
