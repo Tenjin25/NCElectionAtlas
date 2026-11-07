@@ -723,6 +723,9 @@ test('comparison cards name both contests instead of using opaque A/B keys', asy
   expect(source).toContain('signedCountyMarginPctDisplayValue(primaryRow.dem, primaryRow.rep, primaryRow.total)');
   expect(source).toContain('`US President ${year}${suffix || \'\'}`');
   expect(source).toContain("context: comparisonHTML ? 'comparison-results' : 'votehub-results'");
+  expect(source).toContain("scope: 'precinct'");
+  expect(source).toContain('shared precincts');
+  expect(source).toContain("getActiveComparisonRecord('precinct', key)");
   expect(source).not.toContain('class="comparison-result-key">A</span>');
   expect(source).not.toContain('from B to A');
 });
@@ -797,6 +800,44 @@ test.describe('North Carolina Election Atlas regression checks', () => {
     expect(countyComparisonState.summary).toMatch(/President.*2020.*President.*2024.*statewide difference/i);
     expect(Array.isArray(countyComparisonState.fill)).toBeTruthy();
     expect(countyComparisonState.fill[0]).toBe('match');
+  });
+
+  test('comparison mode colors and reports shared precincts when precinct mode is enabled', async ({ page }) => {
+    await waitForSplitTicketOptions(page);
+
+    await page.selectOption('#contestSelect', 'president_2024');
+    await page.click('#precinct-toggle');
+    await page.locator('[data-mode="comparison"]:visible').click();
+
+    await page.waitForFunction(() => {
+      const summary = document.getElementById('comparison-summary')?.textContent || '';
+      return currentVizMode === 'comparison'
+        && activeComparisonSnapshot?.scope === 'precinct'
+        && activeComparisonSnapshot?.records instanceof Map
+        && activeComparisonSnapshot.records.size > 0
+        && /shared precincts/i.test(summary);
+    }, { timeout: APP_READY_TIMEOUT });
+
+    const precinctComparisonState = await page.evaluate(() => ({
+      scope: activeComparisonSnapshot?.scope || '',
+      matched: Number(activeComparisonSnapshot?.matchedPrecincts || 0),
+      eligible: Number(activeComparisonSnapshot?.eligiblePrecincts || 0),
+      summary: document.getElementById('comparison-summary')?.textContent || '',
+      dotVisibility: map?.getLayer?.('precinct-dot')
+        ? map.getLayoutProperty('precinct-dot', 'visibility')
+        : '',
+      dotColor: map?.getLayer?.('precinct-dot')
+        ? map.getPaintProperty('precinct-dot', 'circle-color')
+        : null
+    }));
+
+    expect(precinctComparisonState.scope).toBe('precinct');
+    expect(precinctComparisonState.matched).toBeGreaterThan(2000);
+    expect(precinctComparisonState.eligible).toBeGreaterThanOrEqual(precinctComparisonState.matched);
+    expect(precinctComparisonState.summary).toMatch(/shared precincts/i);
+    expect(precinctComparisonState.dotVisibility).toBe('visible');
+    expect(Array.isArray(precinctComparisonState.dotColor)).toBeTruthy();
+    expect(precinctComparisonState.dotColor[0]).toBe('match');
   });
 
   test('split-ticket toggle enables President vs Governor overlay', async ({ page }) => {

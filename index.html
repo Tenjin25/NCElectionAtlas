@@ -607,7 +607,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Load the full UI weight range so labels, section kickers, and display text keep their intended hierarchy. -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap&v=2026-08-25-typography-tooltip-v2" rel="stylesheet">
-    <link href="./css/atlas-main.css?v=2026-11-04-house-context-v4" rel="stylesheet">
+    <link href="./css/atlas-main.css?v=2026-11-07-precinct-compare-v1" rel="stylesheet">
 <style id="selected-panel-type-scale">
   #focus-card .focus-pill-value { font-size: 16.5px; }
   .desktop-statewide-kicker,
@@ -1865,6 +1865,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <p><strong>Margins</strong>: colors show the <strong>Republican-minus-Democratic margin</strong> (Rep% − Dem%). Shares use the reported total, including Other votes when present. Red shades = Republican lead; blue shades = Democratic lead. Darker = a larger lead (less competitive).</p>
           <p><strong>Winners</strong>: solid color by winner (D/R), regardless of margin size.</p>
           <p><strong>Shift</strong>: change in <strong>signed</strong> margin vs the nearest available prior election for that contest (e.g. 2020→2024). Positive = more Republican; negative = more Democratic.</p>
+          <p><strong>Compare</strong>: difference in signed margin between any two selected contests. With <strong>Precincts On</strong>, both contests are matched to the current precinct keys; gray precincts lack a shared usable result, and the comparison summary reports match coverage.</p>
 
           <h3>Margin Categories</h3>
           <p>Category names are just shorthand for <strong>absolute</strong> margin ranges (|Rep% − Dem%|):</p>
@@ -1901,21 +1902,21 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
 
-    <script src="./js/atlas-classification.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-comparison.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-custom-region.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-core.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-data.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-display.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-election.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-legend.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-manifest.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-modeling.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-provenance.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-regions.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-trends.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-turnout.js?v=2026-11-04-house-context-v4"></script>
-    <script src="./js/atlas-url-state.js?v=2026-11-04-house-context-v4"></script>
+    <script src="./js/atlas-classification.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-comparison.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-custom-region.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-core.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-data.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-display.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-election.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-legend.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-manifest.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-modeling.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-provenance.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-regions.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-trends.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-turnout.js?v=2026-11-07-precinct-compare-v1"></script>
+    <script src="./js/atlas-url-state.js?v=2026-11-07-precinct-compare-v1"></script>
     <script>
     // --- CONFIG ---
     const ATLAS_CREATOR_SIGNATURE = Object.freeze({
@@ -1948,8 +1949,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cache destroyer token for static data requests.
     // Bump this value when you want browsers/CDNs to fetch fresh files immediately.
-    const DATA_CACHE_BUSTER = '2026-11-04-house-context-v4';
-    const APP_BUILD_ID = '2026-11-04-house-context-v4';
+    const DATA_CACHE_BUSTER = '2026-11-07-precinct-compare-v1';
+    const APP_BUILD_ID = '2026-11-07-precinct-compare-v1';
 
     function withCacheBuster(path) {
       return window.AtlasData.withCacheBuster(path, DATA_CACHE_BUSTER);
@@ -19269,7 +19270,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Also throttle rapid transitions between precincts to keep hover responsive.
       try {
         const featKey = (feature?.id !== null && feature?.id !== undefined) ? `id:${feature.id}` : `norm:${precinctNorm}`;
-        const hoverKey = `${featKey}|${contestValue}`;
+        const hoverKey = `${featKey}|${contestValue}|${currentVizMode}|${comparisonContestValue || ''}`;
         const tooltip = document.getElementById('hover-tooltip');
         const tooltipVisible = !!tooltip && tooltip.style.display !== 'none' && (tooltip.innerHTML || '').trim().length > 0;
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -19289,6 +19290,37 @@ document.addEventListener('DOMContentLoaded', function() {
       const mobilePinnedSelection = !!(pinSelection && isMobileInteractionMode());
       const pinnedShell = !!tooltipPinned || mobilePinnedSelection;
       if (mobilePinnedSelection) setTooltipPinned(true);
+      if (currentVizMode === 'comparison') {
+        const lookupKeys = buildPrecinctResultLookupKeys({
+          precinctNorm,
+          countyName,
+          code: displayCode,
+          fullName: precFull,
+          fallbackFullName: fallbackFull
+        });
+        let comparisonRecord = null;
+        for (const key of lookupKeys) {
+          comparisonRecord = getActiveComparisonRecord('precinct', key);
+          if (comparisonRecord) break;
+        }
+        const copyText = (precinctNorm || title || '').toString().trim();
+        const comparisonHTML = comparisonRecord
+          ? renderComparisonRecordHTML(comparisonRecord, {
+              standalone: true,
+              title,
+              subtitle: 'Precinct'
+            })
+          : '<div class="comparison-tooltip-card is-standalone"><div class="tooltip-kicker">No shared result</div><div class="tooltip-insight">One or both contests could not be matched to this precinct.</div></div>';
+        showHoverTooltip(
+          point.x,
+          point.y,
+          buildTooltipShell('', comparisonHTML, { pinned: pinnedShell, showClose: pinnedShell, copyText }),
+          { force: !!forceTooltip, pinned: pinnedShell, context: 'comparison-results', copyText }
+        );
+        clearDesktopHoverExpandState();
+        wireTooltipButtons();
+        return;
+      }
       if (!contestType || !year) {
         const hoverTitle = buildTooltipTitleWithTier(title);
         const copyText = (precinctNorm || title || '').toString().trim();
@@ -22958,12 +22990,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const minZoom = (CONFIG.precincts?.minZoom || 8.5);
       const z = map.getZoom();
-      const comparisonAllowsPrecincts = currentVizMode !== 'comparison';
-      const wantsPolygons = precinctsEnabled && comparisonAllowsPrecincts && !shouldUseCentroidOnlyPrecinctMode() && z >= minZoom;
+      const wantsPolygons = precinctsEnabled && !shouldUseCentroidOnlyPrecinctMode() && z >= minZoom;
       // Keep centroids visible until polygon geometry is actually ready; otherwise users can zoom
       // into an empty map while the heavy precinct GeoJSON is still loading.
       const polyVisible = wantsPolygons && !!precinctSourceLoaded;
-      const dotVisible = precinctsEnabled && comparisonAllowsPrecincts && (!wantsPolygons || !precinctSourceLoaded || shouldUseCentroidOnlyPrecinctMode());
+      const dotVisible = precinctsEnabled && (!wantsPolygons || !precinctSourceLoaded || shouldUseCentroidOnlyPrecinctMode());
 
       // Auto-load precinct centroids at statewide zoom (fast), polygons later (heavy).
       if (dotVisible && !precinctCentroidsLoaded && !precinctCentroidsLoadInFlight) {
@@ -26309,9 +26340,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getActiveComparisonRecord(scope, geographyKey) {
       const snapshot = activeComparisonSnapshot;
-      if (!snapshot || String(snapshot.scope || '') !== String(scope || '')) return null;
+      if (!snapshot) return null;
       const raw = String(geographyKey ?? '').trim();
-      const key = scope === 'county' ? normalizeCountyToken(raw) : String(Number(raw));
+      const key = scope === 'county' || scope === 'precinct'
+        ? normalizeCountyToken(raw)
+        : String(Number(raw));
+      if (scope === 'county' && String(snapshot.scope || '') === 'precinct') {
+        return snapshot.countyRecords?.get(key) || null;
+      }
+      if (String(snapshot.scope || '') !== String(scope || '')) return null;
       return snapshot.records?.get(key) || null;
     }
 
@@ -26386,6 +26423,172 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
 
+    function buildComparisonPrecinctRowIndex(rows, contestType) {
+      const index = new Map();
+      for (const row of (rows || [])) {
+        const rowName = String(row?.county || '').trim();
+        if (!rowName || !rowName.includes(' - ')) continue;
+        const [countyName, rawPrecinct = ''] = rowName.split(' - ', 2);
+        const countyNorm = normalizeCountyToken(countyName);
+        const precinctCode = String(rawPrecinct || '').trim().toUpperCase();
+        if (!countyNorm || !precinctCode || isNonGeographicPrecinctToken(precinctCode, countyNorm)) continue;
+        const primaryKey = normalizeCountyToken(rowName);
+        const keys = buildPrecinctResultLookupKeys({
+          precinctNorm: primaryKey,
+          countyName,
+          code: precinctCode,
+          fullName: precinctCode
+        });
+        for (const rawKey of keys) {
+          const key = normalizeCountyToken(rawKey);
+          if (!key) continue;
+          // Exact rows outrank compatibility aliases that may point at the same modern key.
+          if (key === primaryKey || !index.has(key)) index.set(key, row);
+        }
+      }
+      return index;
+    }
+
+    function comparisonPrecinctRowForKey(index, precinctNorm) {
+      if (!index || typeof index.get !== 'function') return null;
+      const norm = normalizeCountyToken(precinctNorm);
+      if (!norm) return null;
+      const direct = index.get(norm);
+      if (direct) return direct;
+      const [countyName = '', code = ''] = norm.split(' - ', 2);
+      const keys = buildPrecinctResultLookupKeys({ precinctNorm: norm, countyName, code });
+      for (const key of keys) {
+        const row = index.get(normalizeCountyToken(key));
+        if (row) return row;
+      }
+      return null;
+    }
+
+    function comparisonPrecinctOutcome(row, contestType) {
+      if (!row) return null;
+      const dem = Number(row[`${contestType}_dem`] ?? row.dem_votes ?? 0);
+      const rep = Number(row[`${contestType}_rep`] ?? row.rep_votes ?? 0);
+      const other = Number(row[`${contestType}_other`] ?? row.other_votes ?? 0);
+      const explicitTotal = Number(row[`${contestType}_total`] ?? row.total_votes);
+      const total = Number.isFinite(explicitTotal) && explicitTotal > 0
+        ? explicitTotal
+        : (dem + rep + other);
+      if (!(total > 0)) return null;
+      const storedMargin = Number(row[`${contestType}_margin_pct`] ?? row.margin_pct);
+      const signed = Number.isFinite(storedMargin)
+        ? storedMargin
+        : signedMarginPctFromVotes(dem, rep, total);
+      return { dem, rep, other, total, signed };
+    }
+
+    async function applyPrecinctComparison(primary, secondary, requestId) {
+      if (!precinctsEnabled || currentView !== 'counties') return false;
+      const [primaryType, primaryYear] = parseContestValue(primary);
+      const [secondaryType, secondaryYear] = parseContestValue(secondary);
+      const [primaryRows, secondaryRows, precinctIdx] = await Promise.all([
+        loadContestSlice(primaryType, primaryYear),
+        loadContestSlice(secondaryType, secondaryYear),
+        ensurePrecinctCodeIndex()
+      ]);
+      if (requestId !== comparisonRequestId || currentVizMode !== 'comparison' || !precinctsEnabled) return false;
+
+      try { await ensurePrecinctAliasIndex(); } catch (_) {}
+      try { await ensurePrecinctStableToOneMapIndex(); } catch (_) {}
+      try { await ensurePrecinctVariantOverrides(); } catch (_) {}
+
+      const primaryIndex = currentPrecinctResults instanceof Map && currentPrecinctResults.size
+        ? currentPrecinctResults
+        : buildComparisonPrecinctRowIndex(primaryRows, primaryType);
+      const secondaryIndex = buildComparisonPrecinctRowIndex(secondaryRows, secondaryType);
+      const primaryLabel = formatContestLabel(primaryType, primaryYear);
+      const secondaryLabel = formatContestLabel(secondaryType, secondaryYear);
+      const primaryCandidates = comparisonCandidateNamesFromRows(primaryRows, primaryType);
+      const secondaryCandidates = comparisonCandidateNamesFromRows(secondaryRows, secondaryType);
+      const primaryMeta = contestSliceSourceMetaCache.get(primary) || {};
+      const secondaryMeta = contestSliceSourceMetaCache.get(secondary) || {};
+      const primaryProvenance = window.AtlasProvenance.describeProvenance(primaryMeta, { kind: 'precinct' });
+      const secondaryProvenance = window.AtlasProvenance.describeProvenance(secondaryMeta, { kind: 'precinct' });
+      const records = new Map();
+      const countyRecords = activeComparisonSnapshot?.scope === 'county'
+        ? activeComparisonSnapshot.records
+        : new Map();
+      const expr = ['match', ['upcase', ['coalesce', ['get', 'precinct_norm'], '']]];
+      let eligible = 0;
+
+      if (precinctIdx && typeof precinctIdx.forEach === 'function') {
+        precinctIdx.forEach((codes, countyNormRaw) => {
+          const countyNorm = normalizeCountyToken(countyNormRaw);
+          (codes || new Set()).forEach(codeRaw => {
+            const code = String(codeRaw || '').trim().toUpperCase();
+            if (!countyNorm || !code) return;
+            eligible += 1;
+            const key = normalizeCountyToken(`${countyNorm} - ${code}`);
+            const primaryRow = comparisonPrecinctRowForKey(primaryIndex, key);
+            const secondaryRow = comparisonPrecinctRowForKey(secondaryIndex, key);
+            const primaryOutcome = comparisonPrecinctOutcome(primaryRow, primaryType);
+            const secondaryOutcome = comparisonPrecinctOutcome(secondaryRow, secondaryType);
+            if (!primaryOutcome || !secondaryOutcome) return;
+            const comparison = compareMarginsForDisplay(primaryOutcome.signed, secondaryOutcome.signed);
+            records.set(key, {
+              key,
+              primarySigned: comparison.primary,
+              secondarySigned: comparison.comparison,
+              delta: comparison.delta,
+              primaryRow: {
+                ...primaryRow,
+                dem: primaryOutcome.dem,
+                rep: primaryOutcome.rep,
+                other: primaryOutcome.other,
+                total: primaryOutcome.total
+              },
+              secondaryRow: {
+                ...secondaryRow,
+                dem: secondaryOutcome.dem,
+                rep: secondaryOutcome.rep,
+                other: secondaryOutcome.other,
+                total: secondaryOutcome.total
+              },
+              primaryCandidates,
+              secondaryCandidates,
+              primaryLabel,
+              secondaryLabel,
+              primaryProvenance,
+              secondaryProvenance
+            });
+            expr.push(key, colorForShiftMode(comparison.delta));
+          });
+        });
+      }
+      expr.push('#d1d5db');
+
+      lastPrecinctFillExpr = expr;
+      lastPrecinctDotExpr = expr;
+      if (map.getLayer('precinct-fill')) map.setPaintProperty('precinct-fill', 'fill-color', expr);
+      if (map.getLayer('precinct-dot')) map.setPaintProperty('precinct-dot', 'circle-color', expr);
+      if (map.getLayer('precinct-dot-missing')) map.setPaintProperty('precinct-dot-missing', 'circle-color', expr);
+
+      activeComparisonSnapshot = {
+        scope: 'precinct',
+        view: currentView,
+        primaryValue: primary,
+        secondaryValue: secondary,
+        primaryLabel,
+        secondaryLabel,
+        records,
+        countyRecords,
+        matchedPrecincts: records.size,
+        eligiblePrecincts: eligible
+      };
+      const coverage = eligible > 0 ? (100 * records.size / eligible) : 0;
+      updateComparisonControlsSummary(`${secondaryLabel} → ${primaryLabel} · ${records.size.toLocaleString()} shared precincts (${coverage.toFixed(1)}%)`);
+      setStatewideContestTitle(`Compare: ${primaryLabel} vs ${secondaryLabel} (Precincts)`);
+      setStatus(`Compared ${primaryLabel} with ${secondaryLabel} across ${records.size.toLocaleString()} shared precincts.`);
+      renderLegendForVizMode('comparison');
+      updatePrecinctVisibility();
+      applyLayerOpacityTuning();
+      return records.size > 0;
+    }
+
     async function applyCountyComparison(primary, secondary, requestId) {
       const [primaryType, primaryYear] = parseContestValue(primary);
       const [secondaryType, secondaryYear] = parseContestValue(secondary);
@@ -26450,12 +26653,6 @@ document.addEventListener('DOMContentLoaded', function() {
         map.setPaintProperty('county-fill', 'fill-color', expr);
         lastCountyFillExpr = expr;
       }
-      if (precinctsEnabled) {
-        ['precinct-fill', 'precinct-stroke', 'precinct-dot', 'precinct-dot-missing'].forEach(layerId => {
-          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', 'none');
-        });
-      }
-
       activeComparisonSnapshot = {
         scope: 'county',
         view: currentView,
@@ -26621,9 +26818,15 @@ document.addEventListener('DOMContentLoaded', function() {
       activeComparisonSnapshot = null;
       updateComparisonControlsSummary('Loading comparison…');
       try {
-        const applied = currentView === 'counties'
-          ? await applyCountyComparison(primary, secondary, requestId)
-          : await applyDistrictComparison(primary, secondary, requestId);
+        let applied = false;
+        if (currentView === 'counties') {
+          applied = await applyCountyComparison(primary, secondary, requestId);
+          if (applied && precinctsEnabled) {
+            applied = await applyPrecinctComparison(primary, secondary, requestId);
+          }
+        } else {
+          applied = await applyDistrictComparison(primary, secondary, requestId);
+        }
         if (!applied && requestId === comparisonRequestId) {
           updateComparisonControlsSummary('Those contests do not share usable results on the current geography and line set.');
           setStatus('Comparison data is unavailable for the current geography and district lines.');
