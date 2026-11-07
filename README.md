@@ -8,6 +8,20 @@ The live app is now presented as **North Carolina Election Atlas**, which is the
 
 **Live site:** [https://tenjin25.github.io/NCElectionAtlas/](https://tenjin25.github.io/NCElectionAtlas/)
 
+## For Hiring Managers
+
+This project demonstrates end-to-end ownership of a production-scale civic data application—from acquiring and reconciling inconsistent election/GIS sources to designing the data model, building an accessible browser experience, validating the results, and publishing reproducible outputs. The current atlas spans elections from 2000–2026, all 100 North Carolina counties, a 2,632-precinct modern aggregation basis, three congressional line sets, and two modern legislative line sets.
+
+- **Data engineering:** Normalizes North Carolina election results from 2000–2026, resolves changing precinct identifiers, reconciles official county totals, and allocates split precincts with documented block/VAP crosswalks.
+- **Geospatial engineering:** Integrates NCSBE/OneMap, Census TIGER, official block-equivalency files, and multiple congressional and legislative plans while preserving geographic provenance and uncertainty.
+- **Frontend engineering:** Delivers a static, map-first JavaScript application with comparison, shift, demographic, turnout, export, deep-linking, mobile, accessibility, and colorblind-friendly workflows.
+- **Architecture and delivery:** Uses modular browser code, precomputed contest slices, data manifests, and progressive geometry loading to keep a large statewide dataset practical on static GitHub Pages without a production backend.
+- **Performance and reliability:** Uses manifest-driven loading, caching, request deduplication, lazy geometry hydration, Web Worker parsing, regression tests, Playwright browser coverage, and CI data validation.
+- **Reproducible analysis:** Keeps transformation scripts, audit reports, source metadata, coverage diagnostics, and generated artifacts in the repository so published conclusions can be traced and rebuilt.
+- **Product judgment:** Surfaces provenance and uncertainty, distinguishes certified totals from geographic estimates, and translates complex redistricting and election data into workflows usable by researchers and nontechnical readers.
+
+Good starting points for a technical review are the modular browser code in [`js/`](js/), the data pipeline in [`scripts/`](scripts/), the automated checks in [`core-tests/`](core-tests/) and [`tests/`](tests/), and the [2020→2026 U.S. Senate shift-scale report](data/reports/2020_to_2026_us_senate_shift_scale_breakers.md). The sections below document major design decisions, data provenance, rebuilding steps, known limitations, and validation procedures.
+
 ---
 
 ## Screenshots
