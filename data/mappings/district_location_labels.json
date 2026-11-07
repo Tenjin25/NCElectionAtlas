@@ -2,11 +2,12 @@
   "schema": "district_location_labels.v1",
   "method": "County membership and whole/partial shares follow the BEF-derived precinct crosswalks used by the election aggregation. Whole county >=99.9%; material component >0.1%; 'most' >=55% of county area. Directional terms compare the district-county intersection centroid with the county geometry.",
   "manual_overrides": {
+    "precinct_to_cd118.csv:2": "northern Wake County",
     "precinct_to_cd118.csv:13": "Johnston, southern Wake, most of Harnett, and western Wayne"
   },
   "plans": {
     "precinct_to_cd118.csv": {
-      "2": "most of Wake",
+      "2": "northern Wake County",
       "13": "Johnston, southern Wake, most of Harnett, and western Wayne",
       "14": "most of Gaston and southern Mecklenburg"
     },

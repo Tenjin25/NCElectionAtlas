@@ -28,6 +28,7 @@ PLANS = (
 )
 
 MANUAL_OVERRIDES = {
+    "precinct_to_cd118.csv:2": "northern Wake County",
     "precinct_to_cd118.csv:13": "Johnston, southern Wake, most of Harnett, and western Wayne",
 }
 

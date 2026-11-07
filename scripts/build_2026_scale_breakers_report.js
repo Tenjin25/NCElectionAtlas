@@ -58,7 +58,7 @@ function formatCandidateMargin(value, year) {
 function formatShift(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
-  return `${n > 0 ? CANDIDATES[2026].rep : CANDIDATES[2026].dem} +${Math.abs(n).toFixed(2)}`;
+  return `${n > 0 ? 'R' : 'D'}+${Math.abs(n).toFixed(2)}`;
 }
 
 function numericKey(value) {
@@ -199,7 +199,7 @@ const analyzed = views.map(view => {
 const out = [];
 out.push('# 2020→2026 U.S. Senate shift-scale breakers');
 out.push('');
-out.push('These are the areas where the official 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. A shift labeled `Cooper +26.26`, for example, means the margin moved 26.26 points toward Cooper. Other-party votes remain in each margin’s denominator, matching the atlas.');
+out.push('These are the areas where the official 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator, matching the atlas.');
 out.push('');
 out.push('The report covers counties; congressional districts under the 2022, 2024, and 2026 line sets; and State House and State Senate districts under the 2022 and 2024 line sets.');
 out.push('');
