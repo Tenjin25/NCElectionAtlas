@@ -2,17 +2,17 @@
 
 ## March–November 2026
 
-**Last updated:** November 10, 2026
+**Last updated:** November 11, 2026
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
 
-### 93-County Provisional Refresh (November 10, 2026)
+### 97-County Provisional Refresh (November 11, 2026)
 
-- Refreshed the checked-in NCSBE precinct export from the November 10, 9:36:00 p.m. ET posting, when 93 counties showed U.S. Senate provisional votes; the results remain unofficial pending completion of county canvasses.
+- Refreshed the checked-in NCSBE precinct export from the November 11, 10:05:36 a.m. ET posting, when 97 counties showed U.S. Senate provisional votes; the results remain unofficial pending completion of county canvasses.
 - Rebuilt the seven-column OpenElections CSV with 143,275 rows, 100 counties, 2,842 county-precinct pairs, and all 1,380 contests.
 - Republished U.S. Senate, Supreme Court Seat 1, and Court of Appeals Seats 1–3 statewide/county results and their Congressional, State House, and State Senate slices on the 2022, 2024, and 2026 line sets.
 - Rebuilt the direct 2026 NC House, NC Senate, and U.S. House district results from the same snapshot.
-- Advanced the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-10-93-county-provisionals-v1`.
+- Advanced the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-11-97-county-provisionals-v1`.
 
 ### Official 2026 General-Election Results (November 4, 2026)
 

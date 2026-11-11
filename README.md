@@ -133,7 +133,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-10-93-county-provisionals-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-11-97-county-provisionals-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 
@@ -451,7 +451,7 @@ The district-building pipeline and front-end treat these as **non-geographic** a
 
 The checked-in NCSBE precinct export is converted to the seven-column OpenElections layout before any frontend JSON is built. The CSV intentionally retains every contest and zero-vote row; its sum is therefore total ballot selections across contests, not voter turnout.
 
-The current source snapshot is the NCSBE November 10, 2026, 9:36:00 p.m. ET posting. It includes nonzero U.S. Senate provisional votes from 93 counties and remains unofficial pending completion of county canvasses. Its SHA-256 is `888D69F4C6D00457218C095B2A0EAA34AEF29BA90A20EA9D286A5E5D602299B7`.
+The current source snapshot is the NCSBE November 11, 2026, 10:05:36 a.m. ET posting. It includes nonzero U.S. Senate provisional votes from 97 counties and remains unofficial pending completion of county canvasses. Its SHA-256 is `3D6FD3E73A99CCC27203A2D03CAD5BB7DF1DC8C2425F3D29AD2A5A6F37B36827`.
 
 ```powershell
 python tools/convert_to_openelections.py `
