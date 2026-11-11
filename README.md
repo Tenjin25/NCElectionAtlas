@@ -133,7 +133,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-07-precinct-compare-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-10-86-county-provisionals-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 
@@ -450,6 +450,8 @@ The district-building pipeline and front-end treat these as **non-geographic** a
 ### Rebuilding the 2026 General Election
 
 The checked-in NCSBE precinct export is converted to the seven-column OpenElections layout before any frontend JSON is built. The CSV intentionally retains every contest and zero-vote row; its sum is therefore total ballot selections across contests, not voter turnout.
+
+The current source snapshot is the NCSBE November 10, 2026, 7:25:46 p.m. ET posting. It includes nonzero U.S. Senate provisional votes from 86 counties and remains unofficial pending completion of county canvasses. Its SHA-256 is `64C06BA5B36BB1819B566773B5C95A4A6E30E7E561AD485F59D6D6EC6702B613`.
 
 ```powershell
 python tools/convert_to_openelections.py `
