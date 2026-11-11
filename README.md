@@ -490,6 +490,14 @@ python scripts/build_congressional_us_house_slices.py `
   --output-dir data/district_contests_2026_lines
 ```
 
+Build DRA-readable election files on all 236,638 North Carolina 2020 Census blocks:
+
+```powershell
+python scripts/build_2026_dra_block_csvs.py
+```
+
+The eight outputs live under `data/dra/2026/` and use the DRA-compatible columns `GEOID20,Tot,D,R`. They cover U.S. Senate, U.S. House, State House, State Senate, Supreme Court Seat 1, and Court of Appeals Seats 1–3. Precinct results are allocated by 2020 block voting-age population, and largest-remainder integer rounding preserves the exact statewide Democratic, Republican, other, and total vote controls. See `data/dra/2026/README.md` and `manifest.json` for provenance and totals.
+
 The retired synthetic Senate and Supreme Court attempts can be regenerated with `node scripts/inspect_2026_senate_model.js`; that exporter writes `data/legacy/modeling/2026_modeled_attempts.json`, but the legacy contests remain disabled in the picker.
 
 ### Rebuilding District Slices
