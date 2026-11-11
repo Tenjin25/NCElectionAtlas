@@ -1,6 +1,6 @@
 # 2020→2026 U.S. Senate shift-scale breakers
 
-These are the areas where the NCSBE-reported 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator, matching the atlas.
+These are the areas where the NCSBE-reported 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator. County margins use the difference between the candidate shares displayed by the frontend, and shifts use the same rounded-margin comparison pipeline as the atlas.
 
 The 2026 figures use the complete 100-county NCSBE precinct posting from November 11, 2026, 4:00:44 p.m. ET. All counties had reported provisional votes, but the results remained unofficial pending the statewide canvass.
 
@@ -27,7 +27,7 @@ District locations are plain-language descriptions derived from the official BEF
 |---|---:|---:|---:|
 | Buncombe | Cunningham +19.98 | Cooper +46.20 | D+26.22 |
 | Cabarrus | Tillis +10.63 | Cooper +17.51 | D+28.14 |
-| Gaston | Tillis +26.10 | Cooper +0.05 | D+26.14 |
+| Gaston | Tillis +26.10 | Cooper +0.04 | D+26.14 |
 | Henderson | Tillis +20.00 | Cooper +5.99 | D+25.99 |
 | Johnston | Tillis +22.73 | Cooper +6.16 | D+28.89 |
 | Transylvania | Tillis +15.10 | Cooper +9.96 | D+25.06 |

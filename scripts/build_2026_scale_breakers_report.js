@@ -5,6 +5,8 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(ROOT, 'data', 'reports', '2020_to_2026_us_senate_shift_scale_breakers.md');
+const AtlasDisplay = require(path.join(ROOT, 'js', 'atlas-display.js'));
+const AtlasComparison = require(path.join(ROOT, 'js', 'atlas-comparison.js'));
 const SCALE_CEILING = 25;
 const FULL_COUNTY_THRESHOLD = 0.999;
 const MATERIAL_PARTIAL_THRESHOLD = 0.001;
@@ -59,6 +61,24 @@ function formatShift(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
   return `${n > 0 ? 'R' : 'D'}+${Math.abs(n).toFixed(2)}`;
+}
+
+function signedCountyDisplayMargin(result) {
+  const dem = Number(result?.dem_votes || 0);
+  const rep = Number(result?.rep_votes || 0);
+  const total = Number(result?.total_votes || (dem + rep + Number(result?.other_votes || 0)));
+  if (!(total > 0)) return NaN;
+  const rawSigned = ((rep - dem) / total) * 100;
+  const displayAbs = AtlasDisplay.countyMarginPctDisplayValue(rep, dem, total);
+  return rawSigned > 0 ? Math.abs(displayAbs) : rawSigned < 0 ? -Math.abs(displayAbs) : 0;
+}
+
+function signedDisplayedMargin(view, key, result) {
+  // Match the frontend's county-equivalent exception for Lincoln County's HD-97.
+  if (view.kind === 'county' || (view.scope === 'state_house' && Number(key) === 97)) {
+    return signedCountyDisplayMargin(result);
+  }
+  return Number(result?.margin_pct);
 }
 
 function numericKey(value) {
@@ -183,9 +203,12 @@ const analyzed = views.map(view => {
   validateLegislativeComponents(view, locations);
   const keys = [...new Set([...Object.keys(prior || {}), ...Object.keys(current || {})])];
   const rows = keys.map(key => {
-    const margin2020 = Number(prior?.[key]?.margin_pct);
-    const margin2026 = Number(current?.[key]?.margin_pct);
-    const shift = margin2026 - margin2020;
+    const margin2020Raw = signedDisplayedMargin(view, key, prior?.[key]);
+    const margin2026Raw = signedDisplayedMargin(view, key, current?.[key]);
+    const comparison = AtlasComparison.compareDisplayedSignedMargins(margin2026Raw, margin2020Raw);
+    const margin2020 = comparison.comparison;
+    const margin2026 = comparison.primary;
+    const shift = comparison.delta;
     return { key, area: labelArea(view, key), location: formatLocation(view, key, locations[key]), margin2020, margin2026, shift };
   }).filter(row => Number.isFinite(row.shift) && Math.abs(row.shift) >= SCALE_CEILING);
 
@@ -199,7 +222,7 @@ const analyzed = views.map(view => {
 const out = [];
 out.push('# 2020→2026 U.S. Senate shift-scale breakers');
 out.push('');
-out.push('These are the areas where the NCSBE-reported 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator, matching the atlas.');
+out.push('These are the areas where the NCSBE-reported 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator. County margins use the difference between the candidate shares displayed by the frontend, and shifts use the same rounded-margin comparison pipeline as the atlas.');
 out.push('');
 out.push('The 2026 figures use the complete 100-county NCSBE precinct posting from November 11, 2026, 4:00:44 p.m. ET. All counties had reported provisional votes, but the results remained unofficial pending the statewide canvass.');
 out.push('');

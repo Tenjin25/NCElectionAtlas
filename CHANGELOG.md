@@ -14,6 +14,7 @@ The September 21 frontend precision work was later restored and refined by the S
 - Rebuilt the direct 2026 NC House, NC Senate, and U.S. House district results from the same snapshot.
 - Added DRA-readable `GEOID20,Tot,D,R` CSVs for all eight published 2026 contest families on the complete 236,638-block 2020 Census geography, with exact statewide vote reconciliation and a reusable builder.
 - Rebuilt the 2020→2026 U.S. Senate shift-scale report from the complete-county provisional snapshot; 2024-lines House District 64 newly crossed the 25-point ceiling at `D+25.06`, increasing that section from 27 to 28 districts.
+- Aligned the shift-scale generator with the frontend's displayed-share margin pipeline, correcting Gaston's displayed 2026 Senate margin from `Cooper +0.05` to `Cooper +0.04` while retaining its `D+26.14` shift.
 - Advanced the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-11-100-county-provisionals-v1`.
 
 ### Official 2026 General-Election Results (November 4, 2026)
