@@ -13,6 +13,7 @@ The September 21 frontend precision work was later restored and refined by the S
 - Republished U.S. Senate, Supreme Court Seat 1, and Court of Appeals Seats 1–3 statewide/county results and their Congressional, State House, and State Senate slices on the 2022, 2024, and 2026 line sets.
 - Rebuilt the direct 2026 NC House, NC Senate, and U.S. House district results from the same snapshot.
 - Added DRA-readable `GEOID20,Tot,D,R` CSVs for all eight published 2026 contest families on the complete 236,638-block 2020 Census geography, with exact statewide vote reconciliation and a reusable builder.
+- Rebuilt the 2020→2026 U.S. Senate shift-scale report from the complete-county provisional snapshot; 2024-lines House District 64 newly crossed the 25-point ceiling at `D+25.06`, increasing that section from 27 to 28 districts.
 - Advanced the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-11-100-county-provisionals-v1`.
 
 ### Official 2026 General-Election Results (November 4, 2026)
