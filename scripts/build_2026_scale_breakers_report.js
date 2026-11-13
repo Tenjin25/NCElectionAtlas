@@ -224,7 +224,7 @@ out.push('# 2020→2026 U.S. Senate shift-scale breakers');
 out.push('');
 out.push('These are the areas where the NCSBE-reported 2026 U.S. Senate R−D margin moved **25.00 points or more** from the 2020 U.S. Senate margin. That is the ceiling of the atlas shift legend’s “Extreme — 25+ pts” bucket. Election margins use candidate surnames: Cunningham/Tillis in 2020 and Cooper/Whatley in 2026. The shift itself uses partisan notation, so `D+26.26` means the margin moved 26.26 points toward the Democratic candidate. Other-party votes remain in each margin’s denominator. County margins use the difference between the candidate shares displayed by the frontend, and shifts use the same rounded-margin comparison pipeline as the atlas.');
 out.push('');
-out.push('The 2026 figures use the complete 100-county NCSBE precinct posting from November 11, 2026, 4:00:44 p.m. ET. All counties had reported provisional votes, but the results remained unofficial pending the statewide canvass.');
+out.push('The 2026 figures use the NCSBE county-canvass precinct posting from November 13, 2026, 2:40:46 p.m. ET. The results remained unofficial pending the statewide canvass and any recount adjustments.');
 out.push('');
 out.push('The report covers counties; congressional districts under the 2022, 2024, and 2026 line sets; and State House and State Senate districts under the 2022 and 2024 line sets.');
 out.push('');
@@ -263,7 +263,7 @@ for (const view of analyzed) {
 out.push('');
 out.push('## Source');
 out.push('');
-out.push('Generated from `data/contests/us_senate_2020.json`, the complete-county provisional `data/contests/us_senate_2026.json`, the matching district aggregations, the BEF-derived `data/crosswalks/precinct_to_*.csv` files, and `data/mappings/district_location_labels.json`. Legislative component labels are checked against `data/mappings/mixed_county_components.json`.');
+out.push('Generated from `data/contests/us_senate_2020.json`, the county-canvass `data/contests/us_senate_2026.json`, the matching district aggregations, the BEF-derived `data/crosswalks/precinct_to_*.csv` files, and `data/mappings/district_location_labels.json`. Legislative component labels are checked against `data/mappings/mixed_county_components.json`.');
 out.push('');
 out.push('The underlying official assignments are `37_NC_CD118.txt`, `37_NC_CD119.txt`, `CD120_37.txt`, `37_NC_SLDL22.txt`, `37_NC_SLDL24.txt`, `37_NC_SLDU22.txt`, and `37_NC_SLDU24.txt`.');
 out.push('');
