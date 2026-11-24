@@ -373,9 +373,17 @@ def main() -> None:
         crosswalk_source = args.precinct_crosswalk
 
     target_counties = build_target_county_map(COUNTY_GEOJSON, args.cd_shapefile, args.district_col, target_districts)
-    args.out_crosswalk.parent.mkdir(parents=True, exist_ok=True)
-    crosswalk.to_csv(args.out_crosswalk, index=False)
-    print(f"Wrote crosswalk: {args.out_crosswalk} ({len(crosswalk):,} rows; source={crosswalk_source})")
+    should_write_crosswalk = (
+        args.rebuild_crosswalk
+        or not args.precinct_crosswalk.exists()
+        or args.out_crosswalk.resolve() != args.precinct_crosswalk.resolve()
+    )
+    if should_write_crosswalk:
+        args.out_crosswalk.parent.mkdir(parents=True, exist_ok=True)
+        crosswalk.to_csv(args.out_crosswalk, index=False)
+        print(f"Wrote crosswalk: {args.out_crosswalk} ({len(crosswalk):,} rows; source={crosswalk_source})")
+    else:
+        print(f"Using crosswalk: {args.precinct_crosswalk} ({len(crosswalk):,} rows)")
 
     agg = load_aggregated(args.aggregated)
     results_by_year = agg.get("results_by_year", {})
@@ -432,43 +440,28 @@ def main() -> None:
         dst.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         print(f"Wrote {dst.name}: patched districts {sorted(target_districts)}")
 
-    # Rebuild manifest in the new output directory.
+    # Preserve the curated manifest so dormant or intentionally unpublished JSON
+    # files are not reintroduced into the frontend picker merely because they
+    # remain in the directory for archival purposes.
+    manifest_path = args.out_dir / "manifest.json"
+    existing_manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"files": []}
     manifest_rows: list[dict] = []
-    for p in sorted(args.out_dir.glob("*.json")):
-        if p.name == "manifest.json":
+    for existing_row in existing_manifest.get("files", []):
+        p = args.out_dir / str(existing_row.get("file") or "")
+        if not p.is_file():
             continue
-        bits = p.stem.split("_")
-        if len(bits) < 3:
-            continue
-        try:
-            year = int(bits[-1])
-        except ValueError:
-            continue
-        if bits[0] == "state" and len(bits) >= 4:
-            scope = "_".join(bits[:2])
-            contest = "_".join(bits[2:-1])
-        else:
-            scope = bits[0]
-            contest = "_".join(bits[1:-1])
+        row = dict(existing_row)
         try:
             node = json.loads(p.read_text(encoding="utf-8"))
-            districts = len((((node.get("general") or {}).get("results")) or {}))
+            row["districts"] = len((((node.get("general") or {}).get("results")) or {}))
         except Exception:
-            districts = 0
-        manifest_rows.append(
-            {
-                "year": year,
-                "scope": scope,
-                "contest_type": contest,
-                "file": p.name,
-                "districts": districts,
-                "district_lines_year": 2026,
-                "district_lines_label": "2026 congressional lines",
-            }
-        )
+            row["districts"] = 0
+        row["district_lines_year"] = 2026
+        row["district_lines_label"] = "2026 congressional lines"
+        manifest_rows.append(row)
     manifest_rows.sort(key=lambda r: (r["year"], r["scope"], r["contest_type"]))
-    (args.out_dir / "manifest.json").write_text(json.dumps({"files": manifest_rows}, indent=2), encoding="utf-8")
-    print(f"Wrote manifest: {args.out_dir / 'manifest.json'}")
+    manifest_path.write_text(json.dumps({"files": manifest_rows}, indent=2), encoding="utf-8")
+    print(f"Wrote manifest: {manifest_path}")
 
 
 if __name__ == "__main__":

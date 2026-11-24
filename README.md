@@ -105,8 +105,8 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 	- **Statewide Snapshot Tier Precision:** Statewide snapshot ratings classify the same two-decimal margin shown to readers, so a result such as `D+0.96%` remains `Tilt Democratic` instead of being rounded to `1.0%` and promoted to `Lean Democratic`
 	- **Default Atlas/DRA Compromise 15-Tier Palette:** The active table blends the original Atlas colors with lessons from the former DRA palette experiment across Margins, Winners, Shift, and Flips in county, precinct, and district views. It maps directly to the atlas's 40/30/20/10/5.5/1/0.5-point margin thresholds, with darker strongholds and smoother competitive transitions. The compromise palette is the standard live palette; colorblind mode supplies the supported partisan alternative, while Demographics and Population Change retain their own semantic palettes.
 	- **Comparative Controls:** One-click split-ticket overlay (`President` base with `Governor` overlay) plus a what-if swing slider for fast scenario exploration
-- **Official 2026 Results:** The contest picker uses the November 3, 2026 NCSBE precinct export for U.S. Senate, NC Supreme Court Seat 1, and Court of Appeals Seats 1–3. Statewide contests are aggregated to the 2022 and 2024 Congressional / State House / State Senate lines and to the 2026 congressional plan. Direct 2026 U.S. House, NC House, and NC Senate results use their matching 2026 congressional and 2024 legislative lines. The former synthetic Senate and Supreme Court experiments are hidden from the picker and archived for reproducibility in `data/legacy/modeling/2026_modeled_attempts.json`.
-- **2020→2026 U.S. Senate Shift-Scale Report:** [This report](data/reports/2020_to_2026_us_senate_shift_scale_breakers.md) lists every county and district whose Cunningham/Tillis-to-Cooper/Whatley margin moved at least 25 points, the ceiling of the atlas shift scale. The 2026 figures use the November 13 county-canvass snapshot pending the statewide canvass. It covers all three congressional line sets and both legislative line sets. Election margins use candidate surnames (for example, `Cunningham +19.98` or `Cooper +46.19`), while the shift uses partisan notation such as `D+26.21`. The table also supplies plain-language district locations derived from the official BEF crosswalks used by the aggregation. County membership follows the ≥99.9% whole-county and >0.1% material-component rules; directional labels come from district/county geometry, and “most of” means at least 55% of county area.
+- **Official 2026 Results:** The contest picker uses the statewide-canvassed November 3, 2026 NCSBE results for U.S. Senate, NC Supreme Court Seat 1, and Court of Appeals Seats 1–3. Statewide contests are aggregated to the 2022 and 2024 Congressional / State House / State Senate lines and to the 2026 congressional plan. Direct 2026 U.S. House, NC House, and NC Senate results use their matching 2026 congressional and 2024 legislative lines. The State Board certified all published contest families on November 24 except NC House District 62, which remains subject to its recount. The former synthetic Senate and Supreme Court experiments are hidden from the picker and archived for reproducibility in `data/legacy/modeling/2026_modeled_attempts.json`.
+- **2020→2026 U.S. Senate Shift-Scale Report:** [This report](data/reports/2020_to_2026_us_senate_shift_scale_breakers.md) lists every county and district whose Cunningham/Tillis-to-Cooper/Whatley margin moved at least 25 points, the ceiling of the atlas shift scale. The 2026 figures use the statewide-certified results. It covers all three congressional line sets and both legislative line sets. Election margins use candidate surnames (for example, `Cunningham +19.98` or `Cooper +46.19`), while the shift uses partisan notation such as `D+26.21`. The table also supplies plain-language district locations derived from the official BEF crosswalks used by the aggregation. County membership follows the ≥99.9% whole-county and >0.1% material-component rules; directional labels come from district/county geometry, and “most of” means at least 55% of county area.
 - **Layering Controls:** Turnout-intensity opacity mode and overlay opacity presets (`Reveal map`, `Balanced`, `Focus overlay`) for cleaner map readability
 - **Demographics Mode:** County, district, and precinct overlays can be shaded by plurality race share (white / black / Hispanic, plus Native / Asian / Pacific / multiracial / other where available), with synchronized legend colors in both standard and colorblind palettes
 - **High-Contrast Demographics Toggle:** Optional high-contrast demographic shading and chip styling for better visibility on dark tooltip surfaces
@@ -133,7 +133,7 @@ For the most difficult **2000, 2002, and 2004 urban-county district allocations*
 
 See [the change history](CHANGELOG.md) for the dated development notes. The current features and limitations are documented below.
 
-The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-13-county-canvass-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
+The main stylesheet lives in `css/atlas-main.css`; the smaller `index.html` keeps the page structure and application script. The current asset and data cache token is `2026-11-24-state-canvass-v1` and is shared by the stylesheet, local modules, and data requests. The published contest catalog can be checked with `npm run validate:data`, which verifies manifest targets and vote-row arithmetic. CI runs that check along with core tests and inline-script parsing. Before publishing, run `npm run test:core` and `npm test` as well; the browser suite exercises the map UI.
 
 ## UI Performance Enhancements
 
@@ -451,7 +451,7 @@ The district-building pipeline and front-end treat these as **non-geographic** a
 
 The checked-in NCSBE precinct export is converted to the seven-column OpenElections layout before any frontend JSON is built. The CSV intentionally retains every contest and zero-vote row; its sum is therefore total ballot selections across contests, not voter turnout.
 
-The current source snapshot is the NCSBE November 13, 2026, 2:40:46 p.m. ET county-canvass posting. It remains unofficial pending the statewide canvass and any recount adjustments. Its SHA-256 is `D77EB3EC4FE638380159DA0746C8E533C6011211FD3367B4BD335838E0E77B8C`.
+The current source snapshot is the NCSBE November 13, 2026, 7:05:40 p.m. ET county-canvass posting accepted by the State Board at the November 24 statewide canvass. The published contest families are certified except NC House District 62, which remains subject to its recount. The source SHA-256 is `FF844FA7D65865494A60A7AF2CFC5FD6DE5B7788864731C55B157B1F52CEF7FF`.
 
 ```powershell
 python tools/convert_to_openelections.py `
@@ -472,6 +472,11 @@ python scripts/build_district_contests_from_batch_shatter.py `
 
 python scripts/add_csv_county_totals_to_contests.py --write --years 2026
 python scripts/aggregate_contests_to_district_lines.py --year 2026 --line-sets 2022,2024,2026
+
+# The 2026 plan changes CD-1 and CD-3 only. Start from the 2024-line slices
+# so identical districts, including CD-14, retain exactly identical totals.
+python scripts/reaggregate_cd2026_lines.py `
+  --years 2026 --contest-type-regex $statewide --target-districts 1,3
 ```
 
 The county-total helper also emits convenience files under `data/county_contests/`; those files are not frontend authorities and are not required for this release. The frontend reads `data/contests/` and the three district-contest directories.

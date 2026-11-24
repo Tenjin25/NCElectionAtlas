@@ -2,9 +2,19 @@
 
 ## March–November 2026
 
-**Last updated:** November 13, 2026
+**Last updated:** November 24, 2026
 
 The September 21 frontend precision work was later restored and refined by the September 30 update below.
+
+### Statewide Canvass Refresh (November 24, 2026)
+
+- Replaced the 2:40 p.m. county-canvass snapshot with NCSBE's November 13, 7:05:40 p.m. posting, which the State Board accepted during its November 24 statewide canvass. All published contest families are certified except NC House District 62, which remains subject to its recount.
+- Rebuilt the seven-column OpenElections CSV with 155,661 rows, 100 counties, 2,842 county-precinct pairs, all 1,380 contests, and 94,613,201 ballot selections.
+- Republished the five statewide partisan contests and their 2022-, 2024-, and 2026-line district aggregations, plus direct 2026 U.S. House, NC House, and NC Senate results.
+- Synchronized every unchanged 2024/2026 congressional district after aggregation and limited the 2026-plan reallocation to CD-1 and CD-3. CD-14 and the other unchanged districts now have identical totals across both line sets for all five statewide contests.
+- Rebuilt all eight DRA block CSVs with the canvassed controls. The U.S. Senate file reconciles to Cooper `2,480,640`, Whatley `1,648,870`, Bray `56,084`, and Dublin `36,710`.
+- Regenerated the U.S. Senate shift-scale report with corrected margins. Its membership remains 84 geographies, and 2024-lines HD-64 remains the closest listed entry at `D+25.05`.
+- Advanced the shared stylesheet, module, data-request, and `APP_BUILD_ID` cache token to `2026-11-24-state-canvass-v1`.
 
 ### County-Canvass Results Refresh (November 13, 2026)
 

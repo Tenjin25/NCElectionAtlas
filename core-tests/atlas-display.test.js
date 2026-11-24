@@ -21,7 +21,7 @@ test('keeps Cabarrus margin display aligned with its visible candidate shares', 
 });
 
 test('keeps the 2026 Gaston Senate margin aligned with its visible candidate shares', () => {
-  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(40564, 40602, 83126) - 0.04) < 1e-10);
+  assert.ok(Math.abs(AtlasDisplay.countyMarginPctDisplayValue(40564, 40600, 83123) - 0.04) < 1e-10);
 });
 
 test('formats compact totals and signed deltas with established suffixes', () => {
