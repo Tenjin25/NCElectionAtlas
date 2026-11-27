@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -349,6 +350,35 @@ def patch_district_row(template_row: dict, new_votes: dict[str, int]) -> dict:
     return row
 
 
+def reconcile_changed_districts(
+    results: dict[str, dict],
+    aggregate: dict[str, dict[str, int]],
+    target_districts: set[str],
+) -> dict[str, dict[str, int]]:
+    """Keep the source slice's statewide controls while moving votes between changed CDs."""
+    changed = sorted(target_districts & results.keys() & aggregate.keys(), key=int)
+    if not changed:
+        return {}
+    reconciled = {district: dict(aggregate[district]) for district in changed}
+    for bucket in ("dem_votes", "rep_votes", "other_votes"):
+        target = sum(int(results[district].get(bucket, 0)) for district in changed)
+        raw = {district: max(0, aggregate[district][bucket]) for district in changed}
+        raw_total = sum(raw.values())
+        if raw_total == 0:
+            if target:
+                raise ValueError(f"Cannot apportion {target} {bucket} votes without district weights")
+            continue
+        quotas = {district: target * raw[district] / raw_total for district in changed}
+        floors = {district: math.floor(quotas[district]) for district in changed}
+        remainder = target - sum(floors.values())
+        order = sorted(changed, key=lambda district: (-(quotas[district] - floors[district]), int(district)))
+        for district in order[:remainder]:
+            floors[district] += 1
+        for district in changed:
+            reconciled[district][bucket] = floors[district]
+    return reconciled
+
+
 def is_uncontested_partisan_contest(agg_votes: dict[str, dict[str, int]]) -> bool:
     dem_total = 0
     rep_total = 0
@@ -420,12 +450,13 @@ def main() -> None:
             continue
 
         results = (((payload.get("general") or {}).get("results")) or {})
+        reconciled_votes = reconcile_changed_districts(results, agg_votes, target_districts)
         for district in target_districts:
             if district not in results:
                 continue
-            if district not in agg_votes:
+            if district not in reconciled_votes:
                 continue
-            results[district] = patch_district_row(results[district], agg_votes[district])
+            results[district] = patch_district_row(results[district], reconciled_votes[district])
         payload.setdefault("meta", {})
         payload["meta"]["source"] = "sl2025_95_precinct_area_weighted"
         payload["meta"]["district_lines_year"] = 2026

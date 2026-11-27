@@ -475,6 +475,8 @@ python scripts/aggregate_contests_to_district_lines.py --year 2026 --line-sets 2
 
 # The 2026 plan changes CD-1 and CD-3 only. Start from the 2024-line slices
 # so identical districts, including CD-14, retain exactly identical totals.
+# Reconcile the changed districts' combined vote counts to the copied slice's
+# controls after applying the 2026 crosswalk, preserving statewide totals.
 python scripts/reaggregate_cd2026_lines.py `
   --years 2026 --contest-type-regex $statewide --target-districts 1,3
 ```
